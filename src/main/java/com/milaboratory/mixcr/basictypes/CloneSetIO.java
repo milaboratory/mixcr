@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public final class CloneSetIO {
+
     public static CloneSet read(String file) throws IOException {
         return read(file, VDJCLibraryRegistry.getDefault());
     }

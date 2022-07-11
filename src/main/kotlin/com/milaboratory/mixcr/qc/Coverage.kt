@@ -52,7 +52,7 @@ object Coverage {
             FR4End,
         )
 
-    private class RefPointCoverage(val label: String) {
+    private class RefPointCoverage {
         // position in read -> count
         private val stat = TIntLongHashMap(
             Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR,
@@ -129,17 +129,14 @@ object Coverage {
         // reference points
         val refPointStats: List<RefPointCoverage> =
             predefinedRefPoints.map {
-                RefPointCoverage(
-                    it.toString()
-                        .replace("Begin", " begin")
-                )
+                RefPointCoverage()
             }
 
         // v alignment begin
-        val vEdge = RefPointCoverage("V alignment begin")
+        val vEdge = RefPointCoverage()
 
         // j alignment end
-        val jEdge = RefPointCoverage("J alignment end")
+        val jEdge = RefPointCoverage()
 
         private var readLength = 0
         var totalNumberOfReads = 0L
@@ -304,14 +301,14 @@ object Coverage {
             )
 
             val scaleLabels = mutableListOf(
-                "FR1 Begin",
+                "FR1  Begin",
                 "CDR1 Begin",
-                "FR2 Begin",
+                "FR2  Begin",
                 "CDR2 Begin",
-                "FR3 Begin",
+                "FR3  Begin",
                 "CDR3 Begin",
                 "CDR3 End",
-                "FR4 End",
+                "FR4  End",
             )
 
             if (showAlignmentsBoundaries) {
@@ -343,6 +340,7 @@ object Coverage {
                 panelBorder = elementRect(),
                 panelGrid = elementBlank(),
                 axisLineY = elementLine(),
+                legendTitle = elementBlank(),
             )
 
             plt += xlab(

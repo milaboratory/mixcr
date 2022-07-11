@@ -81,6 +81,7 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
                 hLabelsSize,
                 vLabelsSize,
                 false,
+                parsePallete(),
                 width,
                 height
         );

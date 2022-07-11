@@ -37,6 +37,11 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
             description = "Plot in absolute values instead of percent"
     )
     public boolean absoluteValues = false;
+    @Option(
+            names = "--align-chain-usage",
+            description = "When specifying .clnx files on input force to plot chain usage for alignments"
+    )
+    public boolean alignChainUsage = false;
 
     @Override
     protected List<String> getInputFiles() {
@@ -58,7 +63,12 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
         switch (fileType) {
             case CLNA:
             case CLNS:
-                plt = ChainUsage.INSTANCE.chainUsageAssemble(
+                if (alignChainUsage)
+                    plt = ChainUsage.INSTANCE.chainUsageAlign(
+                            files,
+                            !absoluteValues
+                    );
+                else plt = ChainUsage.INSTANCE.chainUsageAssemble(
                         files,
                         !absoluteValues
                 );

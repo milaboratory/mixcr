@@ -5,3 +5,5 @@
 # Removed `pipelineInfo` command
 # Save all MiXCR reports: now possible to export reports directly from vdjca/clns/clna files using `mixcr exportReports --json alignments.vdjca reports.jsonl`
 # Added basic QC plots for alignment rate, chain usage, read coverage; see `mixcr exportQc help`
+# Added --palette option for plots (gene usage, overlap)
+# Fix minor bug in a header row of preprocessors summary tables

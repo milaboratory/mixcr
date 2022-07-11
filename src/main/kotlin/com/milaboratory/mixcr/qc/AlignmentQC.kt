@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.cli.AlignerReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
 import jetbrains.letsPlot.*
 import jetbrains.letsPlot.geom.geomBar
+import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.label.ylab
@@ -111,6 +112,8 @@ object AlignmentQC {
 
         plt += ylab(if (percent) "%" else "# reads")
         plt += xlab("")
+        plt += ggtitle("Alignments rate")
+
         plt += coordFlip()
 
         plt += theme(
@@ -122,16 +125,14 @@ object AlignmentQC {
             legendTitle = elementBlank(),
             legendText = elementText(),
 
-            title = elementText()
+            title = elementText(),
         )
             .legendPositionTop()
             .legendDirectionVertical()
 
+
         plt += ggsize(900, 100 + 25 * files.size)
 
-        plt += labs(
-            title = "Alignments rate",
-        )
 
         plt
     }

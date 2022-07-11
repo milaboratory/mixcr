@@ -252,7 +252,7 @@ public class SetPreprocessorSummary {
         List<String> header = new ArrayList<>();
         header.add("characteristic");
         header.add("sample");
-        for (int i = 0; i < (nCols - 1) / 5; i++) {
+        for (int i = 0; i < (nCols - 2) / 5; i++) {
             String suff;
             if (i == 0)
                 suff = "";

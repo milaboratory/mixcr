@@ -66,6 +66,7 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
                         hLabelsSize,
                         vLabelsSize,
                         false,
+                        parsePallete(),
                         width,
                         height
                 ));
