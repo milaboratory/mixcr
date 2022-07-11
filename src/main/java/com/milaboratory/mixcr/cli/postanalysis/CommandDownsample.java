@@ -19,9 +19,8 @@ import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.ui.ClonotypeDataset;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
+import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
@@ -103,11 +102,9 @@ public class CommandDownsample extends MiXCRCommand {
                         new ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault())
                 ).collect(Collectors.toList());
 
-        SetPreprocessorFactory<Clone> preproc = PostanalysisParameters
-                .parseDownsampling(this.downsampling, CommandPa.extractTagsInfo(getInputFiles()), false)
-                .filterFirst(new ElementPredicate.IncludeChains(Chains.getByName(chains)));
-        if (onlyProductive)
-            preproc = PostanalysisParameters.filterOnlyProductive(preproc);
+        SetPreprocessorFactory<Clone> preproc = DownsamplingParameters
+                .parse(this.downsampling, CommandPa.extractTagsInfo(getInputFiles()), false, onlyProductive)
+                .getPreproc(Chains.getByName(chains));
 
         Dataset<Clone>[] result = SetPreprocessor.processDatasets(preproc.newInstance(), datasets);
 

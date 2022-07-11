@@ -15,10 +15,9 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.cli.MiXCRCommand;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
+import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
-import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -123,11 +122,7 @@ public abstract class CommandPa extends MiXCRCommand {
     static TagsInfo extractTagsInfo(List<String> l) {
         Set<TagsInfo> set = new HashSet<>();
         for (String in : l) {
-            try {
-                set.add(CloneSetIO.mkReader(Paths.get(in), VDJCLibraryRegistry.getDefault()).getTagsInfo());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            set.add(CloneSetIO.extractTagsInfo(Paths.get(in)));
         }
         if (set.size() != 1) {
             throw new IllegalArgumentException("Input files have different tags structure");
@@ -141,7 +136,7 @@ public abstract class CommandPa extends MiXCRCommand {
         if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
         try {
-            PostanalysisParameters.parseDownsampling(defaultDownsampling, getTagsInfo(), dropOutliers);
+            DownsamplingParameters.parse(defaultDownsampling, getTagsInfo(), dropOutliers, onlyProductive);
         } catch (Throwable t) {
             throwValidationException(t.getMessage());
         }

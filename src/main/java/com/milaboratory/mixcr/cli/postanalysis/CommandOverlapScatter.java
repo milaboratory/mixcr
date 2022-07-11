@@ -18,18 +18,15 @@ import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatterRow;
-import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
+import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
-import io.repseq.core.GeneFeature;
 import jetbrains.letsPlot.Figure;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
@@ -38,7 +35,6 @@ import picocli.CommandLine.Parameters;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -105,21 +101,14 @@ public class CommandOverlapScatter extends MiXCRCommand {
 
     @Override
     public void run0() throws Exception {
-        SetPreprocessorFactory<Clone> preproc = PostanalysisParameters.
-                parseDownsampling(downsampling, CommandPa.extractTagsInfo(getInputFiles()), false);
+        DownsamplingParameters preproc = DownsamplingParameters.
+                parse(downsampling, CommandPa.extractTagsInfo(getInputFiles()), false, onlyProductive);
 
         for (NamedChains curChains : this.chains == null
                 ? Arrays.asList(TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED)
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList())) {
 
-            List<ElementPredicate<Clone>> filters = new ArrayList<>();
-            if (onlyProductive) {
-                filters.add(new ElementPredicate.NoOutOfFrames(GeneFeature.CDR3));
-                filters.add(new ElementPredicate.NoStops(GeneFeature.CDR3));
-            }
-            filters.add(new ElementPredicate.IncludeChains(curChains.chains));
-
-            OverlapPreprocessorAdapter.Factory<Clone> downsampling = new OverlapPreprocessorAdapter.Factory<>(preproc.filterFirst(filters));
+            OverlapPreprocessorAdapter.Factory<Clone> downsampling = new OverlapPreprocessorAdapter.Factory<>(preproc.getPreproc(curChains.chains));
 
             Dataset<OverlapGroup<Clone>> dataset = SetPreprocessor.processDatasets(downsampling.newInstance(),
                     OverlapUtil.overlap(

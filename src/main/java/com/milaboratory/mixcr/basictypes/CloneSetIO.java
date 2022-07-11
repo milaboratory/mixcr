@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -68,4 +69,11 @@ public final class CloneSetIO {
         }
     }
 
+    public static TagsInfo extractTagsInfo(Path file) {
+        try (CloneReader reader = mkReader(file, VDJCLibraryRegistry.getDefault())) {
+            return reader.getTagsInfo();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

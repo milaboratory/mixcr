@@ -174,7 +174,6 @@ public class SetPreprocessorSummary {
     /**
      * Write preprocessing summary data to CSV file with columns characteristic | samples | ....
      */
-    @SuppressWarnings("unchecked")
     public static void overlapByCharToCSV(Path path,
                                           PostanalysisSchema<OverlapGroup<Clone>> schema,
                                           PostanalysisResult result,

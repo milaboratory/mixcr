@@ -18,31 +18,34 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import org.junit.Test;
 
-public class PostanalysisParametersTest {
+public class DownsamplingParametersTest {
     @Test
     public void test1() {
-        PostanalysisParameters.parseDownsampling(
+        DownsamplingParameters.parse(
                 "count-umi-auto",
                 new TagsInfo(2, new TagInfo(TagType.Molecule, TagValueType.ByteString, "UMI", 1)),
-                false
+                false,
+                true
         );
     }
 
     @Test
     public void test2() {
-        PostanalysisParameters.parseDownsampling(
+        DownsamplingParameters.parse(
                 "top-reads-1000",
                 null,
-                false
+                false,
+                true
         );
     }
 
     @Test
     public void test3() {
-        PostanalysisParameters.parseDownsampling(
+        DownsamplingParameters.parse(
                 "cumtop-reads-0.5",
                 null,
-                false
+                false,
+                true
         );
     }
 }

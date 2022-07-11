@@ -15,13 +15,9 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
-import com.milaboratory.mixcr.postanalysis.WeightFunctions;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
-import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
-import com.milaboratory.mixcr.postanalysis.preproc.FilterPreprocessor;
-import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersPreset;
@@ -66,14 +62,8 @@ public class CommandPaOverlap extends CommandPa {
     @Override
     @SuppressWarnings("unchecked")
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size(), getTagsInfo());
-        PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(true, groups)
-                .transform(ch -> ch.override(ch.name,
-                        ch.preprocessor
-                                .before(new OverlapPreprocessorAdapter.Factory<>(
-                                        new FilterPreprocessor.Factory<>(WeightFunctions.Count,
-                                                new ElementPredicate.IncludeChains(group.chains.chains)))))
-                );
+        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size(), group.chains.chains, getTagsInfo());
+        PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(true, groups);
 
         OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
                 samples,
