@@ -24,7 +24,7 @@ mixcr analyze amplicon \
   --impute-germline-on-export --json-report case9 \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case9
 
-assert "cat case9.align.jsonl | head -n 1 | jq -r .chainUsage.chains.TRA" "198684"
+assert "cat case9.align.jsonl | head -n 1 | jq -r .chainUsage.chains.TRAD" "198684"
 assert "cat case9.assemble.jsonl | head -n 1 | jq -r .readsInClones" "162874"
 assert "cat case9.assembleContigs.jsonl | head -n 1 | jq -r .longestContigLength" "227"
 assert "cat case9.assembleContigs.jsonl | head -n 1 | jq -r .clonesWithAmbiguousLetters" "981"

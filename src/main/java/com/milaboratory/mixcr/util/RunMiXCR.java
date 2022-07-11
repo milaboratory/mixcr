@@ -32,7 +32,9 @@ import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.AlignerReport;
+import com.milaboratory.mixcr.cli.AlignerReportBuilder;
 import com.milaboratory.mixcr.cli.CloneAssemblerReport;
+import com.milaboratory.mixcr.cli.CloneAssemblerReportBuilder;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
@@ -47,8 +49,10 @@ import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static cc.redberry.pipe.CUtils.chunked;
@@ -73,8 +77,9 @@ public final class RunMiXCR {
             assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
                     false, align.usedGenes, align.parameters.alignerParameters);
 
-            CloneAssemblerReport report = new CloneAssemblerReport();
+            CloneAssemblerReportBuilder report = new CloneAssemblerReportBuilder();
             assembler.setListener(report);
+            report.setTotalReads(align.totalNumberOfReads);
 
             AlignmentsProvider aProvider = new AlignmentsProvider() {
                 @Override
@@ -102,7 +107,7 @@ public final class RunMiXCR {
             assemblerRunner.run();
 
             CloneSet cloneSet = assemblerRunner.getCloneSet(align.parameters.alignerParameters, align.tagsInfo);
-            return new AssembleResult(align, cloneSet, report, assembler);
+            return new AssembleResult(align, cloneSet, report.buildReport(), assembler);
         } finally {
             if (close)
                 assembler.close();
@@ -112,28 +117,10 @@ public final class RunMiXCR {
     public static FullSeqAssembleResult assembleContigs(final AssembleResult assemble) {
         AlignResult align = assemble.alignResult;
 
-        File clnaFile = getTempFile();
-        try (ClnAWriter writer = new ClnAWriter(null, clnaFile, systemTempFolderDestination("runmixcr.assembleContigs"))) {
-            // writer will supply current stage and completion percent to the progress reporter
-            SmartProgressReporter.startProgressReport(writer);
-            // Writing clone block
-
-            writer.writeClones(assemble.cloneSet);
-            PreCloneReader preCloneReader = align.asPreCloneReader();
-            // Pre-soring alignments
-            try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(
-                    preCloneReader.readAlignments(),
-                    assemble.cloneAssembler.getAssembledReadsPort())) {
-                writer.collateAlignments(merged, assemble.cloneAssembler.getAlignmentsCount());
-            }
-            writer.writeAlignmentsAndIndex();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
         int totalClonesCount = 0;
         File tmpFile = getTempFile();
-        try (ClnAReader reader = new ClnAReader(clnaFile.toPath(), VDJCLibraryRegistry.getDefault(), 2);  // TODO concurrency ???
+        try (ClnAReader reader = assemble.resultReader();
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(tmpFile)));) {
 
             IOUtil.registerGeneReferences(tmpOut, align.usedGenes, align.parameters.alignerParameters);
@@ -203,8 +190,8 @@ public final class RunMiXCR {
                 aligner.addGene(gene);
             }
 
-        AlignerReport report = new AlignerReport();
-        aligner.setEventsListener(report);
+        AlignerReportBuilder reportBuilder = new AlignerReportBuilder();
+        aligner.setEventsListener(reportBuilder);
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = parameters.getReader()) {
 
@@ -222,7 +209,7 @@ public final class RunMiXCR {
                     als.add(t.alignment);
                 }
             }
-            return new AlignResult(parameters, reader.getNumberOfReads(), report, als, genes, null, aligner);
+            return new AlignResult(parameters, reader.getNumberOfReads(), reportBuilder.buildReport(), als, genes, null, aligner);
         }
     }
 
@@ -247,6 +234,27 @@ public final class RunMiXCR {
             this.cloneSet = cloneSet;
             this.report = report;
             this.cloneAssembler = cloneAssembler;
+        }
+
+        private File clnaFile = null;
+
+        public ClnAReader resultReader() throws IOException {
+            if (clnaFile == null) {
+                clnaFile = getTempFile();
+                try (ClnAWriter writer = new ClnAWriter(clnaFile, systemTempFolderDestination("runmixcr.assembleContigs"))) {
+                    writer.writeClones(cloneSet);
+                    PreCloneReader preCloneReader = alignResult.asPreCloneReader();
+                    // Pre-soring alignments
+                    try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(
+                            preCloneReader.readAlignments(),
+                            cloneAssembler.getAssembledReadsPort())) {
+                        writer.collateAlignments(merged, cloneAssembler.getAlignmentsCount());
+                    }
+                    writer.writeFooter(Collections.singletonList(alignResult.report), report);
+                    writer.writeAlignmentsAndIndex();
+                }
+            }
+            return new ClnAReader(clnaFile.toPath(), VDJCLibraryRegistry.getDefault(), 1);
         }
     }
 
@@ -276,13 +284,23 @@ public final class RunMiXCR {
             if (alignmentsFile == null) {
                 alignmentsFile = getTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
-                    writer.header(aligner, null, tagsInfo);
+                    writer.header(aligner.getParameters(), usedGenes, tagsInfo);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);
+                    writer.writeFooter(Collections.emptyList(), report);
                 }
             }
             return new VDJCAlignmentsReader(alignmentsFile);
+        }
+
+        public Path alignmentsPath() {
+            try {
+                resultReader();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return alignmentsFile.toPath();
         }
 
         public PreCloneReader asPreCloneReader() throws IOException {

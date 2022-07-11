@@ -11,18 +11,15 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.cli.BinaryFileInfo;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Objects;
-
-import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 
 public final class CloneSetIO {
+
     public static CloneSet read(String file) throws IOException {
         return read(file, VDJCLibraryRegistry.getDefault());
     }
@@ -36,15 +33,12 @@ public final class CloneSetIO {
     }
 
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        BinaryFileInfo fileInfo = fileInfoExtractorInstance.getFileInfo(file);
-        if (fileInfo == null)
-            throw new RuntimeException("Unsupported file type");
-        switch (Objects.requireNonNull(fileInfo).fileType) {
-            case MAGIC_CLNA:
+        switch (IOUtil.extractFileType(file.toPath())) {
+            case CLNA:
                 try (ClnAReader r = new ClnAReader(file.toPath(), libraryRegistry, 1)) {
                     return r.readCloneSet();
                 }
-            case MAGIC_CLNS:
+            case CLNS:
                 try (ClnsReader r = new ClnsReader(file.toPath(), libraryRegistry)) {
                     return r.getCloneSet();
                 }
@@ -64,10 +58,10 @@ public final class CloneSetIO {
     }
 
     public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry, LambdaSemaphore concurrency) throws IOException {
-        switch (Objects.requireNonNull(fileInfoExtractorInstance.getFileInfo(file.toFile())).fileType) {
-            case MAGIC_CLNA:
+        switch (IOUtil.extractFileType(file)) {
+            case CLNA:
                 return new ClnAReader(file, libraryRegistry, concurrency);
-            case MAGIC_CLNS:
+            case CLNS:
                 return new ClnsReader(file, libraryRegistry, concurrency);
             default:
                 throw new RuntimeException("Unsupported file type");

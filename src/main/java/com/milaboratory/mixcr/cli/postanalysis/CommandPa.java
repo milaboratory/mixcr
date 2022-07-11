@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
+import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
@@ -39,7 +39,7 @@ import static java.util.stream.Collectors.toList;
 /**
  *
  */
-public abstract class CommandPa extends ACommandWithOutputMiXCR {
+public abstract class CommandPa extends MiXCRCommand {
     public static final NamedChains[] CHAINS = {TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED};
 
     @Parameters(description = "cloneset.{clns|clna}... result.json.gz|result.json")

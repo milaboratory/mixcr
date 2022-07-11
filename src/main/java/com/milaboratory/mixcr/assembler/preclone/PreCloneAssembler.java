@@ -54,7 +54,7 @@ public final class PreCloneAssembler {
             ReferencePoint.JBeginTrimmed
     };
 
-    private final PreCloneAssemblerReport report = new PreCloneAssemblerReport();
+    private final PreCloneAssemblerReportBuilder report = new PreCloneAssemblerReportBuilder();
     private final AtomicLong idGenerator = new AtomicLong();
 
     private final PreCloneAssemblerParameters parameters;
@@ -93,7 +93,7 @@ public final class PreCloneAssembler {
         return parameters;
     }
 
-    public PreCloneAssemblerReport getReport() {
+    public PreCloneAssemblerReportBuilder getReport() {
         return report;
     }
 

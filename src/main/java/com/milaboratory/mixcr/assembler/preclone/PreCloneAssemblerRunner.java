@@ -79,7 +79,7 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
         this.tempDest = tempDest;
     }
 
-    public PreCloneAssemblerReport getReport() {
+    public PreCloneAssemblerReportBuilder getReport() {
         return assembler.getReport();
     }
 

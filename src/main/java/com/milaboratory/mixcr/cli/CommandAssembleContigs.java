@@ -13,17 +13,9 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
-import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator;
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
+import com.milaboratory.mixcr.assembler.fullseq.*;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
@@ -42,6 +34,7 @@ import io.repseq.core.VDJCGeneId;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.*;
 import java.util.*;
@@ -54,10 +47,16 @@ import static com.milaboratory.util.StreamUtil.noMerge;
         sortOptions = true,
         separator = " ",
         description = "Assemble full sequences.")
-public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
-    static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
+public class CommandAssembleContigs extends MiXCRCommand {
+    public static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
 
     public int threads = Runtime.getRuntime().availableProcessors();
+
+    @Parameters(description = "clones.clna", index = "0")
+    public String in;
+
+    @Parameters(description = "clones.clns", index = "1")
+    public String out;
 
     @Option(description = "Processing threads",
             names = {"-t", "--threads"})
@@ -86,6 +85,16 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
             names = {"-j", "--json-report"})
     public String jsonReport = null;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
     public FullSeqAssemblerParameters getFullSeqAssemblerParameters() {
         FullSeqAssemblerParameters p = FullSeqAssemblerParameters.getByName("default");
         if (!overrides.isEmpty()) {
@@ -97,16 +106,12 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         return p;
     }
 
-    @Override
-    public ActionConfiguration getConfiguration() {
-        return new AssembleContigsConfiguration(getFullSeqAssemblerParameters());
-    }
+    final FullSeqAssemblerReportBuilder reportBuilder = new FullSeqAssemblerReportBuilder();
 
     @Override
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         long beginTimestamp = System.currentTimeMillis();
 
-        final FullSeqAssemblerReport report = new FullSeqAssemblerReport();
         FullSeqAssemblerParameters assemblerParameters = getFullSeqAssemblerParameters();
         int totalClonesCount = 0;
         List<VDJCGene> genes;
@@ -114,10 +119,12 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
         CloneAssemblerParameters cloneAssemblerParameters;
         TagsInfo tagsInfo;
         VDJCSProperties.CloneOrdering ordering;
+        List<MiXCRCommandReport> reports;
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out))); // TODO ????
              BufferedWriter debugReport = debugReportFile == null ? null : new BufferedWriter(new OutputStreamWriter(new FileOutputStream(debugReportFile)))) {
 
+            reports = reader.reports();
             ordering = reader.ordering();
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
@@ -171,7 +178,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
 
                     if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
                         // Something went really wrong
-                        report.onAssemblyCanceled(clone);
+                        reportBuilder.onAssemblyCanceled(clone);
                         return new Clone[]{clone};
                     }
 
@@ -200,7 +207,7 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                             bestGenes.get(GeneType.Variable), bestGenes.get(GeneType.Joining)
                     );
 
-                    fullSeqAssembler.setReport(report);
+                    fullSeqAssembler.setReport(reportBuilder);
 
                     FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(cloneAlignments::alignments);
 
@@ -238,11 +245,11 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                     tmpOut.writeObject(cl);
             }
 
-            assert report.getInitialCloneCount() == reader.numberOfClones();
+            assert reportBuilder.getInitialCloneCount() == reader.numberOfClones();
         }
 
-        assert report.getFinalCloneCount() == totalClonesCount;
-        assert report.getFinalCloneCount() >= report.getInitialCloneCount();
+        assert reportBuilder.getFinalCloneCount() == totalClonesCount;
+        assert reportBuilder.getFinalCloneCount() >= reportBuilder.getInitialCloneCount();
 
         int cloneId = 0;
         Clone[] clones = new Clone[totalClonesCount];
@@ -257,60 +264,26 @@ public class CommandAssembleContigs extends ACommandWithSmartOverwriteWithSingle
                 tagsInfo, ordering);
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
-            writer.writeCloneSet(getFullPipelineConfiguration(), cloneSet);
-        }
+            writer.writeCloneSet(cloneSet);
 
-        ReportWrapper reportWrapper = new ReportWrapper(ASSEMBLE_CONTIGS_COMMAND_NAME, report);
-        reportWrapper.setStartMillis(beginTimestamp);
-        reportWrapper.setInputFiles(in);
-        reportWrapper.setOutputFiles(out);
-        reportWrapper.setCommandLine(getCommandLineArguments());
-        reportWrapper.setFinishMillis(System.currentTimeMillis());
 
-        // Writing report to stout
-        System.out.println("============= Report ==============");
-        ReportUtil.writeReportToStdout(report);
+            reportBuilder.setStartMillis(beginTimestamp);
+            reportBuilder.setInputFiles(in);
+            reportBuilder.setOutputFiles(out);
+            reportBuilder.setCommandLine(getCommandLineArguments());
+            reportBuilder.setFinishMillis(System.currentTimeMillis());
 
-        if (reportFile != null)
-            ReportUtil.appendReport(reportFile, reportWrapper);
+            FullSeqAssemblerReport report = reportBuilder.buildReport();
+            // Writing report to stout
+            ReportUtil.writeReportToStdout(report);
 
-        if (jsonReport != null)
-            ReportUtil.appendJsonReport(jsonReport, reportWrapper);
-    }
+            if (reportFile != null)
+                ReportUtil.appendReport(reportFile, report);
 
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class AssembleContigsConfiguration implements ActionConfiguration {
-        public final FullSeqAssemblerParameters assemblerParameters;
+            if (jsonReport != null)
+                ReportUtil.appendJsonReport(jsonReport, report);
 
-        @JsonCreator
-        public AssembleContigsConfiguration(
-                @JsonProperty("assemblerParameters") FullSeqAssemblerParameters assemblerParameters) {
-            this.assemblerParameters = assemblerParameters;
-        }
-
-        @Override
-        public String actionName() {
-            return ASSEMBLE_CONTIGS_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            AssembleContigsConfiguration that = (AssembleContigsConfiguration) o;
-            return Objects.equals(assemblerParameters, that.assemblerParameters);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(assemblerParameters);
+            writer.writeFooter(reports, report);
         }
     }
 }

@@ -13,7 +13,9 @@ package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.Position.*
+import com.milaboratory.miplots.color.DiscretePalette
 import com.milaboratory.miplots.color.Palettes
+import com.milaboratory.miplots.color.UniversalPalette
 import com.milaboratory.miplots.heatmap.*
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters.Companion.hLabelSize
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters.Companion.vLabelSize
@@ -34,6 +36,7 @@ data class HeatmapParameters(
     val hLabelsSize: Double,
     val vLabelsSize: Double,
     val fillNaZeroes: Boolean,
+    val palette: UniversalPalette,
     override val width: Int,
     override val height: Int,
 ) : WithPlotSize {
@@ -67,7 +70,7 @@ fun mkHeatmap(
         yOrder = if (params.clusterY) Hierarchical() else null,
         fillNoValue = params.fillNaZeroes,
         noValue = 0.0,
-        fillPalette = Palettes.Diverging.lime90rose130
+        fillPalette = params.palette
     )
 
     plt = plt.withBorder()
@@ -108,9 +111,9 @@ fun mkHeatmap(
     }
 
     if (params.clusterX)
-        plt = plt.withDendrogram(pos = Position.Top, 0.1)
+        plt = plt.withDendrogram(pos = Top, 0.1)
     if (params.clusterY)
-        plt = plt.withDendrogram(pos = Position.Right, 0.1)
+        plt = plt.withDendrogram(pos = Right, 0.1)
 
     plt = plt.withLabels(
         Bottom,

@@ -220,13 +220,13 @@ public final class FullSeqAssembler {
         this.rightAssemblingFeatureBound = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength;
     }
 
-    FullSeqAssemblerReport report = null;
+    FullSeqAssemblerReportBuilder report = null;
 
-    public void setReport(FullSeqAssemblerReport report) {
+    public void setReport(FullSeqAssemblerReportBuilder report) {
         this.report = report;
     }
 
-    public FullSeqAssemblerReport getReport() {
+    public FullSeqAssemblerReportBuilder getReport() {
         return report;
     }
 

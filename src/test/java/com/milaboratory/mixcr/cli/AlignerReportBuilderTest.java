@@ -11,18 +11,16 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.cli.ACommand;
+import com.milaboratory.util.GlobalObjectMappers;
+import org.junit.Test;
 
-/**
- *
- */
-public abstract class ACommandMiXCR extends ACommand implements MiXCRCommand {
-    public ACommandMiXCR() {
-        super("mixcr");
-    }
+import static org.junit.Assert.assertNotNull;
 
-    @Override
-    public void validateInfo(String inputFile) {
-        MiXCRCommand.super.validateInfo(inputFile);
+public class AlignerReportBuilderTest {
+
+    @Test
+    public void test1() throws Exception {
+        AlignerReportBuilder rep = new AlignerReportBuilder();
+        assertNotNull(GlobalObjectMappers.getPretty().writeValueAsString(rep));
     }
 }

@@ -28,6 +28,7 @@ import org.junit.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -60,7 +61,7 @@ public class IOTest {
 
 
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.header(aligner, null, null);
+                writer.header(aligner, null);
 
                 header = writer.getPosition();
 
@@ -74,6 +75,7 @@ public class IOTest {
                 }
 
                 writer.setNumberOfProcessedReads(numberOfReads = reader.getNumberOfReads());
+                writer.writeFooter(Collections.emptyList(), null);
             }
         }
 

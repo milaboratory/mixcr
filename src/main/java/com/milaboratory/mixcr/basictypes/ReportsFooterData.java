@@ -9,15 +9,12 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.basictypes;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.util.Report;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 
-public interface CommandReport extends Report {
-    /**
-     * Command (e.g. align, assemble, etc.) that produced this report.
-     */
-    @JsonProperty("action")
-    String getCommand();
+import java.util.List;
+
+public interface ReportsFooterData {
+    List<MiXCRCommandReport> reports();
 }

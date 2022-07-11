@@ -9,18 +9,15 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli.qc;
 
-import com.milaboratory.cli.ACommandWithOutput;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
-/** A command which produce output files */
-public abstract class ACommandWithOutputMiXCR extends ACommandWithOutput implements MiXCRCommand {
-    public ACommandWithOutputMiXCR() {
-        super("mixcr");
-    }
-
-    @Override
-    public void validateInfo(String inputFile) {
-        MiXCRCommand.super.validateInfo(inputFile);
-    }
-}
+@Command(name = "qc",
+        separator = " ",
+        description = "Export QC plots.",
+        subcommands = {
+                CommandLine.HelpCommand.class
+        })
+public class CommandExportQc {}

@@ -11,8 +11,8 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
+import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.postanalysis.plots.MetadataKt;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
@@ -31,7 +31,7 @@ import static java.util.stream.Collectors.toList;
 /**
  *
  */
-public abstract class CommandPaExport extends ACommandWithOutputMiXCR {
+public abstract class CommandPaExport extends MiXCRCommand {
     @Parameters(description = "Input file with postanalysis results.", index = "0", defaultValue = "pa.json.gz")
     public String in;
     @Option(description = CommonDescriptions.METADATA,

@@ -73,7 +73,7 @@ public class ClnAReaderTest {
                 assemble.cloneAssembler.getAssembledReadsPort());
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
+        ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
 
         List<Clone> newClones = assemble.cloneSet.getClones().stream()
                 .map(Clone::resetParentCloneSet)
@@ -89,8 +89,8 @@ public class ClnAReaderTest {
         OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
         CountingOutputPort<VDJCAlignments> alsc = new CountingOutputPort<>(als);
         writer.collateAlignments(alsc, align.alignments.size());
+        writer.writeFooter(Collections.emptyList(), null);
         writer.writeAlignmentsAndIndex();
-
         writer.close();
 
         ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(),
@@ -123,15 +123,15 @@ public class ClnAReaderTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
         File file = TempFileManager.getTempFile();
-        ClnAWriter writer = new ClnAWriter(null, file, smartTempDestination(file, "", false));
+        ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
                 align.parameters.alignerParameters,
                 CloneAssemblerParametersPresets.getByName("default"),
                 null,
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
+        writer.writeFooter(Collections.emptyList(), null);
         writer.writeAlignmentsAndIndex();
-
         writer.close();
 
         ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(), 17);

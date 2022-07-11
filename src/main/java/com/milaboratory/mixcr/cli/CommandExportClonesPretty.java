@@ -22,11 +22,13 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
@@ -36,10 +38,16 @@ import static cc.redberry.primitives.FilterUtil.and;
         sortOptions = true,
         separator = " ",
         description = "Export verbose information about clones.")
-public class CommandExportClonesPretty extends ACommandSimpleExportMiXCR {
+public class CommandExportClonesPretty extends MiXCRCommand {
     public static final int LINE_LENGTH = 80;
     public static final int LINE_OFFSET = 7;
     public static final int MAX_LENGTH = 2 * LINE_OFFSET + LINE_LENGTH;
+
+    @Parameters(index = "0", description = "clones.[clns|clna]")
+    public String in;
+
+    @Parameters(index = "1", description = "output.txt", arity = "0..1")
+    public String out = null;
 
     @Option(description = "Limit number of alignments before filtering",
             names = {"-b", "--limitBefore"})
@@ -69,6 +77,16 @@ public class CommandExportClonesPretty extends ACommandSimpleExportMiXCR {
     @Option(description = "Only output clones where target clonal sequence contains sub-sequence.",
             names = {"-r", "--clonal-sequence-contains"})
     public String csContain = null;
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return out == null ? Collections.emptyList() : Collections.singletonList(out);
+    }
 
     public Chains getChain() {
         return Chains.parse(chain);

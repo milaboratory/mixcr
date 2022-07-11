@@ -19,7 +19,10 @@ import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
+import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.cli.afiltering.AFilter;
 import com.milaboratory.util.NSequenceWithQualityPrintHelper;
 import gnu.trove.set.hash.TLongHashSet;
@@ -28,12 +31,14 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
@@ -43,7 +48,13 @@ import static cc.redberry.primitives.FilterUtil.and;
         sortOptions = true,
         separator = " ",
         description = "Export verbose information about alignments.")
-public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
+public class CommandExportAlignmentsPretty extends MiXCRCommand {
+    @Parameters(index = "0", description = "alignments.vdjca")
+    public String in;
+
+    @Parameters(index = "1", description = "output.txt", arity = "0..1")
+    public String out = null;
+
     @Option(description = "Output only top hits",
             names = {"-t", "--top"})
     public boolean onlyTop = false;
@@ -100,6 +111,16 @@ public class CommandExportAlignmentsPretty extends ACommandSimpleExportMiXCR {
     @Option(description = "List of clone ids to export",
             names = {"--clone-ids"})
     public List<Long> cloneIds = new ArrayList<>();
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return out == null ? Collections.emptyList() : Collections.singletonList(out);
+    }
 
     TLongHashSet getReadIds() {
         if (readIds.isEmpty())

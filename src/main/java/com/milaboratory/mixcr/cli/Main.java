@@ -14,6 +14,10 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.cli.ValidationException;
 import com.milaboratory.milm.MiXCRMain;
 import com.milaboratory.mixcr.cli.postanalysis.*;
+import com.milaboratory.mixcr.cli.qc.CommandExportQc;
+import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign;
+import com.milaboratory.mixcr.cli.qc.CommandExportQcChainUsage;
+import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.VersionInfo;
@@ -170,6 +174,9 @@ public final class Main {
                 .addSubcommand("exportClones", CommandExport.mkClonesSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
+                .addSubcommand("exportReports", CommandExportReports.class)
+                .addSubcommand("exportQc", CommandExportQc.class)
+
                 .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
 
                 .addSubcommand("exportAirr", CommandExportAirr.class)
@@ -191,9 +198,7 @@ public final class Main {
                 .addSubcommand("alignmentsStat", CommandAlignmentsStats.class)
                 .addSubcommand("listLibraries", CommandListLibraries.class)
                 .addSubcommand("versionInfo", CommandVersionInfo.class)
-                .addSubcommand("pipelineInfo", CommandPipelineInfo.class)
-                .addSubcommand("slice", CommandSlice.class)
-                .addSubcommand("info", CommandInfo.class);
+                .addSubcommand("slice", CommandSlice.class);
 
         cmd.getSubcommands()
                 .get("analyze")
@@ -215,6 +220,12 @@ public final class Main {
                 .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportIsotypeUsage.class))
                 .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJUsage.class))
                 .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class));
+
+        cmd.getSubcommands()
+                .get("exportQc")
+                .addSubcommand("align", CommandSpec.forAnnotatedObject(CommandExportQcAlign.class))
+                .addSubcommand("chainUsage", CommandSpec.forAnnotatedObject(CommandExportQcChainUsage.class))
+                .addSubcommand("coverage", CommandSpec.forAnnotatedObject(CommandExportQcCoverage.class));
 
         cmd.setSeparator(" ");
         return cmd;

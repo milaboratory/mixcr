@@ -16,6 +16,7 @@ import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.LambdaSemaphore;
@@ -168,6 +169,11 @@ public final class OverlapUtil {
             @Override
             public CloneAssemblerParameters getAssemblerParameters() {
                 return inner.getAssemblerParameters();
+            }
+
+            @Override
+            public List<MiXCRCommandReport> reports() {
+                return inner.reports();
             }
         };
     }

@@ -12,12 +12,6 @@
 package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner;
@@ -31,13 +25,11 @@ import com.milaboratory.util.*;
 import io.repseq.core.*;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
 import static com.milaboratory.util.TempFileManager.smartTempDestination;
@@ -45,8 +37,14 @@ import static com.milaboratory.util.TempFileManager.smartTempDestination;
 @Command(name = ASSEMBLE_COMMAND_NAME,
         separator = " ",
         description = "Assemble clones.")
-public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandAssemble extends MiXCRCommand {
     static final String ASSEMBLE_COMMAND_NAME = "assemble";
+
+    @Parameters(description = "alignments.vdjca", index = "0")
+    public String in;
+
+    @Parameters(description = "clones.[clns|clna]", index = "1")
+    public String out;
 
     @Option(description = "Clone assembling parameters preset.",
             names = {"-p", "--preset"})
@@ -103,9 +101,13 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     private Map<String, String> preCloneAssemblerOverrides = new HashMap<>();
 
     @Override
-    public ActionConfiguration getConfiguration() {
-        ensureParametersInitialized();
-        return new AssembleConfiguration(getCloneAssemblerParameters(), isClnaOutput, ordering);
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
     }
 
     // Extracting V/D/J/C gene list from input vdjca file
@@ -191,10 +193,10 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
     /**
      * Assemble report
      */
-    public final CloneAssemblerReport report = new CloneAssemblerReport();
+    public final CloneAssemblerReportBuilder reportBuilder = new CloneAssemblerReportBuilder();
 
     @Override
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
@@ -202,8 +204,8 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         TempFileDest tempDest = smartTempDestination(out, "", useSystemTemp);
 
         // Checking consistency between actionParameters.doWriteClnA() value and file extension
-        if ((getOutput().toLowerCase().endsWith(".clna") && !isClnaOutput) ||
-                (getOutput().toLowerCase().endsWith(".clns") && isClnaOutput))
+        if ((out.toLowerCase().endsWith(".clna") && !isClnaOutput) ||
+                (out.toLowerCase().endsWith(".clns") && isClnaOutput))
             warn("WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and\n" +
                     ".clna if -a / --write-alignments options specified.");
 
@@ -221,12 +223,12 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                     isClnaOutput,
                     genes, alignerParameters.getFeaturesToAlignMap())) {
                 // Creating event listener to collect run statistics
-                report.setStartMillis(beginTimestamp);
-                report.setInputFiles(in);
-                report.setOutputFiles(out);
-                report.setCommandLine(getCommandLineArguments());
+                reportBuilder.setStartMillis(beginTimestamp);
+                reportBuilder.setInputFiles(in);
+                reportBuilder.setOutputFiles(out);
+                reportBuilder.setCommandLine(getCommandLineArguments());
 
-                assembler.setListener(report);
+                assembler.setListener(reportBuilder);
 
                 PreCloneReader preClones;
                 if (tagsInfo.hasTagsWithType(TagType.Cell) || tagsInfo.hasTagsWithType(TagType.Molecule)) {
@@ -253,7 +255,7 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                     assemblerRunner.run();
 
                     // Setting report into a big report object
-                    report.setPreCloneAssemblerReport(assemblerRunner.getReport());
+                    reportBuilder.setPreCloneAssemblerReportBuilder(assemblerRunner.getReport());
 
                     preClones = assemblerRunner.createReader();
                 } else
@@ -280,13 +282,16 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                 final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters, tagsInfo), getOrdering());
 
                 // Passing final cloneset to assemble last pieces of statistics for report
-                report.onClonesetFinished(cloneSet);
+                reportBuilder.onClonesetFinished(cloneSet);
+
+                assert cloneSet.getClones().size() == reportBuilder.getCloneCount();
+                reportBuilder.setTotalReads(alignmentsReader.getNumberOfReads());
+
 
                 // Writing results
-                PipelineConfiguration pipelineConfiguration = getFullPipelineConfiguration();
+                CloneAssemblerReport report;
                 if (isClnaOutput) {
-                    try (ClnAWriter writer = new ClnAWriter(pipelineConfiguration, out,
-                            tempDest, highCompression)) {
+                    try (ClnAWriter writer = new ClnAWriter(out, tempDest, highCompression)) {
 
                         // writer will supply current stage and completion percent to the progress reporter
                         SmartProgressReporter.startProgressReport(writer);
@@ -301,23 +306,23 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
                             writer.collateAlignments(merged, assembler.getAlignmentsCount());
                         }
 
+                        reportBuilder.setFinishMillis(System.currentTimeMillis());
+                        report = reportBuilder.buildReport();
+
+                        writer.writeFooter(alignmentsReader.reports(), report);
                         writer.writeAlignmentsAndIndex();
                     }
                 } else
                     try (ClnsWriter writer = new ClnsWriter(out)) {
-                        writer.writeCloneSet(pipelineConfiguration, cloneSet);
+                        writer.writeCloneSet(cloneSet);
+
+                        reportBuilder.setFinishMillis(System.currentTimeMillis());
+                        report = reportBuilder.buildReport();
+
+                        writer.writeFooter(alignmentsReader.reports(), report);
                     }
 
-                // Writing report
-
-                report.setFinishMillis(System.currentTimeMillis());
-
-                assert cloneSet.getClones().size() == report.getCloneCount();
-
-                report.setTotalReads(alignmentsReader.getNumberOfReads());
-
                 // Writing report to stout
-                System.out.println("============= Report ==============");
                 ReportUtil.writeReportToStdout(report);
 
                 if (reportFile != null)
@@ -354,49 +359,6 @@ public class CommandAssemble extends ACommandWithSmartOverwriteWithSingleInputMi
         @Override
         public int hashCode() {
             return Objects.hash(tags, gene);
-        }
-    }
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class AssembleConfiguration implements ActionConfiguration<AssembleConfiguration> {
-        public final CloneAssemblerParameters assemblerParameters;
-        public final boolean clna;
-        public final VDJCSProperties.CloneOrdering ordering;
-
-        @JsonCreator
-        public AssembleConfiguration(
-                @JsonProperty("assemblerParameters") CloneAssemblerParameters assemblerParameters,
-                @JsonProperty("clna") boolean clna,
-                @JsonProperty("ordering") VDJCSProperties.CloneOrdering ordering) {
-            this.assemblerParameters = assemblerParameters;
-            this.clna = clna;
-            this.ordering = ordering;
-        }
-
-        @Override
-        public String actionName() {
-            return ASSEMBLE_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            AssembleConfiguration that = (AssembleConfiguration) o;
-            return clna == that.clna &&
-                    Objects.equals(assemblerParameters, that.assemblerParameters);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(assemblerParameters, clna);
         }
     }
 }

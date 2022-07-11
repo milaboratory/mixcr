@@ -30,7 +30,7 @@ import java.util.*;
         separator = " ",
         sortOptions = true,
         description = "Calculates the difference between two .clns files.")
-public class CommandClonesDiff extends ACommandWithOutputMiXCR {
+public class CommandClonesDiff extends MiXCRCommand {
     @Parameters(description = "input1.clns", index = "0")
     public String in1;
 
@@ -52,11 +52,11 @@ public class CommandClonesDiff extends ACommandWithOutputMiXCR {
             "with a clone sequence).")
     public boolean c = false;
 
-    public boolean useV() { return v; }
+    public boolean useV() {return v;}
 
-    public boolean useJ() { return j; }
+    public boolean useJ() {return j;}
 
-    public boolean useC() { return c; }
+    public boolean useC() {return c;}
 
     //@Parameter(names = {"-o1", "--only-in-first"}, description = "output for alignments contained only " +
     //        "in the first .vdjca file")
@@ -75,6 +75,11 @@ public class CommandClonesDiff extends ACommandWithOutputMiXCR {
     //@Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for match")
     //public int hitsCompareLevel = 1;
 
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Arrays.asList(in1, in2);
+    }
 
     @Override
     protected List<String> getOutputFiles() {

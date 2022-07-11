@@ -30,12 +30,12 @@ import com.milaboratory.util.SmartProgressReporter;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.*;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class CloneAssemblerRunnerTest {
     @Test
@@ -75,12 +75,13 @@ public class CloneAssemblerRunnerTest {
         //write alignments to byte array
         File vdjcaFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
-            writer.header(aligner, null, null);
+            writer.header(aligner, null);
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
                 if (result.alignment != null)
                     writer.write(result.alignment);
             }
+            writer.writeFooter(Collections.emptyList(), null);
         }
 
         AlignmentsProvider alignmentsProvider = new VDJCAlignmentsReader(vdjcaFile);
@@ -114,7 +115,8 @@ public class CloneAssemblerRunnerTest {
         File tmpClnsFile = TempFileManager.getTempFile();
 
         try (ClnsWriter writer = new ClnsWriter(tmpClnsFile)) {
-            writer.writeCloneSet(null, cloneSet);
+            writer.writeCloneSet(cloneSet);
+            writer.writeFooter(Collections.emptyList(), null);
         }
 
         CloneSet cloneSetDeserialized = CloneSetIO.read(tmpClnsFile);

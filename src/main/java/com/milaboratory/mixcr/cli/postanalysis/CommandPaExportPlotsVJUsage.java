@@ -61,6 +61,7 @@ public class CommandPaExportPlotsVJUsage extends CommandPaExportPlotsHeatmap {
                         hLabelsSize,
                         vLabelsSize,
                         false,
+                        parsePallete(),
                         width,
                         height
                 ));

@@ -11,32 +11,24 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.milaboratory.util.Report;
 import com.milaboratory.util.ReportHelper;
 
-public final class ReportWrapper extends AbstractCommandReport {
-    private final String action;
-    private final Report innerReport;
-
-    public ReportWrapper(String action, Report innerReport) {
-        this.action = action;
-        this.innerReport = innerReport;
-    }
-
-    @Override
-    public String getCommand() {
-        return action;
-    }
-
-    @JsonUnwrapped
-    public Report getInnerReport() {
-        return innerReport;
-    }
+public class TagReport implements MiXCRReport {
+//    @JsonProperty("totalReads")
+//    public final long totalReads;
+//    @JsonProperty("matched")
+//    public final long matched;
+//
+//    @JsonCreator
+//    public TagReport(@JsonProperty("totalReads") long totalReads,
+//                     @JsonProperty("matched") long matched) {
+//        this.totalReads = totalReads;
+//        this.matched = matched;
+//    }
 
     @Override
     public void writeReport(ReportHelper helper) {
-        writeSuperReport(helper);
-        innerReport.writeReport(helper);
+//        helper.writeField("Total reads", totalReads);
+//        helper.writePercentAndAbsoluteField("Matched reads", matched, totalReads);
     }
 }

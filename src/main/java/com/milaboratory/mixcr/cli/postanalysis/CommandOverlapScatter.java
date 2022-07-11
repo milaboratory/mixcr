@@ -14,8 +14,8 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.miplots.ExportKt;
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
+import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,7 @@ import static io.repseq.core.Chains.*;
 @Command(name = "overlapScatterPlot",
         separator = " ",
         description = "Plot overlap scatter-plot.")
-public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
+public class CommandOverlapScatter extends MiXCRCommand {
     @Parameters(description = "cloneset_1.{clns|clna}...", index = "0")
     public String in1;
     @Parameters(description = "cloneset_2.{clns|clna}...", index = "1")
@@ -84,6 +85,11 @@ public class CommandOverlapScatter extends ACommandWithOutputMiXCR {
     @Override
     protected List<String> getInputFiles() {
         return Arrays.asList(in1, in2);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
     }
 
     private static String fName(String file) {

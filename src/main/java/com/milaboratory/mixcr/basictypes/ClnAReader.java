@@ -14,9 +14,10 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
+import com.milaboratory.mixcr.cli.MiXCRReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
@@ -41,7 +42,7 @@ import java.util.function.Function;
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader extends PipelineConfigurationReaderMiXCR implements CloneReader, VDJCFileHeaderData, AutoCloseable {
+public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCloseable {
     final PrimitivIHybrid input;
 
     // Index data
@@ -63,7 +64,6 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
     // Read form file header
 
-    final PipelineConfiguration configuration;
     final VDJCAlignerParameters alignerParameters;
     final CloneAssemblerParameters assemblerParameters;
     final TagsInfo tagsInfo;
@@ -76,6 +76,10 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
     // Meta data (also from header)
 
     final String versionInfo;
+
+    private final long reportsStartPosition;
+
+    private final List<MiXCRCommandReport> reports;
 
     public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
         this(path, libraryRegistry, new LambdaSemaphore(concurrency));
@@ -100,7 +104,8 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
 
         // File ending
         long indexBegin;
-        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(-IOUtil.END_MAGIC_LENGTH - 16)) {
+        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(-ClnAWriter.FOOTER_LENGTH)) {
+            this.reportsStartPosition = pi.readLong();
             // Reading key file offsets from last 16 bytes of the file
             this.firstClonePosition = pi.readLong();
             indexBegin = pi.readLong();
@@ -145,22 +150,25 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
             }
 
             this.versionInfo = pi.readUTF();
-            this.configuration = pi.readObject(PipelineConfiguration.class);
             this.alignerParameters = pi.readObject(VDJCAlignerParameters.class);
             this.assemblerParameters = pi.readObject(CloneAssemblerParameters.class);
             this.tagsInfo = pi.readObject(TagsInfo.class);
             this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
             this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.alignerParameters, libraryRegistry);
         }
+
+        // read reports from footer
+        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(reportsStartPosition)) {
+            int nReports = pi.readInt();
+            reports = new ArrayList<>();
+            for (int i = 0; i < nReports; i++) {
+                reports.add((MiXCRCommandReport) pi.readObject(MiXCRReport.class));
+            }
+        }
     }
 
     public ClnAReader(String path, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
         this(Paths.get(path), libraryRegistry, concurrency);
-    }
-
-    @Override
-    public PipelineConfiguration getPipelineConfiguration() {
-        return configuration;
     }
 
     /**
@@ -234,6 +242,11 @@ public final class ClnAReader extends PipelineConfigurationReaderMiXCR implement
      */
     public String getVersionInfo() {
         return versionInfo;
+    }
+
+    @Override
+    public List<MiXCRCommandReport> reports() {
+        return reports;
     }
 
     /**

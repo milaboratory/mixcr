@@ -14,8 +14,8 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.basictypes.ClnsWriter;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
+import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
@@ -33,13 +33,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Command(name = "downsample",
         separator = " ",
         description = "Downsample clonesets.")
-public class CommandDownsample extends ACommandWithOutputMiXCR {
+public class CommandDownsample extends MiXCRCommand {
     @Parameters(description = "cloneset.{clns|clna}...")
     public List<String> in;
 
@@ -68,6 +69,11 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
     @Override
     protected List<String> getInputFiles() {
         return new ArrayList<>(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return getInputFiles().stream().map(this::output).map(Path::toString).collect(Collectors.toList());
     }
 
     private Path output(String input) {
@@ -114,11 +120,12 @@ public class CommandDownsample extends ACommandWithOutputMiXCR {
                     downsampled.add(c);
 
                 ClonotypeDataset r = datasets.get(i);
-                clnsWriter.writeHeader(null,
+                clnsWriter.writeHeader(
                         r.getAlignerParameters(), r.getAssemblerParameters(),
                         r.getTagsInfo(), r.ordering(), r.getUsedGenes(), r.getAlignerParameters(), downsampled.size());
 
                 CUtils.drain(CUtils.asOutputPort(downsampled), clnsWriter.cloneWriter());
+                clnsWriter.writeFooter(Collections.emptyList(), null);
             }
         }
     }

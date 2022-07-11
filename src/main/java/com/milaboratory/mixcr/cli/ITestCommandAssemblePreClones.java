@@ -37,7 +37,7 @@ import static picocli.CommandLine.*;
 @Command(name = "itestAssemblePreClones",
         separator = " ",
         hidden = true)
-public class ITestCommandAssemblePreClones extends ACommandMiXCR {
+public class ITestCommandAssemblePreClones extends MiXCRCommand {
     @Parameters(arity = "4", description = "input_file output_file output_clones output_alignments")
     public List<String> files;
 
@@ -51,6 +51,16 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
 
     @Option(names = "-P", description = "Overrides default pre-clone assembler parameter values.")
     private Map<String, String> preCloneAssemblerOverrides = new HashMap<>();
+
+    @Override
+    protected List<String> getInputFiles() {
+        return files.subList(0, 1);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return files.subList(1, 3);
+    }
 
     @Override
     public void run0() throws Exception {
@@ -78,7 +88,7 @@ public class ITestCommandAssemblePreClones extends ACommandMiXCR {
                     tmp);
             SmartProgressReporter.startProgressReport(assemblerRunner);
             assemblerRunner.run();
-            assemblerRunner.getReport().writeReport(ReportHelper.STDOUT);
+            assemblerRunner.getReport().buildReport().writeReport(ReportHelper.STDOUT);
 
             Set<TagTuple> tagTuples = new HashSet<>();
             TagTuple prevTagKey = null;
