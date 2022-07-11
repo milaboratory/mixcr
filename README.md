@@ -59,6 +59,26 @@ to upgrade already installed MiXCR to the newest version:
     brew update
     brew upgrade mixcr
 
+### Conda
+
+We maintain [Anaconda repository](https://anaconda.org/milaboratories/mixcr) to simplify installation of MiXCR using `conda` package manager. To install latest stable MiXCR build with conda run:
+
+```
+conda install -c milaboratories mixcr
+```
+
+to install a specific version run:
+
+```
+conda install -c milaboratories mixcr=3.0.12
+```
+
+`mixcr` package specifies `openjdk` as a dependency, if you already have Java installed on your system, it might be a good idea to prevent conda from installing another copy of JDK, to do that use `--no-deps` flag:
+
+```
+conda install -c milaboratories mixcr --no-deps
+```
+
 ### Docker
 
 Official MiXCR Docker repository is hosted on the GitHub along with this repo.
