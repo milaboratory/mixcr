@@ -525,11 +525,7 @@ internal class ClusterProcessor(
             min(first.VEndTrimmedPosition, second.VEndTrimmedPosition),
             max(first.JBeginTrimmedPosition, second.JBeginTrimmedPosition)
         )
-        try {
-            return NDNDistance(first.CDR3.getRange(NDNRange), second.CDR3.getRange(NDNRange))
-        } catch (e: Exception) {
-            throw e
-        }
+        return NDNDistance(first.CDR3.getRange(NDNRange), second.CDR3.getRange(NDNRange))
     }
 
     /**

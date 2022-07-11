@@ -131,7 +131,7 @@ class SHMTreeBuilder(
                 //create copy of clone for every pair of V and J hits in it
                 .flatMap { VGeneId ->
                     JGeneNames.map { JGeneId ->
-                        VJBase(VGeneId, JGeneId, clone.ntLengthOf(CDR3))
+                        VJBase(VGeneId, JGeneId, clone.ntLengthOf(CDR3, VGeneId, JGeneId))
                     }
                 }
                 //filter compositions that not overlap with each another
@@ -180,15 +180,18 @@ class SHMTreeBuilder(
             { cluster ->
                 val treeId = cluster.first().treeId
 
-                val CDR3lengths = cluster.map { it.clone.ntLengthOf(CDR3) }
+                val VGeneId = cluster.map { it.clone }.bestGeneForClones(Variable)
+                val JGeneId = cluster.map { it.clone }.bestGeneForClones(Joining)
+
+                val CDR3lengths = cluster.map { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) }
                     .groupingBy { it }.eachCount()
                 if (CDR3lengths.size > 1) {
                     println("WARN: in $treeId not all clones have the same length of CDR3")
                 }
                 val VJBase = VJBase(
-                    VGeneId = cluster.map { it.clone }.bestGeneForClones(Variable),
-                    JGeneId = cluster.map { it.clone }.bestGeneForClones(Joining),
-                    CDR3length = CDR3lengths.maxByOrNull { it.value }!!.key
+                    VGeneId = VGeneId,
+                    JGeneId = JGeneId,
+                    CDR3length = CDR3lengths.values.first()
                 )
 
                 val cloneWrappers = cluster

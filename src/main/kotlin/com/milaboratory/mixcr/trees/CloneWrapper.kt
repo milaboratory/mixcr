@@ -17,11 +17,10 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence
 import com.milaboratory.primitivio.*
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
-import io.repseq.core.GeneFeature
-import io.repseq.core.GeneType
-import io.repseq.core.ReferencePoint
-import io.repseq.core.VDJCGene
+import io.repseq.core.*
+import io.repseq.core.GeneType.*
 import java.util.*
 
 /**
@@ -78,17 +77,27 @@ class CloneWrapper(
     )
 }
 
-fun Clone.getHit(geneType: GeneType, VJBase: VJBase): VDJCHit {
-    val geneId = VJBase.getGeneId(geneType)
-    return getHits(geneType).first { it.gene.id == geneId }
-}
+fun Clone.getHit(geneType: GeneType, VJBase: VJBase): VDJCHit =
+    getHit(geneType, VJBase.getGeneId(geneType))
 
-fun Clone.getFeature(geneFeature: GeneFeature, VJBase: VJBase): NSequenceWithQuality? {
+private fun Clone.getHit(geneType: GeneType, geneId: VDJCGeneId): VDJCHit =
+    getHits(geneType).first { it.gene.id == geneId }
+
+fun Clone.getFeature(geneFeature: GeneFeature, VJBase: VJBase): NSequenceWithQuality? =
+    getFeature(geneFeature, VJBase.VGeneId, VJBase.JGeneId)
+
+fun Clone.ntLengthOf(geneFeature: GeneFeature, VGeneId: VDJCGeneId, JGeneId: VDJCGeneId): Int =
+    getFeature(geneFeature, VGeneId, JGeneId)?.size() ?: -1
+
+private fun Clone.getFeature(
+    geneFeature: GeneFeature,
+    VGeneId: VDJCGeneId,
+    JGeneId: VDJCGeneId
+): NSequenceWithQuality? {
     val topHits = EnumMap<GeneType, VDJCGene>(GeneType::class.java)
-    for (geneType in Sets.newHashSet(GeneType.Joining, GeneType.Variable)) {
-        topHits[geneType] = getHit(geneType, VJBase).gene
-    }
-    for (geneType in Sets.newHashSet(GeneType.Constant, GeneType.Diversity)) {
+    topHits[Variable] = getHit(Variable, VGeneId).gene
+    topHits[Joining] = getHit(Joining, JGeneId).gene
+    for (geneType in Sets.newHashSet(Constant, Diversity)) {
         val hit = getBestHit(geneType)
         if (hit != null) topHits[geneType] = hit.gene
     }
@@ -117,16 +126,14 @@ class SerializerImpl : Serializer<CloneWrapper> {
     override fun write(output: PrimitivO, `object`: CloneWrapper) {
         output.writeObject(`object`.clone)
         output.writeInt(`object`.id.datasetId)
-        output.writeObject(`object`.VJBase.VGeneId)
-        output.writeObject(`object`.VJBase.JGeneId)
-        output.writeInt(`object`.VJBase.CDR3length)
+        output.writeObject(`object`.VJBase)
         output.writeList(`object`.candidateVJBases)
     }
 
     override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(
         input.readObjectRequired(),
         input.readInt(),
-        VJBase(input.readObjectRequired(), input.readObjectRequired(), input.readInt()),
+        input.readObjectRequired(),
         input.readList()
     )
 
