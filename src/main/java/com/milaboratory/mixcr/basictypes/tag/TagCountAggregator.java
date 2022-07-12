@@ -22,6 +22,7 @@ public final class TagCountAggregator {
     private double singletonCount = Double.NaN;
     private TObjectDoubleHashMap<TagTuple> tagMap = null;
     private boolean destroyed = false;
+    private int depth = -1;
 
     public TagCountAggregator() {
     }
@@ -32,6 +33,11 @@ public final class TagCountAggregator {
 
         if (!tc.isKey() && count != 1.0)
             throw new IllegalArgumentException("count != 1.0 for non-key tuple.");
+
+        if (depth == -1)
+            depth = tc.size();
+        else if (depth != tc.size())
+            throw new IllegalArgumentException("Inconsistent tag depth; depth=" + depth + " tc.size()=" + tc.size());
 
         if (tagMap == null) {
             if (singletonTuple == null) {

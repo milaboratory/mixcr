@@ -328,6 +328,8 @@ public final class TagCount {
     public TagCount[] splitBy(int level) {
         if (level == 0)
             return new TagCount[]{this};
+        if (level > depth)
+            throw new IllegalArgumentException();
         Map<TagTuple, TagCountAggregator> map = new HashMap<>();
         TObjectDoubleIterator<TagTuple> it = iterator();
         while (it.hasNext()) {
