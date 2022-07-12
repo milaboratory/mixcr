@@ -18,9 +18,11 @@ import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
 import com.milaboratory.mixcr.postanalysis.ui.ClonotypeDataset;
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
@@ -31,9 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Command(name = "downsample",
@@ -57,6 +57,10 @@ public class CommandDownsample extends MiXCRCommand {
             required = true)
     public String downsampling;
 
+    @Option(description = "Write downsampling summary tsv/csv table.",
+            names = {"--summary"},
+            required = false)
+    public String summary;
     @Option(description = "Suffix to add to output clns file.",
             names = {"--suffix"})
     public String suffix = "downsampled";
@@ -73,6 +77,13 @@ public class CommandDownsample extends MiXCRCommand {
     @Override
     protected List<String> getOutputFiles() {
         return getInputFiles().stream().map(this::output).map(Path::toString).collect(Collectors.toList());
+    }
+
+    @Override
+    public void validate() {
+        super.validate();
+        if (summary != null && (!summary.endsWith(".tsv") && !summary.endsWith(".csv")))
+            throwValidationException("summary table should ends with .csv/.tsv");
     }
 
     private Path output(String input) {
@@ -93,6 +104,13 @@ public class CommandDownsample extends MiXCRCommand {
                 throw new RuntimeException(e);
             }
         }
+        if (summary != null) {
+            try {
+                Files.createDirectories(Paths.get(suffix).toAbsolutePath().getParent());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -102,13 +120,14 @@ public class CommandDownsample extends MiXCRCommand {
                         new ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault())
                 ).collect(Collectors.toList());
 
-        SetPreprocessorFactory<Clone> preproc = DownsamplingParameters
+        SetPreprocessor<Clone> preproc = DownsamplingParameters
                 .parse(this.downsampling, CommandPa.extractTagsInfo(getInputFiles()), false, onlyProductive)
-                .getPreproc(Chains.getByName(chains));
+                .getPreproc(Chains.getByName(chains))
+                .newInstance();
 
-        Dataset<Clone>[] result = SetPreprocessor.processDatasets(preproc.newInstance(), datasets);
-
+        Dataset<Clone>[] result = SetPreprocessor.processDatasets(preproc, datasets);
         ensureOutputPathExists();
+
         for (int i = 0; i < result.length; i++) {
             String input = in.get(i);
             try (ClnsWriter clnsWriter = new ClnsWriter(output(input).toFile())) {
@@ -124,6 +143,29 @@ public class CommandDownsample extends MiXCRCommand {
                 CUtils.drain(CUtils.asOutputPort(downsampled), clnsWriter.cloneWriter());
                 clnsWriter.writeFooter(Collections.emptyList(), null);
             }
+        }
+
+        TIntObjectHashMap<List<SetPreprocessorStat>> summaryStat = preproc.getStat();
+        for (int i = 0; i < result.length; i++) {
+            String input = in.get(i);
+            SetPreprocessorStat stat = SetPreprocessorStat.cumulative(summaryStat.get(i));
+            System.out.println(input + ":" +
+                    " isDropped=" + stat.dropped +
+                    " nClonesBefore=" + stat.nElementsBefore +
+                    " nClonesAfter=" + stat.nElementsAfter +
+                    " sumWeightBefore=" + stat.sumWeightBefore +
+                    " sumWeightAfter=" + stat.sumWeightAfter
+            );
+        }
+
+        if (summary != null) {
+            Map<String, List<SetPreprocessorStat>> summaryTable = new HashMap<>();
+            for (int i = 0; i < in.size(); i++)
+                summaryTable.put(in.get(i), summaryStat.get(i));
+
+            SetPreprocessorSummary.toCSV(Paths.get(summary).toAbsolutePath(),
+                    new SetPreprocessorSummary(summaryTable),
+                    summary.endsWith("csv") ? "," : "\t");
         }
     }
 }
