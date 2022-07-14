@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.alleles
 
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
+import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -65,7 +66,9 @@ class TIgGERAllelesSearcher(
                 .flatMap { allele.invert().combineWith(it.mutations).asSequence() }
                 .groupingBy { it }.eachCount()
                 .filterValues { it >= boundary }
-                .keys.asSequence().asMutations(NucleotideSequence.ALPHABET)
+                .keys.asSequence()
+                .sortedBy { Mutation.getPosition(it) }
+                .asMutations(NucleotideSequence.ALPHABET)
             allele.combineWith(mutationsThatExistsInAlmostAllClones)
         }
 
