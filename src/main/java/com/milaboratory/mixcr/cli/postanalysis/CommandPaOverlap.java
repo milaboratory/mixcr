@@ -18,6 +18,7 @@ import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
+import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersPreset;
@@ -67,6 +68,7 @@ public class CommandPaOverlap extends CommandPa {
 
         OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
                 samples,
+                new ElementPredicate.IncludeChains(group.chains.chains),
                 OverlapUtil.parseCriteria(overlapCriteria).ordering()
         );
 
@@ -78,4 +80,5 @@ public class CommandPaOverlap extends CommandPa {
 
         return new PaResultByGroup(group, schema, result);
     }
+
 }

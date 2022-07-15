@@ -22,6 +22,7 @@ import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatterRow;
+import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
@@ -113,6 +114,7 @@ public class CommandOverlapScatter extends MiXCRCommand {
             Dataset<OverlapGroup<Clone>> dataset = SetPreprocessor.processDatasets(downsampling.newInstance(),
                     OverlapUtil.overlap(
                             Arrays.asList(in1, in2),
+                            new ElementPredicate.IncludeChains(curChains.chains),
                             OverlapUtil.parseCriteria(overlapCriteria).ordering()))[0];
 
             try (OutputPortWithProgress<OverlapGroup<Clone>> port = dataset.mkElementsPort()) {

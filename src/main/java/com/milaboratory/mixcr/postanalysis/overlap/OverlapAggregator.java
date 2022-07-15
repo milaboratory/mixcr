@@ -48,10 +48,14 @@ public class OverlapAggregator<T> implements Aggregator<OverlapKey<OverlapType>,
     public void consume(OverlapGroup<T> obj) {
         List<T> s1 = obj.getBySample(i1);
         List<T> s2 = obj.getBySample(i2);
+        if (s1.isEmpty() && s2.isEmpty())
+            return;
+
         double ss1 = s1.isEmpty() ? 0.0 : s1.stream().mapToDouble(weight::weight).sum();
         double ss2 = s2.isEmpty() ? 0.0 : s2.stream().mapToDouble(weight::weight).sum();
 
         regressionAll.addData(ss1, ss2);
+
         sumS1 += ss1;
         sumS2 += ss2;
         if (!s1.isEmpty())

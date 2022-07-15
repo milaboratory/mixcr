@@ -169,7 +169,7 @@ public class CommandExportOverlap extends MiXCRCommand {
         if (needRecalculateCount)
             counts = overlapBrowser.computeCounts(samples);
 
-        OverlapDataset<Clone> overlap = OverlapUtil.overlap(samples, criteria.ordering());
+        OverlapDataset<Clone> overlap = OverlapUtil.overlap(samples, __ -> true, criteria.ordering());
         try (OutputPortWithProgress<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
             for (Map<NamedChains, OverlapGroup<Clone>> row : CUtils.it(overlapBrowser.overlap(counts, port))) {
                 for (Map.Entry<NamedChains, OverlapGroup<Clone>> e : row.entrySet()) {

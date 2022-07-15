@@ -90,7 +90,7 @@ public class OverlapPreprocessorAdapter<T> implements SetPreprocessor<OverlapGro
                     innerMappers.add(inner.getMapper(iDataset));
                 }
 
-            List<List<T>> result = new ArrayList<>();
+            List<List<T>> result = new ArrayList<>(overlapSize);
             for (int iDataset = 0; iDataset < overlapSize; iDataset++) {
                 List<T> gr = new ArrayList<>();
                 for (T t : group.getBySample(iDataset)) {
