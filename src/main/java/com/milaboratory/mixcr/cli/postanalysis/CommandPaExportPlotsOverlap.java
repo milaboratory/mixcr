@@ -38,6 +38,11 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
             names = {"--color-key"})
     public List<String> colorKey = new ArrayList<>();
 
+    @Option(description = "Fill diagonal line",
+            names = {"--fill-diagonal"}
+    )
+    public boolean fillDiagonal = false;
+
     @Option(description = "Select specific metrics to export.",
             names = {"--metric"})
     public List<String> metrics;
@@ -61,6 +66,7 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
         DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
                 paResult,
                 metrics,
+                fillDiagonal,
                 metadata
         );
         df = filterOverlap(df);
@@ -70,6 +76,10 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
 
         if (df.get("weight").distinct().toList().size() <= 1)
             return;
+
+        List<String> colorKey = this.colorKey.stream()
+                .map(it -> it.startsWith("x_") || it.startsWith("y_") ? it : "x_" + it)
+                .collect(Collectors.toList());
 
         HeatmapParameters par = new HeatmapParameters(
                 !noDendro,

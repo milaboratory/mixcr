@@ -59,7 +59,7 @@ public abstract class CommandPa extends MiXCRCommand {
 
     @Option(description = CommonDescriptions.WEIGHT_FUNCTION,
             names = {"--default-weight-function"},
-            required = false)
+            required = true)
     public String defaultWeightFunction;
 
     @Option(description = "Filter specified chains",

@@ -63,7 +63,12 @@ public class CommandPaOverlap extends CommandPa {
     @Override
     @SuppressWarnings("unchecked")
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size(), group.chains.chains, getTagsInfo());
+        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(
+                samples.size(),
+                // we do not specify chains here, since we will filter
+                // each dataset individually before overlap to speed up computations
+                null,
+                getTagsInfo());
         PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(true, groups);
 
         OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
