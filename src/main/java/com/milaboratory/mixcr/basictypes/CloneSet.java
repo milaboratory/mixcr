@@ -101,20 +101,20 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
     }
 
     public GeneFeature[] getAssemblingFeatures() {
-        return info.assemblerParameters.getAssemblingFeatures();
+        return info.getAssemblerParameters().getAssemblingFeatures();
     }
 
     public CloneAssemblerParameters getAssemblerParameters() {
-        return info.assemblerParameters;
+        return info.getAssemblerParameters();
     }
 
     public VDJCAlignerParameters getAlignmentParameters() {
-        return info.alignerParameters;
+        return info.getAlignerParameters();
     }
 
     @Override
     public TagsInfo getTagsInfo() {
-        return info.tagsInfo;
+        return info.getTagsInfo();
     }
 
     public VDJCSProperties.CloneOrdering getOrdering() {
@@ -127,7 +127,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
 
     @Override
     public GeneFeature getFeatureToAlign(GeneType geneType) {
-        return info.alignerParameters.getFeatureToAlign(geneType);
+        return info.getAlignerParameters().getFeatureToAlign(geneType);
     }
 
     public double getTotalCount() {

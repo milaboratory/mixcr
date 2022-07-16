@@ -147,7 +147,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
             this.versionInfo = pi.readUTF();
             this.info = Objects.requireNonNull(pi.readObject(MiXCRMetaInfo.class));
             this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.info.alignerParameters, libraryRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.info.getAlignerParameters(), libraryRegistry);
         }
 
         // read reports from footer
@@ -174,7 +174,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
      */
     @Override
     public VDJCAlignerParameters getAlignerParameters() {
-        return info.alignerParameters;
+        return info.getAlignerParameters();
     }
 
     /**
@@ -182,7 +182,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
      */
     @Override
     public CloneAssemblerParameters getAssemblerParameters() {
-        return info.assemblerParameters;
+        return info.getAssemblerParameters();
     }
 
     /**
@@ -190,7 +190,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
      */
     @Override
     public TagsInfo getTagsInfo() {
-        return info.tagsInfo;
+        return info.getTagsInfo();
     }
 
     /**
@@ -202,7 +202,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
     }
 
     public GeneFeature[] getAssemblingFeatures() {
-        return info.assemblerParameters.getAssemblingFeatures();
+        return info.getAssemblerParameters().getAssemblingFeatures();
     }
 
     /**

@@ -42,6 +42,23 @@ public final class Util {
         return defaultValue;
     }
 
+    public static <T, P1, P2> T default3(T optionValue, P1 preset,
+                                         Function<P1, P2> presetExtractor1,
+                                         Function<P2, T> presetExtractor2,
+                                         T defaultValue) {
+        if (optionValue != null)
+            return optionValue;
+        if (preset != null) {
+            P2 presetValue1 = presetExtractor1.apply(preset);
+            if (presetValue1 != null) {
+                T presetValue = presetExtractor2.apply(presetValue1);
+                if (presetValue != null)
+                    return presetValue;
+            }
+        }
+        return defaultValue;
+    }
+
     public static String printTwoColumns(List<String> left, List<String> right, int leftWidth, int rightWidth, int sep) {
         return printTwoColumns(left, right, leftWidth, rightWidth, sep, "");
     }

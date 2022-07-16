@@ -18,6 +18,10 @@ import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.ShortSequenceSet;
+import com.milaboratory.mitool.pattern.LibraryStructurePresetCollection;
+import com.milaboratory.mitool.pattern.LibraryStructurePresetCollection.LibraryStructurePreset;
+import com.milaboratory.mitool.pattern.SequenceSetCollection;
 import com.milaboratory.mitool.refinement.CorrectionNode;
 import com.milaboratory.mitool.refinement.CorrectionReport;
 import com.milaboratory.mitool.refinement.TagCorrector;
@@ -34,14 +38,15 @@ import gnu.trove.list.array.TIntArrayList;
 import picocli.CommandLine;
 import picocli.CommandLine.Parameters;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
+import static com.milaboratory.mitool.refinement.TagCorrectorParameters.*;
 import static com.milaboratory.mixcr.cli.CommandCorrectAndSortTags.CORRECT_AND_SORT_TAGS_COMMAND_NAME;
+import static com.milaboratory.mixcr.cli.Util.default3;
+import static java.util.stream.Collectors.toMap;
 import static picocli.CommandLine.Option;
 
 @CommandLine.Command(name = CORRECT_AND_SORT_TAGS_COMMAND_NAME,
@@ -63,34 +68,46 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
 
     @Option(description = "This parameter determines how thorough the procedure should eliminate variants looking like errors. " +
             "Smaller value leave less erroneous variants at the cost of accidentally correcting true variants. " +
-            "This value approximates the fraction of erroneous variants the algorithm will miss (type II errors).",
+            "This value approximates the fraction of erroneous variants the algorithm will miss (type II errors). " +
+            "(default " + DEFAULT_CORRECTION_POWER + " or from preset specified on align step)",
             names = {"-p", "--power"})
-    public double power = 1E-3;
+    public Double power = null;
 
-    @Option(description = "Expected background non-sequencing-related substitution rate",
+    @Option(description = "Expected background non-sequencing-related substitution rate (default " +
+            DEFAULT_BACKGROUND_SUBSTITUTION_RATE + " or from preset specified on align step)",
             names = {"-s", "--substitution-rate"})
-    public double backgroundSubstitutionRate = 1E-3;
+    public Double backgroundSubstitutionRate = null;
 
-    @Option(description = "Expected background non-sequencing-related indel rate",
+    @Option(description = "Expected background non-sequencing-related indel rate (default " +
+            DEFAULT_BACKGROUND_INDEL_RATE + " or from preset specified on align step)",
             names = {"-i", "--indel-rate"})
-    public double backgroundIndelRate = 1E-5;
+    public Double backgroundIndelRate = null;
 
     @Option(description = "Minimal quality score for the tag. " +
-            "Tags having positions with lower quality score will be discarded, if not corrected.",
+            "Tags having positions with lower quality score will be discarded, if not corrected (default " +
+            DEFAULT_MIN_QUALITY + " or from preset specified on align step)",
             names = {"-q", "--min-quality"})
-    public int minQuality = 12;
+    public Integer minQuality = null;
 
-    @Option(description = "Maximal number of substitutions to search for.",
+    @Option(description = "Maximal number of substitutions to search for (default " +
+            DEFAULT_MAX_SUBSTITUTIONS + " or from preset specified on align step)",
             names = {"--max-substitutions"})
-    public int maxSubstitutions = 2;
+    public Integer maxSubstitutions = null;
 
-    @Option(description = "Maximal number of indels to search for.",
+    @Option(description = "Maximal number of indels to search for (default " +
+            DEFAULT_MAX_INDELS + " or from preset specified on align step)",
             names = {"--max-indels"})
-    public int maxIndels = 1;
+    public Integer maxIndels = null;
 
-    @Option(description = "Maximal number of substitutions and indels combined to search for.",
+    @Option(description = "Maximal number of substitutions and indels combined to search for (default " +
+            DEFAULT_MAX_TOTAL_ERROR + " or from preset specified on align step)",
             names = {"--max-errors"})
-    public int maxTotalErrors = 3;
+    public Integer maxTotalErrors = null;
+
+    @Option(names = {"-w", "--whitelist"}, description = "Use whitelist-driven correction for one of the tags. Usage: " +
+            "--whitelist CELL=preset:737K-august-2016 or -w UMI=file:my_umi_whitelist.txt. If not specified mixcr will set " +
+            "correct whitelists if --tag-preset was used on align step.")
+    public Map<String, String> whitelists = new HashMap<>();
 
     @Option(description = "Use system temp folder for temporary files.",
             names = {"--use-system-temp"})
@@ -114,10 +131,54 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
         return Collections.singletonList(out);
     }
 
+    private void setPresetName(String name) {
+        if (name == null)
+            return;
+        preset = LibraryStructurePresetCollection.INSTANCE.getPresetByName(name);
+    }
+
+    private LibraryStructurePreset preset = null;
+
+    private Map<String, String> getWhitelists() {
+        if (whitelists == null || whitelists.isEmpty())
+            return preset == null
+                    ? Collections.EMPTY_MAP
+                    : preset.getWhitelists().entrySet()
+                    .stream()
+                    .collect(toMap(Map.Entry::getKey, e -> "preset:" + e.getValue()));
+        else
+            return whitelists;
+    }
+
+    public <T> T defaultHelper(T optionValue, Function<TagCorrectorParameters, T> presetExtractor2, T defaultValue) {
+        return default3(optionValue, preset,
+                LibraryStructurePreset::getTagCorrectionParameters,
+                presetExtractor2, defaultValue);
+    }
+
     TagCorrectorParameters getParameters() {
         return new TagCorrectorParameters(
-                power, backgroundSubstitutionRate, backgroundIndelRate,
-                minQuality, maxSubstitutions, maxIndels, maxTotalErrors
+                defaultHelper(power,
+                        TagCorrectorParameters::getCorrectionPower,
+                        DEFAULT_CORRECTION_POWER),
+                defaultHelper(backgroundSubstitutionRate,
+                        TagCorrectorParameters::getBackgroundSubstitutionRate,
+                        DEFAULT_BACKGROUND_SUBSTITUTION_RATE),
+                defaultHelper(backgroundIndelRate,
+                        TagCorrectorParameters::getBackgroundIndelRate,
+                        DEFAULT_BACKGROUND_INDEL_RATE),
+                defaultHelper(minQuality,
+                        TagCorrectorParameters::getMinQuality,
+                        DEFAULT_MIN_QUALITY),
+                defaultHelper(maxSubstitutions,
+                        TagCorrectorParameters::getMaxSubstitutions,
+                        DEFAULT_MAX_SUBSTITUTIONS),
+                defaultHelper(maxIndels,
+                        TagCorrectorParameters::getMaxIndels,
+                        DEFAULT_MAX_INDELS),
+                defaultHelper(maxTotalErrors,
+                        TagCorrectorParameters::getMaxTotalError,
+                        DEFAULT_MAX_TOTAL_ERROR)
         );
     }
 
@@ -130,6 +191,7 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
         final int[] targetTagIndices;
         final List<String> tagNames;
         try (VDJCAlignmentsReader mainReader = new VDJCAlignmentsReader(in)) {
+            setPresetName(mainReader.getInfo().getTagPreset());
             TagsInfo tagsInfo = mainReader.getTagsInfo();
 
             tagNames = new ArrayList<>();
@@ -143,7 +205,8 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
             }
             targetTagIndices = indicesBuilder.toArray();
 
-            System.out.println("Correction will be applied to the following tags: " + String.join(", ", tagNames));
+            System.out.println((noCorrect ? "Sorting" : "Correction") +
+                    " will be applied to the following tags: " + String.join(", ", tagNames));
 
             if (!noCorrect) {
                 TagCorrector corrector = new TagCorrector(getParameters(),
@@ -166,8 +229,17 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                 OutputPort<NSequenceWithQuality[]> cInput = CUtils.wrap(mainReader, mapper);
 
                 // Running correction
-                // TODO Collections.EMPTY_MAP -> presets
-                correctionResult = corrector.correct(cInput, tagNames, Collections.EMPTY_MAP, mainReader);
+                Map<String, String> whitelistsOptions = getWhitelists();
+                Map<Integer, ShortSequenceSet> whitelists = new HashMap<>();
+                for (int i = 0; i < tagNames.size(); i++) {
+                    String t = whitelistsOptions.get(tagNames.get(i));
+                    if (t != null) {
+                        System.out.println("The following whitelist will be used for " + tagNames.get(i) + ": " + t);
+                        whitelists.put(i, SequenceSetCollection.INSTANCE.loadSequenceSetByAddress(t));
+                    }
+                }
+
+                correctionResult = corrector.correct(cInput, tagNames, whitelists, mainReader);
                 report = corrector.getReport();
             } else {
                 correctionResult = null;

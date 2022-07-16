@@ -79,7 +79,7 @@ public final class ClnsWriter implements AutoCloseable {
             o.writeObject(ordering);
             o.writeInt(numberOfClones);
 
-            IOUtil.stdVDJCPrimitivOStateInit(o, genes, info.alignerParameters);
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, info.getAlignerParameters());
         }
     }
 

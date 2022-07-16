@@ -101,7 +101,7 @@ public class ClnsReader implements CloneReader, AutoCloseable {
             info = i.readObject(MiXCRMetaInfo.class);
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
             numberOfClones = i.readInt();
-            usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, info.alignerParameters, libraryRegistry);
+            usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, info.getAlignerParameters(), libraryRegistry);
         }
 
         try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(reportsStartPosition)) {
@@ -136,16 +136,16 @@ public class ClnsReader implements CloneReader, AutoCloseable {
 
     @Override
     public TagsInfo getTagsInfo() {
-        return info.tagsInfo;
+        return info.getTagsInfo();
     }
 
     public VDJCAlignerParameters getAlignerParameters() {
-        return info.alignerParameters;
+        return info.getAlignerParameters();
     }
 
     @Override
     public CloneAssemblerParameters getAssemblerParameters() {
-        return info.assemblerParameters;
+        return info.getAssemblerParameters();
     }
 
     @Override

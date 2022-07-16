@@ -149,7 +149,7 @@ public final class VDJCAlignmentsReader implements
 
             info = Objects.requireNonNull(pi.readObject(MiXCRMetaInfo.class));
 
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, info.alignerParameters, vdjcRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, info.getAlignerParameters(), vdjcRegistry);
             this.iState = pi.getState();
         }
 
@@ -174,12 +174,13 @@ public final class VDJCAlignmentsReader implements
     }
 
     public MiXCRMetaInfo getInfo() {
+        ensureInitialized();
         return info;
     }
 
     public synchronized VDJCAlignerParameters getParameters() {
         ensureInitialized();
-        return info.alignerParameters;
+        return info.getAlignerParameters();
     }
 
     public synchronized List<VDJCGene> getUsedGenes() {
@@ -190,7 +191,7 @@ public final class VDJCAlignmentsReader implements
     @Override
     public TagsInfo getTagsInfo() {
         ensureInitialized();
-        return info.tagsInfo;
+        return info.getTagsInfo();
     }
 
     /**

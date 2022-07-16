@@ -12,11 +12,9 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil;
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks;
@@ -128,7 +126,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
             // Writing parameters
             o.writeObject(info);
 
-            IOUtil.stdVDJCPrimitivOStateInit(o, genes, info.alignerParameters);
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, info.getAlignerParameters());
         }
 
         writer = output.beginPrimitivOBlocks(encoderThreads, alignmentsInBlock,

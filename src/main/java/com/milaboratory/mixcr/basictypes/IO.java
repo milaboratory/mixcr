@@ -35,10 +35,10 @@ class IO {
     public static class MiXCRMetaInfoSerializer implements Serializer<MiXCRMetaInfo> {
         @Override
         public void write(PrimitivO output, MiXCRMetaInfo obj) {
-            output.writeObject(obj.tagPreset);
-            output.writeObject(obj.tagsInfo);
-            output.writeObject(obj.alignerParameters);
-            output.writeObject(obj.assemblerParameters);
+            output.writeObject(obj.getTagPreset());
+            output.writeObject(obj.getTagsInfo());
+            output.writeObject(obj.getAlignerParameters());
+            output.writeObject(obj.getAssemblerParameters());
         }
 
         @Override

@@ -135,7 +135,7 @@ public class CommandAssemble extends MiXCRCommand {
         if (assemblerParameters == null)
             throwValidationException("Unknown parameters: " + assemblerParametersName);
         // noinspection ConstantConditions
-        assemblerParameters = assemblerParameters.updateFrom(info.alignerParameters);
+        assemblerParameters = assemblerParameters.updateFrom(info.getAlignerParameters());
 
         // Overriding JSON parameters
         if (!overrides.isEmpty()) {
@@ -175,12 +175,12 @@ public class CommandAssemble extends MiXCRCommand {
 
     public VDJCAlignerParameters getAlignerParameters() {
         ensureParametersInitialized();
-        return info.alignerParameters;
+        return info.getAlignerParameters();
     }
 
     public TagsInfo getTagsInfo() {
         ensureParametersInitialized();
-        return info.tagsInfo;
+        return info.getTagsInfo();
     }
 
     public VDJCSProperties.CloneOrdering getOrdering() {
