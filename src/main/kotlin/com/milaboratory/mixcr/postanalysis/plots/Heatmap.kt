@@ -44,7 +44,7 @@ data class HeatmapParameters(
     companion object {
         fun defaultHLabelSize(labels: List<String>) = run {
             val l = labels.maxOfOrNull { it.length } ?: 0
-            (0.9 * l / 3)
+            (0.9 * l / 2)
         }
 
         fun defaultVLabelSize(labels: List<String>) = defaultHLabelSize(labels)
