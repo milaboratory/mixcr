@@ -88,6 +88,10 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
             names = {"--max-indels"})
     public int maxIndels = 1;
 
+    @Option(description = "Maximal number of substitutions and indels combined to search for.",
+            names = {"--max-errors"})
+    public int maxTotalErrors = 3;
+
     @Option(description = "Use system temp folder for temporary files.",
             names = {"--use-system-temp"})
     public boolean useSystemTemp = false;
@@ -113,7 +117,7 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
     TagCorrectorParameters getParameters() {
         return new TagCorrectorParameters(
                 power, backgroundSubstitutionRate, backgroundIndelRate,
-                minQuality, maxSubstitutions, maxIndels
+                minQuality, maxSubstitutions, maxIndels, maxTotalErrors
         );
     }
 
@@ -231,8 +235,8 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                         SmartProgressReporter.extractProgress(sorted, mainReader.getNumberOfAlignments()));
 
                 // Initializing and writing results to the output file
-                writer.header(mainReader,
-                        mainReader.getTagsInfo().setSorted(mainReader.getTagsInfo().size()));
+                writer.header(mainReader.getInfo().updateTagInfo(ti -> ti.setSorted(ti.size())),
+                        mainReader.getUsedGenes());
                 writer.setNumberOfProcessedReads(mainReader.getNumberOfReads());
                 for (VDJCAlignments al : CUtils.it(sorted))
                     writer.write(al);

@@ -17,9 +17,29 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public final class Util {
     private Util() {
+    }
+
+    public static <T> T default3(T optionValue, T presetValue, T defaultValue) {
+        if (optionValue != null)
+            return optionValue;
+        if (presetValue != null)
+            return presetValue;
+        return defaultValue;
+    }
+
+    public static <T, P> T default3(T optionValue, P preset, Function<P, T> presetExtractor, T defaultValue) {
+        if (optionValue != null)
+            return optionValue;
+        if (preset != null) {
+            T presetValue = presetExtractor.apply(preset);
+            if (presetValue != null)
+                return presetValue;
+        }
+        return defaultValue;
     }
 
     public static String printTwoColumns(List<String> left, List<String> right, int leftWidth, int rightWidth, int sep) {

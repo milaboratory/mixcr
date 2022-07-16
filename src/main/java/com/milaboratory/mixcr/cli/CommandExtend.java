@@ -147,8 +147,7 @@ public class CommandExtend extends MiXCRCommand {
 
             clones.sort(Comparator.comparing(Clone::getId));
 
-            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
-                    cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
+            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getInfo(), cloneSet.getOrdering());
 
             try (ClnsWriter writer = new ClnsWriter(out)) {
                 writer.writeCloneSet(newCloneSet);
@@ -163,7 +162,7 @@ public class CommandExtend extends MiXCRCommand {
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
             SmartProgressReporter.startProgressReport("Extending alignments", reader);
 
-            writer.header(reader.getParameters(), reader.getUsedGenes(), reader.getTagsInfo());
+            writer.header(reader);
 
             ProcessWrapper<VDJCAlignments> process = new ProcessWrapper<>(reader,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),

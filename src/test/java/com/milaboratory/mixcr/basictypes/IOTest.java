@@ -61,7 +61,7 @@ public class IOTest {
 
 
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.header(aligner, null);
+                writer.header(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
 
                 header = writer.getPosition();
 

@@ -115,7 +115,7 @@ public class CommandAssembleContigs extends MiXCRCommand {
         FullSeqAssemblerParameters assemblerParameters = getFullSeqAssemblerParameters();
         int totalClonesCount = 0;
         List<VDJCGene> genes;
-        VDJCAlignerParameters alignerParameters;
+        MiXCRMetaInfo info;
         CloneAssemblerParameters cloneAssemblerParameters;
         TagsInfo tagsInfo;
         VDJCSProperties.CloneOrdering ordering;
@@ -130,11 +130,11 @@ public class CommandAssembleContigs extends MiXCRCommand {
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
                     reader.getAssemblingFeatures(), reader.getUsedGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
 
-            alignerParameters = reader.getAlignerParameters();
+            info = reader.getInfo();
             cloneAssemblerParameters = reader.getAssemblerParameters();
             tagsInfo = reader.getTagsInfo();
             genes = reader.getUsedGenes();
-            IOUtil.registerGeneReferences(tmpOut, genes, alignerParameters);
+            IOUtil.registerGeneReferences(tmpOut, genes, info.alignerParameters);
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort);
@@ -203,7 +203,7 @@ public class CommandAssembleContigs extends MiXCRCommand {
 
                     FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(
                             cloneFactory, assemblerParameters,
-                            clone, alignerParameters,
+                            clone, info.alignerParameters,
                             bestGenes.get(GeneType.Variable), bestGenes.get(GeneType.Joining)
                     );
 
@@ -254,14 +254,13 @@ public class CommandAssembleContigs extends MiXCRCommand {
         int cloneId = 0;
         Clone[] clones = new Clone[totalClonesCount];
         try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(out)))) {
-            IOUtil.registerGeneReferences(tmpIn, genes, alignerParameters);
+            IOUtil.registerGeneReferences(tmpIn, genes, info.alignerParameters);
             int i = 0;
             for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
                 clones[i++] = clone.setId(cloneId++);
         }
 
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, alignerParameters, cloneAssemblerParameters,
-                tagsInfo, ordering);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, info, ordering);
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
             writer.writeCloneSet(cloneSet);

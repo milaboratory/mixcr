@@ -13,10 +13,7 @@ package com.milaboratory.mixcr.postanalysis.ui;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneReader;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.basictypes.VDJCSProperties;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.postanalysis.Dataset;
@@ -99,6 +96,11 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
     @Override
     public List<VDJCGene> getUsedGenes() {
         return reader.getUsedGenes();
+    }
+
+    @Override
+    public MiXCRMetaInfo getInfo() {
+        return reader.getInfo();
     }
 
     @Override

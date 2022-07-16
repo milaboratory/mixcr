@@ -16,6 +16,7 @@ import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.mixcr.basictypes.HasGene;
+import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
@@ -46,6 +47,10 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         this.parameters = parameters;
         this.genesToAlign = genesToAlign;
         this.usedGenes = usedGenes;
+    }
+
+    public MiXCRMetaInfo getBaseMetaInfo() {
+        return new MiXCRMetaInfo(null, null, parameters, null);
     }
 
     private static <R extends SequenceRead> long hash(R input) {
