@@ -23,6 +23,7 @@ import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
+import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -150,8 +151,8 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
                 CorrelationMethod.Pearson
         );
 
-        List<byte[]> plots = BasicStatistics.INSTANCE.plotsAndSummary(df, par);
-        writePlotsAndSummary(result.group, plots);
+        List<Plot> plots = BasicStatistics.INSTANCE.plots(df, par);
+        writePlots(result.group, plots);
     }
 
     @Command(name = "biophysics",

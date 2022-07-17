@@ -28,7 +28,7 @@ import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
-import jetbrains.letsPlot.Figure;
+import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -51,7 +51,7 @@ public class CommandOverlapScatter extends MiXCRCommand {
     public String in1;
     @Parameters(description = "cloneset_2.{clns|clna}...", index = "1")
     public String in2;
-    @Parameters(description = "output.pdf", index = "2")
+    @Parameters(description = "output.[pdf|eps|png|jpeg]", index = "2")
     public String out;
 
     @Option(description = "Chains to export",
@@ -123,14 +123,14 @@ public class CommandOverlapScatter extends MiXCRCommand {
                 if (df.rowsCount() == 0) {
                     continue;
                 }
-                Figure plot = OverlapScatter.INSTANCE.plot(df,
+                Plot plot = OverlapScatter.INSTANCE.plot(df,
                         new OverlapScatter.PlotParameters(
                                 fName(in1),
                                 fName(in2),
                                 CorrelationMethod.Companion.parse(method),
                                 !noLog)
                 );
-                ExportKt.writePDF(outputPath(curChains), plot);
+                ExportKt.writeFile(outputPath(curChains), plot);
             }
         }
     }

@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
         separator = " ",
         description = "Chain usage plot.")
 public class CommandExportQcChainUsage extends MiXCRCommand {
-    @Parameters(description = "sample1.[vdjca|clnx] ... usage.pdf")
+    @Parameters(description = "sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]")
     public List<String> in;
     @Option(
             names = "--absolute-values",
@@ -82,6 +82,6 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
             default:
                 throw new RuntimeException();
         }
-        ExportKt.writePDF(Paths.get(getOutputFiles().get(0)), plt);
+        ExportKt.writeFile(Paths.get(getOutputFiles().get(0)), plt);
     }
 }

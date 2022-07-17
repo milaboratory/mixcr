@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.miplots.ExportKt;
+import com.milaboratory.miplots.ExportType;
 import com.milaboratory.mixcr.postanalysis.plots.Filter;
 import com.milaboratory.mixcr.postanalysis.plots.MetadataKt;
 import jetbrains.letsPlot.intern.Plot;
@@ -45,7 +46,7 @@ public abstract class CommandPaExportPlots extends CommandPaExport {
             names = {"--filter"})
     public List<String> filterByMetadata;
 
-    @Parameters(description = "Output PDF file name", index = "1", defaultValue = "plot.pdf")
+    @Parameters(description = "Output PDF/EPS/PNG/JPEG file name", index = "1", defaultValue = "plot.pdf")
     public String out;
 
     @Override
@@ -63,14 +64,18 @@ public abstract class CommandPaExportPlots extends CommandPaExport {
     @Override
     public void validate() {
         super.validate();
-        if (!out.endsWith(".pdf"))
-            throwValidationException("Output file must ends with .pdf extension");
+        try {
+            ExportType.determine(Paths.get(out));
+        } catch (Exception e) {
+            throwValidationException("Unsupported file extension (possible: pdf, eps, svg, png): " + out);
+        }
         if (filterByMetadata != null && metadata() == null)
             throwValidationException("Filter is specified by metadata is not.");
     }
 
     String plotDestStr(IsolationGroup group) {
-        return out.substring(0, out.length() - 4) + group.extension() + ".pdf";
+        String ext = out.substring(out.length() - 4);
+        return out.substring(0, out.length() - 4) + group.extension() + ext;
     }
 
     Path plotDestPath(IsolationGroup group) {
@@ -85,19 +90,18 @@ public abstract class CommandPaExportPlots extends CommandPaExport {
         }
     }
 
-    void writePlotsAndSummary(IsolationGroup group, List<byte[]> plots) {
-        ensureOutputPathExists();
-        ExportKt.writePDF(plotDestPath(group), plots);
-    }
+//    void writePlotsAndSummary(IsolationGroup group, List<byte[]> plots) {
+//        ensureOutputPathExists();
+//        ExportKt.writePDF(plotDestPath(group), plots);
+//    }
 
     void writePlots(IsolationGroup group, List<Plot> plots) {
         ensureOutputPathExists();
-        ExportKt.writePDFFigure(plotDestPath(group), plots);
+        ExportKt.writeFile(plotDestPath(group), plots);
     }
 
     void writePlots(IsolationGroup group, Plot plot) {
-        ensureOutputPathExists();
-        ExportKt.writePDF(plotDestPath(group), plot);
+        writePlots(group, Collections.singletonList(plot));
     }
 
     @Command(name = "exportPlots",

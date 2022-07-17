@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli.qc;
 
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.miplots.ExportKt;
+import com.milaboratory.miplots.ExportType;
 import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.qc.Coverage;
 import jetbrains.letsPlot.intern.Plot;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
         separator = " ",
         description = "Reads coverage plots.")
 public class CommandExportQcCoverage extends MiXCRCommand {
-    @Parameters(description = "sample1.vdjca ... coverage.pdf")
+    @Parameters(description = "sample1.vdjca ... coverage.[pdf|eps|png|jpeg]")
     public List<String> in;
     @Option(names = {"--show-boundaries"},
             description = "Show V alignment begin and J alignment end")
@@ -60,6 +61,24 @@ public class CommandExportQcCoverage extends MiXCRCommand {
                 input -> plts.addAll(Coverage.INSTANCE.coveragePlot(input, showAlignmentBoundaries)),
                 Runtime.getRuntime().availableProcessors()
         );
-        ExportKt.writePDFFigure(Paths.get(getOutputFiles().get(0)), plts);
+        Path out = Paths.get(getOutputFiles().get(0));
+        ExportType exportType = ExportType.determine(out);
+        if (exportType == ExportType.PDF)
+            ExportKt.writePDFFigure(out, plts);
+        else {
+            int i = 1;
+            for (Plot plt : plts) {
+                String outStr = getOutputFiles().get(0);
+                int l = outStr.lastIndexOf(".");
+                String suff;
+                if (i < 3)
+                    suff = "R" + i;
+                else
+                    suff = "Overlap";
+                outStr = outStr.substring(0, l) + "_" + suff + outStr.substring(l);
+                ExportKt.writeFile(Paths.get(outStr), plt);
+                ++i;
+            }
+        }
     }
 }

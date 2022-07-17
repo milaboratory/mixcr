@@ -17,6 +17,7 @@ import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
+import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -96,7 +97,7 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
                 height
         );
 
-        List<byte[]> plotsAndSummary = Overlap.INSTANCE.plotsAndSummary(df, par);
-        writePlotsAndSummary(result.group, plotsAndSummary);
+        List<Plot> plots = Overlap.INSTANCE.plots(df, par);
+        writePlots(result.group, plots);
     }
 }
