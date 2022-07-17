@@ -493,10 +493,13 @@ public class CommandAlign extends MiXCRCommand {
 
         // Tags
         TagSearchPlan tagSearchPlan = getTagPattern();
+        boolean pairedPayload = tagSearchPlan != null
+                ? tagSearchPlan.readShortcuts.size() == 2
+                : isInputPaired();
 
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
-                tagSearchPlan != null ? tagSearchPlan.readShortcuts.size() == 2 : isInputPaired(),
+                pairedPayload,
                 !noMerge);
 
         int numberOfExcludedNFGenes = 0;
@@ -559,7 +562,7 @@ public class CommandAlign extends MiXCRCommand {
 
              SequenceWriter notAlignedWriter = failedReadsR1 == null
                      ? null
-                     : (isInputPaired()
+                     : (pairedPayload
                      ? new PairedFastqWriter(failedReadsR1, failedReadsR2)
                      : new SingleFastqWriter(failedReadsR1));
         ) {
