@@ -15,8 +15,7 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.cli.PipelineConfiguration;
-import com.milaboratory.cli.PipelineConfigurationWriter;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
@@ -37,6 +36,7 @@ import io.repseq.core.VDJCGene;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
@@ -50,12 +50,14 @@ import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdHash
  * Usage: 1. Constructor (opens the output file, buffered) 2. writeClones() 3. sortAlignments() 4.
  * writeAlignmentsAndIndex() 5. close()
  */
-public final class ClnAWriter implements PipelineConfigurationWriter,
+public final class ClnAWriter implements
         AutoCloseable,
         CanReportProgressAndStage {
-    static final String MAGIC_V6 = "MiXCR.CLNA.V06";
-    static final String MAGIC = MAGIC_V6;
+    static final String MAGIC_V7 = "MiXCR.CLNA.V07";
+    static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
+    /** Number of bytes in footer with meta information */
+    static final int FOOTER_LENGTH = 8 + 8 + 8 + IOUtil.END_MAGIC_LENGTH;
 
     /**
      * Separates blocks of alignments assigned to the same clonotype
@@ -72,8 +74,6 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
     private final boolean highCompression;
 
     private final PrimitivOHybrid output;
-    private final PipelineConfiguration configuration;
-
     /**
      * Counter OP used to report progress during stage 2
      */
@@ -88,20 +88,19 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
     private volatile long numberOfAlignments = -1, numberOfAlignmentsWritten = 0;
     private volatile boolean finished = false;
 
-    public ClnAWriter(PipelineConfiguration configuration, String fileName, TempFileDest tempDest) throws IOException {
-        this(configuration, fileName, tempDest, false);
+    public ClnAWriter(String fileName, TempFileDest tempDest) throws IOException {
+        this(fileName, tempDest, false);
     }
 
-    public ClnAWriter(PipelineConfiguration configuration, String fileName, TempFileDest tempDest, boolean highCompression) throws IOException {
-        this(configuration, new File(fileName), tempDest, highCompression);
+    public ClnAWriter(String fileName, TempFileDest tempDest, boolean highCompression) throws IOException {
+        this(new File(fileName), tempDest, highCompression);
     }
 
-    public ClnAWriter(PipelineConfiguration configuration, File file, TempFileDest tempDest) throws IOException {
-        this(configuration, file, tempDest, false);
+    public ClnAWriter(File file, TempFileDest tempDest) throws IOException {
+        this(file, tempDest, false);
     }
 
-    public ClnAWriter(PipelineConfiguration configuration, File file, TempFileDest tempDest, boolean highCompression) throws IOException {
-        this.configuration = configuration;
+    public ClnAWriter(File file, TempFileDest tempDest, boolean highCompression) throws IOException {
         this.highCompression = highCompression;
         this.tempDest = tempDest;
         this.output = new PrimitivOHybrid(ForkJoinPool.commonPool(), file.toPath());
@@ -137,9 +136,6 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                 // Writing version information
                 o.writeUTF(MiXCRVersionInfo.get()
                         .getVersionString(AppVersionInfo.OutputType.ToFile));
-
-                // Writing full pipeline configuration
-                o.writeObject(configuration);
 
                 // Writing aligner parameters
                 Objects.requireNonNull(cloneSet.alignmentParameters);
@@ -234,6 +230,21 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
         }
     }
 
+    private List<MiXCRCommandReport> footer = null;
+
+    /**
+     * Write reports chain
+     */
+    public void writeFooter(List<MiXCRCommandReport> reports, MiXCRCommandReport report) {
+        if (footer != null)
+            throw new IllegalStateException("Footer already written");
+        this.footer = new ArrayList<>();
+        if (reports != null)
+            footer.addAll(reports);
+        if (report != null)
+            footer.add(report);
+    }
+
     /**
      * Step 3
      */
@@ -244,6 +255,8 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                 throw new IllegalStateException("Call sortAlignments before this method.");
             if (finished)
                 throw new IllegalStateException("Writer already closed.");
+            if (footer == null)
+                throw new IllegalStateException("Footer not written.");
 
             // Indices that will be written below all alignments
             final TLongArrayList aBlockOffset = new TLongArrayList();
@@ -273,7 +286,7 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
 
                         // No synchronization here
 
-                        if (alignments != null && !cloneIds.remove((int)alignments.cloneIndex))
+                        if (alignments != null && !cloneIds.remove((int) alignments.cloneIndex))
                             throw new IllegalArgumentException("Alignment for a wrong clonotype " +
                                     alignments.cloneIndex);
 
@@ -349,7 +362,19 @@ public final class ClnAWriter implements PipelineConfigurationWriter,
                     if (i != aBlockOffset.size() - 1)
                         o.writeVarInt(cloneIdsIndex.get(i));
                 }
+            }
 
+            // Position of reports
+            long footerStartPosition = output.getPosition();
+
+            try (PrimitivO o = output.beginPrimitivO()) {
+                o.writeInt(footer.size());
+                for (MiXCRCommandReport r : footer) {
+                    o.writeObject(r);
+                }
+
+                // Position of reports
+                o.writeLong(footerStartPosition);
                 // Writing two key positions in a file
                 // This values will be using during deserialization to find certain blocks
                 o.writeLong(positionOfFirstClone);

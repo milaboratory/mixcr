@@ -50,7 +50,7 @@ Widely adopted by academic community with 1000+ citations in peer-reviewed scien
 
 ## Installation / Download
 
-#### Using Homebrew on Mac OS X or Linux (linuxbrew)
+### Using Homebrew on Mac OS X or Linux (linuxbrew)
 
     brew install milaboratory/all/mixcr
     
@@ -59,14 +59,105 @@ to upgrade already installed MiXCR to the newest version:
     brew update
     brew upgrade mixcr
 
-[//]: # (#### Docker)
+### Conda
 
-[//]: # ()
-[//]: # (See [official Docker Image]&#40;https://hub.docker.com/r/milaboratory/mixcr&#41;.)
+We maintain [Anaconda repository](https://anaconda.org/milaboratories/mixcr) to simplify installation of MiXCR using `conda` package manager. To install latest stable MiXCR build with conda run:
 
-#### Manual install (any OS)
+```
+conda install -c milaboratories mixcr
+```
 
-* download latest stable MiXCR build from [release page](https://github.com/milaboratory/mixcr/releases/latest)
+to install a specific version run:
+
+```
+conda install -c milaboratories mixcr=3.0.12
+```
+
+`mixcr` package specifies `openjdk` as a dependency, if you already have Java installed on your system, it might be a good idea to prevent conda from installing another copy of JDK, to do that use `--no-deps` flag:
+
+```
+conda install -c milaboratories mixcr --no-deps
+```
+
+### Docker
+
+Official MiXCR Docker repository is hosted on the GitHub along with this repo.
+
+Example:
+
+```
+docker run --rm \
+    -e MI_LICENSE="...license-token..." \
+    -v /path/to/raw/data:/raw:ro \
+    -v /path/to/put/results:/work \
+    ghcr.io/milaboratory/mixcr/mixcr:latest \
+    align -s hs /raw/data_R1.fastq.gz /raw/data_R2.fastq.gz alignments.vdjca 
+```
+
+#### Tags
+
+The docker repo provides pre-built docker images for all release versions of MiXCR starting from 1.1. Images come in two flavours: "mixcr only" (i.e tag `4.0.0`) and co-bundled "mixcr + imgt reference" (i.e. tag `4.0.0-imgt`), for the latter please see the license note below. All bundled versions before and including `4.0.0` contain IMGT reference version `202214-2` from [here](https://github.com/repseqio/library-imgt/releases/tag/v8), this might be different from the images from the previous official docker registry on Docker Hub (which is now deprecated and planned for removal).
+
+See [docker packages](https://github.com/milaboratory/mixcr/pkgs/container/mixcr%2Fmixcr) page for the full list of tags including development builds.
+
+#### Setting the license
+
+There are several ways to pass the license for mixcr when executed inside a container:
+
+1. Using environment variable:
+   
+   ```
+   docker run \
+       -e MI_LICENSE="...license-token..." \
+       ....
+   ```
+
+2. Using license file:
+
+   ```
+   docker run \
+       -v /path/to/mi.license:/opt/mixcr/mi.license:ro \
+       ....
+   ```
+
+3. If it is hard to mount `mi.license` file into already populated folder `/opt/mixcr/` (i.e. in Kubernetes or with other container orchestration tools), you can tell MiXCR where to look for it:
+
+   ```
+   docker run \
+       -v /path/to/folder_with_mi_license:/secrets:ro \
+       -e MI_LICENSE_FILE="/secrets/milicense.txt" \
+       ....
+   ```
+
+#### Migration from the previous docker images
+
+New docker images define `mixcr` startup script as an entrypoint of the image, compared to the previous docker repo where `bash` was used instead. So, what previously was executed this way:
+
+```
+docker run ... old/mixcr/image/address:with_tag mixcr align ...
+```
+
+now will be
+
+```
+docker run ... new/mixcr/image/address:with_tag align ...
+```
+
+For those who rely on other tools inside the image, beware, new build relies on a different base image and has slightly different layout.
+
+`mixcr` startup script is added to `PATH` environment variable, so even if you specify custom entrypoint, there is no need in using of full path to run `mixcr`. 
+
+#### License notice for IMGT images
+
+Images with IMGT reference library contain data imported from IMGT and is subject to terms of use listed on http://www.imgt.org site.
+
+Data coming from IMGT server may be used for academic research only, provided that it is referred to IMGT&reg;, and cited as "IMGT&reg;, the international ImMunoGeneTics information system&reg; http://www.imgt.org (founder and director: Marie-Paule Lefranc, Montpellier, France)."
+
+References to cite: Lefranc, M.-P. et al., Nucleic Acids Research, 27, 209-212 (1999) Cover of NAR; Ruiz, M. et al., Nucleic Acids Research, 28, 219-221 (2000); Lefranc, M.-P., Nucleic Acids Research, 29, 207-209 (2001); Lefranc, M.-P., Nucleic Acids Res., 31, 307-310 (2003); Lefranc, M.-P. et al., In Silico Biol., 5, 0006 (2004) [Epub], 5, 45-60 (2005); Lefranc, M.-P. et al., Nucleic Acids Res., 33, D593-D597 (2005) Full text, Lefranc, M.-P. et al., Nucleic Acids Research 2009 37(Database issue): D1006-D1012; doi:10.1093/nar/gkn838 Full text.
+
+### Manual install (any OS)
+
+* download the latest stable MiXCR build from [release page](https://github.com/milaboratory/mixcr/releases/latest)
 * unzip the archive
 * add resulting folder to your ``PATH`` variable
   * or add symbolic link for ``mixcr`` script to your ``bin`` folder
@@ -95,8 +186,6 @@ To activate the license do one of the following:
     - to any place and specify it in `MI_LICENSE_FILE` environment variable
 - put `mi.license` content to `MI_LICENSE` environment variable
 - run `mixcr activate-license` and paste `mi.license` content to the command prompt
-
-
 
 ## Usage & documentation
 

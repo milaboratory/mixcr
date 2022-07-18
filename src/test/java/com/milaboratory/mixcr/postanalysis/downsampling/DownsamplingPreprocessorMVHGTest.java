@@ -29,7 +29,7 @@ import java.util.stream.LongStream;
 /**
  *
  */
-public class DownsamplingPreprocessorTest {
+public class DownsamplingPreprocessorMVHGTest {
 
     @Test
     public void test1() {
@@ -108,7 +108,7 @@ public class DownsamplingPreprocessorTest {
 
         DownsampleValueChooser dsChooser = counts -> Arrays.stream(counts).min().orElse(0);
 
-        DownsamplingPreprocessor<TestObject> proc = new DownsamplingPreprocessor<>(
+        DownsamplingPreprocessorMVHG<TestObject> proc = new DownsamplingPreprocessorMVHG<>(
                 dsChooser, t -> Math.round(t.weight),
                 (t, w) -> new TestObject(t.value, 1d * w),
                 true,

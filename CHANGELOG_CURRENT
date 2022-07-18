@@ -1,3 +1,9 @@
 # Diversity and Biophysics plots: added ability to select specific primary and secondary group values and their order with `--primary-group-values`, -pv` and `--secondary-group-values`, -sv`. Example: `mixcr exportPlots diversity -p tissue -pv Spleen,Thymus,PBMC,LymphNode -s condition -sv Before,After`
 # Bugfix in V- / J- / VJ- usage tabular output
 # `exportClonesOverlap`: fix bug with ignored option `--only-productive`
+# Dropped functionality used to avoid re-running of some MiXCR commands when re-analyzing the data as unstable
+# Removed `pipelineInfo` command
+# Save all MiXCR reports: now possible to export reports directly from vdjca/clns/clna files using `mixcr exportReports --json alignments.vdjca reports.jsonl`
+# Added basic QC plots for alignment rate, chain usage, read coverage; see `mixcr exportQc help`
+# Added --palette option for plots (gene usage, overlap)
+# Fix minor bug in a header row of preprocessors summary tables

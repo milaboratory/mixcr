@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.cli.BinaryFileInfo;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -19,13 +18,9 @@ import io.repseq.core.VDJCLibraryRegistry;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 
 public final class CloneSetIO {
+
     public static CloneSet read(String file) throws IOException {
         return read(file, VDJCLibraryRegistry.getDefault());
     }
@@ -39,15 +34,12 @@ public final class CloneSetIO {
     }
 
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        BinaryFileInfo fileInfo = fileInfoExtractorInstance.getFileInfo(file);
-        if (fileInfo == null)
-            throw new RuntimeException("Unsupported file type");
-        switch (Objects.requireNonNull(fileInfo).fileType) {
-            case MAGIC_CLNA:
+        switch (IOUtil.extractFileType(file.toPath())) {
+            case CLNA:
                 try (ClnAReader r = new ClnAReader(file.toPath(), libraryRegistry, 1)) {
                     return r.readCloneSet();
                 }
-            case MAGIC_CLNS:
+            case CLNS:
                 try (ClnsReader r = new ClnsReader(file.toPath(), libraryRegistry)) {
                     return r.getCloneSet();
                 }
@@ -67,38 +59,21 @@ public final class CloneSetIO {
     }
 
     public static CloneReader mkReader(Path file, VDJCLibraryRegistry libraryRegistry, LambdaSemaphore concurrency) throws IOException {
-        switch (Objects.requireNonNull(fileInfoExtractorInstance.getFileInfo(file.toFile())).fileType) {
-            case MAGIC_CLNA:
+        switch (IOUtil.extractFileType(file)) {
+            case CLNA:
                 return new ClnAReader(file, libraryRegistry, concurrency);
-            case MAGIC_CLNS:
+            case CLNS:
                 return new ClnsReader(file, libraryRegistry, concurrency);
             default:
                 throw new RuntimeException("Unsupported file type");
         }
     }
 
-    /**
-     * Extracts tags info from files and checks that all input has the same tag structure
-     */
-    public static TagsInfo extractTagsInfo(List<Path> files) {
-        Set<TagsInfo> set = new HashSet<>();
-        for (Path in : files) {
-            try (CloneReader reader = mkReader(in, VDJCLibraryRegistry.getDefault())) {
-                set.add(reader.getTagsInfo());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+    public static TagsInfo extractTagsInfo(Path file) {
+        try (CloneReader reader = mkReader(file, VDJCLibraryRegistry.getDefault())) {
+            return reader.getTagsInfo();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        if (set.size() != 1) {
-            throw new IllegalArgumentException("Input files have different tags structure");
-        } else
-            return set.iterator().next();
-    }
-
-    /**
-     * Extracts tags info from files and checks that all input has the same tag structure
-     */
-    public static TagsInfo extractTagsInfo(String... files) {
-        return extractTagsInfo(Arrays.stream(files).map(Paths::get).collect(Collectors.toList()));
     }
 }

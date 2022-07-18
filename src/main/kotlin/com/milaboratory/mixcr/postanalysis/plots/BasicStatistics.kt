@@ -131,6 +131,7 @@ object BasicStatistics {
             null
         else
             PlotType.values().find { it.cliName.lowercase() == str.lowercase() }
+                ?: throw IllegalArgumentException("unknown plot type: $str")
 
     private fun isCategorical(t: PlotType) = when (t) {
         Scatter -> false
@@ -239,7 +240,7 @@ object BasicStatistics {
                     refGroup = par.refGroup
                 )
 
-            if (par.showOverallPValue && par.secondaryGroup == null)
+            if (par.showOverallPValue)
                 plt += statCompareMeans(
                     method = par.method,
                     multipleGroupsMethod = par.multipleGroupsMethod,

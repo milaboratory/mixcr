@@ -27,4 +27,7 @@ public interface TagValue extends Comparable<TagValue> {
 
     /** Extracts TagValue that can be used as a key, basically by ripping off all auxiliary information. */
     TagValue extractKey();
+
+    /** Forces each child class implement custom toString(). Required for textual exporting. */
+    String toString();
 }

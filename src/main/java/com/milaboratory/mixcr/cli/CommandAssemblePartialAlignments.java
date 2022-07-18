@@ -13,11 +13,6 @@ package com.milaboratory.mixcr.cli;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.mitool.helpers.GroupOP;
 import com.milaboratory.mitool.helpers.PipeKt;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -27,16 +22,19 @@ import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters;
+import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport;
 import com.milaboratory.util.JsonOverrider;
 import com.milaboratory.util.ReportUtil;
 import com.milaboratory.util.SmartProgressReporter;
 import kotlin.jvm.functions.Function1;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static com.milaboratory.mixcr.cli.CommandAssemblePartialAlignments.ASSEMBLE_PARTIAL_COMMAND_NAME;
 
@@ -44,8 +42,14 @@ import static com.milaboratory.mixcr.cli.CommandAssemblePartialAlignments.ASSEMB
         sortOptions = true,
         separator = " ",
         description = "Assembles partially aligned reads into longer sequences.")
-public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
-    static final String ASSEMBLE_PARTIAL_COMMAND_NAME = "assemblePartial";
+public class CommandAssemblePartialAlignments extends MiXCRCommand {
+    public static final String ASSEMBLE_PARTIAL_COMMAND_NAME = "assemblePartial";
+
+    @Parameters(description = "alignments.vdjca", index = "0")
+    public String in;
+
+    @Parameters(description = "alignments.recovered.vdjca", index = "1")
+    public String out;
 
     @Option(names = "-O", description = "Overrides default parameter values.")
     public Map<String, String> overrides = new HashMap<>();
@@ -71,6 +75,16 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
             names = {"--cell-level"})
     public boolean cellLevel = false;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
     private PartialAlignmentsAssemblerParameters assemblerParameters;
 
     public PartialAlignmentsAssemblerParameters getPartialAlignmentsAssemblerParameters() {
@@ -89,18 +103,12 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
         return this.assemblerParameters = assemblerParameters;
     }
 
-
-    @Override
-    public ActionConfiguration getConfiguration() {
-        return new AssemblePartialConfiguration(getPartialAlignmentsAssemblerParameters(), dropPartial, overlappedOnly);
-    }
-
-    public PartialAlignmentsAssembler report;
+    public PartialAlignmentsAssembler reportBuillder;
 
     public boolean leftPartsLimitReached, maxRightMatchesLimitReached;
 
     @Override
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
@@ -113,7 +121,7 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
 
             int groupingDepth = reader1.getTagsInfo().getDepthFor(cellLevel ? TagType.Cell : TagType.Molecule);
 
-            writer.header(reader1.getParameters(), reader1.getUsedGenes(), getFullPipelineConfiguration(),
+            writer.header(reader1.getParameters(), reader1.getUsedGenes(),
                     // output data will be grouped only up to a groupingDepth
                     reader1.getTagsInfo().setSorted(groupingDepth));
 
@@ -121,12 +129,11 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
                     reader1.getUsedGenes(), !dropPartial, overlappedOnly,
                     writer::write);
 
-            this.report = assembler;
-            ReportWrapper report = new ReportWrapper(ASSEMBLE_PARTIAL_COMMAND_NAME, assembler);
-            report.setStartMillis(beginTimestamp);
-            report.setInputFiles(in);
-            report.setOutputFiles(out);
-            report.setCommandLine(getCommandLineArguments());
+            this.reportBuillder = assembler;
+            reportBuillder.setStartMillis(beginTimestamp);
+            reportBuillder.setInputFiles(in);
+            reportBuillder.setOutputFiles(out);
+            reportBuillder.setCommandLine(getCommandLineArguments());
 
             if (reader1.getTagsInfo() != null && !reader1.getTagsInfo().hasNoTags()) {
                 SmartProgressReporter.startProgressReport("Running assemble partial", reader1);
@@ -140,9 +147,11 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
 
                 for (GroupOP<VDJCAlignments, TagTuple> grp1 : CUtils.it(groups1)) {
                     assembler.buildLeftPartsIndex(grp1);
-                    GroupOP<VDJCAlignments, TagTuple> grp2 = groups2.take();
-                    assert grp2.getKey().equals(grp1.getKey()) : grp1.getKey() + " != " + grp2.getKey();
-                    assembler.searchOverlaps(grp2);
+                    grp1.close(); // Drain leftover alignments in the group if not yet done
+                    try (GroupOP<VDJCAlignments, TagTuple> grp2 = groups2.take()) {
+                        assert grp2.getKey().equals(grp1.getKey()) : grp1.getKey() + " != " + grp2.getKey();
+                        assembler.searchOverlaps(grp2);
+                    }
                 }
             } else {
                 SmartProgressReporter.startProgressReport("Building index", reader1);
@@ -151,10 +160,10 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
                 assembler.searchOverlaps(reader2);
             }
 
-            report.setFinishMillis(System.currentTimeMillis());
+            reportBuillder.setFinishMillis(System.currentTimeMillis());
 
+            PartialAlignmentsAssemblerReport report = reportBuillder.buildReport();
             // Writing report to stout
-            System.out.println("============= Report ==============");
             ReportUtil.writeReportToStdout(report);
 
             if (assembler.leftPartsLimitReached()) {
@@ -174,49 +183,8 @@ public class CommandAssemblePartialAlignments extends ACommandWithSmartOverwrite
                 ReportUtil.appendJsonReport(jsonReport, report);
 
             writer.setNumberOfProcessedReads(reader1.getNumberOfReads() - assembler.overlapped.get());
-        }
-    }
 
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class AssemblePartialConfiguration implements ActionConfiguration {
-        public final PartialAlignmentsAssemblerParameters parameters;
-        public final boolean dropPartial;
-        public final boolean overlappedOnly;
-
-        @JsonCreator
-        public AssemblePartialConfiguration(@JsonProperty("parameters") PartialAlignmentsAssemblerParameters parameters,
-                                            @JsonProperty("dropPartial") boolean dropPartial,
-                                            @JsonProperty("overlappedOnly") boolean overlappedOnly) {
-            this.parameters = parameters;
-            this.dropPartial = dropPartial;
-            this.overlappedOnly = overlappedOnly;
-        }
-
-        @Override
-        public String actionName() {
-            return ASSEMBLE_PARTIAL_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            AssemblePartialConfiguration that = (AssemblePartialConfiguration) o;
-            return dropPartial == that.dropPartial &&
-                    overlappedOnly == that.overlappedOnly &&
-                    Objects.equals(parameters, that.parameters);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(parameters, dropPartial, overlappedOnly);
+            writer.writeFooter(reader1.reports(), report);
         }
     }
 }

@@ -15,6 +15,7 @@ import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
@@ -25,6 +26,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -59,7 +61,8 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (ClnsWriter writer = new ClnsWriter(tempFile)) {
-            writer.writeCloneSet(null, assemble.cloneSet);
+            writer.writeCloneSet(assemble.cloneSet);
+            writer.writeFooter(Collections.emptyList(), null);
         }
         CloneSet read = CloneSetIO.read(tempFile);
 
@@ -111,9 +114,10 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner, null, null);
+            writer.header(align.aligner, null);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
+            writer.writeFooter(Collections.emptyList(), null);
         }
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
@@ -148,9 +152,10 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner, null, null);
+            writer.header(align.aligner, null);
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
+            writer.writeFooter(Collections.emptyList(), null);
         }
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
@@ -175,6 +180,18 @@ public class RunMiXCRTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         RunMiXCR.AssembleResult assemble0 = RunMiXCR.assemble(align, false);
         RunMiXCR.FullSeqAssembleResult assemble = RunMiXCR.assembleContigs(assemble0);
+
+        try (VDJCAlignmentsReader reader = align.resultReader()) {
+            for (MiXCRCommandReport r : reader.reports()) {
+                System.out.println(r);
+            }
+        }
+
+        try (ClnAReader reader = assemble0.resultReader()) {
+            for (MiXCRCommandReport r : reader.reports()) {
+                System.out.println(r);
+            }
+        }
 
         for (Clone clone : assemble.cloneSet.getClones()) {
             Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),

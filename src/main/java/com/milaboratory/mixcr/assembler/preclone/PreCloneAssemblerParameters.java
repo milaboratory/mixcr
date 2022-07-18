@@ -11,42 +11,93 @@
  */
 package com.milaboratory.mixcr.assembler.preclone;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.mitool.consensus.AAssemblerParameters;
 import com.milaboratory.mitool.consensus.GConsensusAssemblerParameters;
-import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
-import io.repseq.core.GeneFeature;
+
+import java.util.Objects;
 
 public final class PreCloneAssemblerParameters {
-    final GConsensusAssemblerParameters assemblerParameters;
-    final HasRelativeMinScore relativeMinScores;
-    final GeneFeature[] assemblingFeatures;
-    final int groupingLevel;
+    /** Parameters to pre-assemble clone assembling feature sequence inside read groups having the same tags */
+    @JsonProperty("assembler")
+    final GConsensusAssemblerParameters assembler;
 
-    public PreCloneAssemblerParameters(GConsensusAssemblerParameters assemblerParameters,
-                                       HasRelativeMinScore relativeMinScores,
-                                       GeneFeature[] assemblingFeatures, int groupingLevel) {
-        this.assemblerParameters = assemblerParameters;
-        this.relativeMinScores = relativeMinScores;
-        this.assemblingFeatures = assemblingFeatures;
-        this.groupingLevel = groupingLevel;
+    /**
+     * Only pre-clones having at least this share among reads with the same tag suffix will be preserved.
+     * This option is useful when assembling consensuses inside cell groups, but still want to decontaminate
+     * results using molecular barcodes.
+     */
+    @JsonProperty("minTagSuffixShare")
+    final float minTagSuffixShare;
+
+    @JsonCreator
+    public PreCloneAssemblerParameters(
+            @JsonProperty("assembler") GConsensusAssemblerParameters assembler,
+            @JsonProperty("minTagSuffixShare") float minTagSuffixShare) {
+        this.assembler = Objects.requireNonNull(assembler);
+        this.minTagSuffixShare = minTagSuffixShare;
     }
 
-    public static final AAssemblerParameters DefaultAAssemblerParams = AAssemblerParameters.builder()
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PreCloneAssemblerParameters that = (PreCloneAssemblerParameters) o;
+        return Float.compare(that.minTagSuffixShare, minTagSuffixShare) == 0 && assembler.equals(that.assembler);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(assembler, minTagSuffixShare);
+    }
+
+    private static final AAssemblerParameters DefaultAAssemblerParams = AAssemblerParameters.builder()
             .bandWidth(4)
             .scoring(LinearGapAlignmentScoring.getNucleotideBLASTScoring(-14))
             .minAlignmentScore(40)
-            .maxAlignmentPenalty(33)
-            .trimMinimalSumQuality(20)
+            .maxNormalizedAlignmentPenalty(0.15f)
             .trimReferenceRegion(false)
             .maxQuality((byte) 45)
             .build();
 
-    public static final GConsensusAssemblerParameters DefaultGConsensusAssemblerParameters = GConsensusAssemblerParameters.builder()
+    private static final GConsensusAssemblerParameters DefaultGConsensusAssemblerParameters = GConsensusAssemblerParameters.builder()
             .aAssemblerParameters(DefaultAAssemblerParams)
-            .maxIterations(4)
+            .maxIterations(6)
+
+            // Consensus diversity control
             .minAltSeedQualityScore((byte) 11)
-            .minimalRecordShare(0.01)
-            .minimalRecordCount(1)
+            .minAltSeedNormalizedPenalty(0.35f)
+            .altSeedPenaltyTolerance(0.3f)
+
+            // Consensus filtering
+            .minRecordSharePerConsensus(0.01f)
+            .minRecordsPerConsensus(1)
+            .minRecursiveRecordShare(0.35f)
+
             .build();
+
+    /**
+     * Returns default global assembler parameters for by-cell (byCell = true) or by molecule (byCell = false) assembly
+     * scenario
+     */
+    public static PreCloneAssemblerParameters getDefaultParameters(boolean byCell) {
+        if (byCell)
+            return new PreCloneAssemblerParameters(
+                    DefaultGConsensusAssemblerParameters.toBuilder()
+                            .minRecordSharePerConsensus(.01f)
+                            .minRecursiveRecordShare(.2f)
+                            .maxConsensuses(0) // don't limit
+                            .build(),
+                    0.8f); // apply secondary UMI-based filtering
+        else
+            return new PreCloneAssemblerParameters(
+                    DefaultGConsensusAssemblerParameters.toBuilder()
+                            .minRecordSharePerConsensus(.2f)
+                            .minRecursiveRecordShare(.4f)
+                            .maxConsensuses(3)
+                            .build(),
+                    0.0f);
+    }
 }

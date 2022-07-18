@@ -31,9 +31,9 @@ import java.util.stream.LongStream;
 import static com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingUtil.downsample_mvhg;
 
 /**
- *
+ * Downsampling based on multivariate hypergeometric distributions
  */
-public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
+public class DownsamplingPreprocessorMVHG<T> implements SetPreprocessor<T> {
     public final ToLongFunction<T> getCount;
     public final BiFunction<T, Long, T> setCount;
     public final DownsampleValueChooser downsampleValueChooser;
@@ -41,11 +41,11 @@ public class DownsamplingPreprocessor<T> implements SetPreprocessor<T> {
     final String id;
     private final SetPreprocessorStat.Builder<T> stats;
 
-    public DownsamplingPreprocessor(DownsampleValueChooser downsampleValueChooser,
-                                    ToLongFunction<T> getCount,
-                                    BiFunction<T, Long, T> setCount,
-                                    boolean dropOutliers,
-                                    String id) {
+    public DownsamplingPreprocessorMVHG(DownsampleValueChooser downsampleValueChooser,
+                                        ToLongFunction<T> getCount,
+                                        BiFunction<T, Long, T> setCount,
+                                        boolean dropOutliers,
+                                        String id) {
         this.getCount = getCount;
         this.setCount = setCount;
         this.downsampleValueChooser = downsampleValueChooser;

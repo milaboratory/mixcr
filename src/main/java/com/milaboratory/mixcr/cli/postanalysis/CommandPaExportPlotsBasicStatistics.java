@@ -16,12 +16,14 @@ import com.milaboratory.miplots.stat.util.PValueCorrection;
 import com.milaboratory.miplots.stat.util.RefGroup;
 import com.milaboratory.miplots.stat.util.TestMethod;
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
+import com.milaboratory.miplots.stat.xdiscrete.LabelFormat;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
+import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -67,9 +69,9 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
             names = {"--hide-overall-p-value"})
     public boolean hideOverallPValue;
 
-    @Option(description = "Hide pairwise p-values",
-            names = {"--hide-pairwise-p-value"})
-    public boolean hidePairwisePValue;
+    @Option(description = "Show pairwise p-value comparisons",
+            names = {"--pairwise-comparisons"})
+    public boolean pairwiseComparisons;
 
     @Option(description = "Reference group. Can be \"all\" or some specific value.",
             names = {"--ref-group"})
@@ -94,6 +96,10 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     @Option(description = "Method used to adjust p-values. Default is Holm. Available methods: none, BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm, Hommel",
             names = {"--p-adjust-method"})
     public String pAdjustMethod = "Holm";
+
+    @Option(description = "Show significance level instead of p-values",
+            names = {"--show-significance"})
+    public boolean showSignificance;
 
     abstract String group();
 
@@ -120,6 +126,10 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
 
         PlotType plotType = BasicStatistics.INSTANCE.parsePlotType(this.plotType);
 
+        LabelFormat labelFormat = showSignificance
+                ? LabelFormat.Companion.getSignificance()
+                : new LabelFormat.Companion.Formatted();
+
         BasicStatistics.PlotParameters par = new BasicStatistics.PlotParameters(
                 plotType,
                 primaryGroup,
@@ -128,12 +138,12 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
                 secondaryGroupValues,
                 facetBy,
                 !hideOverallPValue,
-                !hidePairwisePValue,
+                pairwiseComparisons,
                 rg,
                 hideNS,
                 null,
-                null,
-                null,
+                labelFormat,
+                labelFormat,
                 paired,
                 TestMethod.valueOf(method),
                 TestMethod.valueOf(methodForMultipleGroups),
@@ -141,8 +151,8 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
                 CorrelationMethod.Pearson
         );
 
-        List<byte[]> plots = BasicStatistics.INSTANCE.plotsAndSummary(df, par);
-        writePlotsAndSummary(result.group, plots);
+        List<Plot> plots = BasicStatistics.INSTANCE.plots(df, par);
+        writePlots(result.group, plots);
     }
 
     @Command(name = "biophysics",

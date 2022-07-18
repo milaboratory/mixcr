@@ -15,12 +15,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.OrderedOutputPort;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.*;
@@ -30,21 +25,30 @@ import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
+import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 
-import static com.milaboratory.mixcr.basictypes.IOUtil.*;
+import static com.milaboratory.mixcr.basictypes.IOUtil.extractFileType;
 import static com.milaboratory.mixcr.cli.CommandExtend.EXTEND_COMMAND_NAME;
 
 @Command(name = EXTEND_COMMAND_NAME,
         sortOptions = true,
         separator = " ",
         description = "Impute alignments or clones with germline sequences.")
-public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
-    static final String EXTEND_COMMAND_NAME = "extend";
+public class CommandExtend extends MiXCRCommand {
+    public static final String EXTEND_COMMAND_NAME = "extend";
+
+    @Parameters(description = "data.[vdjca|clns|clna]", index = "0")
+    public String in;
+
+    @Parameters(description = "extendeed.[vdjca|clns|clna]", index = "1")
+    public String out;
 
     @Option(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
             names = {"-c", "--chains"})
@@ -89,6 +93,16 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
             names = {"--min-j-score"})
     public int minimalJScore = 70;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
     public Chains getChains() {
         return Chains.parse(chains);
     }
@@ -102,20 +116,15 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
     }
 
     @Override
-    public ActionConfiguration getConfiguration() {
-        return new ExtendConfiguration(getChains(), extensionQuality, getVAnchorPoint(), getJAnchorPoint(), minimalVScore, minimalJScore);
-    }
-
-    @Override
-    public void run1() throws Exception {
-        switch (getInputFileInfo().fileType) {
-            case MAGIC_VDJC:
+    public void run0() throws Exception {
+        switch (extractFileType(Paths.get(in))) {
+            case VDJCA:
                 processVDJCA();
                 break;
-            case MAGIC_CLNS:
+            case CLNS:
                 processClns();
                 break;
-            case MAGIC_CLNA:
+            case CLNA:
                 throwValidationException("Operation is not supported for ClnA files.");
                 break;
             default:
@@ -124,24 +133,27 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
     }
 
     void processClns() throws IOException {
-        CloneSet cloneSet = CloneSetIO.read(in);
+        try (ClnsReader reader = new ClnsReader(in, VDJCLibraryRegistry.getDefault())) {
+            CloneSet cloneSet = reader.getCloneSet();
 
-        OutputPort<Clone> outputPort = CUtils.asOutputPort(cloneSet);
-        ProcessWrapper<Clone> process = new ProcessWrapper<>(outputPort,
-                cloneSet.getAlignmentParameters().getVAlignerParameters().getParameters().getScoring(),
-                cloneSet.getAlignmentParameters().getJAlignerParameters().getParameters().getScoring());
+            OutputPort<Clone> outputPort = CUtils.asOutputPort(cloneSet);
+            ProcessWrapper<Clone> process = new ProcessWrapper<>(outputPort,
+                    cloneSet.getAlignmentParameters().getVAlignerParameters().getParameters().getScoring(),
+                    cloneSet.getAlignmentParameters().getJAlignerParameters().getParameters().getScoring());
 
-        List<Clone> clones = new ArrayList<>(cloneSet.getClones().size());
-        for (Clone clone : CUtils.it(process.getOutput()))
-            clones.add(clone.resetParentCloneSet());
+            List<Clone> clones = new ArrayList<>(cloneSet.getClones().size());
+            for (Clone clone : CUtils.it(process.getOutput()))
+                clones.add(clone.resetParentCloneSet());
 
-        clones.sort(Comparator.comparing(Clone::getId));
+            clones.sort(Comparator.comparing(Clone::getId));
 
-        CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
-                cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
+            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
+                    cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
 
-        try (ClnsWriter writer = new ClnsWriter(out)) {
-            writer.writeCloneSet(getFullPipelineConfiguration(), newCloneSet);
+            try (ClnsWriter writer = new ClnsWriter(out)) {
+                writer.writeCloneSet(newCloneSet);
+                writer.writeFooter(reader.reports(), process.report);
+            }
         }
     }
 
@@ -151,8 +163,7 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
              final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
             SmartProgressReporter.startProgressReport("Extending alignments", reader);
 
-            writer.header(reader.getParameters(), reader.getUsedGenes(),
-                    getFullPipelineConfiguration(), reader.getTagsInfo());
+            writer.header(reader.getParameters(), reader.getUsedGenes(), reader.getTagsInfo());
 
             ProcessWrapper<VDJCAlignments> process = new ProcessWrapper<>(reader,
                     reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
@@ -167,28 +178,31 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
                 writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts));
 
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
-
             process.finish();
+            writer.writeFooter(reader.reports(), process.report);
         }
     }
 
     final class ProcessWrapper<T extends VDJCObject> {
-        final ReportWrapper report;
+        final AbstractCommandReportBuilder reportBuilder;
         final ParallelProcessor<T, T> output;
 
+        MiXCRCommandReport report;
+
         public ProcessWrapper(OutputPort<T> input,
-                              AlignmentScoring<NucleotideSequence> vScoring, AlignmentScoring<NucleotideSequence> jScoring) {
+                              AlignmentScoring<NucleotideSequence> vScoring,
+                              AlignmentScoring<NucleotideSequence> jScoring) {
             VDJCObjectExtender<T> extender = new VDJCObjectExtender<>(getChains(), extensionQuality,
                     vScoring, jScoring,
                     minimalVScore, minimalJScore,
                     getVAnchorPoint(),
                     getJAnchorPoint());
             this.output = new ParallelProcessor<>(input, extender, threads);
-            this.report = new ReportWrapper(EXTEND_COMMAND_NAME, extender);
-            report.setStartMillis(System.currentTimeMillis());
-            report.setInputFiles(in);
-            report.setOutputFiles(out);
-            report.setCommandLine(getCommandLineArguments());
+            this.reportBuilder = extender;
+            reportBuilder.setStartMillis(System.currentTimeMillis());
+            reportBuilder.setInputFiles(in);
+            reportBuilder.setOutputFiles(out);
+            reportBuilder.setCommandLine(getCommandLineArguments());
         }
 
         public OutputPort<T> getOutput() {
@@ -196,10 +210,9 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
         }
 
         public void finish() throws JsonProcessingException {
-            report.setFinishMillis(System.currentTimeMillis());
-
+            reportBuilder.setFinishMillis(System.currentTimeMillis());
+            report = reportBuilder.buildReport();
             // Writing report to stout
-            System.out.println("============= Report ==============");
             ReportUtil.writeReportToStdout(report);
 
             if (reportFile != null)
@@ -207,60 +220,6 @@ public class CommandExtend extends ACommandWithSmartOverwriteWithSingleInputMiXC
 
             if (jsonReport != null)
                 ReportUtil.appendJsonReport(jsonReport, report);
-        }
-    }
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class ExtendConfiguration implements ActionConfiguration {
-        final Chains chains;
-        final byte extensionQuality;
-        final ReferencePoint vAnchorPoint, jAnchorPoint;
-        final int minimalVScore;
-        final int minimalJScore;
-
-        @JsonCreator
-        public ExtendConfiguration(@JsonProperty("chains") Chains chains,
-                                   @JsonProperty("extensionQuality") byte extensionQuality,
-                                   @JsonProperty("vAnchorPoint") ReferencePoint vAnchorPoint,
-                                   @JsonProperty("jAnchorPoint") ReferencePoint jAnchorPoint,
-                                   @JsonProperty("minimalVScore") int minimalVScore,
-                                   @JsonProperty("minimalJScore") int minimalJScore) {
-            this.chains = chains;
-            this.extensionQuality = extensionQuality;
-            this.vAnchorPoint = vAnchorPoint;
-            this.jAnchorPoint = jAnchorPoint;
-            this.minimalVScore = minimalVScore;
-            this.minimalJScore = minimalJScore;
-        }
-
-        @Override
-        public String actionName() {
-            return EXTEND_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ExtendConfiguration that = (ExtendConfiguration) o;
-            return extensionQuality == that.extensionQuality &&
-                    minimalVScore == that.minimalVScore &&
-                    minimalJScore == that.minimalJScore &&
-                    Objects.equals(chains, that.chains) &&
-                    Objects.equals(vAnchorPoint, that.vAnchorPoint) &&
-                    Objects.equals(jAnchorPoint, that.jAnchorPoint);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(chains, extensionQuality, vAnchorPoint, jAnchorPoint, minimalVScore, minimalJScore);
         }
     }
 }

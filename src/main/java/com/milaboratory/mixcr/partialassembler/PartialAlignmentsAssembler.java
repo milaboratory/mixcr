@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.partialassembler;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.InputPort;
 import cc.redberry.pipe.OutputPort;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -25,9 +24,8 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
+import com.milaboratory.mixcr.cli.AbstractCommandReportBuilder;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.util.Report;
-import com.milaboratory.util.ReportHelper;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 import io.repseq.core.*;
@@ -37,7 +35,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class PartialAlignmentsAssembler implements Report {
+public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
     final TLongHashSet alreadyMergedIds = new TLongHashSet();
     final TLongHashSet notInLeftIndexIds = new TLongHashSet();
@@ -58,18 +56,18 @@ public class PartialAlignmentsAssembler implements Report {
             independentRuns = new AtomicLong(),
             leftParts = new AtomicLong(),
             rightParts = new AtomicLong(),
-            noKMer = new AtomicLong(),
-            wildcardsInKMer = new AtomicLong(),
+            leftTooShortNRegion = new AtomicLong(),
+            droppedWildcardsInKMer = new AtomicLong(),
             kMerDiversity = new AtomicLong(),
-            total = new AtomicLong(),
+            totalProcessed = new AtomicLong(),
             overlapped = new AtomicLong(),
-            totalWritten = new AtomicLong(),
-            partialAsIs = new AtomicLong(),
+            outputAlignments = new AtomicLong(),
+            partialAlignmentsAsIs = new AtomicLong(),
             overoverlapped = new AtomicLong(),
             droppedSmallOverlapNRegion = new AtomicLong(),
             droppedNoNRegion = new AtomicLong(),
             complexOverlapped = new AtomicLong(),
-            containsCDR3 = new AtomicLong();
+            withCDR3 = new AtomicLong();
 
     public PartialAlignmentsAssembler(PartialAlignmentsAssemblerParameters params,
                                       VDJCAlignerParameters alignerParameters,
@@ -128,12 +126,12 @@ public class PartialAlignmentsAssembler implements Report {
             aligner.addGene(gene);
 
         for (final VDJCAlignments alignment : CUtils.it(input)) {
-            total.incrementAndGet();
+            totalProcessed.incrementAndGet();
 
             if (alignment.getFeature(GeneFeature.CDR3) != null) {
-                containsCDR3.incrementAndGet();
+                withCDR3.incrementAndGet();
                 if (!overlappedOnly) {
-                    totalWritten.incrementAndGet();
+                    outputAlignments.incrementAndGet();
                     output.put(alignment);
                 }
                 continue;
@@ -151,8 +149,8 @@ public class PartialAlignmentsAssembler implements Report {
                     searchResult.cancel();
                 if (writePartial && !overlappedOnly &&
                         notInLeftIndexIds.contains(alignment.getAlignmentsIndex())) {
-                    totalWritten.incrementAndGet();
-                    partialAsIs.incrementAndGet();
+                    outputAlignments.incrementAndGet();
+                    partialAlignmentsAsIs.incrementAndGet();
                     output.put(alignment);
                 }
             };
@@ -235,7 +233,7 @@ public class PartialAlignmentsAssembler implements Report {
             }
 
             overlapped.incrementAndGet();
-            totalWritten.incrementAndGet();
+            outputAlignments.incrementAndGet();
 
             output.put(mAlignment.shiftIndelsAtHomopolymers(geneTypesToShiftIndels));
 
@@ -248,8 +246,8 @@ public class PartialAlignmentsAssembler implements Report {
             for (List<KMerInfo> kMerInfos : kToIndexLeft.valueCollection())
                 for (KMerInfo kMerInfo : kMerInfos)
                     if (alreadyMergedIds.add(kMerInfo.alignments.getAlignmentsIndex())) {
-                        totalWritten.incrementAndGet();
-                        partialAsIs.incrementAndGet();
+                        outputAlignments.incrementAndGet();
+                        partialAlignmentsAsIs.incrementAndGet();
                         output.put(kMerInfo.getAlignments());
                     }
     }
@@ -481,104 +479,6 @@ public class PartialAlignmentsAssembler implements Report {
         return usingAlignment ? "A" : "S";
     }
 
-    @JsonProperty("independentRuns")
-    public long getIndependentRuns() {
-        return independentRuns.get();
-    }
-
-    @JsonProperty("totalProcessed")
-    public long getTotalProcessed() {
-        return total.get();
-    }
-
-    @JsonProperty("outputAlignments")
-    public long getOutputAlignments() {
-        return totalWritten.get();
-    }
-
-    @JsonProperty("withCDR3")
-    public long getContainsCDR3() {
-        return containsCDR3.get();
-    }
-
-    @JsonProperty("overlapped")
-    public long getOverlapped() {
-        return overlapped.get();
-    }
-
-    @JsonProperty("leftTooShortNRegion")
-    public long getLeftShortNRegion() {
-        return noKMer.get();
-    }
-
-    @JsonProperty("kMerDiversity")
-    public long getKMerDiversity() {
-        return kMerDiversity.get();
-    }
-
-    @JsonProperty("droppedWildcardsInKMer")
-    public long getWildcardsInKMer() {
-        return wildcardsInKMer.get();
-    }
-
-    @JsonProperty("droppedSmallOverlapNRegion")
-    public long getDroppedSmallOverlapNRegion() {
-        return droppedSmallOverlapNRegion.get();
-    }
-
-    @JsonProperty("droppedNoNRegion")
-    public long getDroppedNoNRegion() {
-        return droppedNoNRegion.get();
-    }
-
-    @JsonProperty("leftParts")
-    public long getLeftParts() {
-        return leftParts.get();
-    }
-
-    @JsonProperty("rightParts")
-    public long getRightParts() {
-        return rightParts.get();
-    }
-
-    @JsonProperty("complexOverlaps")
-    public long getComplexOverlaps() {
-        return complexOverlapped.get();
-    }
-
-    @JsonProperty("overOverlaps")
-    public long getOverOverlapped() {
-        return overoverlapped.get();
-    }
-
-    @JsonProperty("partialAlignmentsAsIs")
-    public long getPartialAlignmentsAsIs() {
-        return partialAsIs.get();
-    }
-
-    @Override
-    public void writeReport(ReportHelper helper) {
-        long total = this.total.get();
-        if (independentRuns.get() != 1)
-            helper.writeField("Independent runs", total);
-        helper.writeField("Total alignments analysed", total);
-        helper.writePercentAndAbsoluteField("Number of output alignments", totalWritten, total);
-        helper.writePercentAndAbsoluteField("Alignments already with CDR3 (no overlapping is performed)", containsCDR3, total);
-        helper.writePercentAndAbsoluteField("Successfully overlapped alignments", overlapped, total);
-        helper.writePercentAndAbsoluteField("Left parts with too small N-region (failed to extract k-mer)", noKMer, total);
-        helper.writeField("Extracted k-mer diversity", kMerDiversity);
-        helper.writePercentAndAbsoluteField("Dropped due to wildcard in k-mer", wildcardsInKMer, total);
-        helper.writePercentAndAbsoluteField("Dropped due to too short NRegion parts in overlap", droppedSmallOverlapNRegion, total);
-        helper.writePercentAndAbsoluteField("Dropped overlaps with empty N region due to no complete NDN coverage", droppedNoNRegion, total);
-        helper.writePercentAndAbsoluteField("Number of left-side alignments", leftParts, total);
-        helper.writePercentAndAbsoluteField("Number of right-side alignments", rightParts, total);
-        helper.writePercentAndAbsoluteField("Complex overlaps", complexOverlapped, total);
-        helper.writePercentAndAbsoluteField("Over-overlaps", overoverlapped, total);
-        helper.writePercentAndAbsoluteField("Partial alignments written to output", partialAsIs, total);
-        if (!writePartial && !overlappedOnly && totalWritten.get() != overlapped.get() + partialAsIs.get() + containsCDR3.get())
-            throw new AssertionError();
-    }
-
     private int getLeftPartitionedSequence(VDJCAlignments alignment) {
         for (int i = 0; i < alignment.numberOfTargets(); i++) {
             if (alignment.getBestHit(GeneType.Joining) != null &&
@@ -649,7 +549,7 @@ public class PartialAlignmentsAssembler implements Report {
 
         int kFromFirst = left.getPartitioning().getPosition(ReferencePoint.VEndTrimmed) + kOffset;
         if (kFromFirst < 0 || kFromFirst + kValue >= seq.size()) {
-            noKMer.incrementAndGet();
+            leftTooShortNRegion.incrementAndGet();
             return false;
         }
 
@@ -657,7 +557,7 @@ public class PartialAlignmentsAssembler implements Report {
         for (int kFrom = kFromFirst; kFrom < seq.size() - kValue; ++kFrom) {
             long kmer = kMer(seq.getSequence(), kFrom, kValue);
             if (kmer == -1) {
-                wildcardsInKMer.incrementAndGet();
+                droppedWildcardsInKMer.incrementAndGet();
                 continue;
             }
 
@@ -671,6 +571,36 @@ public class PartialAlignmentsAssembler implements Report {
 
         leftParts.incrementAndGet();
         return true;
+    }
+
+    @Override
+    public PartialAlignmentsAssemblerReport buildReport() {
+        if (!writePartial && !overlappedOnly && outputAlignments.get() != overlapped.get() + partialAlignmentsAsIs.get() + withCDR3.get())
+            throw new AssertionError();
+
+        return new PartialAlignmentsAssemblerReport(
+                getDate(),
+                getCommandLine(),
+                getInputFiles(),
+                getOutputFiles(),
+                getExecutionTimeMillis(),
+                getVersion(),
+                independentRuns.get(),
+                totalProcessed.get(),
+                outputAlignments.get(),
+                withCDR3.get(),
+                overlapped.get(),
+                leftTooShortNRegion.get(),
+                kMerDiversity.get(),
+                droppedWildcardsInKMer.get(),
+                droppedSmallOverlapNRegion.get(),
+                droppedNoNRegion.get(),
+                leftParts.get(),
+                rightParts.get(),
+                complexOverlapped.get(),
+                overoverlapped.get(),
+                partialAlignmentsAsIs.get()
+        );
     }
 
     private static long kMer(NucleotideSequence seq, int from, int length) {

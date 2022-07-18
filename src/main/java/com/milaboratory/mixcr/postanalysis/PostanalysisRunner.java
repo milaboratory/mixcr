@@ -160,15 +160,27 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
                     .map(c -> c.createAggregator(dataset))
                     .toArray(Aggregator[]::new);
 
+            Map<SetPreprocessor<T>, Aggregator<?, T>[]> proc2agg = proc2char.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            e -> IntStream.of(e.getValue().toArray()).mapToObj(
+                                    it -> aggregators[it]
+                            ).toArray(Aggregator[]::new),
+                            (a, b) -> a,
+                            IdentityHashMap::new
+                    ));
+
             try (OutputPortWithProgress<T> port = dataset.mkElementsPort()) {
                 for (T o : CUtils.it(port)) {
                     progress = port.getProgress();
                     for (Map.Entry<SetPreprocessor<T>, MappingFunction<T>> e : mappingFunctions[i].entrySet()) {
                         MappingFunction<T> mapper = e.getValue();
                         T oMapped = mapper.apply(o);
-                        if (oMapped != null)
-                            for (int chIdx : proc2char.get(e.getKey()).toArray())
-                                aggregators[chIdx].consume(oMapped);
+                        if (oMapped != null) {
+                            Aggregator<?, T>[] aggs = proc2agg.get(e.getKey());
+                            for (Aggregator<?, T> agg : aggs)
+                                agg.consume(oMapped);
+                        }
                     }
                 }
             }

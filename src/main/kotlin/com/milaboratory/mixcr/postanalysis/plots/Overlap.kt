@@ -41,7 +41,8 @@ object Overlap {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metricsFilter: List<String>?
+        fillDiagonal: Boolean,
+        metricsFilter: List<String>?,
     ) = run {
         val data = mutableListOf<OverlapRow>()
         val mf = metricsFilter?.map { it.lowercase() }?.toSet()
@@ -56,6 +57,8 @@ object Overlap {
                     }
                     val sample1 = key.id1
                     val sample2 = key.id2
+                    if (!fillDiagonal && sample1 == sample2)
+                        continue
                     val preprocStat1 = paResult.getPreprocStat(ch, sample1)
                     val preprocStat2 = paResult.getPreprocStat(ch, sample2)
                     data += OverlapRow(preproc, preprocStat1, preprocStat2, sample1, sample2, key.key, metric.value)
@@ -73,9 +76,10 @@ object Overlap {
     fun dataFrame(
         paResult: PostanalysisResult,
         metricsFilter: List<String>?,
+        fillDiagonal: Boolean,
         metadata: Metadata?,
     ) = run {
-        var df: DataFrame<OverlapRow> = dataFrame(paResult, metricsFilter)
+        var df: DataFrame<OverlapRow> = dataFrame(paResult, fillDiagonal, metricsFilter)
         if (metadata != null)
             df = df.withMetadata(metadata)
         df

@@ -79,10 +79,14 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
         return new TagsInfo(sortedLevel, tags);
     }
 
+    public TagsInfo sortedPrefix() {
+        return new TagsInfo(sortingLevel, Arrays.copyOf(tags, sortingLevel));
+    }
+
     public int indexOf(String tagName) {
         int idx = -1;
         for (TagInfo ti : this)
-            if (ti.getName().equals(tagName)) {
+            if (ti.getName().equalsIgnoreCase(tagName)) {
                 idx = ti.getIndex();
                 break;
             }

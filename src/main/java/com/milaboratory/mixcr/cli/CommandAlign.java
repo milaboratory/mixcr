@@ -20,12 +20,6 @@ import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import cc.redberry.pipe.util.StatusReporter;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.core.PairedEndReadsLayout;
 import com.milaboratory.core.Target;
 import com.milaboratory.core.io.CompressionType;
@@ -39,7 +33,7 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
-import com.milaboratory.core.sequence.quality.ReadTrimmerReport;
+import com.milaboratory.milm.MiXCRMain;
 import com.milaboratory.mitool.helpers.FSKt;
 import com.milaboratory.mitool.pattern.PatternCollection;
 import com.milaboratory.mitool.pattern.search.*;
@@ -49,7 +43,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.*;
-import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.*;
 import io.repseq.core.*;
@@ -79,7 +72,7 @@ import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
         sortOptions = false,
         separator = " ",
         description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
-public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
+public class CommandAlign extends MiXCRCommand {
     static final String ALIGN_COMMAND_NAME = "align";
     @Parameters(arity = "2..3",
             paramLabel = "files",
@@ -317,6 +310,10 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 : (vdjcLibrary = VDJCLibraryRegistry.getDefault().getLibrary(getLibraryName(), species));
     }
 
+    public boolean taggedAnalysis() {
+        return tagPattern != null || tagPatternName != null || tagPatternFile != null;
+    }
+
     public boolean isInputPaired() {
         return getInputFiles().size() == 2;
     }
@@ -337,14 +334,20 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         };
 
         if (isInputPaired()) {
-            List<ConcatenatingSingleReader> readers = getInputFiles().stream()
+            List<List<Path>> resolved = getInputFiles().stream()
                     .map(rf -> FSKt.expandPathNPattern(Paths.get(rf)))
-                    .map(rs -> new ConcatenatingSingleReader(
-                            rs.stream()
-                                    .map(readerFactory)
-                                    .collect(Collectors.toList())
-                    ))
                     .collect(Collectors.toList());
+            MiXCRMain.lm.reportApplicationInputs(resolved.stream()
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList()));
+            List<ConcatenatingSingleReader> readers =
+                    resolved.stream()
+                            .map(rs -> new ConcatenatingSingleReader(
+                                    rs.stream()
+                                            .map(readerFactory)
+                                            .collect(Collectors.toList())
+                            ))
+                            .collect(Collectors.toList());
             return new PairedFastqReader(readers.get(0), readers.get(1));
         } else {
             String in = getInputFiles().get(0);
@@ -354,95 +357,13 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                         new FastaReader<>(in, NucleotideSequence.ALPHABET),
                         true
                 );
-            else
-                return new ConcatenatingSingleReader(FSKt.expandPathNPattern(Paths.get(in)).stream()
+            else {
+                List<Path> resolved = FSKt.expandPathNPattern(Paths.get(in));
+                MiXCRMain.lm.reportApplicationInputs(resolved);
+                return new ConcatenatingSingleReader(resolved.stream()
                         .map(readerFactory)
                         .collect(Collectors.toList()));
-        }
-    }
-
-    @Override
-    public PipelineConfiguration getFullPipelineConfiguration() {
-        return PipelineConfiguration.mkInitial(getInputFiles(), getConfiguration(),
-                MiXCRVersionInfo.getAppVersionInfo());
-    }
-
-    @Override
-    public ActionConfiguration getConfiguration() {
-        return new AlignConfiguration(
-                getAlignerParameters(),
-                !noMerge,
-                getLibrary().getLibraryId(),
-                limit,
-                getQualityTrimmerParameters(),
-                tagPattern);
-    }
-
-    /** Set of parameters that completely (uniquely) determine align action */
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type"
-    )
-    public static class AlignConfiguration implements ActionConfiguration<AlignConfiguration> {
-        /**
-         * Aligner parameters
-         */
-        public final VDJCAlignerParameters alignerParameters;
-        /**
-         * Whether reads were merged
-         */
-        public final boolean mergeReads;
-        /**
-         * VDJC library ID
-         */
-        public final VDJCLibraryId libraryId;
-        /**
-         * Limit number of reads
-         */
-        public final long limit;
-        /**
-         * Trimming parameters (null if trimming is not enabled)
-         */
-        public final QualityTrimmerParameters trimmerParameters;
-        /** Tag extraction pattern */
-        public final String tagPattern;
-
-        @JsonCreator
-        public AlignConfiguration(@JsonProperty("alignerParameters") VDJCAlignerParameters alignerParameters,
-                                  @JsonProperty("mergeReads") boolean mergeReads,
-                                  @JsonProperty("libraryId") VDJCLibraryId libraryId,
-                                  @JsonProperty("limit") long limit,
-                                  @JsonProperty("trimmerParameters") QualityTrimmerParameters trimmerParameters,
-                                  @JsonProperty("tagPattern") String tagPattern) {
-            this.alignerParameters = alignerParameters;
-            this.mergeReads = mergeReads;
-            this.libraryId = libraryId;
-            this.limit = limit;
-            this.trimmerParameters = trimmerParameters;
-            this.tagPattern = tagPattern;
-        }
-
-        @Override
-        public String actionName() {
-            return ALIGN_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            AlignConfiguration that = (AlignConfiguration) o;
-            return mergeReads == that.mergeReads && limit == that.limit && Objects.equals(alignerParameters, that.alignerParameters) && Objects.equals(libraryId, that.libraryId) && Objects.equals(trimmerParameters, that.trimmerParameters) && Objects.equals(tagPattern, that.tagPattern);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(alignerParameters, mergeReads, libraryId, limit, trimmerParameters, tagPattern);
+            }
         }
     }
 
@@ -501,6 +422,13 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         if (readShortcuts.size() > 2)
             throwValidationException("Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported.", false);
 
+        if (failedReadsR1 != null) {
+            if (failedReadsR2 == null && readShortcuts.size() == 2)
+                throwValidationException("Option --not-aligned-R2 is not specified but tag pattern defines two payload reads.", false);
+            if (failedReadsR2 != null && readShortcuts.size() == 1)
+                throwValidationException("Option --not-aligned-R2 is specified but tag pattern defines only one payload read.", false);
+        }
+
         return new TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.getTags());
     }
 
@@ -518,7 +446,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             throwValidationException("No output file.");
         if (failedReadsR2 != null && failedReadsR1 == null)
             throwValidationException("Wrong input for --not-aligned-R1,2");
-        if (failedReadsR1 != null && (failedReadsR2 != null) != isInputPaired())
+        if (failedReadsR1 != null && !taggedAnalysis() && (failedReadsR2 != null) != isInputPaired())
             throwValidationException("Option --not-aligned-R2 is not set.", false);
         if (library.contains("/") || library.contains("\\"))
             throwValidationException("Library name can't be a path. Place your library to one of the " +
@@ -527,7 +455,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
     }
 
     /** Alignment report */
-    public final AlignerReport report = new AlignerReport();
+    public final AlignerReportBuilder reportBuilder = new AlignerReportBuilder();
 
     private QualityTrimmerParameters getQualityTrimmerParameters() {
         return new QualityTrimmerParameters(trimmingQualityThreshold,
@@ -536,7 +464,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         // Saving initial timestamp
         long beginTimestamp = System.currentTimeMillis();
 
@@ -607,22 +535,23 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
             throwExecutionException("No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option).");
 
-        report.setStartMillis(beginTimestamp);
-        report.setInputFiles(getInputFiles());
-        report.setOutputFiles(getOutput());
-        report.setCommandLine(getCommandLineArguments());
+        reportBuilder.setStartMillis(beginTimestamp);
+        reportBuilder.setInputFiles(getInputFiles());
+        reportBuilder.setOutputFiles(getOutputFiles());
+        reportBuilder.setCommandLine(getCommandLineArguments());
 
         if (tagSearchPlan != null)
-            report.setTagReport(tagSearchPlan.report);
+            reportBuilder.setTagReportBuilder(tagSearchPlan.report);
 
         // Attaching report to aligner
-        aligner.setEventsListener(report);
+        aligner.setEventsListener(reportBuilder);
 
+        String outputFile = getOutputFiles().get(0);
         try (SequenceReaderCloseable<? extends SequenceRead> reader = createReader();
 
-             VDJCAlignmentsWriter writer = getOutput().equals(".")
+             VDJCAlignmentsWriter writer = outputFile.equals(".")
                      ? null
-                     : new VDJCAlignmentsWriter(getOutput(), Math.max(1, threads / 8),
+                     : new VDJCAlignmentsWriter(outputFile, Math.max(1, threads / 8),
                      DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression);
 
              SequenceWriter notAlignedWriter = failedReadsR1 == null
@@ -632,7 +561,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                      : new SingleFastqWriter(failedReadsR1));
         ) {
             if (writer != null)
-                writer.header(aligner, getFullPipelineConfiguration(),
+                writer.header(aligner,
                         tagSearchPlan != null
                                 ? new TagsInfo(0, tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
                                 : TagsInfo.NO_TAGS);
@@ -662,9 +591,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
 
             ReadTrimmerProcessor readTrimmerProcessor;
             if (trimmingQualityThreshold > 0) {
-                ReadTrimmerReport rep = new ReadTrimmerReport();
+                ReadTrimmerReportBuilder rep = new ReadTrimmerReportBuilder();
                 readTrimmerProcessor = new ReadTrimmerProcessor(getQualityTrimmerParameters(), rep);
-                report.setTrimmingReport(rep);
+                reportBuilder.setTrimmingReportBuilder(rep);
             } else
                 readTrimmerProcessor = null;
 
@@ -676,11 +605,11 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                     TaggedSequence parsed = tagSearchPlan.parse(input);
 
                     if (parsed == null) {
-                        report.onFailedAlignment(input, VDJCAlignmentFailCause.NoBarcode);
+                        reportBuilder.onFailedAlignment(input, VDJCAlignmentFailCause.NoBarcode);
                         return new VDJCAlignmentResult(input);
                     }
 
-                    SequenceRead read = parsed.read;
+                    SequenceRead read = parsed.payloadRead;
                     if (readTrimmerProcessor != null)
                         read = readTrimmerProcessor.process(read);
 
@@ -744,35 +673,41 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                 alignment = alignment.setTagCount(result.tagTuple == null ? TagCount.NO_TAGS_1 : new TagCount(result.tagTuple));
 
                 if (alignment.isChimera())
-                    report.onChimera();
+                    reportBuilder.onChimera();
 
                 if (writer != null)
                     writer.write(alignment);
             }
             if (writer != null)
                 writer.setNumberOfProcessedReads(reader.getNumberOfReads());
+
+            reportBuilder.setFinishMillis(System.currentTimeMillis());
+
+            AlignerReport report = reportBuilder.buildReport();
+
+            if (writer != null)
+                writer.writeFooter(Collections.singletonList(report), null);
+
+            // Writing report to stout
+            ReportUtil.writeReportToStdout(report);
+
+            if (reportFile != null)
+                ReportUtil.appendReport(reportFile, report);
+
+            if (jsonReport != null)
+                ReportUtil.appendJsonReport(jsonReport, report);
         }
-
-        report.setFinishMillis(System.currentTimeMillis());
-
-        // Writing report to stout
-        System.out.println("============= Report ==============");
-        ReportUtil.writeReportToStdout(report);
-
-        if (reportFile != null)
-            ReportUtil.appendReport(reportFile, report);
-
-        if (jsonReport != null)
-            ReportUtil.appendJsonReport(jsonReport, report);
     }
 
     static final class TaggedSequence {
         final TagTuple tags;
-        final SequenceRead read;
+        final SequenceRead rawRead;
+        final SequenceRead payloadRead;
 
-        public TaggedSequence(TagTuple tags, SequenceRead read) {
+        public TaggedSequence(TagTuple tags, SequenceRead rawRead, SequenceRead payloadRead) {
             this.tags = tags;
-            this.read = read;
+            this.rawRead = rawRead;
+            this.payloadRead = payloadRead;
         }
     }
 
@@ -815,7 +750,7 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
                                 : read.getRead(i).getDescription());
             }
 
-            return new TaggedSequence(new TagTuple(tags), SequenceReadUtil.construct(reads));
+            return new TaggedSequence(new TagTuple(tags), read, SequenceReadUtil.construct(reads));
         }
     }
 
@@ -870,6 +805,9 @@ public class CommandAlign extends ACommandWithSmartOverwriteMiXCR {
         Collections.sort(tags);
         for (int i = 0; i < tags.size(); i++)
             tags.set(i, tags.get(i).withIndex(i));
+        tags.stream().map(TagInfo::getType)
+                .collect(Collectors.toSet())
+                .forEach(tt -> MiXCRMain.lm.reportFeature("mixcr.tag-type", tt.toString()));
         Collections.sort(readTags);
         return new ParseInfo(tags, readTags);
     }

@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
-import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.ui.*;
 import com.milaboratory.util.JsonOverrider;
 import com.milaboratory.util.SmartProgressReporter;
@@ -52,12 +51,8 @@ public class CommandPaIndividual extends CommandPa {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, Clone>> groups = getParameters().getGroups(getTagsInfo());
-        PostanalysisSchema<Clone> schema = new PostanalysisSchema<>(false, groups)
-                .transform(ch -> ch.override(ch.name,
-                        ch.preprocessor
-                                .filterFirst(new ElementPredicate.IncludeChains(group.chains.chains)))
-                );
+        List<CharacteristicGroup<?, Clone>> groups = getParameters().getGroups(group.chains.chains, getTagsInfo());
+        PostanalysisSchema<Clone> schema = new PostanalysisSchema<>(false, groups);
         PostanalysisRunner runner = new PostanalysisRunner<>();
         runner.addCharacteristics(schema.getAllCharacterisitcs());
 

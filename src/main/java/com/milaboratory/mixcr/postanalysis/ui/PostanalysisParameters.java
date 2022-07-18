@@ -21,15 +21,10 @@ import com.milaboratory.mixcr.postanalysis.Characteristic;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory;
 import com.milaboratory.mixcr.postanalysis.WeightFunction;
 import com.milaboratory.mixcr.postanalysis.WeightFunctions;
-import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessorFactory;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsampleValueChooser;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
-import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
-import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
-import com.milaboratory.mixcr.postanalysis.preproc.SelectTop;
 import com.milaboratory.primitivio.annotations.Serializable;
-import io.repseq.core.GeneFeature;
+import io.repseq.core.Chains;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -78,37 +73,37 @@ public abstract class PostanalysisParameters {
             this.tagsInfo = tagsInfo;
         }
 
+        @JsonIgnore
+        private DownsamplingParameters downsamplingParameters;
+
+        public synchronized DownsamplingParameters getDownsamplingParameters() {
+            if (downsamplingParameters == null)
+                downsamplingParameters = DownsamplingParameters.parse(
+                        this.downsampling == null ? parent.defaultDownsampling : this.downsampling,
+                        tagsInfo,
+                        this.dropOutliers == null ? parent.defaultDropOutliers : this.dropOutliers,
+                        this.onlyProductive == null ? parent.defaultOnlyProductive : this.onlyProductive);
+            return downsamplingParameters;
+        }
+
         public WeightFunction<Clone> weightFunction() {
             return parseWeightFunction(this.weightFunction == null ? parent.defaultWeightFunction : this.weightFunction, tagsInfo);
         }
 
-        public SetPreprocessorFactory<Clone> preproc() {
-            SetPreprocessorFactory<Clone> p = parseDownsampling();
-
-            boolean onlyProductive = this.onlyProductive == null ? parent.defaultOnlyProductive : this.onlyProductive;
-            if (onlyProductive)
-                p = filterOnlyProductive(p);
-            return p;
+        public SetPreprocessorFactory<Clone> preproc(Chains chains) {
+            return getDownsamplingParameters().getPreproc(chains);
         }
 
-        public PreprocessorAndWeight<Clone> pwTuple() {
-            return new PreprocessorAndWeight<>(preproc(), weightFunction());
+        PreprocessorAndWeight<Clone> pwTuple(Chains chains) {
+            return new PreprocessorAndWeight<>(preproc(chains), weightFunction());
         }
 
-        public OverlapPreprocessorAndWeight<Clone> opwTuple() {
-            return new OverlapPreprocessorAndWeight<>(overlapPreproc(), weightFunction());
+        OverlapPreprocessorAndWeight<Clone> opwTuple(Chains chains) {
+            return new OverlapPreprocessorAndWeight<>(overlapPreproc(chains), weightFunction());
         }
 
-        public SetPreprocessorFactory<OverlapGroup<Clone>> overlapPreproc() {
-            return new OverlapPreprocessorAdapter.Factory<>(preproc());
-        }
-
-        SetPreprocessorFactory<Clone> parseDownsampling() {
-            return PostanalysisParameters.parseDownsampling(
-                    this.downsampling == null ? parent.defaultDownsampling : this.downsampling,
-                    tagsInfo,
-                    this.dropOutliers == null ? parent.defaultDropOutliers : this.dropOutliers
-            );
+        public SetPreprocessorFactory<OverlapGroup<Clone>> overlapPreproc(Chains chains) {
+            return new OverlapPreprocessorAdapter.Factory<>(preproc(chains));
         }
 
         @Override
@@ -202,6 +197,7 @@ public abstract class PostanalysisParameters {
         if (weight == null) // default
             return WeightFunctions.Count;
         switch (weight) {
+            case "read":
             case "read-count":
             case "reads-count":
                 return WeightFunctions.Count;
@@ -213,63 +209,5 @@ public abstract class PostanalysisParameters {
                     throw new IllegalArgumentException("Unknown weight type: " + weight + ". Available types: none, default, read, " + info.stream().map(TagInfo::getName).collect(Collectors.joining(",")));
                 return new WeightFunctions.TagCount(tagIndex);
         }
-    }
-
-    public static SetPreprocessorFactory<Clone> parseDownsampling(String downsampling,
-                                                                  TagsInfo tagsInfo,
-                                                                  boolean dropOutliers) {
-        if (downsampling.equalsIgnoreCase("none"))
-            return new NoPreprocessing.Factory<>();
-
-        String[] parts = downsampling.split("-");
-
-        String tag = parts[1];
-        WeightFunction<Clone> wt;
-        switch (tag) {
-            case "read":
-            case "reads":
-                wt = WeightFunctions.Count;
-                break;
-            default:
-                int i = tagsInfo.indexOfIgnoreCase(tag.replace("-count", ""));
-                if (i < 0)
-                    throw new IllegalArgumentException("Tag " + tag + " not found in the input files.");
-                wt = new WeightFunctions.TagCount(i);
-        }
-
-        switch (parts[0]) {
-            case "count":
-                DownsampleValueChooser chooser;
-                switch (parts[2]) {
-                    case "auto":
-                        chooser = new DownsampleValueChooser.Auto();
-                        break;
-                    case "min":
-                        chooser = new DownsampleValueChooser.Minimal();
-                        break;
-                    case "fixed":
-                        chooser = new DownsampleValueChooser.Fixed(Long.parseLong(parts[3]));
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Can't parse downsampling value choose: " + downsampling);
-                }
-                return new ClonesDownsamplingPreprocessorFactory(chooser, dropOutliers, wt);
-
-            case "top":
-                return new SelectTop.Factory<>(wt, Integer.parseInt(parts[2]));
-
-            case "cumtop":
-                return new SelectTop.Factory<>(wt, Double.parseDouble(parts[2]) / 100.0);
-
-            default:
-                throw new IllegalArgumentException("Illegal downsampling string: " + downsampling);
-        }
-    }
-
-    public static SetPreprocessorFactory<Clone> filterOnlyProductive(SetPreprocessorFactory<Clone> p) {
-        List<ElementPredicate<Clone>> filters = new ArrayList<>();
-        filters.add(new ElementPredicate.NoStops(GeneFeature.CDR3));
-        filters.add(new ElementPredicate.NoOutOfFrames(GeneFeature.CDR3));
-        return p.filterFirst(filters);
     }
 }

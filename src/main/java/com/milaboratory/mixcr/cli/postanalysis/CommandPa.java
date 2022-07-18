@@ -13,9 +13,9 @@ package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
+import com.milaboratory.mixcr.cli.MiXCRCommand;
+import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
 import picocli.CommandLine;
@@ -38,9 +38,10 @@ import static java.util.stream.Collectors.toList;
 /**
  *
  */
-public abstract class CommandPa extends ACommandWithOutputMiXCR {
+public abstract class CommandPa extends MiXCRCommand {
     public static final NamedChains[] CHAINS = {TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED};
 
+    static final String sampleMatchColumn = "sample___matched";
     @Parameters(description = "cloneset.{clns|clna}... result.json.gz|result.json")
     public List<String> inOut;
 
@@ -59,7 +60,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
     @Option(description = CommonDescriptions.WEIGHT_FUNCTION,
             names = {"--default-weight-function"},
-            required = false)
+            required = true)
     public String defaultWeightFunction;
 
     @Option(description = "Filter specified chains",
@@ -114,9 +115,20 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     protected TagsInfo getTagsInfo() {
         if (!tagsInfoInitialized) {
             tagsInfoInitialized = true;
-            this.tagsInfo = CloneSetIO.extractTagsInfo(getInputFiles().toArray(new String[0]));
+            this.tagsInfo = extractTagsInfo(getInputFiles());
         }
         return tagsInfo;
+    }
+
+    static TagsInfo extractTagsInfo(List<String> l) {
+        Set<TagsInfo> set = new HashSet<>();
+        for (String in : l) {
+            set.add(CloneSetIO.extractTagsInfo(Paths.get(in)));
+        }
+        if (set.size() != 1) {
+            throw new IllegalArgumentException("Input files have different tags structure");
+        } else
+            return set.iterator().next();
     }
 
     @Override
@@ -125,7 +137,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
         try {
-            PostanalysisParameters.parseDownsampling(defaultDownsampling, getTagsInfo(), dropOutliers);
+            DownsamplingParameters.parse(defaultDownsampling, getTagsInfo(), dropOutliers, onlyProductive);
         } catch (Throwable t) {
             throwValidationException(t.getMessage());
         }
@@ -192,6 +204,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
     private Map<String, List<Object>> _metadata = null;
 
+    /** Map of columns */
     protected Map<String, List<Object>> metadata() {
         if (metadata == null)
             return null;

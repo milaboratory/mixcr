@@ -13,10 +13,9 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.InputPort;
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.cli.PipelineConfiguration;
-import com.milaboratory.cli.PipelineConfigurationWriter;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
@@ -29,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,12 +36,14 @@ import java.util.stream.Collectors;
 /**
  *
  */
-public final class ClnsWriter implements PipelineConfigurationWriter, AutoCloseable {
-    static final String MAGIC_V11 = "MiXCR.CLNS.V11";
+public final class ClnsWriter implements AutoCloseable {
+    static final String MAGIC_V12 = "MiXCR.CLNS.V12";
     static final String MAGIC_V12 = "MiXCR.CLNS.V12";
     static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
+    /** Number of bytes in footer with meta information */
+    static final int FOOTER_LENGTH = 8 + IOUtil.END_MAGIC_LENGTH;
 
     final PrimitivOHybrid output;
 
@@ -57,10 +59,8 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
         this.output = output;
     }
 
-    public void writeHeaderFromCloneSet(
-            PipelineConfiguration configuration,
-            CloneSet cloneSet) {
-        writeHeader(configuration,
+    public void writeHeaderFromCloneSet(CloneSet cloneSet) {
+        writeHeader(
                 cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters(),
                 cloneSet.getTagsInfo(),
@@ -73,7 +73,6 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
     }
 
     public void writeHeader(
-            PipelineConfiguration configuration,
             VDJCAlignerParameters alignmentParameters,
             CloneAssemblerParameters assemblerParameters,
             TagsInfo tagsInfo,
@@ -93,7 +92,6 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
                             AppVersionInfo.OutputType.ToFile));
 
             // Writing analysis meta-information
-            o.writeObject(configuration);
             o.writeObject(alignmentParameters);
             o.writeObject(assemblerParameters);
             o.writeObject(tagsInfo);
@@ -112,9 +110,8 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
         return output.beginPrimitivOBlocks(3, 512);
     }
 
-    public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet, List<VDJCLibrary> libraries) {
+    public void writeCloneSet(CloneSet cloneSet, List<VDJCLibrary> libraries) {
         writeHeader(
-                configuration,
                 cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters(),
                 cloneSet.tagsInfo,
@@ -130,17 +127,45 @@ public final class ClnsWriter implements PipelineConfigurationWriter, AutoClosea
         cloneIP.put(null);
     }
 
-    public void writeCloneSet(PipelineConfiguration configuration, CloneSet cloneSet) {
-        writeHeaderFromCloneSet(configuration, cloneSet);
+    public void writeCloneSet(CloneSet cloneSet) {
+        writeHeaderFromCloneSet(cloneSet);
         InputPort<Clone> cloneIP = cloneWriter();
         for (Clone clone : cloneSet)
             cloneIP.put(clone);
         cloneIP.put(null);
     }
 
+    private List<MiXCRCommandReport> footer = null;
+
+    /**
+     * Write reports chain
+     */
+    public void writeFooter(List<MiXCRCommandReport> reports, MiXCRCommandReport report) {
+        if (footer != null)
+            throw new IllegalStateException("Footer already written");
+        this.footer = new ArrayList<>();
+        if (reports != null)
+            footer.addAll(reports);
+        if (report != null)
+            footer.add(report);
+    }
+
     @Override
     public void close() throws IOException {
+        if (footer == null)
+            throw new IllegalStateException("Footer not written");
+
+        // position of reports
+        long footerStartPosition = output.getPosition();
+
         try (PrimitivO o = output.beginPrimitivO()) {
+            o.writeInt(footer.size());
+            for (MiXCRCommandReport report : footer) {
+                o.writeObject(report);
+            }
+
+            // Total size = 8 + END_MAGIC_LENGTH
+            o.writeLong(footerStartPosition);
             // Writing end-magic as a file integrity sign
             o.write(IOUtil.getEndMagicBytes());
         }

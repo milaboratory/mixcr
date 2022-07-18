@@ -111,6 +111,10 @@ public class SetPreprocessorStat {
                 last.sumWeightAfter);
     }
 
+    public static SetPreprocessorStat empty(String preprocId) {
+        return new SetPreprocessorStat(preprocId, false, 0, 0, 0, 0);
+    }
+
     private static final class BuilderForSample<T> {
         final String preprocId;
         final AtomicBoolean dropped = new AtomicBoolean(false);

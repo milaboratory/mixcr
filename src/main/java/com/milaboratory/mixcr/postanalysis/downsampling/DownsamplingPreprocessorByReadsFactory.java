@@ -15,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.postanalysis.WeightFunction;
 
 import java.util.Objects;
 
@@ -27,30 +26,24 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class ClonesDownsamplingPreprocessorFactory extends DownsamplingPreprocessorFactory<Clone> {
-    @JsonProperty("weightFunction")
-    public final WeightFunction<Clone> weightFunction;
-
+public class DownsamplingPreprocessorByReadsFactory extends DownsamplingPreprocessorMVHGFactory<Clone> {
     @JsonCreator
-    public ClonesDownsamplingPreprocessorFactory(@JsonProperty("downsampleValueChooser") DownsampleValueChooser downsampleValueChooser,
-                                                 @JsonProperty("dropOutliers") boolean dropOutliers,
-                                                 @JsonProperty("weightFunction") WeightFunction<Clone> weightFunction) {
-        super(downsampleValueChooser, c -> Math.round(weightFunction.weight(c)), Clone::setCount, dropOutliers);
-        this.weightFunction = weightFunction;
+    public DownsamplingPreprocessorByReadsFactory(@JsonProperty("downsampleValueChooser") DownsampleValueChooser downsampleValueChooser,
+                                                  @JsonProperty("dropOutliers") boolean dropOutliers) {
+        super(downsampleValueChooser, c -> Math.round(c.getCount()), Clone::setCount, dropOutliers);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ClonesDownsamplingPreprocessorFactory that = (ClonesDownsamplingPreprocessorFactory) o;
+        DownsamplingPreprocessorByReadsFactory that = (DownsamplingPreprocessorByReadsFactory) o;
         return Objects.equals(downsampleValueChooser, that.downsampleValueChooser)
-                && Objects.equals(weightFunction, that.weightFunction)
                 && Objects.equals(dropOutliers, that.dropOutliers);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(downsampleValueChooser, weightFunction, dropOutliers);
+        return Objects.hash(downsampleValueChooser, dropOutliers);
     }
 }

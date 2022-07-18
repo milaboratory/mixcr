@@ -24,7 +24,17 @@ import java.util.List;
         hidden = true,
         separator = " ",
         description = "List all available library by scanning all library search paths.")
-public class CommandListLibraries extends ACommandMiXCR {
+public class CommandListLibraries extends MiXCRCommand {
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.emptyList();
+    }
+
     @Override
     public void run0() {
         VDJCLibraryRegistry.getDefault().loadAllLibraries();

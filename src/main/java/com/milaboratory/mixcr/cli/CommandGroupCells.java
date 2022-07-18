@@ -83,7 +83,6 @@ package com.milaboratory.mixcr.cli;
 //         }
 //
 //         // Writing report to stout
-//         System.out.println("============= Report ==============");
 //         Util.writeReportToStdout(report);
 //
 //         if (reportFile != null)

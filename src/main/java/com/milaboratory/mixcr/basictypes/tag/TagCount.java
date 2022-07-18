@@ -25,11 +25,13 @@ public final class TagCount {
 
     final TagTuple singletonTuple;
     final double singletonCount;
+    final int depth;
     final TObjectDoubleHashMap<TagTuple> tagMap;
 
     public TagCount(TagTuple singletonTuple) {
         this.singletonTuple = singletonTuple;
         this.singletonCount = 1.0;
+        this.depth = singletonTuple.tags.length;
         this.tagMap = null;
     }
 
@@ -38,6 +40,7 @@ public final class TagCount {
             throw new IllegalArgumentException("Non-key tuples can be associated only with 1.0 count.");
         this.singletonTuple = singletonTuple;
         this.singletonCount = singletonCount;
+        this.depth = singletonTuple.tags.length;
         this.tagMap = null;
     }
 
@@ -59,10 +62,14 @@ public final class TagCount {
                 throw new IllegalArgumentException("Non-key tuples can be associated only with 1.0 count.");
             this.singletonTuple = sTuple;
             this.singletonCount = sCount;
+            this.depth = this.singletonTuple.tags.length;
             this.tagMap = null;
         } else {
             this.singletonTuple = null;
             this.singletonCount = Double.NaN;
+            TObjectDoubleIterator<TagTuple> it = tagMap.iterator();
+            it.advance();
+            this.depth = it.key().tags.length;
             this.tagMap = tagMap;
         }
     }
@@ -111,13 +118,17 @@ public final class TagCount {
         return result;
     }
 
-    public Set<TagTuple> keySuffixes(int depth) {
+    public TagCount keySuffixes(int depth) {
         TagTuple fullKey = asKeyOrNull();
         if (fullKey != null)
-            return Collections.singleton(fullKey.keySuffix(depth));
-        return tagMap.keySet().stream()
-                .map(t -> t.keySuffix(depth))
-                .collect(Collectors.toSet());
+            return new TagCount(fullKey.keySuffix(depth), singletonCount);
+        TObjectDoubleHashMap<TagTuple> suffixMap = new TObjectDoubleHashMap<>(tagMap.size());
+        TObjectDoubleIterator<TagTuple> it = tagMap.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            suffixMap.put(it.key().keySuffix(depth), it.value());
+        }
+        return new TagCount(suffixMap);
     }
 
     public TagValue singleOrNull(int idx) {
@@ -170,14 +181,20 @@ public final class TagCount {
                 : tagMap.size();
     }
 
-    public int projectionSize(int... idxs) {
-        Set<TagTuple> set = new HashSet<>();
+    /**
+     * Reduces tag counts to the specified level, new tag counts will be computed as the number of uniques suffixes.
+     */
+    public TagCount reduceToLevel(int level) {
+        if (level == depth) {
+            return this;
+        }
+        TagCountAggregator agg = new TagCountAggregator();
         TObjectDoubleIterator<TagTuple> it = iterator();
         while (it.hasNext()) {
             it.advance();
-            set.add(it.key().project(idxs));
+            agg.add(it.key().prefix(level), 1d);
         }
-        return set.size();
+        return agg.createAndDestroy();
     }
 
     public double get(TagTuple tt) {
@@ -187,6 +204,14 @@ public final class TagCount {
             return 0.0;
         } else
             return tagMap.get(tt);
+    }
+
+    public boolean containsAll(Set<TagTuple> other) {
+        return tagMap.keySet().containsAll(other);
+    }
+
+    public boolean containsAll(TagCount other) {
+        return tuples().containsAll(other.tuples());
     }
 
     public TObjectDoubleIterator<TagTuple> iterator() {
@@ -300,8 +325,12 @@ public final class TagCount {
         return tb.createAndDestroy();
     }
 
-    public TagCount[] splitBy(int index) {
-        Map<TagValue, TagCountAggregator> map = new HashMap<>();
+    public TagCount[] splitBy(int level) {
+        if (level == 0)
+            return new TagCount[]{this};
+        if (level > depth)
+            throw new IllegalArgumentException();
+        Map<TagTuple, TagCountAggregator> map = new HashMap<>();
         TObjectDoubleIterator<TagTuple> it = iterator();
         while (it.hasNext()) {
             it.advance();
@@ -309,7 +338,7 @@ public final class TagCount {
             TagTuple t = it.key();
             double count = it.value();
 
-            TagCountAggregator tb = map.computeIfAbsent(t.get(index), __ -> new TagCountAggregator());
+            TagCountAggregator tb = map.computeIfAbsent(t.prefix(level), __ -> new TagCountAggregator());
             tb.add(t, count);
         }
         return map.values().stream().map(TagCountAggregator::createAndDestroy).toArray(TagCount[]::new);
@@ -337,14 +366,4 @@ public final class TagCount {
     //     }
     //     return new TagCounter(result);
     // }
-
-    public Set<TagValue> tags(int index) {
-        Set<TagValue> set = new HashSet<>();
-        TObjectDoubleIterator<TagTuple> it = iterator();
-        while (it.hasNext()) {
-            it.advance();
-            set.add(it.key().get(index));
-        }
-        return set;
-    }
 }

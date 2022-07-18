@@ -1,5 +1,8 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
+import de.undercouch.gradle.tasks.download.Download
 import groovy.lang.Closure
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import java.net.InetAddress
@@ -25,6 +28,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-8"
     id("com.palantir.git-version") version "0.13.0" // don't upgrade, latest version that runs on Java 8
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.bmuschko.docker-java-application") version "7.4.0"
+    id("de.undercouch.download") version "5.1.0"
 }
 // Make IDE aware of the generated code:
 kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
@@ -46,6 +51,9 @@ val isRelease = boolProperty("mi-release")
 
 val longTests: String? by project
 val miCiStage = properties["mi-ci-stage"] as String?
+
+group = "com.milaboratory"
+version = if (version != "unspecified") version else ""
 description = "MiXCR"
 
 java {
@@ -80,10 +88,10 @@ repositories {
     }
 }
 
-val milibVersion = "2.0.0"
-val repseqioVersion = "1.4.0-7-trees"
-val mitoolVersion = "1.0.1"
-val miplotsVersion = "1.0.0-16-master"
+val milibVersion = "2.0.0-11-master"
+val repseqioVersion = "1.4.1-1-master"
+val mitoolVersion = "1.1.0-9-main"
+val miplotsVersion = "1.0.0-23-master"
 val jacksonBomVersion = "2.13.3"
 
 dependencies {
@@ -96,8 +104,8 @@ dependencies {
     }
     implementation("com.milaboratory:miplots:$miplotsVersion")
 
-    // implementation("com.milaboratory:milm2-jvm:0.2.0-test-2") { isChanging = true }
-    implementation("com.milaboratory:milm2-jvm:1.2.0")
+    // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
+    implementation("com.milaboratory:milm2-jvm:1.9.0")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -154,8 +162,67 @@ val distributionZip by tasks.registering(Zip::class) {
     from(shadowJar) {
         rename("-.*\\.jar", "\\.jar")
     }
-    from("${project.rootDir}/mixcr")
+    from("${project.rootDir}/${project.name}")
     from("${project.rootDir}/LICENSE")
+}
+
+val prepareDockerContext by tasks.registering(Copy::class) {
+    group = "docker"
+    from(shadowJar) {
+        rename("-.*\\.jar", "\\.jar")
+    }
+    from("${project.rootDir}/${project.name}")
+    from("${project.rootDir}/LICENSE")
+    into(layout.buildDirectory.dir("docker"))
+}
+
+val prepareIMGTDockerContext by tasks.registering(Download::class) {
+    group = "docker"
+    dependsOn(prepareDockerContext)
+    src("https://github.com/repseqio/library-imgt/releases/download/v8/imgt.202214-2.sv8.json.gz")
+    dest(layout.buildDirectory.dir("docker"))
+}
+
+val commonDockerContents: Dockerfile.() -> Unit = {
+    from("eclipse-temurin:17-jre")
+    label(mapOf("maintainer" to "MiLaboratories Inc <support@milaboratories.com>"))
+    runCommand("mkdir /work /opt/${project.name}")
+    workingDir("/work")
+    environmentVariable("PATH", "/opt/${project.name}:\${PATH}")
+    copyFile("LICENSE", "/opt/${project.name}/LICENSE")
+    copyFile(project.name, "/opt/${project.name}/${project.name}")
+    entryPoint(project.name)
+    copyFile("${project.name}.jar", "/opt/${project.name}/${project.name}.jar")
+}
+
+val createDockerfile by tasks.registering(Dockerfile::class) {
+    group = "docker"
+    dependsOn(prepareDockerContext)
+    commonDockerContents()
+}
+
+val imgtDockerfile = layout.buildDirectory.file("docker/Dockerfile.imgt")
+
+val createIMGTDockerfile by tasks.registering(Dockerfile::class) {
+    group = "docker"
+    dependsOn(createDockerfile)
+    dependsOn(prepareIMGTDockerContext)
+    destFile.set(imgtDockerfile)
+    commonDockerContents()
+    copyFile("imgt*", "/opt/${project.name}/")
+}
+
+val buildDockerImage by tasks.registering(DockerBuildImage::class) {
+    group = "docker"
+    dependsOn(createDockerfile)
+    images.set(setOf(project.name) + if (version == "") emptySet() else setOf("${project.name}:${version}"))
+}
+
+val buildIMGTDockerImage by tasks.registering(DockerBuildImage::class) {
+    group = "docker"
+    dependsOn(createIMGTDockerfile)
+    dockerFile.set(imgtDockerfile)
+    images.set(setOf(project.name + ":latest-imgt") + if (version == "") emptySet() else setOf("${project.name}:${version}-imgt"))
 }
 
 publishing {
