@@ -39,10 +39,9 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.math.abs
 
-class BuildSHMTreeReport : AbstractCommandReport() {
+class BuildSHMTreeReport : MiXCRReport {
     @get:JsonProperty("stepResults")
     val stepResults = mutableListOf<StepResult>()
-    override fun getCommand() = CommandFindShmTrees.COMMAND_NAME
 
     fun onStepEnd(step: BuildSHMTreeStep, clonesWasAdded: Int, treesCountDelta: Int) {
         stepResults += StepResult(

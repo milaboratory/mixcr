@@ -47,7 +47,7 @@ private val groupingCriteria: GroupingCriteria<CloneWrapper> = object : Grouping
     separator = " ",
     description = ["Builds SHM trees."]
 )
-class CommandFindShmTrees : ACommandWithOutputMiXCR() {
+class CommandFindShmTrees : MiXCRCommand() {
     @Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_file.$shmFileExtension"])
     private val inOut: List<String> = ArrayList()
 

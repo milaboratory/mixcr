@@ -85,7 +85,7 @@ public class ClnsReader implements CloneReader, AutoCloseable {
             switch (magicString) {
                 case MAGIC:
                     break;
-                case MAGIC_V11:
+                case MAGIC_V12:
                     readLibraries = false;
                     break;
                 default:

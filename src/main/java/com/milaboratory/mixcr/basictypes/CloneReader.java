@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -39,6 +38,4 @@ public interface CloneReader extends VDJCFileHeaderData, ReportsFooterData, Auto
     VDJCAlignerParameters getAlignerParameters();
 
     CloneAssemblerParameters getAssemblerParameters();
-
-    PipelineConfiguration getPipelineConfiguration();
 }

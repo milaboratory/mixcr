@@ -55,7 +55,7 @@ import kotlin.collections.set
     separator = " ",
     description = ["Find allele variants in clns."]
 )
-class CommandFindAlleles : ACommandWithOutputMiXCR() {
+class CommandFindAlleles : MiXCRCommand() {
     @CommandLine.Parameters(
         arity = "2..*",
         description = [
@@ -253,10 +253,11 @@ class CommandFindAlleles : ACommandWithOutputMiXCR() {
         )
         ClnsWriter(this).use { clnsWriter ->
             clnsWriter.writeCloneSet(
-                cloneReader.pipelineConfiguration,
                 cloneSet,
                 listOf(resultLibrary)
             )
+            //TODO make and write search alleles report
+            clnsWriter.writeFooter(cloneReader.reports(), null)
         }
     }
 

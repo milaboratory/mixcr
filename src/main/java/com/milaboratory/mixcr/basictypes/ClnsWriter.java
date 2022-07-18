@@ -38,11 +38,13 @@ import java.util.stream.Collectors;
  */
 public final class ClnsWriter implements AutoCloseable {
     static final String MAGIC_V12 = "MiXCR.CLNS.V12";
-    static final String MAGIC_V12 = "MiXCR.CLNS.V12";
-    static final String MAGIC = MAGIC_V12;
+    static final String MAGIC_V13 = "MiXCR.CLNS.V13";
+    static final String MAGIC = MAGIC_V13;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
-    /** Number of bytes in footer with meta information */
+    /**
+     * Number of bytes in footer with meta information
+     */
     static final int FOOTER_LENGTH = 8 + IOUtil.END_MAGIC_LENGTH;
 
     final PrimitivOHybrid output;
@@ -59,7 +61,7 @@ public final class ClnsWriter implements AutoCloseable {
         this.output = output;
     }
 
-    public void writeHeaderFromCloneSet(CloneSet cloneSet) {
+    public void writeHeaderFromCloneSet(CloneSet cloneSet, List<VDJCLibrary> libraries) {
         writeHeader(
                 cloneSet.getAlignmentParameters(),
                 cloneSet.getAssemblerParameters(),
@@ -67,7 +69,7 @@ public final class ClnsWriter implements AutoCloseable {
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
                 cloneSet,
-                Collections.emptyList(),
+                libraries,
                 cloneSet.size()
         );
     }
@@ -111,16 +113,7 @@ public final class ClnsWriter implements AutoCloseable {
     }
 
     public void writeCloneSet(CloneSet cloneSet, List<VDJCLibrary> libraries) {
-        writeHeader(
-                cloneSet.getAlignmentParameters(),
-                cloneSet.getAssemblerParameters(),
-                cloneSet.tagsInfo,
-                cloneSet.getOrdering(),
-                cloneSet.getUsedGenes(),
-                cloneSet,
-                libraries,
-                cloneSet.size()
-        );
+        writeHeaderFromCloneSet(cloneSet, libraries);
         InputPort<Clone> cloneIP = cloneWriter();
         for (Clone clone : cloneSet)
             cloneIP.put(clone);
@@ -128,11 +121,7 @@ public final class ClnsWriter implements AutoCloseable {
     }
 
     public void writeCloneSet(CloneSet cloneSet) {
-        writeHeaderFromCloneSet(cloneSet);
-        InputPort<Clone> cloneIP = cloneWriter();
-        for (Clone clone : cloneSet)
-            cloneIP.put(clone);
-        cloneIP.put(null);
+        writeCloneSet(cloneSet, Collections.emptyList());
     }
 
     private List<MiXCRCommandReport> footer = null;

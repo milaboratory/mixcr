@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -76,7 +77,7 @@ public class IOUtil {
         registerGeneReferences(output, genes, featuresToAlign);
     }
 
-    public static void registerGeneReferences(HasPrimitivIOState ioState, List<VDJCGene> genes,
+    public static void registerGeneReferences(HasPrimitivIOState ioState, Collection<VDJCGene> genes,
                                               HasFeatureToAlign featuresToAlign) {
         // Putting genes references and feature sequences to be serialized/deserialized as references
         for (VDJCGene gene : genes) {
