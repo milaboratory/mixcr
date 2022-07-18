@@ -174,8 +174,6 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
         TempFileManager.smartTempDestination(outputTreesPath, "", useSystemTemp)
     }
 
-    private val counter = AtomicInteger(0)
-
     override fun run0() {
         ensureParametersInitialized()
         val cloneReaders = clnsFileNames.map { path ->
@@ -207,13 +205,14 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             .sortAndGroupWithProgress(
                 groupingCriteria,
                 cloneReaders.constructStateBuilder(),
-                tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
+                tempDest.addSuffix("tree.builder.init"),
                 cloneWrappersCount
             )
         var stepDescription = "Step $stepNumber/$stepsCount, ${BuildSHMTreeStep.BuildingInitialTrees.forPrint}"
         SmartProgressReporter.startProgressReport(stepDescription, progressOfZeroStep)
         var currentStepDebug = createDebug(stepNumber)
         val relatedAllelesMutations = shmTreeBuilder.relatedAllelesMutations()
+        //TODO process big clusters first for max CPU utilization, for other steps too
         clustersForZeroStep.forEachInParallel(threads) { cluster ->
             shmTreeBuilder.zeroStep(
                 cluster,
@@ -222,7 +221,6 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             )
         }
         val clonesWasAddedOnInit = shmTreeBuilder.makeDecisions()
-        shmTreeBuilder.makeDecisions()
 
         //TODO check that all trees has minimum common mutations in VJ
         report.onStepEnd(BuildSHMTreeStep.BuildingInitialTrees, clonesWasAddedOnInit, shmTreeBuilder.treesCount())
@@ -235,13 +233,13 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
                 .sortAndGroupWithProgress(
                     groupingCriteria,
                     cloneReaders.constructStateBuilder(),
-                    tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
+                    tempDest.addSuffix("tree.builder.$stepNumber"),
                     cloneWrappersCount
                 )
-            stepDescription = "Step " + stepNumber + "/" + stepsCount + ", " + step.forPrint
+            stepDescription = "Step $stepNumber/$stepsCount, ${step.forPrint}"
             SmartProgressReporter.startProgressReport(stepDescription, progressOfStep)
             val allClonesInTress = shmTreeBuilder.allClonesInTress()
-            clustersForStep.forEachInParallel(threads) { cluster ->
+            clustersForStep.forEachInParallel(threads) { cluster: List<CloneWrapper> ->
                 shmTreeBuilder.applyStep(
                     cluster,
                     step,
@@ -258,7 +256,7 @@ class CommandFindShmTrees : ACommandWithOutputMiXCR() {
             .sortAndGroupWithProgress(
                 groupingCriteria,
                 cloneReaders.constructStateBuilder(),
-                tempDest.addSuffix("tree.builder").addSuffix("_" + counter.incrementAndGet()),
+                tempDest.addSuffix("tree.builder.result"),
                 cloneWrappersCount
             )
         SmartProgressReporter.startProgressReport("Building results", progressOfBuildResult)

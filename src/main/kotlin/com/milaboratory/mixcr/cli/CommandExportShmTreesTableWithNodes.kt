@@ -284,6 +284,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                     )
 
                     shmTreeForPostanalysis.tree.allNodes()
+                        .asSequence()
                         .flatMap { it.node.content.split() }
                         .forEach {
                             output.put(shmTreeForPostanalysis to it)

@@ -340,14 +340,16 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
 
         override fun parentContent(): E = (parent.content as Reconstructed<T, E>).content
 
-        private fun postprocess(parentToPostprocess: Tree.Node<ObservedOrReconstructed<T, E>>): Tree.Node<ObservedOrReconstructed<T, E>> =
-            Tree.Node(
-                parentToPostprocess.content,
-                postprocess(
-                    (parentToPostprocess.content as Reconstructed<T, E>).content,
-                    parentToPostprocess.links
-                )
+        private fun postprocess(parentToPostprocess: Tree.Node<ObservedOrReconstructed<T, E>>): Tree.Node<ObservedOrReconstructed<T, E>> {
+            val result = Tree.Node(
+                parentToPostprocess.content
             )
+            postprocess(
+                (parentToPostprocess.content as Reconstructed<T, E>).content,
+                parentToPostprocess.links
+            ).forEach { result.addChild(it.node, it.distance) }
+            return result
+        }
 
         private fun postprocess(
             parentContent: E, links: List<NodeLink<ObservedOrReconstructed<T, E>>>
@@ -364,18 +366,17 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
                             //in this case we should remove this node from tree by skipping it and inserting its children directly
                             postprocess(parentContent, child.links)
                         } else {
-                            val result = NodeLink(
-                                Tree.Node(
-                                    Reconstructed(
-                                        mapped,  //TODO recalculate minDistanceFromObserved
-                                        childContent.minDistanceFromObserved,
-                                        ++counter
-                                    ),
-                                    postprocess(mapped, child.links)
-                                ),
-                                newDistance
+                            val result = Tree.Node<ObservedOrReconstructed<T, E>>(
+                                Reconstructed(
+                                    mapped,  //TODO recalculate minDistanceFromObserved
+                                    childContent.minDistanceFromObserved,
+                                    ++counter
+                                )
                             )
-                            listOf(result)
+                            postprocess(mapped, child.links).forEach {
+                                result.addChild(it.node, it.distance)
+                            }
+                            listOf(NodeLink(result, newDistance))
                         }
                     }
                     else -> listOf(link)

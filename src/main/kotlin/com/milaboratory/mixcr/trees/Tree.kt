@@ -21,14 +21,17 @@ import java.math.BigDecimal
 class Tree<T : Any>(
     val root: Node<T>
 ) {
-    fun copy(): Tree<T> {
-        return Tree(root.copy())
+    fun copy(): Tree<T> = Tree(root.copy())
+
+    fun allNodes(): List<NodeWithParent<T>> {
+        val result = mutableListOf<NodeWithParent<T>>()
+        result += NodeWithParent(null, root, null)
+        root.registerAllDescendants(result)
+        return result
     }
 
-    fun allNodes(): Sequence<NodeWithParent<T>> = sequenceOf(NodeWithParent(null, root, null)) + root.allDescendants()
-
     /** List of all leafs in the t@ree */
-    fun allLeafs() = allNodes().filter { it.node.isLeaf() }
+    fun allLeafs() = allNodes().asSequence().filter { it.node.isLeaf() }
 
     fun <R : Any> map(mapper: (T?, T) -> R): Tree<R> =
         Tree(root.map(null, mapper))
@@ -39,7 +42,7 @@ class Tree<T : Any>(
 
         constructor(content: T) {
             this.content = content
-            children = ArrayList()
+            children = mutableListOf()
         }
 
         constructor(content: T, children: List<NodeLink<T>>) {
@@ -48,8 +51,9 @@ class Tree<T : Any>(
         }
 
         fun copy(): Node<T> {
-            val childrenCopy = children.map { NodeLink(it.node.copy(), it.distance) }
-            return Node(content, childrenCopy)
+            val result = Node(content)
+            children.forEach { result.addChild(it.node.copy(), it.distance) }
+            return result
         }
 
         /** Returns the height of the tree */
@@ -65,19 +69,26 @@ class Tree<T : Any>(
 
         fun replaceChild(what: Node<T>, substitution: Node<T>, distance: BigDecimal) {
             require(children.removeIf { it.node === what })
-            children.add(NodeLink(substitution, distance))
+            addChild(substitution, distance)
         }
 
-        fun allDescendants(): Sequence<NodeWithParent<T>> = children.asSequence().flatMap { link ->
-            sequenceOf(NodeWithParent(this, link.node, link.distance)) + link.node.allDescendants()
-        }
-
-        fun <R> map(parentContent: T?, mapper: (T?, T) -> R): Node<R> = Node(
-            mapper(parentContent, content),
-            children.map { child: NodeLink<T> ->
-                child.map(content, mapper)
+        fun registerAllDescendants(result: MutableList<NodeWithParent<T>>) {
+            children.forEach { link ->
+                result += NodeWithParent(this, link.node, link.distance)
+                link.node.registerAllDescendants(result)
             }
-        )
+        }
+
+        fun <R> map(parentContent: T?, mapper: (T?, T) -> R): Node<R> {
+            val result = Node(mapper(parentContent, content))
+            children.forEach { child ->
+                result.addChild(
+                    child.node.map(content, mapper),
+                    child.distance
+                )
+            }
+            return result
+        }
 
         /** Whether this node is leaf */
         fun isLeaf() = links.isEmpty()
@@ -86,12 +97,7 @@ class Tree<T : Any>(
     class NodeLink<T>(
         val node: Node<T>,
         val distance: BigDecimal
-    ) {
-        fun <R> map(parentContent: T, mapper: (T?, T) -> R): NodeLink<R> = NodeLink(
-            node.map(parentContent, mapper),
-            distance
-        )
-    }
+    )
 
     data class NodeWithParent<T>(
         val parent: Node<T>?,
@@ -121,11 +127,12 @@ object TreeSerializer {
     fun <T> readNode(input: PrimitivI, klass: Class<T>): Tree.Node<T> {
         val content = input.readObject(klass)
         val count = input.readInt()
-        val links = (0 until count).map {
+        val result = Tree.Node(content)
+        repeat(count) {
             val distance = input.readDouble()
             val child = readNode(input, klass)
-            Tree.NodeLink(child, BigDecimal.valueOf(distance))
+            result.addChild(child, BigDecimal.valueOf(distance))
         }
-        return Tree.Node(content, links)
+        return result
     }
 }

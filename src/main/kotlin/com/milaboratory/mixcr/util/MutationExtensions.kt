@@ -49,105 +49,111 @@ fun <S : Sequence<S>> Mutations<S>.extractAbsoluteMutations(
 
 fun Mutations<NucleotideSequence>.intersection(second: Mutations<NucleotideSequence>): Mutations<NucleotideSequence> {
     if (isEmpty || second.isEmpty) return EMPTY_NUCLEOTIDE_MUTATIONS
-    return intersectionAsSequence(second).asMutations(NucleotideSequence.ALPHABET)
+    val builder = MutationsBuilder(NucleotideSequence.ALPHABET)
+    findIntersections(second) {
+        builder.append(it)
+    }
+    return builder.createAndDestroy()
 }
 
 fun Mutations<NucleotideSequence>.intersectionCount(second: Mutations<NucleotideSequence>): Int {
     if (isEmpty || second.isEmpty) return 0
-    return intersectionAsSequence(second).count()
+    var count = 0
+    findIntersections(second) {
+        count++
+    }
+    return count
 }
 
-private fun Mutations<NucleotideSequence>.intersectionAsSequence(
-    second: Mutations<NucleotideSequence>
-): kotlin.sequences.Sequence<Int> {
-    val builder = sequence {
-        val firstIterator = asSequence().iterator()
-        val secondIterator = second.asSequence().iterator()
-        var mutationOfFirst: Int? = firstIterator.next()
-        var mutationOfSecond: Int? = secondIterator.next()
-        while (mutationOfFirst != null && mutationOfSecond != null) {
-            val positionOfFirst = Mutation.getPosition(mutationOfFirst)
-            val positionOfSecond = Mutation.getPosition(mutationOfSecond)
-            if (positionOfFirst < positionOfSecond) {
-                mutationOfFirst = firstIterator.nextOrNull()
-            } else if (positionOfFirst > positionOfSecond) {
-                mutationOfSecond = secondIterator.nextOrNull()
-            } else {
-                //positions are the same
-                val positionInBaseSeq = Mutation.getPosition(mutationOfFirst)
+private inline fun Mutations<NucleotideSequence>.findIntersections(
+    second: Mutations<NucleotideSequence>,
+    callback: (Int) -> Unit
+) {
+    val firstIterator = MutationsIterator(this)
+    val secondIterator = MutationsIterator(second)
+    var mutationOfFirst: Int = firstIterator.nextOrMinusOne()
+    var mutationOfSecond: Int = secondIterator.nextOrMinusOne()
+    while (mutationOfFirst != -1 && mutationOfSecond != -1) {
+        val positionOfFirst = Mutation.getPosition(mutationOfFirst)
+        val positionOfSecond = Mutation.getPosition(mutationOfSecond)
+        if (positionOfFirst < positionOfSecond) {
+            mutationOfFirst = firstIterator.nextOrMinusOne()
+        } else if (positionOfFirst > positionOfSecond) {
+            mutationOfSecond = secondIterator.nextOrMinusOne()
+        } else {
+            //positions are the same
+            val positionInBaseSeq = Mutation.getPosition(mutationOfFirst)
 
-                //collect all inserts at this position in sequences. Last mutation will be processed on next step
-                val subsetOfFirstBuilder = NucleotideSequence.ALPHABET.createBuilder()
-                while (mutationOfFirst != null && Mutation.isInsertion(mutationOfFirst) &&
-                    Mutation.getPosition(mutationOfFirst) == positionInBaseSeq
-                ) {
-                    subsetOfFirstBuilder.append(Mutation.getTo(mutationOfFirst))
-                    mutationOfFirst = firstIterator.nextOrNull()
-                }
-                val subsetOfSecondBuilder = NucleotideSequence.ALPHABET.createBuilder()
-                while (mutationOfSecond != null && Mutation.isInsertion(mutationOfSecond) &&
-                    Mutation.getPosition(mutationOfSecond) == positionInBaseSeq
-                ) {
-                    subsetOfSecondBuilder.append(Mutation.getTo(mutationOfSecond))
-                    mutationOfSecond = secondIterator.nextOrNull()
-                }
+            //collect all inserts at this position in sequences. Last mutation will be processed on next step
+            val subsetOfFirstBuilder = NucleotideSequence.ALPHABET.createBuilder()
+            while (mutationOfFirst != -1 && Mutation.isInsertion(mutationOfFirst) &&
+                Mutation.getPosition(mutationOfFirst) == positionInBaseSeq
+            ) {
+                subsetOfFirstBuilder.append(Mutation.getTo(mutationOfFirst))
+                mutationOfFirst = firstIterator.nextOrMinusOne()
+            }
+            val subsetOfSecondBuilder = NucleotideSequence.ALPHABET.createBuilder()
+            while (mutationOfSecond != -1 && Mutation.isInsertion(mutationOfSecond) &&
+                Mutation.getPosition(mutationOfSecond) == positionInBaseSeq
+            ) {
+                subsetOfSecondBuilder.append(Mutation.getTo(mutationOfSecond))
+                mutationOfSecond = secondIterator.nextOrMinusOne()
+            }
 
-                if (subsetOfFirstBuilder.size() != 0 && subsetOfSecondBuilder.size() != 0) {
-                    val subsetOfFirst = subsetOfFirstBuilder.createAndDestroy()
-                    val subsetOfSecond = subsetOfSecondBuilder.createAndDestroy()
-                    val mutationsBetweenInsertedSubsets = Aligner.alignGlobal(
-                        LinearGapAlignmentScoring.getNucleotideBLASTScoring(),
-                        subsetOfFirst,
-                        subsetOfSecond
-                    ).absoluteMutations
-                    val changedPositionsOfFirstSubset = mutationsBetweenInsertedSubsets.asSequence()
-                        .filter { !Mutation.isInsertion(it) }
-                        .map { Mutation.getPosition(it) }
-                        .toSet()
-                    val notChangedPositions = (0 until subsetOfFirst.size()) - changedPositionsOfFirstSubset
-                    notChangedPositions.forEach { position ->
-                        yield(
-                            Mutation.createInsertion(
-                                positionInBaseSeq,
-                                subsetOfFirst.codeAt(position).toInt()
-                            )
+            if (subsetOfFirstBuilder.size() != 0 && subsetOfSecondBuilder.size() != 0) {
+                val subsetOfFirst = subsetOfFirstBuilder.createAndDestroy()
+                val subsetOfSecond = subsetOfSecondBuilder.createAndDestroy()
+                val mutationsBetweenInsertedSubsets = Aligner.alignGlobal(
+                    LinearGapAlignmentScoring.getNucleotideBLASTScoring(),
+                    subsetOfFirst,
+                    subsetOfSecond
+                ).absoluteMutations
+                val changedPositionsOfFirstSubset = mutationsBetweenInsertedSubsets.asSequence()
+                    .filter { !Mutation.isInsertion(it) }
+                    .map { Mutation.getPosition(it) }
+                    .toSet()
+                val notChangedPositions = (0 until subsetOfFirst.size()) - changedPositionsOfFirstSubset
+                notChangedPositions.forEach { position ->
+                    callback(
+                        Mutation.createInsertion(
+                            positionInBaseSeq,
+                            subsetOfFirst.codeAt(position).toInt()
                         )
-                    }
-                } else {
-                    //it there is substitutions in this position, compare them
-                    if (mutationOfFirst != null && mutationOfFirst == mutationOfSecond) {
-                        yield(mutationOfFirst)
-                    }
+                    )
                 }
+            } else {
+                //it there is substitutions in this position, compare them
+                if (mutationOfFirst != -1 && mutationOfFirst == mutationOfSecond) {
+                    callback(mutationOfFirst)
+                }
+            }
 
-                //there were no insertions in this position in one of sequences, roll iterator for next mutation
-                if (subsetOfFirstBuilder.size() == 0) {
-                    mutationOfFirst = firstIterator.nextOrNull()
-                }
-                if (subsetOfSecondBuilder.size() == 0) {
-                    mutationOfSecond = secondIterator.nextOrNull()
-                }
+            //there were no insertions in this position in one of sequences, roll iterator for next mutation
+            if (subsetOfFirstBuilder.size() == 0) {
+                mutationOfFirst = firstIterator.nextOrMinusOne()
+            }
+            if (subsetOfSecondBuilder.size() == 0) {
+                mutationOfSecond = secondIterator.nextOrMinusOne()
             }
         }
     }
-    return builder
 }
 
 fun Mutations<NucleotideSequence>.without(second: Mutations<NucleotideSequence>): Mutations<NucleotideSequence> {
     if (second.isEmpty) return this
-    val secondIterator = second.asSequence().iterator()
-    var mutationOfSecond: Int? = secondIterator.next()
+    val secondIterator = MutationsIterator(second)
+    var mutationOfSecond: Int = secondIterator.nextOrMinusOne()
     return asSequence().filter { mutationOfFirst ->
-        if (mutationOfSecond == null) {
+        if (mutationOfSecond == -1) {
             true
         } else {
             if (mutationOfFirst == mutationOfSecond) {
-                mutationOfSecond = secondIterator.nextOrNull()
+                mutationOfSecond = secondIterator.nextOrMinusOne()
                 false
             } else {
                 val positionOfFirst = Mutation.getPosition(mutationOfFirst)
-                while (secondIterator.hasNext() && positionOfFirst > Mutation.getPosition(mutationOfSecond!!)) {
-                    mutationOfSecond = secondIterator.next()
+                while (secondIterator.hasNext() && positionOfFirst > Mutation.getPosition(mutationOfSecond)) {
+                    mutationOfSecond = secondIterator.nextOrMinusOne()
                 }
                 true
             }
@@ -155,7 +161,17 @@ fun Mutations<NucleotideSequence>.without(second: Mutations<NucleotideSequence>)
     }.asMutations(NucleotideSequence.ALPHABET)
 }
 
-private fun <T> Iterator<T>.nextOrNull(): T? = when {
-    hasNext() -> next()
-    else -> null
+private class MutationsIterator(
+    private val mutations: Mutations<NucleotideSequence>
+) {
+    private var i = 0;
+
+    fun hasNext() = i < mutations.size()
+
+    fun nextOrMinusOne(): Int =
+        if (i == mutations.size()) {
+            -1
+        } else {
+            mutations.getMutation(i++)
+        }
 }

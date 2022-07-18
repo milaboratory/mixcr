@@ -9,7 +9,7 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-@file:Suppress("PrivatePropertyName", "LocalVariableName")
+@file:Suppress("PrivatePropertyName", "LocalVariableName", "FunctionName")
 
 package com.milaboratory.mixcr.trees
 
@@ -23,7 +23,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.util.XSV
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.util.TempFileDest
@@ -78,13 +77,13 @@ class SHMTreeBuilder(
     private val datasets: List<CloneReader>,
     private val tempDest: TempFileDest,
     private val threads: Int,
-    vGenesToSearch: Set<String>,
-    jGenesToSearch: Set<String>,
+    VGenesToSearch: Set<String>,
+    JGenesToSearch: Set<String>,
     CDR3LengthToSearch: Set<Int>
 ) {
     private val cloneWrappersFilter = CloneWrappersFilter(
-        vGenesToSearch.ifEmpty { null },
-        jGenesToSearch.ifEmpty { null },
+        VGenesToSearch.ifEmpty { null },
+        JGenesToSearch.ifEmpty { null },
         CDR3LengthToSearch.ifEmpty { null }
     )
     private val VScoring: AlignmentScoring<NucleotideSequence> =
@@ -95,9 +94,6 @@ class SHMTreeBuilder(
 
     private val assemblingFeatures: Array<GeneFeature> =
         datasets[0].assemblerParameters.assemblingFeatures
-
-    private val alignerParameters: VDJCAlignerParameters =
-        datasets[0].alignerParameters
 
     /**
      * For every clone store in what tree it was added and with what score
@@ -282,7 +278,9 @@ class SHMTreeBuilder(
         val VJBase = clusterBySameVAndJ.first().VJBase
         try {
             val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-            val currentTrees = currentTrees[VJBase]!!.map { snapshot -> clusterProcessor.restore(snapshot) }
+            val currentTrees = currentTrees.getOrDefault(VJBase, emptyList())
+                .map { snapshot -> clusterProcessor.restore(snapshot) }
+            if (currentTrees.isEmpty()) return
             val debugInfos = clusterProcessor.debugInfos(currentTrees)
             XSV.writeXSVBody(debugOfPreviousStep, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
             val result = clusterProcessor.applyStep(step, currentTrees, allClonesInTress)
@@ -302,11 +300,14 @@ class SHMTreeBuilder(
         idGenerator: AtomicInteger
     ): List<SHMTreeResult> {
         val VJBase = clusterBySameVAndJ.first().VJBase
+        if (!cloneWrappersFilter.match(VJBase)) {
+            return emptyList()
+        }
         try {
             val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ, VJBase)
-            val currentTrees = currentTrees[VJBase]!!.map { snapshot ->
-                clusterProcessor.restoreWithNDNFromMRCA(snapshot)
-            }
+            val currentTrees = currentTrees.getOrDefault(VJBase, emptyList())
+                .map { snapshot -> clusterProcessor.restoreWithNDNFromMRCA(snapshot) }
+            if (currentTrees.isEmpty()) return emptyList()
             val debugInfos = clusterProcessor.debugInfos(currentTrees)
             XSV.writeXSVBody(previousStepDebug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
             return currentTrees.asSequence()
@@ -366,19 +367,35 @@ class SHMTreeBuilder(
         }
         .toMap()
 
-    private class CloneWrappersFilter(
-        private val vGenesToSearch: Set<String>?,
-        private val jGenesToSearch: Set<String>?,
-        private val CDR3LengthToSearch: Set<Int>?
-    ) {
-        fun match(cloneWrapper: CloneWrapper): Boolean =
-            (vGenesToSearch?.contains(cloneWrapper.VJBase.VGeneId.name) ?: true) &&
-                    (jGenesToSearch?.contains(cloneWrapper.VJBase.JGeneId.name) ?: true) &&
-                    (CDR3LengthToSearch?.contains(cloneWrapper.VJBase.CDR3length) ?: true)
-    }
-
     private fun alleleMutations(gene: VDJCGene): Mutations<NucleotideSequence> =
         gene.data.baseSequence.mutations ?: EMPTY_NUCLEOTIDE_MUTATIONS
+
+    private class CloneWrappersFilter(
+        private val VGenesToSearch: Set<String>?,
+        private val JGenesToSearch: Set<String>?,
+        private val CDR3LengthToSearch: Set<Int>?
+    ) {
+        fun match(VJBase: VJBase): Boolean =
+            (VGenesToSearch?.contains(VJBase.VGeneId.name) ?: true) &&
+                    (JGenesToSearch?.contains(VJBase.JGeneId.name) ?: true) &&
+                    (CDR3LengthToSearch?.contains(VJBase.CDR3length) ?: true)
+
+        fun match(cloneWrapper: CloneWrapper): Boolean =
+            VGeneMatches(cloneWrapper) && JGeneMatches(cloneWrapper) && CDR3LengthMatches(cloneWrapper)
+
+        private fun JGeneMatches(cloneWrapper: CloneWrapper): Boolean {
+            if (JGenesToSearch == null) return true
+            return cloneWrapper.candidateVJBases.any { it.JGeneId.name in JGenesToSearch }
+        }
+
+        private fun VGeneMatches(cloneWrapper: CloneWrapper): Boolean {
+            if (VGenesToSearch == null) return true
+            return cloneWrapper.candidateVJBases.any { it.VGeneId.name in VGenesToSearch }
+        }
+
+        private fun CDR3LengthMatches(cloneWrapper: CloneWrapper) =
+            (CDR3LengthToSearch?.contains(cloneWrapper.VJBase.CDR3length) ?: true)
+    }
 }
 
 @Serializable(by = CloneFromUserInputSerializer::class)

@@ -14,39 +14,35 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.Variable
 
 class SyntheticNode private constructor(
     val fromRootToThis: MutationsSet,
 ) {
-    fun mutate(rootInfo: RootInfo, mutations: NodeMutationsDescription): SyntheticNode = SyntheticNode(
+    fun mutate(mutations: NodeMutationsDescription): SyntheticNode = SyntheticNode(
         MutationsSet(
             VGeneMutations(
                 mutations = fromRootToThis.VMutations.mutations.mapValues { (geneFeature, value) ->
                     value.combineWith(
-                        mutations.VMutationsWithoutCDR3[geneFeature]!!.mutations
-                            .move(rootInfo.getPartitioning(Variable).getPosition(geneFeature.firstPoint))
+                        mutations.VMutationsWithoutCDR3[geneFeature]!!.mutationsFromParentToThis
                     )
                 },
                 partInCDR3 = fromRootToThis.VMutations.partInCDR3.copy(
                     mutations = fromRootToThis.VMutations.partInCDR3.mutations
-                        .combineWith(mutations.VMutationsInCDR3WithoutNDN.mutations.move(fromRootToThis.VMutations.partInCDR3.range.lower))
+                        .combineWith(mutations.VMutationsInCDR3WithoutNDN.mutationsFromParentToThis)
                 )
             ),
             fromRootToThis.NDNMutations.copy(
                 mutations = fromRootToThis.NDNMutations.mutations
-                    .combineWith(mutations.knownNDN.mutations)
+                    .combineWith(mutations.knownNDN.mutationsFromParentToThis)
             ),
             JGeneMutations(
                 partInCDR3 = fromRootToThis.JMutations.partInCDR3.copy(
                     mutations = fromRootToThis.JMutations.partInCDR3.mutations
-                        .combineWith(mutations.JMutationsInCDR3WithoutNDN.mutations.move(fromRootToThis.JMutations.partInCDR3.range.lower))
+                        .combineWith(mutations.JMutationsInCDR3WithoutNDN.mutationsFromParentToThis)
                 ),
                 mutations = fromRootToThis.JMutations.mutations.mapValues { (geneFeature, value) ->
                     value.combineWith(
-                        mutations.JMutationsWithoutCDR3[geneFeature]!!.mutations
-                            .move(rootInfo.getPartitioning(Joining).getPosition(geneFeature.firstPoint))
+                        mutations.JMutationsWithoutCDR3[geneFeature]!!.mutationsFromParentToThis
                     )
                 }
             )

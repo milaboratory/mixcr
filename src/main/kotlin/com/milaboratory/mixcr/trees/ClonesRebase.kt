@@ -51,7 +51,7 @@ class ClonesRebase(
             val rangeToAlign = Range(VMutationsWithinNDNRange.upper, rootInfo.VRangeInCDR3.upper)
             if (!rangeToAlign.isEmpty && !rangeToAlign.isReverse) {
                 val absoluteMutations = Aligner.alignGlobal(
-                    scoringSet.VScoring,
+                    scoringSet.V.scoring,
                     VSequence1,
                     mutationsFromVJGermline.knownNDN,
                     rangeToAlign.lower,
@@ -79,7 +79,7 @@ class ClonesRebase(
         val rangeToAlign = Range(rootInfo.JRangeInCDR3.lower, JMutationsWithinNDNRange.lower)
         if (!rangeToAlign.isEmpty && !rangeToAlign.isReverse) {
             val absoluteMutations = Aligner.alignGlobal(
-                scoringSet.JScoring,
+                scoringSet.J.scoring,
                 JSequence1,
                 mutationsFromVJGermline.knownNDN,
                 rangeToAlign.lower,
@@ -92,7 +92,7 @@ class ClonesRebase(
         }
         NDNRangeInKnownNDN = Range(NDNRangeInKnownNDN.lower, NDNRangeInKnownNDN.upper - lengthDelta)
         val NDNMutations = Aligner.alignGlobal(
-            scoringSet.NDNScoring,
+            scoringSet.NDN.scoring,
             rootInfo.reconstructedNDN,
             mutationsFromVJGermline.knownNDN.getRange(NDNRangeInKnownNDN)
         ).absoluteMutations
@@ -150,7 +150,7 @@ class ClonesRebase(
         val NDNPartToAlign = Range(VPartToAlign.upper, JPartToAlign.lower)
 
         val VMutationsToAdd = Aligner.alignGlobal(
-            scoringSet.VScoring,
+            scoringSet.V.scoring,
             VSequence1,
             toAlign,
             VRangeToAlign.lower,
@@ -160,7 +160,7 @@ class ClonesRebase(
         ).absoluteMutations
 
         val JMutationsToAdd = Aligner.alignGlobal(
-            scoringSet.JScoring,
+            scoringSet.J.scoring,
             JSequence1,
             toAlign,
             JRangeToAlign.lower,
@@ -170,7 +170,7 @@ class ClonesRebase(
         ).absoluteMutations
 
         val NDNMutations = Aligner.alignGlobal(
-            scoringSet.NDNScoring,
+            scoringSet.NDN.scoring,
             rebaseTo.reconstructedNDN,
             toAlign,
             0,

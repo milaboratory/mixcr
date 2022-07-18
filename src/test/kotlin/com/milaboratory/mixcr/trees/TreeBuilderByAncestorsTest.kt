@@ -1,9 +1,7 @@
 package com.milaboratory.mixcr.trees
 
 import com.google.common.collect.Lists
-import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Observed
-import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
-import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
+import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.*
 import com.milaboratory.mixcr.util.RandomizedTest
 import io.kotest.matchers.bigdecimal.shouldBeGreaterThanOrEquals
 import org.junit.Assert
@@ -354,8 +352,7 @@ class TreeBuilderByAncestorsTest {
         val reconstructedNodeEqualToObserved = result.allNodes()
             .map { it.node }
             .filter { it.content is Reconstructed<*, *> }
-            .filter { (it.content as Reconstructed).content == parseNode("454") }
-            .first()
+            .first { (it.content as Reconstructed).content == parseNode("454") }
         val observedChild = reconstructedNodeEqualToObserved.links.stream()
             .filter { it.distance == BigDecimal.ZERO }
             .map { it.node }
@@ -555,13 +552,10 @@ class TreeBuilderByAncestorsTest {
             .collect(Collectors.toList())
     }
 
-    private fun sumOfDistances(tree: Tree<*>): BigDecimal {
-        return tree.allNodes()
-            .map { it.distance }
-            .filter { obj -> Objects.nonNull(obj) }
-            .map { it!! }
-            .fold(BigDecimal.ZERO) { obj: BigDecimal, toAdd: BigDecimal -> obj.add(toAdd) }
-    }
+    private fun sumOfDistances(tree: Tree<*>): BigDecimal = tree.allNodes()
+        .asSequence()
+        .mapNotNull { it.distance }
+        .fold(BigDecimal.ZERO) { obj: BigDecimal, toAdd: BigDecimal -> obj.add(toAdd) }
 
     private fun withoutReconstructed(original: Tree<ObservedOrReconstructed<List<Int>, List<Int>>>): Tree<List<Int>> {
         val rootContent = (original.root.content as Reconstructed<List<Int>, List<Int>>).content

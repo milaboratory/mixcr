@@ -126,10 +126,10 @@ class MutationsExtensionsTest {
             println("  intersection: ${intersection.encode(",")}")
             println(" first without: ${first.combineWith(intersection.invert()).encode(",")}")
             println("second without: ${second.combineWith(intersection.invert()).encode(",")}")
-            println("        result: ${result.mutations.encode(",")}")
+            println("        result: ${result.mutationsFromParentToThis.encode(",")}")
         }
-        result.sequence1 shouldBe first.mutate(sequence1)
-        result.mutations.mutate(result.sequence1) shouldBe second.mutate(sequence1)
+        result.calculateParent() shouldBe first.mutate(sequence1)
+        result.mutationsFromParentToThis.mutate(result.calculateParent()) shouldBe second.mutate(sequence1)
     }
 
     @Ignore

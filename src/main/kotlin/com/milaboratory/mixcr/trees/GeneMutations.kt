@@ -56,6 +56,16 @@ class VGeneMutations(
 
     override fun buildPartInCDR3(rootInfo: RootInfo): NucleotideSequence =
         MutationsUtils.buildSequence(rootInfo.VSequence, partInCDR3.mutations, rootInfo.VRangeInCDR3)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
+    }
 }
 
 class JGeneMutations(
@@ -68,6 +78,16 @@ class JGeneMutations(
 
     override fun buildPartInCDR3(rootInfo: RootInfo): NucleotideSequence =
         MutationsUtils.buildSequence(rootInfo.JSequence, partInCDR3.mutations, rootInfo.JRangeInCDR3)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
+    }
 }
 
 @Serializable(by = PartInCDR3Serializer::class)

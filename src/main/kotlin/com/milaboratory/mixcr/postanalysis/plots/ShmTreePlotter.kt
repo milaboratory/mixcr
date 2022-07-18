@@ -79,16 +79,19 @@ class TreeFilter(
         if (treeIds != null && !treeIds.contains(tree.meta.treeId))
             return false
         if (seqPattern != null) {
-            return tree.tree.allNodes().flatMap { it.node.content.clones.map { w -> w.clone } }.any { clone ->
-                if (seqPattern.feature != null) {
-                    if (seqPattern.isAA)
-                        seqPattern.bitapQ(clone.getAAFeature(seqPattern.feature))
-                    else
-                        seqPattern.bitapQ(clone.getFeature(seqPattern.feature).sequence)
-                } else {
-                    clone.targets.any { seqPattern.bitapQ(it.sequence) }
+            return tree.tree.allNodes()
+                .asSequence()
+                .flatMap { it.node.content.clones.map { w -> w.clone } }
+                .any { clone ->
+                    if (seqPattern.feature != null) {
+                        if (seqPattern.isAA)
+                            seqPattern.bitapQ(clone.getAAFeature(seqPattern.feature))
+                        else
+                            seqPattern.bitapQ(clone.getFeature(seqPattern.feature).sequence)
+                    } else {
+                        clone.targets.any { seqPattern.bitapQ(it.sequence) }
+                    }
                 }
-            }
         }
         return true
     }

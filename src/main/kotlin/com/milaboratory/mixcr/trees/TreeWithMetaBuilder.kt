@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.trees.Tree.NodeWithParent
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
 import java.math.BigDecimal
@@ -34,6 +33,7 @@ class TreeWithMetaBuilder(
      * first parent is copy of clone, we need grandparent
      */
     fun getEffectiveParent(toSearch: CloneWrapper.ID): SyntheticNode = treeBuilder.tree.allNodes()
+        .asSequence()
         .filter { nodeWithParent ->
             nodeWithParent.node.links
                 .mapNotNull { link ->
@@ -77,7 +77,7 @@ class TreeWithMetaBuilder(
             )
         }
 
-    fun allNodes(): Sequence<NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> =
+    fun allNodes(): List<Tree.NodeWithParent<ObservedOrReconstructed<CloneWithMutationsFromReconstructedRoot, SyntheticNode>>> =
         treeBuilder.tree.allNodes()
 
     fun bestAction(rebasedClone: CloneWithMutationsFromReconstructedRoot): TreeBuilderByAncestors.Action<SyntheticNode> {

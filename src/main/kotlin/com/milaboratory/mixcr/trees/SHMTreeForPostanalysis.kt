@@ -207,7 +207,7 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
         distanceFromMostRecentCommonAncestor = mrca.distanceFrom(main)
         distanceFromParent = mappedParent!!.distanceFrom(main)
     }
-    return Tree.Node(
+    val result = Tree.Node(
         SHMTreeForPostanalysis.NodeWithClones(
             content.id,
             parent?.content?.id,
@@ -226,14 +226,16 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
                         meta.fileNames[it.node.content.datasetId]
                     )
                 }
-        ),
-        links.filter { it.distance.compareTo(BigDecimal.ZERO) != 0 }
-            .map {
-                require(it.node.content.clone == null)
-                val mappedChild = it.node.map(meta, parent = this, root = root, mrca = mrca)
-                Tree.NodeLink(mappedChild, mappedChild.content.distanceFromParent!!)
-            }
+        )
     )
+    links
+        .filter { it.distance.compareTo(BigDecimal.ZERO) != 0 }
+        .forEach {
+            require(it.node.content.clone == null)
+            val mappedChild = it.node.map(meta, parent = this, root = root, mrca = mrca)
+            result.addChild(mappedChild, mappedChild.content.distanceFromParent!!)
+        }
+    return result
 }
 
 private fun MutationsSet.asMutationsDescription(meta: SHMTreeForPostanalysis.Meta): MutationsDescription =

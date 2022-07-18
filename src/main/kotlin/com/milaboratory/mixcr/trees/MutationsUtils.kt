@@ -54,26 +54,29 @@ internal object MutationsUtils {
         base: Mutations<NucleotideSequence>,
         comparison: Mutations<NucleotideSequence>,
         range: Range = Range(0, sequence1.size())
-    ): MutationsWithRange {
-        val newSequence1 = buildSequence(sequence1, base, range)
-        //with exclusion of intersection there will be fewer mutations in a result
-        val intersection = base.intersection(comparison)
-        return MutationsWithRange(
-            newSequence1,
-            intersection.invert().combineWith(base).invert()
-                .combineWith(intersection.invert().combineWith(comparison))
-                .move(-range.lower),
-            Range(0, newSequence1.size())
-        )
-    }
+    ): CompositeMutations = CompositeMutations(
+        sequence1,
+        base,
+        range,
+        base.invert().combineWith(comparison)
+    )
 
-    fun <R, V1, V2> fold(
+    inline fun <R, V1, V2> zip(
         first: Map<GeneFeature, V1>,
         second: Map<GeneFeature, V2>,
-        folder: (V1, V2, GeneFeature) -> R
+        function: (V1, V2, GeneFeature) -> R
     ): Map<GeneFeature, R> {
         require(first.keys == second.keys)
-        return first.mapValues { (range, value) -> folder(value, second[range]!!, range) }
+        return first.mapValues { (geneFeature, value) -> function(value, second[geneFeature]!!, geneFeature) }
+    }
+
+    inline fun <R, V1, V2> fold(
+        first: Map<GeneFeature, V1>,
+        second: Map<GeneFeature, V2>,
+        function: (V1, V2, GeneFeature) -> R,
+    ): Collection<R> {
+        require(first.keys == second.keys)
+        return first.map { (geneFeature, value) -> function(value, second[geneFeature]!!, geneFeature) }
     }
 
     fun positionIfNucleotideWasDeleted(position: Int): Int = when {
@@ -246,8 +249,8 @@ internal object MutationsUtils {
     }
 }
 
-fun Map<GeneFeature, MutationsWithRange>.intersection(with: Map<GeneFeature, MutationsWithRange>): Map<GeneFeature, MutationsWithRange> =
-    MutationsUtils.fold(this, with) { a, b, _ -> a.intersection(b) }
+fun Map<GeneFeature, CompositeMutations>.intersection(with: Map<GeneFeature, CompositeMutations>): Map<GeneFeature, CompositeMutations> =
+    MutationsUtils.zip(this, with) { a, b, _ -> a.intersection(b) }
 
-fun MutationsWithRange.intersection(with: MutationsWithRange): MutationsWithRange =
-    copy(mutations = mutations.intersection(with.mutations))
+fun CompositeMutations.intersection(with: CompositeMutations): CompositeMutations =
+    copy(mutationsFromParentToThis = mutationsFromParentToThis.intersection(with.mutationsFromParentToThis))

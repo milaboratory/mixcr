@@ -11,12 +11,30 @@
  */
 package com.milaboratory.mixcr.trees
 
+import com.milaboratory.core.Range
+import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.sequence.NucleotideSequence
 import io.repseq.core.GeneFeature
 
 class NodeMutationsDescription(
-    val VMutationsWithoutCDR3: Map<GeneFeature, MutationsWithRange>,
-    val VMutationsInCDR3WithoutNDN: MutationsWithRange,
-    val knownNDN: MutationsWithRange,
-    val JMutationsInCDR3WithoutNDN: MutationsWithRange,
-    val JMutationsWithoutCDR3: Map<GeneFeature, MutationsWithRange>
+    val VMutationsWithoutCDR3: Map<GeneFeature, CompositeMutations>,
+    val VMutationsInCDR3WithoutNDN: CompositeMutations,
+    val knownNDN: CompositeMutations,
+    val JMutationsInCDR3WithoutNDN: CompositeMutations,
+    val JMutationsWithoutCDR3: Map<GeneFeature, CompositeMutations>
 )
+
+/**
+ * Mutations representation for chained mutations.
+ *
+ * Parent sequence may be calculated if needed
+ */
+data class CompositeMutations(
+    val grand: NucleotideSequence,
+    val mutationsFromGrandToParent: Mutations<NucleotideSequence>,
+    val rangeInGrand: Range,
+    val mutationsFromParentToThis: Mutations<NucleotideSequence>,
+) {
+    fun calculateParent(): NucleotideSequence = mutationsFromGrandToParent.mutate(grand)
+    val rangeInParent: Range = MutationsUtils.projectRange(mutationsFromGrandToParent, rangeInGrand)
+}
