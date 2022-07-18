@@ -36,7 +36,7 @@ import static com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristi
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class PostanalysisParametersIndividual extends PostanalysisParameters {
     public static final String
-            Biophysics = "biophysics",
+            CDR3Metrics = "cdr3metrics",
             Diversity = "diversity",
             VUsage = "vUsage",
             JUsage = "JUsage",
@@ -46,7 +46,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             VSpectratype = "VSpectratype",
             VSpectratypeMean = "VSpectratypeMean";
 
-    public BiophysicsParameters biophysics = new BiophysicsParameters();
+    public CDR3MetricsParameters cdr3metrics = new CDR3MetricsParameters();
     public DiversityParameters diversity = new DiversityParameters();
     public MetricParameters vUsage = new MetricParameters();
     public MetricParameters jUsage = new MetricParameters();
@@ -58,14 +58,14 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
     public List<CharacteristicGroup<?, Clone>> getGroups(Chains chains, TagsInfo tagsInfo) {
         for (WithParentAndTags wpt : Arrays.asList(
-                biophysics, diversity, vUsage, jUsage, vjUsage, isotypeUsage, cdr3Spectratype, vSpectratype, vSpectratypeMean
+                cdr3metrics, diversity, vUsage, jUsage, vjUsage, isotypeUsage, cdr3Spectratype, vSpectratype, vSpectratypeMean
         )) {
             wpt.setParent(this);
             wpt.setTagsInfo(tagsInfo);
         }
 
         return Arrays.asList(
-                biophysics.getGroup(chains),
+                cdr3metrics.getGroup(chains),
                 diversity.getGroup(chains),
                 new CharacteristicGroup<>(VUsage,
                         Arrays.asList(AdditiveCharacteristics.segmentUsage(
@@ -126,7 +126,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             fieldVisibility = JsonAutoDetect.Visibility.ANY,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE,
             getterVisibility = JsonAutoDetect.Visibility.NONE)
-    public static class BiophysicsParameters implements WithParentAndTags {
+    public static class CDR3MetricsParameters implements WithParentAndTags {
         public MetricParameters cdr3lenAA = new MetricParameters();
         public MetricParameters cdr3lenNT = new MetricParameters();
         public MetricParameters ndnLenNT = new MetricParameters();
@@ -156,7 +156,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         }
 
         public CharacteristicGroup<?, Clone> getGroup(Chains chains) {
-            return new CharacteristicGroup<>(Biophysics,
+            return new CharacteristicGroup<>(CDR3Metrics,
                     Arrays.asList(
                             lengthOf(cdr3lenNT.preproc(chains), cdr3lenNT.weightFunction(), GeneFeature.CDR3, false).setName("CDR3 length, nt"),
                             lengthOf(cdr3lenAA.preproc(chains), cdr3lenAA.weightFunction(), GeneFeature.CDR3, true).setName("CDR3 length, aa"),
@@ -175,7 +175,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            BiophysicsParameters that = (BiophysicsParameters) o;
+            CDR3MetricsParameters that = (CDR3MetricsParameters) o;
             return Objects.equals(cdr3lenAA, that.cdr3lenAA) && Objects.equals(cdr3lenNT, that.cdr3lenNT) && Objects.equals(ndnLenNT, that.ndnLenNT) && Objects.equals(addedNNT, that.addedNNT) && Objects.equals(Strength, that.Strength) && Objects.equals(Hydrophobicity, that.Hydrophobicity) && Objects.equals(Surface, that.Surface) && Objects.equals(Volume, that.Volume) && Objects.equals(Charge, that.Charge);
         }
 
@@ -264,11 +264,11 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PostanalysisParametersIndividual that = (PostanalysisParametersIndividual) o;
-        return Objects.equals(biophysics, that.biophysics) && Objects.equals(diversity, that.diversity) && Objects.equals(vUsage, that.vUsage) && Objects.equals(jUsage, that.jUsage) && Objects.equals(vjUsage, that.vjUsage) && Objects.equals(isotypeUsage, that.isotypeUsage);
+        return Objects.equals(cdr3metrics, that.cdr3metrics) && Objects.equals(diversity, that.diversity) && Objects.equals(vUsage, that.vUsage) && Objects.equals(jUsage, that.jUsage) && Objects.equals(vjUsage, that.vjUsage) && Objects.equals(isotypeUsage, that.isotypeUsage);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(biophysics, diversity, vUsage, jUsage, vjUsage, isotypeUsage);
+        return Objects.hash(cdr3metrics, diversity, vUsage, jUsage, vjUsage, isotypeUsage);
     }
 }

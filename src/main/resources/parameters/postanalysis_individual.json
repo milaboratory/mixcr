@@ -4,7 +4,7 @@
     "defaultOnlyProductive": true,
     "defaultDropOutliers": false,
     "defaultWeightFunction": "read-count",
-    "biophysics": {
+    "cdr3metrics": {
       "cdr3lenAA": {
         "downsampling": null,
         "onlyProductive": null,

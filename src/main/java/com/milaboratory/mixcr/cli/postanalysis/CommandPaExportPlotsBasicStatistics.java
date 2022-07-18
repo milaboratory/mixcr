@@ -155,14 +155,14 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         writePlots(result.group, plots);
     }
 
-    @Command(name = "biophysics",
+    @Command(name = "cdr3metrics",
             sortOptions = false,
             separator = " ",
-            description = "Export biophysics metrics")
-    public static class ExportBiophysics extends CommandPaExportPlotsBasicStatistics {
+            description = "Export CDR3 metrics")
+    public static class ExportCDR3Metrics extends CommandPaExportPlotsBasicStatistics {
         @Override
         String group() {
-            return PostanalysisParametersIndividual.Biophysics;
+            return PostanalysisParametersIndividual.CDR3Metrics;
         }
     }
 

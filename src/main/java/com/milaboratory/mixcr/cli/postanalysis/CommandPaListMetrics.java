@@ -55,14 +55,14 @@ public class CommandPaListMetrics extends MiXCRCommand {
 
         PaResultByGroup result = paResult.results.get(0);
         CharacteristicGroup<Clone, ?>
-                biophys = result.schema.getGroup(PostanalysisParametersIndividual.Biophysics),
+                biophys = result.schema.getGroup(PostanalysisParametersIndividual.CDR3Metrics),
                 diversity = result.schema.getGroup(PostanalysisParametersIndividual.Diversity);
 
         for (int i = 0; i < 2; i++) {
             System.out.println();
             CharacteristicGroup<Clone, ?> gr = i == 0 ? biophys : diversity;
             if (i == 0)
-                System.out.println("Biophysics metrics:");
+                System.out.println("CDR3 metrics:");
             else
                 System.out.println("Diversity metrics:");
             result.result.forGroup(gr)
