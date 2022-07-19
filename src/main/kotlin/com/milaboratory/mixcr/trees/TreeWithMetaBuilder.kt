@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstructed
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
-import java.math.BigDecimal
 import java.util.*
 
 class TreeWithMetaBuilder(
@@ -83,9 +82,9 @@ class TreeWithMetaBuilder(
     fun bestAction(rebasedClone: CloneWithMutationsFromReconstructedRoot): TreeBuilderByAncestors.Action<SyntheticNode> {
         val bestAction = treeBuilder.bestActionForObserved(rebasedClone)
         return object : TreeBuilderByAncestors.Action<SyntheticNode>() {
-            override fun changeOfDistance(): BigDecimal = bestAction.changeOfDistance()
+            override fun changeOfDistance(): Double = bestAction.changeOfDistance()
 
-            override fun distanceFromObserved(): BigDecimal = bestAction.distanceFromObserved()
+            override fun distanceFromObserved(): Double = bestAction.distanceFromObserved()
 
             override fun apply() {
                 bestAction.apply()
@@ -97,7 +96,7 @@ class TreeWithMetaBuilder(
     }
 
     fun distanceFromRootToClone(rebasedClone: CloneWithMutationsFromReconstructedRoot): Double =
-        treeBuilder.distanceFromRootToObserved(rebasedClone).toDouble()
+        treeBuilder.distanceFromRootToObserved(rebasedClone)
 
     fun snapshot(): Snapshot = Snapshot(
         clonesAdditionHistory,

@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 @file:Suppress("LocalVariableName")
 
 package com.milaboratory.mixcr.trees
@@ -27,7 +38,6 @@ import io.repseq.core.ReferencePointsBuilder
 import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibraryId
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 import java.lang.Integer.min
 import kotlin.random.Random
@@ -41,7 +51,6 @@ class RebaseClonesTest {
 
     private val vdjcLibraryId = VDJCLibraryId("human", 0)
 
-    @Ignore
     @Test
     fun randomizedTestForRebaseMutations() {
         RandomizedTest.randomized(::testRebaseMutations, numberOfRuns = 100000)
@@ -60,7 +69,6 @@ class RebaseClonesTest {
         )
     }
 
-    @Ignore
     @Test
     fun randomizedTestForRebaseMutationsWithOverlappingNDN() {
         RandomizedTest.randomized(::testRebaseMutationsWithOverlappingNDN, numberOfRuns = 100000)
@@ -231,7 +239,6 @@ class RebaseClonesTest {
                 }
             }.createAndDestroy()
 
-    @Ignore
     @Test
     fun randomizedTestForRebaseClone() {
         RandomizedTest.randomized(::testRebaseClone, numberOfRuns = 100000)

@@ -1,8 +1,18 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.trees
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.math.BigDecimal
 
 class TreesPrinterTest {
     @Test
@@ -51,12 +61,12 @@ class TreesPrinterTest {
     private fun sampleTree(): Tree<String> {
         val root = Tree.Node("F")
         val tree = Tree(root)
-        root.addChild(Tree.Node("A"), BigDecimal("0.1"))
-        root.addChild(Tree.Node("B"), BigDecimal("0.2"))
+        root.addChild(Tree.Node("A"), 0.1)
+        root.addChild(Tree.Node("B"), 0.2)
         val e = Tree.Node("E")
-        root.addChild(e, BigDecimal("0.5"))
-        e.addChild(Tree.Node("C"), BigDecimal("0.3"))
-        e.addChild(Tree.Node("D"), BigDecimal("0.4"))
+        root.addChild(e, 0.5)
+        e.addChild(Tree.Node("C"), 0.3)
+        e.addChild(Tree.Node("D"), 0.4)
         return tree
     }
 }

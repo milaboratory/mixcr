@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.util
 
 import com.milaboratory.core.mutations.Mutation
@@ -7,7 +18,6 @@ import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.trees.generateMutations
 import com.milaboratory.mixcr.trees.generateSequence
 import io.kotest.matchers.shouldBe
-import org.junit.Ignore
 import org.junit.Test
 import kotlin.random.Random
 
@@ -89,7 +99,6 @@ class MutationsExtensionsTest {
         mutations("I0G,I0T").without(mutations("I0T")) shouldBe mutations("I0G")
     }
 
-    //    @Ignore
     @Test
     fun `random test of difference`() {
         RandomizedTest.randomized(::testDifference, numberOfRuns = 1_000_000)
@@ -132,7 +141,6 @@ class MutationsExtensionsTest {
         result.mutationsFromParentToThis.mutate(result.calculateParent()) shouldBe second.mutate(sequence1)
     }
 
-    @Ignore
     @Test
     fun `random test of without`() {
         RandomizedTest.randomized(::testWithout, numberOfRuns = 100000)
@@ -148,7 +156,6 @@ class MutationsExtensionsTest {
         )
     }
 
-    @Ignore
     @Test
     fun `random test of intersection`() {
         RandomizedTest.randomized(::testIntersection, numberOfRuns = 100000)

@@ -28,8 +28,8 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
         fields += FieldParameterless(
             "-uniqClonesCount",
             "Number of uniq clones in the SHM tree",
-            "Different clones count",
-            "differentClonesCount"
+            "Uniq clones count",
+            "uniqClonesCount"
         ) { shmTree ->
             shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
         }

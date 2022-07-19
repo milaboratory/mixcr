@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 @file:Suppress("LocalVariableName")
 
 package com.milaboratory.mixcr.trees
@@ -22,7 +33,6 @@ import io.repseq.core.GeneFeature.*
 import io.repseq.core.ReferencePoint.*
 import io.repseq.core.ReferencePoints
 import io.repseq.core.ReferenceUtil
-import org.junit.Ignore
 import org.junit.Test
 import kotlin.random.Random
 
@@ -324,7 +334,6 @@ class MutationsDescriptionsTest {
         }
     }
 
-    @Ignore
     @Test
     fun `randomized test of broken AA`() {
         RandomizedTest.randomized(::testBrokenAA, numberOfRuns = 100000)
@@ -369,7 +378,6 @@ class MutationsDescriptionsTest {
         mutationsDescription.aaMutationsDetailed(FR4, GeneFeature(JBegin, FR4End))
     }
 
-    @Ignore
     @Test
     fun `randomized test of mutations projection`() {
         RandomizedTest.randomized(::testMutationsProjection, numberOfRuns = 100000)
@@ -486,7 +494,6 @@ class MutationsDescriptionsTest {
         (CDR2AAAlignment.target + FR3AAAlignment.target + CDR3AAAlignment.target + FR4AAAlignment.target) shouldBe expectedFullAATarget
     }
 
-    @Ignore
     @Test
     fun `randomized test of difference`() {
         RandomizedTest.randomized(::testDifference, numberOfRuns = 100000)

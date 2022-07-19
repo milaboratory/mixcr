@@ -11,9 +11,6 @@
  */
 package com.milaboratory.mixcr.trees
 
-import java.math.BigDecimal
-import java.util.stream.Collectors
-
 /**
  * https://en.wikipedia.org/wiki/Newick_format
  */
@@ -24,7 +21,7 @@ class XmlTreePrinter<T : Any>(
 
     private fun printNode(
         node: Tree.Node<out T>,
-        distanceFromParent: BigDecimal?
+        distanceFromParent: Double?
     ): String {
 
         val sb = StringBuilder()
@@ -39,11 +36,10 @@ class XmlTreePrinter<T : Any>(
         if (node.links.isNotEmpty()) {
             sb.append(">")
             sb.append(
-                node.links.stream()
-                    .sorted(Comparator.comparing { link -> link.distance })
-                    .map { link -> printNode(link.node, link.distance) }
-                    .sorted()
-                    .collect(Collectors.joining("")))
+                node.links
+                    .sortedBy { link -> link.distance }
+                    .joinToString("") { link -> printNode(link.node, link.distance) }
+            )
             sb.append("</node>")
         } else {
             sb.append("/>")

@@ -40,7 +40,6 @@ import io.repseq.core.ReferencePoint.CDR3Begin
 import io.repseq.core.ReferencePoint.CDR3End
 import io.repseq.core.ReferencePoints
 import io.repseq.core.VDJCGeneId
-import java.math.BigDecimal
 import java.util.*
 import java.util.function.Supplier
 import kotlin.math.max
@@ -270,7 +269,7 @@ internal class ClusterProcessor(
                 //try to calculate distances in both ways, it may differ
                 val distance_1 = distanceBetweenTrees(clonesRebase, treeToAttach, treeToGrow)
                 val distance_2 = distanceBetweenTrees(clonesRebase, treeToGrow, treeToAttach)
-                val metric = min(distance_1.toDouble(), distance_2.toDouble())
+                val metric = min(distance_1, distance_2)
                 if (metric <= parameters.thresholdForCombineTrees) {
                     treeToGrow = buildATree(
                         listOf(treeToGrow, treeToAttach).flatMap { treeWithMetaBuilder ->
@@ -299,7 +298,7 @@ internal class ClusterProcessor(
         clonesRebase: ClonesRebase,
         from: TreeWithMetaBuilder,
         destination: TreeWithMetaBuilder
-    ): BigDecimal {
+    ): Double {
         val oldestAncestorOfFrom = from.mostRecentCommonAncestor()
         val oldestAncestorOfDestination = destination.mostRecentCommonAncestor()
         val destinationRebasedOnFrom = clonesRebase.rebaseMutations(
@@ -458,7 +457,7 @@ internal class ClusterProcessor(
                 if (bestActionAndDistanceFromRoot != null) {
                     val bestAction = bestActionAndDistanceFromRoot.first
                     val distanceFromRoot = bestActionAndDistanceFromRoot.second
-                    val metric = bestAction.changeOfDistance().toDouble() / distanceFromRoot
+                    val metric = bestAction.changeOfDistance() / distanceFromRoot
                     if (metric <= parameters.thresholdForFreeClones) {
                         decisions[clone.cloneWrapper.id] = MetricDecisionInfo(metric)
                         bestAction.apply()
@@ -503,10 +502,7 @@ internal class ClusterProcessor(
         return TreeBuilderByAncestors(
             root,
             distance = { base, mutations ->
-                distance(mutations) + penaltyForReversedMutations(
-                    base,
-                    mutations
-                )
+                distance(mutations) + penaltyForReversedMutations(base, mutations)
             },
             mutationsBetween = { first, second ->
                 mutationsBetween(rootInfo, first.fromRootToThis, second.fromRootToThis)
@@ -636,11 +632,10 @@ internal class ClusterProcessor(
     private fun penaltyForReversedMutations(
         fromRootToBase: SyntheticNode,
         mutations: NodeMutationsDescription
-    ): BigDecimal {
+    ): Double {
         val reversedMutationsCount = reversedVMutationsCount(fromRootToBase, mutations) +
                 reversedJMutationsCount(fromRootToBase, mutations)
-        return BigDecimal.valueOf(parameters.penaltyForReversedMutations)
-            .multiply(BigDecimal.valueOf(reversedMutationsCount.toLong()))
+        return parameters.penaltyForReversedMutations * reversedMutationsCount
     }
 
     private fun reversedVMutationsCount(
@@ -690,7 +685,7 @@ internal class ClusterProcessor(
      * - Try other variants of end formula
      * - Reuse NDNDistance
      */
-    private fun distance(mutations: NodeMutationsDescription): BigDecimal {
+    private fun distance(mutations: NodeMutationsDescription): Double {
         val VPenalties = scoringSet.V.penalties(mutations.VMutationsWithoutCDR3.values) +
                 scoringSet.V.penalties(mutations.VMutationsInCDR3WithoutNDN)
         val VLength = mutations.VMutationsWithoutCDR3.values.sumOf { it.rangeInParent.length() } +
@@ -701,10 +696,8 @@ internal class ClusterProcessor(
                 mutations.JMutationsInCDR3WithoutNDN.rangeInParent.length()
         val NDNPenalties = scoringSet.NDN.penalties(mutations.knownNDN)
         val NDNLength = mutations.knownNDN.rangeInParent.length()
-        return BigDecimal.valueOf(
-            (NDNPenalties * parameters.NDNScoreMultiplier + VPenalties + JPenalties) /
-                    (NDNLength + VLength + JLength).toDouble()
-        )
+        return (NDNPenalties * parameters.NDNScoreMultiplier + VPenalties + JPenalties) /
+                (NDNLength + VLength + JLength).toDouble()
     }
 
     private fun score(rootInfo: RootInfo, mutations: MutationsSet): Int {

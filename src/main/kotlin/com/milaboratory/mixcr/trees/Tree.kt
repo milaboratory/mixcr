@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
-import java.math.BigDecimal
 
 /**
  *
@@ -62,12 +61,12 @@ class Tree<T : Any>(
         val links: List<NodeLink<T>>
             get() = children
 
-        fun addChild(node: Node<T>, distance: BigDecimal): Node<T> {
+        fun addChild(node: Node<T>, distance: Double): Node<T> {
             children.add(NodeLink(node, distance))
             return this
         }
 
-        fun replaceChild(what: Node<T>, substitution: Node<T>, distance: BigDecimal) {
+        fun replaceChild(what: Node<T>, substitution: Node<T>, distance: Double) {
             require(children.removeIf { it.node === what })
             addChild(substitution, distance)
         }
@@ -96,13 +95,13 @@ class Tree<T : Any>(
 
     class NodeLink<T>(
         val node: Node<T>,
-        val distance: BigDecimal
+        val distance: Double
     )
 
     data class NodeWithParent<T>(
         val parent: Node<T>?,
         val node: Node<T>,
-        val distance: BigDecimal?
+        val distance: Double?
     )
 }
 
@@ -115,7 +114,7 @@ object TreeSerializer {
         output.writeObject(node.content)
         output.writeInt(node.links.size)
         node.links.forEach { link ->
-            output.writeDouble(link.distance.toDouble())
+            output.writeDouble(link.distance)
             writeNode(output, link.node)
         }
     }
@@ -131,7 +130,7 @@ object TreeSerializer {
         repeat(count) {
             val distance = input.readDouble()
             val child = readNode(input, klass)
-            result.addChild(child, BigDecimal.valueOf(distance))
+            result.addChild(child, distance)
         }
         return result
     }

@@ -21,7 +21,6 @@ import io.repseq.core.*
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint.*
-import java.math.BigDecimal
 import java.util.*
 
 data class SHMTreeForPostanalysis(
@@ -52,9 +51,9 @@ data class SHMTreeForPostanalysis(
         mostRecentCommonAncestor: MutationsDescription,
         main: MutationsDescription,
         parent: MutationsDescription?,
-        distanceFromRoot: BigDecimal,
-        distanceFromMostRecentCommonAncestor: BigDecimal?,
-        distanceFromParent: BigDecimal?,
+        distanceFromRoot: Double,
+        distanceFromMostRecentCommonAncestor: Double?,
+        distanceFromParent: Double?,
         val clones: List<CloneWithDatasetId>
     ) : BaseNode(
         id = id,
@@ -106,9 +105,9 @@ data class SHMTreeForPostanalysis(
         mostRecentCommonAncestor: MutationsDescription,
         main: MutationsDescription,
         parent: MutationsDescription?,
-        distanceFromRoot: BigDecimal,
-        distanceFromMostRecentCommonAncestor: BigDecimal?,
-        distanceFromParent: BigDecimal?,
+        distanceFromRoot: Double,
+        distanceFromMostRecentCommonAncestor: Double?,
+        distanceFromParent: Double?,
         val clone: CloneWithDatasetId?
     ) : BaseNode(
         id = id,
@@ -129,11 +128,11 @@ data class SHMTreeForPostanalysis(
         protected val mostRecentCommonAncestor: MutationsDescription,
         protected val main: MutationsDescription,
         protected val parent: MutationsDescription?,
-        protected val distanceFromRoot: BigDecimal,
-        protected val distanceFromMostRecentCommonAncestor: BigDecimal?,
-        val distanceFromParent: BigDecimal?,
+        protected val distanceFromRoot: Double,
+        protected val distanceFromMostRecentCommonAncestor: Double?,
+        val distanceFromParent: Double?,
     ) {
-        fun distanceFrom(base: Base): BigDecimal? = when (base) {
+        fun distanceFrom(base: Base): Double? = when (base) {
             Base.germline -> distanceFromRoot
             Base.mrca -> distanceFromMostRecentCommonAncestor
             Base.parent -> distanceFromParent
@@ -193,13 +192,13 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
     root: MutationsDescription,
     mrca: MutationsDescription
 ): Tree.Node<SHMTreeForPostanalysis.NodeWithClones> {
-    val distanceFromRoot: BigDecimal
-    val distanceFromMostRecentCommonAncestor: BigDecimal?
-    val distanceFromParent: BigDecimal?
+    val distanceFromRoot: Double
+    val distanceFromMostRecentCommonAncestor: Double?
+    val distanceFromParent: Double?
     val main = content.mutationsSet.asMutationsDescription(meta)
     val mappedParent = parent?.content?.mutationsSet?.asMutationsDescription(meta)
     if (parent == null) {
-        distanceFromRoot = BigDecimal.ZERO
+        distanceFromRoot = 0.0
         distanceFromMostRecentCommonAncestor = null
         distanceFromParent = null
     } else {
@@ -218,7 +217,7 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
             distanceFromRoot = distanceFromRoot,
             distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
             distanceFromParent = distanceFromParent,
-            clones = links.filter { it.distance.compareTo(BigDecimal.ZERO) == 0 }
+            clones = links.filter { it.distance == 0.0 }
                 .map {
                     SHMTreeForPostanalysis.CloneWithDatasetId(
                         it.node.content.clone!!,
@@ -229,7 +228,7 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
         )
     )
     links
-        .filter { it.distance.compareTo(BigDecimal.ZERO) != 0 }
+        .filter { it.distance != 0.0 }
         .forEach {
             require(it.node.content.clone == null)
             val mappedChild = it.node.map(meta, parent = this, root = root, mrca = mrca)
@@ -272,5 +271,5 @@ private fun MutationsSet.JPartsOfMutationsDescriptor(): SortedMap<GeneFeature, M
         }
     }
 
-fun MutationsDescription.distanceFrom(to: MutationsDescription): BigDecimal =
-    BigDecimal(differenceWith(to).nMutationsCount)
+fun MutationsDescription.distanceFrom(to: MutationsDescription): Double =
+    differenceWith(to).nMutationsCount.toDouble()
