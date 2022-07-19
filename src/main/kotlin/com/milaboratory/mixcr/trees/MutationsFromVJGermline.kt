@@ -14,46 +14,29 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import io.repseq.core.GeneFeature
+import java.util.*
 
-/**
- * All known clone mutations with rebased on specified VEndTrimmed and JEndTrimmed.
- * VEndTrimmed and JEndTrimmed may not be the same as in the clone.
- *
- * specified VEndTrimmed and specified JEndTrimmed are calculated for entire VJ cluster
- * @see ClusterProcessor.CalculatedClusterInfo.VRangeInCDR3
- * @see ClusterProcessor.CalculatedClusterInfo.JRangeInCDR3
- *
- * Assumptions:
- *      specified-VEndTrimmed < clone-VEndTrimmed
- *      specified-JEndTrimmed > clone-JEndTrimmed
- */
 @Suppress("PropertyName")
 class MutationsFromVJGermline(
-    val VMutations: VGeneMutations,
+    val VMutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
     /**
-     * First: mutations within [specified-VEndTrimmed:clone-VEndTrimmed]
-     * second: range [specified-VEndTrimmed:clone-VEndTrimmed] in V coordinates
+     * Already known from alignments V mutations within CDR3 feature
      */
-    val knownVMutationsWithinNDN: Pair<Mutations<NucleotideSequence>, Range>,
+    val knownVMutationsWithinCDR3: Pair<Mutations<NucleotideSequence>, Range>,
     /**
      * Full sequence of CDR3
      */
     val CDR3: NucleotideSequence,
     /**
-     * Part of NDN within [specified-VEndTrimmed:specified-JEndTrimmed]
+     * Already known from alignments J mutations within CDR3 feature
      */
-    val knownNDN: NucleotideSequence,
-    /**
-     * First: mutations within [clone-JEndTrimmed:specified-JEndTrimmed]
-     * second: range [clone-JEndTrimmed:specified-JEndTrimmed] in J coordinates
-     */
-    val knownJMutationsWithinNDN: Pair<Mutations<NucleotideSequence>, Range>,
-    val JMutations: JGeneMutations
+    val knownJMutationsWithinCDR3: Pair<Mutations<NucleotideSequence>, Range>,
+    val JMutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>
 ) {
     val VJMutationsCount: Int
-        get() = VMutations.mutationsCount() + JMutations.mutationsCount()
+        get() = VMutations.values.sumOf { it.size() } + JMutations.values.sumOf { it.size() }
 
-    val VEndTrimmedPosition = VMutations.partInCDR3.range.length() + knownVMutationsWithinNDN.second.length()
-    val JBeginTrimmedPosition =
-        CDR3.size() - JMutations.partInCDR3.range.length() - knownJMutationsWithinNDN.second.length()
+    val VEndTrimmedPosition = knownVMutationsWithinCDR3.second.length()
+    val JBeginTrimmedPosition = CDR3.size() - knownJMutationsWithinCDR3.second.length()
 }

@@ -205,38 +205,17 @@ internal class ClusterProcessor(
      * Present all mutations as `MutationsFromVJGermline`
      * @see MutationsFromVJGermline
      */
-    private fun rebaseFromGermline(cloneWrapper: CloneWrapper): CloneWithMutationsFromVJGermline {
-        val CDR3 = cloneWrapper.getFeature(GeneFeature.CDR3)!!.sequence
-        val VMutationsInCDR3WithoutNDN = PartInCDR3(
-            clusterInfo.VRangeInCDR3,
-            getMutationsForRange(cloneWrapper, clusterInfo.VRangeInCDR3, Variable)
-                .extractAbsoluteMutations(clusterInfo.VRangeInCDR3, false)
-        )
-        val JMutationsInCDR3WithoutNDN = PartInCDR3(
-            clusterInfo.JRangeInCDR3,
-            getMutationsForRange(cloneWrapper, clusterInfo.JRangeInCDR3, Joining)
-                .extractAbsoluteMutations(clusterInfo.JRangeInCDR3, true)
-        )
-        val result = MutationsFromVJGermline(
-            VGeneMutations(
-                cloneWrapper.getMutationsWithoutCDR3(Variable),
-                VMutationsInCDR3WithoutNDN
+    private fun rebaseFromGermline(cloneWrapper: CloneWrapper): CloneWithMutationsFromVJGermline =
+        CloneWithMutationsFromVJGermline(
+            MutationsFromVJGermline(
+                cloneWrapper.getMutationsWithoutCDR3(Variable).toSortedMap(),
+                getVMutationsWithinCDR3(cloneWrapper),
+                cloneWrapper.getFeature(GeneFeature.CDR3)!!.sequence,
+                getJMutationsWithinCDR3(cloneWrapper),
+                cloneWrapper.getMutationsWithoutCDR3(Joining).toSortedMap()
             ),
-            getVMutationsWithinNDN(cloneWrapper, clusterInfo.VRangeInCDR3.upper),
-            CDR3,
-            CDR3.getRange(
-                clusterInfo.VRangeInCDR3.length() + VMutationsInCDR3WithoutNDN.mutations.lengthDelta,
-                CDR3.size() - (clusterInfo.JRangeInCDR3.length() + JMutationsInCDR3WithoutNDN.mutations.lengthDelta)
-            ),
-            getJMutationsWithinNDN(cloneWrapper, clusterInfo.JRangeInCDR3.lower),
-            JGeneMutations(
-                JMutationsInCDR3WithoutNDN,
-                cloneWrapper.getMutationsWithoutCDR3(Joining)
-            )
+            cloneWrapper
         )
-
-        return CloneWithMutationsFromVJGermline(result, cloneWrapper)
-    }
 
     /**
      * Try to compare NDN of MRCA of different trees to decide if we need to collide trees.
@@ -530,22 +509,21 @@ internal class ClusterProcessor(
         val rootBasedOn = first()
 
         //TODO may be just get from root?
-        val VRangeInCDR3 = mostLikableRangeInCDR3(this) { clone -> VRangeInCDR3(clone) }
-        val JRangeInCDR3 = mostLikableRangeInCDR3(this) { clone -> JRangeInCDR3(clone) }
-        val NDNRangeInKnownNDN = NDNRangeInKnownNDN(rootBasedOn.mutations, VRangeInCDR3, JRangeInCDR3)
+        val VRangeInCDR3 = mostLikableRangeInCDR3(this) { it.mutations.knownVMutationsWithinCDR3.second }
+        val JRangeInCDR3 = mostLikableRangeInCDR3(this) { it.mutations.knownJMutationsWithinCDR3.second }
         val NDNBuilder = ALPHABET.createBuilder()
-        repeat(NDNRangeInKnownNDN.length()) {
+        repeat(rootBasedOn.mutations.CDR3.size() - VRangeInCDR3.length() - JRangeInCDR3.length()) {
             NDNBuilder.append(NucleotideSequence.N)
         }
         return RootInfo(
             VSequence1,
             rootBasedOn.cloneWrapper.getPartitioning(Variable),
-            rootBasedOn.mutations.VMutations.mutations.keys.sorted(),
+            rootBasedOn.mutations.VMutations.keys.sorted(),
             VRangeInCDR3,
             NDNBuilder.createAndDestroy(),
             JSequence1,
             rootBasedOn.cloneWrapper.getPartitioning(Joining),
-            rootBasedOn.mutations.JMutations.mutations.keys.sorted(),
+            rootBasedOn.mutations.JMutations.keys.sorted(),
             JRangeInCDR3,
             rootBasedOn.cloneWrapper.VJBase
         )
@@ -574,58 +552,37 @@ internal class ClusterProcessor(
         else -> this
     }
 
-    private fun getVMutationsWithinNDN(clone: CloneWrapper, from: Int): Pair<Mutations<NucleotideSequence>, Range> {
+    private fun getVMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<NucleotideSequence>, Range> {
         val hit = clone.getHit(Variable)
         val CDR3Begin = clone.getRelativePosition(Variable, CDR3Begin)
         val alignment = (0 until hit.alignments.size)
             .map { hit.getAlignment(it) }
             .firstOrNull { alignment ->
-                alignment.sequence1Range.contains(CDR3Begin) && alignment.sequence1Range.contains(from)
+                alignment.sequence1Range.contains(CDR3Begin)
             }
         return when (alignment) {
-            null -> EMPTY_NUCLEOTIDE_MUTATIONS to Range(from, from)
-            else -> Pair(
-                alignment.absoluteMutations.extractAbsoluteMutations(
-                    Range(
-                        from,
-                        alignment.sequence1Range.upper
-                    ), false
-                ),
-                Range(from, alignment.sequence1Range.upper)
-            )
+            null -> EMPTY_NUCLEOTIDE_MUTATIONS to Range(CDR3Begin, CDR3Begin)
+            else -> {
+                val range = Range(CDR3Begin, alignment.sequence1Range.upper)
+                alignment.absoluteMutations.extractAbsoluteMutations(range, false) to range
+            }
         }
     }
 
-    private fun getMutationsForRange(
-        clone: CloneWrapper,
-        range: Range,
-        geneType: GeneType
-    ): Mutations<NucleotideSequence> {
-        val hit = clone.getHit(geneType)
-        return (0 until hit.alignments.size)
-            .map { target -> hit.getAlignment(target) }
-            .filter { alignment -> alignment.sequence1Range.contains(range) }
-            .map { it.absoluteMutations }
-            .first()
-    }
-
-    private fun getJMutationsWithinNDN(clone: CloneWrapper, to: Int): Pair<Mutations<NucleotideSequence>, Range> {
+    private fun getJMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<NucleotideSequence>, Range> {
         val hit = clone.getHit(Joining)
         val CDR3End = clone.getRelativePosition(Joining, CDR3End)
         val alignment = (0 until hit.alignments.size)
             .map { hit.getAlignment(it) }
             .firstOrNull { alignment ->
-                alignment.sequence1Range.contains(CDR3End) && alignment.sequence1Range.contains(to)
+                alignment.sequence1Range.contains(CDR3End)
             }
         return when (alignment) {
-            null -> EMPTY_NUCLEOTIDE_MUTATIONS to Range(to, to)
-            else -> Pair(
-                alignment.absoluteMutations.extractAbsoluteMutations(
-                    Range(alignment.sequence1Range.lower, to),
-                    false
-                ),
-                Range(alignment.sequence1Range.lower, to)
-            )
+            null -> EMPTY_NUCLEOTIDE_MUTATIONS to Range(CDR3End, CDR3End)
+            else -> {
+                val range = Range(alignment.sequence1Range.lower, CDR3End)
+                alignment.absoluteMutations.extractAbsoluteMutations(range, true) to range
+            }
         }
     }
 
@@ -739,11 +696,10 @@ internal class ClusterProcessor(
     //TODO it is more possible to decrease length of alignment than to increase
     private fun mostLikableRangeInCDR3(
         cluster: List<CloneWithMutationsFromVJGermline>,
-        rangeSupplier: (CloneWrapper) -> Range
+        rangeSupplier: (CloneWithMutationsFromVJGermline) -> Range
     ): Range = cluster.asSequence()
         .sortedBy { it.mutations.VJMutationsCount }
         .take(parameters.topToVoteOnNDNSize)
-        .map { obj: CloneWithMutationsFromVJGermline -> obj.cloneWrapper }
         .map(rangeSupplier)
         .groupingBy { it }.eachCount()
         .entries
@@ -832,15 +788,7 @@ internal class ClusterProcessor(
 
     internal class CalculatedClusterInfo(
         val commonVAlignmentRanges: ClonesAlignmentRanges,
-        val commonJAlignmentRanges: ClonesAlignmentRanges,
-        /**
-         * Intersection of all [CDR3End:VEndTrimmed] of clones in the cluster
-         */
-        val VRangeInCDR3: Range,
-        /**
-         * Intersection of all [JEndTrimmed:CDR3End] of clones in the cluster
-         */
-        val JRangeInCDR3: Range
+        val commonJAlignmentRanges: ClonesAlignmentRanges
     )
 
     companion object {
@@ -856,9 +804,7 @@ internal class ClusterProcessor(
             ClonesAlignmentRanges.commonAlignmentRanges(
                 originalCluster,
                 minPortionOfClonesForCommonAlignmentRanges, Joining
-            ) { it.getHit(Joining) },
-            minRangeInCDR3(originalCluster) { clone -> VRangeInCDR3(clone) },
-            minRangeInCDR3(originalCluster) { clone -> JRangeInCDR3(clone) }
+            ) { it.getHit(Joining) }
         )
 
         @Suppress("UNCHECKED_CAST")
@@ -874,29 +820,6 @@ internal class ClusterProcessor(
                 is MetricDecisionInfo -> MetricDecisionInfo.makeDecision(chooses as Map<VJBase, MetricDecisionInfo>)
             }
         }
-
-        private fun minRangeInCDR3(
-            cluster: List<CloneWrapper>,
-            rangeSupplier: (CloneWrapper) -> Range
-        ): Range {
-            //TODO try to align to calculate most possible position
-            return cluster
-                .map(rangeSupplier)
-                .minByOrNull { it.length() }!!
-        }
-
-        private fun VRangeInCDR3(clone: CloneWrapper): Range {
-            val alignments = clone.getHit(Variable).alignments
-            return Range(
-                clone.getRelativePosition(Variable, CDR3Begin),
-                alignments[alignments.size - 1].sequence1Range.upper
-            )
-        }
-
-        private fun JRangeInCDR3(clone: CloneWrapper): Range = Range(
-            clone.getHit(Joining).getAlignment(0).sequence1Range.lower,
-            clone.getRelativePosition(Joining, CDR3End)
-        )
     }
 }
 
@@ -1075,23 +998,16 @@ private class OriginalClustersBuilder(
     }
 
     private fun without(
-        cloneMutations: GeneMutations,
+        mutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
         alleleMutations: Mutations<NucleotideSequence>
-    ): Iterable<Mutations<NucleotideSequence>> {
+    ): Iterable<Mutations<NucleotideSequence>> =
         if (alleleMutations.size() == 0) {
-            return when {
-                cloneMutations.partInCDR3.range.isEmpty -> cloneMutations.mutations.values
-                else -> cloneMutations.mutations.values + cloneMutations.partInCDR3.mutations
+            mutations.values
+        } else {
+            mutations.map { (_, mutations) ->
+                mutations.without(alleleMutations)
             }
         }
-        val result = cloneMutations.mutations.map { (_, mutations) ->
-            mutations.without(alleleMutations)
-        }
-        return when {
-            cloneMutations.partInCDR3.range.isEmpty -> result
-            else -> result + cloneMutations.partInCDR3.mutations.without(alleleMutations)
-        }
-    }
 
     private fun commonMutationsCount(
         first: Iterable<Mutations<NucleotideSequence>>,

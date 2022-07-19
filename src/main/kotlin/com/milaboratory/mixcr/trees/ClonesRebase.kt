@@ -31,81 +31,64 @@ class ClonesRebase(
         mutationsFromVJGermline: MutationsFromVJGermline,
         cloneWrapper: CloneWrapper
     ): CloneWithMutationsFromReconstructedRoot {
-        var NDNRangeInKnownNDN =
-            NDNRangeInKnownNDN(mutationsFromVJGermline, rootInfo.VRangeInCDR3, rootInfo.JRangeInCDR3)
-        var VMutationsInCDR3WithoutNDN = mutationsFromVJGermline.VMutations.partInCDR3
-        val wasVRangeInCDR3 = mutationsFromVJGermline.VMutations.partInCDR3.range
-        val VRange = Range(wasVRangeInCDR3.lower, rootInfo.VRangeInCDR3.upper)
-        //can skip empty VRange because we will not include first mutations (empty range always will mutate to empty range)
-        if (!VRange.isEmpty) {
-            var VMutationsWithinNDNRange = mutationsFromVJGermline.knownVMutationsWithinNDN.second.intersection(VRange)
-            VMutationsWithinNDNRange = VMutationsWithinNDNRange ?: Range(wasVRangeInCDR3.upper, wasVRangeInCDR3.upper)
-            var lengthDelta = 0
-            if (!VMutationsWithinNDNRange.isEmpty) {
-                val VMutationsToAdd = mutationsFromVJGermline.knownVMutationsWithinNDN.first
-                    .extractAbsoluteMutations(VMutationsWithinNDNRange, false)
-                VMutationsInCDR3WithoutNDN = VMutationsInCDR3WithoutNDN
-                    .combineWithMutationsToTheRight(VMutationsWithinNDNRange, VMutationsToAdd)
-                lengthDelta += VMutationsToAdd.lengthDelta
-            }
-            val rangeToAlign = Range(VMutationsWithinNDNRange.upper, rootInfo.VRangeInCDR3.upper)
-            if (!rangeToAlign.isEmpty && !rangeToAlign.isReverse) {
-                val absoluteMutations = Aligner.alignGlobal(
-                    scoringSet.V.scoring,
-                    VSequence1,
-                    mutationsFromVJGermline.knownNDN,
-                    rangeToAlign.lower,
-                    rangeToAlign.length(),
-                    VMutationsWithinNDNRange.length() + lengthDelta,
-                    rangeToAlign.length()
-                ).absoluteMutations
-                VMutationsInCDR3WithoutNDN = VMutationsInCDR3WithoutNDN
-                    .combineWithMutationsToTheRight(rangeToAlign, absoluteMutations)
-            }
-            NDNRangeInKnownNDN = Range(NDNRangeInKnownNDN.lower + lengthDelta, NDNRangeInKnownNDN.upper)
-        }
-        var JMutationsInCDR3WithoutNDN = mutationsFromVJGermline.JMutations.partInCDR3
-        val wasJRangeInCDR3 = mutationsFromVJGermline.JMutations.partInCDR3.range
-        val JRange = Range(rootInfo.JRangeInCDR3.lower, wasJRangeInCDR3.lower)
-        var JMutationsWithinNDNRange = mutationsFromVJGermline.knownJMutationsWithinNDN.second
-            .intersection(JRange)
-        JMutationsWithinNDNRange = JMutationsWithinNDNRange ?: Range(wasJRangeInCDR3.lower, wasJRangeInCDR3.lower)
-        var lengthDelta = 0
-        val JMutationsToAdd = mutationsFromVJGermline.knownJMutationsWithinNDN.first
-            .extractAbsoluteMutations(JMutationsWithinNDNRange, true)
-        JMutationsInCDR3WithoutNDN = JMutationsInCDR3WithoutNDN.withoutLeftInsert()
-            .combineWithMutationsToTheLeft(JMutationsWithinNDNRange, JMutationsToAdd)
-        lengthDelta += JMutationsToAdd.lengthDelta
-        val rangeToAlign = Range(rootInfo.JRangeInCDR3.lower, JMutationsWithinNDNRange.lower)
-        if (!rangeToAlign.isEmpty && !rangeToAlign.isReverse) {
-            val absoluteMutations = Aligner.alignGlobal(
-                scoringSet.J.scoring,
-                JSequence1,
-                mutationsFromVJGermline.knownNDN,
+        var VMutationsInCDR3WithoutNDN = mutationsFromVJGermline.knownVMutationsWithinCDR3
+            .first
+            .extractAbsoluteMutations(rootInfo.VRangeInCDR3, true)
+        if (rootInfo.VRangeInCDR3.length() > mutationsFromVJGermline.knownVMutationsWithinCDR3.second.length()) {
+            val rangeToAlign = Range(
+                mutationsFromVJGermline.knownVMutationsWithinCDR3.second.upper,
+                rootInfo.VRangeInCDR3.upper
+            )
+            val additionalVMutations = Aligner.alignGlobal(
+                scoringSet.V.scoring,
+                VSequence1,
+                mutationsFromVJGermline.CDR3,
                 rangeToAlign.lower,
                 rangeToAlign.length(),
-                NDNRangeInKnownNDN.upper - lengthDelta,
+                mutationsFromVJGermline.VEndTrimmedPosition + VMutationsInCDR3WithoutNDN.lengthDelta,
                 rangeToAlign.length()
             ).absoluteMutations
-            JMutationsInCDR3WithoutNDN =
-                JMutationsInCDR3WithoutNDN.combineWithMutationsToTheLeft(rangeToAlign, absoluteMutations)
+            VMutationsInCDR3WithoutNDN = VMutationsInCDR3WithoutNDN.concat(additionalVMutations)
         }
-        NDNRangeInKnownNDN = Range(NDNRangeInKnownNDN.lower, NDNRangeInKnownNDN.upper - lengthDelta)
+
+        var JMutationsInCDR3WithoutNDN = mutationsFromVJGermline.knownJMutationsWithinCDR3
+            .first
+            .extractAbsoluteMutations(rootInfo.JRangeInCDR3, true)
+        if (rootInfo.JRangeInCDR3.length() > mutationsFromVJGermline.knownJMutationsWithinCDR3.second.length()) {
+            val rangeToAlign = Range(
+                rootInfo.JRangeInCDR3.lower,
+                mutationsFromVJGermline.knownJMutationsWithinCDR3.second.lower
+            )
+            val additionalJMutations = Aligner.alignGlobal(
+                scoringSet.J.scoring,
+                JSequence1,
+                mutationsFromVJGermline.CDR3,
+                rangeToAlign.lower,
+                rangeToAlign.length(),
+                mutationsFromVJGermline.JBeginTrimmedPosition - rangeToAlign.length() - JMutationsInCDR3WithoutNDN.lengthDelta,
+                rangeToAlign.length()
+            ).absoluteMutations
+            JMutationsInCDR3WithoutNDN = additionalJMutations.concat(JMutationsInCDR3WithoutNDN)
+        }
+
         val NDNMutations = Aligner.alignGlobal(
             scoringSet.NDN.scoring,
             rootInfo.reconstructedNDN,
-            mutationsFromVJGermline.knownNDN.getRange(NDNRangeInKnownNDN)
+            mutationsFromVJGermline.CDR3.getRange(
+                rootInfo.VRangeInCDR3.length() + VMutationsInCDR3WithoutNDN.lengthDelta,
+                mutationsFromVJGermline.CDR3.size() - rootInfo.JRangeInCDR3.length() - JMutationsInCDR3WithoutNDN.lengthDelta
+            )
         ).absoluteMutations
         return CloneWithMutationsFromReconstructedRoot(
             MutationsSet(
                 VGeneMutations(
-                    mutationsFromVJGermline.VMutations.mutations,
-                    VMutationsInCDR3WithoutNDN
+                    mutationsFromVJGermline.VMutations,
+                    PartInCDR3(rootInfo.VRangeInCDR3, VMutationsInCDR3WithoutNDN)
                 ),
                 NDNMutations(NDNMutations),
                 JGeneMutations(
-                    JMutationsInCDR3WithoutNDN,
-                    mutationsFromVJGermline.JMutations.mutations
+                    PartInCDR3(rootInfo.JRangeInCDR3, JMutationsInCDR3WithoutNDN),
+                    mutationsFromVJGermline.JMutations
                 )
             ),
             mutationsFromVJGermline,
@@ -201,9 +184,3 @@ class ClonesRebase(
         )
     }
 }
-
-fun NDNRangeInKnownNDN(mutations: MutationsFromVJGermline, VRangeInCDR3: Range, JRangeInCDR3: Range): Range =
-    Range(
-        VRangeInCDR3.length() - mutations.VMutations.partInCDR3.range.length(),
-        mutations.knownNDN.size() - (JRangeInCDR3.length() - mutations.JMutations.partInCDR3.range.length())
-    )

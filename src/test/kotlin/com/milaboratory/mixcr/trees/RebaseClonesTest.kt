@@ -579,14 +579,12 @@ class RebaseClonesTest {
         )
         val mutationsFromVJGermline = MutationsFromVJGermline(
             VGeneMutations,
-            Range(commonVRangeInCDR3.upper, VRangeAfterCDR3Begin.upper).let { range ->
-                VMutations.extractAbsoluteMutations(range, false) to range
-            },
+            VMutations.extractAbsoluteMutations(VRangeAfterCDR3Begin, false) to VRangeAfterCDR3Begin,
             buildSequence(
                 VSequence,
                 VMutations,
                 VRangeAfterCDR3Begin,
-                true
+                false
             ) +
                     NDN +
                     buildSequence(
@@ -595,22 +593,7 @@ class RebaseClonesTest {
                         JRangeBeforeCDR3End,
                         true
                     ),
-            buildSequence(
-                VSequence,
-                VMutations,
-                Range(commonVRangeInCDR3.upper, VRangeAfterCDR3Begin.upper),
-                false
-            ) +
-                    NDN +
-                    buildSequence(
-                        JSequence,
-                        JMutations,
-                        Range(JRangeBeforeCDR3End.lower, commonJRangeInCDR3.lower),
-                        true
-                    ),
-            Range(JRangeBeforeCDR3End.lower, commonJRangeInCDR3.lower).let { range ->
-                JMutations.extractAbsoluteMutations(range, true) to range
-            },
+            JMutations.extractAbsoluteMutations(JRangeBeforeCDR3End, true) to JRangeBeforeCDR3End,
             JGeneMutations
         )
         val VJBase = VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), 20)
