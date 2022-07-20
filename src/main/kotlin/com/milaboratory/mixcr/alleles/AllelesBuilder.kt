@@ -35,10 +35,12 @@ import kotlin.collections.set
 
 class AllelesBuilder(
     private val parameters: FindAllelesParameters,
-    private val datasets: List<CloneReader>
+    val datasets: List<CloneReader>
 ) {
     private val VScoring = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
     private val JScoring = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
+
+    fun count() = datasets.sumOf { it.numberOfClones() }.toLong()
 
     fun unsortedClones() = datasets.map { it.readClones() }
         .flatten()
