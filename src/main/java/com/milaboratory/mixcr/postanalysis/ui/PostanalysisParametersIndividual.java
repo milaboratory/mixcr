@@ -122,6 +122,18 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         );
     }
 
+    public static String[] SUPPORTED_CDR3_METRICS = {
+            "cdr3lenAA",
+            "cdr3lenNT",
+            "ndnLenNT",
+            "addedNNT",
+            "strength",
+            "hydrophobicity",
+            "surface",
+            "volume",
+            "charge"
+    };
+
     @JsonAutoDetect(
             fieldVisibility = JsonAutoDetect.Visibility.ANY,
             isGetterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -131,14 +143,14 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         public MetricParameters cdr3lenNT = new MetricParameters();
         public MetricParameters ndnLenNT = new MetricParameters();
         public MetricParameters addedNNT = new MetricParameters();
-        public MetricParameters Strength = new MetricParameters();
-        public MetricParameters Hydrophobicity = new MetricParameters();
-        public MetricParameters Surface = new MetricParameters();
-        public MetricParameters Volume = new MetricParameters();
-        public MetricParameters Charge = new MetricParameters();
+        public MetricParameters strength = new MetricParameters();
+        public MetricParameters hydrophobicity = new MetricParameters();
+        public MetricParameters surface = new MetricParameters();
+        public MetricParameters volume = new MetricParameters();
+        public MetricParameters charge = new MetricParameters();
 
         private List<MetricParameters> list() {
-            return Arrays.asList(cdr3lenAA, cdr3lenNT, ndnLenNT, addedNNT, Strength, Hydrophobicity, Surface, Volume, Charge);
+            return Arrays.asList(cdr3lenAA, cdr3lenNT, ndnLenNT, addedNNT, strength, hydrophobicity, surface, volume, charge);
         }
 
         @Override
@@ -162,11 +174,11 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
                             lengthOf(cdr3lenAA.preproc(chains), cdr3lenAA.weightFunction(), GeneFeature.CDR3, true).setName("CDR3 length, aa"),
                             lengthOf(ndnLenNT.preproc(chains), ndnLenNT.weightFunction(), GeneFeature.VJJunction, false).setName("NDN length, nt"),
                             addedNucleotides(addedNNT.preproc(chains), addedNNT.weightFunction()).setName("Added N, nt"),
-                            biophysics(Strength.preproc(chains), Strength.weightFunction(), AAProperties.AAProperty.N2Strength, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Strength"),
-                            biophysics(Hydrophobicity.preproc(chains), Hydrophobicity.weightFunction(), AAProperties.AAProperty.N2Hydrophobicity, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Hydrophobicity"),
-                            biophysics(Surface.preproc(chains), Surface.weightFunction(), AAProperties.AAProperty.N2Surface, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Surface"),
-                            biophysics(Volume.preproc(chains), Volume.weightFunction(), AAProperties.AAProperty.N2Volume, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Volume"),
-                            biophysics(Charge.preproc(chains), Charge.weightFunction(), AAProperties.AAProperty.Charge, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Charge")
+                            biophysics(strength.preproc(chains), strength.weightFunction(), AAProperties.AAProperty.N2Strength, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Strength"),
+                            biophysics(hydrophobicity.preproc(chains), hydrophobicity.weightFunction(), AAProperties.AAProperty.N2Hydrophobicity, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Hydrophobicity"),
+                            biophysics(surface.preproc(chains), surface.weightFunction(), AAProperties.AAProperty.N2Surface, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Surface"),
+                            biophysics(volume.preproc(chains), volume.weightFunction(), AAProperties.AAProperty.N2Volume, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Volume"),
+                            biophysics(charge.preproc(chains), charge.weightFunction(), AAProperties.AAProperty.Charge, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Charge")
                     ),
                     Collections.singletonList(new GroupSummary.Simple<>()));
         }
@@ -176,12 +188,12 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             CDR3MetricsParameters that = (CDR3MetricsParameters) o;
-            return Objects.equals(cdr3lenAA, that.cdr3lenAA) && Objects.equals(cdr3lenNT, that.cdr3lenNT) && Objects.equals(ndnLenNT, that.ndnLenNT) && Objects.equals(addedNNT, that.addedNNT) && Objects.equals(Strength, that.Strength) && Objects.equals(Hydrophobicity, that.Hydrophobicity) && Objects.equals(Surface, that.Surface) && Objects.equals(Volume, that.Volume) && Objects.equals(Charge, that.Charge);
+            return Objects.equals(cdr3lenAA, that.cdr3lenAA) && Objects.equals(cdr3lenNT, that.cdr3lenNT) && Objects.equals(ndnLenNT, that.ndnLenNT) && Objects.equals(addedNNT, that.addedNNT) && Objects.equals(strength, that.strength) && Objects.equals(hydrophobicity, that.hydrophobicity) && Objects.equals(surface, that.surface) && Objects.equals(volume, that.volume) && Objects.equals(charge, that.charge);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(cdr3lenAA, cdr3lenNT, ndnLenNT, addedNNT, Strength, Hydrophobicity, Surface, Volume, Charge);
+            return Objects.hash(cdr3lenAA, cdr3lenNT, ndnLenNT, addedNNT, strength, hydrophobicity, surface, volume, charge);
         }
     }
 

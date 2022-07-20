@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.miplots.Position;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapType;
 import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
@@ -58,12 +59,21 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
         return df;
     }
 
+    private List<OverlapType> metricsFilter() {
+        if (metrics == null || metrics.isEmpty())
+            return null;
+        return metrics.stream()
+                .map(OverlapType::byNameOrThrow)
+                .collect(Collectors.toList());
+    }
+
     @Override
     void run(PaResultByGroup result) {
         CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(PostanalysisParametersOverlap.Overlap);
         PostanalysisResult paResult = result.result.forGroup(ch);
         DataFrame<?> metadata = metadata();
 
+        List<OverlapType> metrics = metricsFilter();
         DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
                 paResult,
                 metrics,

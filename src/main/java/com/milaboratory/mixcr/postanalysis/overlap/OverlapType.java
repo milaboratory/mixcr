@@ -11,7 +11,8 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -33,7 +34,23 @@ public enum OverlapType {
         this.longDescription = longDescription;
     }
 
+    private static Map<String, OverlapType> byNameIgnoreCase;
+
+    static {
+        byNameIgnoreCase = new HashMap<>();
+        for (OverlapType v : values()) {
+            byNameIgnoreCase.put(v.name().toLowerCase(), v);
+        }
+    }
+
     public static OverlapType byName(String name) {
-        return Arrays.stream(values()).filter(s -> s.shortDescription.equals(name)).findFirst().orElse(null);
+        return byNameIgnoreCase.get(name.toLowerCase());
+    }
+
+    public static OverlapType byNameOrThrow(String name) {
+        OverlapType r = byName(name);
+        if (r == null)
+            throw new IllegalArgumentException("Unknown metric name: " + name);
+        return r;
     }
 }

@@ -19,6 +19,7 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
+import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
@@ -28,8 +29,9 @@ import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
     @Option(description = "Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +
@@ -103,14 +105,17 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
 
     abstract String group();
 
+    abstract Predicate<String> metricsFilter();
+
     @Override
     void run(PaResultByGroup result) {
         CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
         PostanalysisResult paResult = result.result.forGroup(ch);
         DataFrame<?> metadata = metadata();
+        Predicate<String> mf = metricsFilter();
         DataFrame<BasicStatRow> df = BasicStatistics.INSTANCE.dataFrame(
                 paResult,
-                metrics,
+                mf::test,
                 metadata
         );
 
@@ -164,6 +169,18 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         String group() {
             return PostanalysisParametersIndividual.CDR3Metrics;
         }
+
+        @Override
+        Predicate<String> metricsFilter() {
+            if (metrics == null || metrics.isEmpty())
+                return t -> true;
+            HashSet<String> set = new HashSet<>(Arrays.asList(PostanalysisParametersIndividual.SUPPORTED_CDR3_METRICS));
+            for (String m : metrics) {
+                if (!set.contains(m.toLowerCase()))
+                    throw new IllegalArgumentException("Unknown metric: " + m);
+            }
+            return new HashSet<>(metrics)::contains;
+        }
     }
 
     @Command(name = "diversity",
@@ -174,6 +191,27 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         @Override
         String group() {
             return PostanalysisParametersIndividual.Diversity;
+        }
+
+        @Override
+        Predicate<String> metricsFilter() {
+            if (metrics == null || metrics.isEmpty())
+                return t -> true;
+            HashMap<String, String> map = new HashMap<String, String>() {{
+                put("chao1".toLowerCase(), DiversityMeasure.Chao1.name);
+                put("efronThisted".toLowerCase(), DiversityMeasure.EfronThisted.name);
+                put("inverseSimpsonIndex".toLowerCase(), DiversityMeasure.InverseSimpsonIndex.name);
+                put("giniIndex".toLowerCase(), DiversityMeasure.GiniIndex.name);
+                put("observed".toLowerCase(), DiversityMeasure.Observed.name);
+                put("shannonWiener".toLowerCase(), DiversityMeasure.ShannonWiener.name);
+                put("normalizedShannonWienerIndex".toLowerCase(), DiversityMeasure.NormalizedShannonWienerIndex.name);
+                put("d50", "d50");
+            }};
+            for (String m : metrics) {
+                if (!map.containsKey(m.toLowerCase()))
+                    throw new IllegalArgumentException("Unknown metric: " + m);
+            }
+            return metrics.stream().map(String::toLowerCase).map(map::get).collect(Collectors.toSet())::contains;
         }
     }
 }

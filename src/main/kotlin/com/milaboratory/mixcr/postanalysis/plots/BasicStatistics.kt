@@ -58,16 +58,15 @@ object BasicStatistics {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metricsFilter: List<String>?,
+        metricsFilter: ((String) -> Boolean)?,
     ): DataFrame<BasicStatRow> = run {
         val data = mutableListOf<BasicStatRow>()
 
-        val mf = metricsFilter?.toSet()
         for ((ch, charData) in paResult.data) {
             for ((sampleId, keys) in charData.data) {
                 for (metric in keys.data) {
                     val key = metric.key.toString()
-                    if (mf != null && !mf.contains(key)) {
+                    if (metricsFilter != null && !metricsFilter(key)) {
                         continue
                     }
                     data += BasicStatRow(
@@ -87,7 +86,7 @@ object BasicStatistics {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metricsFilter: List<String>?,
+        metricsFilter: ((String) -> Boolean)?,
         metadata: Metadata?,
     ) = run {
         var df = dataFrame(paResult, metricsFilter)
@@ -101,7 +100,7 @@ object BasicStatistics {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metricsFilter: List<String>?,
+        metricsFilter: ((String) -> Boolean)?,
         metadataPath: String?,
     ) = dataFrame(paResult, metricsFilter, readMetadata(metadataPath))
 
