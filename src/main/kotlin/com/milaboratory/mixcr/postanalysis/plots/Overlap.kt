@@ -116,7 +116,7 @@ object Overlap {
         df: DataFrame<OverlapRow>,
         par: HeatmapParameters,
     ) = df.groupBy { metric }.groups.toList()
-        .map { sdf -> plot(df, par) + ggtitle(sdf.first()[OverlapRow::metric.name]!!.toString()) }
+        .map { sdf -> plot(sdf, par) + ggtitle(sdf.first().metric.shortDescription) }
 
 //    fun tables(
 //        df: DataFrame<OverlapRow>,
