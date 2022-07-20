@@ -88,7 +88,6 @@ public class CommandExportOverlap extends MiXCRCommand {
     @Override
     public void run0() throws Exception {
         List<String> samples = getInputFiles();
-        boolean needRecalculateCount = this.chains != null || onlyProductive;
         List<NamedChains> chains = this.chains == null
                 ? Collections.singletonList(Chains.ALL_NAMED)
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
@@ -165,9 +164,7 @@ public class CommandExportOverlap extends MiXCRCommand {
 
         OverlapBrowser overlapBrowser = new OverlapBrowser(chains, onlyProductive);
         SmartProgressReporter.startProgressReport(overlapBrowser);
-        Map<NamedChains, double[]> counts = null;
-        if (needRecalculateCount)
-            counts = overlapBrowser.computeCounts(samples);
+        Map<NamedChains, double[]> counts = overlapBrowser.computeCounts(samples);
 
         OverlapDataset<Clone> overlap = OverlapUtil.overlap(samples, __ -> true, criteria.ordering());
         try (OutputPortWithProgress<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
