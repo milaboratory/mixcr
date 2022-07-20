@@ -23,7 +23,7 @@ public class CommonDescriptions {
 
     public static final String JSON_REPORT = "JSON formatted report file";
 
-    public static final String DOWNSAMPLING = "Choose downsampling. Possible values: \n count-[reads|TAG]-[auto|min|number]\n top-[reads|TAG]-[number]\n cumtop-[reads|TAG]-[fraction]";
+    public static final String DOWNSAMPLING = "Choose downsampling. Possible values: \n count-[reads|TAG]-[auto|min|fixed][-<number>]\n top-[reads|TAG]-[<number>]\n cumtop-[reads|TAG]-[percent]";
 
     public static final String WEIGHT_FUNCTION = "Weight function: [read|TAG]";
 

@@ -74,20 +74,20 @@ public class OverlapAggregator<T> implements Aggregator<OverlapKey<OverlapType>,
     @Override
     public MetricValue<OverlapKey<OverlapType>>[] result() {
         List<MetricValue<OverlapKey<OverlapType>>> result = new ArrayList<>();
-        if (types.contains(OverlapType.D))
-            result.add(new MetricValue<>(key(OverlapType.D, id1, id2), safeDiv(diversityIntersection, diversity1 * diversity2)));
+        if (types.contains(OverlapType.RelativeDiversity))
+            result.add(new MetricValue<>(key(OverlapType.RelativeDiversity, id1, id2), safeDiv(diversityIntersection, diversity1 * diversity2)));
         if (types.contains(OverlapType.SharedClonotypes))
             result.add(new MetricValue<>(key(OverlapType.SharedClonotypes, id1, id2), 1.0 * diversityIntersection));
-        if (types.contains(OverlapType.F1))
-            result.add(new MetricValue<>(key(OverlapType.F1, id1, id2), Math.sqrt(safeDiv(sumS1Intersection * sumS2Intersection, sumS1 * sumS2))));
-        if (types.contains(OverlapType.F2))
-            result.add(new MetricValue<>(key(OverlapType.F2, id1, id2), safeDiv(sumSqProduct, Math.sqrt(sumS1 * sumS2))));
-        if (types.contains(OverlapType.Jaccard))
-            result.add(new MetricValue<>(key(OverlapType.Jaccard, id1, id2), safeDiv(diversityIntersection, (diversity1 + diversity2 - diversityIntersection))));
-        if (types.contains(OverlapType.R_Intersection))
-            result.add(new MetricValue<>(key(OverlapType.R_Intersection, id1, id2), regressionIntersection.getR()));
-        if (types.contains(OverlapType.R_All))
-            result.add(new MetricValue<>(key(OverlapType.R_All, id1, id2), regressionAll.getR()));
+        if (types.contains(OverlapType.F1Index))
+            result.add(new MetricValue<>(key(OverlapType.F1Index, id1, id2), Math.sqrt(safeDiv(sumS1Intersection * sumS2Intersection, sumS1 * sumS2))));
+        if (types.contains(OverlapType.F2Index))
+            result.add(new MetricValue<>(key(OverlapType.F2Index, id1, id2), safeDiv(sumSqProduct, Math.sqrt(sumS1 * sumS2))));
+        if (types.contains(OverlapType.JaccardIndex))
+            result.add(new MetricValue<>(key(OverlapType.JaccardIndex, id1, id2), safeDiv(diversityIntersection, (diversity1 + diversity2 - diversityIntersection))));
+        if (types.contains(OverlapType.Pearson))
+            result.add(new MetricValue<>(key(OverlapType.Pearson, id1, id2), regressionIntersection.getR()));
+        if (types.contains(OverlapType.PearsonAll))
+            result.add(new MetricValue<>(key(OverlapType.PearsonAll, id1, id2), regressionAll.getR()));
         //noinspection unchecked
         return result.toArray(new MetricValue[0]);
     }

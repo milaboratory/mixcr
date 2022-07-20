@@ -193,14 +193,14 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         public MetricParameters observed = new MetricParameters();
         public MetricParameters shannonWiener = new MetricParameters();
         public MetricParameters chao1 = new MetricParameters();
-        public MetricParameters clonality = new MetricParameters();
-        public MetricParameters inverseSimpson = new MetricParameters();
-        public MetricParameters gini = new MetricParameters();
+        public MetricParameters normalizedShannonWienerIndex = new MetricParameters();
+        public MetricParameters inverseSimpsonIndex = new MetricParameters();
+        public MetricParameters giniIndex = new MetricParameters();
         public MetricParameters d50 = new MetricParameters();
         public MetricParameters efronThisted = new MetricParameters();
 
         private List<MetricParameters> list() {
-            return Arrays.asList(observed, shannonWiener, chao1, clonality, inverseSimpson, gini, d50, efronThisted);
+            return Arrays.asList(observed, shannonWiener, chao1, normalizedShannonWienerIndex, inverseSimpsonIndex, giniIndex, d50, efronThisted);
         }
 
         @Override
@@ -223,9 +223,9 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
                         put(DiversityMeasure.Observed, observed.pwTuple(chains));
                         put(DiversityMeasure.ShannonWiener, shannonWiener.pwTuple(chains));
                         put(DiversityMeasure.Chao1, chao1.pwTuple(chains));
-                        put(DiversityMeasure.NormalizedShannonWeinerIndex, clonality.pwTuple(chains));
-                        put(DiversityMeasure.InverseSimpson, inverseSimpson.pwTuple(chains));
-                        put(DiversityMeasure.GiniIndex, gini.pwTuple(chains));
+                        put(DiversityMeasure.NormalizedShannonWienerIndex, normalizedShannonWienerIndex.pwTuple(chains));
+                        put(DiversityMeasure.InverseSimpsonIndex, inverseSimpsonIndex.pwTuple(chains));
+                        put(DiversityMeasure.GiniIndex, giniIndex.pwTuple(chains));
                         put(DiversityMeasure.EfronThisted, efronThisted.pwTuple(chains));
                     }},
                     (p, l) -> Collections.singletonList(new DiversityCharacteristic<>("Diversity "
@@ -250,12 +250,12 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             DiversityParameters that = (DiversityParameters) o;
-            return Objects.equals(observed, that.observed) && Objects.equals(shannonWiener, that.shannonWiener) && Objects.equals(chao1, that.chao1) && Objects.equals(clonality, that.clonality) && Objects.equals(inverseSimpson, that.inverseSimpson) && Objects.equals(gini, that.gini) && Objects.equals(d50, that.d50);
+            return Objects.equals(observed, that.observed) && Objects.equals(shannonWiener, that.shannonWiener) && Objects.equals(chao1, that.chao1) && Objects.equals(normalizedShannonWienerIndex, that.normalizedShannonWienerIndex) && Objects.equals(inverseSimpsonIndex, that.inverseSimpsonIndex) && Objects.equals(giniIndex, that.giniIndex) && Objects.equals(d50, that.d50);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(observed, shannonWiener, chao1, clonality, inverseSimpson, gini, d50);
+            return Objects.hash(observed, shannonWiener, chao1, normalizedShannonWienerIndex, inverseSimpsonIndex, giniIndex, d50);
         }
     }
 

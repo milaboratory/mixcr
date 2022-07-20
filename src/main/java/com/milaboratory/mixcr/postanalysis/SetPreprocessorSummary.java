@@ -188,7 +188,7 @@ public class SetPreprocessorSummary {
 
         List<List<Object>> rows = new ArrayList<>();
         for (Map.Entry<Set<OverlapType>, Characteristic<?, OverlapGroup<Clone>>> eCh : m.entrySet()) {
-            String ch = eCh.getKey().stream().map(it -> it.name).collect(Collectors.joining("/"));
+            String ch = eCh.getKey().stream().map(it -> it.shortDescription).collect(Collectors.joining("/"));
             String preproc = eCh.getValue().preprocessor.id();
             SetPreprocessorSummary preprocSummary = result.preprocSummary.get(preproc);
             addRows(rows, ch, preproc, preprocSummary);

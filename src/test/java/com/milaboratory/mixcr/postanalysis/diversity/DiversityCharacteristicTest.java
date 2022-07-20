@@ -56,7 +56,7 @@ public class DiversityCharacteristicTest {
         CharacteristicGroupResult<DiversityMeasure> table = result.getTable(group);
         for (CharacteristicGroupResultCell<DiversityMeasure> cell : table.cells) {
             TestDataset<TestObject> ds = Arrays.stream(datasets).filter(d -> d.id.equals(cell.datasetId)).findFirst().get();
-            if (cell.key == DiversityMeasure.InverseSimpson)
+            if (cell.key == DiversityMeasure.InverseSimpsonIndex)
                 Assert.assertEquals(SimpsonIndex(ds.data), cell.value, 1e-6);
             if (cell.key == DiversityMeasure.ShannonWiener)
                 Assert.assertEquals(Math.exp(ShannonEntropy(ds.data)), cell.value, 1e-6);

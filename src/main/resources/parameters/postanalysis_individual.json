@@ -78,19 +78,19 @@
         "dropOutliers": null,
         "weightFunction": null
       },
-      "clonality": {
+      "normalizedShannonWienerIndex": {
         "downsampling": null,
         "onlyProductive": null,
         "dropOutliers": null,
         "weightFunction": null
       },
-      "inverseSimpson": {
+      "inverseSimpsonIndex": {
         "downsampling": null,
         "onlyProductive": null,
         "dropOutliers": null,
         "weightFunction": null
       },
-      "gini": {
+      "giniIndex": {
         "downsampling": null,
         "onlyProductive": null,
         "dropOutliers": null,
