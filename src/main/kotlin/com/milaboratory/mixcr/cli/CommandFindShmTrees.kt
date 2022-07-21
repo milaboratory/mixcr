@@ -88,6 +88,12 @@ class CommandFindShmTrees : MiXCRCommand() {
     )
     var CDR3LengthToSearch: Set<Int> = HashSet()
 
+    @Option(
+        description = ["Filter clones with counts more or equal to that parameter"],
+        names = ["--min-count"]
+    )
+    var minCountForClone: Int? = null
+
     @Option(names = ["-rp", "--report-pdf"], description = ["Pdf report file path"])
     var reportPdf: String? = null
 
@@ -156,6 +162,9 @@ class CommandFindShmTrees : MiXCRCommand() {
             if (CDR3LengthToSearch.isNotEmpty()) {
                 throwValidationException("--cdr3-lengths must be empty if --build-from is specified")
             }
+            if (minCountForClone != null) {
+                throwValidationException("--min-count must be empty if --build-from is specified")
+            }
             if (report != null) {
                 println("WARN: argument --report will not be used with --build-from")
             }
@@ -171,6 +180,7 @@ class CommandFindShmTrees : MiXCRCommand() {
     private val reportFileName: String get() = report ?: (FilenameUtils.removeExtension(outputTreesPath) + ".report")
 
     private val tempDest: TempFileDest by lazy {
+        File(outputTreesPath).mkdirs()
         TempFileManager.smartTempDestination(outputTreesPath, "", useSystemTemp)
     }
 
@@ -191,7 +201,8 @@ class CommandFindShmTrees : MiXCRCommand() {
             threads,
             vGenesToSearch,
             jGenesToSearch,
-            CDR3LengthToSearch
+            CDR3LengthToSearch,
+            minCountForClone
         )
         if (buildFrom != null) {
             buildFromUserInput(shmTreeBuilder, cloneReaders)
@@ -239,7 +250,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             stepDescription = "Step $stepNumber/$stepsCount, ${step.forPrint}"
             SmartProgressReporter.startProgressReport(stepDescription, progressOfStep)
             val allClonesInTress = shmTreeBuilder.allClonesInTress()
-            clustersForStep.forEachInParallel(threads) { cluster: List<CloneWrapper> ->
+            clustersForStep.forEachInParallel(threads) { cluster ->
                 shmTreeBuilder.applyStep(
                     cluster,
                     step,

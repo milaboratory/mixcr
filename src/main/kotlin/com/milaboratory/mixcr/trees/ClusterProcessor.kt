@@ -9,7 +9,7 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-@file:Suppress("LocalVariableName", "FunctionName", "PrivatePropertyName")
+@file:Suppress("LocalVariableName", "FunctionName", "PrivatePropertyName", "PropertyName")
 
 package com.milaboratory.mixcr.trees
 
@@ -26,10 +26,7 @@ import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.ObservedOrReconstruct
 import com.milaboratory.mixcr.trees.TreeBuilderByAncestors.Reconstructed
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder.MetricDecisionInfo
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder.ZeroStepDecisionInfo
-import com.milaboratory.mixcr.util.ClonesAlignmentRanges
-import com.milaboratory.mixcr.util.extractAbsoluteMutations
-import com.milaboratory.mixcr.util.intersectionCount
-import com.milaboratory.mixcr.util.without
+import com.milaboratory.mixcr.util.*
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.JCDR3Part
 import io.repseq.core.GeneFeature.VCDR3Part
@@ -104,13 +101,24 @@ internal class ClusterProcessor(
         val clonesThatNotCloseToAnyGermline = originalCluster.asSequence()
             .filter { !hasVJPairThatCloseToGermline(it, parameters.commonMutationsCountForClustering) }
         val clones = rebaseFromGermline(clonesThatNotCloseToAnyGermline)
-        val clusters = OriginalClustersBuilder(
-            parameters,
-            scoringSet,
-            clones.toList(),
-            VJBase,
-            relatedAllelesMutations
-        ).buildClusters()
+        val originalClustersBuilder: OriginalClustersBuilder = when (parameters.buildingInitialTreesAlgorithm) {
+            "BronKerbosch" -> OriginalClustersBuilder.BronKerbosch(
+                parameters,
+                scoringSet,
+                clones.toList(),
+                VJBase,
+                relatedAllelesMutations
+            )
+            "Hierarchical" -> OriginalClustersBuilder.Hierarchical(
+                parameters,
+                scoringSet,
+                clones.toList(),
+                VJBase,
+                relatedAllelesMutations
+            )
+            else -> throw IllegalArgumentException("buildingInitialTreesAlgorithm param must be Hierarchical|BronKerbosch, got ${parameters.buildingInitialTreesAlgorithm}")
+        }
+        val clusters = originalClustersBuilder.buildClusters()
         val result = clusters
             .asSequence()
             .filter { it.size > 1 }
@@ -823,15 +831,16 @@ internal class ClusterProcessor(
     }
 }
 
-private class OriginalClustersBuilder(
-    private val parameters: SHMTreeBuilderParameters,
-    private val scoringSet: ScoringSet,
-    private val originalClones: List<CloneWithMutationsFromVJGermline>,
+private sealed class OriginalClustersBuilder(
+    protected val parameters: SHMTreeBuilderParameters,
+    protected val scoringSet: ScoringSet,
+    protected val originalClones: List<CloneWithMutationsFromVJGermline>,
     VJBase: VJBase,
     relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
 ) {
-    private val VMutationWithoutAlleles: Map<CloneWrapper.ID, List<Iterable<Mutations<NucleotideSequence>>>>
-    private val JMutationWithoutAlleles: Map<CloneWrapper.ID, List<Iterable<Mutations<NucleotideSequence>>>>
+
+    protected val VMutationWithoutAlleles: Map<CloneWrapper.ID, List<Iterable<Mutations<NucleotideSequence>>>>
+    protected val JMutationWithoutAlleles: Map<CloneWrapper.ID, List<Iterable<Mutations<NucleotideSequence>>>>
 
     init {
         val VAllelesMutations = relatedAllelesMutations[VJBase.VGeneId] ?: listOf(EMPTY_NUCLEOTIDE_MUTATIONS)
@@ -845,131 +854,23 @@ private class OriginalClustersBuilder(
         }
     }
 
-
-    /**
-     * Contract: clones have min parameters.commonMutationsCountForClustering mutations from any germline
-     *
-     * Assumption: if there are more than parameters.commonMutationsCountForClustering the same mutations and
-     * NDN region is somehow similar - than this clones from the same tree.
-     *
-     * Clusters formed by hierarchical clustering
-     *
-     * Optimizations that lose data:
-     * 1. Process all files separately. Lose clusters with size 2 that form by clone pair from different files.
-     *
-     *
-     * Thoughts:
-     * - Lower parameters.commonMutationsCountForClustering may be used if we calculate probability of specific mutation.
-     * Probabilities may be calculated on frequencies of mutations in specific gene in all clones of all samples.
-     * Or it may be arbitrary data.
-     * If it calculated from samples, then it will include impact both of hotspots and pressure of selection.
-     * - Threshold of NDNDistance may be function of count of the same mutations in a pair and count of different synonymic mutations.
-     */
-    fun buildClusters(): List<List<CloneWithMutationsFromVJGermline>> {
-        val clonesFromDifferentFiles = originalClones.groupBy { it.cloneWrapper.id.datasetId }
-            .mapValues { it.value.toMutableList() }
-        return if (clonesFromDifferentFiles.size == 1) {
-            hierarchicalClustering(originalClones)
+    private fun without(
+        mutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
+        alleleMutations: Mutations<NucleotideSequence>
+    ): Iterable<Mutations<NucleotideSequence>> =
+        if (alleleMutations.size() == 0) {
+            mutations.values
         } else {
-            //find clusters from each file separately
-            val foundClusters = clonesFromDifferentFiles
-                .entries
-                //process small one first. It may reduce big files before processing
-                .sortedBy { it.value.size }
-                .flatMap { (datasetId, clonesFromAFile) ->
-                    val foundClusters = hierarchicalClustering(clonesFromAFile)
-                        .map { it.toMutableList() }
-                    //search for clones from other files that can be attached to found clusters
-                    foundClusters.forEach { foundCluster ->
-                        clonesFromDifferentFiles
-                            .filterKeys { it != datasetId }
-                            .values
-                            .forEach { clonesFromOtherFile ->
-                                val clonesToAttach = clonesFromOtherFile
-                                    .filter { it.mayBeAttachedToAnyCluster() }
-                                    .filter { nextClone ->
-                                        foundCluster.any { cloneInCluster ->
-                                            fromTheSameCluster(nextClone, cloneInCluster)
-                                        }
-                                    }
-                                //remove found clones from file (will not be processed)
-                                clonesFromOtherFile.removeAll(clonesToAttach)
-                                foundCluster.addAll(clonesToAttach)
-                            }
-                    }
-                    foundClusters
-                }
-            //try to merge found clusters
-            tryToMergeClusters(foundClusters)
-        }
-    }
-
-    private fun tryToMergeClusters(
-        original: List<List<CloneWithMutationsFromVJGermline>>
-    ): List<List<CloneWithMutationsFromVJGermline>> {
-        val result = mutableListOf<MutableList<CloneWithMutationsFromVJGermline>>()
-        for (nextCluster in original) {
-            val clusterToGrow = result.firstOrNull { existedCluster ->
-                existedCluster.any { cloneInCluster ->
-                    nextCluster.any { nextClone ->
-                        fromTheSameCluster(nextClone, cloneInCluster)
-                    }
-                }
+            mutations.map { (_, mutations) ->
+                mutations.without(alleleMutations)
             }
-            if (clusterToGrow != null) {
-                clusterToGrow += nextCluster
-            } else {
-                result += nextCluster.toMutableList()
-            }
-        }
-        return result
-    }
-
-    private fun hierarchicalClustering(
-        clones: List<CloneWithMutationsFromVJGermline>
-    ): List<List<CloneWithMutationsFromVJGermline>> {
-        val result = mutableListOf<MutableList<CloneWithMutationsFromVJGermline>>()
-        clones
-            .filter { it.mayBeAttachedToAnyCluster() }
-            .sortedByDescending { it.mutations.VJMutationsCount }
-            .forEach { nextClone ->
-                val clusterToGrow = result.firstOrNull { existedCluster ->
-                    existedCluster.any { cloneInCluster ->
-                        fromTheSameCluster(nextClone, cloneInCluster)
-                    }
-                }
-                if (clusterToGrow != null) {
-                    clusterToGrow += nextClone
-                } else {
-                    result += mutableListOf(nextClone)
-                }
-            }
-        return result.filter { it.size > 1 }
-    }
-
-    private fun CloneWithMutationsFromVJGermline.mayBeAttachedToAnyCluster() =
-        mutations.VJMutationsCount >= parameters.commonMutationsCountForClustering
-
-    /**
-     * Calculate common mutations in clone pair but mutations from allele mutations.
-     * So if clones have a mutation, but there is allele of this gene with the same mutation, this mutation will be omitted in count.
-     */
-    private fun fromTheSameCluster(
-        first: CloneWithMutationsFromVJGermline,
-        second: CloneWithMutationsFromVJGermline
-    ): Boolean =
-        if (commonMutationsCount(first, second) >= parameters.commonMutationsCountForClustering) {
-            val NDNDistance = NDNDistance(first.mutations, second.mutations)
-            NDNDistance <= parameters.maxNDNDistanceForClustering
-        } else {
-            false
         }
 
     /**
      * Calculate common mutations in clone pair but mutations from allele mutations.
      * So if clones have a mutation, but there is allele of this gene with the same mutation, this mutation will be omitted in count.
      */
-    private fun commonMutationsCount(
+    protected fun commonMutationsCount(
         first: CloneWithMutationsFromVJGermline,
         second: CloneWithMutationsFromVJGermline
     ): Int =
@@ -981,7 +882,7 @@ private class OriginalClustersBuilder(
             JMutationWithoutAlleles[second.cloneWrapper.id]!!
         )
 
-    private fun NDNDistance(first: MutationsFromVJGermline, second: MutationsFromVJGermline): Double {
+    protected fun NDNDistance(first: MutationsFromVJGermline, second: MutationsFromVJGermline): Double {
         check(first.CDR3.size() == second.CDR3.size())
         val NDNRange = Range(
             min(first.VEndTrimmedPosition, second.VEndTrimmedPosition),
@@ -997,18 +898,6 @@ private class OriginalClustersBuilder(
         commonMutationsCount(first[i], second[i])
     }
 
-    private fun without(
-        mutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
-        alleleMutations: Mutations<NucleotideSequence>
-    ): Iterable<Mutations<NucleotideSequence>> =
-        if (alleleMutations.size() == 0) {
-            mutations.values
-        } else {
-            mutations.map { (_, mutations) ->
-                mutations.without(alleleMutations)
-            }
-        }
-
     private fun commonMutationsCount(
         first: Iterable<Mutations<NucleotideSequence>>,
         second: Iterable<Mutations<NucleotideSequence>>
@@ -1020,6 +909,192 @@ private class OriginalClustersBuilder(
             result += secondElement.intersectionCount(firstElement)
         }
         return result
+    }
+
+    abstract fun buildClusters(): List<List<CloneWithMutationsFromVJGermline>>
+
+    class BronKerbosch(
+        parameters: SHMTreeBuilderParameters,
+        scoringSet: ScoringSet,
+        originalClones: List<CloneWithMutationsFromVJGermline>,
+        VJBase: VJBase,
+        relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
+    ) : OriginalClustersBuilder(parameters, scoringSet, originalClones, VJBase, relatedAllelesMutations) {
+        /**
+         * Contract: clones have min parameters.commonMutationsCountForClustering mutations from any germline
+         *
+         * Assumption: if there are more than parameters.commonMutationsCountForClustering the same mutations and
+         * NDN region is somehow similar - than this clones from the same tree.
+         *
+         * 1. Make matrix with marked clone pairs that match assumption
+         * 2. Find cliques in this matrix
+         *
+         * Thoughts:
+         * - Lower parameters.commonMutationsCountForClustering may be used if we calculate probability of specific mutation.
+         * Probabilities may be calculated on frequencies of mutations in specific gene in all clones of all samples.
+         * Or it may be arbitrary data.
+         * If it calculated from samples, then it will include impact both of hotspots and pressure of selection.
+         * - Threshold of NDNDistance may be function of count of the same mutations in a pair and count of different synonymic mutations.
+         */
+        override fun buildClusters(): List<List<CloneWithMutationsFromVJGermline>> {
+            //TODO process different files separately
+            return clusterByCommonMutationsAndNDNDistance(originalClones)
+        }
+
+        private fun clusterByCommonMutationsAndNDNDistance(
+            clones: List<CloneWithMutationsFromVJGermline>
+        ): List<List<CloneWithMutationsFromVJGermline>> {
+            val matrix = AdjacencyMatrix(clones.size)
+            for (i in clones.indices) {
+                for (j in clones.indices) {
+                    val commonMutationsCount = commonMutationsCount(clones[i], clones[j])
+                    if (commonMutationsCount >= parameters.commonMutationsCountForClustering) {
+                        val NDNDistance = NDNDistance(clones[i].mutations, clones[j].mutations)
+                        if (NDNDistance <= parameters.maxNDNDistanceForClustering) {
+                            matrix.setConnected(i, j)
+                        }
+                    }
+                }
+            }
+            val notOverlappedCliques = mutableListOf<BitArrayInt>()
+            matrix.calculateMaximalCliques()
+                .filter { it.bitCount() > 1 }
+                .sortedByDescending { it.bitCount() }
+                .forEach { clique ->
+                    if (notOverlappedCliques.none { it.intersects(clique) }) {
+                        notOverlappedCliques.add(clique)
+                    }
+                }
+            return notOverlappedCliques
+                .map { it.bits.map { i -> clones[i] } }
+        }
+    }
+
+    class Hierarchical(
+        parameters: SHMTreeBuilderParameters,
+        scoringSet: ScoringSet,
+        originalClones: List<CloneWithMutationsFromVJGermline>,
+        VJBase: VJBase,
+        relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
+    ) : OriginalClustersBuilder(parameters, scoringSet, originalClones, VJBase, relatedAllelesMutations) {
+        /**
+         * Contract: clones have min parameters.commonMutationsCountForClustering mutations from any germline
+         *
+         * Assumption: if there are more than parameters.commonMutationsCountForClustering the same mutations and
+         * NDN region is somehow similar - than this clones from the same tree.
+         *
+         * Clusters formed by hierarchical clustering
+         *
+         * Optimizations that lose data:
+         * 1. Process all files separately. Lose clusters with size 2 that form by clone pair from different files.
+         *
+         *
+         * Thoughts:
+         * - Lower parameters.commonMutationsCountForClustering may be used if we calculate probability of specific mutation.
+         * Probabilities may be calculated on frequencies of mutations in specific gene in all clones of all samples.
+         * Or it may be arbitrary data.
+         * If it calculated from samples, then it will include impact both of hotspots and pressure of selection.
+         * - Threshold of NDNDistance may be function of count of the same mutations in a pair and count of different synonymic mutations.
+         */
+        override fun buildClusters(): List<List<CloneWithMutationsFromVJGermline>> {
+            val clonesFromDifferentFiles = originalClones.groupBy { it.cloneWrapper.id.datasetId }
+                .mapValues { it.value.toMutableList() }
+            return if (clonesFromDifferentFiles.size == 1) {
+                hierarchicalClustering(originalClones)
+            } else {
+                //find clusters from each file separately
+                val foundClusters = clonesFromDifferentFiles
+                    .entries
+                    //process small one first. It may reduce big files before processing
+                    .sortedBy { it.value.size }
+                    .flatMap { (datasetId, clonesFromAFile) ->
+                        val foundClusters = hierarchicalClustering(clonesFromAFile)
+                            .map { it.toMutableList() }
+                        //search for clones from other files that can be attached to found clusters
+                        foundClusters.forEach { foundCluster ->
+                            clonesFromDifferentFiles
+                                .filterKeys { it != datasetId }
+                                .values
+                                .forEach { clonesFromOtherFile ->
+                                    val clonesToAttach = clonesFromOtherFile
+                                        .filter { it.mayBeAttachedToAnyCluster() }
+                                        .filter { nextClone ->
+                                            foundCluster.any { cloneInCluster ->
+                                                fromTheSameCluster(nextClone, cloneInCluster)
+                                            }
+                                        }
+                                    //remove found clones from file (will not be processed)
+                                    clonesFromOtherFile.removeAll(clonesToAttach)
+                                    foundCluster.addAll(clonesToAttach)
+                                }
+                        }
+                        foundClusters
+                    }
+                //try to merge found clusters
+                tryToMergeClusters(foundClusters)
+            }
+        }
+
+        private fun tryToMergeClusters(
+            original: List<List<CloneWithMutationsFromVJGermline>>
+        ): List<List<CloneWithMutationsFromVJGermline>> {
+            val result = mutableListOf<MutableList<CloneWithMutationsFromVJGermline>>()
+            for (nextCluster in original) {
+                val clusterToGrow = result.firstOrNull { existedCluster ->
+                    existedCluster.any { cloneInCluster ->
+                        nextCluster.any { nextClone ->
+                            fromTheSameCluster(nextClone, cloneInCluster)
+                        }
+                    }
+                }
+                if (clusterToGrow != null) {
+                    clusterToGrow += nextCluster
+                } else {
+                    result += nextCluster.toMutableList()
+                }
+            }
+            return result
+        }
+
+        private fun hierarchicalClustering(
+            clones: List<CloneWithMutationsFromVJGermline>
+        ): List<List<CloneWithMutationsFromVJGermline>> {
+            val result = mutableListOf<MutableList<CloneWithMutationsFromVJGermline>>()
+            clones
+                .filter { it.mayBeAttachedToAnyCluster() }
+                .sortedByDescending { it.mutations.VJMutationsCount }
+                .forEach { nextClone ->
+                    val clusterToGrow = result.firstOrNull { existedCluster ->
+                        existedCluster.any { cloneInCluster ->
+                            fromTheSameCluster(nextClone, cloneInCluster)
+                        }
+                    }
+                    if (clusterToGrow != null) {
+                        clusterToGrow += nextClone
+                    } else {
+                        result += mutableListOf(nextClone)
+                    }
+                }
+            return result.filter { it.size > 1 }
+        }
+
+        private fun CloneWithMutationsFromVJGermline.mayBeAttachedToAnyCluster() =
+            mutations.VJMutationsCount >= parameters.commonMutationsCountForClustering
+
+        /**
+         * Calculate common mutations in clone pair but mutations from allele mutations.
+         * So if clones have a mutation, but there is allele of this gene with the same mutation, this mutation will be omitted in count.
+         */
+        private fun fromTheSameCluster(
+            first: CloneWithMutationsFromVJGermline,
+            second: CloneWithMutationsFromVJGermline
+        ): Boolean =
+            if (commonMutationsCount(first, second) >= parameters.commonMutationsCountForClustering) {
+                val NDNDistance = NDNDistance(first.mutations, second.mutations)
+                NDNDistance <= parameters.maxNDNDistanceForClustering
+            } else {
+                false
+            }
     }
 }
 

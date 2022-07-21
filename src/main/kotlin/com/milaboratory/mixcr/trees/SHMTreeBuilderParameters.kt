@@ -77,6 +77,10 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
      */
     @param:JsonProperty("NDNScoreMultiplier") val NDNScoreMultiplier: Double,
     /**
+     * Algorithm for the zero step. BronKerbosch|Hierarchical
+     */
+    @param:JsonProperty("buildingInitialTreesAlgorithm") val buildingInitialTreesAlgorithm: String,
+    /**
      * Order of steps to postprocess trees.
      */
     @param:JsonProperty("stepsOrder") val stepsOrder: List<BuildSHMTreeStep>,

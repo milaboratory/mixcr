@@ -79,13 +79,16 @@ class SHMTreeBuilder(
     private val threads: Int,
     VGenesToSearch: Set<String>,
     JGenesToSearch: Set<String>,
-    CDR3LengthToSearch: Set<Int>
+    CDR3LengthToSearch: Set<Int>,
+    minCountForClone: Int?
 ) {
     private val cloneWrappersFilter = CloneWrappersFilter(
         VGenesToSearch.ifEmpty { null },
         JGenesToSearch.ifEmpty { null },
-        CDR3LengthToSearch.ifEmpty { null }
+        CDR3LengthToSearch.ifEmpty { null },
+        minCountForClone
     )
+
     private val VScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
 
@@ -373,15 +376,22 @@ class SHMTreeBuilder(
     private class CloneWrappersFilter(
         private val VGenesToSearch: Set<String>?,
         private val JGenesToSearch: Set<String>?,
-        private val CDR3LengthToSearch: Set<Int>?
+        private val CDR3LengthToSearch: Set<Int>?,
+        private val minCountForClone: Int?
     ) {
         fun match(VJBase: VJBase): Boolean =
             (VGenesToSearch?.contains(VJBase.VGeneId.name) ?: true) &&
                     (JGenesToSearch?.contains(VJBase.JGeneId.name) ?: true) &&
-                    (CDR3LengthToSearch?.contains(VJBase.CDR3length) ?: true)
+                    CDR3LengthMatches(VJBase)
 
         fun match(cloneWrapper: CloneWrapper): Boolean =
-            VGeneMatches(cloneWrapper) && JGeneMatches(cloneWrapper) && CDR3LengthMatches(cloneWrapper)
+            VGeneMatches(cloneWrapper) && JGeneMatches(cloneWrapper) && CDR3LengthMatches(cloneWrapper.VJBase)
+                    && countMatches(cloneWrapper)
+
+        private fun countMatches(cloneWrapper: CloneWrapper): Boolean {
+            if (minCountForClone == null) return true
+            return cloneWrapper.clone.count >= minCountForClone
+        }
 
         private fun JGeneMatches(cloneWrapper: CloneWrapper): Boolean {
             if (JGenesToSearch == null) return true
@@ -393,8 +403,8 @@ class SHMTreeBuilder(
             return cloneWrapper.candidateVJBases.any { it.VGeneId.name in VGenesToSearch }
         }
 
-        private fun CDR3LengthMatches(cloneWrapper: CloneWrapper) =
-            (CDR3LengthToSearch?.contains(cloneWrapper.VJBase.CDR3length) ?: true)
+        private fun CDR3LengthMatches(VJBase: VJBase) =
+            (CDR3LengthToSearch?.contains(VJBase.CDR3length) ?: true)
     }
 }
 

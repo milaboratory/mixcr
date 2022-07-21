@@ -13,6 +13,7 @@
     "penaltyForReversedMutations": 10,
     "countOfNodesToProbe": 3,
     "minPortionOfClonesForCommonAlignmentRanges": 0.95,
+    "buildingInitialTreesAlgorithm": "BronKerbosch",
     "stepsOrder": [
       "AttachClonesByDistanceChange",
       "CombineTrees",
