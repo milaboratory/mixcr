@@ -89,7 +89,7 @@ class CommandFindShmTrees : MiXCRCommand() {
     var CDR3LengthToSearch: Set<Int> = HashSet()
 
     @Option(
-        description = ["Filter clones with counts more or equal to that parameter"],
+        description = ["Filter clones with counts great or equal to that parameter"],
         names = ["--min-count"]
     )
     var minCountForClone: Int? = null
