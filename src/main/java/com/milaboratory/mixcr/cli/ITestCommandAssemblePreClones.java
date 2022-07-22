@@ -23,11 +23,14 @@ import com.milaboratory.mixcr.basictypes.tag.TagInfo;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagValue;
+import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.*;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.util.*;
@@ -109,12 +112,14 @@ public class ITestCommandAssemblePreClones extends MiXCRCommand {
             // Checking and exporting alignments
 
             long numberOfAlignmentsCheck = 0;
-            try (PrintStream ps = new PrintStream(files.get(2))) {
+            try (PrintStream ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(files.get(2)), 1 << 20))) {
                 ps.print("alignmentId\t");
                 for (TagInfo ti : reader.getTagsInfo())
                     ps.print(ti.getName() + "\t");
                 ps.println("readIndex\tcloneId\tcdr3\tcdr3_qual\tbestV\tbestJ");
-                for (VDJCAlignments al : CUtils.it(reader.readAlignments())) {
+                OutputPortWithProgress<VDJCAlignments> aReader = reader.readAlignments();
+                SmartProgressReporter.startProgressReport("Exporting alignments", aReader);
+                for (VDJCAlignments al : CUtils.it(aReader)) {
                     cdr3Hash -= Objects.hashCode(al.getFeature(GeneFeature.CDR3));
                     numberOfAlignmentsCheck++;
 
@@ -164,12 +169,14 @@ public class ITestCommandAssemblePreClones extends MiXCRCommand {
             // Checking and exporting clones
 
             long numberOfClonesCheck = 0;
-            try (PrintStream ps = new PrintStream(files.get(3))) {
+            try (PrintStream ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(files.get(3)), 1 << 20))) {
                 ps.print("cloneId\t");
                 for (TagInfo ti : reader.getTagsInfo())
                     ps.print(ti.getName() + "\t");
                 ps.println("count\tcount_full\tcdr3\tbestV\tbestJ");
-                for (PreClone c : CUtils.it(reader.readPreClones())) {
+                OutputPortWithProgress<PreClone> cReader = reader.readPreClones();
+                SmartProgressReporter.startProgressReport("Exporting clones", cReader);
+                for (PreClone c : CUtils.it(cReader)) {
                     TObjectDoubleIterator<TagTuple> it = c.getCoreTagCount().iterator();
                     while (it.hasNext()) {
                         it.advance();
@@ -179,7 +186,7 @@ public class ITestCommandAssemblePreClones extends MiXCRCommand {
                         for (TagValue tv : it.key())
                             ps.print(tv.toString() + "\t");
                         ps.print(it.value() + "\t");
-                        ps.print(c.getFullTagCount().get(it.key()) + '\t');
+                        ps.print(c.getFullTagCount().get(it.key()) + "\t");
                         ps.println(c.getClonalSequence()[0].getSequence() + "\t" +
                                 c.getBestGene(GeneType.Variable).getName() + "\t" +
                                 c.getBestGene(GeneType.Joining).getName());
