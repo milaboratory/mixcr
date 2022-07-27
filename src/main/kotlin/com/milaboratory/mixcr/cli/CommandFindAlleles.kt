@@ -151,7 +151,9 @@ class CommandFindAlleles : MiXCRCommand() {
     }
 
     private val tempDest: TempFileDest by lazy {
-        File(outputClnsFiles.first()).mkdirs()
+        if (!useSystemTemp) {
+            Paths.get(outputClnsFiles.first()).toAbsolutePath().parent.toFile().mkdirs()
+        }
         TempFileManager.smartTempDestination(outputClnsFiles.first(), "", useSystemTemp)
     }
 

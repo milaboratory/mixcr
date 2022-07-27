@@ -191,7 +191,9 @@ class CommandFindShmTrees : MiXCRCommand() {
     private val reportFileName: String get() = report ?: (FilenameUtils.removeExtension(outputTreesPath) + ".report")
 
     private val tempDest: TempFileDest by lazy {
-        File(outputTreesPath).mkdirs()
+        if (!useSystemTemp) {
+            Paths.get(outputTreesPath).toAbsolutePath().parent.toFile().mkdirs()
+        }
         TempFileManager.smartTempDestination(outputTreesPath, "", useSystemTemp)
     }
 
