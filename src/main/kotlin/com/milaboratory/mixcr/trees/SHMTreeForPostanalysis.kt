@@ -18,8 +18,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.*
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint.*
 import java.util.*
 
@@ -37,7 +35,7 @@ data class SHMTreeForPostanalysis(
         fun partitioning(geneType: GeneType): ReferencePoints =
             getGene(geneType).partitioning
 
-        fun getGene(geneType: GeneType) = geneSupplier(rootInfo.VJBase.getGeneId(geneType))
+        fun getGene(geneType: GeneType) = geneSupplier(rootInfo.VJBase.geneIds[geneType])
 
         fun geneFeatureToAlign(geneType: GeneType): GeneFeature =
             alignerParameters.getGeneAlignerParameters(geneType).geneFeatureToAlign
@@ -240,34 +238,34 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
 private fun MutationsSet.asMutationsDescription(meta: SHMTreeForPostanalysis.Meta): MutationsDescription =
     MutationsDescription(
         VPartsOfMutationsDescriptor(),
-        meta.rootInfo.VSequence,
-        meta.rootInfo.getPartitioning(Variable)
-            .withVCDR3PartLength(meta.rootInfo.VRangeInCDR3.length()),
+        meta.rootInfo.sequence1.V,
+        meta.rootInfo.partitioning.V
+            .withVCDR3PartLength(meta.rootInfo.rangeInCDR3.V.length()),
         meta.rootInfo.reconstructedNDN,
         NDNMutations.mutations,
         JPartsOfMutationsDescriptor(),
-        meta.rootInfo.JSequence,
-        meta.rootInfo.getPartitioning(Joining)
-            .withJCDR3PartLength(meta.rootInfo.JRangeInCDR3.length())
+        meta.rootInfo.sequence1.J,
+        meta.rootInfo.partitioning.J
+            .withJCDR3PartLength(meta.rootInfo.rangeInCDR3.J.length())
     )
 
 private fun MutationsSet.VPartsOfMutationsDescriptor(): SortedMap<GeneFeature, Mutations<NucleotideSequence>> =
-    VMutations.mutations.entries.associateTo(TreeMap()) { (geneFeature, mutations) ->
+    mutations.V.mutationsOutsideOfCDR3.entries.associateTo(TreeMap()) { (geneFeature, mutationsInFeature) ->
         if (geneFeature.lastPoint == CDR3Begin) {
             GeneFeature(geneFeature.firstPoint, VEndTrimmed) to
-                    mutations.concat(VMutations.partInCDR3.mutations)
+                    mutationsInFeature.concat(mutations.V.partInCDR3.mutations)
         } else {
-            geneFeature to mutations
+            geneFeature to mutationsInFeature
         }
     }
 
 private fun MutationsSet.JPartsOfMutationsDescriptor(): SortedMap<GeneFeature, Mutations<NucleotideSequence>> =
-    JMutations.mutations.entries.associateTo(TreeMap()) { (geneFeature, mutations) ->
+    mutations.J.mutationsOutsideOfCDR3.entries.associateTo(TreeMap()) { (geneFeature, mutationsInFeature) ->
         if (geneFeature.firstPoint == CDR3End) {
             GeneFeature(JBeginTrimmed, geneFeature.lastPoint) to
-                    JMutations.partInCDR3.mutations.concat(mutations)
+                    mutations.J.partInCDR3.mutations.concat(mutationsInFeature)
         } else {
-            geneFeature to mutations
+            geneFeature to mutationsInFeature
         }
     }
 

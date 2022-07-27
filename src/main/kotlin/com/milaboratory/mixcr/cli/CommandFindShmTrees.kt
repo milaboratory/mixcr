@@ -70,8 +70,12 @@ class CommandFindShmTrees : MiXCRCommand() {
     @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
     var overrides: Map<String, String> = HashMap()
 
-    @Option(description = ["SHM tree builder parameters preset."], names = ["-p", "--preset"])
-    var shmTreeBuilderParametersName = "default"
+    @Option(
+        description = ["SHM tree builder parameters preset."],
+        names = ["-p", "--preset"],
+        defaultValue = "default"
+    )
+    lateinit var shmTreeBuilderParametersName: String
 
     @Option(names = ["-r", "--report"], description = ["Report file path"])
     var report: String? = null
@@ -99,6 +103,13 @@ class CommandFindShmTrees : MiXCRCommand() {
 
     @Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
     var debugDirectoryPath: String? = null
+
+    @Option(
+        description = ["Search alleles within GeneFeature."],
+        names = ["--region"],
+        defaultValue = "VDJRegion"
+    )
+    lateinit var geneFeatureToSearchParameter: String
 
     private val debugDirectory: Path by lazy {
         when (debugDirectoryPath) {
@@ -190,13 +201,17 @@ class CommandFindShmTrees : MiXCRCommand() {
             CloneSetIO.mkReader(Paths.get(path), VDJCLibraryRegistry.getDefault())
         }
         require(cloneReaders.isNotEmpty()) { "there is no files to process" }
-        //TODO check other common things
-        require(
-            cloneReaders.map { it.assemblerParameters }.distinct().count() == 1
-        ) { "input files must have the same assembler parameters" }
+        require(cloneReaders.map { it.assemblerParameters }.distinct().count() == 1) {
+            "input files must have the same assembler parameters"
+        }
+        require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
+            "input files must have the same aligner parameters"
+        }
         val shmTreeBuilder = SHMTreeBuilder(
             shmTreeBuilderParameters,
             cloneReaders,
+            //TODO check that clones are strictly aligned by assemblingFeatures
+            cloneReaders.first().assemblerParameters.assemblingFeatures,
             tempDest,
             threads,
             vGenesToSearch,
@@ -279,6 +294,7 @@ class CommandFindShmTrees : MiXCRCommand() {
                 cloneReaders.first().alignerParameters,
                 clnsFileNames,
                 usedGenes,
+                //TODO summarize tagsInfo
                 cloneReaders.first().tagsInfo,
                 usedGenes.map { it.parentLibrary }.distinct()
             )

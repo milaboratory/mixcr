@@ -36,10 +36,6 @@ data class FindAllelesParameters @JsonCreator constructor(
      */
     @param:JsonProperty("productiveOnly") val productiveOnly: Boolean,
     /**
-     * Min portion of clones to determinate common alignment ranges.
-     */
-    @param:JsonProperty("minPortionOfClonesForCommonAlignmentRanges") val minPortionOfClonesForCommonAlignmentRanges: Double,
-    /**
      * Window size that will be used for build regression of mutations frequency vs count of mutations
      */
     @param:JsonProperty("windowSizeForRegression") val windowSizeForRegression: Int,

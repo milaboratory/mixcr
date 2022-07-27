@@ -14,29 +14,28 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.util.VJPair
 import io.repseq.core.GeneFeature
 import java.util.*
 
 @Suppress("PropertyName")
 class MutationsFromVJGermline(
-    val VMutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
     /**
-     * Already known from alignments V mutations within CDR3 feature
+     * Mutations outside of CDR3
      */
-    val knownVMutationsWithinCDR3: Pair<Mutations<NucleotideSequence>, Range>,
+    val mutations: VJPair<SortedMap<GeneFeature, Mutations<NucleotideSequence>>>,
+    /**
+     * Already known from alignments V and J mutations within CDR3 feature
+     */
+    val knownMutationsWithinCDR3: VJPair<Pair<Mutations<NucleotideSequence>, Range>>,
     /**
      * Full sequence of CDR3
      */
     val CDR3: NucleotideSequence,
-    /**
-     * Already known from alignments J mutations within CDR3 feature
-     */
-    val knownJMutationsWithinCDR3: Pair<Mutations<NucleotideSequence>, Range>,
-    val JMutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>
 ) {
     val VJMutationsCount: Int
-        get() = VMutations.values.sumOf { it.size() } + JMutations.values.sumOf { it.size() }
+        get() = mutations.V.values.sumOf { it.size() } + mutations.J.values.sumOf { it.size() }
 
-    val VEndTrimmedPosition = knownVMutationsWithinCDR3.second.length()
-    val JBeginTrimmedPosition = CDR3.size() - knownJMutationsWithinCDR3.second.length()
+    val VEndTrimmedPosition = knownMutationsWithinCDR3.V.second.length()
+    val JBeginTrimmedPosition = CDR3.size() - knownMutationsWithinCDR3.J.second.length()
 }

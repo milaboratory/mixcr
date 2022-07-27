@@ -13,22 +13,20 @@
 
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
-
-class SyntheticNode private constructor(
+class SyntheticNode(
     val fromRootToThis: MutationsSet,
 ) {
     fun mutate(mutations: NodeMutationsDescription): SyntheticNode = SyntheticNode(
         MutationsSet(
             VGeneMutations(
-                mutations = fromRootToThis.VMutations.mutations.mapValues { (geneFeature, value) ->
+                mutations = fromRootToThis.mutations.V.mutationsOutsideOfCDR3.mapValues { (geneFeature, value) ->
                     value.combineWith(
-                        mutations.VMutationsWithoutCDR3[geneFeature]!!.mutationsFromParentToThis
+                        mutations.mutationsOutsideCDR3.V[geneFeature]!!.mutationsFromParentToThis
                     )
                 },
-                partInCDR3 = fromRootToThis.VMutations.partInCDR3.copy(
-                    mutations = fromRootToThis.VMutations.partInCDR3.mutations
-                        .combineWith(mutations.VMutationsInCDR3WithoutNDN.mutationsFromParentToThis)
+                partInCDR3 = fromRootToThis.mutations.V.partInCDR3.copy(
+                    mutations = fromRootToThis.mutations.V.partInCDR3.mutations
+                        .combineWith(mutations.mutationsInCDR3.V.mutationsFromParentToThis)
                 )
             ),
             fromRootToThis.NDNMutations.copy(
@@ -36,38 +34,17 @@ class SyntheticNode private constructor(
                     .combineWith(mutations.knownNDN.mutationsFromParentToThis)
             ),
             JGeneMutations(
-                partInCDR3 = fromRootToThis.JMutations.partInCDR3.copy(
-                    mutations = fromRootToThis.JMutations.partInCDR3.mutations
-                        .combineWith(mutations.JMutationsInCDR3WithoutNDN.mutationsFromParentToThis)
+                partInCDR3 = fromRootToThis.mutations.J.partInCDR3.copy(
+                    mutations = fromRootToThis.mutations.J.partInCDR3.mutations
+                        .combineWith(mutations.mutationsInCDR3.J.mutationsFromParentToThis)
                 ),
-                mutations = fromRootToThis.JMutations.mutations.mapValues { (geneFeature, value) ->
+                mutations = fromRootToThis.mutations.J.mutationsOutsideOfCDR3.mapValues { (geneFeature, value) ->
                     value.combineWith(
-                        mutations.JMutationsWithoutCDR3[geneFeature]!!.mutationsFromParentToThis
+                        mutations.mutationsOutsideCDR3.J[geneFeature]!!.mutationsFromParentToThis
                     )
                 }
             )
         )
     )
 
-    companion object {
-        fun createFromMutations(
-            fromRootToThis: MutationsSet
-        ): SyntheticNode {
-            return SyntheticNode(fromRootToThis)
-        }
-
-        fun createRoot(rootInfo: RootInfo): SyntheticNode = SyntheticNode(
-            MutationsSet(
-                VGeneMutations(
-                    rootInfo.VAlignFeatures.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS },
-                    PartInCDR3(rootInfo.VRangeInCDR3, EMPTY_NUCLEOTIDE_MUTATIONS)
-                ),
-                NDNMutations(EMPTY_NUCLEOTIDE_MUTATIONS),
-                JGeneMutations(
-                    PartInCDR3(rootInfo.JRangeInCDR3, EMPTY_NUCLEOTIDE_MUTATIONS),
-                    rootInfo.JAlignFeatures.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS }
-                )
-            )
-        )
-    }
 }

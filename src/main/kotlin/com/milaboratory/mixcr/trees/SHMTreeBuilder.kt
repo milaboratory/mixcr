@@ -22,8 +22,11 @@ import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
+import com.milaboratory.mixcr.util.alignmentsCover
 import com.milaboratory.primitivio.*
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.util.TempFileDest
 import io.repseq.core.GeneFeature
@@ -32,6 +35,7 @@ import io.repseq.core.GeneFeature.VJJunction
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
+import io.repseq.core.ReferencePoint.*
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import java.io.PrintStream
@@ -75,6 +79,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class SHMTreeBuilder(
     private val parameters: SHMTreeBuilderParameters,
     private val datasets: List<CloneReader>,
+    private val assemblingFeatures: Array<GeneFeature>,
     private val tempDest: TempFileDest,
     private val threads: Int,
     VGenesToSearch: Set<String>,
@@ -95,8 +100,6 @@ class SHMTreeBuilder(
     private val JScoring: AlignmentScoring<NucleotideSequence> =
         datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
 
-    private val assemblingFeatures: Array<GeneFeature> =
-        datasets[0].assemblerParameters.assemblingFeatures
 
     /**
      * For every clone store in what tree it was added and with what score
@@ -110,6 +113,15 @@ class SHMTreeBuilder(
     private var currentTrees = ConcurrentHashMap<VJBase, List<TreeWithMetaBuilder.Snapshot>>()
     private val treeIdGenerators = ConcurrentHashMap<VJBase, IdGenerator>()
 
+    private val geneFeatureToMatch: VJPair<GeneFeature> = assemblingFeatures
+        .reduce(GeneFeature::append)
+        .let { geneFeatureToSearch ->
+            VJPair(
+                V = GeneFeature.intersection(geneFeatureToSearch, GeneFeature(UTR5Begin, CDR3Begin)),
+                J = GeneFeature.intersection(geneFeatureToSearch, GeneFeature(CDR3End, FR4End)),
+            )
+        }
+
     fun cloneWrappersCount(): Int = unsortedClonotypes().count()
 
     fun allClonesInTress() = currentTrees.asSequence()
@@ -118,37 +130,37 @@ class SHMTreeBuilder(
         .toSet()
 
     fun unsortedClonotypes(): OutputPort<CloneWrapper> = readClonesWithDatasetIds()
-        .filter { (_, c) ->
-            // filter non-productive clonotypes
-            // todo CDR3?
-            !parameters.productiveOnly || (!c.containsStops(CDR3) && !c.isOutOfFrame(CDR3))
-        }
         .flatMap { (datasetId, clone) ->
-            val VGeneNames = clone.getHits(Variable).map { VHit -> VHit.gene.id }
-            val JGeneNames = clone.getHits(Joining).map { JHit -> JHit.gene.id }
-            val candidateVJBases = VGeneNames
+            val VGeneIds = clone.getHits(Variable).map { VHit -> VHit.gene.id }
+            val JGeneIds = clone.getHits(Joining).map { JHit -> JHit.gene.id }
+            val candidateVJBases = VGeneIds
                 //create copy of clone for every pair of V and J hits in it
                 .flatMap { VGeneId ->
-                    JGeneNames.map { JGeneId ->
+                    JGeneIds.map { JGeneId ->
                         VJBase(VGeneId, JGeneId, clone.ntLengthOf(CDR3, VGeneId, JGeneId))
                     }
+                }
+                .filter { VJBase -> clone.coversRequestedFeature(VJBase) }
+                .filter { VJBase ->
+                    // filter non-productive clonotypes
+                    // todo only CDR3?
+                    !parameters.productiveOnly ||
+                            (!clone.containsStops(CDR3, VJBase) && !clone.isOutOfFrame(CDR3, VJBase))
                 }
                 //filter compositions that not overlap with each another
                 .filter { VJBase ->
                     clone.formsAllRefPointsInCDR3(VJBase)
                 }
-            candidateVJBases
-                .map { VJBase ->
-                    CloneWrapper(
-                        clone,
-                        datasetId,
-                        VJBase,
-                        candidateVJBases
-                    )
-                }
+            candidateVJBases.map { VJBase ->
+                CloneWrapper(clone, datasetId, VJBase, candidateVJBases)
+            }
         }
         //filter by user defined parameters
         .filter { c -> cloneWrappersFilter.match(c) }
+
+    private fun Clone.coversRequestedFeature(VJBase: VJBase): Boolean =
+        getHit(VJBase, Variable).alignmentsCover(geneFeatureToMatch) &&
+                getHit(VJBase, Joining).alignmentsCover(geneFeatureToMatch)
 
     private fun Clone.formsAllRefPointsInCDR3(VJBase: VJBase): Boolean =
         getFeature(CDR3, VJBase) != null && getFeature(VJJunction, VJBase) != null
@@ -194,10 +206,16 @@ class SHMTreeBuilder(
                 )
 
                 val cloneWrappers = cluster
-                    .filter { it.clone.ntLengthOf(CDR3) == VJBase.CDR3length }
+                    .filter { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) == VJBase.CDR3length }
+                    .filter { it.clone.coversRequestedFeature(VJBase) }
                     //filter compositions that not overlap with each another
                     .filter { it.clone.formsAllRefPointsInCDR3(VJBase) }
                     .map { CloneWrapper(it.clone, it.datasetId, VJBase, listOf(VJBase)) }
+
+                if (cloneWrappers.size != cluster.size) {
+                    val excludedCloneIds = cluster.map { it.clone.id } - cloneWrappers.map { it.clone.id }.toSet()
+                    println("WARN: $excludedCloneIds will be not included in $treeId")
+                }
 
                 val clusterProcessor = buildClusterProcessor(cloneWrappers, VJBase)
                 clusterProcessor.buildTreeFromAllClones(treeId)
@@ -341,10 +359,6 @@ class SHMTreeBuilder(
             clusterBySameVAndJ,
             anyClone.getHit(Variable).getAlignment(0).sequence1,
             anyClone.getHit(Joining).getAlignment(0).sequence1,
-            ClusterProcessor.calculateClusterInfo(
-                clusterBySameVAndJ,
-                parameters.minPortionOfClonesForCommonAlignmentRanges
-            ),
             treeIdGenerators.computeIfAbsent(VJBase) { IdGenerator() },
             VJBase
         )
@@ -380,8 +394,8 @@ class SHMTreeBuilder(
         private val minCountForClone: Int?
     ) {
         fun match(VJBase: VJBase): Boolean =
-            (VGenesToSearch?.contains(VJBase.VGeneId.name) ?: true) &&
-                    (JGenesToSearch?.contains(VJBase.JGeneId.name) ?: true) &&
+            (VGenesToSearch?.contains(VJBase.geneIds.V.name) ?: true) &&
+                    (JGenesToSearch?.contains(VJBase.geneIds.J.name) ?: true) &&
                     CDR3LengthMatches(VJBase)
 
         fun match(cloneWrapper: CloneWrapper): Boolean =
@@ -395,12 +409,12 @@ class SHMTreeBuilder(
 
         private fun JGeneMatches(cloneWrapper: CloneWrapper): Boolean {
             if (JGenesToSearch == null) return true
-            return cloneWrapper.candidateVJBases.any { it.JGeneId.name in JGenesToSearch }
+            return cloneWrapper.candidateVJBases.any { it.geneIds.J.name in JGenesToSearch }
         }
 
         private fun VGeneMatches(cloneWrapper: CloneWrapper): Boolean {
             if (VGenesToSearch == null) return true
-            return cloneWrapper.candidateVJBases.any { it.VGeneId.name in VGenesToSearch }
+            return cloneWrapper.candidateVJBases.any { it.geneIds.V.name in VGenesToSearch }
         }
 
         private fun CDR3LengthMatches(VJBase: VJBase) =

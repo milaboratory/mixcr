@@ -13,6 +13,7 @@ package com.milaboratory.primitivio
 
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.util.FlatteningOutputPort
@@ -46,19 +47,19 @@ fun <T, R> OutputPort<T>.mapInParallel(
     function: (T) -> R
 ): OutputPort<R> = CUtils.orderedParallelProcessor(this, function, buffer, threads)
 
-fun <T, R> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPort<R> = flatMap {
+fun <T, R> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPortCloseable<R> = flatMap {
     listOfNotNull(function(it))
 }
 
-fun <T> List<OutputPort<T>>.flatten(): OutputPort<T> =
+fun <T> List<OutputPort<T>>.flatten(): OutputPortCloseable<T> =
     FlatteningOutputPort(CUtils.asOutputPort(this))
 
-fun <T, R> OutputPort<T>.flatMap(function: (element: T) -> Iterable<R>): OutputPort<R> =
+fun <T, R> OutputPort<T>.flatMap(function: (element: T) -> Iterable<R>): OutputPortCloseable<R> =
     FlatteningOutputPort(CUtils.wrap(this) {
         CUtils.asOutputPort(function(it))
     })
 
-fun <T> OutputPort<T>.filter(test: (element: T) -> Boolean): OutputPort<T> =
+fun <T> OutputPort<T>.filter(test: (element: T) -> Boolean): OutputPortCloseable<T> =
     FilteringPort(this, test)
 
 fun <T> OutputPort<T>.forEach(action: (element: T) -> Unit): Unit =

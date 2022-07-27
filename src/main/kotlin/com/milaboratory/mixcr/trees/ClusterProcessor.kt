@@ -35,7 +35,6 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint.CDR3Begin
 import io.repseq.core.ReferencePoint.CDR3End
-import io.repseq.core.ReferencePoints
 import io.repseq.core.VDJCGeneId
 import java.util.*
 import java.util.function.Supplier
@@ -49,7 +48,6 @@ internal class ClusterProcessor(
     private val originalCluster: List<CloneWrapper>,
     private val VSequence1: NucleotideSequence,
     private val JSequence1: NucleotideSequence,
-    private val clusterInfo: CalculatedClusterInfo,
     private val idGenerator: IdGenerator,
     private val VJBase: VJBase
 ) {
@@ -58,7 +56,9 @@ internal class ClusterProcessor(
         currentTrees: List<TreeWithMetaBuilder>,
         allClonesInTress: Set<CloneWrapper.ID>
     ): StepResult = stepByName(stepName).next(currentTrees) {
-        rebaseFromGermline(originalCluster.asSequence().filter { it.id !in allClonesInTress })
+        originalCluster.asSequence()
+            .filter { it.id !in allClonesInTress }
+            .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
     }
 
     private fun stepByName(stepName: BuildSHMTreeStep): Step = when (stepName) {
@@ -100,19 +100,21 @@ internal class ClusterProcessor(
         //use only clones that are at long distance from any germline
         val clonesThatNotCloseToAnyGermline = originalCluster.asSequence()
             .filter { !hasVJPairThatCloseToGermline(it, parameters.commonMutationsCountForClustering) }
-        val clones = rebaseFromGermline(clonesThatNotCloseToAnyGermline)
+        val clones = clonesThatNotCloseToAnyGermline
+            .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
+            .toList()
         val originalClustersBuilder: OriginalClustersBuilder = when (parameters.buildingInitialTreesAlgorithm) {
             "BronKerbosch" -> OriginalClustersBuilder.BronKerbosch(
                 parameters,
                 scoringSet,
-                clones.toList(),
+                clones,
                 VJBase,
                 relatedAllelesMutations
             )
             "Hierarchical" -> OriginalClustersBuilder.Hierarchical(
                 parameters,
                 scoringSet,
-                clones.toList(),
+                clones,
                 VJBase,
                 relatedAllelesMutations
             )
@@ -136,8 +138,8 @@ internal class ClusterProcessor(
                     val VHit = it.cloneWrapper.getHit(Variable)
                     val JHit = it.cloneWrapper.getHit(Joining)
                     it.cloneWrapper.id to ZeroStepDecisionInfo(
-                        effectiveParent.fromRootToThis.VMutations.mutationsCount() +
-                                effectiveParent.fromRootToThis.JMutations.mutationsCount(),
+                        effectiveParent.fromRootToThis.mutations.V.mutationsCount() +
+                                effectiveParent.fromRootToThis.mutations.J.mutationsCount(),
                         VHit.gene.geneName,
                         JHit.gene.geneName,
                         VHit.score,
@@ -154,8 +156,9 @@ internal class ClusterProcessor(
     }
 
     fun buildTreeFromAllClones(treeId: Int): SHMTreeResult {
-        val rebasedFromGermline = rebaseFromGermline(originalCluster.asSequence())
-        val treeWithMetaBuilder = buildATree(rebasedFromGermline.toList())
+        val rebasedFromGermline = originalCluster
+            .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
+        val treeWithMetaBuilder = buildATree(rebasedFromGermline)
         return SHMTreeResult(
             treeWithMetaBuilder.buildResult(),
             treeWithMetaBuilder.rootInfo,
@@ -166,8 +169,8 @@ internal class ClusterProcessor(
     private fun hasVJPairThatCloseToGermline(cloneWrapper: CloneWrapper, threashold: Int): Boolean =
         cloneWrapper.candidateVJBases
             .map { VJBase ->
-                cloneWrapper.clone.getHit(Variable, VJBase).mutationsCount() +
-                        cloneWrapper.clone.getHit(Joining, VJBase).mutationsCount()
+                cloneWrapper.clone.getHit(VJBase, Variable).mutationsCount() +
+                        cloneWrapper.clone.getHit(VJBase, Joining).mutationsCount()
             }
             .any { it < threashold }
 
@@ -175,10 +178,11 @@ internal class ClusterProcessor(
 
     fun restore(snapshot: TreeWithMetaBuilder.Snapshot): TreeWithMetaBuilder {
         val clonesInTrees = snapshot.clonesAdditionHistory.toSet()
-        val rebasedClonesFromGermline = rebaseFromGermline(
-            originalCluster.filter { it.id in clonesInTrees }.asSequence()
-        )
-        return buildATree(rebasedClonesFromGermline.toList())
+        val rebasedClonesFromGermline = originalCluster.asSequence()
+            .filter { it.id in clonesInTrees }
+            .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
+            .toList()
+        return buildATree(rebasedClonesFromGermline)
     }
 
     /**
@@ -187,10 +191,11 @@ internal class ClusterProcessor(
     fun restoreWithNDNFromMRCA(snapshot: TreeWithMetaBuilder.Snapshot): TreeWithMetaBuilder {
         val clonesInTrees = snapshot.clonesAdditionHistory.toSet()
 
-        val rebasedCluster = rebaseFromGermline(
-            originalCluster
-                .filter { it.id in clonesInTrees }.asSequence()
-        ).toList()
+        val rebasedCluster = originalCluster
+            .asSequence()
+            .filter { it.id in clonesInTrees }
+            .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
+            .toList()
 
         val treeWithSequenceOfNInRoot = buildATree(rebasedCluster)
         val reconstructedNDN = treeWithSequenceOfNInRoot.mostRecentCommonAncestorNDN()
@@ -202,13 +207,6 @@ internal class ClusterProcessor(
         )
     }
 
-    private fun rebaseFromGermline(clones: Sequence<CloneWrapper>): Sequence<CloneWithMutationsFromVJGermline> = clones
-        .filter { cloneWrapper ->
-            (clusterInfo.commonVAlignmentRanges.containsCloneWrapper(cloneWrapper)
-                    && clusterInfo.commonJAlignmentRanges.containsCloneWrapper(cloneWrapper))
-        }
-        .map { cloneWrapper -> rebaseFromGermline(cloneWrapper) }
-
     /**
      * Present all mutations as `MutationsFromVJGermline`
      * @see MutationsFromVJGermline
@@ -216,11 +214,15 @@ internal class ClusterProcessor(
     private fun rebaseFromGermline(cloneWrapper: CloneWrapper): CloneWithMutationsFromVJGermline =
         CloneWithMutationsFromVJGermline(
             MutationsFromVJGermline(
-                cloneWrapper.getMutationsWithoutCDR3(Variable).toSortedMap(),
-                getVMutationsWithinCDR3(cloneWrapper),
-                cloneWrapper.getFeature(GeneFeature.CDR3)!!.sequence,
-                getJMutationsWithinCDR3(cloneWrapper),
-                cloneWrapper.getMutationsWithoutCDR3(Joining).toSortedMap()
+                VJPair(
+                    cloneWrapper.getMutationsWithoutCDR3(Variable).toSortedMap(),
+                    cloneWrapper.getMutationsWithoutCDR3(Joining).toSortedMap()
+                ),
+                VJPair(
+                    getVMutationsWithinCDR3(cloneWrapper),
+                    getJMutationsWithinCDR3(cloneWrapper)
+                ),
+                cloneWrapper.getFeature(GeneFeature.CDR3)!!.sequence
             ),
             cloneWrapper
         )
@@ -306,10 +308,10 @@ internal class ClusterProcessor(
         NodeMutationsDescription(
             mutationsBetween(rootInfo, first, second, Variable),
             MutationsUtils.difference(
-                rootInfo.VSequence,
-                first.VMutations.partInCDR3.mutations,
-                second.VMutations.partInCDR3.mutations,
-                rootInfo.VRangeInCDR3
+                rootInfo.sequence1.V,
+                first.mutations.V.partInCDR3.mutations,
+                second.mutations.V.partInCDR3.mutations,
+                rootInfo.rangeInCDR3.V
             ),
             MutationsUtils.difference(
                 rootInfo.reconstructedNDN,
@@ -318,10 +320,10 @@ internal class ClusterProcessor(
                 Range(0, rootInfo.reconstructedNDN.size())
             ),
             MutationsUtils.difference(
-                rootInfo.JSequence,
-                first.JMutations.partInCDR3.mutations,
-                second.JMutations.partInCDR3.mutations,
-                rootInfo.JRangeInCDR3
+                rootInfo.sequence1.J,
+                first.mutations.J.partInCDR3.mutations,
+                second.mutations.J.partInCDR3.mutations,
+                rootInfo.rangeInCDR3.J
             ),
             mutationsBetween(rootInfo, first, second, Joining)
         )
@@ -333,14 +335,14 @@ internal class ClusterProcessor(
         geneType: GeneType
     ): Map<GeneFeature, CompositeMutations> =
         MutationsUtils.zip(
-            firstMutations.getGeneMutations(geneType).mutations,
-            secondMutations.getGeneMutations(geneType).mutations
+            firstMutations.mutations[geneType].mutationsOutsideOfCDR3,
+            secondMutations.mutations[geneType].mutationsOutsideOfCDR3
         ) { base, comparison, geneFeature ->
             MutationsUtils.difference(
-                rootInfo.getSequence1(geneType),
+                rootInfo.sequence1[geneType],
                 base,
                 comparison,
-                rootInfo.getPartitioning(geneType).getRange(geneFeature)
+                rootInfo.partitioning[geneType].getRange(geneFeature)
             )
         }
 
@@ -470,7 +472,11 @@ internal class ClusterProcessor(
             }
             .sortedBy { score(rootInfo, it.mutationsSet) }
             .toList()
-        val treeBuilder = createTreeBuilder(rootInfo)
+        val alignFeatures = VJPair(
+            cluster.first().mutations.mutations.V.keys.sorted(),
+            cluster.first().mutations.mutations.J.keys.sorted(),
+        )
+        val treeBuilder = createTreeBuilder(rootInfo, alignFeatures)
         val treeWithMetaBuilder = TreeWithMetaBuilder(
             treeBuilder,
             rootInfo,
@@ -484,8 +490,23 @@ internal class ClusterProcessor(
         return treeWithMetaBuilder
     }
 
-    private fun createTreeBuilder(rootInfo: RootInfo): TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, NodeMutationsDescription> {
-        val root = SyntheticNode.createRoot(rootInfo)
+    private fun createTreeBuilder(
+        rootInfo: RootInfo,
+        alignFeatures: VJPair<List<GeneFeature>>
+    ): TreeBuilderByAncestors<CloneWithMutationsFromReconstructedRoot, SyntheticNode, NodeMutationsDescription> {
+        val root = SyntheticNode(
+            MutationsSet(
+                VGeneMutations(
+                    alignFeatures.V.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS },
+                    PartInCDR3(rootInfo.rangeInCDR3.V, EMPTY_NUCLEOTIDE_MUTATIONS)
+                ),
+                NDNMutations(EMPTY_NUCLEOTIDE_MUTATIONS),
+                JGeneMutations(
+                    PartInCDR3(rootInfo.rangeInCDR3.J, EMPTY_NUCLEOTIDE_MUTATIONS),
+                    alignFeatures.J.associateWith { EMPTY_NUCLEOTIDE_MUTATIONS }
+                )
+            )
+        )
         return TreeBuilderByAncestors(
             root,
             distance = { base, mutations ->
@@ -495,10 +516,10 @@ internal class ClusterProcessor(
                 mutationsBetween(rootInfo, first.fromRootToThis, second.fromRootToThis)
             },
             mutate = { parent, fromParentToThis -> parent.mutate(fromParentToThis) },
-            asAncestor = { observed -> SyntheticNode.createFromMutations(observed.mutationsSet) },
+            asAncestor = { observed -> SyntheticNode(observed.mutationsSet) },
             findCommonMutations = { first, second -> commonMutations(first, second) },
             postprocessDescendants = { parent, child ->
-                SyntheticNode.createFromMutations(
+                SyntheticNode(
                     child.fromRootToThis.copy(
                         NDNMutations = child.fromRootToThis.NDNMutations.copy(
                             mutations = MutationsUtils.concreteNDNChild(
@@ -517,23 +538,29 @@ internal class ClusterProcessor(
         val rootBasedOn = first()
 
         //TODO may be just get from root?
-        val VRangeInCDR3 = mostLikableRangeInCDR3(this) { it.mutations.knownVMutationsWithinCDR3.second }
-        val JRangeInCDR3 = mostLikableRangeInCDR3(this) { it.mutations.knownJMutationsWithinCDR3.second }
         val NDNBuilder = ALPHABET.createBuilder()
-        repeat(rootBasedOn.mutations.CDR3.size() - VRangeInCDR3.length() - JRangeInCDR3.length()) {
+        repeat(
+            rootBasedOn.mutations.CDR3.size() - mostLikableRangeInCDR3(this) { it.mutations.knownMutationsWithinCDR3.V.second }.length() - mostLikableRangeInCDR3(
+                this
+            ) { it.mutations.knownMutationsWithinCDR3.J.second }.length()
+        ) {
             NDNBuilder.append(NucleotideSequence.N)
         }
         return RootInfo(
-            VSequence1,
-            rootBasedOn.cloneWrapper.getPartitioning(Variable),
-            rootBasedOn.mutations.VMutations.keys.sorted(),
-            VRangeInCDR3,
+            VJPair(
+                VSequence1,
+                JSequence1,
+            ),
+            VJPair(
+                rootBasedOn.cloneWrapper.getPartitioning(Variable),
+                rootBasedOn.cloneWrapper.getPartitioning(Joining)
+            ),
+            VJPair(
+                mostLikableRangeInCDR3(this) { it.mutations.knownMutationsWithinCDR3.V.second },
+                mostLikableRangeInCDR3(this) { it.mutations.knownMutationsWithinCDR3.J.second }
+            ),
             NDNBuilder.createAndDestroy(),
-            JSequence1,
-            rootBasedOn.cloneWrapper.getPartitioning(Joining),
-            rootBasedOn.mutations.JMutations.keys.sorted(),
-            JRangeInCDR3,
-            rootBasedOn.cloneWrapper.VJBase
+            VJBase
         )
     }
 
@@ -562,7 +589,7 @@ internal class ClusterProcessor(
 
     private fun getVMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<NucleotideSequence>, Range> {
         val hit = clone.getHit(Variable)
-        val CDR3Begin = clone.getRelativePosition(Variable, CDR3Begin)
+        val CDR3Begin = hit.gene.partitioning.getRelativePosition(hit.alignedFeature, CDR3Begin)
         val alignment = (0 until hit.alignments.size)
             .map { hit.getAlignment(it) }
             .firstOrNull { alignment ->
@@ -579,7 +606,7 @@ internal class ClusterProcessor(
 
     private fun getJMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<NucleotideSequence>, Range> {
         val hit = clone.getHit(Joining)
-        val CDR3End = clone.getRelativePosition(Joining, CDR3End)
+        val CDR3End = hit.gene.partitioning.getRelativePosition(hit.alignedFeature, CDR3End)
         val alignment = (0 until hit.alignments.size)
             .map { hit.getAlignment(it) }
             .firstOrNull { alignment ->
@@ -608,14 +635,14 @@ internal class ClusterProcessor(
         mutations: NodeMutationsDescription
     ): Int {
         val reversedMutationsNotInCDR3 = MutationsUtils.fold(
-            fromRootToBase.fromRootToThis.VMutations.mutations,
-            mutations.VMutationsWithoutCDR3
+            fromRootToBase.fromRootToThis.mutations.V.mutationsOutsideOfCDR3,
+            mutations.mutationsOutsideCDR3.V
         ) { a, b, _ ->
             reversedMutationsCount(a, b)
         }.sum()
         val reversedMutationsInCDR3 = reversedMutationsCount(
-            fromRootToBase.fromRootToThis.VMutations.partInCDR3.mutations,
-            mutations.VMutationsInCDR3WithoutNDN
+            fromRootToBase.fromRootToThis.mutations.V.partInCDR3.mutations,
+            mutations.mutationsInCDR3.V
         )
         return reversedMutationsInCDR3 + reversedMutationsNotInCDR3
     }
@@ -625,14 +652,14 @@ internal class ClusterProcessor(
         mutations: NodeMutationsDescription
     ): Int {
         val reversedMutationsNotInCDR3 = MutationsUtils.fold(
-            fromRootToBase.fromRootToThis.JMutations.mutations,
-            mutations.JMutationsWithoutCDR3
+            fromRootToBase.fromRootToThis.mutations.J.mutationsOutsideOfCDR3,
+            mutations.mutationsOutsideCDR3.J
         ) { a, b, _ ->
             reversedMutationsCount(a, b)
         }.sum()
         val reversedMutationsInCDR3 = reversedMutationsCount(
-            fromRootToBase.fromRootToThis.JMutations.partInCDR3.mutations,
-            mutations.JMutationsInCDR3WithoutNDN
+            fromRootToBase.fromRootToThis.mutations.J.partInCDR3.mutations,
+            mutations.mutationsInCDR3.J
         )
         return reversedMutationsInCDR3 + reversedMutationsNotInCDR3
     }
@@ -651,14 +678,14 @@ internal class ClusterProcessor(
      * - Reuse NDNDistance
      */
     private fun distance(mutations: NodeMutationsDescription): Double {
-        val VPenalties = scoringSet.V.penalties(mutations.VMutationsWithoutCDR3.values) +
-                scoringSet.V.penalties(mutations.VMutationsInCDR3WithoutNDN)
-        val VLength = mutations.VMutationsWithoutCDR3.values.sumOf { it.rangeInParent.length() } +
-                mutations.VMutationsInCDR3WithoutNDN.rangeInParent.length()
-        val JPenalties = scoringSet.J.penalties(mutations.JMutationsWithoutCDR3.values) +
-                scoringSet.J.penalties(mutations.JMutationsInCDR3WithoutNDN)
-        val JLength = mutations.JMutationsWithoutCDR3.values.sumOf { it.rangeInParent.length() } +
-                mutations.JMutationsInCDR3WithoutNDN.rangeInParent.length()
+        val VPenalties = scoringSet.V.penalties(mutations.mutationsOutsideCDR3.V.values) +
+                scoringSet.V.penalties(mutations.mutationsInCDR3.V)
+        val VLength = mutations.mutationsOutsideCDR3.V.values.sumOf { it.rangeInParent.length() } +
+                mutations.mutationsInCDR3.V.rangeInParent.length()
+        val JPenalties = scoringSet.J.penalties(mutations.mutationsOutsideCDR3.J.values) +
+                scoringSet.J.penalties(mutations.mutationsInCDR3.J)
+        val JLength = mutations.mutationsOutsideCDR3.J.values.sumOf { it.rangeInParent.length() } +
+                mutations.mutationsInCDR3.J.rangeInParent.length()
         val NDNPenalties = scoringSet.NDN.penalties(mutations.knownNDN)
         val NDNLength = mutations.knownNDN.rangeInParent.length()
         return (NDNPenalties * parameters.NDNScoreMultiplier + VPenalties + JPenalties) /
@@ -668,12 +695,12 @@ internal class ClusterProcessor(
     private fun score(rootInfo: RootInfo, mutations: MutationsSet): Int {
         val VScore = AlignmentUtils.calculateScore(
             VSequence1,
-            mutations.VMutations.combinedMutations(),
+            mutations.mutations.V.combinedMutations(),
             scoringSet.V.scoring
         )
         val JScore = AlignmentUtils.calculateScore(
             JSequence1,
-            mutations.JMutations.combinedMutations(),
+            mutations.mutations.J.combinedMutations(),
             scoringSet.J.scoring
         )
         val NDNScore = AlignmentUtils.calculateScore(
@@ -689,16 +716,16 @@ internal class ClusterProcessor(
         second: NodeMutationsDescription
     ): NodeMutationsDescription =
         NodeMutationsDescription(
-            first.VMutationsWithoutCDR3.intersection(second.VMutationsWithoutCDR3),
-            first.VMutationsInCDR3WithoutNDN.intersection(second.VMutationsInCDR3WithoutNDN),
+            first.mutationsOutsideCDR3.V.intersection(second.mutationsOutsideCDR3.V),
+            first.mutationsInCDR3.V.intersection(second.mutationsInCDR3.V),
             first.knownNDN.copy(
                 mutationsFromParentToThis = MutationsUtils.findNDNCommonAncestor(
                     first.knownNDN.mutationsFromParentToThis,
                     second.knownNDN.mutationsFromParentToThis
                 )
             ),
-            first.JMutationsInCDR3WithoutNDN.intersection(second.JMutationsInCDR3WithoutNDN),
-            first.JMutationsWithoutCDR3.intersection(second.JMutationsWithoutCDR3)
+            first.mutationsInCDR3.J.intersection(second.mutationsInCDR3.J),
+            first.mutationsOutsideCDR3.J.intersection(second.mutationsOutsideCDR3.J),
         )
 
     //TODO it is more possible to decrease length of alignment than to increase
@@ -712,8 +739,8 @@ internal class ClusterProcessor(
         .groupingBy { it }.eachCount()
         .entries
         .maxWithOrNull(java.util.Map.Entry.comparingByValue<Range, Int>()
-            .thenComparing(Comparator.comparingInt { (key, _): Map.Entry<Range, Int> -> key.length() }
-                .reversed()))!!
+            .thenComparing(Comparator.comparingInt { (key, _) -> key.length() })
+        )!!
         .key
 
     private fun buildStepResult(
@@ -754,11 +781,11 @@ internal class ClusterProcessor(
         return DebugInfo(
             tree.treeId,
             tree.rootInfo,
-            nodeContent.fromRootToThis.getGeneMutations(Variable).mutations.keys.map {
-                tree.rootInfo.getPartitioning(Variable).getRange(it)
+            nodeContent.fromRootToThis.mutations.V.mutationsOutsideOfCDR3.keys.map {
+                tree.rootInfo.partitioning.V.getRange(it)
             },
-            nodeContent.fromRootToThis.getGeneMutations(Joining).mutations.keys.map {
-                tree.rootInfo.getPartitioning(Joining).getRange(it)
+            nodeContent.fromRootToThis.mutations.J.mutationsOutsideOfCDR3.keys.map {
+                tree.rootInfo.partitioning.J.getRange(it)
             },
             cloneId,
             nodeWithParent.node.content.id,
@@ -794,33 +821,13 @@ internal class ClusterProcessor(
         val nodesDebugInfo: List<DebugInfo>
     )
 
-    internal class CalculatedClusterInfo(
-        val commonVAlignmentRanges: ClonesAlignmentRanges,
-        val commonJAlignmentRanges: ClonesAlignmentRanges
-    )
-
     companion object {
-
-        fun calculateClusterInfo(
-            originalCluster: List<CloneWrapper>,
-            minPortionOfClonesForCommonAlignmentRanges: Double
-        ): CalculatedClusterInfo = CalculatedClusterInfo(
-            ClonesAlignmentRanges.commonAlignmentRanges(
-                originalCluster,
-                minPortionOfClonesForCommonAlignmentRanges, Variable
-            ) { it.getHit(Variable) },
-            ClonesAlignmentRanges.commonAlignmentRanges(
-                originalCluster,
-                minPortionOfClonesForCommonAlignmentRanges, Joining
-            ) { it.getHit(Joining) }
-        )
-
         @Suppress("UNCHECKED_CAST")
         fun makeDecision(chooses: Map<VJBase, TreeWithMetaBuilder.DecisionInfo>): VJBase {
             if (chooses.size == 1) {
-                return chooses.keys.iterator().next()
+                return chooses.keys.first()
             }
-            val anyElement = chooses.values.iterator().next()
+            val anyElement = chooses.values.first()
             //all values are from the same class
             require(chooses.values.all { anyElement.javaClass.isInstance(it) })
             return when (anyElement) {
@@ -843,14 +850,14 @@ private sealed class OriginalClustersBuilder(
     protected val JMutationWithoutAlleles: Map<CloneWrapper.ID, List<Iterable<Mutations<NucleotideSequence>>>>
 
     init {
-        val VAllelesMutations = relatedAllelesMutations[VJBase.VGeneId] ?: listOf(EMPTY_NUCLEOTIDE_MUTATIONS)
-        val JAllelesMutations = relatedAllelesMutations[VJBase.JGeneId] ?: listOf(EMPTY_NUCLEOTIDE_MUTATIONS)
+        val VAllelesMutations = relatedAllelesMutations[VJBase.geneIds.V] ?: listOf(EMPTY_NUCLEOTIDE_MUTATIONS)
+        val JAllelesMutations = relatedAllelesMutations[VJBase.geneIds.J] ?: listOf(EMPTY_NUCLEOTIDE_MUTATIONS)
 
         VMutationWithoutAlleles = originalClones.associate { clone ->
-            clone.cloneWrapper.id to VAllelesMutations.map { without(clone.mutations.VMutations, it) }
+            clone.cloneWrapper.id to VAllelesMutations.map { without(clone.mutations.mutations.V, it) }
         }
         JMutationWithoutAlleles = originalClones.associate { clone ->
-            clone.cloneWrapper.id to JAllelesMutations.map { without(clone.mutations.JMutations, it) }
+            clone.cloneWrapper.id to JAllelesMutations.map { without(clone.mutations.mutations.J, it) }
         }
     }
 
@@ -1097,6 +1104,3 @@ private sealed class OriginalClustersBuilder(
             }
     }
 }
-
-private fun CloneWrapper.getPartitioning(geneType: GeneType): ReferencePoints =
-    getHit(geneType).gene.partitioning.getRelativeReferencePoints(getHit(geneType).alignedFeature)

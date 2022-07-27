@@ -33,15 +33,15 @@ class DebugInfo(
     companion object {
         var COLUMNS_FOR_XSV: Map<String, (DebugInfo) -> Any?> =
             ImmutableMap.builder<String, (DebugInfo) -> Any?>()
-                .put("VGeneName") { it.rootInfo.VJBase.VGeneId.name }
-                .put("JGeneName") { it.rootInfo.VJBase.JGeneId.name }
+                .put("VGeneName") { it.rootInfo.VJBase.geneIds.V.name }
+                .put("JGeneName") { it.rootInfo.VJBase.geneIds.J.name }
                 .put("CDR3Length") { it.rootInfo.VJBase.CDR3length }
                 .put("VRangeWithoutCDR3") {
                     it.VRangesWithoutCDR3.stream().map { range -> encodeRange(range) }
                         .collect(Collectors.joining(","))
                 }
-                .put("VRangeInCDR3") { encodeRange(it.rootInfo.VRangeInCDR3) }
-                .put("JRangeInCDR3") { encodeRange(it.rootInfo.JRangeInCDR3) }
+                .put("VRangeInCDR3") { encodeRange(it.rootInfo.rangeInCDR3.V) }
+                .put("JRangeInCDR3") { encodeRange(it.rootInfo.rangeInCDR3.J) }
                 .put("JRangeWithoutCDR3") {
                     it.JRangesWithoutCDR3.stream().map { range -> encodeRange(range) }
                         .collect(Collectors.joining(","))
@@ -52,11 +52,11 @@ class DebugInfo(
                 .put("id") { it.id }
                 .put("parentId") { it.parentId }
                 .put("NDN") { it.NDN }
-                .put("VMutationsFromRoot") { it.mutationsFromRoot.VMutations.combinedMutations().encode() }
-                .put("JMutationsFromRoot") { it.mutationsFromRoot.JMutations.combinedMutations().encode() }
+                .put("VMutationsFromRoot") { it.mutationsFromRoot.mutations.V.combinedMutations().encode() }
+                .put("JMutationsFromRoot") { it.mutationsFromRoot.mutations.J.combinedMutations().encode() }
                 .put("NDNMutationsFromRoot") { it.mutationsFromRoot.NDNMutations.mutations.encode() }
-                .put("VMutationsFromParent") { it.mutationsFromParent?.VMutations?.combinedMutations()?.encode() }
-                .put("JMutationsFromParent") { it.mutationsFromParent?.JMutations?.combinedMutations()?.encode() }
+                .put("VMutationsFromParent") { it.mutationsFromParent?.mutations?.V?.combinedMutations()?.encode() }
+                .put("JMutationsFromParent") { it.mutationsFromParent?.mutations?.J?.combinedMutations()?.encode() }
                 .put("NDNMutationsFromParent") { it.mutationsFromParent?.NDNMutations?.mutations?.encode() }
                 .put("decisionMetric") { it.decisionMetric }
                 .put("publicClone") { it.publicClone }

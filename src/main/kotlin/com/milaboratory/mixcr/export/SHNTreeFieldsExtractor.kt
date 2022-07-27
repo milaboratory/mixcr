@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
-import io.repseq.core.GeneType
+import io.repseq.core.GeneType.VJ_REFERENCE
 
 object SHNTreeFieldsExtractor : BaseFieldExtractors() {
     override fun initFields(): Array<Field<out Any>> {
@@ -44,7 +44,7 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
         }
 
         // Best hits
-        for (type in arrayOf(GeneType.Variable, GeneType.Joining)) {
+        for (type in VJ_REFERENCE) {
             val l = type.letter
             fields.add(
                 FieldParameterless(
@@ -53,8 +53,9 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
                     "Best $l hit",
                     "best${l}Hit"
                 ) {
-                it.meta.rootInfo.VJBase.getGeneId(type).name
-            })
+                    it.meta.rootInfo.VJBase.geneIds[type].name
+                }
+            )
         }
 
         return fields.toTypedArray()

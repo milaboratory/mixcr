@@ -11,12 +11,12 @@
  */
 package com.milaboratory.mixcr.trees
 
+import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
-import io.repseq.core.GeneType
 import io.repseq.core.VDJCGeneId
 
 /**
@@ -25,27 +25,26 @@ import io.repseq.core.VDJCGeneId
  */
 @Serializable(by = VJBaseSerializer::class)
 data class VJBase(
-    val VGeneId: VDJCGeneId,
-    val JGeneId: VDJCGeneId,
+    val geneIds: VJPair<VDJCGeneId>,
     val CDR3length: Int
 ) {
-    fun getGeneId(geneType: GeneType): VDJCGeneId = when (geneType) {
-        GeneType.Variable -> VGeneId
-        GeneType.Joining -> JGeneId
-        else -> throw IllegalArgumentException()
-    }
+    constructor(
+        VGeneId: VDJCGeneId,
+        JGeneId: VDJCGeneId,
+        CDR3length: Int
+    ) : this(VJPair(VGeneId, JGeneId), CDR3length)
 
     companion object {
-        val comparator: Comparator<VJBase> = Comparator.comparing<VJBase, VDJCGeneId> { it.VGeneId }
-            .thenComparing<VDJCGeneId> { it.JGeneId }
+        val comparator: Comparator<VJBase> = Comparator.comparing<VJBase, VDJCGeneId> { it.geneIds.V }
+            .thenComparing<VDJCGeneId> { it.geneIds.J }
             .thenComparingInt { it.CDR3length }
     }
 }
 
 class VJBaseSerializer : Serializer<VJBase> {
     override fun write(output: PrimitivO, obj: VJBase) {
-        output.writeObject(obj.VGeneId)
-        output.writeObject(obj.JGeneId)
+        output.writeObject(obj.geneIds.V)
+        output.writeObject(obj.geneIds.J)
         output.writeInt(obj.CDR3length)
     }
 

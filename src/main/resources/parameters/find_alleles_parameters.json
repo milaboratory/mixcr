@@ -2,7 +2,6 @@
   "default": {
     "productiveOnly": true,
     "useClonesWithCountMoreThen": 0,
-    "minPortionOfClonesForCommonAlignmentRanges": 0.95,
     "windowSizeForRegression": 10,
     "allowedSkippedPointsInRegression": 3,
     "minDiversityRatioBetweenAlleles": 0.75,

@@ -14,15 +14,26 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.util.VJPair
 import io.repseq.core.GeneFeature
 
-class NodeMutationsDescription(
-    val VMutationsWithoutCDR3: Map<GeneFeature, CompositeMutations>,
-    val VMutationsInCDR3WithoutNDN: CompositeMutations,
-    val knownNDN: CompositeMutations,
-    val JMutationsInCDR3WithoutNDN: CompositeMutations,
-    val JMutationsWithoutCDR3: Map<GeneFeature, CompositeMutations>
-)
+class NodeMutationsDescription private constructor(
+    val mutationsOutsideCDR3: VJPair<Map<GeneFeature, CompositeMutations>>,
+    val mutationsInCDR3: VJPair<CompositeMutations>,
+    val knownNDN: CompositeMutations
+) {
+    constructor(
+        VMutationsOutsideCDR3: Map<GeneFeature, CompositeMutations>,
+        VMutationsInCDR3: CompositeMutations,
+        knownNDN: CompositeMutations,
+        JMutationsInCDR3: CompositeMutations,
+        JMutationsOutsideCDR3: Map<GeneFeature, CompositeMutations>
+    ) : this(
+        VJPair(VMutationsOutsideCDR3, JMutationsOutsideCDR3),
+        VJPair(VMutationsInCDR3, JMutationsInCDR3),
+        knownNDN
+    )
+}
 
 /**
  * Mutations representation for chained mutations.

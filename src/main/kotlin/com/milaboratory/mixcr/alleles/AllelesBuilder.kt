@@ -13,14 +13,15 @@
 
 package com.milaboratory.mixcr.alleles
 
-import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.AlignmentScoring
+import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.util.ClonesAlignmentRanges
+import com.milaboratory.mixcr.util.VJPair
+import com.milaboratory.mixcr.util.alignmentsCover
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.filter
@@ -35,10 +36,13 @@ import kotlin.collections.set
 
 class AllelesBuilder(
     private val parameters: FindAllelesParameters,
-    val datasets: List<CloneReader>
+    val datasets: List<CloneReader>,
+    private val geneFeatureToMatch: VJPair<GeneFeature>
 ) {
-    private val VScoring = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring
-    private val JScoring = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
+    private val scoring: VJPair<AlignmentScoring<NucleotideSequence>> = VJPair(
+        V = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring,
+        J = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
+    )
 
     fun count() = datasets.sumOf { it.numberOfClones() }.toLong()
 
@@ -55,20 +59,25 @@ class AllelesBuilder(
 
     private fun findAlleles(clusterByTheSameGene: List<Clone>, geneType: GeneType): List<Allele> {
         require(clusterByTheSameGene.isNotEmpty())
-        val commonAlignmentRanges = ClonesAlignmentRanges.commonAlignmentRanges(
-            clusterByTheSameGene,
-            parameters.minPortionOfClonesForCommonAlignmentRanges,
-            geneType
-        ) { it.getBestHit(geneType) }
         val bestHit = clusterByTheSameGene[0].getBestHit(geneType)
+        val partitioning = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
+        val rangesToMatch = partitioning.getRanges(geneFeatureToMatch[geneType])
+
         val complimentaryGene = complimentaryGene(geneType)
         val cloneDescriptors = clusterByTheSameGene.asSequence()
-            .filter { commonAlignmentRanges.containsClone(it) }
+            //TODO add to report count of not matched clones
+            .filter { clone ->
+                clone.getBestHit(geneType).alignmentsCover(rangesToMatch)
+            }
             .map { clone ->
                 CloneDescription(
                     clone.getBestHit(geneType).alignments.asSequence()
+                        .filterNotNull()
                         .flatMap { it.absoluteMutations.asSequence() }
-                        .filter { commonAlignmentRanges.containsMutation(it) }
+                        .filter { mutation ->
+                            val position = Mutation.getPosition(mutation)
+                            rangesToMatch.any { toMatch -> position in toMatch }
+                        }
                         .asMutations(NucleotideSequence.ALPHABET),
                     clone.ntLengthOf(CDR3),
                     clone.getBestHit(complimentaryGene).gene.geneName
@@ -76,8 +85,8 @@ class AllelesBuilder(
             }
             .toList()
         val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
-            scoring(geneType),
-            clusterByTheSameGene.first().getBestHit(geneType).alignments[0].sequence1,
+            scoring[geneType],
+            clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1,
             parameters
         )
 
@@ -101,7 +110,7 @@ class AllelesBuilder(
                     bestHit.gene,
                     it.allele,
                     bestHit.alignedFeature,
-                    commonAlignmentRanges.commonRanges
+                    rangesToMatch
                 )
             }
     }
@@ -109,12 +118,6 @@ class AllelesBuilder(
     private fun complimentaryGene(geneType: GeneType): GeneType = when (geneType) {
         Variable -> Joining
         Joining -> Variable
-        else -> throw IllegalArgumentException()
-    }
-
-    private fun scoring(geneType: GeneType): AlignmentScoring<NucleotideSequence> = when (geneType) {
-        Variable -> VScoring
-        Joining -> JScoring
         else -> throw IllegalArgumentException()
     }
 
@@ -163,17 +166,6 @@ class AllelesBuilder(
             .associateByTo(TreeMap(), { it }, { mappedReferencePoints.getPosition(it).toLong() })
     }
 
-    class SortedClonotypes(
-        private val sortedByV: OutputPortCloseable<Clone>,
-        private val sortedByJ: OutputPortCloseable<Clone>
-    ) {
-        fun getSortedBy(geneType: GeneType): OutputPortCloseable<Clone> = when (geneType) {
-            Variable -> sortedByV
-            Joining -> sortedByJ
-            else -> throw IllegalArgumentException()
-        }
-    }
-
     private class Allele(
         val gene: VDJCGene,
         val mutations: Mutations<NucleotideSequence>,
@@ -181,8 +173,8 @@ class AllelesBuilder(
         val knownRanges: Array<Range>
     ) {
         override fun toString(): String = "Allele{" +
-            "id=" + gene.name +
-            ", mutations=" + mutations +
-            '}'
+                "id=" + gene.name +
+                ", mutations=" + mutations +
+                '}'
     }
 }

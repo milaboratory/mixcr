@@ -13,35 +13,33 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
-import io.repseq.core.GeneType
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.Variable
 
 /**
  * Describe mutations of node from the root of the tree.
  */
+@Suppress("DataClassPrivateConstructor")
 @Serializable(by = MutationsSetSerializer::class)
-data class MutationsSet(
-    val VMutations: VGeneMutations,
-    val NDNMutations: NDNMutations,
-    val JMutations: JGeneMutations
+data class MutationsSet private constructor(
+    val mutations: VJPair<GeneMutations>,
+    val NDNMutations: NDNMutations
 ) {
-    fun getGeneMutations(geneType: GeneType): GeneMutations = when (geneType) {
-        Joining -> JMutations
-        Variable -> VMutations
-        else -> throw IllegalArgumentException()
-    }
+    constructor(
+        VMutations: VGeneMutations,
+        NDNMutations: NDNMutations,
+        JMutations: JGeneMutations
+    ) : this(VJPair(VMutations, JMutations), NDNMutations)
 }
 
 class MutationsSetSerializer : Serializer<MutationsSet> {
     override fun write(output: PrimitivO, obj: MutationsSet) {
-        Util.writeMap(obj.VMutations.mutations, output)
-        output.writeObject(obj.VMutations.partInCDR3)
+        Util.writeMap(obj.mutations.V.mutationsOutsideOfCDR3, output)
+        output.writeObject(obj.mutations.V.partInCDR3)
         output.writeObject(obj.NDNMutations)
-        output.writeObject(obj.JMutations.partInCDR3)
-        Util.writeMap(obj.JMutations.mutations, output)
+        output.writeObject(obj.mutations.J.partInCDR3)
+        Util.writeMap(obj.mutations.J.mutationsOutsideOfCDR3, output)
     }
 
     override fun read(input: PrimitivI): MutationsSet = MutationsSet(

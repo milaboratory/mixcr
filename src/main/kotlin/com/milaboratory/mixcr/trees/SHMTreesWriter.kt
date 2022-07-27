@@ -71,8 +71,8 @@ class SHMTreesWriter(
     }
 
     companion object {
-        private const val MAGIC_V0 = "MiXCR.TREE.V00"
-        const val MAGIC = MAGIC_V0
+        private const val MAGIC_V1 = "MiXCR.TREE.V01"
+        const val MAGIC = MAGIC_V1
         const val MAGIC_LENGTH = 14
         val MAGIC_BYTES = MAGIC.toByteArray(StandardCharsets.US_ASCII)
 

@@ -37,10 +37,10 @@ sealed class GeneMutations(
      * In every cluster keys of different nodes will be equal.
      * There will be several entries if there are holes in alignments, but this holes must be consistent.
      */
-    val mutations: SortedMap<GeneFeature, Mutations<NucleotideSequence>>
+    val mutationsOutsideOfCDR3: SortedMap<GeneFeature, Mutations<NucleotideSequence>>
 ) {
 
-    fun mutationsCount() = partInCDR3.mutations.size() + mutations.values.sumOf { it.size() }
+    fun mutationsCount() = partInCDR3.mutations.size() + mutationsOutsideOfCDR3.values.sumOf { it.size() }
     abstract fun combinedMutations(): Mutations<NucleotideSequence>
 
     abstract fun buildPartInCDR3(rootInfo: RootInfo): NucleotideSequence
@@ -51,11 +51,11 @@ class VGeneMutations(
     partInCDR3: PartInCDR3
 ) : GeneMutations(partInCDR3, mutations.toSortedMap()) {
     override fun combinedMutations(): Mutations<NucleotideSequence> =
-        (mutations.values.asSequence().flatMap { it.asSequence() } + partInCDR3.mutations.asSequence())
+        (mutationsOutsideOfCDR3.values.asSequence().flatMap { it.asSequence() } + partInCDR3.mutations.asSequence())
             .asMutations(NucleotideSequence.ALPHABET)
 
     override fun buildPartInCDR3(rootInfo: RootInfo): NucleotideSequence =
-        MutationsUtils.buildSequence(rootInfo.VSequence, partInCDR3.mutations, rootInfo.VRangeInCDR3)
+        MutationsUtils.buildSequence(rootInfo.sequence1.V, partInCDR3.mutations, rootInfo.rangeInCDR3.V)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -73,11 +73,11 @@ class JGeneMutations(
     mutations: Map<GeneFeature, Mutations<NucleotideSequence>>
 ) : GeneMutations(partInCDR3, mutations.toSortedMap()) {
     override fun combinedMutations(): Mutations<NucleotideSequence> =
-        (partInCDR3.mutations.asSequence() + mutations.values.asSequence().flatMap { it.asSequence() })
+        (partInCDR3.mutations.asSequence() + mutationsOutsideOfCDR3.values.asSequence().flatMap { it.asSequence() })
             .asMutations(NucleotideSequence.ALPHABET)
 
     override fun buildPartInCDR3(rootInfo: RootInfo): NucleotideSequence =
-        MutationsUtils.buildSequence(rootInfo.JSequence, partInCDR3.mutations, rootInfo.JRangeInCDR3)
+        MutationsUtils.buildSequence(rootInfo.sequence1.J, partInCDR3.mutations, rootInfo.rangeInCDR3.J)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

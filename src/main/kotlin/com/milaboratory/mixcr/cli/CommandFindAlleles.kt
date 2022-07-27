@@ -13,9 +13,7 @@
 
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.blocks.Buffer
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.alignment.AlignmentScoring
@@ -23,17 +21,23 @@ import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.OutputPortWithProgress
+import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
+import com.milaboratory.mixcr.util.alignmentsCover
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.*
 import com.milaboratory.util.*
 import io.repseq.core.*
 import io.repseq.core.GeneType.*
+import io.repseq.core.ReferencePoint.*
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
 import org.apache.commons.io.FilenameUtils
@@ -46,6 +50,7 @@ import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
+import kotlin.math.min
 
 @CommandLine.Command(
     name = CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
@@ -111,13 +116,42 @@ class CommandFindAlleles : MiXCRCommand() {
     @CommandLine.Option(description = ["File to description of each allele."], names = ["--export-alleles-mutations"])
     var allelesMutationsOutput: String? = null
 
-    @CommandLine.Option(description = ["Find alleles parameters preset."], names = ["-p", "--preset"])
-    var findAllelesParametersName = "default"
+    @CommandLine.Option(
+        description = ["Find alleles parameters preset."],
+        names = ["-p", "--preset"],
+        defaultValue = "default"
+    )
+    lateinit var findAllelesParametersName: String
+
+    @CommandLine.Option(
+        description = ["Search alleles within GeneFeature."],
+        names = ["--region"],
+        defaultValue = "VDJRegion"
+    )
+    lateinit var geneFeatureToSearchParameter: String
+
+    private val geneFeatureToSearch: GeneFeature by lazy {
+        GeneFeature.parse(geneFeatureToSearchParameter)
+    }
 
     @CommandLine.Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
     var overrides: Map<String, String> = HashMap()
 
+    private val assembleFeatures: Array<GeneFeature> by lazy {
+        geneFeatureToSearch
+            .map { GeneFeature(it.begin, it.end) }
+            .toTypedArray()
+    }
+
+    private val geneFeatureToMatch: VJPair<GeneFeature> by lazy {
+        VJPair(
+            V = GeneFeature.intersection(geneFeatureToSearch, GeneFeature(UTR5Begin, CDR3Begin)),
+            J = GeneFeature.intersection(geneFeatureToSearch, GeneFeature(CDR3End, FR4End))
+        )
+    }
+
     private val tempDest: TempFileDest by lazy {
+        File(outputClnsFiles.first()).mkdirs()
         TempFileManager.smartTempDestination(outputClnsFiles.first(), "", useSystemTemp)
     }
 
@@ -157,8 +191,15 @@ class CommandFindAlleles : MiXCRCommand() {
         require(cloneReaders.map { it.assemblerParameters }.distinct().count() == 1) {
             "input files must have the same assembler parameters"
         }
+        require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
+            "input files must have the same aligner parameters"
+        }
 
-        val allelesBuilder = AllelesBuilder(findAllelesParameters, cloneReaders)
+        val allelesBuilder = AllelesBuilder(
+            findAllelesParameters,
+            cloneReaders,
+            geneFeatureToMatch
+        )
 
         val VAlleles = searchForAlleles(allelesBuilder, Variable)
         val JAlleles = searchForAlleles(allelesBuilder, Joining)
@@ -177,15 +218,23 @@ class CommandFindAlleles : MiXCRCommand() {
             geneDatum.map { resultLibrary[it.name].id }
         }
         val allelesStatistics = mutableMapOf<String, Int>()
+        val cloneRebuild = CloneRebuild(
+            resultLibrary,
+            allelesMapping,
+            assembleFeatures,
+            geneFeatureToMatch,
+            threads,
+            cloneReaders.first().assemblerParameters,
+            cloneReaders.first().alignerParameters
+        )
         cloneReaders.forEachIndexed { i, cloneReader ->
-            val mapperClones = rebuildClones(
-                resultLibrary,
-                allelesMapping,
-                cloneReader,
-                "Realigning ${inputFiles[i]} with found alleles"
-            )
+            val mapperClones = cloneReader.readClones().use { port ->
+                val inputWithProgress = OutputPortWithProgress.wrap(cloneReader.numberOfClones().toLong(), port)
+                SmartProgressReporter.startProgressReport("Realigning ${inputFiles[i]}", inputWithProgress)
+                cloneRebuild.rebuildClones(inputWithProgress)
+            }
             mapperClones.forEach { clone ->
-                for (geneType in arrayOf(Variable, Joining)) {
+                for (geneType in VJ_REFERENCE) {
                     allelesStatistics.increment(clone.getBestHit(geneType).gene.name)
                     allelesStatistics.increment(clone.getBestHit(geneType).gene.geneName)
                 }
@@ -228,6 +277,9 @@ class CommandFindAlleles : MiXCRCommand() {
                 "regions" to { gene ->
                     gene.data.baseSequence.regions?.joinToString { it.toString() }
                 },
+                "alleleMutationsReliableRanges" to { gene ->
+                    gene.data.meta["alleleMutationsReliableRanges"]
+                },
                 "mutations" to { gene ->
                     gene.data.baseSequence.mutations?.encode() ?: ""
                 },
@@ -240,7 +292,7 @@ class CommandFindAlleles : MiXCRCommand() {
             )
             writeXSVHeaders(output, columns.keys, ";")
             val genes = resultLibrary.genes
-                .filter { it.geneType in arrayOf(Variable, Joining) }
+                .filter { it.geneType in VJ_REFERENCE }
                 .sortedWith(Comparator.comparing { it: VDJCGene -> it.geneType }
                     .thenComparing { it: VDJCGene -> it.name })
             writeXSVBody(output, genes, columns, ";")
@@ -257,15 +309,12 @@ class CommandFindAlleles : MiXCRCommand() {
             clones,
             resultLibrary.genes,
             cloneReader.alignerParameters,
-            cloneReader.assemblerParameters,
+            cloneReader.assemblerParameters.setAssemblingFeatures(assembleFeatures),
             cloneReader.tagsInfo,
             cloneReader.ordering()
         )
         ClnsWriter(this).use { clnsWriter ->
-            clnsWriter.writeCloneSet(
-                cloneSet,
-                listOf(resultLibrary)
-            )
+            clnsWriter.writeCloneSet(cloneSet, listOf(resultLibrary))
             //TODO make and write search alleles report
             clnsWriter.writeFooter(cloneReader.reports(), null)
         }
@@ -326,52 +375,102 @@ class CommandFindAlleles : MiXCRCommand() {
         return usedGenes
     }
 
-    private fun rebuildClones(
-        resultLibrary: VDJCLibrary,
-        allelesMapping: Map<String, List<VDJCGeneId>>,
-        cloneReader: CloneReader,
-        progressTitle: String
-    ): List<Clone> {
-        val cloneFactory = CloneFactory(
-            cloneReader.assemblerParameters.cloneFactoryParameters,
-            cloneReader.assemblerParameters.assemblingFeatures,
-            resultLibrary.genes,
-            cloneReader.alignerParameters.featuresToAlignMap
-        )
-        return cloneReader.readClones().use { port ->
-            val inputWithProgress = OutputPortWithProgress.wrap(
-                cloneReader.numberOfClones().toLong(),
-                port
-            )
-            SmartProgressReporter.startProgressReport(progressTitle, inputWithProgress)
-            val result = CUtils.orderedParallelProcessor(
-                inputWithProgress,
-                { clone -> rebuildClone(resultLibrary, allelesMapping, cloneFactory, clone) },
-                Buffer.DEFAULT_SIZE,
-                threads
-            )
-            result.toList()
-        }
+    private fun AllelesBuilder.buildAlleles(
+        clusters: OutputPort<List<Clone>>,
+        geneType: GeneType
+    ): OutputPort<Pair<String, List<VDJCGeneData>>> = clusters.mapInParallel(threads) { cluster ->
+        val geneId = cluster[0].getBestHit(geneType).gene.name
+        val resultGenes = allelesGeneData(cluster, geneType)
+        geneId to resultGenes
     }
 
-    private fun rebuildClone(
-        resultLibrary: VDJCLibrary,
-        allelesMapping: Map<String, List<VDJCGeneId>>,
-        cloneFactory: CloneFactory,
-        clone: Clone
-    ): Clone {
-        val originalGeneScores = EnumMap<GeneType, List<GeneAndScore>>(
-            GeneType::class.java
-        )
+    private fun anyClone(cloneReaders: List<CloneReader>): Clone {
+        cloneReaders[0].readClones().use { port -> return port.take() }
+    }
+
+    companion object {
+        const val FIND_ALLELES_COMMAND_NAME = "findAlleles"
+    }
+}
+
+private class CloneRebuild(
+    private val resultLibrary: VDJCLibrary,
+    private val allelesMapping: Map<String, List<VDJCGeneId>>,
+    private val assemblingFeatures: Array<GeneFeature>,
+    /**
+     * correspond with assemblingFeatures
+     */
+    private val geneFeatureToMatch: VJPair<GeneFeature>,
+    private val threads: Int,
+    assemblerParameters: CloneAssemblerParameters,
+    alignerParameters: VDJCAlignerParameters
+) {
+    private val cloneFactory = CloneFactory(
+        assemblerParameters.cloneFactoryParameters,
+        assemblingFeatures,
+        resultLibrary.genes,
+        alignerParameters.featuresToAlignMap
+    )
+
+    /**
+     * Every clone will be assembled by assemblingFeatures.
+     * For every clone will be added hits aligned to found alleles.
+     *
+     * Cutting targets by assemblingFeatures may produce identical clones, their will be merged
+     */
+    fun rebuildClones(input: OutputPort<Clone>): List<Clone> {
+        val remappedClones = input
+            //map only clones that fully covered by geneFeatureToSearch
+            .filter { clone ->
+                clone.getHits(Variable).any { hit -> hit.alignmentsCover(geneFeatureToMatch) } &&
+                        clone.getHits(Joining).any { hit -> hit.alignmentsCover(geneFeatureToMatch) }
+            }
+            .mapInParallel(threads) { clone ->
+                //remove targets and alignments that don't cover geneFeatureToSearch
+                val cloneCutByGeneFeature = clone.removeTargetsNotCoveredBy(geneFeatureToMatch)
+
+                //cut targets by assemblingFeatures
+                val cutTargets = assemblingFeatures
+                    .map { cloneCutByGeneFeature.getFeature(it) }
+                    .toTypedArray()
+                cloneFactory.create(
+                    cloneCutByGeneFeature.id,
+                    cloneCutByGeneFeature.count,
+                    cloneCutByGeneFeature.scoresWithAddedAlleles(),
+                    cloneCutByGeneFeature.tagCount,
+                    cutTargets,
+                    cloneCutByGeneFeature.group
+                )
+            }
+            .toList()
+        return remappedClones
+            .groupBy { clone -> clone.targets.map { it.sequence } to clone.getBestHit(Constant)?.gene?.id }
+            .values
+            .map { clones ->
+                clones.reduce { a, b ->
+                    Clone(
+                        a.targets,
+                        a.hits,
+                        TagCountAggregator.merge(a.tagCount, b.tagCount),
+                        a.count + b.count,
+                        min(a.id, b.id),
+                        null
+                    )
+                }
+            }
+    }
+
+    private fun Clone.scoresWithAddedAlleles(): EnumMap<GeneType, List<GeneAndScore>> {
+        val originalGeneScores = EnumMap<GeneType, List<GeneAndScore>>(GeneType::class.java)
         //copy D and C
-        for (gt in listOf(Diversity, Constant)) {
-            originalGeneScores[gt] = clone.getHits(gt).map { hit ->
+        for (gt in arrayOf(Diversity, Constant)) {
+            originalGeneScores[gt] = getHits(gt).map { hit ->
                 val mappedGeneId = VDJCGeneId(resultLibrary.libraryId, hit.gene.name)
                 GeneAndScore(mappedGeneId, hit.score)
             }
         }
-        for (gt in listOf(Variable, Joining)) {
-            originalGeneScores[gt] = clone.getHits(gt).flatMap { hit ->
+        for (gt in VJ_REFERENCE) {
+            originalGeneScores[gt] = getHits(gt).flatMap { hit ->
                 allelesMapping[hit.gene.name]!!.map { foundAlleleId ->
                     if (foundAlleleId.name != hit.gene.name) {
                         val scoreDelta = scoreDelta(
@@ -386,33 +485,74 @@ class CommandFindAlleles : MiXCRCommand() {
                 }
             }
         }
-        return cloneFactory.create(
-            clone.id,
-            clone.count,
-            originalGeneScores,
-            clone.tagCount,
-            clone.targets,
-            clone.group
+        return originalGeneScores
+    }
+
+    private fun Clone.removeTargetsNotCoveredBy(geneFeatureToMatch: VJPair<GeneFeature>): Clone {
+        val resultHits: EnumMap<GeneType, Array<VDJCHit>?> = EnumMap(hits)
+        resultHits[Variable] = hits[Variable]?.removeAlignmentsNotCoveredBy(geneFeatureToMatch)
+        resultHits[Joining] = hits[Joining]?.removeAlignmentsNotCoveredBy(geneFeatureToMatch)
+
+        val targetIndexesWithAlignments = resultHits.values
+            .filterNotNull()
+            .flatMap { it.toList() }
+            .flatMap { hit ->
+                (0 until hit.numberOfTargets())
+                    .filter { i -> hit.getAlignment(i) != null }
+            }
+            .distinct()
+            .sorted()
+
+        resultHits[Variable] = resultHits[Variable]?.map { hit ->
+            hit.filterAlignmentsByTargetIndexes(targetIndexesWithAlignments)
+        }?.toTypedArray()
+        resultHits[Joining] = resultHits[Joining]?.map { hit ->
+            hit.filterAlignmentsByTargetIndexes(targetIndexesWithAlignments)
+        }?.toTypedArray()
+        return Clone(
+            targetIndexesWithAlignments.map { getTarget(it) }.toTypedArray(),
+            resultHits,
+            tagCount,
+            count,
+            id,
+            group
         )
     }
 
-    private fun AllelesBuilder.buildAlleles(
-        clusters: OutputPort<List<Clone>>,
-        geneType: GeneType
-    ): OutputPort<Pair<String, List<VDJCGeneData>>> = clusters.mapInParallel(threads) { cluster ->
-        val geneId = cluster[0].getBestHit(geneType).gene.name
-        val resultGenes = allelesGeneData(cluster, geneType)
-        geneId to resultGenes
+    private fun Array<out VDJCHit>.removeAlignmentsNotCoveredBy(geneFeatureToMatch: VJPair<GeneFeature>) =
+        filter { it.alignmentsCover(geneFeatureToMatch) }
+            .map { hit ->
+                var result = hit
+                val partitioning = hit.gene.partitioning.getRelativeReferencePoints(hit.alignedFeature)
+                val rangesToMatch = partitioning.getRanges(geneFeatureToMatch[hit.geneType])
+
+                for (i in 0 until hit.numberOfTargets()) {
+                    val alignment: Alignment<NucleotideSequence>? = hit.getAlignment(i)
+                    if (alignment != null && rangesToMatch.none { toMatch -> toMatch in alignment.sequence1Range }) {
+                        result = hit.setAlignment(i, null)
+                    }
+                }
+                result
+            }
+            .toTypedArray()
+
+    private fun VDJCHit.filterAlignmentsByTargetIndexes(targetIndexesWithAlignments: List<Int>): VDJCHit {
+        val filteredAlignments: Array<Alignment<NucleotideSequence>?> =
+            Array(targetIndexesWithAlignments.size) { i ->
+                getAlignment(targetIndexesWithAlignments[i])
+            }
+        return VDJCHit(gene, filteredAlignments, alignedFeature)
     }
 
     private fun scoreDelta(
         foundAllele: VDJCGene,
         scoring: AlignmentScoring<NucleotideSequence>,
-        alignments: Array<Alignment<NucleotideSequence>>
+        alignments: Array<Alignment<NucleotideSequence>?>
     ): Float {
         var scoreDelta = 0.0f
         //recalculate score for every alignment based on found allele
         for (alignment in alignments) {
+            if (alignment == null) continue
             val alleleMutations = foundAllele.data.baseSequence.mutations
             if (alleleMutations != null) {
                 val seq1RangeAfterAlleleMutations = Range(
@@ -430,13 +570,5 @@ class CommandFindAlleles : MiXCRCommand() {
             }
         }
         return scoreDelta
-    }
-
-    private fun anyClone(cloneReaders: List<CloneReader>): Clone {
-        cloneReaders[0].readClones().use { port -> return port.take() }
-    }
-
-    companion object {
-        const val FIND_ALLELES_COMMAND_NAME = "findAlleles"
     }
 }
