@@ -92,7 +92,7 @@ public class CommandAlign extends MiXCRCommand {
         return inOut.subList(inOut.size() - 1, inOut.size());
     }
 
-    @Option(description = CommonDescriptions.SPECIES,
+    @Option(description = "Size of buffer for FASTQ readers",
             names = {"--read-buffer"})
     public int readBufferSize = 1 << 22;
 

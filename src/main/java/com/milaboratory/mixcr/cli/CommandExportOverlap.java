@@ -180,6 +180,7 @@ public class CommandExportOverlap extends MiXCRCommand {
     private static final class InfoWriter implements AutoCloseable {
         final PrintWriter writer;
         final List<String> samples;
+        final List<String> samplesNames;
         final List<OverlapFieldExtractor> extractors;
 
         public InfoWriter(Path out, List<String> samples,
@@ -190,11 +191,19 @@ public class CommandExportOverlap extends MiXCRCommand {
                 throw new RuntimeException(e);
             }
             this.samples = samples;
+            this.samplesNames = samples.stream().map(InfoWriter::removeExt).collect(Collectors.toList());
+            ;
             this.extractors = extractors;
         }
 
+        static String removeExt(String sampleName) {
+            return sampleName
+                    .replace(".clns", "")
+                    .replace(".clna", "");
+        }
+
         void writeHeader() {
-            writer.println(extractors.stream().flatMap(e -> e.header(samples).stream()).collect(Collectors.joining("\t")));
+            writer.println(extractors.stream().flatMap(e -> e.header(samplesNames).stream()).collect(Collectors.joining("\t")));
         }
 
         void writeRow(OverlapGroup<Clone> row) {

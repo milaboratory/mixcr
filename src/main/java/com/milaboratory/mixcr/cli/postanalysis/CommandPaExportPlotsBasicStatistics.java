@@ -64,7 +64,8 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     public String facetBy;
 
     @Option(description = "Select specific metrics to export.",
-            names = {"--metric"})
+            names = {"--metric"},
+            split = ",")
     public List<String> metrics;
 
     @Option(description = "Hide overall p-value",
@@ -80,7 +81,7 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     public String refGroup;
 
     @Option(description = "Hide non-significant observations",
-            names = {"--hide-ns"})
+            names = {"--hide-non-significant"})
     public boolean hideNS;
 
     @Option(description = "Do paired analysis",
@@ -106,6 +107,14 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     abstract String group();
 
     abstract Predicate<String> metricsFilter();
+
+    @Override
+    public void validate() {
+        super.validate();
+        if (!out.endsWith("pdf") && (metrics == null || metrics.isEmpty()))
+            throwValidationException("For export in " + out.substring(out.length() - 3).toUpperCase() + "" +
+                    "Use --metrics option to specify only one metric to export. Or use PDF format for export.");
+    }
 
     @Override
     void run(PaResultByGroup result) {
