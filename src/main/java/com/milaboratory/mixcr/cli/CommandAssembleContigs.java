@@ -73,7 +73,7 @@ public class CommandAssembleContigs extends MiXCRCommand {
             names = {"-r", "--report"})
     public String reportFile;
 
-    @Option(description = "Ignore tags",
+    @Option(description = "Ignore tags (UMIs, cell-barcodes)",
             names = {"--ignore-tags"})
     public boolean ignoreTags;
 
