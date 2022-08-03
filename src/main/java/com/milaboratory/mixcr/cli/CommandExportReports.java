@@ -15,6 +15,7 @@ import com.milaboratory.mixcr.basictypes.ClnAReader;
 import com.milaboratory.mixcr.basictypes.ClnsReader;
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.ReportHelper;
 import com.milaboratory.util.ReportUtil;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -82,11 +83,16 @@ public class CommandExportReports extends MiXCRCommand {
                 throw new RuntimeException();
         }
 
-        for (MiXCRCommandReport report : reports) {
-            if (helper != null)
-                report.writeReport(helper);
-            if (json)
-                ReportUtil.appendJsonReport(out, report);
-        }
+        if (json) {
+            if (out != null)
+                for (MiXCRCommandReport report : reports)
+                    ReportUtil.appendJsonReport(out, report);
+            else
+                System.out.println(GlobalObjectMappers.getPretty().writeValueAsString(reports));
+        } else
+            for (MiXCRCommandReport report : reports) {
+                if (helper != null)
+                    report.writeReport(helper);
+            }
     }
 }
