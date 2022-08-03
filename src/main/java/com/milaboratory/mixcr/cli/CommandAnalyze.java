@@ -226,7 +226,7 @@ public abstract class CommandAnalyze extends MiXCRCommand {
             required = true)
     public String species = "hs";
 
-    @Option(description = CommonDescriptions.SPECIES,
+    @Option(description = "Aligner parameters preset",
             names = {"--align-preset"})
     public String alignPreset = null;
 
