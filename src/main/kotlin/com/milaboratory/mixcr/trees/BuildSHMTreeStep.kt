@@ -13,22 +13,22 @@ package com.milaboratory.mixcr.trees
 
 enum class BuildSHMTreeStep(val forPrint: String) {
     /**
-     * @see ClusterProcessor.buildTreeTopParts
+     * @see SHMTreeBuilderBySteps.buildTreeTopParts
      */
     BuildingInitialTrees("Building initial trees"),
 
     /**
-     * @see ClusterProcessor.attachClonesByDistanceChange
+     * @see SHMTreeBuilderBySteps.attachClonesByDistanceChange
      */
     AttachClonesByDistanceChange("Attaching clones by distance change"),
 
     /**
-     * @see ClusterProcessor.combineTrees
+     * @see SHMTreeBuilderBySteps.combineTrees
      */
     CombineTrees("Combining trees"),
 
     /**
-     * @see ClusterProcessor.attachClonesByNDN
+     * @see SHMTreeBuilderBySteps.attachClonesByNDN
      */
     AttachClonesByNDN("Attaching clones by NDN");
 }

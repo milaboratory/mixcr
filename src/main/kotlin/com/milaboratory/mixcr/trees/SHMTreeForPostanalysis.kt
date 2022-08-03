@@ -17,13 +17,23 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import io.repseq.core.*
-import io.repseq.core.ReferencePoint.*
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.CDR3End
+import io.repseq.core.ReferencePoint.JBeginTrimmed
+import io.repseq.core.ReferencePoint.VEndTrimmed
+import io.repseq.core.ReferencePoints
+import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
+import io.repseq.core.VDJCLibraryRegistry
 import java.util.*
 
 data class SHMTreeForPostanalysis(
     val tree: Tree<NodeWithClones>,
-    val meta: Meta
+    val meta: Meta,
+    val root: MutationsDescription,
+    val mrca: MutationsDescription
 ) {
     class Meta(
         val rootInfo: RootInfo,
@@ -171,16 +181,20 @@ fun SHMTreeResult.forPostanalysis(
         alignerParameters
     ) { geneId -> libraryRegistry.getGene(geneId) }
 
+    val root = tree.root.content.mutationsSet.asMutationsDescription(meta)
+    val mrca = mostRecentCommonAncestor.mutationsSet.asMutationsDescription(meta)
     val mappedRoot = tree.root.map(
         meta,
         null,
-        tree.root.content.mutationsSet.asMutationsDescription(meta),
-        mostRecentCommonAncestor.mutationsSet.asMutationsDescription(meta)
+        root,
+        mrca
     )
 
     return SHMTreeForPostanalysis(
         Tree(mappedRoot),
-        meta
+        meta,
+        root,
+        mrca
     )
 }
 

@@ -11,9 +11,14 @@
  */
 package com.milaboratory.mixcr.trees
 
+import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.util.VJPair
+import com.milaboratory.mixcr.util.alignmentsCover
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
 
 fun List<CloneReader>.constructStateBuilder(): PrimitivIOStateBuilder {
     check(map { it.alignerParameters }.distinct().size == 1) {
@@ -27,3 +32,11 @@ fun List<CloneReader>.constructStateBuilder(): PrimitivIOStateBuilder {
     )
     return stateBuilder
 }
+
+fun Clone.coversFeature(geneFeatureToMatch: VJPair<GeneFeature>, VJBase: VJBase): Boolean =
+    getHit(VJBase, GeneType.Variable).alignmentsCover(geneFeatureToMatch) &&
+            getHit(VJBase, GeneType.Joining).alignmentsCover(geneFeatureToMatch)
+
+fun Clone.formsAllRefPointsInCDR3(VJBase: VJBase): Boolean =
+    getFeature(GeneFeature.CDR3, VJBase) != null && getFeature(GeneFeature.VJJunction, VJBase) != null
+

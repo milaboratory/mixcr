@@ -11,27 +11,19 @@
  */
 package com.milaboratory.mixcr.trees
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.milaboratory.mixcr.util.ParametersPresets
 import com.milaboratory.primitivio.annotations.Serializable
-import io.repseq.core.GeneFeature
 
 /**
  *
  */
-@JsonAutoDetect(
-    fieldVisibility = JsonAutoDetect.Visibility.ANY,
-    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-    getterVisibility = JsonAutoDetect.Visibility.NONE
-)
 @Serializable(asJson = true)
 data class SHMTreeBuilderParameters @JsonCreator constructor(
-    /**
-     * Feature that is covered by all clonotypes (e.g. VDJRegion for full-length data).
-     */
-    @param:JsonProperty("targetRegion") val targetRegion: GeneFeature?,
+    @param:JsonProperty("singleCell") val singleCell: SingleCell,
     /**
      * Use only productive clonotypes (no OOF, no stops).
      */
@@ -61,35 +53,105 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
      */
     @param:JsonProperty("penaltyForReversedMutations") val penaltyForReversedMutations: Double,
     /**
-     * Min count of common mutations in VJ for pair to form first clusterization.
-     */
-    @param:JsonProperty("commonMutationsCountForClustering") val commonMutationsCountForClustering: Int,
-    /**
-     * Max penalty of NDN mutations per NDN length for pair to form first clusterization.
-     */
-    @param:JsonProperty("maxNDNDistanceForClustering") val maxNDNDistanceForClustering: Double,
-    /**
      * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
      */
     @param:JsonProperty("countOfNodesToProbe") val countOfNodesToProbe: Int,
     /**
      * Multiplier of NDN score on calculating distance between clones in a tree.
      */
-    @param:JsonProperty("NDNScoreMultiplier") val NDNScoreMultiplier: Double,
+    @param:JsonProperty("NDNScoreMultiplier")
+    @get:JsonProperty("NDNScoreMultiplier")
+    val NDNScoreMultiplier: Double,
     /**
-     * Algorithm for the zero step. BronKerbosch|Hierarchical
+     * Algorithm for the zero step
      */
-    @param:JsonProperty("buildingInitialTreesAlgorithm") val buildingInitialTreesAlgorithm: String,
+    @param:JsonProperty("initialClusterization") val initialClusterization: ClusterizationAlgorithm,
     /**
      * Order of steps to postprocess trees.
      */
     @param:JsonProperty("stepsOrder") val stepsOrder: List<BuildSHMTreeStep>,
-    /**
-     * Min portion of clones to determinate common alignment ranges.
-     */
-    @param:JsonProperty("minPortionOfClonesForCommonAlignmentRanges") val minPortionOfClonesForCommonAlignmentRanges: Double,
-    @param:JsonProperty("NDNSizeLimitForPublicClones") val NDNSizeLimitForPublicClones: Int
-) : java.io.Serializable {
+    @param:JsonProperty("NDNSizeLimitForPublicClones")
+    @get:JsonProperty("NDNSizeLimitForPublicClones")
+    val NDNSizeLimitForPublicClones: Int
+) {
+
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        property = "type"
+    )
+    @JsonSubTypes(
+        JsonSubTypes.Type(ClusterizationAlgorithm.Hierarchical::class, name = "hierarchical"),
+        JsonSubTypes.Type(ClusterizationAlgorithm.BronKerbosch::class, name = "BronKerbosch")
+    )
+    sealed class ClusterizationAlgorithm(
+        /**
+         * Min count of common mutations in VJ for pair to form first clusterization.
+         */
+        val commonMutationsCountForClustering: Int,
+        /**
+         * Max penalty of NDN mutations per NDN length for pair to form first clusterization.
+         */
+        val maxNDNDistanceForClustering: Double
+    ) {
+        class Hierarchical @JsonCreator constructor(
+            @JsonProperty("commonMutationsCountForClustering") commonMutationsCountForClustering: Int,
+            @JsonProperty("maxNDNDistanceForClustering") maxNDNDistanceForClustering: Double
+        ) : ClusterizationAlgorithm(commonMutationsCountForClustering, maxNDNDistanceForClustering)
+
+        class BronKerbosch @JsonCreator constructor(
+            @JsonProperty("commonMutationsCountForClustering") commonMutationsCountForClustering: Int,
+            @JsonProperty("maxNDNDistanceForClustering") maxNDNDistanceForClustering: Double
+        ) : ClusterizationAlgorithm(commonMutationsCountForClustering, maxNDNDistanceForClustering)
+    }
+
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        property = "type"
+    )
+    @JsonSubTypes(
+        JsonSubTypes.Type(ClusterizationAlgorithmForSingleCell.Hierarchical::class, name = "hierarchical"),
+        JsonSubTypes.Type(ClusterizationAlgorithmForSingleCell.BronKerbosch::class, name = "BronKerbosch")
+    )
+    sealed class ClusterizationAlgorithmForSingleCell(
+        /**
+         * Max penalty of NDN mutations per NDN length for a pair of heavy light chains
+         */
+        val maxNDNDistanceForHeavyChain: Double,
+        /**
+         * Max penalty of NDN mutations per NDN length for a pair of light chains
+         */
+        val maxNDNDistanceForLightChain: Double,
+    ) {
+        class Hierarchical @JsonCreator constructor(
+            @JsonProperty("maxNDNDistanceForLightChain") maxNDNDistanceForLightChain: Double,
+            @JsonProperty("maxNDNDistanceForHeavyChain") maxNDNDistanceForHeavyChain: Double
+        ) : ClusterizationAlgorithmForSingleCell(maxNDNDistanceForHeavyChain, maxNDNDistanceForLightChain)
+
+        class BronKerbosch @JsonCreator constructor(
+            @JsonProperty("maxNDNDistanceForLightChain") maxNDNDistanceForLightChain: Double,
+            @JsonProperty("maxNDNDistanceForHeavyChain") maxNDNDistanceForHeavyChain: Double
+        ) : ClusterizationAlgorithmForSingleCell(maxNDNDistanceForHeavyChain, maxNDNDistanceForLightChain)
+    }
+
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        property = "type"
+    )
+    @JsonSubTypes(
+        JsonSubTypes.Type(SingleCell.NoOP::class, name = "no op"),
+        JsonSubTypes.Type(SingleCell.SimpleClustering::class, name = "simpleClustering")
+    )
+    sealed class SingleCell {
+        class NoOP : SingleCell() {
+            override fun equals(other: Any?): Boolean = other is NoOP
+            override fun hashCode(): Int = 0
+        }
+
+        data class SimpleClustering @JsonCreator constructor(
+            @param:JsonProperty("algorithm") val algorithm: ClusterizationAlgorithmForSingleCell
+        ) : SingleCell()
+    }
+
     companion object {
         val presets = ParametersPresets<SHMTreeBuilderParameters>("shm_tree_parameters")
     }

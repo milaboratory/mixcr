@@ -24,6 +24,8 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.miplots.toSvg
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep
+import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
+import com.milaboratory.mixcr.trees.BuildSHMTreeStep.CombineTrees
 import com.milaboratory.mixcr.trees.DebugInfo
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportHelper
@@ -188,12 +190,12 @@ class BuildSHMTreeReport : MiXCRReport {
         for (i in stepResults.indices) {
             val stepResult = stepResults[i]
             helper.writeField("step ${i + 1}", stepResult.step.forPrint)
-            if (stepResult.step != BuildSHMTreeStep.CombineTrees) {
+            if (stepResult.step != CombineTrees) {
                 helper.writeField("Clones was added", stepResult.clonesWasAdded)
             }
-            if (stepResult.step == BuildSHMTreeStep.BuildingInitialTrees) {
+            if (stepResult.step == BuildingInitialTrees) {
                 helper.writeField("Trees created", stepResult.treesCountDelta)
-            } else if (stepResult.step == BuildSHMTreeStep.CombineTrees) {
+            } else if (stepResult.step == CombineTrees) {
                 helper.writeField("Trees combined", -stepResult.treesCountDelta)
             }
         }

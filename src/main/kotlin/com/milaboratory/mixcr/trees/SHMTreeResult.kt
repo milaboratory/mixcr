@@ -11,13 +11,13 @@
  */
 package com.milaboratory.mixcr.trees
 
+import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 
-@Serializable(by = SHMTreeSerializer::class)
+@Serializable(by = SHMTreeResult.SerializerImpl::class)
 class SHMTreeResult(
     val tree: Tree<CloneOrFoundAncestor>,
     val rootInfo: RootInfo,
@@ -28,24 +28,20 @@ class SHMTreeResult(
             1 -> tree.root.links.first().node
             else -> tree.root
         }.content
-}
 
-class SHMTreeSerializer : Serializer<SHMTreeResult> {
-    override fun write(output: PrimitivO, obj: SHMTreeResult) {
-        TreeSerializer.writeTree(output, obj.tree)
-        output.writeObject(obj.rootInfo)
-        output.writeInt(obj.treeId)
+    class SerializerImpl : BasicSerializer<SHMTreeResult>() {
+        override fun write(output: PrimitivO, obj: SHMTreeResult) {
+            TreeSerializer.writeTree(output, obj.tree)
+            output.writeObject(obj.rootInfo)
+            output.writeInt(obj.treeId)
+        }
+
+        override fun read(input: PrimitivI): SHMTreeResult = SHMTreeResult(
+            TreeSerializer.readTree(input),
+            input.readObjectRequired(),
+            input.readInt()
+        )
     }
-
-    override fun read(input: PrimitivI): SHMTreeResult = SHMTreeResult(
-        TreeSerializer.readTree(input),
-        input.readObjectRequired(),
-        input.readInt()
-    )
-
-    override fun isReference(): Boolean = false
-
-    override fun handlesReference(): Boolean = false
 }
 
 

@@ -23,7 +23,13 @@ import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
-import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.GeneAndScore
+import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.trees.constructStateBuilder
@@ -33,11 +39,34 @@ import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
 import com.milaboratory.mixcr.util.alignmentsCover
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import com.milaboratory.primitivio.*
-import com.milaboratory.util.*
-import io.repseq.core.*
-import io.repseq.core.GeneType.*
-import io.repseq.core.ReferencePoint.*
+import com.milaboratory.primitivio.GroupingCriteria
+import com.milaboratory.primitivio.asSequence
+import com.milaboratory.primitivio.filter
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.groupByWithProgress
+import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.toList
+import com.milaboratory.util.GlobalObjectMappers
+import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Diversity
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.VDJC_REFERENCE
+import io.repseq.core.GeneType.VJ_REFERENCE
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.CDR3End
+import io.repseq.core.ReferencePoint.FR4End
+import io.repseq.core.ReferencePoint.UTR5Begin
+import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
+import io.repseq.core.VDJCLibrary
+import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
 import org.apache.commons.io.FilenameUtils
@@ -256,11 +285,11 @@ class CommandFindAlleles : MiXCRCommand() {
         val totalClonesCount = allelesBuilder.count()
         val stateBuilder = allelesBuilder.datasets.constructStateBuilder()
 
-        val (clustersWithTheSameV, progressOfV) = allelesBuilder.unsortedClones().sortAndGroupWithProgress(
-            GroupingCriteria.sortBy { it.getBestHit(geneType).gene },
+        val (clustersWithTheSameV, progressOfV) = allelesBuilder.unsortedClones().groupByWithProgress(
             stateBuilder,
             tempDest.addSuffix("alleles.searcher.${geneType.name[0]}"),
-            totalClonesCount
+            totalClonesCount,
+            GroupingCriteria.groupBy { it.getBestHit(geneType).gene }
         )
         SmartProgressReporter.startProgressReport("Searching for ${geneType.name[0]} alleles", progressOfV)
         return allelesBuilder.buildAlleles(clustersWithTheSameV, geneType)

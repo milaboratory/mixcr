@@ -17,6 +17,8 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.VJPair
 import io.repseq.core.GeneFeature
 import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 
 @Suppress("PropertyName")
 class MutationsFromVJGermline(
@@ -36,6 +38,6 @@ class MutationsFromVJGermline(
     val VJMutationsCount: Int
         get() = mutations.V.values.sumOf { it.size() } + mutations.J.values.sumOf { it.size() }
 
-    val VEndTrimmedPosition = knownMutationsWithinCDR3.V.second.length()
-    val JBeginTrimmedPosition = CDR3.size() - knownMutationsWithinCDR3.J.second.length()
+    val VEndTrimmedPosition = min(knownMutationsWithinCDR3.V.second.length(), CDR3.size())
+    val JBeginTrimmedPosition = max(CDR3.size() - knownMutationsWithinCDR3.J.second.length(), 0)
 }

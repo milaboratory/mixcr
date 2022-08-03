@@ -18,6 +18,8 @@ import com.milaboratory.mixcr.util.OutputPortWithProgress
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.sorting.HashSorter
+import com.milaboratory.util.sorting.Sorter
+import org.apache.commons.io.FileUtils
 
 interface GroupingCriteria<T> {
     /**
@@ -31,54 +33,78 @@ interface GroupingCriteria<T> {
     val comparator: Comparator<T>
 
     companion object {
-        fun <T : Any, R> sortBy(property: (T) -> R): GroupingCriteria<T> where R : Comparable<R>, R : Any =
+        fun <T : Any, R> groupBy(property: (T) -> R): GroupingCriteria<T> where R : Comparable<R>, R : Any =
             object : GroupingCriteria<T> {
                 override fun hashCodeForGroup(entity: T): Int = property(entity).hashCode()
 
                 override val comparator: Comparator<T> = Comparator.comparing(property)
             }
+
+        fun <T : Any, R> groupBy(comparator: Comparator<R>, property: (T) -> R): GroupingCriteria<T> where R : Any =
+            object : GroupingCriteria<T> {
+                override fun hashCodeForGroup(entity: T): Int = property(entity).hashCode()
+
+                override val comparator: Comparator<T> = Comparator.comparing(property, comparator)
+            }
     }
 }
 
-inline fun <reified T : Any> OutputPort<T>.sort(
+inline fun <reified T : Any> OutputPort<T>.hashSort(
     groupingCriteria: GroupingCriteria<T>,
     stateBuilder: PrimitivIOStateBuilder,
-    tempFileDest: TempFileDest
+    tempFileDest: TempFileDest,
+    readerConcurrency: Int = 8,
+    writerConcurrency: Int = 8
 ): OutputPortCloseable<T> {
     // todo check memory budget
-    val memoryBudget = if (Runtime.getRuntime().maxMemory() > 10000000000L /* -Xmx10g */) Runtime.getRuntime()
-        .maxMemory() / 4L /* 1 Gb */ else 1 shl 28
-    // todo move constants to parameters
+    val memoryBudget = when {
+        Runtime.getRuntime().maxMemory() > 10 * FileUtils.ONE_GB -> Runtime.getRuntime().maxMemory() / 8L
+        else -> 256 * FileUtils.ONE_MB
+    }
     return HashSorter(
         T::class.java,
         groupingCriteria::hashCodeForGroup,
         groupingCriteria.comparator,
         5,
         tempFileDest,
-        8,
-        8,
+        readerConcurrency,
+        writerConcurrency,
         stateBuilder.oState,
         stateBuilder.iState,
         memoryBudget,
-        (1 shl 18 /* 256 Kb */).toLong()
+        256 * FileUtils.ONE_KB
     ).port(this)
 }
 
-inline fun <reified T : Any> OutputPort<T>.sortAndGroup(
-    groupingCriteria: GroupingCriteria<T>,
-    stateBuilder: PrimitivIOStateBuilder,
-    tempFileDest: TempFileDest
-): OutputPort<List<T>> =
-    sort(groupingCriteria, stateBuilder, tempFileDest)
-        .groupBySortedData(groupingCriteria)
+inline fun <reified T : Any> OutputPort<T>.sort(
+    tempFileDest: TempFileDest,
+    comparator: Comparator<T>,
+    chunkSize: Int = 512 * 1024
+): OutputPortCloseable<T> {
+    return Sorter.sort(
+        this,
+        comparator,
+        chunkSize,
+        T::class.java,
+        tempFileDest.resolveFile("sort")
+    )
+}
 
-inline fun <reified T : Any> OutputPort<T>.sortAndGroupWithProgress(
-    groupingCriteria: GroupingCriteria<T>,
+inline fun <reified T : Any> OutputPort<T>.groupBy(
     stateBuilder: PrimitivIOStateBuilder,
     tempFileDest: TempFileDest,
-    expectedSize: Long
+    groupingCriteria: GroupingCriteria<T>
+): OutputPort<List<T>> =
+    hashSort(groupingCriteria, stateBuilder, tempFileDest)
+        .groupBySortedData(groupingCriteria)
+
+inline fun <reified T : Any> OutputPort<T>.groupByWithProgress(
+    stateBuilder: PrimitivIOStateBuilder,
+    tempFileDest: TempFileDest,
+    expectedSize: Long,
+    groupingCriteria: GroupingCriteria<T>
 ): Pair<OutputPort<List<T>>, CanReportProgress> {
-    val sorted = sort(groupingCriteria, stateBuilder, tempFileDest)
+    val sorted = hashSort(groupingCriteria, stateBuilder, tempFileDest)
     val withProgress = OutputPortWithProgress.wrap(expectedSize, sorted)
     return withProgress
         .groupBySortedData(groupingCriteria) to withProgress

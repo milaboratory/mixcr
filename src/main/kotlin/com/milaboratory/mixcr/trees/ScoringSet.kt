@@ -37,26 +37,31 @@ class ScoringSet(
      * Use different penalties in N and D segments comparing to probability of generating the same NDN sequence
      */
     fun NDNDistance(firstNDN: NucleotideSequence, secondNDN: NucleotideSequence): Double {
-        val score = Aligner.alignGlobal(
-            NDN.scoring,
-            firstNDN,
-            secondNDN
-        ).score
-        val maxScore = max(
-            maxScore(firstNDN.size(), NDN.scoring),
-            maxScore(secondNDN.size(), NDN.scoring)
-        )
-        return (maxScore - score) / min(firstNDN.size(), secondNDN.size()).toDouble()
+        val penaltyCalculator = NDN
+        return penaltyCalculator.normalizedPenalties(firstNDN, secondNDN)
     }
 
     class PenaltyCalculator(
         val scoring: AlignmentScoring<NucleotideSequence>
     ) {
+        fun normalizedPenalties(
+            first: NucleotideSequence,
+            second: NucleotideSequence
+        ): Double {
+            val score = Aligner.alignGlobal(
+                scoring,
+                first,
+                second
+            ).score
+            val maxScore = scoring.maxScore(max(first.size(), second.size()))
+            return (maxScore - score) / min(first.size(), second.size()).toDouble()
+        }
+
         fun penalties(mutations: Collection<CompositeMutations>): Int =
             mutations.sumOf { penalties(it) }
 
         fun penalties(mutations: CompositeMutations): Int {
-            val maxScore = maxScore(mutations.rangeInParent.length(), scoring)
+            val maxScore = scoring.maxScore(mutations.rangeInParent.length())
             //AlignmentUtils.calculateScore use sequence only for positions without mutations.
             //Calculating parent is expensive, so use grand if possible
             val base = if (mutations.mutationsFromParentToThis.lastMutationPosition() > mutations.grand.size()) {
@@ -70,6 +75,6 @@ class ScoringSet(
     }
 }
 
-private fun maxScore(sequenceSize: Int, scoring: AlignmentScoring<NucleotideSequence>): Int =
-    sequenceSize * scoring.maximalMatchScore
+private fun AlignmentScoring<NucleotideSequence>.maxScore(sequenceSize: Int): Int =
+    sequenceSize * maximalMatchScore
 

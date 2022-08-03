@@ -17,6 +17,7 @@ import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.util.FlatteningOutputPort
+import com.milaboratory.mixcr.util.OutputPortWithProgress
 
 inline fun <reified T : Any> PrimitivI.readObjectOptional(): T? = readObject(T::class.java)
 inline fun <reified T : Any> PrimitivI.readObjectRequired(): T = readObject(T::class.java)
@@ -39,6 +40,11 @@ inline fun <reified T : Any> PrimitivI.readArray(): Array<T> = Array(readInt()) 
     readObject(T::class.java)
 }
 
+inline fun <reified T : Any, R> OutputPortCloseable<T>.withProgress(
+    expectedSize: Long,
+    block: (OutputPortWithProgress<T>) -> R
+): R = OutputPortWithProgress.wrap(expectedSize, this).use(block)
+
 fun <T, R> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
 
 fun <T, R> OutputPort<T>.mapInParallel(
@@ -53,6 +59,8 @@ fun <T, R> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPortCloseable<R>
 
 fun <T> List<OutputPort<T>>.flatten(): OutputPortCloseable<T> =
     FlatteningOutputPort(CUtils.asOutputPort(this))
+
+fun <T> OutputPort<List<T>>.flatten(): OutputPortCloseable<T> = flatMap { it }
 
 fun <T, R> OutputPort<T>.flatMap(function: (element: T) -> Iterable<R>): OutputPortCloseable<R> =
     FlatteningOutputPort(CUtils.wrap(this) {

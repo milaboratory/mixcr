@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.alleles
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.mixcr.util.ParametersPresets
@@ -20,11 +19,6 @@ import com.milaboratory.primitivio.annotations.Serializable
 /**
  *
  */
-@JsonAutoDetect(
-    fieldVisibility = JsonAutoDetect.Visibility.ANY,
-    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-    getterVisibility = JsonAutoDetect.Visibility.NONE
-)
 @Serializable(asJson = true)
 data class FindAllelesParameters @JsonCreator constructor(
     /**

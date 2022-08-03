@@ -12,14 +12,13 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
-import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneFeature
@@ -90,49 +89,20 @@ class JGeneMutations(
     }
 }
 
-@Serializable(by = PartInCDR3Serializer::class)
+@Serializable(by = PartInCDR3.SerializerImpl::class)
 data class PartInCDR3(
     val range: Range,
     val mutations: Mutations<NucleotideSequence>
 ) {
+    class SerializerImpl : BasicSerializer<PartInCDR3>() {
+        override fun write(output: PrimitivO, obj: PartInCDR3) {
+            output.writeObject(obj.range)
+            output.writeObject(obj.mutations)
+        }
 
-    fun withoutLeftInsert() = copy(
-        mutations = mutations.asSequence()
-            .filter { mutation ->
-                Mutation.getPosition(mutation) != range.lower || !Mutation.isInsertion(mutation)
-            }
-            .asMutations(NucleotideSequence.ALPHABET)
-    )
-
-    fun combineWithMutationsToTheRight(
-        rightRange: Range,
-        mutationsToAdd: Mutations<NucleotideSequence>
-    ) = PartInCDR3(
-        range.setUpper(rightRange.upper),
-        mutations.concat(mutationsToAdd)
-    )
-
-    fun combineWithMutationsToTheLeft(
-        leftRange: Range,
-        mutationsToAdd: Mutations<NucleotideSequence>
-    ) = PartInCDR3(
-        range.setLower(leftRange.lower),
-        mutationsToAdd.concat(mutations)
-    )
-}
-
-class PartInCDR3Serializer : Serializer<PartInCDR3> {
-    override fun write(output: PrimitivO, obj: PartInCDR3) {
-        output.writeObject(obj.range)
-        output.writeObject(obj.mutations)
+        override fun read(input: PrimitivI): PartInCDR3 = PartInCDR3(
+            input.readObjectRequired(),
+            input.readObjectRequired()
+        )
     }
-
-    override fun read(input: PrimitivI): PartInCDR3 = PartInCDR3(
-        input.readObjectRequired(),
-        input.readObjectRequired()
-    )
-
-    override fun isReference(): Boolean = false
-
-    override fun handlesReference(): Boolean = false
 }

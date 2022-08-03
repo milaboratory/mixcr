@@ -13,10 +13,10 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.ReferencePoints
@@ -24,7 +24,7 @@ import io.repseq.core.ReferencePoints
 /**
  * Common information about germline of the tree
  */
-@Serializable(by = RootInfoSerializer::class)
+@Serializable(by = RootInfo.SerializerImpl::class)
 data class RootInfo(
     /**
      * V and J germline for VJBase.VGeneId and VJBase.JGeneId
@@ -42,37 +42,34 @@ data class RootInfo(
      */
     val reconstructedNDN: NucleotideSequence,
     val VJBase: VJBase
-)
-class RootInfoSerializer : Serializer<RootInfo> {
-    override fun write(output: PrimitivO, obj: RootInfo) {
-        output.writeObject(obj.sequence1.V)
-        output.writeObject(obj.sequence1.J)
-        output.writeObject(obj.partitioning.V)
-        output.writeObject(obj.partitioning.J)
-        output.writeObject(obj.rangeInCDR3.V)
-        output.writeObject(obj.rangeInCDR3.J)
-        output.writeObject(obj.reconstructedNDN)
-        output.writeObject(obj.VJBase)
+) {
+    class SerializerImpl : BasicSerializer<RootInfo>() {
+        override fun write(output: PrimitivO, obj: RootInfo) {
+            output.writeObject(obj.sequence1.V)
+            output.writeObject(obj.sequence1.J)
+            output.writeObject(obj.partitioning.V)
+            output.writeObject(obj.partitioning.J)
+            output.writeObject(obj.rangeInCDR3.V)
+            output.writeObject(obj.rangeInCDR3.J)
+            output.writeObject(obj.reconstructedNDN)
+            output.writeObject(obj.VJBase)
+        }
+
+        override fun read(input: PrimitivI): RootInfo = RootInfo(
+            VJPair(
+                input.readObjectRequired(),
+                input.readObjectRequired()
+            ),
+            VJPair(
+                input.readObjectRequired(),
+                input.readObjectRequired()
+            ),
+            VJPair(
+                input.readObjectRequired(),
+                input.readObjectRequired()
+            ),
+            input.readObjectRequired(),
+            input.readObjectRequired()
+        )
     }
-
-    override fun read(input: PrimitivI): RootInfo = RootInfo(
-        VJPair(
-            input.readObjectRequired(),
-            input.readObjectRequired()
-        ),
-        VJPair(
-            input.readObjectRequired(),
-            input.readObjectRequired()
-        ),
-        VJPair(
-            input.readObjectRequired(),
-            input.readObjectRequired()
-        ),
-        input.readObjectRequired(),
-        input.readObjectRequired()
-    )
-
-    override fun isReference(): Boolean = false
-
-    override fun handlesReference(): Boolean = false
 }

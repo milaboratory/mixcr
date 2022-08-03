@@ -9,9 +9,14 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
+@file:Suppress("LocalVariableName")
+
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mitool.helpers.get
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.VJ_REFERENCE
 
 object SHNTreeFieldsExtractor : BaseFieldExtractors() {
@@ -41,6 +46,30 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
             "totalClonesCount"
         ) { shmTree ->
             shmTree.tree.allNodes().sumOf { (_, node) -> node.content.clones.sumOf { it.clone.count } }.toString()
+        }
+
+        fields += FieldParameterless(
+            "-wildcardsScore",
+            "Count of possible nucleotide sequences of CDR3 in MRCA",
+            "Wildcards score",
+            "wildcardsScore"
+        ) { shmTree ->
+            val CDR3Sequence = shmTree.mrca.targetNSequence(CDR3)!!
+            val wildcardSized = (0 until CDR3Sequence.size())
+                .map { CDR3Sequence[it] }
+                .filter { NucleotideSequence.ALPHABET.isWildcard(it) }
+                .map { NucleotideSequence.ALPHABET.codeToWildcard(it) }
+                .map { it.basicSize() }
+            wildcardSized.fold(1, Int::times).toString()
+        }
+
+        fields += FieldParameterless(
+            "-ndnOfMRCA",
+            "NDN nucleotide sequence of MRCA",
+            "mrcaNDN",
+            "mrcaNDN"
+        ) { shmTree ->
+            shmTree.mrca.NDN.toString()
         }
 
         // Best hits

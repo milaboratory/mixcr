@@ -21,7 +21,9 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 
 @Command(
     name = CommandExportShmTreesTable.COMMAND_NAME,
@@ -50,6 +52,8 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                     FieldData.mk("-treeId"),
                     FieldData.mk("-uniqClonesCount"),
                     FieldData.mk("-totalClonesCount"),
+                    FieldData.mk("-wildcardsScore"),
+                    FieldData.mk("-ndnOfMRCA"),
                     FieldData.mk("-vHit"),
                     FieldData.mk("-jHit"),
                 )

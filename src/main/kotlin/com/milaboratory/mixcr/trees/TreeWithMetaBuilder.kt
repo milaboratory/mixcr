@@ -23,7 +23,7 @@ class TreeWithMetaBuilder(
     private val clonesAdditionHistory: LinkedList<CloneWrapper.ID>,
     val treeId: TreeId
 ) {
-    fun copy(): TreeWithMetaBuilder =
+    fun copy(treeId: TreeId = this.treeId): TreeWithMetaBuilder =
         TreeWithMetaBuilder(treeBuilder.copy(), rootInfo, clonesRebase, clonesAdditionHistory, treeId)
 
     fun clonesCount(): Int = clonesAdditionHistory.size

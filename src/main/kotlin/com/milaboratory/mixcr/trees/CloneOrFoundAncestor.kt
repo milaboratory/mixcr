@@ -11,39 +11,34 @@
  */
 package com.milaboratory.mixcr.trees
 
+import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
 
-@Serializable(by = CloneOrFoundAncestorSerializer::class)
+@Serializable(by = CloneOrFoundAncestor.SerializerImpl::class)
 class CloneOrFoundAncestor(
     val id: Int,
     val clone: Clone?,
     val datasetId: Int?,
     val mutationsSet: MutationsSet
-)
+) {
+    class SerializerImpl : BasicSerializer<CloneOrFoundAncestor>() {
+        override fun write(output: PrimitivO, obj: CloneOrFoundAncestor) {
+            output.writeInt(obj.id)
+            output.writeObject(obj.clone)
+            output.writeInt(obj.datasetId ?: -1)
+            output.writeObject(obj.mutationsSet)
+        }
 
-class CloneOrFoundAncestorSerializer : Serializer<CloneOrFoundAncestor> {
-    override fun write(output: PrimitivO, obj: CloneOrFoundAncestor) {
-        output.writeInt(obj.id)
-        output.writeObject(obj.clone)
-        output.writeInt(obj.datasetId ?: -1)
-        output.writeObject(obj.mutationsSet)
+        override fun read(input: PrimitivI): CloneOrFoundAncestor = CloneOrFoundAncestor(
+            input.readInt(),
+            input.readObjectOptional(),
+            input.readInt().let { if (it == -1) null else it },
+            input.readObjectRequired()
+        )
     }
-
-    override fun read(input: PrimitivI): CloneOrFoundAncestor = CloneOrFoundAncestor(
-        input.readInt(),
-        input.readObjectOptional(),
-        input.readInt().let { if (it == -1) null else it },
-        input.readObjectRequired()
-    )
-
-    override fun isReference(): Boolean = false
-
-    override fun handlesReference(): Boolean = false
-
 }

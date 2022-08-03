@@ -1,5 +1,13 @@
 {
   "default": {
+    "singleCell": {
+      "type": "simpleClustering",
+      "algorithm": {
+        "type": "hierarchical",
+        "maxNDNDistanceForHeavyChain": 0.5,
+        "maxNDNDistanceForLightChain": 0.5
+      }
+    },
     "productiveOnly": true,
     "thresholdForCombineTrees": 0.5,
     "thresholdForCombineByNDN": 1.5,
@@ -7,13 +15,14 @@
     "maxNDNDistanceForFreeClones": 1.5,
     "topToVoteOnNDNSize": 5,
     "NDNScoreMultiplier": 2.5,
-    "commonMutationsCountForClustering": 5,
-    "maxNDNDistanceForClustering": 1.5,
     "NDNSizeLimitForPublicClones": 3,
     "penaltyForReversedMutations": 10,
     "countOfNodesToProbe": 3,
-    "minPortionOfClonesForCommonAlignmentRanges": 0.95,
-    "buildingInitialTreesAlgorithm": "BronKerbosch",
+    "initialClusterization": {
+      "type": "BronKerbosch",
+      "commonMutationsCountForClustering": 5,
+      "maxNDNDistanceForClustering": 1.5
+    },
     "stepsOrder": [
       "AttachClonesByDistanceChange",
       "CombineTrees",

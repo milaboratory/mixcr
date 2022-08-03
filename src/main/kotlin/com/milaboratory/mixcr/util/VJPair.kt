@@ -15,7 +15,7 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 
-class VJPair<T>(
+data class VJPair<T>(
     val V: T,
     val J: T
 ) {
@@ -25,23 +25,10 @@ class VJPair<T>(
         else -> throw IllegalArgumentException()
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as VJPair<*>
-
-        if (V != other.V) return false
-        if (J != other.J) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = V?.hashCode() ?: 0
-        result = 31 * result + (J?.hashCode() ?: 0)
-        return result
-    }
+    fun <R> map(function: (T) -> R): VJPair<R> = VJPair(
+        V = function(V),
+        J = function(J),
+    )
 
     override fun toString(): String {
         return "(V=$V, J=$J)"

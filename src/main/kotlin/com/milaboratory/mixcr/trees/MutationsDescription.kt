@@ -9,7 +9,7 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-@file:Suppress("LocalVariableName", "FunctionName", "PrivatePropertyName")
+@file:Suppress("LocalVariableName", "FunctionName", "PrivatePropertyName", "PropertyName")
 
 package com.milaboratory.mixcr.trees
 
@@ -31,7 +31,12 @@ import io.repseq.core.GeneFeature.VJJunction
 import io.repseq.core.GeneFeature.intersection
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.ReferencePoint.*
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.CDR3End
+import io.repseq.core.ReferencePoint.JBegin
+import io.repseq.core.ReferencePoint.JBeginTrimmed
+import io.repseq.core.ReferencePoint.VEnd
+import io.repseq.core.ReferencePoint.VEndTrimmed
 import io.repseq.core.ReferencePoints
 import java.util.*
 
@@ -45,6 +50,9 @@ class MutationsDescription private constructor(
     JPartsAA: MutationsDescription.() -> Parts<AminoAcidSequence>,
     fullLengthPartsAA: MutationsDescription.() -> Parts<AminoAcidSequence>,
 ) {
+
+    val NDN: NucleotideSequence
+        get() = NDNMutations.mutate(baseNDN)
 
     constructor(
         VParts: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,

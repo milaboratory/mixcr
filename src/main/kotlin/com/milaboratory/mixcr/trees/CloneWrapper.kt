@@ -14,20 +14,36 @@ package com.milaboratory.mixcr.trees
 import com.google.common.collect.Sets
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NSequenceWithQuality
+import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence
-import com.milaboratory.primitivio.*
-import com.milaboratory.primitivio.Serializer
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
-import io.repseq.core.*
-import io.repseq.core.GeneType.*
+import com.milaboratory.primitivio.readList
+import com.milaboratory.primitivio.readObjectRequired
+import com.milaboratory.primitivio.writeList
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Diversity
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.ReferencePoints
+import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
 import java.util.*
+import kotlin.collections.List
+import kotlin.collections.emptyList
+import kotlin.collections.first
+import kotlin.collections.indices
+import kotlin.collections.set
 
 /**
  *
  */
-@Serializable(by = SerializerImpl::class)
+@Serializable(by = CloneWrapper.SerializerImpl::class)
 class CloneWrapper(
     /**
      * Original clonotype
@@ -41,7 +57,7 @@ class CloneWrapper(
      * Within this VJ pair and CDR3 length this clone will be viewed. There maybe several copies of one clone with different VJ
      */
     val VJBase: VJBase,
-    val candidateVJBases: List<VJBase>
+    val candidateVJBases: List<VJBase> = emptyList()
 ) {
     val id = ID(clone.id, datasetId)
     fun getHit(geneType: GeneType): VDJCHit = clone.getHit(VJBase, geneType)
@@ -73,6 +89,22 @@ class CloneWrapper(
         val cloneId: Int,
         val datasetId: Int
     )
+
+    class SerializerImpl : BasicSerializer<CloneWrapper>() {
+        override fun write(output: PrimitivO, `object`: CloneWrapper) {
+            output.writeObject(`object`.clone)
+            output.writeInt(`object`.id.datasetId)
+            output.writeObject(`object`.VJBase)
+            output.writeList(`object`.candidateVJBases)
+        }
+
+        override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(
+            input.readObjectRequired(),
+            input.readInt(),
+            input.readObjectRequired(),
+            input.readList()
+        )
+    }
 }
 
 fun Clone.containsStops(feature: GeneFeature, VJBase: VJBase): Boolean {
@@ -146,24 +178,4 @@ private fun Clone.getTargetContainingFeature(
         if (tmp != null && quality < tmp.quality.minValue()) targetIndex = i
     }
     return targetIndex
-}
-
-class SerializerImpl : Serializer<CloneWrapper> {
-    override fun write(output: PrimitivO, `object`: CloneWrapper) {
-        output.writeObject(`object`.clone)
-        output.writeInt(`object`.id.datasetId)
-        output.writeObject(`object`.VJBase)
-        output.writeList(`object`.candidateVJBases)
-    }
-
-    override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(
-        input.readObjectRequired(),
-        input.readInt(),
-        input.readObjectRequired(),
-        input.readList()
-    )
-
-    override fun isReference(): Boolean = true
-
-    override fun handlesReference(): Boolean = false
 }
