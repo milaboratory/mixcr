@@ -39,8 +39,4 @@ public interface CloneAssemblerListener {
     void onPreClustered(CloneAccumulator majorClone, CloneAccumulator minorClone);
 
     void onCloneDropped(CloneAccumulator clone);
-
-    /* Fine filtering */
-
-    void onCloneDroppedInFineFiltering(CloneAccumulator clone);
 }

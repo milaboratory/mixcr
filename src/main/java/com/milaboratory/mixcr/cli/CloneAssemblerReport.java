@@ -55,9 +55,6 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
     @JsonProperty("clonesDroppedAsLowQuality")
     public final int clonesDroppedAsLowQuality;
 
-    @JsonProperty("clonesDroppedInFineFiltering")
-    public final int clonesDroppedInFineFiltering;
-
     @JsonProperty("clonesPreClustered")
     public final int clonesPreClustered;
 
@@ -75,15 +72,6 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
 
     @JsonProperty("clonalChainUsage")
     public final ChainUsageStats clonalChainUsage;
-
-    @JsonProperty("readsAttachedByTags")
-    public final long readsAttachedByTags;
-
-    @JsonProperty("readsWithAmbiguousAttachmentsByTags")
-    public final long readsWithAmbiguousAttachmentsByTags;
-
-    @JsonProperty("readsFailedToAttachedByTags")
-    public final long readsFailedToAttachedByTags;
 
     @JsonCreator
     public CloneAssemblerReport(@JsonProperty("date") Date date,
@@ -104,16 +92,12 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
                                 @JsonProperty("readsClustered") long readsClustered,
                                 @JsonProperty("clones") int clones,
                                 @JsonProperty("clonesDroppedAsLowQuality") int clonesDroppedAsLowQuality,
-                                @JsonProperty("clonesDroppedInFineFiltering") int clonesDroppedInFineFiltering,
                                 @JsonProperty("clonesPreClustered") int clonesPreClustered,
                                 @JsonProperty("readsPreClustered") long readsPreClustered,
                                 @JsonProperty("readsInClones") long readsInClones,
                                 @JsonProperty("readsInClonesBeforeClustering") long readsInClonesBeforeClustering,
                                 @JsonProperty("readsDroppedWithLowQualityClones") long readsDroppedWithLowQualityClones,
-                                @JsonProperty("clonalChainUsage") ChainUsageStats clonalChainUsage,
-                                @JsonProperty("readsAttachedByTags") long readsAttachedByTags,
-                                @JsonProperty("readsWithAmbiguousAttachmentsByTags") long readsWithAmbiguousAttachmentsByTags,
-                                @JsonProperty("readsFailedToAttachedByTags") long readsFailedToAttachedByTags) {
+                                @JsonProperty("clonalChainUsage") ChainUsageStats clonalChainUsage) {
         super(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version);
         this.preCloneAssemblerReport = preCloneAssemblerReport;
         this.totalReadsProcessed = totalReadsProcessed;
@@ -127,16 +111,12 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
         this.readsClustered = readsClustered;
         this.clones = clones;
         this.clonesDroppedAsLowQuality = clonesDroppedAsLowQuality;
-        this.clonesDroppedInFineFiltering = clonesDroppedInFineFiltering;
         this.clonesPreClustered = clonesPreClustered;
         this.readsPreClustered = readsPreClustered;
         this.readsInClones = readsInClones;
         this.readsInClonesBeforeClustering = readsInClonesBeforeClustering;
         this.readsDroppedWithLowQualityClones = readsDroppedWithLowQualityClones;
         this.clonalChainUsage = clonalChainUsage;
-        this.readsAttachedByTags = readsAttachedByTags;
-        this.readsWithAmbiguousAttachmentsByTags = readsWithAmbiguousAttachmentsByTags;
-        this.readsFailedToAttachedByTags = readsFailedToAttachedByTags;
     }
 
     @Override
@@ -180,11 +160,7 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
                 .writePercentAndAbsoluteField("Reads dropped with low quality clones, percent of total", readsDroppedWithLowQualityClones, totalReadsProcessed)
                 .writeField("Clonotypes eliminated by PCR error correction", clonesClustered)
                 .writeField("Clonotypes dropped as low quality", clonesDroppedAsLowQuality)
-                .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered)
-                .writeField("Clonotypes dropped in fine filtering", clonesDroppedInFineFiltering)
-                .writePercentAndAbsoluteField("Partially aligned reads attached to clones by tags", readsAttachedByTags, totalReadsProcessed)
-                .writePercentAndAbsoluteField("Partially aligned reads with ambiguous clone attachments by tags", readsWithAmbiguousAttachmentsByTags, totalReadsProcessed)
-                .writePercentAndAbsoluteField("Partially aligned reads failed to attach to clones by tags", readsFailedToAttachedByTags, totalReadsProcessed);
+                .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered);
 
 
         // Writing distribution by chains
