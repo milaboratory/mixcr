@@ -17,7 +17,14 @@ import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.util.FlatteningOutputPort
+import cc.redberry.pipe.util.TBranchOutputPort
 import com.milaboratory.mixcr.util.OutputPortWithProgress
+import com.milaboratory.primitivio.blocks.PrimitivIBlocks
+import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil
+import com.milaboratory.primitivio.blocks.PrimitivOBlocks
+import com.milaboratory.util.TempFileDest
+import net.jpountz.lz4.LZ4Compressor
+import java.util.concurrent.ThreadLocalRandom
 
 inline fun <reified T : Any> PrimitivI.readObjectOptional(): T? = readObject(T::class.java)
 inline fun <reified T : Any> PrimitivI.readObjectRequired(): T = readObject(T::class.java)
@@ -45,43 +52,79 @@ inline fun <reified T : Any, R> OutputPortCloseable<T>.withProgress(
     block: (OutputPortWithProgress<T>) -> R
 ): R = OutputPortWithProgress.wrap(expectedSize, this).use(block)
 
-fun <T, R> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
+fun <T : Any, R : Any> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
 
-fun <T, R> OutputPort<T>.mapInParallel(
+fun <T : Any, R : Any> OutputPort<T>.mapInParallel(
     threads: Int,
     buffer: Int = Buffer.DEFAULT_SIZE,
     function: (T) -> R
 ): OutputPort<R> = CUtils.orderedParallelProcessor(this, function, buffer, threads)
 
-fun <T, R> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPortCloseable<R> = flatMap {
+fun <T : Any, R : Any> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPortCloseable<R> = flatMap {
     listOfNotNull(function(it))
 }
 
-fun <T> List<OutputPort<T>>.flatten(): OutputPortCloseable<T> =
+fun <T : Any> List<OutputPort<T>>.flatten(): OutputPortCloseable<T> =
     FlatteningOutputPort(CUtils.asOutputPort(this))
 
-fun <T> OutputPort<List<T>>.flatten(): OutputPortCloseable<T> = flatMap { it }
+fun <T : Any> OutputPort<List<T>>.flatten(): OutputPortCloseable<T> = flatMap { it }
 
-fun <T, R> OutputPort<T>.flatMap(function: (element: T) -> Iterable<R>): OutputPortCloseable<R> =
+fun <T : Any, R : Any> OutputPort<T>.flatMap(function: (element: T) -> Iterable<R>): OutputPortCloseable<R> =
     FlatteningOutputPort(CUtils.wrap(this) {
         CUtils.asOutputPort(function(it))
     })
 
-fun <T> OutputPort<T>.filter(test: (element: T) -> Boolean): OutputPortCloseable<T> =
+fun <T : Any> OutputPort<T>.filter(test: (element: T) -> Boolean): OutputPortCloseable<T> =
     FilteringPort(this, test)
 
-fun <T> OutputPort<T>.forEach(action: (element: T) -> Unit): Unit =
+fun <T : Any> OutputPort<T>.forEach(action: (element: T) -> Unit): Unit =
     CUtils.it(this).forEach(action)
 
-fun <T> OutputPort<T>.forEachInParallel(threads: Int, action: (element: T) -> Unit): Unit =
+fun <T : Any> OutputPort<T>.forEachInParallel(threads: Int, action: (element: T) -> Unit): Unit =
     CUtils.processAllInParallel(this, action, threads)
 
-fun <T> OutputPort<T>.toList(): List<T> =
+fun <T : Any> OutputPort<T>.toList(): List<T> =
     CUtils.it(this).toList()
 
-fun <T> OutputPort<T>.asSequence(): Sequence<T> =
+fun <T : Any> OutputPort<T>.asSequence(): Sequence<T> =
     CUtils.it(this).asSequence()
 
-fun <T> OutputPort<T>.count(): Int =
+fun <T : Any> OutputPort<T>.count(): Int =
     CUtils.it(this).count()
 
+inline fun <reified T : Any, R> OutputPort<T>.cached(
+    tempDest: TempFileDest,
+    stateBuilder: PrimitivIOStateBuilder,
+    blockSize: Int,
+    concurrencyToRead: Int = 1,
+    concurrencyToWrite: Int = 1,
+    compressor: LZ4Compressor = PrimitivIOBlocksUtil.fastLZ4Compressor(),
+    function: (() -> OutputPort<T>) -> R
+): R {
+    val primitivI = PrimitivIBlocks(T::class.java, concurrencyToRead, stateBuilder.iState)
+    val primitivO = PrimitivOBlocks<T>(
+        concurrencyToWrite,
+        stateBuilder.oState,
+        blockSize,
+        compressor
+    )
+
+    val tempFile = tempDest.resolvePath("tempFile." + ThreadLocalRandom.current().nextInt())
+
+    var wasCalled = false
+    val portForFirstCall = TBranchOutputPort.wrap(primitivO.newWriter(tempFile), this)
+    val result = function {
+        if (!wasCalled) {
+            wasCalled = true
+            portForFirstCall
+        } else {
+            check(portForFirstCall.isClosed) {
+                "First result from cache must be read entirely before calling the next time"
+            }
+            primitivI.newReader(tempFile, blockSize)
+        }
+    }
+    tempFile.toFile().delete()
+    (this as? OutputPortCloseable)?.close()
+    return result
+}

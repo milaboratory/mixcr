@@ -150,8 +150,8 @@ data class SHMTreeForPostanalysis(
 
         fun mutationsDescription(baseOn: Base): MutationsDescription? = when (baseOn) {
             Base.germline -> main
-            Base.mrca -> main.differenceWith(mostRecentCommonAncestor)
-            Base.parent -> parent?.let { main.differenceWith(it) }
+            Base.mrca -> mostRecentCommonAncestor.differenceWith(main)
+            Base.parent -> parent?.differenceWith(main)
         }
     }
 

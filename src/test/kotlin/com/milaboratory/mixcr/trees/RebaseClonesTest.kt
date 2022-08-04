@@ -235,9 +235,9 @@ class RebaseClonesTest {
     fun reproduceRebaseClone() {
         RandomizedTest.reproduce(
             ::testRebaseClone,
-//            7238690851096249903L,
-//            -6528292659028221478L,
-//            -1959168467592812968L,
+            7238690851096249903L,
+            -6528292659028221478L,
+            -1959168467592812968L,
             4887507527711339190L,
             2049978999466120864L,
             -7534105378312308262L,
@@ -420,6 +420,9 @@ class RebaseClonesTest {
                 mapOf(FR4 to JMutations.extractAbsoluteMutations(JRangeAfterCDR3End, true))
             )
         )
+        if (original.buildCDR3(originalRootInfo).size() != CDR3Length) {
+            return
+        }
 
         val NDNRangeInCDR3After = (random.nextInt(CDR3Length - offset)).let { left ->
             Range(min(offset, left), random.nextInt(left, CDR3Length))
@@ -429,7 +432,10 @@ class RebaseClonesTest {
             VJPair(VPartitioning, JPartitioning),
             VJPair(
                 Range(10, 10 + NDNRangeInCDR3After.lower),
-                Range(JRangeAfterCDR3End.lower - CDR3Length + NDNRangeInCDR3After.upper, JRangeAfterCDR3End.lower)
+                Range(
+                    JRangeAfterCDR3End.lower - CDR3Length + NDNRangeInCDR3After.upper,
+                    JRangeAfterCDR3End.lower
+                )
             ),
             oneLetterSequence(N, NDNRangeInCDR3After.length()),
             VJBase(VDJCGeneId(vdjcLibraryId, "VSome"), VDJCGeneId(vdjcLibraryId, "JSome"), CDR3Length)

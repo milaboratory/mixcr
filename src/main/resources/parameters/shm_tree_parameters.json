@@ -4,8 +4,8 @@
       "type": "simpleClustering",
       "algorithm": {
         "type": "hierarchical",
-        "maxNDNDistanceForHeavyChain": 0.5,
-        "maxNDNDistanceForLightChain": 0.5
+        "maxNDNDistanceForHeavyChain": 1.0,
+        "maxNDNDistanceForLightChain": 1.0
       }
     },
     "productiveOnly": true,

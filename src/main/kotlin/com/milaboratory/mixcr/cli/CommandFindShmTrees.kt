@@ -251,7 +251,7 @@ class CommandFindShmTrees : MiXCRCommand() {
                 is SHMTreeBuilderParameters.SingleCell.NoOP ->
                     warn("Single cell tags will not be used but it's possible on this data")
                 is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
-                    val result = shmTreeBuilderOrchestrator.buildTreesByCellTags(outputTreesPath, singleCellParams)
+                    val result = shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams)
                     writeResults(result, cloneReaders, scoringSet, generateGlobalTreeIds = true)
                     return
                 }

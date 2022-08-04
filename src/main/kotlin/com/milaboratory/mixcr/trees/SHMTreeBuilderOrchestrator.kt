@@ -180,7 +180,6 @@ class SHMTreeBuilderOrchestrator(
 
 
     fun buildTreesByCellTags(
-        outputTreesPath: String,
         singleCellParams: SHMTreeBuilderParameters.SingleCell.SimpleClustering
     ): OutputPort<TreeWithMetaBuilder> {
         check(datasets.map { it.tagsInfo }.distinct().size == 1) {
@@ -200,7 +199,6 @@ class SHMTreeBuilderOrchestrator(
         )
             .buildTrees(
                 readClonesWithDatasetIds(),
-                outputTreesPath,
                 tagsInfo,
                 singleCellParams
             )

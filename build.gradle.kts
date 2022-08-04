@@ -94,9 +94,13 @@ val repseqioVersion = "1.4.0-20-trees"
 val mitoolVersion = "1.1.0-9-main"
 val miplotsVersion = "1.0.0-26-master"
 val jacksonBomVersion = "2.13.3"
+val redberryPipeVersion = "1.2.0-5-trees"
 
 dependencies {
-    implementation("com.milaboratory:milib:$milibVersion")
+    implementation("cc.redberry:pipe:$redberryPipeVersion")
+    implementation("com.milaboratory:milib:$milibVersion") {
+        exclude("cc.redberry", "pipe")
+    }
     implementation("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
     }

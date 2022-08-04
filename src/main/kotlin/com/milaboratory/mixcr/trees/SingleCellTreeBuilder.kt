@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.trees
 
-import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -26,9 +25,7 @@ import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.blocks.PrimitivIBlocks
-import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil
-import com.milaboratory.primitivio.blocks.PrimitivOBlocks
+import com.milaboratory.primitivio.cached
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.flatMap
 import com.milaboratory.primitivio.flatten
@@ -46,10 +43,7 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import org.apache.commons.io.FilenameUtils
-import java.nio.file.Paths
 import java.util.*
-import kotlin.io.path.exists
 
 class SingleCellTreeBuilder(
     private val stateBuilder: PrimitivIOStateBuilder,
@@ -62,85 +56,74 @@ class SingleCellTreeBuilder(
 ) {
     fun buildTrees(
         clones: OutputPortCloseable<CloneWithDatasetId>,
-        outputTreesPath: String,
         tagsInfo: TagsInfo,
         singleCellParams: SHMTreeBuilderParameters.SingleCell.SimpleClustering
     ): OutputPortCloseable<TreeWithMetaBuilder> {
-        //        val cellGroupsFile = tempDest.addSuffix("tree.builder.sc").resolvePath("cellGroups")
-        //TODO remove
-        val cellGroupsFile = Paths.get("${FilenameUtils.removeExtension(outputTreesPath)}.temp")
-        val blockSize = 100
+        //TODO replace with specialized code
+        val cellTageIndex = tagsInfo.first { it.type == TagType.Cell }.index
 
-        if (!cellGroupsFile.exists()) {
-            //TODO replace with specialized code
-            val cellTageIndex = tagsInfo.first { it.type == TagType.Cell }.index
-            val grouped = clones.groupByCellBarcodes(cellTageIndex)
-            val cellGroups = grouped.formCellGroups()
-            val primitivO = PrimitivOBlocks<CellGroup>(
-                4,
-                stateBuilder.oState,
-                blockSize,
-                PrimitivIOBlocksUtil.fastLZ4Compressor()
-            )
-            //TODO use tee
-            CUtils.drain(cellGroups, primitivO.newWriter(cellGroupsFile))
-        }
-
-        val primitivI = PrimitivIBlocks(CellGroup::class.java, 4, stateBuilder.iState)
-
-        val sortedCellGroups = primitivI.newReader(cellGroupsFile, blockSize)
-            .groupCellsByChainPairs()
-            //on resolving intersection prefer larger groups
-            .sort(
-                tempDest.addSuffix("tree.builder.sc.sort_by_cell_barcodes_count"),
-                Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed()
-            )
-
-        //decision about every barcode, to what pair of heavy and light chains it belongs
-        val cellBarcodesToGroupChainPair = mutableMapOf<CellBarcodeWithDatasetId, ChainPairKey>()
-        sortedCellGroups.forEach { cellGroup ->
-            val newBarcodes = cellGroup.cellBarcodes - cellBarcodesToGroupChainPair.keys
-            //TODO count and print how much was filtered
-            if (newBarcodes.size > 1) {
-                newBarcodes.forEach {
-                    cellBarcodesToGroupChainPair[it] = cellGroup.chainPairKey
-                }
-            }
-        }
-
-        val clusterPredictor = ClustersBuilder.ClusterPredictorForCellGroup(
-            singleCellParams.algorithm.maxNDNDistanceForHeavyChain,
-            singleCellParams.algorithm.maxNDNDistanceForLightChain,
-            scoringSet
-        )
-        val clustersBuilder = when (singleCellParams.algorithm) {
-            is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.BronKerbosch ->
-                ClustersBuilder.BronKerbosch(clusterPredictor)
-            is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.Hierarchical ->
-                ClustersBuilder.Hierarchical(clusterPredictor) { datasetId }
-        }
-        return primitivI.newReader(cellGroupsFile, blockSize)
-            //read clones with barcodes and group them accordingly to decisions
-            .clustersWithSameVJAndCDR3Length(cellBarcodesToGroupChainPair)
-            .flatMap { cellGroups ->
-                clustersBuilder.buildClusters(cellGroups.map {
-                    ChainPairRebasedFromGermline(
-                        heavy = it.heavy.rebaseFromGermline(assemblingFeatures),
-                        light = it.light.rebaseFromGermline(assemblingFeatures)
+        return clones
+            .groupByCellBarcodes(cellTageIndex)
+            .formCellGroups()
+            .cached(
+                tempDest.addSuffix("tree.builder.sc.cellGroups"),
+                stateBuilder,
+                blockSize = 100
+            ) { cache ->
+                val sortedCellGroups = cache()
+                    .groupCellsByChainPairs()
+                    //on resolving intersection prefer larger groups
+                    .sort(
+                        tempDest.addSuffix("tree.builder.sc.sort_by_cell_barcodes_count"),
+                        Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed()
                     )
-                })
-            }
-            .mapInParallel(threads) { cluster ->
-                //TODO build linked topology
-                //TODO what to do with the same clones that exists in several nodes because mutations was in other chain
-                listOf(
-                    cluster.map { it.heavy }.distinctBy { it.cloneWrapper.id },
-                    cluster.map { it.light }.distinctBy { it.cloneWrapper.id }
+
+                //decision about every barcode, to what pair of heavy and light chains it belongs
+                val cellBarcodesToGroupChainPair = mutableMapOf<CellBarcodeWithDatasetId, ChainPairKey>()
+                sortedCellGroups.forEach { cellGroup ->
+                    val newBarcodes = cellGroup.cellBarcodes - cellBarcodesToGroupChainPair.keys
+                    //TODO count and print how much was filtered
+                    if (newBarcodes.size > 1) {
+                        newBarcodes.forEach {
+                            cellBarcodesToGroupChainPair[it] = cellGroup.chainPairKey
+                        }
+                    }
+                }
+
+                val clusterPredictor = ClustersBuilder.ClusterPredictorForCellGroup(
+                    singleCellParams.algorithm.maxNDNDistanceForHeavyChain,
+                    singleCellParams.algorithm.maxNDNDistanceForLightChain,
+                    scoringSet
                 )
-                    .filter { it.size > 1 }
-                    .map { SHMTreeBuilder.buildATreeFromRoot(it) }
+                val clustersBuilder = when (singleCellParams.algorithm) {
+                    is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.BronKerbosch ->
+                        ClustersBuilder.BronKerbosch(clusterPredictor)
+                    is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.Hierarchical ->
+                        ClustersBuilder.Hierarchical(clusterPredictor) { datasetId }
+                }
+                cache()
+                    //read clones with barcodes and group them accordingly to decisions
+                    .clustersWithSameVJAndCDR3Length(cellBarcodesToGroupChainPair)
+                    .flatMap { cellGroups ->
+                        clustersBuilder.buildClusters(cellGroups.map {
+                            ChainPairRebasedFromGermline(
+                                heavy = it.heavy.rebaseFromGermline(assemblingFeatures),
+                                light = it.light.rebaseFromGermline(assemblingFeatures)
+                            )
+                        })
+                    }
+                    .mapInParallel(threads) { cluster ->
+                        //TODO build linked topology
+                        //TODO what to do with the same clones that exists in several nodes because mutations was in other chain
+                        listOf(
+                            cluster.map { it.heavy }.distinctBy { it.cloneWrapper.id },
+                            cluster.map { it.light }.distinctBy { it.cloneWrapper.id }
+                        )
+                            .filter { it.size > 1 }
+                            .map { SHMTreeBuilder.buildATreeFromRoot(it) }
+                    }
+                    .flatten()
             }
-            .flatten()
     }
 
     private fun OutputPort<CellGroup>.clustersWithSameVJAndCDR3Length(
