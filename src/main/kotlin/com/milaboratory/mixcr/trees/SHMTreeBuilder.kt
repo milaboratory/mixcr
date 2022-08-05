@@ -27,7 +27,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class SHMTreeBuilder(
-    private val parameters: SHMTreeBuilderParameters,
+    private val parameters: SHMTreeBuilderParameters.TopologyBuilderParameters,
     private val scoringSet: ScoringSet
 ) {
     private val treeIdGenerators = ConcurrentHashMap<VJBase, IdGenerator>()

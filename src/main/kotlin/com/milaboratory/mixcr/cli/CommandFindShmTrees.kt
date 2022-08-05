@@ -31,6 +31,8 @@ import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.trees.VJBase
 import com.milaboratory.mixcr.trees.constructStateBuilder
+import com.milaboratory.mixcr.trees.forPrint
+import com.milaboratory.mixcr.trees.initialStep
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.flatMap
@@ -172,6 +174,9 @@ class CommandFindShmTrees : MiXCRCommand() {
         if (!outputTreesPath.endsWith(".$shmFileExtension")) {
             throwValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
         }
+        if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
+            throwValidationException("First step must be BuildingInitialTrees")
+        }
         if (buildFrom != null) {
             if (!buildFrom!!.endsWith(".tsv")) {
                 throwValidationException("--build-from must be .tsv, got $buildFrom")
@@ -267,7 +272,7 @@ class CommandFindShmTrees : MiXCRCommand() {
     ) {
         val cloneWrappersCount = cloneWrappersCount().toLong()
         val report = BuildSHMTreeReport()
-        val stepsCount = shmTreeBuilderParameters.stepsOrder.size + 1
+        val stepsCount = shmTreeBuilderParameters.steps.size
         var stepNumber = 1
         val stateBuilder = datasets.constructStateBuilder()
         //TODO sort and group one time and save to temp file
@@ -278,7 +283,7 @@ class CommandFindShmTrees : MiXCRCommand() {
                 cloneWrappersCount,
                 groupingCriteria
             )
-        var stepDescription = "Step $stepNumber/$stepsCount, ${BuildingInitialTrees.forPrint}"
+        var stepDescription = "Step $stepNumber/$stepsCount, ${shmTreeBuilderParameters.initialStep.forPrint}"
         SmartProgressReporter.startProgressReport(stepDescription, progressOfZeroStep)
         var currentStepDebug = createDebug(stepNumber)
         val relatedAllelesMutations = relatedAllelesMutations()
@@ -293,9 +298,9 @@ class CommandFindShmTrees : MiXCRCommand() {
         val clonesWasAddedOnInit = makeDecisions()
 
         //TODO check that all trees has minimum common mutations in VJ
-        report.onStepEnd(BuildingInitialTrees, clonesWasAddedOnInit, treesCount())
+        report.onStepEnd(shmTreeBuilderParameters.initialStep, clonesWasAddedOnInit, treesCount())
         var previousStepDebug = currentStepDebug
-        for (step in shmTreeBuilderParameters.stepsOrder) {
+        for (step in shmTreeBuilderParameters.steps) {
             stepNumber++
             currentStepDebug = createDebug(stepNumber)
             val treesCountBefore = treesCount()
@@ -335,7 +340,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             .flatMap { cluster -> getResult(cluster, previousStepDebug.treesAfterDecisionsWriter) }
 
         resultWriter(result)
-        for (i in 0..shmTreeBuilderParameters.stepsOrder.size) {
+        for (i in 0..shmTreeBuilderParameters.steps.size) {
             stepNumber = i + 1
             val treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX)
             val treesAfterDecisions = debugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
@@ -372,7 +377,7 @@ class CommandFindShmTrees : MiXCRCommand() {
         generateGlobalTreeIds: Boolean
     ) {
         var treeIdGenerator = 1
-        val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters, scoringSet)
+        val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters.topologyBuilder, scoringSet)
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
             shmTreesWriter.writeHeader(cloneReaders)
 

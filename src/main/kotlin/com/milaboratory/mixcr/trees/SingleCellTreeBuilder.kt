@@ -112,14 +112,16 @@ class SingleCellTreeBuilder(
                             )
                         })
                     }
-                    .mapInParallel(threads) { cluster ->
+                    .mapInParallel(threads) { clusterOfCells ->
                         //TODO build linked topology
                         //TODO what to do with the same clones that exists in several nodes because mutations was in other chain
                         listOf(
-                            cluster.map { it.heavy }.distinctBy { it.cloneWrapper.id },
-                            cluster.map { it.light }.distinctBy { it.cloneWrapper.id }
+                            clusterOfCells.map { it.heavy }.distinctBy { it.cloneWrapper.id },
+                            clusterOfCells.map { it.light }.distinctBy { it.cloneWrapper.id }
                         )
-                            .filter { it.size > 1 }
+                            .filter { cluster ->
+                                cluster.map { it.cloneWrapper.clone.targets.toList() }.distinct().size > 1
+                            }
                             .map { SHMTreeBuilder.buildATreeFromRoot(it) }
                     }
                     .flatten()

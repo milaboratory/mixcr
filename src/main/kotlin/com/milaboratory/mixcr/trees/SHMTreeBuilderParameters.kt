@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.trees
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.milaboratory.mixcr.util.ParametersPresets
 import com.milaboratory.primitivio.annotations.Serializable
 
@@ -29,59 +29,36 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
      */
     @param:JsonProperty("productiveOnly") val productiveOnly: Boolean,
     /**
-     * Clone will be accepted if distanceFromRoot / changeOfDistanceOnCloneAdd >= thresholdForFreeClones.
-     */
-    @param:JsonProperty("thresholdForFreeClones") val thresholdForFreeClones: Double,
-    /**
-     * Max penalty of NDN mutations per NDN length for pair for attaching on AttachClonesByDistanceChange step.
-     */
-    @param:JsonProperty("maxNDNDistanceForFreeClones") val maxNDNDistanceForFreeClones: Double,
-    /**
-     * Clone will be combined with a tree if penalty by letter on alignment of NDN on root will be less than this value.
-     */
-    @param:JsonProperty("thresholdForCombineByNDN") val thresholdForCombineByNDN: Double,
-    /**
-     * Trees will be combined if distance between roots will be less than this value.
-     */
-    @param:JsonProperty("thresholdForCombineTrees") val thresholdForCombineTrees: Double,
-    /**
-     * Count of clones nearest to the root that will be used to determinate borders of NDN region.
-     */
-    @param:JsonProperty("topToVoteOnNDNSize") val topToVoteOnNDNSize: Int,
-    /**
-     * Penalty that will be multiplied by reversed mutations count.
-     */
-    @param:JsonProperty("penaltyForReversedMutations") val penaltyForReversedMutations: Double,
-    /**
-     * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
-     */
-    @param:JsonProperty("countOfNodesToProbe") val countOfNodesToProbe: Int,
-    /**
-     * Multiplier of NDN score on calculating distance between clones in a tree.
-     */
-    @param:JsonProperty("NDNScoreMultiplier")
-    @get:JsonProperty("NDNScoreMultiplier")
-    val NDNScoreMultiplier: Double,
-    /**
-     * Algorithm for the zero step
-     */
-    @param:JsonProperty("initialClusterization") val initialClusterization: ClusterizationAlgorithm,
-    /**
      * Order of steps to postprocess trees.
      */
-    @param:JsonProperty("stepsOrder") val stepsOrder: List<BuildSHMTreeStep>,
-    @param:JsonProperty("NDNSizeLimitForPublicClones")
-    @get:JsonProperty("NDNSizeLimitForPublicClones")
-    val NDNSizeLimitForPublicClones: Int
+    @param:JsonProperty("steps") val steps: List<BuildSHMTreeStep>,
+    @param:JsonProperty("topologyBuilder") val topologyBuilder: TopologyBuilderParameters
 ) {
+
+    data class TopologyBuilderParameters @JsonCreator constructor(
+        /**
+         * Count of clones nearest to the root that will be used to determinate borders of NDN region.
+         */
+        @param:JsonProperty("topToVoteOnNDNSize") val topToVoteOnNDNSize: Int,
+        /**
+         * Penalty that will be multiplied by reversed mutations count.
+         */
+        @param:JsonProperty("penaltyForReversedMutations") val penaltyForReversedMutations: Double,
+        /**
+         * Count of the nearest nodes to added that will be proceeded to find optimal insertion.
+         */
+        @param:JsonProperty("countOfNodesToProbe") val countOfNodesToProbe: Int,
+        /**
+         * Multiplier of NDN score on calculating distance between clones in a tree.
+         */
+        @param:JsonProperty("NDNScoreMultiplier")
+        @get:JsonProperty("NDNScoreMultiplier")
+        val NDNScoreMultiplier: Double,
+    )
 
     @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         property = "type"
-    )
-    @JsonSubTypes(
-        JsonSubTypes.Type(ClusterizationAlgorithm.Hierarchical::class, name = "hierarchical"),
-        JsonSubTypes.Type(ClusterizationAlgorithm.BronKerbosch::class, name = "BronKerbosch")
     )
     sealed class ClusterizationAlgorithm(
         /**
@@ -93,11 +70,13 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
          */
         val maxNDNDistanceForClustering: Double
     ) {
+        @JsonTypeName("hierarchical")
         class Hierarchical @JsonCreator constructor(
             @JsonProperty("commonMutationsCountForClustering") commonMutationsCountForClustering: Int,
             @JsonProperty("maxNDNDistanceForClustering") maxNDNDistanceForClustering: Double
         ) : ClusterizationAlgorithm(commonMutationsCountForClustering, maxNDNDistanceForClustering)
 
+        @JsonTypeName("BronKerbosch")
         class BronKerbosch @JsonCreator constructor(
             @JsonProperty("commonMutationsCountForClustering") commonMutationsCountForClustering: Int,
             @JsonProperty("maxNDNDistanceForClustering") maxNDNDistanceForClustering: Double
@@ -107,10 +86,6 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
     @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         property = "type"
-    )
-    @JsonSubTypes(
-        JsonSubTypes.Type(ClusterizationAlgorithmForSingleCell.Hierarchical::class, name = "hierarchical"),
-        JsonSubTypes.Type(ClusterizationAlgorithmForSingleCell.BronKerbosch::class, name = "BronKerbosch")
     )
     sealed class ClusterizationAlgorithmForSingleCell(
         /**
@@ -122,11 +97,13 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
          */
         val maxNDNDistanceForLightChain: Double,
     ) {
+        @JsonTypeName("hierarchical")
         class Hierarchical @JsonCreator constructor(
             @JsonProperty("maxNDNDistanceForLightChain") maxNDNDistanceForLightChain: Double,
             @JsonProperty("maxNDNDistanceForHeavyChain") maxNDNDistanceForHeavyChain: Double
         ) : ClusterizationAlgorithmForSingleCell(maxNDNDistanceForHeavyChain, maxNDNDistanceForLightChain)
 
+        @JsonTypeName("BronKerbosch")
         class BronKerbosch @JsonCreator constructor(
             @JsonProperty("maxNDNDistanceForLightChain") maxNDNDistanceForLightChain: Double,
             @JsonProperty("maxNDNDistanceForHeavyChain") maxNDNDistanceForHeavyChain: Double
@@ -137,16 +114,14 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
         use = JsonTypeInfo.Id.NAME,
         property = "type"
     )
-    @JsonSubTypes(
-        JsonSubTypes.Type(SingleCell.NoOP::class, name = "no op"),
-        JsonSubTypes.Type(SingleCell.SimpleClustering::class, name = "simpleClustering")
-    )
     sealed class SingleCell {
+        @JsonTypeName("noop")
         class NoOP : SingleCell() {
             override fun equals(other: Any?): Boolean = other is NoOP
             override fun hashCode(): Int = 0
         }
 
+        @JsonTypeName("simpleClustering")
         data class SimpleClustering @JsonCreator constructor(
             @param:JsonProperty("algorithm") val algorithm: ClusterizationAlgorithmForSingleCell
         ) : SingleCell()
@@ -156,3 +131,65 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
         val presets = ParametersPresets<SHMTreeBuilderParameters>("shm_tree_parameters")
     }
 }
+
+val SHMTreeBuilderParameters.initialStep: BuildSHMTreeStep.BuildingInitialTrees
+    get() = steps.first() as BuildSHMTreeStep.BuildingInitialTrees
+
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    property = "name"
+)
+sealed class BuildSHMTreeStep {
+    /**
+     * @see SHMTreeBuilderBySteps.buildTreeTopParts
+     */
+    @JsonTypeName("BuildingInitialTrees")
+    class BuildingInitialTrees(
+        @param:JsonProperty("algorithm") val algorithm: SHMTreeBuilderParameters.ClusterizationAlgorithm
+    ) : BuildSHMTreeStep()
+
+    /**
+     * @see SHMTreeBuilderBySteps.attachClonesByDistanceChange
+     */
+    @JsonTypeName("AttachClonesByDistanceChange")
+    class AttachClonesByDistanceChange(
+        /**
+         * Clone will be accepted if distanceFromRoot / changeOfDistanceOnCloneAdd >= threshold.
+         */
+        @param:JsonProperty("threshold") val threshold: Double,
+        /**
+         * Max penalty of NDN mutations per NDN length for pair.
+         */
+        @param:JsonProperty("maxNDNDistance") val maxNDNDistance: Double,
+    ) : BuildSHMTreeStep()
+
+    /**
+     * @see SHMTreeBuilderBySteps.combineTrees
+     */
+    @JsonTypeName("CombineTrees")
+    class CombineTrees(
+        /**
+         * Trees will be combined if distance between roots will be less than this value.
+         */
+        @param:JsonProperty("maxNDNDistanceBetweenRoots") val maxNDNDistanceBetweenRoots: Double
+    ) : BuildSHMTreeStep()
+
+    /**
+     * @see SHMTreeBuilderBySteps.attachClonesByNDN
+     */
+    @JsonTypeName("AttachClonesByNDN")
+    class AttachClonesByNDN(
+        /**
+         * Clone will be combined with a tree if penalty by letter on alignment of NDN on root will be less than this value.
+         */
+        @param:JsonProperty("maxNDNDistance") val maxNDNDistance: Double
+    ) : BuildSHMTreeStep()
+}
+
+val BuildSHMTreeStep.forPrint: String
+    get() = when (this) {
+        is BuildSHMTreeStep.BuildingInitialTrees -> "Building initial trees"
+        is BuildSHMTreeStep.AttachClonesByDistanceChange -> "Attaching clones by distance change"
+        is BuildSHMTreeStep.CombineTrees -> "Combining trees"
+        is BuildSHMTreeStep.AttachClonesByNDN -> "Attaching clones by NDN"
+    }

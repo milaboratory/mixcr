@@ -34,7 +34,7 @@ import java.util.function.Supplier
 import kotlin.math.min
 
 internal class SHMTreeBuilderBySteps(
-    private val parameters: SHMTreeBuilderParameters,
+    private val initialStep: BuildingInitialTrees,
     private val scoringSet: ScoringSet,
     private val assemblingFeatures: Array<GeneFeature>,
     private val shmTreeBuilder: SHMTreeBuilder
@@ -50,32 +50,34 @@ internal class SHMTreeBuilderBySteps(
             .map { cloneWrapper -> cloneWrapper.rebaseFromGermline(assemblingFeatures) }
     }
 
-    private fun stepByName(stepName: BuildSHMTreeStep): Step = when (stepName) {
-        AttachClonesByDistanceChange -> object : Step {
+    private fun stepByName(stepParameters: BuildSHMTreeStep): Step = when (stepParameters) {
+        is AttachClonesByDistanceChange -> object : Step {
             override fun next(
                 originalTrees: List<TreeWithMetaBuilder>,
                 clonesNotInClusters: () -> Sequence<CloneWithMutationsFromVJGermline>
             ): StepResult = attachClonesByDistanceChange(
                 originalTrees,
-                clonesNotInClusters
+                clonesNotInClusters,
+                stepParameters
             )
         }
-        CombineTrees -> object : Step {
+        is CombineTrees -> object : Step {
             override fun next(
                 originalTrees: List<TreeWithMetaBuilder>,
                 clonesNotInClusters: () -> Sequence<CloneWithMutationsFromVJGermline>
-            ): StepResult = combineTrees(originalTrees)
+            ): StepResult = combineTrees(originalTrees, stepParameters)
         }
-        AttachClonesByNDN -> object : Step {
+        is AttachClonesByNDN -> object : Step {
             override fun next(
                 originalTrees: List<TreeWithMetaBuilder>,
                 clonesNotInClusters: () -> Sequence<CloneWithMutationsFromVJGermline>
             ): StepResult = attachClonesByNDN(
                 originalTrees,
-                clonesNotInClusters
+                clonesNotInClusters,
+                stepParameters
             )
         }
-        BuildingInitialTrees -> throw IllegalArgumentException()
+        is BuildingInitialTrees -> throw IllegalArgumentException()
     }
 
     /**
@@ -89,7 +91,7 @@ internal class SHMTreeBuilderBySteps(
         relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>,
         clones: List<CloneWrapper>
     ): StepResult {
-        val clusterizationAlgorithm = parameters.initialClusterization
+        val clusterizationAlgorithm = initialStep.algorithm
         //use only clones that are at long distance from any germline
         val clonesThatNotCloseToAnyGermline = clones.asSequence()
             .filter { !hasVJPairThatCloseToGermline(it, clusterizationAlgorithm.commonMutationsCountForClustering) }
@@ -179,7 +181,7 @@ internal class SHMTreeBuilderBySteps(
      * - Maybe we can calculate possibility of combined tree and use it as a metric.
      * - see NDNDistance
      */
-    private fun combineTrees(originalTrees: List<TreeWithMetaBuilder>): StepResult {
+    private fun combineTrees(originalTrees: List<TreeWithMetaBuilder>, parameters: CombineTrees): StepResult {
         val result = mutableListOf<TreeWithMetaBuilder>()
         val originalTreesCopy = originalTrees
             .sortedByDescending { it.clonesCount() }
@@ -196,7 +198,7 @@ internal class SHMTreeBuilderBySteps(
                 val distance_1 = shmTreeBuilder.distanceBetweenTrees(treeToAttach, treeToGrow)
                 val distance_2 = shmTreeBuilder.distanceBetweenTrees(treeToGrow, treeToAttach)
                 val metric = min(distance_1, distance_2)
-                if (metric <= parameters.thresholdForCombineTrees) {
+                if (metric <= parameters.maxNDNDistanceBetweenRoots) {
                     treeToGrow = shmTreeBuilder.buildATreeFromRoot(
                         listOf(treeToGrow, treeToAttach).flatMap { treeWithMetaBuilder ->
                             treeWithMetaBuilder.allNodes()
@@ -238,12 +240,13 @@ internal class SHMTreeBuilderBySteps(
      */
     private fun attachClonesByNDN(
         originalTrees: List<TreeWithMetaBuilder>,
-        clonesNotInClusters: Supplier<Sequence<CloneWithMutationsFromVJGermline>>
+        clonesNotInClusters: Supplier<Sequence<CloneWithMutationsFromVJGermline>>,
+        parameters: AttachClonesByNDN
     ): StepResult {
         val decisions = mutableMapOf<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>()
         val resultTrees = originalTrees.map { it.copy() }
         clonesNotInClusters.get()
-            .filter { clone -> clone.mutations.VJMutationsCount < parameters.initialClusterization.commonMutationsCountForClustering }
+            .filter { clone -> clone.mutations.VJMutationsCount < initialStep.algorithm.commonMutationsCountForClustering }
             .forEach { clone ->
                 //find a tree that closed to the clone by NDN of MRCA
                 val bestTreeToAttach = resultTrees
@@ -263,7 +266,7 @@ internal class SHMTreeBuilderBySteps(
                     .minByOrNull { it.first }
                 if (bestTreeToAttach != null) {
                     val metric = bestTreeToAttach.first
-                    if (metric <= parameters.thresholdForCombineByNDN) {
+                    if (metric <= parameters.maxNDNDistance) {
                         bestTreeToAttach.second()
                         decisions[clone.cloneWrapper.id] = MetricDecisionInfo(metric)
                     }
@@ -290,15 +293,16 @@ internal class SHMTreeBuilderBySteps(
      */
     private fun attachClonesByDistanceChange(
         originalTrees: List<TreeWithMetaBuilder>,
-        clonesNotInClustersSupplier: Supplier<Sequence<CloneWithMutationsFromVJGermline>>
+        clonesNotInClustersSupplier: () -> Sequence<CloneWithMutationsFromVJGermline>,
+        parameters: AttachClonesByDistanceChange
     ): StepResult {
         val result = originalTrees.map { it.copy() }
         val decisions = mutableMapOf<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>()
-        val clonesNotInClusters = clonesNotInClustersSupplier.get()
+        val clonesNotInClusters = clonesNotInClustersSupplier()
             .sortedByDescending { it.mutations.VJMutationsCount }
         //try to add clones as nodes, more mutated first, so we build a tree from top to bottom
         clonesNotInClusters.forEach { clone ->
-            if (clone.mutations.VJMutationsCount >= parameters.initialClusterization.commonMutationsCountForClustering) {
+            if (clone.mutations.VJMutationsCount >= initialStep.algorithm.commonMutationsCountForClustering) {
                 //choose tree that most suitable for the clone by topology
                 val bestActionAndDistanceFromRoot = result
                     .mapNotNull { treeWithMeta ->
@@ -311,7 +315,7 @@ internal class SHMTreeBuilderBySteps(
                         val NDNDistance = scoringSet.NDNDistance(NDNOfPossibleParent, NDNOfRebasedClone)
                         when {
                             //filter trees with too different NDN from the clone
-                            NDNDistance > parameters.maxNDNDistanceForFreeClones -> null
+                            NDNDistance > parameters.maxNDNDistance -> null
                             else -> bestAction to treeWithMeta.distanceFromRootToClone(rebasedClone)
                         }
                     }
@@ -320,7 +324,7 @@ internal class SHMTreeBuilderBySteps(
                     val bestAction = bestActionAndDistanceFromRoot.first
                     val distanceFromRoot = bestActionAndDistanceFromRoot.second
                     val metric = bestAction.changeOfDistance() / distanceFromRoot
-                    if (metric <= parameters.thresholdForFreeClones) {
+                    if (metric <= parameters.threshold) {
                         decisions[clone.cloneWrapper.id] = MetricDecisionInfo(metric)
                         bestAction.apply()
                     }
@@ -380,13 +384,9 @@ internal class SHMTreeBuilderBySteps(
             nodeContent.fromRootToThis.NDNMutations.buildSequence(tree.rootInfo),
             nodeContent.fromRootToThis,
             parentMutations,
-            metric,
-            isPublic(tree.rootInfo)
+            metric
         )
     }
-
-    private fun isPublic(rootInfo: RootInfo): Boolean =
-        rootInfo.reconstructedNDN.size() <= parameters.NDNSizeLimitForPublicClones
 
     fun debugInfos(currentTrees: List<TreeWithMetaBuilder>): List<DebugInfo> = currentTrees.flatMap { tree ->
         tree.allNodes()

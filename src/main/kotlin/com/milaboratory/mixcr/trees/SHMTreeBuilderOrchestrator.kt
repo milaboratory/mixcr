@@ -112,12 +112,12 @@ class SHMTreeBuilderOrchestrator(
     private var currentTrees = ConcurrentHashMap<VJBase, List<TreeWithMetaBuilder.Snapshot>>()
 
     private val SHMTreeBuilder = SHMTreeBuilder(
-        parameters,
+        parameters.topologyBuilder,
         scoringSet
     )
 
     private val SHMTreeBuilderBySteps = SHMTreeBuilderBySteps(
-        parameters,
+        parameters.initialStep,
         scoringSet,
         assemblingFeatures,
         SHMTreeBuilder

@@ -27,8 +27,7 @@ class DebugInfo(
     private val NDN: NucleotideSequence,
     private val mutationsFromRoot: MutationsSet,
     private val mutationsFromParent: MutationsSet?,
-    private val decisionMetric: Double?,
-    private val publicClone: Boolean
+    private val decisionMetric: Double?
 ) {
     companion object {
         var COLUMNS_FOR_XSV: Map<String, (DebugInfo) -> Any?> =
@@ -59,7 +58,6 @@ class DebugInfo(
                 .put("JMutationsFromParent") { it.mutationsFromParent?.mutations?.J?.combinedMutations()?.encode() }
                 .put("NDNMutationsFromParent") { it.mutationsFromParent?.NDNMutations?.mutations?.encode() }
                 .put("decisionMetric") { it.decisionMetric }
-                .put("publicClone") { it.publicClone }
                 .build()
 
         private fun encodeRange(range: Range): String = range.lower.toString() + "-" + range.upper

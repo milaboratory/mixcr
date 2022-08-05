@@ -1,5 +1,6 @@
 {
   "default": {
+    "productiveOnly": true,
     "singleCell": {
       "type": "simpleClustering",
       "algorithm": {
@@ -8,28 +9,47 @@
         "maxNDNDistanceForLightChain": 1.0
       }
     },
-    "productiveOnly": true,
-    "thresholdForCombineTrees": 0.5,
-    "thresholdForCombineByNDN": 1.5,
-    "thresholdForFreeClones": 0.45,
-    "maxNDNDistanceForFreeClones": 1.5,
-    "topToVoteOnNDNSize": 5,
-    "NDNScoreMultiplier": 2.5,
-    "NDNSizeLimitForPublicClones": 3,
-    "penaltyForReversedMutations": 10,
-    "countOfNodesToProbe": 3,
-    "initialClusterization": {
-      "type": "BronKerbosch",
-      "commonMutationsCountForClustering": 5,
-      "maxNDNDistanceForClustering": 1.5
+    "topologyBuilder": {
+      "topToVoteOnNDNSize": 5,
+      "NDNScoreMultiplier": 2.5,
+      "penaltyForReversedMutations": 10,
+      "countOfNodesToProbe": 3
     },
-    "stepsOrder": [
-      "AttachClonesByDistanceChange",
-      "CombineTrees",
-      "AttachClonesByNDN",
-      "AttachClonesByDistanceChange",
-      "CombineTrees",
-      "AttachClonesByNDN"
+    "steps": [
+      {
+        "name": "BuildingInitialTrees",
+        "algorithm": {
+          "type": "BronKerbosch",
+          "commonMutationsCountForClustering": 5,
+          "maxNDNDistanceForClustering": 1.5
+        }
+      },
+      {
+        "name": "AttachClonesByDistanceChange",
+        "threshold": 0.45,
+        "maxNDNDistance": 1.5
+      },
+      {
+        "name": "CombineTrees",
+        "maxNDNDistanceBetweenRoots": 0.5
+      },
+      {
+        "name": "AttachClonesByNDN",
+        "maxNDNDistance": 1.5
+      },
+      {
+        "name": "AttachClonesByDistanceChange",
+        "threshold": 0.45,
+        "maxNDNDistance": 1.5
+      },
+      {
+        "name": "CombineTrees",
+        "maxNDNDistanceBetweenRoots": 0.5
+      },
+      {
+        "name": "AttachClonesByNDN",
+        "maxNDNDistance": 1.5
+      }
     ]
   }
 }

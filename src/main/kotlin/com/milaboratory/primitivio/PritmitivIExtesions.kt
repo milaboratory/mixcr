@@ -18,7 +18,6 @@ import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.util.FlatteningOutputPort
 import cc.redberry.pipe.util.TBranchOutputPort
-import com.milaboratory.mixcr.util.OutputPortWithProgress
 import com.milaboratory.primitivio.blocks.PrimitivIBlocks
 import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks
@@ -46,11 +45,6 @@ fun <T : Any> PrimitivO.writeArray(array: Array<T>) {
 inline fun <reified T : Any> PrimitivI.readArray(): Array<T> = Array(readInt()) {
     readObject(T::class.java)
 }
-
-inline fun <reified T : Any, R> OutputPortCloseable<T>.withProgress(
-    expectedSize: Long,
-    block: (OutputPortWithProgress<T>) -> R
-): R = OutputPortWithProgress.wrap(expectedSize, this).use(block)
 
 fun <T : Any, R : Any> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
 

@@ -27,6 +27,7 @@ import com.milaboratory.mixcr.trees.BuildSHMTreeStep
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.CombineTrees
 import com.milaboratory.mixcr.trees.DebugInfo
+import com.milaboratory.mixcr.trees.forPrint
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportHelper
 import jetbrains.letsPlot.geom.geomBar
@@ -56,13 +57,9 @@ class BuildSHMTreeReport : MiXCRReport {
     fun addStatsForStep(stepIndex: Int, treesBeforeDecisions: File, treesAfterDecisions: File) {
         val debugInfosBefore = XSV.readXSV(treesBeforeDecisions, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
         val debugInfosAfter = XSV.readXSV(treesAfterDecisions, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
-        stepResults[stepIndex].statsOfNotPublic = calculateStatsFromDebug(
-            debugInfosBefore.filterNot { it["publicClone"]!!.toBooleanStrict() },
-            debugInfosAfter.filterNot { it["publicClone"]!!.toBooleanStrict() }
-        )
-        stepResults[stepIndex].statsOfPublic = calculateStatsFromDebug(
-            debugInfosBefore.filter { it["publicClone"]!!.toBooleanStrict() },
-            debugInfosAfter.filter { it["publicClone"]!!.toBooleanStrict() }
+        stepResults[stepIndex].stats = calculateStatsFromDebug(
+            debugInfosBefore,
+            debugInfosAfter
         )
     }
 
@@ -137,7 +134,6 @@ class BuildSHMTreeReport : MiXCRReport {
     }
 
     fun writePdfReport(output: Path) {
-        val pages = mutableListOf<ByteArray>()
         val commonPageDescriptions = listOf(
             PageDescription(
                 "Common VJ mutations counts",
@@ -156,14 +152,14 @@ class BuildSHMTreeReport : MiXCRReport {
                 { NDNsWildcardsScoreForRoots }
             ) { plot ->
                 plot + ggsize(500, 250) + geomHistogram() +
-                    geomVLine(xintercept = averageNDNWildcardsScore, color = "green")
+                        geomVLine(xintercept = averageNDNWildcardsScore, color = "green")
             },
             PageDescription(
                 "Max NDNs wildcards score in a tree",
                 { maxNDNsWildcardsScoreInTree }
             ) { plot ->
                 plot + ggsize(500, 250) + geomHistogram() +
-                    geomVLine(xintercept = averageNDNWildcardsScore, color = "green")
+                        geomVLine(xintercept = averageNDNWildcardsScore, color = "green")
             }
         )
         val pageDescriptionsForNotPublic = commonPageDescriptions + PageDescription(
@@ -171,31 +167,28 @@ class BuildSHMTreeReport : MiXCRReport {
             { minMutationsRateDifferences }
         ) { plot ->
             plot + ggsize(500, 250) + geomHistogram() +
-                geomVLine(xintercept = averageMutationsRateDifference, color = "green")
-        } +
-            PageDescription(
-                "Max mutations rate differences",
-                { maxMutationsRateDifferences }
-            ) { plot ->
-                plot + ggsize(500, 250) + geomHistogram() +
                     geomVLine(xintercept = averageMutationsRateDifference, color = "green")
-            }
-        pages += printPages(pageDescriptionsForNotPublic, "Trees without public clones") { statsOfNotPublic }
-        pages += printPages(commonPageDescriptions, "Trees with public clones") { statsOfPublic }
-
-        writePDF(output, pages)
+        } +
+                PageDescription(
+                    "Max mutations rate differences",
+                    { maxMutationsRateDifferences }
+                ) { plot ->
+                    plot + ggsize(500, 250) + geomHistogram() +
+                            geomVLine(xintercept = averageMutationsRateDifference, color = "green")
+                }
+        writePDF(output, pageDescriptionsForNotPublic.printPages())
     }
 
     override fun writeReport(helper: ReportHelper) {
         for (i in stepResults.indices) {
             val stepResult = stepResults[i]
             helper.writeField("step ${i + 1}", stepResult.step.forPrint)
-            if (stepResult.step != CombineTrees) {
+            if (stepResult.step is CombineTrees) {
                 helper.writeField("Clones was added", stepResult.clonesWasAdded)
             }
-            if (stepResult.step == BuildingInitialTrees) {
+            if (stepResult.step is BuildingInitialTrees) {
                 helper.writeField("Trees created", stepResult.treesCountDelta)
-            } else if (stepResult.step == CombineTrees) {
+            } else if (stepResult.step !is CombineTrees) {
                 helper.writeField("Trees combined", -stepResult.treesCountDelta)
             }
         }
@@ -203,40 +196,33 @@ class BuildSHMTreeReport : MiXCRReport {
         helper.writeField("Total clones count in trees", stepResults.sumOf { it.clonesWasAdded })
     }
 
-    private fun printPages(
-        pageDescriptionsForNotPublic: List<PageDescription>,
-        pagesGroupTitle: String,
-        statsSupplier: StepResult.() -> StepResult.Stats
-    ): List<ByteArray> = pageDescriptionsForNotPublic.mapIndexed { pageNum, (title, field, plotBuilder) ->
-        val bs = ByteArrayOutputStream()
-        val pdfDoc = PdfDocument(PdfWriter(bs))
+    private fun List<PageDescription>.printPages(): List<ByteArray> =
+        map { (title, field, plotBuilder) ->
+            val bs = ByteArrayOutputStream()
+            val pdfDoc = PdfDocument(PdfWriter(bs))
 
-        Document(pdfDoc).use { document ->
-            if (pageNum == 0) {
-                document.add(Paragraph(pagesGroupTitle))
-            }
-            document.add(Paragraph(title))
+            Document(pdfDoc).use { document ->
+                document.add(Paragraph(title))
 
-            for (i in stepResults.indices) {
-                val stepResult = stepResults[i]
-                val stepDescription = "Step ${i + 1}: ${stepResult.step.forPrint}"
-                val stats = statsSupplier(stepResult)
-                val content = field(stats)
-                if (content.isEmpty()) {
-                    continue
+                for (i in stepResults.indices) {
+                    val stepResult = stepResults[i]
+                    val stepDescription = "Step ${i + 1}: ${stepResult.step.forPrint}"
+                    val content = field(stepResult.stats)
+                    if (content.isEmpty()) {
+                        continue
+                    }
+                    val data = mapOf(
+                        stepDescription to content
+                    )
+                    val plot = letsPlot(data) {
+                        x = stepDescription
+                    }
+                    val svg = plotBuilder(stepResult.stats, plot).toSvg()
+                    document.add(SvgConverter.convertToImage(ByteArrayInputStream(svg.toByteArray()), pdfDoc))
                 }
-                val data = mapOf(
-                    stepDescription to content
-                )
-                val plot = letsPlot(data) {
-                    x = stepDescription
-                }
-                val svg = plotBuilder(stats, plot).toSvg()
-                document.add(SvgConverter.convertToImage(ByteArrayInputStream(svg.toByteArray()), pdfDoc))
             }
+            bs.toByteArray()
         }
-        bs.toByteArray()
-    }
 
     data class PageDescription(
         val title: String,
@@ -250,8 +236,7 @@ class BuildSHMTreeReport : MiXCRReport {
         @get:JsonProperty("treesCountDelta") val treesCountDelta: Int
     ) {
         @get:JsonProperty("stats")
-        lateinit var statsOfNotPublic: Stats
-        lateinit var statsOfPublic: Stats
+        lateinit var stats: Stats
 
         class Stats(
             @get:JsonProperty("commonVJMutationsCounts") val commonVJMutationsCounts: List<Int>,
