@@ -82,9 +82,11 @@ class TreeWithMetaBuilder(
     fun bestAction(rebasedClone: CloneWithMutationsFromReconstructedRoot): TreeBuilderByAncestors.Action<SyntheticNode> {
         val bestAction = treeBuilder.bestActionForObserved(rebasedClone)
         return object : TreeBuilderByAncestors.Action<SyntheticNode>() {
-            override fun changeOfDistance(): Double = bestAction.changeOfDistance()
+            override val changeOfDistance: Double
+                get() = bestAction.changeOfDistance
 
-            override fun distanceFromObserved(): Double = bestAction.distanceFromObserved()
+            override val distanceFromObserved: Double
+                get() = bestAction.distanceFromObserved
 
             override fun apply() {
                 bestAction.apply()

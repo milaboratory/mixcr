@@ -285,13 +285,15 @@ class CommandFindAlleles : MiXCRCommand() {
         val totalClonesCount = allelesBuilder.count()
         val stateBuilder = allelesBuilder.datasets.constructStateBuilder()
 
+        //assumption: there are no allele genes in library
+        //TODO how to check assumption?
         val (clustersWithTheSameV, progressOfV) = allelesBuilder.unsortedClones().groupByWithProgress(
             stateBuilder,
-            tempDest.addSuffix("alleles.searcher.${geneType.name[0]}"),
+            tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}"),
             totalClonesCount,
             GroupingCriteria.groupBy { it.getBestHit(geneType).gene }
         )
-        SmartProgressReporter.startProgressReport("Searching for ${geneType.name[0]} alleles", progressOfV)
+        SmartProgressReporter.startProgressReport("Searching for ${geneType.letter} alleles", progressOfV)
         return allelesBuilder.buildAlleles(clustersWithTheSameV, geneType)
     }
 
@@ -407,9 +409,9 @@ class CommandFindAlleles : MiXCRCommand() {
     }
 
     private fun AllelesBuilder.buildAlleles(
-        clusters: OutputPort<List<Clone>>,
+        clustersWithTheSameGene: OutputPort<List<Clone>>,
         geneType: GeneType
-    ): OutputPort<Pair<String, List<VDJCGeneData>>> = clusters.mapInParallel(threads) { cluster ->
+    ): OutputPort<Pair<String, List<VDJCGeneData>>> = clustersWithTheSameGene.mapInParallel(threads) { cluster ->
         val geneId = cluster[0].getBestHit(geneType).gene.name
         val resultGenes = allelesGeneData(cluster, geneType)
         geneId to resultGenes
@@ -443,6 +445,7 @@ private class CloneRebuild(
         alignerParameters.featuresToAlignMap
     )
 
+    //TODO move this logic to contig command
     /**
      * Every clone will be assembled by assemblingFeatures.
      * For every clone will be added hits aligned to found alleles.
@@ -453,6 +456,7 @@ private class CloneRebuild(
         val remappedClones = input
             //map only clones that fully covered by geneFeatureToSearch
             .filter { clone ->
+                //TODO remove other hits
                 clone.getHits(Variable).any { hit -> hit.alignmentsCover(geneFeatureToMatch) } &&
                         clone.getHits(Joining).any { hit -> hit.alignmentsCover(geneFeatureToMatch) }
             }
@@ -475,10 +479,13 @@ private class CloneRebuild(
             }
             .toList()
         return remappedClones
+            //TODO add V and J names of best hits
+            //TODO use meta split by V, split by J
             .groupBy { clone -> clone.targets.map { it.sequence } to clone.getBestHit(Constant)?.gene?.id }
             .values
             .map { clones ->
                 clones.reduce { a, b ->
+                    //TODO choose base by max count
                     Clone(
                         a.targets,
                         a.hits,
@@ -500,10 +507,12 @@ private class CloneRebuild(
                 GeneAndScore(mappedGeneId, hit.score)
             }
         }
+        //add hits with alleles and add delta score
         for (gt in VJ_REFERENCE) {
             originalGeneScores[gt] = getHits(gt).flatMap { hit ->
                 allelesMapping[hit.gene.name]!!.map { foundAlleleId ->
                     if (foundAlleleId.name != hit.gene.name) {
+                        //TODO use only one allele if they are too different (use relative min score from assemble parameters)
                         val scoreDelta = scoreDelta(
                             resultLibrary[foundAlleleId.name],
                             cloneFactory.parameters.getVJCParameters(gt).scoring,

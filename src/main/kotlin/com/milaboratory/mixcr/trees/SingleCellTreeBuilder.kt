@@ -99,7 +99,7 @@ class SingleCellTreeBuilder(
                     is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.BronKerbosch ->
                         ClustersBuilder.BronKerbosch(clusterPredictor)
                     is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.Hierarchical ->
-                        ClustersBuilder.Hierarchical(clusterPredictor) { datasetId }
+                        ClustersBuilder.Hierarchical(clusterPredictor)
                 }
                 cache()
                     //read clones with barcodes and group them accordingly to decisions

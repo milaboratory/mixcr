@@ -30,7 +30,5 @@ data class VJPair<T>(
         J = function(J),
     )
 
-    override fun toString(): String {
-        return "(V=$V, J=$J)"
-    }
+    override fun toString(): String = "(V=$V, J=$J)"
 }

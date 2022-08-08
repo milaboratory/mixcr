@@ -44,7 +44,6 @@ class TIgGERAllelesSearcher(
         }
 
         val foundAlleles = chooseAndGroupMutationsByAlleles(possibleAlleleMutations.toSet(), clones)
-        //TODO add mutations that exists in all clones of allele
         val withZeroAllele = addZeroAlleleIfNeeded(foundAlleles, clones)
         val enriched = enrichAllelesWithMutationsThatExistsInAlmostAllClones(withZeroAllele, clones)
         return enriched.map { AllelesSearcher.Result(it) }
@@ -153,7 +152,11 @@ class TIgGERAllelesSearcher(
         countByMutationsCount: Map<Int, Int>
     ): Boolean {
         val countByMutationsCountWithTheMutation =
-            clones.filter { clone -> clone.mutations.asSequence().any { it == mutation } }
+            clones
+                .filter { clone ->
+                    //TODO try to replace with binary search
+                    clone.mutations.asSequence().any { it == mutation }
+                }
                 .groupingBy { it.mutations.size() }.eachCount()
         val mutationCountWithMaxClonesCount = countByMutationsCountWithTheMutation.entries
             .maxByOrNull { it.value }!!
@@ -171,7 +174,7 @@ class TIgGERAllelesSearcher(
         val y = DoubleArray(xPoints.size)
         xPoints.forEachIndexed { i, x ->
             val result = (countByMutationsCountWithTheMutation[x] ?: 0) /
-                (countByMutationsCount[x]?.toDouble() ?: 1.0)
+                    (countByMutationsCount[x]?.toDouble() ?: 1.0)
             regression.addData(x.toDouble(), result)
             y[i] = result
         }
@@ -203,6 +206,7 @@ class TIgGERAllelesSearcher(
             subsetOfAlleleMutations to clone
         }
             .groupBy({ it.first }) { it.second }
+            //TODO plus diversity of all clones that include this subset and more
             .mapValues { it.value.diversity() }
             .filterValues { it >= parameters.minDiversityForAllele }
         return when {

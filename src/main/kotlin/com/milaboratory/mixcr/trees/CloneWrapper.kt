@@ -34,15 +34,9 @@ import io.repseq.core.ReferencePoints
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import java.util.*
-import kotlin.collections.List
-import kotlin.collections.emptyList
-import kotlin.collections.first
-import kotlin.collections.indices
 import kotlin.collections.set
 
-/**
- *
- */
+//TODO group by the same target
 @Serializable(by = CloneWrapper.SerializerImpl::class)
 class CloneWrapper(
     /**

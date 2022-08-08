@@ -26,10 +26,14 @@ import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.flatten
-import io.repseq.core.*
+import io.repseq.core.BaseSequence
+import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
+import io.repseq.core.ReferencePoint
+import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
 import java.util.*
 import kotlin.collections.set
@@ -60,12 +64,13 @@ class AllelesBuilder(
     private fun findAlleles(clusterByTheSameGene: List<Clone>, geneType: GeneType): List<Allele> {
         require(clusterByTheSameGene.isNotEmpty())
         val bestHit = clusterByTheSameGene[0].getBestHit(geneType)
+        //TODO remove after moving cut logic to contig (left filter of CDR3 mutations)
         val partitioning = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
         val rangesToMatch = partitioning.getRanges(geneFeatureToMatch[geneType])
 
-        val complimentaryGene = complimentaryGene(geneType)
+        val complimentaryGeneType = complimentaryGeneType(geneType)
         val cloneDescriptors = clusterByTheSameGene.asSequence()
-            //TODO add to report count of not matched clones
+            //TODO remove after moving cut logic to contig
             .filter { clone ->
                 clone.getBestHit(geneType).alignmentsCover(rangesToMatch)
             }
@@ -80,7 +85,7 @@ class AllelesBuilder(
                         }
                         .asMutations(NucleotideSequence.ALPHABET),
                     clone.ntLengthOf(CDR3),
-                    clone.getBestHit(complimentaryGene).gene.geneName
+                    clone.getBestHit(complimentaryGeneType).gene.geneName
                 )
             }
             .toList()
@@ -115,7 +120,7 @@ class AllelesBuilder(
             }
     }
 
-    private fun complimentaryGene(geneType: GeneType): GeneType = when (geneType) {
+    private fun complimentaryGeneType(geneType: GeneType): GeneType = when (geneType) {
         Variable -> Joining
         Joining -> Variable
         else -> throw IllegalArgumentException()

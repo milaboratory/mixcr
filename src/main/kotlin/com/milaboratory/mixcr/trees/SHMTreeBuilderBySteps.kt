@@ -111,16 +111,16 @@ internal class SHMTreeBuilderBySteps(
             is SHMTreeBuilderParameters.ClusterizationAlgorithm.BronKerbosch ->
                 ClustersBuilder.BronKerbosch(clusterPredictor)
             is SHMTreeBuilderParameters.ClusterizationAlgorithm.Hierarchical ->
-                ClustersBuilder.Hierarchical(clusterPredictor) { cloneWrapper.id.datasetId }
+                ClustersBuilder.Hierarchical(clusterPredictor)
         }
         val clusters = clustersBuilder.buildClusters(rebasedClones)
         val result = clusters
             .asSequence()
             .filter { it.size > 1 }
-            .filter {
+            .filter { cluster ->
                 //skip cluster if it formed by the same clones but with different C or from different samples
-                val toCompare = it.first()
-                it.subList(1, it.size).any { clone ->
+                val toCompare = cluster.first()
+                cluster.subList(1, cluster.size).any { clone ->
                     !Arrays.equals(clone.cloneWrapper.clone.targets, toCompare.cloneWrapper.clone.targets)
                 }
             }
@@ -186,7 +186,8 @@ internal class SHMTreeBuilderBySteps(
         val originalTreesCopy = originalTrees
             .sortedByDescending { it.clonesCount() }
             .toMutableList()
-        //trying to grow the biggest trees first
+        //TODO sort by entropy in NDN sequence (or calculate it by pairs with broad NDN and sort pairs)
+        //trying to grow the biggest trees first, because we know more about NDN sequence
         while (originalTreesCopy.isNotEmpty()) {
             var treeToGrow = originalTreesCopy[0]
             originalTreesCopy.removeAt(0)
@@ -319,11 +320,11 @@ internal class SHMTreeBuilderBySteps(
                             else -> bestAction to treeWithMeta.distanceFromRootToClone(rebasedClone)
                         }
                     }
-                    .minByOrNull { p -> p.first.changeOfDistance() }
+                    .minByOrNull { p -> p.first.changeOfDistance }
                 if (bestActionAndDistanceFromRoot != null) {
                     val bestAction = bestActionAndDistanceFromRoot.first
                     val distanceFromRoot = bestActionAndDistanceFromRoot.second
-                    val metric = bestAction.changeOfDistance() / distanceFromRoot
+                    val metric = bestAction.changeOfDistance / distanceFromRoot
                     if (metric <= parameters.threshold) {
                         decisions[clone.cloneWrapper.id] = MetricDecisionInfo(metric)
                         bestAction.apply()

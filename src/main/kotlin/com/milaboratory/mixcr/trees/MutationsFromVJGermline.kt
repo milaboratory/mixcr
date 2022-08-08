@@ -20,12 +20,14 @@ import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
+//TODO rework model that there is no need of explicit NDN range
 @Suppress("PropertyName")
 class MutationsFromVJGermline(
     /**
      * Mutations outside of CDR3
      */
     val mutations: VJPair<SortedMap<GeneFeature, Mutations<NucleotideSequence>>>,
+    //TODO remove
     /**
      * Already known from alignments V and J mutations within CDR3 feature
      */

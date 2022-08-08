@@ -116,26 +116,29 @@ internal object MutationsUtils {
         val alSize = alphabet.size()
         require(matrix.size == alSize * alSize) { "Wrong matrix size." }
 
+        //TODO add comments
         //TODO remove excludeSet from milib
-        for (wc1 in alphabet.allWildcards) for (wc2 in alphabet.allWildcards) {
-            if (wc1.isBasic && wc2.isBasic) continue
-            var sumScore = 0
-            for (i in 0 until wc1.basicSize()) {
-                sumScore += if (wc2.matches(wc1.getMatchingCode(i))) {
-                    match
-                } else {
-                    mismatch
+        for (wc1 in alphabet.allWildcards) {
+            for (wc2 in alphabet.allWildcards) {
+                if (wc1.isBasic && wc2.isBasic) continue
+                var sumScore = 0
+                for (i in 0 until wc1.basicSize()) {
+                    sumScore += if (wc2.matches(wc1.getMatchingCode(i))) {
+                        match
+                    } else {
+                        mismatch
+                    }
                 }
-            }
-            for (i in 0 until wc2.basicSize()) {
-                sumScore += if (wc1.matches(wc2.getMatchingCode(i))) {
-                    match * multiplierOfAsymmetry
-                } else {
-                    mismatch * multiplierOfAsymmetry
+                for (i in 0 until wc2.basicSize()) {
+                    sumScore += if (wc1.matches(wc2.getMatchingCode(i))) {
+                        match * multiplierOfAsymmetry
+                    } else {
+                        mismatch * multiplierOfAsymmetry
+                    }
                 }
+                sumScore /= wc1.basicSize() + wc2.basicSize() * multiplierOfAsymmetry
+                matrix[wc1.code + wc2.code * alSize] = sumScore
             }
-            sumScore /= wc1.basicSize() + wc2.basicSize() * multiplierOfAsymmetry
-            matrix[wc1.code + wc2.code * alSize] = sumScore
         }
         return matrix
     }

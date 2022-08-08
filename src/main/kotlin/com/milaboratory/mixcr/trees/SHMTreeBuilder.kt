@@ -82,6 +82,7 @@ class SHMTreeBuilder(
         destination: TreeWithMetaBuilder
     ): Double {
         val clonesRebase = ClonesRebase(from.rootInfo.sequence1, scoringSet)
+        //TODO use not only MRCA, but bottom of the tree
         val oldestAncestorOfFrom = from.mostRecentCommonAncestor()
         val oldestAncestorOfDestination = destination.mostRecentCommonAncestor()
         val destinationRebasedOnFrom = clonesRebase.rebaseMutations(
@@ -208,9 +209,9 @@ class SHMTreeBuilder(
             mutationsBetween = { first, second ->
                 mutationsBetween(rootInfo, first.fromRootToThis, second.fromRootToThis)
             },
-            mutate = { parent, fromParentToThis -> parent.mutate(fromParentToThis) },
+            mutate = SyntheticNode::mutate,
             asAncestor = { observed -> SyntheticNode(observed.mutationsSet) },
-            findCommonMutations = { first, second -> commonMutations(first, second) },
+            findCommonMutations = ::commonMutations,
             postprocessDescendants = { parent, child ->
                 SyntheticNode(
                     child.fromRootToThis.copy(

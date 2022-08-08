@@ -32,7 +32,6 @@ sealed class ClustersBuilder<T : Any> {
     interface ClusterPredictor<T> {
         fun prefer(first: T, second: T): Boolean
         fun fromTheSameCluster(first: T, second: T): Boolean
-        fun fromTheSameCluster(first: Collection<T>, second: Collection<T>): Boolean
         fun fromTheSameCluster(cluster: Collection<T>, toCompare: T): Boolean
     }
 
@@ -55,25 +54,6 @@ sealed class ClustersBuilder<T : Any> {
             NDNRangeForHeavy = mergedNDNRange(first.heavy, second.heavy),
             NDNRangeForLight = mergedNDNRange(first.light, second.light)
         )
-
-        override fun fromTheSameCluster(
-            first: Collection<ChainPairRebasedFromGermline>,
-            second: Collection<ChainPairRebasedFromGermline>
-        ): Boolean {
-            val NDNRangeForHeavy = mergeNDNRanges(
-                first.map { it.heavy }.mostPossibleNDNRange(),
-                second.map { it.heavy }.mostPossibleNDNRange()
-            )
-            val NDNRangeForLight = mergeNDNRanges(
-                first.map { it.light }.mostPossibleNDNRange(),
-                second.map { it.light }.mostPossibleNDNRange()
-            )
-            return first.any { cloneInCluster ->
-                second.any { nextClone ->
-                    fromTheSameCluster(nextClone, cloneInCluster, NDNRangeForHeavy, NDNRangeForLight)
-                }
-            }
-        }
 
         override fun fromTheSameCluster(
             cluster: Collection<ChainPairRebasedFromGermline>,
@@ -136,18 +116,6 @@ sealed class ClustersBuilder<T : Any> {
             first: CloneWithMutationsFromVJGermline,
             second: CloneWithMutationsFromVJGermline
         ): Boolean = fromTheSameCluster(first, second, mergedNDNRange(first, second))
-
-        override fun fromTheSameCluster(
-            first: Collection<CloneWithMutationsFromVJGermline>,
-            second: Collection<CloneWithMutationsFromVJGermline>
-        ): Boolean {
-            val NDNRange = mergeNDNRanges(first.mostPossibleNDNRange(), second.mostPossibleNDNRange())
-            return first.any { cloneInCluster ->
-                second.any { nextClone ->
-                    fromTheSameCluster(nextClone, cloneInCluster, NDNRange)
-                }
-            }
-        }
 
         override fun fromTheSameCluster(
             cluster: Collection<CloneWithMutationsFromVJGermline>,
@@ -237,7 +205,6 @@ sealed class ClustersBuilder<T : Any> {
          * - Threshold of NDNDistance may be function of count of the same mutations in a pair and count of different synonymic mutations.
          */
         override fun buildClusters(original: List<T>): List<List<T>> {
-            //TODO process different files separately
             return clusterByCommonMutationsAndNDNDistance(original)
         }
 
@@ -267,8 +234,7 @@ sealed class ClustersBuilder<T : Any> {
     }
 
     class Hierarchical<T : Any>(
-        private val clusterPredictor: ClusterPredictor<T>,
-        private val datasetId: T.() -> Int
+        private val clusterPredictor: ClusterPredictor<T>
     ) : ClustersBuilder<T>() {
         /**
          * Contract: clones have min parameters.commonMutationsCountForClustering mutations from any germline
@@ -289,63 +255,13 @@ sealed class ClustersBuilder<T : Any> {
          * If it calculated from samples, then it will include impact both of hotspots and pressure of selection.
          * - Threshold of NDNDistance may be function of count of the same mutations in a pair and count of different synonymic mutations.
          */
-        override fun buildClusters(original: List<T>): List<List<T>> {
-            val clonesFromDifferentFiles = original.groupBy { it.datasetId() }
-                .mapValues { it.value.toMutableList() }
-            return if (clonesFromDifferentFiles.size == 1) {
-                hierarchicalClustering(original)
-            } else {
-                //find clusters from each file separately
-                val foundClusters = clonesFromDifferentFiles
-                    .entries
-                    //process small one first. It may reduce big files before processing
-                    .sortedBy { it.value.size }
-                    .flatMap { (datasetId, clonesFromAFile) ->
-                        val foundClusters = hierarchicalClustering(clonesFromAFile)
-                            .map { it.toMutableList() }
-                        //search for clones from other files that can be attached to found clusters
-                        foundClusters.forEach { foundCluster ->
-                            clonesFromDifferentFiles
-                                .filterKeys { it != datasetId }
-                                .values
-                                .forEach { clonesFromOtherFile ->
-                                    val clonesToAttach = clonesFromOtherFile
-                                        .filter { nextClone ->
-                                            clusterPredictor.fromTheSameCluster(foundCluster, nextClone)
-                                        }
-                                    //remove found clones from file (will not be processed)
-                                    clonesFromOtherFile.removeAll(clonesToAttach)
-                                    foundCluster.addAll(clonesToAttach)
-                                }
-                        }
-                        foundClusters
-                    }
-                //try to merge found clusters
-                tryToMergeClusters(foundClusters)
-            }
-        }
-
-        private fun tryToMergeClusters(
-            original: List<List<T>>
-        ): List<List<T>> {
-            val result = mutableListOf<MutableList<T>>()
-            for (nextCluster in original) {
-                val clusterToGrow = result.firstOrNull { existedCluster ->
-                    clusterPredictor.fromTheSameCluster(existedCluster, nextCluster)
-                }
-                if (clusterToGrow != null) {
-                    clusterToGrow += nextCluster
-                } else {
-                    result += nextCluster.toMutableList()
-                }
-            }
-            return result
-        }
+        override fun buildClusters(original: List<T>): List<List<T>> = hierarchicalClustering(original)
 
         private fun hierarchicalClustering(
             clones: List<T>
         ): List<List<T>> {
             val result = mutableListOf<MutableList<T>>()
+            //TODO just repeat the process instead of search of clusters
             //cluster only preferable clones
             clones.forEach { nextClone ->
                 val clusterToGrow = result
@@ -354,6 +270,7 @@ sealed class ClustersBuilder<T : Any> {
                             clusterPredictor.prefer(nextClone, cloneInCluster)
                         }
                     }
+                    //TODO merge all, not with only first
                     .firstOrNull { existedCluster ->
                         clusterPredictor.fromTheSameCluster(existedCluster, nextClone)
                     }
@@ -369,6 +286,7 @@ sealed class ClustersBuilder<T : Any> {
             //cluster clones that was left
             clonesThatWasNotClusteredInFirstTry.forEach { nextClone ->
                 val clusterToGrow = result
+                    //TODO merge all, not with only first
                     .firstOrNull { existedCluster ->
                         clusterPredictor.fromTheSameCluster(existedCluster, nextClone)
                     }

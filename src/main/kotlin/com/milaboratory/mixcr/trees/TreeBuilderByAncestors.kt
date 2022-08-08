@@ -12,15 +12,15 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.mixcr.trees.Tree.NodeLink
-import java.util.*
 
+//TODO why abstraction
 class TreeBuilderByAncestors<T, E, M> private constructor(
     private val distance: (E, M) -> Double,
     private val asAncestor: (T) -> E,
     private val mutationsBetween: (E, E) -> M,
     private val mutate: (E, M) -> E,
     private val findCommonMutations: (M, M) -> M,
-    private val postprocessDescendants: (E, E) -> E,
+    private val postprocessDescendants: (parent: E, child: E) -> E,
     val tree: Tree<ObservedOrReconstructed<T, E>>,
     private val countOfNodesToProbe: Int,
     private var counter: Int
@@ -95,18 +95,22 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
      */
     private fun bestAction(
         addedAsAncestor: E,
+        //TODO inline
         nodeGenerator: (Double) -> Tree.Node<ObservedOrReconstructed<T, E>>
     ): Action<E> {
         val nearestNodes = tree.allNodes()
+            .asSequence()
             .filter { it.node.content is Reconstructed<*, *> }
-            .sortedWith(Comparator.comparing { compareWith ->
+            .map { compareWith ->
                 val reconstructed = compareWith.node.content as Reconstructed<T, E>
                 val nodeContent = reconstructed.content
-                distance(
+                compareWith to distance(
                     nodeContent,
                     mutationsBetween(nodeContent, addedAsAncestor)
                 ) + reconstructed.minDistanceFromObserved
-            })
+            }
+            .sortedBy { it.second }
+            .map { it.first }
             .take(countOfNodesToProbe)
             .toList()
         val possibleActions = nearestNodes.flatMap { nodeWithParent ->
@@ -114,7 +118,8 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
             //search for siblings with common mutations with the added node
             val siblingToMergeWith: Replace? = chosenNode.links
                 .filter { it.node.content is Reconstructed<*, *> }
-                .map { link ->
+                //choose a sibling with max score of common mutations
+                .mapNotNull { link ->
                     replaceChild(
                         chosenNode,
                         link.node,
@@ -123,10 +128,7 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
                         nodeGenerator
                     )
                 }
-                .filter { Objects.nonNull(it) } //choose a sibling with max score of common mutations
-                .maxWithOrNull(
-                    Comparator.comparingDouble<Replace> { it.distanceFromParentToCommon }
-                )
+                .maxByOrNull { it.distanceFromParentToCommon }
             if (siblingToMergeWith != null) {
                 //the added node (A), the chosen node (B), the sibling (D) has common ancestor (C) with A
                 //
@@ -250,6 +252,7 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
         val distanceFromCommonToAdded = distance(commonAncestor, mutationsBetween(commonAncestor, addedAsAncestor))
         val minDistanceFromObserved = minOf(
             distanceFromCommonToAdded,
+            //TODO check
             distanceFromCommonAncestorToChild,
             parentAsReconstructed.minDistanceFromObserved + distanceFromParentToCommon
         )
@@ -286,8 +289,8 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
     }
 
     abstract class Action<E> {
-        abstract fun changeOfDistance(): Double
-        abstract fun distanceFromObserved(): Double
+        abstract val changeOfDistance: Double
+        abstract val distanceFromObserved: Double
         abstract fun apply()
 
         abstract fun parentContent(): E
@@ -298,10 +301,9 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
         private val distanceFromParentAndInsertion: Double,
         private val nodeToInsert: Tree.Node<ObservedOrReconstructed<T, E>>
     ) : Action<E>() {
-        override fun changeOfDistance() = distanceFromParentAndInsertion
+        override val changeOfDistance get() = distanceFromParentAndInsertion
 
-        override fun distanceFromObserved() =
-            (parent.content as Reconstructed<T, E>).minDistanceFromObserved
+        override val distanceFromObserved get() = (parent.content as Reconstructed<T, E>).minDistanceFromObserved
 
         override fun apply() {
             val parentAsReconstructed = parent.content as Reconstructed<T, E>
@@ -322,11 +324,9 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
         private val sumOfDistancesFromAncestor: Double,
         private val distanceFromParentToReplaceWhat: Double
     ) : Action<E>() {
-        override fun changeOfDistance() =
-            distanceFromParentToCommon - distanceFromParentToReplaceWhat + sumOfDistancesFromAncestor
+        override val changeOfDistance get() = distanceFromParentToCommon - distanceFromParentToReplaceWhat + sumOfDistancesFromAncestor
 
-        override fun distanceFromObserved() =
-            (parent.content as Reconstructed<T, E>).minDistanceFromObserved
+        override val distanceFromObserved get() = (parent.content as Reconstructed<T, E>).minDistanceFromObserved
 
         override fun apply() {
             parent.replaceChild(
@@ -418,10 +418,11 @@ class TreeBuilderByAncestors<T, E, M> private constructor(
 
     companion object {
         val ACTION_COMPARATOR: Comparator<Action<*>> = Comparator
+            //TODO check why and revive tests with 0 and 1
             .comparingDouble<Action<*>> { action ->
-                action.changeOfDistance() + action.distanceFromObserved()
+                action.changeOfDistance + action.distanceFromObserved
             }
-            .thenComparing { action -> action.changeOfDistance() }
+            .thenComparing { action -> action.changeOfDistance }
             .thenComparing { action -> if (action is TreeBuilderByAncestors<*, *, *>.Insert) 1 else -1 }
     }
 }

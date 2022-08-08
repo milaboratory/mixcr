@@ -15,6 +15,9 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 
 data class CloneDescription(
+    /**
+     * Mutations of clone without CDR3
+     */
     val mutations: Mutations<NucleotideSequence>,
     val clusterIdentity: ClusterIdentity
 ) {

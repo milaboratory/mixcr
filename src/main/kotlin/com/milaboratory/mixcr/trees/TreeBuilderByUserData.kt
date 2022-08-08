@@ -24,7 +24,10 @@ import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.mapNotNull
 import com.milaboratory.util.TempFileDest
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGeneId
 
 class TreeBuilderByUserData(
@@ -55,10 +58,10 @@ class TreeBuilderByUserData(
         cluster: List<CloneFromUserInput>,
         treeId: Int
     ): List<CloneWrapper> {
-        val VGeneId = cluster.map { it.clone }.bestGeneForClones(GeneType.Variable)
-        val JGeneId = cluster.map { it.clone }.bestGeneForClones(GeneType.Joining)
+        val VGeneId = cluster.map { it.clone }.bestGeneForClones(Variable)
+        val JGeneId = cluster.map { it.clone }.bestGeneForClones(Joining)
 
-        val CDR3lengths = cluster.map { it.clone.ntLengthOf(GeneFeature.CDR3, VGeneId, JGeneId) }
+        val CDR3lengths = cluster.map { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) }
             .groupingBy { it }.eachCount()
         if (CDR3lengths.size > 1) {
             println("WARN: in $treeId not all clones have the same length of CDR3")
@@ -69,7 +72,7 @@ class TreeBuilderByUserData(
         )
 
         val cloneWrappers = cluster
-            .filter { it.clone.ntLengthOf(GeneFeature.CDR3, VGeneId, JGeneId) == VJBase.CDR3length }
+            .filter { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) == VJBase.CDR3length }
             .filter { it.clone.coversFeature(geneFeatureToMatch, VJBase) }
             //filter compositions that not overlap with each another
             .filter { it.clone.formsAllRefPointsInCDR3(VJBase) }
