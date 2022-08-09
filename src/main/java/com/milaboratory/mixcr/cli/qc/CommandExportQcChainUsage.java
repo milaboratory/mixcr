@@ -16,6 +16,8 @@ import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType;
 import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.qc.ChainUsage;
+import io.repseq.core.Chains;
+import io.repseq.core.Chains.NamedChains;
 import jetbrains.letsPlot.intern.Plot;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -43,6 +45,13 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
     )
     public boolean alignChainUsage = false;
 
+    @Option(
+            names = "--chains",
+            description = "Specify which chains to export. Possible values: TRAD, TRB, TRG, IGH, IGK, IGL.",
+            split = ","
+    )
+    public List<String> chains;
+
     @Override
     protected List<String> getInputFiles() {
         return in.subList(0, in.size() - 1);
@@ -58,6 +67,9 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
         MiXCRFileType fileType = IOUtil.extractFileType(Paths.get(in.get(0)));
         List<Path> files = getInputFiles().stream().map(Paths::get)
                 .collect(Collectors.toList());
+        List<NamedChains> chains = this.chains == null
+                ? ChainUsage.getDefaultChainsList()
+                : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
 
         Plot plt;
         switch (fileType) {
@@ -66,17 +78,20 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
                 if (alignChainUsage)
                     plt = ChainUsage.INSTANCE.chainUsageAlign(
                             files,
-                            !absoluteValues
+                            !absoluteValues,
+                            chains
                     );
                 else plt = ChainUsage.INSTANCE.chainUsageAssemble(
                         files,
-                        !absoluteValues
+                        !absoluteValues,
+                        chains
                 );
                 break;
             case VDJCA:
                 plt = ChainUsage.INSTANCE.chainUsageAlign(
                         files,
-                        !absoluteValues
+                        !absoluteValues,
+                        chains
                 );
                 break;
             default:

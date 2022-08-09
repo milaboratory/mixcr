@@ -40,8 +40,8 @@ class QcTest {
             AlignmentQC.alignQc(align, percent = false),
             AlignmentQC.alignQc(align, percent = true),
 
-            ChainUsage.chainUsageAlign(align, percent = false),
-            ChainUsage.chainUsageAlign(align, percent = true),
+            ChainUsage.chainUsageAlign(align, percent = false, ChainUsage.DefaultChainsList),
+            ChainUsage.chainUsageAlign(align, percent = true, ChainUsage.DefaultChainsList),
         )
 
         align.forEach { plt += Coverage.coveragePlot(it) }

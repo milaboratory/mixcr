@@ -131,8 +131,7 @@ object AlignmentQC {
             .legendDirectionVertical()
 
 
-        plt += ggsize(900, 150 + 35 * files.size)
-
+        plt += ggsize(1000, 300 + 35 * files.size)
 
         plt
     }

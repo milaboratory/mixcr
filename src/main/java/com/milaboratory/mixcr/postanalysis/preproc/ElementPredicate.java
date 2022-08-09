@@ -63,7 +63,7 @@ public interface ElementPredicate<T> extends Predicate<T> {
 
         @Override
         public boolean test(Clone clone) {
-            return !clone.isOutOfFrame(feature);
+            return !clone.isOutOfFrameOrAbsent(feature);
         }
 
         @Override
@@ -97,7 +97,7 @@ public interface ElementPredicate<T> extends Predicate<T> {
 
         @Override
         public boolean test(Clone clone) {
-            return !clone.containsStops(feature);
+            return !clone.containsStopsOrAbsent(feature);
         }
 
         @Override

@@ -39,7 +39,7 @@ import static java.util.stream.Collectors.toList;
  *
  */
 public abstract class CommandPa extends MiXCRCommand {
-    public static final NamedChains[] CHAINS = {TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED};
+    public static final NamedChains[] CHAINS = {TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGK_NAMED, IGL_NAMED};
 
     static final String sampleMatchColumn = "sample___matched";
     @Parameters(description = "cloneset.{clns|clna}... result.json.gz|result.json")
