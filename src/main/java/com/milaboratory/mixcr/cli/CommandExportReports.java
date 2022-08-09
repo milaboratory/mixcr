@@ -91,8 +91,11 @@ public class CommandExportReports extends MiXCRCommand {
                 System.out.println(GlobalObjectMappers.getPretty().writeValueAsString(reports));
         } else
             for (MiXCRCommandReport report : reports) {
-                if (helper != null)
+                if (helper != null) {
                     report.writeReport(helper);
+                    if (out == null)
+                        System.out.println();
+                }
             }
     }
 }
