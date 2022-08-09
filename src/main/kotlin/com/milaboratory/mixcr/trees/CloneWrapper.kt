@@ -36,27 +36,25 @@ import io.repseq.core.VDJCGeneId
 import java.util.*
 import kotlin.collections.set
 
-//TODO group by the same target
 @Serializable(by = CloneWrapper.SerializerImpl::class)
 class CloneWrapper(
     /**
-     * Original clonotype
+     * Original clones with the same targets, but from different files or with different C gene
      */
-    val clone: Clone,
-    /**
-     * Dataset serial number
-     */
-    datasetId: Int,
+    val clones: List<CloneWithDatasetId>,
     /**
      * Within this VJ pair and CDR3 length this clone will be viewed. There maybe several copies of one clone with different VJ
      */
     val VJBase: VJBase,
     val candidateVJBases: List<VJBase> = emptyList()
 ) {
-    val id = ID(clone.id, datasetId)
-    fun getHit(geneType: GeneType): VDJCHit = clone.getHit(VJBase, geneType)
+    val id = ID(clones.map { it.id })
+    val mainClone = chooseMainClone(clones.map { it.clone })
 
-    fun getFeature(geneFeature: GeneFeature): NSequenceWithQuality? = clone.getFeature(geneFeature, VJBase)
+    fun getHit(geneType: GeneType): VDJCHit = mainClone.getHit(VJBase, geneType)
+
+    fun getFeature(geneFeature: GeneFeature): NSequenceWithQuality? =
+        mainClone.getFeature(geneFeature, VJBase)
 
     fun getPartitioning(geneType: GeneType): ReferencePoints =
         getHit(geneType).gene.partitioning.getRelativeReferencePoints(getHit(geneType).alignedFeature)
@@ -67,36 +65,71 @@ class CloneWrapper(
 
         other as CloneWrapper
 
-        if (VJBase != other.VJBase) return false
         if (id != other.id) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = VJBase.hashCode()
-        result = 31 * result + id.hashCode()
-        return result
+        return id.hashCode()
     }
 
     data class ID(
-        val cloneId: Int,
-        val datasetId: Int
+        val ids: List<CloneWithDatasetId.ID>
     )
 
     class SerializerImpl : BasicSerializer<CloneWrapper>() {
         override fun write(output: PrimitivO, `object`: CloneWrapper) {
-            output.writeObject(`object`.clone)
-            output.writeInt(`object`.id.datasetId)
+            output.writeList(`object`.clones)
             output.writeObject(`object`.VJBase)
             output.writeList(`object`.candidateVJBases)
         }
 
         override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(
-            input.readObjectRequired(),
-            input.readInt(),
+            input.readList(),
             input.readObjectRequired(),
             input.readList()
+        )
+    }
+
+    companion object {
+        /**
+         * Algorithm can't distinct evolution of clones that differs outside assemble feature.
+         * But we need to choose one base for all clones.
+         */
+        fun chooseMainClone(clones: List<Clone>): Clone =
+            clones.maxWithOrNull(
+                Comparator.comparingDouble<Clone> { (it.getBestHit(Variable).score + it.getBestHit(Joining).score).toDouble() }
+                    .thenComparingDouble { it.count }
+            )!!
+    }
+}
+
+@Serializable(by = CloneWithDatasetId.SerializerImpl::class)
+data class CloneWithDatasetId(
+    val clone: Clone,
+    val datasetId: Int
+) {
+    val id
+        get() = ID(
+            clone.id,
+            datasetId
+        )
+
+    data class ID(
+        private val cloneId: Int,
+        private val datasetId: Int
+    )
+
+    class SerializerImpl : BasicSerializer<CloneWithDatasetId>() {
+        override fun write(output: PrimitivO, obj: CloneWithDatasetId) {
+            output.writeObject(obj.clone)
+            output.writeInt(obj.datasetId)
+        }
+
+        override fun read(input: PrimitivI): CloneWithDatasetId = CloneWithDatasetId(
+            input.readObjectRequired(),
+            input.readInt()
         )
     }
 }
@@ -134,13 +167,9 @@ private fun Clone.getFeature(
     VGeneId: VDJCGeneId,
     JGeneId: VDJCGeneId
 ): NSequenceWithQuality? {
-    try {
-        val partitionedTargets = getPartitionedTargets(VGeneId, JGeneId)
-        val tcf = getTargetContainingFeature(partitionedTargets, geneFeature)
-        return if (tcf == -1) null else partitionedTargets[tcf].getFeature(geneFeature)
-    } catch (e: Exception) {
-        throw e
-    }
+    val partitionedTargets = getPartitionedTargets(VGeneId, JGeneId)
+    val tcf = getTargetContainingFeature(partitionedTargets, geneFeature)
+    return if (tcf == -1) null else partitionedTargets[tcf].getFeature(geneFeature)
 }
 
 private fun Clone.getPartitionedTargets(

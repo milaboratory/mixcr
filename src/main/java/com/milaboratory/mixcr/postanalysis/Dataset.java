@@ -43,6 +43,11 @@ public interface Dataset<T> {
                     }
 
                     @Override
+                    public void finish() {
+
+                    }
+
+                    @Override
                     public double getProgress() {
                         return 0.0;
                     }

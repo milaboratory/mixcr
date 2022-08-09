@@ -230,19 +230,21 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
             distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
             distanceFromParent = distanceFromParent,
             clones = links.filter { it.distance == 0.0 }
-                .map {
-                    SHMTreeForPostanalysis.CloneWithDatasetId(
-                        it.node.content.clone!!,
-                        it.node.content.datasetId!!,
-                        meta.fileNames[it.node.content.datasetId]
-                    )
+                .flatMap { nodeLink ->
+                    nodeLink.node.content.clones.map { (clone, datasetId) ->
+                        SHMTreeForPostanalysis.CloneWithDatasetId(
+                            clone,
+                            datasetId,
+                            meta.fileNames[datasetId]
+                        )
+                    }
                 }
         )
     )
     links
         .filter { it.distance != 0.0 }
         .forEach {
-            require(it.node.content.clone == null)
+            require(it.node.content.clones.isEmpty())
             val mappedChild = it.node.map(meta, parent = this, root = root, mrca = mrca)
             result.addChild(mappedChild, mappedChild.content.distanceFromParent!!)
         }

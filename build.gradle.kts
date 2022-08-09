@@ -64,7 +64,7 @@ java {
 
 application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
-    applicationDefaultJvmArgs = listOf("-Xmx6g")
+    applicationDefaultJvmArgs = listOf("-Xmx8g")
 }
 
 tasks.withType<JavaCompile> {

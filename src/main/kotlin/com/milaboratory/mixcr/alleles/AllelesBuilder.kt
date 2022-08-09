@@ -13,6 +13,7 @@
 
 package com.milaboratory.mixcr.alleles
 
+import cc.redberry.pipe.OutputPort
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutation
@@ -20,12 +21,20 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.alignmentsCover
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
+import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.flatten
+import com.milaboratory.primitivio.groupBy
+import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.toList
+import com.milaboratory.primitivio.withProgress
+import com.milaboratory.util.ProgressAndStage
+import com.milaboratory.util.TempFileDest
 import io.repseq.core.BaseSequence
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -40,7 +49,8 @@ import kotlin.collections.set
 
 class AllelesBuilder(
     private val parameters: FindAllelesParameters,
-    val datasets: List<CloneReader>,
+    private val tempDest: TempFileDest,
+    private val datasets: List<CloneReader>,
     private val geneFeatureToMatch: VJPair<GeneFeature>
 ) {
     private val scoring: VJPair<AlignmentScoring<NucleotideSequence>> = VJPair(
@@ -48,9 +58,45 @@ class AllelesBuilder(
         J = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
     )
 
-    fun count() = datasets.sumOf { it.numberOfClones() }.toLong()
+    fun searchForAlleles(
+        geneType: GeneType,
+        progress: ProgressAndStage,
+        threads: Int
+    ): List<Pair<String, List<VDJCGeneData>>> {
+        val totalClonesCount = datasets.sumOf { it.numberOfClones() }.toLong()
+        val stateBuilder = datasets.constructStateBuilder()
 
-    fun unsortedClones() = datasets.map { it.readClones() }
+        //assumption: there are no allele genes in library
+        //TODO how to check assumption?
+        return filteredClones { filteredClones ->
+            filteredClones.withProgress(
+                totalClonesCount,
+                progress,
+                "Grouping by the same ${geneType.letter} gene"
+            ) { clones ->
+                clones.groupBy(
+                    stateBuilder,
+                    tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}"),
+                    GroupingCriteria.groupBy { it.getBestHit(geneType).gene }
+                )
+            }
+                .withProgress(
+                    totalClonesCount,
+                    progress,
+                    "Searching for ${geneType.letter} alleles",
+                    countPerElement = { it.size.toLong() }
+                ) { clustersWithTheSameV ->
+                    clustersWithTheSameV.mapInParallel(threads) { cluster ->
+                        val geneId = cluster[0].getBestHit(geneType).gene.name
+                        geneId to findAlleles(cluster, geneType).toGeneData()
+                    }
+                        .toList()
+                }
+        }
+    }
+
+
+    private fun <R> filteredClones(function: (OutputPort<Clone>) -> R): R = datasets.map { it.readClones() }
         .flatten()
         .filter { c ->
             // filter non-productive clonotypes
@@ -60,6 +106,7 @@ class AllelesBuilder(
         .filter { c ->
             c.count > parameters.useClonesWithCountMoreThen
         }
+        .use(function)
 
     private fun findAlleles(clusterByTheSameGene: List<Clone>, geneType: GeneType): List<Allele> {
         require(clusterByTheSameGene.isNotEmpty())
@@ -126,14 +173,13 @@ class AllelesBuilder(
         else -> throw IllegalArgumentException()
     }
 
-    fun allelesGeneData(cluster: List<Clone>, geneType: GeneType): List<VDJCGeneData> =
-        findAlleles(cluster, geneType)
-            .map { allele ->
-                when {
-                    allele.mutations != Mutations.EMPTY_NUCLEOTIDE_MUTATIONS -> buildGene(allele)
-                    else -> allele.gene.data
-                }
+    private fun List<Allele>.toGeneData() =
+        map { allele ->
+            when {
+                allele.mutations != Mutations.EMPTY_NUCLEOTIDE_MUTATIONS -> buildGene(allele)
+                else -> allele.gene.data
             }
+        }
             .sortedBy { it.name }
 
     private fun buildGene(allele: Allele): VDJCGeneData = VDJCGeneData(

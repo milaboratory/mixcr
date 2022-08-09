@@ -29,7 +29,6 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGeneId
-import java.util.*
 import java.util.function.Supplier
 import kotlin.math.min
 
@@ -37,7 +36,8 @@ internal class SHMTreeBuilderBySteps(
     private val initialStep: BuildingInitialTrees,
     private val scoringSet: ScoringSet,
     private val assemblingFeatures: Array<GeneFeature>,
-    private val shmTreeBuilder: SHMTreeBuilder
+    private val shmTreeBuilder: SHMTreeBuilder,
+    private val relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>
 ) {
     fun applyStep(
         stepName: BuildSHMTreeStep,
@@ -77,7 +77,12 @@ internal class SHMTreeBuilderBySteps(
                 stepParameters
             )
         }
-        is BuildingInitialTrees -> throw IllegalArgumentException()
+        is BuildingInitialTrees -> object : Step {
+            override fun next(
+                originalTrees: List<TreeWithMetaBuilder>,
+                clonesNotInClusters: () -> Sequence<CloneWithMutationsFromVJGermline>
+            ): StepResult = buildTreeTopParts(clonesNotInClusters())
+        }
     }
 
     /**
@@ -87,18 +92,17 @@ internal class SHMTreeBuilderBySteps(
      * See actual algorithm for forming clusters in link
      * @see ClustersBuilder.buildClusters
      */
-    fun buildTreeTopParts(
-        relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>,
-        clones: List<CloneWrapper>
-    ): StepResult {
+    fun buildTreeTopParts(clones: Sequence<CloneWithMutationsFromVJGermline>): StepResult {
         val clusterizationAlgorithm = initialStep.algorithm
         //use only clones that are at long distance from any germline
-        val clonesThatNotCloseToAnyGermline = clones.asSequence()
-            .filter { !hasVJPairThatCloseToGermline(it, clusterizationAlgorithm.commonMutationsCountForClustering) }
-        val rebasedClones = clonesThatNotCloseToAnyGermline
-            .map { cloneWrapper -> cloneWrapper.rebaseFromGermline(assemblingFeatures) }
+        val temp = clones.toList()
+        val rebasedClones = temp
+            .filterNot {
+                hasVJPairThatCloseToGermline(it.cloneWrapper, clusterizationAlgorithm.commonMutationsCountForClustering)
+            }
             .filter { it.mutations.VJMutationsCount >= clusterizationAlgorithm.commonMutationsCountForClustering }
             .toList()
+        if (rebasedClones.isEmpty()) return StepResult.empty
         val clusterPredictor = ClustersBuilder.ClusterPredictorForOneChain(
             clusterizationAlgorithm.commonMutationsCountForClustering,
             clusterizationAlgorithm.maxNDNDistanceForClustering,
@@ -110,20 +114,13 @@ internal class SHMTreeBuilderBySteps(
         val clustersBuilder = when (clusterizationAlgorithm) {
             is SHMTreeBuilderParameters.ClusterizationAlgorithm.BronKerbosch ->
                 ClustersBuilder.BronKerbosch(clusterPredictor)
-            is SHMTreeBuilderParameters.ClusterizationAlgorithm.Hierarchical ->
-                ClustersBuilder.Hierarchical(clusterPredictor)
+            is SHMTreeBuilderParameters.ClusterizationAlgorithm.SingleLinkage ->
+                ClustersBuilder.SingleLinkage(clusterPredictor)
         }
         val clusters = clustersBuilder.buildClusters(rebasedClones)
         val result = clusters
             .asSequence()
             .filter { it.size > 1 }
-            .filter { cluster ->
-                //skip cluster if it formed by the same clones but with different C or from different samples
-                val toCompare = cluster.first()
-                cluster.subList(1, cluster.size).any { clone ->
-                    !Arrays.equals(clone.cloneWrapper.clone.targets, toCompare.cloneWrapper.clone.targets)
-                }
-            }
             .map { cluster ->
                 val treeWithMetaBuilder = shmTreeBuilder.buildATreeFromRoot(cluster)
                 val decisionsInfo = cluster.map {
@@ -148,13 +145,13 @@ internal class SHMTreeBuilderBySteps(
         )
     }
 
-    private fun hasVJPairThatCloseToGermline(cloneWrapper: CloneWrapper, threashold: Int): Boolean =
+    private fun hasVJPairThatCloseToGermline(cloneWrapper: CloneWrapper, threshold: Int): Boolean =
         cloneWrapper.candidateVJBases
             .map { VJBase ->
-                cloneWrapper.clone.getHit(VJBase, Variable).mutationsCount() +
-                        cloneWrapper.clone.getHit(VJBase, Joining).mutationsCount()
+                cloneWrapper.mainClone.getHit(VJBase, Variable).mutationsCount() +
+                        cloneWrapper.mainClone.getHit(VJBase, Joining).mutationsCount()
             }
-            .any { it < threashold }
+            .any { it < threshold }
 
     private fun VDJCHit.mutationsCount(): Int = alignments.sumOf { it.absoluteMutations.size() }
 
@@ -182,6 +179,7 @@ internal class SHMTreeBuilderBySteps(
      * - see NDNDistance
      */
     private fun combineTrees(originalTrees: List<TreeWithMetaBuilder>, parameters: CombineTrees): StepResult {
+        if (originalTrees.isEmpty()) return StepResult.empty
         val result = mutableListOf<TreeWithMetaBuilder>()
         val originalTreesCopy = originalTrees
             .sortedByDescending { it.clonesCount() }
@@ -244,6 +242,7 @@ internal class SHMTreeBuilderBySteps(
         clonesNotInClusters: Supplier<Sequence<CloneWithMutationsFromVJGermline>>,
         parameters: AttachClonesByNDN
     ): StepResult {
+        if (originalTrees.isEmpty()) return StepResult.empty
         val decisions = mutableMapOf<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>()
         val resultTrees = originalTrees.map { it.copy() }
         clonesNotInClusters.get()
@@ -297,6 +296,7 @@ internal class SHMTreeBuilderBySteps(
         clonesNotInClustersSupplier: () -> Sequence<CloneWithMutationsFromVJGermline>,
         parameters: AttachClonesByDistanceChange
     ): StepResult {
+        if (originalTrees.isEmpty()) return StepResult.empty
         val result = originalTrees.map { it.copy() }
         val decisions = mutableMapOf<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>()
         val clonesNotInClusters = clonesNotInClustersSupplier()
@@ -421,6 +421,10 @@ internal class SHMTreeBuilderBySteps(
         val decisions: Map<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>,
         val snapshots: List<TreeWithMetaBuilder.Snapshot>,
         val nodesDebugInfo: List<DebugInfo>
-    )
+    ) {
+        companion object {
+            val empty = StepResult(emptyMap(), emptyList(), emptyList())
+        }
+    }
 }
 

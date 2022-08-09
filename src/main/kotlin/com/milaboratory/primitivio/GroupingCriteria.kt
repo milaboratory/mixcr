@@ -15,11 +15,12 @@ import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mixcr.util.OutputPortWithProgress
-import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.sorting.HashSorter
 import com.milaboratory.util.sorting.Sorter
 import org.apache.commons.io.FileUtils
+import java.util.function.ToLongFunction
 
 interface GroupingCriteria<T> {
     /**
@@ -49,7 +50,7 @@ interface GroupingCriteria<T> {
     }
 }
 
-inline fun <reified T : Any> OutputPort<T>.hashSort(
+inline fun <reified T : Any> OutputPort<T>.hashGrouping(
     groupingCriteria: GroupingCriteria<T>,
     stateBuilder: PrimitivIOStateBuilder,
     tempFileDest: TempFileDest,
@@ -95,19 +96,34 @@ inline fun <reified T : Any> OutputPort<T>.groupBy(
     tempFileDest: TempFileDest,
     groupingCriteria: GroupingCriteria<T>
 ): OutputPort<List<T>> =
-    hashSort(groupingCriteria, stateBuilder, tempFileDest)
+    hashGrouping(groupingCriteria, stateBuilder, tempFileDest)
         .groupBySortedData(groupingCriteria)
 
-inline fun <reified T : Any> OutputPort<T>.groupByWithProgress(
-    stateBuilder: PrimitivIOStateBuilder,
-    tempFileDest: TempFileDest,
+fun <T : Any, R> OutputPort<T>.withProgress(
     expectedSize: Long,
-    groupingCriteria: GroupingCriteria<T>
-): Pair<OutputPort<List<T>>, CanReportProgress> {
-    val sorted = hashSort(groupingCriteria, stateBuilder, tempFileDest)
-    val withProgress = OutputPortWithProgress.wrap(expectedSize, sorted)
-    return withProgress
-        .groupBySortedData(groupingCriteria) to withProgress
+    progressAndStage: ProgressAndStage,
+    stage: String,
+    function: (OutputPort<T>) -> R
+): R {
+    val withProgress = OutputPortWithProgress.wrap(expectedSize, this)
+    progressAndStage.delegate(stage, withProgress)
+    val result = function(withProgress)
+    withProgress.finish()
+    return result
+}
+
+fun <T : Any, R> OutputPort<T>.withProgress(
+    expectedSize: Long,
+    progressAndStage: ProgressAndStage,
+    stage: String,
+    countPerElement: ToLongFunction<T>,
+    function: (OutputPort<T>) -> R
+): R {
+    val withProgress = OutputPortWithProgress.wrap(expectedSize, this, countPerElement)
+    progressAndStage.delegate(stage, withProgress)
+    val result = function(withProgress)
+    withProgress.finish()
+    return result
 }
 
 /**

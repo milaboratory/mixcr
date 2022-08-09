@@ -205,16 +205,10 @@ sealed class ClustersBuilder<T : Any> {
          * - Threshold of NDNDistance may be function of count of the same mutations in a pair and count of different synonymic mutations.
          */
         override fun buildClusters(original: List<T>): List<List<T>> {
-            return clusterByCommonMutationsAndNDNDistance(original)
-        }
-
-        private fun clusterByCommonMutationsAndNDNDistance(
-            clones: List<T>
-        ): List<List<T>> {
-            val matrix = AdjacencyMatrix(clones.size)
-            for (i in clones.indices) {
-                for (j in clones.indices) {
-                    if (clusterPredictor.fromTheSameCluster(clones[i], clones[j])) {
+            val matrix = AdjacencyMatrix(original.size)
+            for (i in original.indices) {
+                for (j in original.indices) {
+                    if (clusterPredictor.fromTheSameCluster(original[i], original[j])) {
                         matrix.setConnected(i, j)
                     }
                 }
@@ -229,11 +223,11 @@ sealed class ClustersBuilder<T : Any> {
                     }
                 }
             return notOverlappedCliques
-                .map { it.bits.map { i -> clones[i] } }
+                .map { it.bits.map { i -> original[i] } }
         }
     }
 
-    class Hierarchical<T : Any>(
+    class SingleLinkage<T : Any>(
         private val clusterPredictor: ClusterPredictor<T>
     ) : ClustersBuilder<T>() {
         /**
@@ -255,27 +249,26 @@ sealed class ClustersBuilder<T : Any> {
          * If it calculated from samples, then it will include impact both of hotspots and pressure of selection.
          * - Threshold of NDNDistance may be function of count of the same mutations in a pair and count of different synonymic mutations.
          */
-        override fun buildClusters(original: List<T>): List<List<T>> = hierarchicalClustering(original)
-
-        private fun hierarchicalClustering(
-            clones: List<T>
-        ): List<List<T>> {
+        override fun buildClusters(original: List<T>): List<List<T>> {
             val result = mutableListOf<MutableList<T>>()
             //TODO just repeat the process instead of search of clusters
             //cluster only preferable clones
-            clones.forEach { nextClone ->
-                val clusterToGrow = result
+            original.forEach { nextClone ->
+                val clustersToGrow = result
                     .filter { existedCluster ->
                         existedCluster.any { cloneInCluster ->
                             clusterPredictor.prefer(nextClone, cloneInCluster)
                         }
                     }
-                    //TODO merge all, not with only first
-                    .firstOrNull { existedCluster ->
+                    .filter { existedCluster ->
                         clusterPredictor.fromTheSameCluster(existedCluster, nextClone)
                     }
-                if (clusterToGrow != null) {
-                    clusterToGrow += nextClone
+                if (clustersToGrow.isNotEmpty()) {
+                    clustersToGrow.first() += nextClone
+                    clustersToGrow.subList(1, clustersToGrow.size).forEach { clusterToMerge ->
+                        clustersToGrow.first() += clusterToMerge
+                        result.remove(clusterToMerge)
+                    }
                 } else {
                     result += mutableListOf(nextClone)
                 }
@@ -285,13 +278,16 @@ sealed class ClustersBuilder<T : Any> {
 
             //cluster clones that was left
             clonesThatWasNotClusteredInFirstTry.forEach { nextClone ->
-                val clusterToGrow = result
-                    //TODO merge all, not with only first
-                    .firstOrNull { existedCluster ->
+                val clustersToGrow = result
+                    .filter { existedCluster ->
                         clusterPredictor.fromTheSameCluster(existedCluster, nextClone)
                     }
-                if (clusterToGrow != null) {
-                    clusterToGrow += nextClone
+                if (clustersToGrow.isNotEmpty()) {
+                    clustersToGrow.first() += nextClone
+                    clustersToGrow.subList(1, clustersToGrow.size).forEach { clusterToMerge ->
+                        clustersToGrow.first() += clusterToMerge
+                        result.remove(clusterToMerge)
+                    }
                 } else {
                     result += mutableListOf(nextClone)
                 }

@@ -32,22 +32,19 @@ import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
-import com.milaboratory.mixcr.trees.constructStateBuilder
-import com.milaboratory.mixcr.util.OutputPortWithProgress
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV.writeXSVBody
 import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
 import com.milaboratory.mixcr.util.alignmentsCover
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import com.milaboratory.primitivio.GroupingCriteria
-import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.groupByWithProgress
 import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.toList
+import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
@@ -228,15 +225,17 @@ class CommandFindAlleles : MiXCRCommand() {
 
         val allelesBuilder = AllelesBuilder(
             findAllelesParameters,
+            tempDest,
             cloneReaders,
             geneFeatureToMatch
         )
 
-        val VAlleles = searchForAlleles(allelesBuilder, Variable)
-        val JAlleles = searchForAlleles(allelesBuilder, Joining)
+        val progressAndStage = ProgressAndStage("Grouping by the same V gene", 0.0)
+        SmartProgressReporter.startProgressReport(progressAndStage)
+        val VAlleles = allelesBuilder.searchForAlleles(Variable, progressAndStage, threads)
+        val JAlleles = allelesBuilder.searchForAlleles(Joining, progressAndStage, threads)
 
-        val alleles: MutableMap<String, List<VDJCGeneData>> =
-            (VAlleles.asSequence() + JAlleles.asSequence()).toMap(HashMap())
+        val alleles: MutableMap<String, List<VDJCGeneData>> = (VAlleles + JAlleles).toMap(HashMap())
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
         val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)
@@ -259,42 +258,28 @@ class CommandFindAlleles : MiXCRCommand() {
             cloneReaders.first().alignerParameters
         )
         cloneReaders.forEachIndexed { i, cloneReader ->
-            val mapperClones = cloneReader.readClones().use { port ->
-                val inputWithProgress = OutputPortWithProgress.wrap(cloneReader.numberOfClones().toLong(), port)
-                SmartProgressReporter.startProgressReport("Realigning ${inputFiles[i]}", inputWithProgress)
-                cloneRebuild.rebuildClones(inputWithProgress)
-            }
-            mapperClones.forEach { clone ->
-                for (geneType in VJ_REFERENCE) {
-                    allelesStatistics.increment(clone.getBestHit(geneType).gene.name)
-                    allelesStatistics.increment(clone.getBestHit(geneType).gene.geneName)
+            cloneReader.readClones().use { port ->
+                port.withProgress(
+                    cloneReader.numberOfClones().toLong(),
+                    progressAndStage,
+                    "Realigning ${inputFiles[i]}"
+                ) { clones ->
+                    val mapperClones = cloneRebuild.rebuildClones(clones)
+                    mapperClones.forEach { clone ->
+                        for (geneType in VJ_REFERENCE) {
+                            allelesStatistics.increment(clone.getBestHit(geneType).gene.name)
+                            allelesStatistics.increment(clone.getBestHit(geneType).gene.geneName)
+                        }
+                    }
+                    File(outputClnsFiles[i]).writeMappedClones(mapperClones, resultLibrary, cloneReader)
                 }
             }
-            File(outputClnsFiles[i]).writeMappedClones(mapperClones, resultLibrary, cloneReader)
         }
+        progressAndStage.finish()
         if (allelesMutationsOutput != null) {
             Paths.get(allelesMutationsOutput!!).toAbsolutePath().parent.toFile().mkdirs()
             printAllelesMutationsOutput(resultLibrary, allelesStatistics)
         }
-    }
-
-    private fun searchForAlleles(
-        allelesBuilder: AllelesBuilder,
-        geneType: GeneType
-    ): OutputPort<Pair<String, List<VDJCGeneData>>> {
-        val totalClonesCount = allelesBuilder.count()
-        val stateBuilder = allelesBuilder.datasets.constructStateBuilder()
-
-        //assumption: there are no allele genes in library
-        //TODO how to check assumption?
-        val (clustersWithTheSameV, progressOfV) = allelesBuilder.unsortedClones().groupByWithProgress(
-            stateBuilder,
-            tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}"),
-            totalClonesCount,
-            GroupingCriteria.groupBy { it.getBestHit(geneType).gene }
-        )
-        SmartProgressReporter.startProgressReport("Searching for ${geneType.letter} alleles", progressOfV)
-        return allelesBuilder.buildAlleles(clustersWithTheSameV, geneType)
     }
 
     private fun <T> MutableMap<T, Int>.increment(key: T) {
@@ -406,15 +391,6 @@ class CommandFindAlleles : MiXCRCommand() {
             }
         }
         return usedGenes
-    }
-
-    private fun AllelesBuilder.buildAlleles(
-        clustersWithTheSameGene: OutputPort<List<Clone>>,
-        geneType: GeneType
-    ): OutputPort<Pair<String, List<VDJCGeneData>>> = clustersWithTheSameGene.mapInParallel(threads) { cluster ->
-        val geneId = cluster[0].getBestHit(geneType).gene.name
-        val resultGenes = allelesGeneData(cluster, geneType)
-        geneId to resultGenes
     }
 
     private fun anyClone(cloneReaders: List<CloneReader>): Clone {

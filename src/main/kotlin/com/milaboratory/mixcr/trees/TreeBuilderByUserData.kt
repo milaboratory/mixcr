@@ -34,13 +34,13 @@ class TreeBuilderByUserData(
     private val tempDest: TempFileDest,
     private val stateBuilder: PrimitivIOStateBuilder,
     private val geneFeatureToMatch: VJPair<GeneFeature>,
-    private val threads: Int,
     private val assemblingFeatures: Array<GeneFeature>,
     private val SHMTreeBuilder: SHMTreeBuilder
 ) {
     fun buildByUserData(
-        userInput: Map<CloneWrapper.ID, Int>,
-        clonesWithDatasetIds: OutputPort<CloneWithDatasetId>
+        clonesWithDatasetIds: OutputPort<CloneWithDatasetId>,
+        userInput: Map<CloneWithDatasetId.ID, Int>,
+        threads: Int
     ): OutputPort<TreeWithMetaBuilder> = clonesWithDatasetIds
         .combineWithUserData(userInput)
         .map { cluster ->
@@ -72,29 +72,39 @@ class TreeBuilderByUserData(
         )
 
         val cloneWrappers = cluster
+            .asSequence()
             .filter { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) == VJBase.CDR3length }
             .filter { it.clone.coversFeature(geneFeatureToMatch, VJBase) }
             //filter compositions that not overlap with each another
             .filter { it.clone.formsAllRefPointsInCDR3(VJBase) }
-            .map { CloneWrapper(it.clone, it.datasetId, VJBase, listOf(VJBase)) }
+            .groupBy { it.clone.targets.toList() }
+            .values
+            .map { theSameClones ->
+                CloneWrapper(
+                    theSameClones.map { CloneWithDatasetId(it.clone, it.datasetId) },
+                    VJBase,
+                    listOf(VJBase)
+                )
+            }
+            .toList()
 
         if (cloneWrappers.size != cluster.size) {
-            val excludedCloneIds = cluster.map { it.clone.id } - cloneWrappers.map { it.clone.id }.toSet()
+            val excludedCloneIds = cluster.map { it.clone.id } - cloneWrappers.map { it.id }.toSet()
             println("WARN: $excludedCloneIds will be not included in $treeId")
         }
         return cloneWrappers
     }
 
     private fun OutputPort<CloneWithDatasetId>.combineWithUserData(
-        userInput: Map<CloneWrapper.ID, Int>
+        userInput: Map<CloneWithDatasetId.ID, Int>
     ): OutputPort<List<CloneFromUserInput>> =
-        mapNotNull { (clone, datasetId) ->
-            val datasetIdWithCloneId = CloneWrapper.ID(datasetId = datasetId, cloneId = clone.id)
+        mapNotNull { cloneWithDatasetId ->
+            val datasetIdWithCloneId = cloneWithDatasetId.id
             val treeId = userInput[datasetIdWithCloneId] ?: return@mapNotNull null
             CloneFromUserInput(
-                clone = clone,
+                clone = cloneWithDatasetId.clone,
                 treeId = treeId,
-                datasetId = datasetId
+                datasetId = cloneWithDatasetId.datasetId
             )
         }.groupBy(
             stateBuilder,

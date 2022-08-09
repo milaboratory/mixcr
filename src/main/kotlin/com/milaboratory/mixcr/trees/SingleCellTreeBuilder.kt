@@ -46,18 +46,18 @@ import io.repseq.core.GeneType.Variable
 import java.util.*
 
 class SingleCellTreeBuilder(
+    private val parameters: SHMTreeBuilderParameters.SingleCell.SimpleClustering,
     private val stateBuilder: PrimitivIOStateBuilder,
     private val tempDest: TempFileDest,
     private val clonesFilter: SHMTreeBuilderOrchestrator.ClonesFilter,
     private val scoringSet: ScoringSet,
     private val assemblingFeatures: Array<GeneFeature>,
-    private val threads: Int,
     private val SHMTreeBuilder: SHMTreeBuilder
 ) {
     fun buildTrees(
         clones: OutputPortCloseable<CloneWithDatasetId>,
         tagsInfo: TagsInfo,
-        singleCellParams: SHMTreeBuilderParameters.SingleCell.SimpleClustering
+        threads: Int
     ): OutputPortCloseable<TreeWithMetaBuilder> {
         //TODO replace with specialized code
         val cellTageIndex = tagsInfo.first { it.type == TagType.Cell }.index
@@ -91,41 +91,76 @@ class SingleCellTreeBuilder(
                 }
 
                 val clusterPredictor = ClustersBuilder.ClusterPredictorForCellGroup(
-                    singleCellParams.algorithm.maxNDNDistanceForHeavyChain,
-                    singleCellParams.algorithm.maxNDNDistanceForLightChain,
+                    parameters.algorithm.maxNDNDistanceForHeavyChain,
+                    parameters.algorithm.maxNDNDistanceForLightChain,
                     scoringSet
                 )
-                val clustersBuilder = when (singleCellParams.algorithm) {
+                val clustersBuilder = when (parameters.algorithm) {
                     is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.BronKerbosch ->
                         ClustersBuilder.BronKerbosch(clusterPredictor)
-                    is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.Hierarchical ->
-                        ClustersBuilder.Hierarchical(clusterPredictor)
+                    is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.SingleLinkage ->
+                        ClustersBuilder.SingleLinkage(clusterPredictor)
                 }
                 cache()
                     //read clones with barcodes and group them accordingly to decisions
                     .clustersWithSameVJAndCDR3Length(cellBarcodesToGroupChainPair)
                     .flatMap { cellGroups ->
-                        clustersBuilder.buildClusters(cellGroups.map {
-                            ChainPairRebasedFromGermline(
-                                heavy = it.heavy.rebaseFromGermline(assemblingFeatures),
-                                light = it.light.rebaseFromGermline(assemblingFeatures)
-                            )
-                        })
+                        val rebasedChainPairs = groupDuplicatesAndRebaseFromGermline(cellGroups)
+                        clustersBuilder.buildClusters(rebasedChainPairs)
                     }
                     .mapInParallel(threads) { clusterOfCells ->
                         //TODO build linked topology
                         //TODO what to do with the same clones that exists in several nodes because mutations was in other chain
                         listOf(
-                            clusterOfCells.map { it.heavy }.distinctBy { it.cloneWrapper.id },
-                            clusterOfCells.map { it.light }.distinctBy { it.cloneWrapper.id }
+                            clusterOfCells.map { it.heavy },
+                            clusterOfCells.map { it.light }
                         )
+                            // regroup the same clones. There may be a case that cells differ by only one chain
+                            .map { cluster ->
+                                cluster
+                                    .flatMap { it.cloneWrapper.clones }
+                                    .groupBy { it.clone.targets.toList() }
+                                    .values
+                                    .map { theSameClones ->
+                                        CloneWrapper(theSameClones, theSameClones.first().clone.asVJBase())
+                                    }
+                                    .map { it.rebaseFromGermline(assemblingFeatures) }
+                            }
                             .filter { cluster ->
-                                cluster.map { it.cloneWrapper.clone.targets.toList() }.distinct().size > 1
+                                //filter clusters formed by the same clones (for example, light chain didn't mutate)
+                                cluster.size > 1
                             }
                             .map { SHMTreeBuilder.buildATreeFromRoot(it) }
                     }
                     .flatten()
             }
+    }
+
+    private fun groupDuplicatesAndRebaseFromGermline(cellGroups: List<ChainPair>): List<ChainPairRebasedFromGermline> {
+        val rebasedChainPairs = cellGroups
+            //grouping clones pairs that have the same heavy and light clones but from different files or with different C
+            .groupBy { chainPair ->
+                listOf(
+                    chainPair.heavy.clone.targets.toList(),
+                    chainPair.light.clone.targets.toList()
+                )
+            }
+            .values
+            .map { chainPairs ->
+                // remove duplicates in chains.
+                // For example, there is maybe one light clone with one C and two heavy clones with different C
+                val heavy = chainPairs.map { it.heavy }.distinctBy { it.id }
+                val light = chainPairs.map { it.light }.distinctBy { it.id }
+                CloneWrapper(heavy, heavy.first().clone.asVJBase()) to
+                        CloneWrapper(light, light.first().clone.asVJBase())
+            }
+            .map { (heavy, light) ->
+                ChainPairRebasedFromGermline(
+                    heavy = heavy.rebaseFromGermline(assemblingFeatures),
+                    light = light.rebaseFromGermline(assemblingFeatures)
+                )
+            }
+        return rebasedChainPairs
     }
 
     private fun OutputPort<CellGroup>.clustersWithSameVJAndCDR3Length(
@@ -135,11 +170,11 @@ class SingleCellTreeBuilder(
             val chainPairKey = cellBarcodesToGroupChainPair.getValue(cellGroup.cellBarcode)
             ChainPair(
                 heavy = cellGroup.heavy
-                    .map { CloneWrapper(it, cellGroup.cellBarcode.datasetId, it.asVJBase()) }
-                    .first { it.VJBase == chainPairKey.heavy },
+                    .map { CloneWithDatasetId(it, cellGroup.cellBarcode.datasetId) }
+                    .first { it.clone.asVJBase() == chainPairKey.heavy },
                 light = cellGroup.light
-                    .map { CloneWrapper(it, cellGroup.cellBarcode.datasetId, it.asVJBase()) }
-                    .first { it.VJBase == chainPairKey.light }
+                    .map { CloneWithDatasetId(it, cellGroup.cellBarcode.datasetId) }
+                    .first { it.clone.asVJBase() == chainPairKey.light }
             )
         }
         .groupBy(
@@ -148,7 +183,7 @@ class SingleCellTreeBuilder(
             GroupingCriteria.groupBy(
                 Comparator.comparing({ (first, _): Pair<VJBase, VJBase> -> first }, VJBase.comparator)
                     .thenComparing({ it.second }, VJBase.comparator)
-            ) { it.heavy.VJBase to it.light.VJBase }
+            ) { it.heavy.clone.asVJBase() to it.light.clone.asVJBase() }
         )
 
     private fun OutputPort<CellGroup>.groupCellsByChainPairs(): OutputPort<GroupOfCells> =
@@ -216,10 +251,8 @@ class SingleCellTreeBuilder(
             }
 
     private fun OutputPort<CloneWithDatasetId>.groupByCellBarcodes(cellTageIndex: Int) =
-        filter { (clone, _) ->
-            clonesFilter.matchForProductive(clone)
-        }
-            .filter { (clone, _) -> clonesFilter.countMatches(clone) }
+        filter { clonesFilter.matchForProductive(it.clone) }
+            .filter { clonesFilter.countMatches(it.clone) }
             .flatMap { (clone, datasetId) ->
                 clone.tagCount.tuples()
                     .map { tuple -> (tuple[cellTageIndex] as SequenceTagValue).sequence }
@@ -285,17 +318,15 @@ data class ChainPairKey(
 class ChainPairRebasedFromGermline(
     val heavy: CloneWithMutationsFromVJGermline,
     val light: CloneWithMutationsFromVJGermline
-) {
-    val datasetId get() = heavy.cloneWrapper.id.datasetId
-}
+)
 
 @Serializable(by = ChainPair.SerializerImpl::class)
 class ChainPair(
-    val heavy: CloneWrapper,
-    val light: CloneWrapper
+    val heavy: CloneWithDatasetId,
+    val light: CloneWithDatasetId
 ) {
     init {
-        check(heavy.id.datasetId == light.id.datasetId)
+        check(heavy.datasetId == light.datasetId)
     }
 
     class SerializerImpl : BasicSerializer<ChainPair>() {

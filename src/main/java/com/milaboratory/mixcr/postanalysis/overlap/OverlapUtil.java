@@ -56,6 +56,11 @@ public final class OverlapUtil {
                     }
 
                     @Override
+                    public void finish() {
+
+                    }
+
+                    @Override
                     public void close() {
                         processor.close();
                     }

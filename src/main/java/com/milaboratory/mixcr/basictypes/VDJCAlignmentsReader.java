@@ -332,6 +332,11 @@ public final class VDJCAlignmentsReader implements
         }
 
         @Override
+        public void finish() {
+            finished = true;
+        }
+
+        @Override
         public double getProgress() {
             return 1.0 * counter.get() / numberOfAlignments;
         }

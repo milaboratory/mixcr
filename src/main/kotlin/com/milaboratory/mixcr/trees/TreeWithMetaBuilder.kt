@@ -70,8 +70,7 @@ class TreeWithMetaBuilder(
 
             CloneOrFoundAncestor(
                 node.id,
-                cloneWrapper?.clone,
-                cloneWrapper?.id?.datasetId,
+                cloneWrapper?.clones ?: emptyList(),
                 mutationsSet
             )
         }

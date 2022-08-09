@@ -27,7 +27,6 @@ class MutationsFromVJGermline(
      * Mutations outside of CDR3
      */
     val mutations: VJPair<SortedMap<GeneFeature, Mutations<NucleotideSequence>>>,
-    //TODO remove
     /**
      * Already known from alignments V and J mutations within CDR3 feature
      */

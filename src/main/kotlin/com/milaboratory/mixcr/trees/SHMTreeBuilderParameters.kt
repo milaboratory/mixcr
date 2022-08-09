@@ -70,8 +70,8 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
          */
         val maxNDNDistanceForClustering: Double
     ) {
-        @JsonTypeName("hierarchical")
-        class Hierarchical @JsonCreator constructor(
+        @JsonTypeName("SingleLinkage")
+        class SingleLinkage @JsonCreator constructor(
             @JsonProperty("commonMutationsCountForClustering") commonMutationsCountForClustering: Int,
             @JsonProperty("maxNDNDistanceForClustering") maxNDNDistanceForClustering: Double
         ) : ClusterizationAlgorithm(commonMutationsCountForClustering, maxNDNDistanceForClustering)
@@ -97,8 +97,8 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
          */
         val maxNDNDistanceForLightChain: Double,
     ) {
-        @JsonTypeName("hierarchical")
-        class Hierarchical @JsonCreator constructor(
+        @JsonTypeName("SingleLinkage")
+        class SingleLinkage @JsonCreator constructor(
             @JsonProperty("maxNDNDistanceForLightChain") maxNDNDistanceForLightChain: Double,
             @JsonProperty("maxNDNDistanceForHeavyChain") maxNDNDistanceForHeavyChain: Double
         ) : ClusterizationAlgorithmForSingleCell(maxNDNDistanceForHeavyChain, maxNDNDistanceForLightChain)

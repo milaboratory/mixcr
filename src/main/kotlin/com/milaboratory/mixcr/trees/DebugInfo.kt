@@ -21,7 +21,7 @@ class DebugInfo(
     private val rootInfo: RootInfo,
     private val VRangesWithoutCDR3: Collection<Range>,
     private val JRangesWithoutCDR3: Collection<Range>,
-    private val cloneId: CloneWrapper.ID?,
+    private val cloneIds: CloneWrapper.ID?,
     private val id: Int,
     private val parentId: Int?,
     private val NDN: NucleotideSequence,
@@ -46,8 +46,7 @@ class DebugInfo(
                         .collect(Collectors.joining(","))
                 }
                 .put("treeId") { it.treeId.encode() }
-                .put("datasetId") { it.cloneId?.datasetId }
-                .put("cloneId") { it.cloneId?.cloneId }
+                .put("clonesIds") { it.cloneIds?.ids }
                 .put("id") { it.id }
                 .put("parentId") { it.parentId }
                 .put("NDN") { it.NDN }

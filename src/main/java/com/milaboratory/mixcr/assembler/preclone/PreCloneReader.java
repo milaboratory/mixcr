@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.assembler.preclone;
 
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import io.repseq.core.GeneFeature;
 
@@ -58,6 +57,11 @@ public interface PreCloneReader extends AutoCloseable {
                     }
 
                     @Override
+                    public void finish() {
+                        alignmentReader.finish();
+                    }
+
+                    @Override
                     public PreClone take() {
                         VDJCAlignments al;
                         //noinspection StatementWithEmptyBody
@@ -96,6 +100,11 @@ public interface PreCloneReader extends AutoCloseable {
                     }
 
                     @Override
+                    public void finish() {
+                        reader.finish();
+                    }
+
+                    @Override
                     public VDJCAlignments take() {
                         synchronized (sync) {
                             VDJCAlignments al = reader.take();
@@ -103,7 +112,7 @@ public interface PreCloneReader extends AutoCloseable {
                                 return null;
 
 
-                            if(alignmentPredicate(al))
+                            if (alignmentPredicate(al))
                                 al = al.withCloneIndexAndMappingType(idGenerator.getAndIncrement(), (byte) 0)
                                         .setAlignmentsIndex(al.getAlignmentsIndex());
 

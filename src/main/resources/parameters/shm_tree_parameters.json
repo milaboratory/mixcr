@@ -4,7 +4,7 @@
     "singleCell": {
       "type": "simpleClustering",
       "algorithm": {
-        "type": "hierarchical",
+        "type": "SingleLinkage",
         "maxNDNDistanceForHeavyChain": 1.0,
         "maxNDNDistanceForLightChain": 1.0
       }
@@ -19,7 +19,7 @@
       {
         "name": "BuildingInitialTrees",
         "algorithm": {
-          "type": "BronKerbosch",
+          "type": "SingleLinkage",
           "commonMutationsCountForClustering": 5,
           "maxNDNDistanceForClustering": 1.5
         }

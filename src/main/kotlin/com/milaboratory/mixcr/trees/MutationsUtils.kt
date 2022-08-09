@@ -116,6 +116,7 @@ internal object MutationsUtils {
         val alSize = alphabet.size()
         require(matrix.size == alSize * alSize) { "Wrong matrix size." }
 
+        //TODO move to main library
         //TODO add comments
         //TODO remove excludeSet from milib
         for (wc1 in alphabet.allWildcards) {
