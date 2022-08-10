@@ -52,6 +52,12 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
     )
     public List<String> chains;
 
+    @Option(
+            names = "--hide-non-functional",
+            description = "Show fractions of non-functional CDR3s (out-of-frames and containing stops)"
+    )
+    public boolean hideNonFunctional;
+
     @Override
     protected List<String> getInputFiles() {
         return in.subList(0, in.size() - 1);
@@ -79,11 +85,13 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
                     plt = ChainUsage.INSTANCE.chainUsageAlign(
                             files,
                             !absoluteValues,
+                            !hideNonFunctional,
                             chains
                     );
                 else plt = ChainUsage.INSTANCE.chainUsageAssemble(
                         files,
                         !absoluteValues,
+                        !hideNonFunctional,
                         chains
                 );
                 break;
@@ -91,6 +99,7 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
                 plt = ChainUsage.INSTANCE.chainUsageAlign(
                         files,
                         !absoluteValues,
+                        !hideNonFunctional,
                         chains
                 );
                 break;
