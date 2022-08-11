@@ -54,7 +54,7 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
 
     @Option(
             names = "--hide-non-functional",
-            description = "Show fractions of non-functional CDR3s (out-of-frames and containing stops)"
+            description = "Hide fractions of non-functional CDR3s (out-of-frames and containing stops)"
     )
     public boolean hideNonFunctional;
 
