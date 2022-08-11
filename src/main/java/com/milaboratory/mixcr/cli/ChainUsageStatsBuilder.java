@@ -14,31 +14,33 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.util.ReportBuilder;
 import io.repseq.core.Chains;
+import io.repseq.core.GeneFeature;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static io.repseq.core.Chains.*;
 
 public final class ChainUsageStatsBuilder implements ReportBuilder {
     final AtomicLong chimeras = new AtomicLong(0);
     final AtomicLong total = new AtomicLong(0);
-    final ConcurrentHashMap<Chains, AtomicLong> counters = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<Chains, RecordBuilder> records = new ConcurrentHashMap<>();
 
-    AtomicLong getCounter(Chains chains) {
-        AtomicLong counter;
-        if ((counter = counters.get(chains)) != null)
-            return counter;
+    RecordBuilder getRecordBuilder(Chains chains) {
+        RecordBuilder rec;
+        if ((rec = records.get(chains)) != null)
+            return rec;
         else {
-            AtomicLong newCounter = new AtomicLong(0);
-            counter = counters.putIfAbsent(chains, newCounter);
-            if (counter == null)
-                return newCounter;
+            RecordBuilder newRec = new RecordBuilder();
+            rec = records.putIfAbsent(chains, newRec);
+            if (rec == null)
+                return newRec;
             else
-                return counter;
+                return rec;
         }
     }
 
@@ -47,7 +49,7 @@ public final class ChainUsageStatsBuilder implements ReportBuilder {
         if (obj.isChimera())
             chimeras.incrementAndGet();
         else
-            getCounter(obj.commonTopChains()).incrementAndGet();
+            getRecordBuilder(obj.commonTopChains()).increment(obj);
     }
 
     void decrement(VDJCObject obj) {
@@ -55,19 +57,19 @@ public final class ChainUsageStatsBuilder implements ReportBuilder {
         if (obj.isChimera())
             chimeras.decrementAndGet();
         else
-            getCounter(obj.commonTopChains()).decrementAndGet();
+            getRecordBuilder(obj.commonTopChains()).increment(obj);
     }
 
-    Map<Chains.NamedChains, Long> getMap() {
-        Map<Chains.NamedChains, Long> r = new HashMap<>();
-        for (Map.Entry<Chains, AtomicLong> e : counters.entrySet())
-            for (Chains.NamedChains knownChains : Arrays.asList(
-                    TRAD_NAMED,
-                    TRB_NAMED, TRG_NAMED,
-                    IGH_NAMED, IGKL_NAMED))
+    Map<NamedChains, ChainUsageStatsRecord> getMap() {
+        Map<NamedChains, RecordBuilder> r = new HashMap<>();
+        for (Map.Entry<Chains, RecordBuilder> e : records.entrySet())
+            for (NamedChains knownChains : Arrays.asList(
+                    TRAD_NAMED, TRB_NAMED, TRG_NAMED,
+                    IGH_NAMED, IGK_NAMED, IGL_NAMED))
                 if (knownChains.chains.intersects(e.getKey()))
-                    r.put(knownChains, r.getOrDefault(knownChains, 0L) + e.getValue().get());
-        return r;
+                    r.computeIfAbsent(knownChains, __ -> new RecordBuilder()).add(e.getValue());
+        return r.entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
     }
 
     @Override
@@ -77,5 +79,45 @@ public final class ChainUsageStatsBuilder implements ReportBuilder {
                 total.get(),
                 getMap()
         );
+    }
+
+    static class RecordBuilder {
+        public final AtomicLong total = new AtomicLong(0L);
+        public final AtomicLong nf = new AtomicLong(0L);
+        public final AtomicLong oof = new AtomicLong(0L);
+        public final AtomicLong stops = new AtomicLong(0L);
+
+        RecordBuilder increment(VDJCObject obj) {
+            total.incrementAndGet();
+            if (!obj.isAvailable(GeneFeature.CDR3))
+                return this;
+
+            boolean hasStops = obj.containsStopsOrAbsent(GeneFeature.CDR3);
+            boolean isOOf = obj.isOutOfFrameOrAbsent(GeneFeature.CDR3);
+            if (isOOf) // if oof, do not check stops
+                this.oof.incrementAndGet();
+            else if (hasStops)
+                stops.incrementAndGet();
+            if (hasStops || isOOf)
+                nf.incrementAndGet();
+            return this;
+        }
+
+        RecordBuilder add(RecordBuilder oth) {
+            total.addAndGet(oth.total.get());
+            nf.addAndGet(oth.nf.get());
+            oof.addAndGet(oth.oof.get());
+            stops.addAndGet(oth.stops.get());
+            return this;
+        }
+
+        ChainUsageStatsRecord build() {
+            return new ChainUsageStatsRecord(
+                    total.get(),
+                    nf.get(),
+                    oof.get(),
+                    stops.get()
+            );
+        }
     }
 }

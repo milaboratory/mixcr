@@ -796,7 +796,7 @@ public abstract class VDJCObject {
         }
     }
 
-    public boolean containsStops(GeneFeature feature) {
+    public boolean containsStopsOrAbsent(GeneFeature feature) {
         GeneFeature codingFeature = GeneFeature.getCodingGeneFeature(feature);
         if (codingFeature == null)
             return true;
@@ -815,7 +815,7 @@ public abstract class VDJCObject {
         return false;
     }
 
-    public boolean isOutOfFrame(GeneFeature feature) {
+    public boolean isOutOfFrameOrAbsent(GeneFeature feature) {
         NSequenceWithQuality nt = getFeature(feature);
         if (nt == null || nt.size() % 3 != 0)
             return true;

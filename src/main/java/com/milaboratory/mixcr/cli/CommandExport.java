@@ -285,13 +285,13 @@ public abstract class CommandExport<T extends VDJCObject> extends MiXCRCommand {
             @Override
             public boolean accept(Clone clone) {
                 if (filterOutOfFrames) {
-                    if (clone.isOutOfFrame(GeneFeature.CDR3))
+                    if (clone.isOutOfFrameOrAbsent(GeneFeature.CDR3))
                         return false;
                 }
 
                 if (filterStopCodons)
                     for (GeneFeature assemblingFeature : clone.getParentCloneSet().getAssemblingFeatures())
-                        if (clone.containsStops(assemblingFeature))
+                        if (clone.containsStopsOrAbsent(assemblingFeature))
                             return false;
 
                 return true;
