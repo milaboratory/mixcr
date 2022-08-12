@@ -33,8 +33,7 @@ import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.mixcr.util.XSV.writeXSVBody
-import com.milaboratory.mixcr.util.XSV.writeXSVHeaders
+import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.mixcr.util.alignmentsCover
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.filter
@@ -308,12 +307,11 @@ class CommandFindAlleles : MiXCRCommand() {
                     allelesStatistics[gene.geneName]
                 }
             )
-            writeXSVHeaders(output, columns.keys, ";")
             val genes = resultLibrary.genes
                 .filter { it.geneType in VJ_REFERENCE }
                 .sortedWith(Comparator.comparing { it: VDJCGene -> it.geneType }
                     .thenComparing { it: VDJCGene -> it.name })
-            writeXSVBody(output, genes, columns, ";")
+            writeXSV(output, genes, columns, ";")
         }
     }
 

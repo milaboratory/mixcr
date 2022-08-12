@@ -117,9 +117,21 @@ data class CloneWithDatasetId(
         )
 
     data class ID(
-        private val cloneId: Int,
-        private val datasetId: Int
-    )
+        val cloneId: Int,
+        val datasetId: Int
+    ) {
+        fun encode() = "$datasetId:$cloneId"
+
+        companion object {
+            fun decode(text: String): ID {
+                val (datasetId, cloneId) = text.split(":")
+                return ID(
+                    datasetId.toInt(),
+                    cloneId.toInt()
+                )
+            }
+        }
+    }
 
     class SerializerImpl : BasicSerializer<CloneWithDatasetId>() {
         override fun write(output: PrimitivO, obj: CloneWithDatasetId) {

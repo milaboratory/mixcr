@@ -19,9 +19,9 @@
       {
         "name": "BuildingInitialTrees",
         "algorithm": {
-          "type": "SingleLinkage",
+          "type": "BronKerbosch",
           "commonMutationsCountForClustering": 5,
-          "maxNDNDistanceForClustering": 1.5
+          "maxNDNDistanceForClustering": 1.0
         }
       },
       {
@@ -31,24 +31,7 @@
       },
       {
         "name": "CombineTrees",
-        "maxNDNDistanceBetweenRoots": 0.5
-      },
-      {
-        "name": "AttachClonesByNDN",
-        "maxNDNDistance": 1.5
-      },
-      {
-        "name": "AttachClonesByDistanceChange",
-        "threshold": 0.45,
-        "maxNDNDistance": 1.5
-      },
-      {
-        "name": "CombineTrees",
-        "maxNDNDistanceBetweenRoots": 0.5
-      },
-      {
-        "name": "AttachClonesByNDN",
-        "maxNDNDistance": 1.5
+        "maxNDNDistanceBetweenRoots": 0.3
       }
     ]
   }

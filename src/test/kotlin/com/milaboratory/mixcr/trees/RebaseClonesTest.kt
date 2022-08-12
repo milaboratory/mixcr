@@ -583,8 +583,12 @@ class RebaseClonesTest {
             rootInfo,
             mutationsFromVJGermline,
             CloneWrapper(
-                Clone(emptyArray(), Maps.newEnumMap(GeneType::class.java), null, 0.0, 0, 0),
-                0,
+                listOf(
+                    CloneWithDatasetId(
+                        Clone(emptyArray(), Maps.newEnumMap(GeneType::class.java), null, 0.0, 0, 0),
+                        0
+                    )
+                ),
                 VJBase,
                 listOf(VJBase)
             )

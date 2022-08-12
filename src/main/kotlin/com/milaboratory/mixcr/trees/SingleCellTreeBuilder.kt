@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
@@ -55,14 +54,15 @@ class SingleCellTreeBuilder(
     private val SHMTreeBuilder: SHMTreeBuilder
 ) {
     fun buildTrees(
-        clones: OutputPortCloseable<CloneWithDatasetId>,
+        clones: OutputPort<CloneWithDatasetId>,
         tagsInfo: TagsInfo,
-        threads: Int
-    ): OutputPortCloseable<TreeWithMetaBuilder> {
+        threads: Int,
+        resultWriter: (OutputPort<TreeWithMetaBuilder>) -> Unit
+    ) {
         //TODO replace with specialized code
         val cellTageIndex = tagsInfo.first { it.type == TagType.Cell }.index
 
-        return clones
+        clones
             .groupByCellBarcodes(cellTageIndex)
             .formCellGroups()
             .cached(
@@ -101,7 +101,8 @@ class SingleCellTreeBuilder(
                     is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.SingleLinkage ->
                         ClustersBuilder.SingleLinkage(clusterPredictor)
                 }
-                cache()
+
+                val result = cache()
                     //read clones with barcodes and group them accordingly to decisions
                     .clustersWithSameVJAndCDR3Length(cellBarcodesToGroupChainPair)
                     .flatMap { cellGroups ->
@@ -133,6 +134,8 @@ class SingleCellTreeBuilder(
                             .map { SHMTreeBuilder.buildATreeFromRoot(it) }
                     }
                     .flatten()
+
+                resultWriter(result)
             }
     }
 

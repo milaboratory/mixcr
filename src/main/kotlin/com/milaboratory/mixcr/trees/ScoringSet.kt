@@ -36,10 +36,8 @@ class ScoringSet(
      * - Try to calculate probabilities of length of N segments and align center to D if possible.
      * Use different penalties in N and D segments comparing to probability of generating the same NDN sequence
      */
-    fun NDNDistance(firstNDN: NucleotideSequence, secondNDN: NucleotideSequence): Double {
-        val penaltyCalculator = NDN
-        return penaltyCalculator.normalizedPenalties(firstNDN, secondNDN)
-    }
+    fun NDNDistance(firstNDN: NucleotideSequence, secondNDN: NucleotideSequence): Double =
+        NDN.normalizedPenalties(firstNDN, secondNDN)
 
     class PenaltyCalculator(
         val scoring: AlignmentScoring<NucleotideSequence>
@@ -62,14 +60,12 @@ class ScoringSet(
 
         fun penalties(mutations: CompositeMutations): Int {
             val maxScore = scoring.maxScore(mutations.rangeInParent.length())
-            //AlignmentUtils.calculateScore use sequence only for positions without mutations.
-            //Calculating parent is expensive, so use grand if possible
-            val base = if (mutations.mutationsFromParentToThis.lastMutationPosition() > mutations.grand.size()) {
-                mutations.calculateParent()
-            } else {
-                mutations.grand
-            }
-            val score = AlignmentUtils.calculateScore(base, mutations.mutationsFromParentToThis, scoring)
+            val score = AlignmentUtils.calculateScore(
+                mutations.calculateParent(),
+                mutations.rangeInParent,
+                mutations.mutationsFromParentToThis,
+                scoring
+            )
             return maxScore - score
         }
     }

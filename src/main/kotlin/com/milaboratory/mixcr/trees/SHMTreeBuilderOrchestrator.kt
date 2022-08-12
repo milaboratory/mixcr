@@ -14,90 +14,43 @@
 package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
-import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.cli.BuildSHMTreeReport
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
-import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.flatMap
 import com.milaboratory.primitivio.flatten
-import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
-import com.milaboratory.primitivio.withProgress
-import com.milaboratory.primitivio.writeList
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint.CDR3Begin
 import io.repseq.core.ReferencePoint.CDR3End
 import io.repseq.core.ReferencePoint.FR4End
 import io.repseq.core.ReferencePoint.UTR5Begin
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
+import java.io.File
 import java.io.PrintStream
-import java.util.concurrent.ConcurrentHashMap
+import java.nio.file.Path
 
 
-private val groupingCriteria: GroupingCriteria<CloneWrapper> = object : GroupingCriteria<CloneWrapper> {
-    override fun hashCodeForGroup(entity: CloneWrapper): Int = entity.VJBase.hashCode()
-
-    override val comparator: Comparator<CloneWrapper> = Comparator.comparing({ c -> c.VJBase }, VJBase.comparator)
-}
-
-/**
- * Algorithm has several steps.
- * For each step process all VJ clusters. Zero-step produce trees, others - add clones to trees or combine them.
- *
- * Zero-step will form initial trees from mutated clones.
- * Initially we can't trust position of VEndTrimmed and JEndTrimmed because of mutations near VEndTrimmed and JEndTrimmed
- * change border of alignment in both ways.
- * For mutated clones we have more information in VJ segments so algorithm will less prone to uncertainty in coordinates of VEndTrimmed and JEndTrimmed.
- *
- * After forming initial trees we can calculate coordinates of VEndTrimmed and JEndTrimmed with high precision,
- * so next steps may use NDN for comparing nodes and clones.
- *
- * After each step we got more information about tree and their MRCA. It affects result of next steps.
- *
- * On every step clone may be chosen for several trees. So after each step there must be call of makeDecisions that left every clone only in one tree.
- *
- * Trees build by maximum parsimony with distances calculated by ClusterProcessor.distance.
- * On every added clone in the tree there is a recalculation of NDN of part of nodes by MutationsUtils.findNDNCommonAncestor and MutationsUtils.concreteNDNChild
- *
- * For NDN used modified score because it must work with wildcards properly. See MutationsUtils.NDNScoring
- *
- * Thoughts:
- * - Maybe we need to repeat steps until they not yield any results
- * - Try to combine trees and clones with different CDR3length at the end
- *
- * @see BuildSHMTreeStep
- * @see SHMTreeBuilderOrchestrator.applyStep
- * @see SHMTreeBuilderOrchestrator.makeDecisions
- * @see SHMTreeBuilder.distance
- * @see MutationsUtils.concreteNDNChild
- * @see MutationsUtils.findNDNCommonAncestor
- * @see MutationsUtils.NDNScoring
- */
 class SHMTreeBuilderOrchestrator(
-    parameters: SHMTreeBuilderParameters,
+    private val parameters: SHMTreeBuilderParameters,
     private val scoringSet: ScoringSet,
-    val datasets: List<CloneReader>,
+    private val datasets: List<CloneReader>,
     private val assemblingFeatures: Array<GeneFeature>,
     private val tempDest: TempFileDest,
+    private val debugDirectory: Path,
     VGenesToSearch: Set<String>,
     JGenesToSearch: Set<String>,
     CDR3LengthToSearch: Set<Int>,
@@ -111,28 +64,9 @@ class SHMTreeBuilderOrchestrator(
         parameters.productiveOnly
     )
 
-    /**
-     * For every clone store in what tree it was added and with what score
-     */
-    private var decisions = ConcurrentHashMap<CloneWrapper.ID, Map<VJBase, TreeWithMetaBuilder.DecisionInfo>>()
-
-    /**
-     * For storing full structure of the tree there is not enough memory.
-     * So between steps we store only minimum information about clones in every tree.
-     */
-    private var currentTrees = ConcurrentHashMap<VJBase, List<TreeWithMetaBuilder.Snapshot>>()
-
     private val SHMTreeBuilder = SHMTreeBuilder(
         parameters.topologyBuilder,
         scoringSet
-    )
-
-    private val SHMTreeBuilderBySteps = SHMTreeBuilderBySteps(
-        parameters.initialStep,
-        scoringSet,
-        assemblingFeatures,
-        SHMTreeBuilder,
-        relatedAllelesMutations()
     )
 
     private val geneFeatureToMatch: VJPair<GeneFeature> = assemblingFeatures
@@ -144,93 +78,38 @@ class SHMTreeBuilderOrchestrator(
             )
         }
 
-    fun allClonesInTress() = currentTrees.asSequence()
-        .flatMap { it.value }
-        .flatMap { it.clonesAdditionHistory }
-        .toSet()
-
-    fun clonesWithTheSameVJAndCDR3Length(progressAndStage: ProgressAndStage): OutputPort<Cluster> =
-        readClonesWithDatasetIds()
-            .withProgress(
-                datasets.sumOf { it.numberOfClones() }.toLong(),
-                progressAndStage,
-                "Search for clones with the same targets"
-            ) { allClones ->
-                //group efficiently the same clones
-                allClones.groupBy(
-                    datasets.constructStateBuilder(),
-                    tempDest.addSuffix("tree.builder.grouping.clones.with.the.same.targets"),
-                    GroupingCriteria.groupBy { it.clone.targets.reduce(NSequenceWithQuality::concatenate) }
-                )
-            }
-            .withProgress(
-                datasets.sumOf { it.numberOfClones() }.toLong(),
-                progressAndStage,
-                "Group clones by the same V, J and CDR3Length"
-            ) { groupedClones ->
-                groupedClones
-                    .flatMap { clones -> clones.asCloneWrappers() }
-                    //filter by user defined parameters
-                    .filter { c -> clonesFilter.match(c) }
-                    .groupBy(
-                        datasets.constructStateBuilder(),
-                        tempDest.addSuffix("tree.builder.grouping.by.the.same.VJ.CDR3Length"),
-                        groupingCriteria
-                    )
-                    .map { Cluster(it) }
-            }
-
-    private fun List<CloneWithDatasetId>.asCloneWrappers(): List<CloneWrapper> {
-        val mainClone = CloneWrapper.chooseMainClone(map { it.clone })
-        val VGeneIds = mainClone.getHits(Variable).map { VHit -> VHit.gene.id }
-        val JGeneIds = mainClone.getHits(Joining).map { JHit -> JHit.gene.id }
-        val candidateVJBases = VGeneIds
-            //create copy of clone for every pair of V and J hits in it
-            .flatMap { VGeneId ->
-                JGeneIds.map { JGeneId ->
-                    VJBase(VJPair(VGeneId, JGeneId), mainClone.ntLengthOf(CDR3, VGeneId, JGeneId))
-                }
-            }
-            .filter { VJBase -> mainClone.coversFeature(geneFeatureToMatch, VJBase) }
-            .filter { VJBase ->
-                clonesFilter.matchForProductive(mainClone, VJBase)
-            }
-            //filter compositions that not overlap with each another
-            .filter { VJBase ->
-                mainClone.formsAllRefPointsInCDR3(VJBase)
-            }
-        return candidateVJBases.map { VJBase ->
-            CloneWrapper(this, VJBase, candidateVJBases)
-        }
-    }
-
     /**
      * @param userInput (datasetId:cloneId) = treeId
      */
     fun buildByUserData(
         userInput: Map<CloneWithDatasetId.ID, Int>,
         threads: Int
-    ): OutputPort<TreeWithMetaBuilder> =
-        TreeBuilderByUserData(
+    ): OutputPort<TreeWithMetaBuilder> {
+        val treeBuilder = TreeBuilderByUserData(
             tempDest,
             datasets.constructStateBuilder(),
             geneFeatureToMatch,
             assemblingFeatures,
             SHMTreeBuilder
-        ).buildByUserData(readClonesWithDatasetIds(), userInput, threads)
+        )
+        return readClonesWithDatasetIds { clones ->
+            treeBuilder.buildByUserData(clones, userInput, threads)
+        }
+    }
 
 
     fun buildTreesByCellTags(
         singleCellParams: SHMTreeBuilderParameters.SingleCell.SimpleClustering,
-        threads: Int
-    ): OutputPort<TreeWithMetaBuilder> {
+        threads: Int,
+        resultWriter: (OutputPort<TreeWithMetaBuilder>) -> Unit
+    ) {
         check(datasets.map { it.tagsInfo }.distinct().size == 1) {
             "tagsInfo must be the same for all files"
         }
         val tagsInfo = datasets.first().tagsInfo
         val stateBuilder = datasets.constructStateBuilder()
 
-        return SingleCellTreeBuilder(
+        val treeBuilder = SingleCellTreeBuilder(
             singleCellParams,
             stateBuilder,
             tempDest,
@@ -239,99 +118,60 @@ class SHMTreeBuilderOrchestrator(
             assemblingFeatures,
             SHMTreeBuilder
         )
-            .buildTrees(
-                readClonesWithDatasetIds(),
-                tagsInfo,
-                threads
-            )
+        readClonesWithDatasetIds { clones ->
+            treeBuilder.buildTrees(clones, tagsInfo, threads, resultWriter)
+        }
     }
 
-    private fun readClonesWithDatasetIds(): OutputPortCloseable<CloneWithDatasetId> = datasets
+    fun buildTreesBySteps(
+        progressAndStage: ProgressAndStage,
+        threads: Int,
+        resultWriter: (OutputPort<TreeWithMetaBuilder>) -> Unit
+    ): BuildSHMTreeReport {
+        val treeBuilder = SHMTreeBuilderBySteps(
+            parameters.steps,
+            scoringSet,
+            assemblingFeatures,
+            SHMTreeBuilder,
+            clonesFilter,
+            relatedAllelesMutations(),
+            datasets.sumOf { it.numberOfClones() }.toLong(),
+            datasets.constructStateBuilder(),
+            tempDest,
+            geneFeatureToMatch
+        )
+        val debugs = parameters.steps.indices.map {
+            createDebug(it)
+        }
+        readClonesWithDatasetIds { clones ->
+            treeBuilder.buildTrees(
+                clones,
+                progressAndStage,
+                threads,
+                debugs,
+                resultWriter
+            )
+        }
+
+        val report = BuildSHMTreeReport()
+        debugs.forEachIndexed { i, debug ->
+            report.addStatsForStep(
+                parameters.steps[i],
+                debug,
+                if (i == 0) null else debugs[i - 1]
+            )
+        }
+        return report
+    }
+
+    //TODO auto close through lambda
+    private fun <R> readClonesWithDatasetIds(function: (OutputPort<CloneWithDatasetId>) -> R) = datasets
         .withIndex()
         .map { (datasetId, dataset) ->
             dataset.readClones().map { clone -> CloneWithDatasetId(clone, datasetId) }
         }
         .flatten()
-
-    /**
-     * Clone may be selected for several trees with different VJ.
-     * Need to choose it what tree suppose to leave the clone.
-     *
-     * @return total count of clones that was added on this step
-     */
-    fun makeDecisions(): Int {
-        val clonesToRemove = mutableMapOf<VJBase, MutableSet<CloneWrapper.ID>>()
-        decisions.forEach { (cloneId, decisions) ->
-            val chosenDecision: VJBase = SHMTreeBuilderBySteps.makeDecision(decisions)
-            (decisions.keys - chosenDecision).forEach { VJBase ->
-                clonesToRemove.computeIfAbsent(VJBase) { mutableSetOf() } += cloneId
-            }
-        }
-        currentTrees = currentTrees.mapValuesTo(ConcurrentHashMap()) { (key, value) ->
-            value
-                .map { snapshot -> snapshot.excludeClones(clonesToRemove[key] ?: emptySet()) }
-                .filter { snapshot -> snapshot.clonesAdditionHistory.size > 1 }
-        }
-        val clonesWasAdded = decisions.size
-        decisions = ConcurrentHashMap()
-        return clonesWasAdded
-    }
-
-    fun treesCount(): Int = currentTrees.values.sumOf { it.size }
-
-    /**
-     * Run one of possible steps to add clones or combine trees.
-     */
-    fun applyStep(
-        clusterBySameVAndJ: List<CloneWrapper>,
-        step: BuildSHMTreeStep,
-        allClonesInTress: Set<CloneWrapper.ID>,
-        debugOfPreviousStep: PrintStream,
-        debugOfCurrentStep: PrintStream
-    ) {
-        val VJBase = clusterBySameVAndJ.first().VJBase
-        try {
-            val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ)
-            val currentTrees = currentTrees.getOrDefault(VJBase, emptyList())
-                .map { snapshot -> clusterProcessor.restore(snapshot, clusterBySameVAndJ) }
-            val debugInfos = clusterProcessor.debugInfos(currentTrees)
-            XSV.writeXSVBody(debugOfPreviousStep, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
-            val result = clusterProcessor.applyStep(step, currentTrees, allClonesInTress, clusterBySameVAndJ)
-            this.currentTrees[VJBase] = result.snapshots
-            result.decisions.forEach { (cloneId, decision) ->
-                decisions.merge(cloneId, mapOf(VJBase to decision)) { a, b -> a + b }
-            }
-            XSV.writeXSVBody(debugOfCurrentStep, result.nodesDebugInfo, DebugInfo.COLUMNS_FOR_XSV, ";")
-        } catch (e: Exception) {
-            throw RuntimeException("can't apply step $step on $VJBase", e)
-        }
-    }
-
-    fun getResult(
-        clusterBySameVAndJ: List<CloneWrapper>,
-        previousStepDebug: PrintStream
-    ): List<TreeWithMetaBuilder> {
-        val VJBase = clusterBySameVAndJ.first().VJBase
-        if (!clonesFilter.match(VJBase)) {
-            return emptyList()
-        }
-        try {
-            val clusterProcessor = buildClusterProcessor(clusterBySameVAndJ)
-            val currentTrees = currentTrees.getOrDefault(VJBase, emptyList())
-                .map { snapshot -> clusterProcessor.restore(snapshot, clusterBySameVAndJ) }
-            if (currentTrees.isEmpty()) return emptyList()
-            val debugInfos = clusterProcessor.debugInfos(currentTrees)
-            XSV.writeXSVBody(previousStepDebug, debugInfos, DebugInfo.COLUMNS_FOR_XSV, ";")
-            return currentTrees
-        } catch (e: Exception) {
-            throw RuntimeException("can't build result for $VJBase", e)
-        }
-    }
-
-    private fun buildClusterProcessor(clusterBySameVAndJ: List<CloneWrapper>): SHMTreeBuilderBySteps {
-        require(clusterBySameVAndJ.isNotEmpty())
-        return SHMTreeBuilderBySteps
-    }
+        .use(function)
 
     /**
      * For every gene make a list of mutations to alleles of the gene.
@@ -355,6 +195,33 @@ class SHMTreeBuilderOrchestrator(
 
     private fun alleleMutations(gene: VDJCGene): Mutations<NucleotideSequence> =
         gene.data.baseSequence.mutations ?: EMPTY_NUCLEOTIDE_MUTATIONS
+
+    private fun createDebug(stepNumber: Int): Debug {
+        val beforeDecisions = prepareDebugFile(stepNumber, "before_decisions")
+        val afterDecisions = prepareDebugFile(stepNumber, "after_decisions")
+        return Debug(
+            beforeDecisions.first,
+            beforeDecisions.second,
+            afterDecisions.first,
+            afterDecisions.second
+        )
+    }
+
+    private fun prepareDebugFile(stepNumber: Int, suffix: String): Pair<File, PrintStream> {
+        val debugFile = debugDirectory.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile()
+        debugFile.delete()
+        debugFile.createNewFile()
+        val debugWriter = PrintStream(debugFile)
+        XSV.writeXSVHeaders(debugWriter, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
+        return debugFile to debugWriter
+    }
+
+    class Debug(
+        val treesBeforeDecisionsFile: File,
+        val treesBeforeDecisionsWriter: PrintStream,
+        val treesAfterDecisionsFile: File,
+        val treesAfterDecisionsWriter: PrintStream
+    )
 
     class ClonesFilter(
         private val VGenesToSearch: Set<String>?,
@@ -399,19 +266,6 @@ class SHMTreeBuilderOrchestrator(
 
         private fun CDR3LengthMatches(VJBase: VJBase) =
             (CDR3LengthToSearch?.contains(VJBase.CDR3length) ?: true)
-    }
-
-    @Serializable(by = Cluster.SerializerImpl::class)
-    class Cluster(
-        val clones: List<CloneWrapper>
-    ) {
-        class SerializerImpl : BasicSerializer<Cluster>() {
-            override fun write(output: PrimitivO, obj: Cluster) {
-                output.writeList(obj.clones)
-            }
-
-            override fun read(input: PrimitivI): Cluster = Cluster(input.readList())
-        }
     }
 }
 

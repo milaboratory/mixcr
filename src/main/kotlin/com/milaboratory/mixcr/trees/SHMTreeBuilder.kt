@@ -15,9 +15,13 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.AlignmentUtils
+import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.VJPair
+import com.milaboratory.mixcr.util.asMutations
+import com.milaboratory.mixcr.util.asSequence
+import com.milaboratory.mixcr.util.intersection
 import com.milaboratory.mixcr.util.intersectionCount
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -90,13 +94,12 @@ class SHMTreeBuilder(
             originalRoot = destination.rootInfo,
             rebaseTo = from.rootInfo
         )
-        return distance(
-            mutationsBetween(
-                from.rootInfo,
-                oldestAncestorOfFrom.fromRootToThis,
-                destinationRebasedOnFrom
-            )
+        val mutations = mutationsBetween(
+            from.rootInfo,
+            oldestAncestorOfFrom.fromRootToThis,
+            destinationRebasedOnFrom
         )
+        return distance(mutations)
     }
 
     private fun List<CloneWithMutationsFromVJGermline>.buildRootInfo(): RootInfo {
@@ -230,26 +233,30 @@ class SHMTreeBuilder(
 
     private fun mutationsBetween(rootInfo: RootInfo, first: MutationsSet, second: MutationsSet) =
         NodeMutationsDescription(
-            mutationsBetween(rootInfo, first, second, Variable),
-            MutationsUtils.difference(
-                rootInfo.sequence1.V,
-                first.mutations.V.partInCDR3.mutations,
-                second.mutations.V.partInCDR3.mutations,
-                rootInfo.rangeInCDR3.V
+            VJPair(
+                mutationsBetween(rootInfo, first, second, Variable),
+                mutationsBetween(rootInfo, first, second, Joining)
+            ),
+            VJPair(
+                MutationsUtils.difference(
+                    rootInfo.sequence1.V,
+                    first.mutations.V.partInCDR3.mutations,
+                    second.mutations.V.partInCDR3.mutations,
+                    rootInfo.rangeInCDR3.V
+                ),
+                MutationsUtils.difference(
+                    rootInfo.sequence1.J,
+                    first.mutations.J.partInCDR3.mutations,
+                    second.mutations.J.partInCDR3.mutations,
+                    rootInfo.rangeInCDR3.J
+                )
             ),
             MutationsUtils.difference(
                 rootInfo.reconstructedNDN,
                 first.NDNMutations.mutations,
                 second.NDNMutations.mutations,
                 Range(0, rootInfo.reconstructedNDN.size())
-            ),
-            MutationsUtils.difference(
-                rootInfo.sequence1.J,
-                first.mutations.J.partInCDR3.mutations,
-                second.mutations.J.partInCDR3.mutations,
-                rootInfo.rangeInCDR3.J
-            ),
-            mutationsBetween(rootInfo, first, second, Joining)
+            )
         )
 
     private fun mutationsBetween(
@@ -363,17 +370,43 @@ class SHMTreeBuilder(
     private fun commonMutations(
         first: NodeMutationsDescription,
         second: NodeMutationsDescription
-    ): NodeMutationsDescription =
-        NodeMutationsDescription(
-            first.mutationsOutsideCDR3.V.intersection(second.mutationsOutsideCDR3.V),
+    ): NodeMutationsDescription {
+        var mutationsInCDR3 = VJPair(
             first.mutationsInCDR3.V.intersection(second.mutationsInCDR3.V),
+            first.mutationsInCDR3.J.intersection(second.mutationsInCDR3.J),
+        )
+        // Found common mutations can change CDR3 length.
+        // Example:
+        // [I2A,D4A] and [I3A,D4A]. Common mutations will be [D4A]
+        if (mutationsInCDR3.V.mutationsFromParentToThis.lengthDelta + mutationsInCDR3.J.mutationsFromParentToThis.lengthDelta != 0) {
+            mutationsInCDR3 = mutationsInCDR3.map { compositeMutations ->
+                compositeMutations.copy(mutationsFromParentToThis = compositeMutations.mutationsFromParentToThis
+                    .asSequence()
+                    .filter { Mutation.isSubstitution(it) }
+                    .asMutations(NucleotideSequence.ALPHABET)
+                )
+            }
+        }
+        return NodeMutationsDescription(
+            VJPair(
+                first.mutationsOutsideCDR3.V.intersection(second.mutationsOutsideCDR3.V),
+                first.mutationsOutsideCDR3.J.intersection(second.mutationsOutsideCDR3.J)
+            ),
+            mutationsInCDR3,
             first.knownNDN.copy(
                 mutationsFromParentToThis = MutationsUtils.findNDNCommonAncestor(
                     first.knownNDN.mutationsFromParentToThis,
                     second.knownNDN.mutationsFromParentToThis
                 )
             ),
-            first.mutationsInCDR3.J.intersection(second.mutationsInCDR3.J),
-            first.mutationsOutsideCDR3.J.intersection(second.mutationsOutsideCDR3.J),
         )
+    }
+
+    private fun Map<GeneFeature, CompositeMutations>.intersection(
+        with: Map<GeneFeature, CompositeMutations>
+    ): Map<GeneFeature, CompositeMutations> =
+        MutationsUtils.zip(this, with) { a, b, _ -> a.intersection(b) }
+
+    private fun CompositeMutations.intersection(with: CompositeMutations): CompositeMutations =
+        copy(mutationsFromParentToThis = mutationsFromParentToThis.intersection(with.mutationsFromParentToThis))
 }

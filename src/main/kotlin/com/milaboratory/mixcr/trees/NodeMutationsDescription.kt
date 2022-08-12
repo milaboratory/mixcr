@@ -17,23 +17,11 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.VJPair
 import io.repseq.core.GeneFeature
 
-class NodeMutationsDescription private constructor(
+class NodeMutationsDescription(
     val mutationsOutsideCDR3: VJPair<Map<GeneFeature, CompositeMutations>>,
     val mutationsInCDR3: VJPair<CompositeMutations>,
     val knownNDN: CompositeMutations
-) {
-    constructor(
-        VMutationsOutsideCDR3: Map<GeneFeature, CompositeMutations>,
-        VMutationsInCDR3: CompositeMutations,
-        knownNDN: CompositeMutations,
-        JMutationsInCDR3: CompositeMutations,
-        JMutationsOutsideCDR3: Map<GeneFeature, CompositeMutations>
-    ) : this(
-        VJPair(VMutationsOutsideCDR3, JMutationsOutsideCDR3),
-        VJPair(VMutationsInCDR3, JMutationsInCDR3),
-        knownNDN
-    )
-}
+)
 
 /**
  * Mutations representation for chained mutations.

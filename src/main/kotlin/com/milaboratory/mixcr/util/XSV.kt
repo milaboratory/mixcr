@@ -24,14 +24,26 @@ object XSV {
     }
 
     @JvmStatic
+    fun <T> writeXSV(
+        output: PrintStream,
+        records: Iterable<T>,
+        columns: Map<String, (T) -> Any?>,
+        delimiter: String
+    ) {
+        writeXSVHeaders(output, columns.keys, delimiter)
+        writeXSVBody(output, records, columns, delimiter)
+    }
+
+    @JvmStatic
     fun <T> writeXSVBody(
         output: PrintStream,
-        records: Collection<T>,
+        records: Iterable<T>,
         columns: Map<String, (T) -> Any?>,
         delimiter: String
     ) {
         for (record in records) {
-            output.println(columns.values.stream()
+            output.println(
+                columns.values.stream()
                 .map { column -> Objects.toString(column(record), "") }
                 .collect(Collectors.joining(delimiter))
             )

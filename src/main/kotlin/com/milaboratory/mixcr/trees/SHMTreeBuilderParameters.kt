@@ -132,9 +132,6 @@ data class SHMTreeBuilderParameters @JsonCreator constructor(
     }
 }
 
-val SHMTreeBuilderParameters.initialStep: BuildSHMTreeStep.BuildingInitialTrees
-    get() = steps.first() as BuildSHMTreeStep.BuildingInitialTrees
-
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     property = "name"

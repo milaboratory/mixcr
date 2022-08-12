@@ -27,6 +27,7 @@ import com.milaboratory.mixcr.trees.BuildSHMTreeStep
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.CombineTrees
 import com.milaboratory.mixcr.trees.DebugInfo
+import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
 import com.milaboratory.mixcr.trees.forPrint
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportHelper
@@ -38,7 +39,6 @@ import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.letsPlot
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.nio.file.Path
 import kotlin.math.abs
 
@@ -46,36 +46,41 @@ class BuildSHMTreeReport : MiXCRReport {
     @get:JsonProperty("stepResults")
     val stepResults = mutableListOf<StepResult>()
 
-    fun onStepEnd(step: BuildSHMTreeStep, clonesWasAdded: Int, treesCountDelta: Int) {
-        stepResults += StepResult(
+    fun addStatsForStep(
+        step: BuildSHMTreeStep,
+        stepResultDebug: SHMTreeBuilderOrchestrator.Debug,
+        previousStepResultDebug: SHMTreeBuilderOrchestrator.Debug?
+    ) {
+        stepResults += calculateStatsFromDebug(
             step,
-            clonesWasAdded,
-            treesCountDelta
-        )
-    }
-
-    fun addStatsForStep(stepIndex: Int, treesBeforeDecisions: File, treesAfterDecisions: File) {
-        val debugInfosBefore = XSV.readXSV(treesBeforeDecisions, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
-        val debugInfosAfter = XSV.readXSV(treesAfterDecisions, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
-        stepResults[stepIndex].stats = calculateStatsFromDebug(
-            debugInfosBefore,
-            debugInfosAfter
+            XSV.readXSV(stepResultDebug.treesBeforeDecisionsFile, DebugInfo.COLUMNS_FOR_XSV.keys, ";"),
+            XSV.readXSV(stepResultDebug.treesAfterDecisionsFile, DebugInfo.COLUMNS_FOR_XSV.keys, ";"),
+            previousStepResultDebug?.let {
+                XSV.readXSV(it.treesAfterDecisionsFile, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
+            }
         )
     }
 
     private fun calculateStatsFromDebug(
-        debugInfosBefore: List<Map<String, String?>>, debugInfosAfter: List<Map<String, String?>>
-    ): StepResult.Stats {
-        val commonVJMutationsCounts = debugInfosAfter
+        step: BuildSHMTreeStep,
+        debugInfosBeforeDecisions: List<Map<String, String?>>,
+        debugInfosAfterDecisions: List<Map<String, String?>>,
+        previousStepDebug: List<Map<String, String?>>?
+    ): StepResult {
+        val clonesWasAdded = debugInfosAfterDecisions.clonesCount - (previousStepDebug?.clonesCount ?: 0)
+        val cloneNodesWasAdded = debugInfosAfterDecisions.cloneNodesCount - (previousStepDebug?.cloneNodesCount ?: 0)
+        val treesCountDelta = debugInfosAfterDecisions.treesCount - (previousStepDebug?.treesCount ?: 0)
+
+        val commonVJMutationsCounts = debugInfosAfterDecisions
             .filter { it["parentId"] == "0" }
             .map {
                 it.getMutations("VMutationsFromRoot").size() + it.getMutations("JMutationsFromRoot").size()
             }
-        val clonesCountInTrees = debugInfosAfter
+        val clonesCountInTrees = debugInfosAfterDecisions
             .filter { it["cloneId"] != null }
             .groupingBy { it.treeId() }.eachCount()
             .values
-        val NDNsByTrees = debugInfosAfter
+        val NDNsByTrees = debugInfosAfterDecisions
             .filter { it["id"] != "0" }
             .groupBy { it.treeId() }
             .mapValues { (_, value) -> value.sortedBy { it["id"]!!.toInt() }.map { it.getNucleotideSequence("NDN") } }
@@ -95,7 +100,7 @@ class BuildSHMTreeReport : MiXCRReport {
                     .filter { it.size() != 0 }
                     .maxOfOrNull { NDN -> NDN.wildcardsScore() }
             }
-        val surenessOfDecisions = debugInfosBefore
+        val surenessOfDecisions = debugInfosBeforeDecisions
             .filter { it["cloneId"] != null }
             .filter { it["decisionMetric"] != null }
             .groupBy({ it["cloneId"] }) { it["decisionMetric"]!!.toDouble() }
@@ -106,7 +111,7 @@ class BuildSHMTreeReport : MiXCRReport {
                 (maxMetric - minMetric) / maxMetric
             }
             .values
-        val mutationRatesDifferences = debugInfosAfter
+        val mutationRatesDifferences = debugInfosAfterDecisions
             .filter { it["parentId"] != null }
             .filter { it["NDN"] != null }
             .groupBy({ it.treeId() }) { it.mutationsRateDifference() }
@@ -119,19 +124,36 @@ class BuildSHMTreeReport : MiXCRReport {
             .map { it.minOrNull() ?: 0.0 }
         val maxMutationsRateDifferences = mutationRatesDifferences.values
             .map { it.maxOrNull() ?: 0.0 }
-        return StepResult.Stats(
-            commonVJMutationsCounts,
-            clonesCountInTrees,
-            rootNDNSizes,
-            averageNDNWildcardsScore,
-            NDNsWildcardsScoreForRoots,
-            maxNDNsWildcardsScoreInTree,
-            surenessOfDecisions,
-            averageMutationsRateDifference,
-            minMutationsRateDifferences,
-            maxMutationsRateDifferences
+        return StepResult(
+            step = step,
+            clonesWasAdded = clonesWasAdded,
+            cloneNodesWasAdded = cloneNodesWasAdded,
+            treesCountDelta = treesCountDelta,
+            commonVJMutationsCounts = commonVJMutationsCounts,
+            clonesCountInTrees = clonesCountInTrees,
+            rootNDNSizes = rootNDNSizes,
+            averageNDNWildcardsScore = averageNDNWildcardsScore,
+            NDNsWildcardsScoreForRoots = NDNsWildcardsScoreForRoots,
+            maxNDNsWildcardsScoreInTree = maxNDNsWildcardsScoreInTree,
+            surenessOfDecisions = surenessOfDecisions,
+            averageMutationsRateDifference = averageMutationsRateDifference,
+            minMutationsRateDifferences = minMutationsRateDifferences,
+            maxMutationsRateDifferences = maxMutationsRateDifferences
         )
     }
+
+    private val List<Map<String, String?>>.clonesCount
+        get() = map { it["clonesCount"]!! }
+            .sumOf { it.toInt() }
+
+    private val List<Map<String, String?>>.cloneNodesCount
+        get() = mapNotNull { it["clonesIds"] }
+            .count()
+
+    private val List<Map<String, String?>>.treesCount
+        get() = map { it["treeId"] }
+            .distinct()
+            .count()
 
     fun writePdfReport(output: Path) {
         val commonPageDescriptions = listOf(
@@ -183,12 +205,12 @@ class BuildSHMTreeReport : MiXCRReport {
         for (i in stepResults.indices) {
             val stepResult = stepResults[i]
             helper.writeField("step ${i + 1}", stepResult.step.forPrint)
-            if (stepResult.step is CombineTrees) {
+            if (stepResult.step !is CombineTrees) {
                 helper.writeField("Clones was added", stepResult.clonesWasAdded)
             }
             if (stepResult.step is BuildingInitialTrees) {
                 helper.writeField("Trees created", stepResult.treesCountDelta)
-            } else if (stepResult.step !is CombineTrees) {
+            } else if (stepResult.step is CombineTrees) {
                 helper.writeField("Trees combined", -stepResult.treesCountDelta)
             }
         }
@@ -207,7 +229,7 @@ class BuildSHMTreeReport : MiXCRReport {
                 for (i in stepResults.indices) {
                     val stepResult = stepResults[i]
                     val stepDescription = "Step ${i + 1}: ${stepResult.step.forPrint}"
-                    val content = field(stepResult.stats)
+                    val content = field(stepResult)
                     if (content.isEmpty()) {
                         continue
                     }
@@ -217,7 +239,7 @@ class BuildSHMTreeReport : MiXCRReport {
                     val plot = letsPlot(data) {
                         x = stepDescription
                     }
-                    val svg = plotBuilder(stepResult.stats, plot).toSvg()
+                    val svg = plotBuilder(stepResult, plot).toSvg()
                     document.add(SvgConverter.convertToImage(ByteArrayInputStream(svg.toByteArray()), pdfDoc))
                 }
             }
@@ -226,31 +248,26 @@ class BuildSHMTreeReport : MiXCRReport {
 
     data class PageDescription(
         val title: String,
-        val field: StepResult.Stats.() -> Collection<Any>,
-        val plotBuilder: StepResult.Stats.(Plot) -> Plot = { plot -> plot + ggsize(500, 250) + geomBar() }
+        val field: StepResult.() -> Collection<Any>,
+        val plotBuilder: StepResult.(Plot) -> Plot = { plot -> plot + ggsize(500, 250) + geomBar() }
     )
 
     class StepResult(
         @get:JsonProperty("step") val step: BuildSHMTreeStep,
         @get:JsonProperty("clonesWasAdded") val clonesWasAdded: Int,
-        @get:JsonProperty("treesCountDelta") val treesCountDelta: Int
-    ) {
-        @get:JsonProperty("stats")
-        lateinit var stats: Stats
-
-        class Stats(
-            @get:JsonProperty("commonVJMutationsCounts") val commonVJMutationsCounts: List<Int>,
-            @get:JsonProperty("clonesCountInTrees") val clonesCountInTrees: Collection<Int>,
-            @get:JsonProperty("rootNDNSizes") val rootNDNSizes: List<Int>,
-            @get:JsonProperty("averageNDNWildcardsScore") val averageNDNWildcardsScore: Double,
-            @get:JsonProperty("NDNsWildcardsScoreForRoots") val NDNsWildcardsScoreForRoots: List<Double>,
-            @get:JsonProperty("maxNDNsWildcardsScoreInTree") val maxNDNsWildcardsScoreInTree: List<Double>,
-            @get:JsonProperty("surenessOfDecisions") val surenessOfDecisions: Collection<Double>,
-            @get:JsonProperty("averageMutationsRateDifference") val averageMutationsRateDifference: Double,
-            @get:JsonProperty("minMutationsRateDifferences") val minMutationsRateDifferences: List<Double>,
-            @get:JsonProperty("maxMutationsRateDifferences") val maxMutationsRateDifferences: List<Double>
-        )
-    }
+        @get:JsonProperty("cloneNodesWasAdded") val cloneNodesWasAdded: Int,
+        @get:JsonProperty("treesCountDelta") val treesCountDelta: Int,
+        @get:JsonProperty("commonVJMutationsCounts") val commonVJMutationsCounts: List<Int>,
+        @get:JsonProperty("clonesCountInTrees") val clonesCountInTrees: Collection<Int>,
+        @get:JsonProperty("rootNDNSizes") val rootNDNSizes: List<Int>,
+        @get:JsonProperty("averageNDNWildcardsScore") val averageNDNWildcardsScore: Double,
+        @get:JsonProperty("NDNsWildcardsScoreForRoots") val NDNsWildcardsScoreForRoots: List<Double>,
+        @get:JsonProperty("maxNDNsWildcardsScoreInTree") val maxNDNsWildcardsScoreInTree: List<Double>,
+        @get:JsonProperty("surenessOfDecisions") val surenessOfDecisions: Collection<Double>,
+        @get:JsonProperty("averageMutationsRateDifference") val averageMutationsRateDifference: Double,
+        @get:JsonProperty("minMutationsRateDifferences") val minMutationsRateDifferences: List<Double>,
+        @get:JsonProperty("maxMutationsRateDifferences") val maxMutationsRateDifferences: List<Double>
+    )
 }
 
 private fun Map<String, String?>.mutationsRateDifference(): Double {

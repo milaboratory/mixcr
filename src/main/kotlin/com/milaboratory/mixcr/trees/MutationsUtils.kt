@@ -25,7 +25,6 @@ import com.milaboratory.core.sequence.NucleotideSequence.ALPHABET
 import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.Wildcard
 import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.mixcr.util.intersection
 import io.repseq.core.GeneFeature
 import java.util.*
 import kotlin.math.abs
@@ -252,9 +251,3 @@ internal object MutationsUtils {
         }
     }
 }
-
-fun Map<GeneFeature, CompositeMutations>.intersection(with: Map<GeneFeature, CompositeMutations>): Map<GeneFeature, CompositeMutations> =
-    MutationsUtils.zip(this, with) { a, b, _ -> a.intersection(b) }
-
-fun CompositeMutations.intersection(with: CompositeMutations): CompositeMutations =
-    copy(mutationsFromParentToThis = mutationsFromParentToThis.intersection(with.mutationsFromParentToThis))

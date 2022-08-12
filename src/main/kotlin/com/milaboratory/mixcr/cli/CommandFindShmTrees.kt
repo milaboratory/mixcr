@@ -19,7 +19,6 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.CloneWithDatasetId
-import com.milaboratory.mixcr.trees.DebugInfo
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.trees.SHMTreeBuilder
 import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
@@ -29,16 +28,8 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
-import com.milaboratory.mixcr.trees.constructStateBuilder
-import com.milaboratory.mixcr.trees.forPrint
 import com.milaboratory.mixcr.util.XSV
-import com.milaboratory.primitivio.cached
-import com.milaboratory.primitivio.count
-import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.forEachInParallel
-import com.milaboratory.primitivio.mapInParallel
-import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.ReportUtil
@@ -51,7 +42,6 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
-import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
@@ -231,6 +221,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             //TODO check that clones are strictly aligned by assemblingFeatures
             assemblerParameters.assemblingFeatures,
             tempDest,
+            debugDirectory,
             VGenesToSearch,
             JGenesToSearch,
             CDR3LengthToSearch,
@@ -247,82 +238,19 @@ class CommandFindShmTrees : MiXCRCommand() {
                 is SHMTreeBuilderParameters.SingleCell.NoOP ->
                     warn("Single cell tags will not be used but it's possible on this data")
                 is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
-                    val result = shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads)
-                    writeResults(result, cloneReaders, scoringSet, generateGlobalTreeIds = true)
+                    shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads) {
+                        writeResults(it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
+                    }
                     return
                 }
             }
         }
-        shmTreeBuilderOrchestrator.buildTreesAndPrintReport {
-            writeResults(it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
-        }
-    }
-
-    private fun SHMTreeBuilderOrchestrator.buildTreesAndPrintReport(
-        resultWriter: (OutputPort<TreeWithMetaBuilder>) -> Unit
-    ) {
-        val report = BuildSHMTreeReport()
-        val stateBuilder = datasets.constructStateBuilder()
         val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
         SmartProgressReporter.startProgressReport(progressAndStage)
-        clonesWithTheSameVJAndCDR3Length(progressAndStage)
-            .cached(
-                tempDest.addSuffix("tree.builder.grouping.by.the.same.VJ.CDR3Length"),
-                stateBuilder,
-                blockSize = 100,
-                concurrencyToRead = threads / 2,
-                concurrencyToWrite = threads / 2
-            ) { clustersCache ->
-                val cloneWrappersCount = clustersCache().count().toLong()
-
-                val stepsCount = shmTreeBuilderParameters.steps.size
-                var stepNumber = 0
-                var previousStepDebug = createDebug(stepNumber)
-                for (step in shmTreeBuilderParameters.steps) {
-                    stepNumber++
-                    val currentStepDebug = createDebug(stepNumber)
-                    val treesCountBefore = treesCount()
-                    val allClonesInTress = allClonesInTress()
-                    clustersCache().withProgress(
-                        cloneWrappersCount,
-                        progressAndStage,
-                        "Step $stepNumber/$stepsCount, ${step.forPrint}"
-                    ) { clusters ->
-                        clusters.forEachInParallel(threads) { cluster ->
-                            applyStep(
-                                cluster.clones,
-                                step,
-                                allClonesInTress,
-                                previousStepDebug.treesAfterDecisionsWriter,
-                                currentStepDebug.treesBeforeDecisionsWriter
-                            )
-                        }
-                    }
-                    val clonesWasAdded = makeDecisions()
-                    report.onStepEnd(step, clonesWasAdded, treesCount() - treesCountBefore)
-                    previousStepDebug = currentStepDebug
-                }
-                clustersCache().withProgress(
-                    cloneWrappersCount,
-                    progressAndStage,
-                    "Building results"
-                ) { clusters ->
-                    val result = clusters
-                        .mapInParallel(threads) { cluster ->
-                            getResult(cluster.clones, previousStepDebug.treesAfterDecisionsWriter)
-                        }
-                        .flatten()
-
-                    resultWriter(result)
-                }
-            }
-
-        for (i in 0 until shmTreeBuilderParameters.steps.size) {
-            val stepNumber = i + 1
-            val treesBeforeDecisions = debugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX)
-            val treesAfterDecisions = debugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
-            report.addStatsForStep(i, treesBeforeDecisions, treesAfterDecisions)
+        val report = shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, threads) {
+            writeResults(it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
         }
+        progressAndStage.finish()
         if (reportPdf != null) {
             report.writePdfReport(Paths.get(reportPdf!!))
         }
@@ -388,30 +316,6 @@ class CommandFindShmTrees : MiXCRCommand() {
             anyCloneReader.tagsInfo,
             usedGenes.map { it.parentLibrary }.distinct()
         )
-    }
-
-    private fun createDebug(stepNumber: Int) = Debug(
-        prepareDebugFile(stepNumber, Debug.BEFORE_DECISIONS_SUFFIX),
-        prepareDebugFile(stepNumber, Debug.AFTER_DECISIONS_SUFFIX)
-    )
-
-    private fun prepareDebugFile(stepNumber: Int, suffix: String): PrintStream {
-        val debugFile = debugFile(stepNumber, suffix)
-        debugFile.delete()
-        debugFile.createNewFile()
-        val debugWriter = PrintStream(debugFile)
-        XSV.writeXSVHeaders(debugWriter, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
-        return debugWriter
-    }
-
-    private fun debugFile(stepNumber: Int, suffix: String): File =
-        debugDirectory.resolve("step_" + stepNumber + "_" + suffix + ".csv").toFile()
-
-    class Debug(val treesBeforeDecisionsWriter: PrintStream, val treesAfterDecisionsWriter: PrintStream) {
-        companion object {
-            const val BEFORE_DECISIONS_SUFFIX = "before_decisions"
-            const val AFTER_DECISIONS_SUFFIX = "after_decisions"
-        }
     }
 
     companion object {

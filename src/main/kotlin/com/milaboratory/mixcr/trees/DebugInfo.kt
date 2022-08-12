@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.trees
 import com.google.common.collect.ImmutableMap
 import com.milaboratory.core.Range
 import com.milaboratory.core.sequence.NucleotideSequence
-import java.util.stream.Collectors
 
 class DebugInfo(
     private val treeId: TreeId,
@@ -36,17 +35,16 @@ class DebugInfo(
                 .put("JGeneName") { it.rootInfo.VJBase.geneIds.J.name }
                 .put("CDR3Length") { it.rootInfo.VJBase.CDR3length }
                 .put("VRangeWithoutCDR3") {
-                    it.VRangesWithoutCDR3.stream().map { range -> encodeRange(range) }
-                        .collect(Collectors.joining(","))
+                    it.VRangesWithoutCDR3.joinToString(",") { range -> encodeRange(range) }
                 }
                 .put("VRangeInCDR3") { encodeRange(it.rootInfo.rangeInCDR3.V) }
                 .put("JRangeInCDR3") { encodeRange(it.rootInfo.rangeInCDR3.J) }
                 .put("JRangeWithoutCDR3") {
-                    it.JRangesWithoutCDR3.stream().map { range -> encodeRange(range) }
-                        .collect(Collectors.joining(","))
+                    it.JRangesWithoutCDR3.joinToString(",") { range -> encodeRange(range) }
                 }
                 .put("treeId") { it.treeId.encode() }
-                .put("clonesIds") { it.cloneIds?.ids }
+                .put("clonesIds") { info -> info.cloneIds?.ids?.joinToString(",") { it.encode() } }
+                .put("clonesCount") { it.cloneIds?.ids?.size ?: 0 }
                 .put("id") { it.id }
                 .put("parentId") { it.parentId }
                 .put("NDN") { it.NDN }
