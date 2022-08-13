@@ -15,7 +15,7 @@ import picocli.CommandLine
 import picocli.CommandLine.Command
 
 @Command(
-    name = "kit",
+    name = "protocol",
     separator = " ",
     description = ["Run full MiXCR pipeline for specific protocol."],
     subcommands = [CommandLine.HelpCommand::class]
