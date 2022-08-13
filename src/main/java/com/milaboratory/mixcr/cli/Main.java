@@ -13,8 +13,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ValidationException;
 import com.milaboratory.milm.MiXCRMain;
-import com.milaboratory.mixcr.cli.analyze.CommandAnalyzeAmplicon;
-import com.milaboratory.mixcr.cli.analyze.CommandAnalyzeShotgun;
+import com.milaboratory.mixcr.cli.analyze.*;
 import com.milaboratory.mixcr.cli.postanalysis.*;
 import com.milaboratory.mixcr.cli.qc.CommandExportQc;
 import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign;
@@ -204,11 +203,17 @@ public final class Main {
 
         cmd.getSubcommands()
                 .get("analyze")
-                .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
-                .addSubcommand("shotgun", CommandAnalyze.mkShotgun())
-                .addSubcommand("amplicon2", CommandAnalyzeAmplicon.class)
-                .addSubcommand("shotgun2", CommandAnalyzeShotgun.class)
-                .addSubcommand("10x", CommandAnalyze.mk10x());
+                .addSubcommand("amplicon", CommandAnalyzeAmplicon.class)
+                .addSubcommand("shotgun", CommandAnalyzeShotgun.class)
+                .addSubcommand("10x", CommandAnalyze10x.class);
+
+        cmd.getSubcommands()
+                .get("analyze")
+                .addSubcommand("protocol", CommandAnalyzeProtocol.class);
+
+        cmd.getSubcommands()
+                .get("analyze").getSubcommands().get("protocol")
+                .addSubcommand("biomed2", CommandAnalyzeBioMed2.class);
 
         cmd.getSubcommands()
                 .get("postanalysis")

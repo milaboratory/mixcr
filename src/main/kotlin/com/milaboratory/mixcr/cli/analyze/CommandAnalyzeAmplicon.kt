@@ -194,9 +194,7 @@ class CommandAnalyzeAmplicon : AnalyzeWithBarcodesWithContigs() {
 
         var vdjca = runAlign(output = "$prefix.vdjca")
         if (needCorrectAndSortTags) {
-            val newVdjca = "$prefix.corrected.vdjca"
-            runCorrectAndSortTags(input = vdjca, output = newVdjca)
-            vdjca = newVdjca
+            vdjca = runCorrectAndSortTags(input = vdjca, output = "$prefix.corrected.vdjca")
         }
 
         var clnx = runAssemble(input = vdjca, output = prefix + if (contigAssembly) ".clna" else ".clns")
