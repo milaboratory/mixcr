@@ -60,7 +60,7 @@ public class CommandExportReports extends MiXCRCommand {
     public void run0() throws Exception {
         ReportHelper helper = json
                 ? null
-                : out == null ? new ReportHelper(System.out, true) : new ReportHelper(out);
+                : out == null ? new ReportHelper(System.out, false) : new ReportHelper(out);
 
         List<MiXCRCommandReport> reports;
         switch (IOUtil.extractFileType(Paths.get(in))) {
@@ -92,6 +92,7 @@ public class CommandExportReports extends MiXCRCommand {
         } else
             for (MiXCRCommandReport report : reports) {
                 if (helper != null) {
+                    report.writeHeader(helper);
                     report.writeReport(helper);
                     if (out == null)
                         System.out.println();

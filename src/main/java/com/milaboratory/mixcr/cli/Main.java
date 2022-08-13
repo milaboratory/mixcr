@@ -13,6 +13,8 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.cli.ValidationException;
 import com.milaboratory.milm.MiXCRMain;
+import com.milaboratory.mixcr.cli.analyze.CommandAnalyzeAmplicon;
+import com.milaboratory.mixcr.cli.analyze.CommandAnalyzeShotgun;
 import com.milaboratory.mixcr.cli.postanalysis.*;
 import com.milaboratory.mixcr.cli.qc.CommandExportQc;
 import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign;
@@ -203,7 +205,10 @@ public final class Main {
         cmd.getSubcommands()
                 .get("analyze")
                 .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
-                .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+                .addSubcommand("shotgun", CommandAnalyze.mkShotgun())
+                .addSubcommand("amplicon2", CommandAnalyzeAmplicon.class)
+                .addSubcommand("shotgun2", CommandAnalyzeShotgun.class)
+                .addSubcommand("10x", CommandAnalyze.mk10x());
 
         cmd.getSubcommands()
                 .get("postanalysis")
