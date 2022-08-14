@@ -15,6 +15,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mitool.helpers.GroupOP;
 import com.milaboratory.mitool.helpers.PipeKt;
+import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
@@ -77,6 +78,10 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
 
         this.outputFile = outputFile;
         this.tempDest = tempDest;
+    }
+
+    public void setExtractionListener(ClonalSequenceExtractionListener extractionListener) {
+        assembler.setExtractionListener(extractionListener);
     }
 
     public PreCloneAssemblerReportBuilder getReport() {

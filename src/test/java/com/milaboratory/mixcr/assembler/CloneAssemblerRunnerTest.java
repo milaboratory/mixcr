@@ -105,7 +105,7 @@ public class CloneAssemblerRunnerTest {
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
         CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
-                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures()),
+                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures(), __ -> {}),
                 new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters));
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();

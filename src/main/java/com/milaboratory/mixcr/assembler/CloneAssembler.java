@@ -142,9 +142,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             listener.onNewCloneCreated(accumulator);
     }
 
-    void onFailedToExtractTarget(PreClone preClone) {
+    void onTooShortClonalSequence(PreClone preClone) {
         if (listener != null)
-            listener.onFailedToExtractTarget(preClone);
+            listener.onTooShortClonalSequence(preClone);
     }
 
     void onTooManyLowQualityPoints(PreClone preClone) {
@@ -390,7 +390,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             if (target == null) {
                 log(new AssemblerEvent(input.getIndex(), AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
-                onFailedToExtractTarget(input);
+                onTooShortClonalSequence(input);
                 return;
             }
 
