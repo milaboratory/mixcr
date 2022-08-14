@@ -21,7 +21,7 @@ import picocli.CommandLine.Command;
 @Command(name = "exportTables",
         sortOptions = false,
         separator = " ",
-        description = "Biophysics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap")
+        description = "CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap")
 public final class CommandPaExportTables extends CommandPaExportTablesBase {
     public CommandPaExportTables() {}
 

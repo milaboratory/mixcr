@@ -188,7 +188,7 @@ public class SetPreprocessorSummary {
 
         List<List<Object>> rows = new ArrayList<>();
         for (Map.Entry<Set<OverlapType>, Characteristic<?, OverlapGroup<Clone>>> eCh : m.entrySet()) {
-            String ch = eCh.getKey().stream().map(it -> it.name).collect(Collectors.joining("/"));
+            String ch = eCh.getKey().stream().map(it -> it.shortDescription).collect(Collectors.joining("/"));
             String preproc = eCh.getValue().preprocessor.id();
             SetPreprocessorSummary preprocSummary = result.preprocSummary.get(preproc);
             addRows(rows, ch, preproc, preprocSummary);
@@ -291,17 +291,19 @@ public class SetPreprocessorSummary {
             }
             writer.write("\n");
 
-            for (int i = 0; ; i++) {
-                for (int j = 0; ; j++) {
-                    writer.write(rows.get(i).get(j).toString());
-                    if (j == rows.get(i).size() - 1)
+            if (!rows.isEmpty())
+                for (int i = 0; ; i++) {
+                    if (!rows.get(i).isEmpty())
+                        for (int j = 0; ; j++) {
+                            writer.write(rows.get(i).get(j).toString());
+                            if (j == rows.get(i).size() - 1)
+                                break;
+                            writer.write(sep);
+                        }
+                    if (i == rows.size() - 1)
                         break;
-                    writer.write(sep);
+                    writer.write("\n");
                 }
-                if (i == rows.size() - 1)
-                    break;
-                writer.write("\n");
-            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

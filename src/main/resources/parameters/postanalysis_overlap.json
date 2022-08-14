@@ -4,7 +4,7 @@
     "defaultOnlyProductive": false,
     "defaultDropOutliers": false,
     "defaultWeightFunction": "read-count",
-    "d": {
+    "relativeDiversity": {
       "downsampling": null,
       "onlyProductive": null,
       "dropOutliers": null,
@@ -16,31 +16,31 @@
       "dropOutliers": null,
       "weightFunction": null
     },
-    "f1": {
+    "f1Index": {
       "downsampling": null,
       "onlyProductive": null,
       "dropOutliers": null,
       "weightFunction": null
     },
-    "f2": {
+    "f2Index": {
       "downsampling": null,
       "onlyProductive": null,
       "dropOutliers": null,
       "weightFunction": null
     },
-    "jaccard": {
+    "jaccardIndex": {
       "downsampling": null,
       "onlyProductive": null,
       "dropOutliers": null,
       "weightFunction": null
     },
-    "rIntersection": {
+    "pearson": {
       "downsampling": null,
       "onlyProductive": null,
       "dropOutliers": null,
       "weightFunction": null
     },
-    "rAll": {
+    "pearsonAll": {
       "downsampling": null,
       "onlyProductive": null,
       "dropOutliers": null,

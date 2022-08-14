@@ -30,7 +30,8 @@ import com.milaboratory.util.Report;
         @JsonSubTypes.Type(value = PreCloneAssemblerReport.class, name = "preCloneAssemblerReport"),
         @JsonSubTypes.Type(value = ReadTrimmerReport.class, name = "readTrimmerReport"),
         @JsonSubTypes.Type(value = TagReport.class, name = "tagReport"),
-        @JsonSubTypes.Type(value = VDJCObjectExtenderReport.class, name = "extenderReport")
+        @JsonSubTypes.Type(value = VDJCObjectExtenderReport.class, name = "extenderReport"),
+        @JsonSubTypes.Type(value = CorrectAndSortTagsReport.class, name = "correctAndSortTagsReport")
 })
 @Serializable(asJson = true)
 public interface MiXCRReport extends Report {}

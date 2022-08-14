@@ -76,10 +76,14 @@ public class PostanalysisResult {
     }
 
     /**
-     * Get preprocessor statistics for specified characteristic for spaecified sample
+     * Get preprocessor statistics for specified characteristic for spaecified sample.
      */
     public SetPreprocessorStat getPreprocStat(String charId, String sampleId) {
-        return SetPreprocessorStat.cumulative(preprocSummary.get(data.get(charId).preproc).result.get(sampleId));
+        String preproc = data.get(charId).preproc;
+        List<SetPreprocessorStat> stats = preprocSummary.get(preproc).result.get(sampleId);
+        if (stats == null)
+            return SetPreprocessorStat.empty(preproc);
+        return SetPreprocessorStat.cumulative(stats);
     }
 
     /** Returns a set of characteristics */

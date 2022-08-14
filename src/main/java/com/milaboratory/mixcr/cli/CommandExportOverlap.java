@@ -88,7 +88,6 @@ public class CommandExportOverlap extends MiXCRCommand {
     @Override
     public void run0() throws Exception {
         List<String> samples = getInputFiles();
-        boolean needRecalculateCount = this.chains != null || onlyProductive;
         List<NamedChains> chains = this.chains == null
                 ? Collections.singletonList(Chains.ALL_NAMED)
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
@@ -165,11 +164,9 @@ public class CommandExportOverlap extends MiXCRCommand {
 
         OverlapBrowser overlapBrowser = new OverlapBrowser(chains, onlyProductive);
         SmartProgressReporter.startProgressReport(overlapBrowser);
-        Map<NamedChains, double[]> counts = null;
-        if (needRecalculateCount)
-            counts = overlapBrowser.computeCounts(samples);
+        Map<NamedChains, double[]> counts = overlapBrowser.computeCounts(samples);
 
-        OverlapDataset<Clone> overlap = OverlapUtil.overlap(samples, criteria.ordering());
+        OverlapDataset<Clone> overlap = OverlapUtil.overlap(samples, __ -> true, criteria.ordering());
         try (OutputPortWithProgress<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
             for (Map<NamedChains, OverlapGroup<Clone>> row : CUtils.it(overlapBrowser.overlap(counts, port))) {
                 for (Map.Entry<NamedChains, OverlapGroup<Clone>> e : row.entrySet()) {
@@ -183,6 +180,7 @@ public class CommandExportOverlap extends MiXCRCommand {
     private static final class InfoWriter implements AutoCloseable {
         final PrintWriter writer;
         final List<String> samples;
+        final List<String> samplesNames;
         final List<OverlapFieldExtractor> extractors;
 
         public InfoWriter(Path out, List<String> samples,
@@ -193,11 +191,19 @@ public class CommandExportOverlap extends MiXCRCommand {
                 throw new RuntimeException(e);
             }
             this.samples = samples;
+            this.samplesNames = samples.stream().map(InfoWriter::removeExt).collect(Collectors.toList());
+            ;
             this.extractors = extractors;
         }
 
+        static String removeExt(String sampleName) {
+            return sampleName
+                    .replace(".clns", "")
+                    .replace(".clna", "");
+        }
+
         void writeHeader() {
-            writer.println(extractors.stream().flatMap(e -> e.header(samples).stream()).collect(Collectors.joining("\t")));
+            writer.println(extractors.stream().flatMap(e -> e.header(samplesNames).stream()).collect(Collectors.joining("\t")));
         }
 
         void writeRow(OverlapGroup<Clone> row) {

@@ -14,7 +14,7 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
 import picocli.CommandLine.Command;
 
-@Command(name = "preprocSummary",
+@Command(name = "exportPreprocTables",
         sortOptions = false,
         separator = " ",
         description = "Export preprocessing summary tables.")

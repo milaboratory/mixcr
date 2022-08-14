@@ -197,6 +197,7 @@ public abstract class PostanalysisParameters {
         if (weight == null) // default
             return WeightFunctions.Count;
         switch (weight) {
+            case "read":
             case "read-count":
             case "reads-count":
                 return WeightFunctions.Count;

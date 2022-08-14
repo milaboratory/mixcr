@@ -58,9 +58,15 @@ public final class DownsamplingParameters {
         this.onlyProductive = onlyProductive;
     }
 
-    /** Return preprocessor use to analyze specific chains */
+    /**
+     * Return preprocessor use to analyze specific chains. If chains == null, returns preprocessor without chains
+     * filtering.
+     */
     public SetPreprocessorFactory<Clone> getPreproc(Chains chains) {
-        return preproc.filterFirst(weightFunction, new ElementPredicate.IncludeChains(chains));
+        if (chains == null)
+            return preproc;
+        else
+            return preproc.filterFirst(weightFunction, new ElementPredicate.IncludeChains(chains));
     }
 
     /**

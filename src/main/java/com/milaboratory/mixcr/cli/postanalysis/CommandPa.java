@@ -39,8 +39,6 @@ import static java.util.stream.Collectors.toList;
  *
  */
 public abstract class CommandPa extends MiXCRCommand {
-    public static final NamedChains[] CHAINS = {TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED};
-
     @Parameters(description = "cloneset.{clns|clna}... result.json.gz|result.json")
     public List<String> inOut;
 
@@ -59,7 +57,7 @@ public abstract class CommandPa extends MiXCRCommand {
 
     @Option(description = CommonDescriptions.WEIGHT_FUNCTION,
             names = {"--default-weight-function"},
-            required = false)
+            required = true)
     public String defaultWeightFunction;
 
     @Option(description = "Filter specified chains",
@@ -203,6 +201,7 @@ public abstract class CommandPa extends MiXCRCommand {
 
     private Map<String, List<Object>> _metadata = null;
 
+    /** Map of columns */
     protected Map<String, List<Object>> metadata() {
         if (metadata == null)
             return null;
@@ -316,7 +315,7 @@ public abstract class CommandPa extends MiXCRCommand {
                 if (c.intersects(mc.chains))
                     results.add(run0(new IsolationGroup(mc, group.group), group.samples));
             } else
-                for (NamedChains knownChains : CHAINS) {
+                for (NamedChains knownChains : DEFAULT_EXPORT_CHAINS_LIST) {
                     if (c.intersects(knownChains.chains)) {
                         results.add(run0(new IsolationGroup(knownChains, group.group), group.samples));
                     }

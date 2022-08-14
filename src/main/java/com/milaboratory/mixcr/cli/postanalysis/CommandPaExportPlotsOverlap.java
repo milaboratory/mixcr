@@ -14,9 +14,11 @@ package com.milaboratory.mixcr.cli.postanalysis;
 import com.milaboratory.miplots.Position;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapType;
 import com.milaboratory.mixcr.postanalysis.plots.*;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
+import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -38,6 +40,11 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
             names = {"--color-key"})
     public List<String> colorKey = new ArrayList<>();
 
+    @Option(description = "Fill diagonal line",
+            names = {"--fill-diagonal"}
+    )
+    public boolean fillDiagonal = false;
+
     @Option(description = "Select specific metrics to export.",
             names = {"--metric"})
     public List<String> metrics;
@@ -52,15 +59,25 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
         return df;
     }
 
+    private List<OverlapType> metricsFilter() {
+        if (metrics == null || metrics.isEmpty())
+            return null;
+        return metrics.stream()
+                .map(OverlapType::byNameOrThrow)
+                .collect(Collectors.toList());
+    }
+
     @Override
     void run(PaResultByGroup result) {
         CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(PostanalysisParametersOverlap.Overlap);
         PostanalysisResult paResult = result.result.forGroup(ch);
         DataFrame<?> metadata = metadata();
 
+        List<OverlapType> metrics = metricsFilter();
         DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
                 paResult,
                 metrics,
+                fillDiagonal,
                 metadata
         );
         df = filterOverlap(df);
@@ -70,6 +87,10 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
 
         if (df.get("weight").distinct().toList().size() <= 1)
             return;
+
+        List<String> colorKey = this.colorKey.stream()
+                .map(it -> it.startsWith("x_") || it.startsWith("y_") ? it : "x_" + it)
+                .collect(Collectors.toList());
 
         HeatmapParameters par = new HeatmapParameters(
                 !noDendro,
@@ -86,7 +107,7 @@ public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWith
                 height
         );
 
-        List<byte[]> plotsAndSummary = Overlap.INSTANCE.plotsAndSummary(df, par);
-        writePlotsAndSummary(result.group, plotsAndSummary);
+        List<Plot> plots = Overlap.INSTANCE.plots(df, par);
+        writePlots(result.group, plots);
     }
 }

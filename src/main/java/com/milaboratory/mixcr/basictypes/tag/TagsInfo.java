@@ -86,7 +86,7 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
     public int indexOf(String tagName) {
         int idx = -1;
         for (TagInfo ti : this)
-            if (ti.getName().equals(tagName)) {
+            if (ti.getName().equalsIgnoreCase(tagName)) {
                 idx = ti.getIndex();
                 break;
             }

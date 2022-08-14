@@ -48,7 +48,7 @@ public class CommandExportAirr extends MiXCRCommand {
             names = {"-t", "--target"})
     public int targetId = -1;
 
-    @Option(description = "If this option alignment fields will be padded with IMGT-style gaps.",
+    @Option(description = "If this option is specified, alignment fields will be padded with IMGT-style gaps.",
             names = {"-g", "--imgt-gaps"})
     public boolean withPadding = false;
 

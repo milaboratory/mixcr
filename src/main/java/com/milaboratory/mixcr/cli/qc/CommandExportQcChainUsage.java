@@ -16,6 +16,8 @@ import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType;
 import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.qc.ChainUsage;
+import io.repseq.core.Chains;
+import io.repseq.core.Chains.NamedChains;
 import jetbrains.letsPlot.intern.Plot;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -30,7 +32,7 @@ import java.util.stream.Collectors;
         separator = " ",
         description = "Chain usage plot.")
 public class CommandExportQcChainUsage extends MiXCRCommand {
-    @Parameters(description = "sample1.[vdjca|clnx] ... usage.pdf")
+    @Parameters(description = "sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]")
     public List<String> in;
     @Option(
             names = "--absolute-values",
@@ -42,6 +44,19 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
             description = "When specifying .clnx files on input force to plot chain usage for alignments"
     )
     public boolean alignChainUsage = false;
+
+    @Option(
+            names = "--chains",
+            description = "Specify which chains to export. Possible values: TRAD, TRB, TRG, IGH, IGK, IGL.",
+            split = ","
+    )
+    public List<String> chains;
+
+    @Option(
+            names = "--hide-non-functional",
+            description = "Hide fractions of non-functional CDR3s (out-of-frames and containing stops)"
+    )
+    public boolean hideNonFunctional;
 
     @Override
     protected List<String> getInputFiles() {
@@ -58,6 +73,9 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
         MiXCRFileType fileType = IOUtil.extractFileType(Paths.get(in.get(0)));
         List<Path> files = getInputFiles().stream().map(Paths::get)
                 .collect(Collectors.toList());
+        List<NamedChains> chains = this.chains == null
+                ? Chains.DEFAULT_EXPORT_CHAINS_LIST
+                : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
 
         Plot plt;
         switch (fileType) {
@@ -66,22 +84,28 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
                 if (alignChainUsage)
                     plt = ChainUsage.INSTANCE.chainUsageAlign(
                             files,
-                            !absoluteValues
+                            !absoluteValues,
+                            !hideNonFunctional,
+                            chains
                     );
                 else plt = ChainUsage.INSTANCE.chainUsageAssemble(
                         files,
-                        !absoluteValues
+                        !absoluteValues,
+                        !hideNonFunctional,
+                        chains
                 );
                 break;
             case VDJCA:
                 plt = ChainUsage.INSTANCE.chainUsageAlign(
                         files,
-                        !absoluteValues
+                        !absoluteValues,
+                        !hideNonFunctional,
+                        chains
                 );
                 break;
             default:
                 throw new RuntimeException();
         }
-        ExportKt.writePDF(Paths.get(getOutputFiles().get(0)), plt);
+        ExportKt.writeFile(Paths.get(getOutputFiles().get(0)), plt);
     }
 }

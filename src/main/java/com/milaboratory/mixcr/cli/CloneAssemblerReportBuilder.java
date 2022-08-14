@@ -11,21 +11,26 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.assembler.CloneAccumulator;
 import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReportBuilder;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuilder implements CloneAssemblerListener {
+public final class CloneAssemblerReportBuilder
+        extends AbstractCommandReportBuilder
+        implements CloneAssemblerListener, ClonalSequenceExtractionListener {
     private final ChainUsageStatsBuilder clonalChainUsage = new ChainUsageStatsBuilder();
     private PreCloneAssemblerReportBuilder preCloneAssemblerReportBuilder;
     long totalReadsProcessed = -1;
     final AtomicInteger initialClonesCreated = new AtomicInteger();
+    final AtomicLong readsDroppedTooShortClonalSequence = new AtomicLong();
     final AtomicLong readsDroppedNoTargetSequence = new AtomicLong();
     final AtomicLong readsDroppedLowQuality = new AtomicLong();
     final AtomicLong readsInClones = new AtomicLong();
@@ -56,8 +61,13 @@ public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuil
     }
 
     @Override
-    public void onFailedToExtractTarget(PreClone preClone) {
-        readsDroppedNoTargetSequence.addAndGet(preClone.getNumberOfReads());
+    public void onFailedToExtractClonalSequence(VDJCAlignments al) {
+        readsDroppedNoTargetSequence.incrementAndGet();
+    }
+
+    @Override
+    public void onTooShortClonalSequence(PreClone preClone) {
+        readsDroppedTooShortClonalSequence.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
@@ -137,6 +147,7 @@ public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuil
                 totalReadsProcessed,
                 initialClonesCreated.get(),
                 readsDroppedNoTargetSequence.get(),
+                readsDroppedTooShortClonalSequence.get(),
                 readsDroppedLowQuality.get(),
                 coreReads.get(),
                 readsDroppedFailedMapping.get(),

@@ -16,18 +16,22 @@ import com.milaboratory.miplots.stat.util.PValueCorrection;
 import com.milaboratory.miplots.stat.util.RefGroup;
 import com.milaboratory.miplots.stat.util.TestMethod;
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
+import com.milaboratory.miplots.stat.xdiscrete.LabelFormat;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
+import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
+import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
     @Option(description = "Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +
@@ -60,23 +64,24 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
     public String facetBy;
 
     @Option(description = "Select specific metrics to export.",
-            names = {"--metric"})
+            names = {"--metric"},
+            split = ",")
     public List<String> metrics;
 
     @Option(description = "Hide overall p-value",
             names = {"--hide-overall-p-value"})
     public boolean hideOverallPValue;
 
-    @Option(description = "Hide pairwise p-values",
-            names = {"--hide-pairwise-p-value"})
-    public boolean hidePairwisePValue;
+    @Option(description = "Show pairwise p-value comparisons",
+            names = {"--pairwise-comparisons"})
+    public boolean pairwiseComparisons;
 
     @Option(description = "Reference group. Can be \"all\" or some specific value.",
             names = {"--ref-group"})
     public String refGroup;
 
     @Option(description = "Hide non-significant observations",
-            names = {"--hide-ns"})
+            names = {"--hide-non-significant"})
     public boolean hideNS;
 
     @Option(description = "Do paired analysis",
@@ -95,16 +100,31 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
             names = {"--p-adjust-method"})
     public String pAdjustMethod = "Holm";
 
+    @Option(description = "Show significance level instead of p-values",
+            names = {"--show-significance"})
+    public boolean showSignificance;
+
     abstract String group();
+
+    abstract Predicate<String> metricsFilter();
+
+    @Override
+    public void validate() {
+        super.validate();
+        if (!out.endsWith("pdf") && (metrics == null || metrics.isEmpty()))
+            throwValidationException("For export in " + out.substring(out.length() - 3).toUpperCase() + "" +
+                    "Use --metrics option to specify only one metric to export. Or use PDF format for export.");
+    }
 
     @Override
     void run(PaResultByGroup result) {
         CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
         PostanalysisResult paResult = result.result.forGroup(ch);
         DataFrame<?> metadata = metadata();
+        Predicate<String> mf = metricsFilter();
         DataFrame<BasicStatRow> df = BasicStatistics.INSTANCE.dataFrame(
                 paResult,
-                metrics,
+                mf::test,
                 metadata
         );
 
@@ -120,6 +140,10 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
 
         PlotType plotType = BasicStatistics.INSTANCE.parsePlotType(this.plotType);
 
+        LabelFormat labelFormat = showSignificance
+                ? LabelFormat.Companion.getSignificance()
+                : new LabelFormat.Companion.Formatted();
+
         BasicStatistics.PlotParameters par = new BasicStatistics.PlotParameters(
                 plotType,
                 primaryGroup,
@@ -128,12 +152,12 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
                 secondaryGroupValues,
                 facetBy,
                 !hideOverallPValue,
-                !hidePairwisePValue,
+                pairwiseComparisons,
                 rg,
                 hideNS,
                 null,
-                null,
-                null,
+                labelFormat,
+                labelFormat,
                 paired,
                 TestMethod.valueOf(method),
                 TestMethod.valueOf(methodForMultipleGroups),
@@ -141,18 +165,30 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
                 CorrelationMethod.Pearson
         );
 
-        List<byte[]> plots = BasicStatistics.INSTANCE.plotsAndSummary(df, par);
-        writePlotsAndSummary(result.group, plots);
+        List<Plot> plots = BasicStatistics.INSTANCE.plots(df, par);
+        writePlots(result.group, plots);
     }
 
-    @Command(name = "biophysics",
+    @Command(name = "cdr3metrics",
             sortOptions = false,
             separator = " ",
-            description = "Export biophysics metrics")
-    public static class ExportBiophysics extends CommandPaExportPlotsBasicStatistics {
+            description = "Export CDR3 metrics")
+    public static class ExportCDR3Metrics extends CommandPaExportPlotsBasicStatistics {
         @Override
         String group() {
-            return PostanalysisParametersIndividual.Biophysics;
+            return PostanalysisParametersIndividual.CDR3Metrics;
+        }
+
+        @Override
+        Predicate<String> metricsFilter() {
+            if (metrics == null || metrics.isEmpty())
+                return t -> true;
+            HashSet<String> set = new HashSet<>(Arrays.asList(PostanalysisParametersIndividual.SUPPORTED_CDR3_METRICS));
+            for (String m : metrics) {
+                if (!set.contains(m.toLowerCase()))
+                    throw new IllegalArgumentException("Unknown metric: " + m);
+            }
+            return new HashSet<>(metrics)::contains;
         }
     }
 
@@ -164,6 +200,27 @@ public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExpor
         @Override
         String group() {
             return PostanalysisParametersIndividual.Diversity;
+        }
+
+        @Override
+        Predicate<String> metricsFilter() {
+            if (metrics == null || metrics.isEmpty())
+                return t -> true;
+            HashMap<String, String> map = new HashMap<String, String>() {{
+                put("chao1".toLowerCase(), DiversityMeasure.Chao1.name);
+                put("efronThisted".toLowerCase(), DiversityMeasure.EfronThisted.name);
+                put("inverseSimpsonIndex".toLowerCase(), DiversityMeasure.InverseSimpsonIndex.name);
+                put("giniIndex".toLowerCase(), DiversityMeasure.GiniIndex.name);
+                put("observed".toLowerCase(), DiversityMeasure.Observed.name);
+                put("shannonWiener".toLowerCase(), DiversityMeasure.ShannonWiener.name);
+                put("normalizedShannonWienerIndex".toLowerCase(), DiversityMeasure.NormalizedShannonWienerIndex.name);
+                put("d50", "d50");
+            }};
+            for (String m : metrics) {
+                if (!map.containsKey(m.toLowerCase()))
+                    throw new IllegalArgumentException("Unknown metric: " + m);
+            }
+            return metrics.stream().map(String::toLowerCase).map(map::get).collect(Collectors.toSet())::contains;
         }
     }
 }

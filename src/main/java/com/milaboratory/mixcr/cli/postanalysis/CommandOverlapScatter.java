@@ -22,12 +22,13 @@ import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter;
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatterRow;
+import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
-import jetbrains.letsPlot.Figure;
+import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -50,7 +51,7 @@ public class CommandOverlapScatter extends MiXCRCommand {
     public String in1;
     @Parameters(description = "cloneset_2.{clns|clna}...", index = "1")
     public String in2;
-    @Parameters(description = "output.pdf", index = "2")
+    @Parameters(description = "output.[pdf|eps|png|jpeg]", index = "2")
     public String out;
 
     @Option(description = "Chains to export",
@@ -105,7 +106,7 @@ public class CommandOverlapScatter extends MiXCRCommand {
                 parse(downsampling, CommandPa.extractTagsInfo(getInputFiles()), false, onlyProductive);
 
         for (NamedChains curChains : this.chains == null
-                ? Arrays.asList(TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED)
+                ? DEFAULT_EXPORT_CHAINS_LIST
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList())) {
 
             OverlapPreprocessorAdapter.Factory<Clone> downsampling = new OverlapPreprocessorAdapter.Factory<>(preproc.getPreproc(curChains.chains));
@@ -113,6 +114,7 @@ public class CommandOverlapScatter extends MiXCRCommand {
             Dataset<OverlapGroup<Clone>> dataset = SetPreprocessor.processDatasets(downsampling.newInstance(),
                     OverlapUtil.overlap(
                             Arrays.asList(in1, in2),
+                            new ElementPredicate.IncludeChains(curChains.chains),
                             OverlapUtil.parseCriteria(overlapCriteria).ordering()))[0];
 
             try (OutputPortWithProgress<OverlapGroup<Clone>> port = dataset.mkElementsPort()) {
@@ -121,14 +123,14 @@ public class CommandOverlapScatter extends MiXCRCommand {
                 if (df.rowsCount() == 0) {
                     continue;
                 }
-                Figure plot = OverlapScatter.INSTANCE.plot(df,
+                Plot plot = OverlapScatter.INSTANCE.plot(df,
                         new OverlapScatter.PlotParameters(
                                 fName(in1),
                                 fName(in2),
                                 CorrelationMethod.Companion.parse(method),
                                 !noLog)
                 );
-                ExportKt.writePDF(outputPath(curChains), plot);
+                ExportKt.writeFile(outputPath(curChains), plot);
             }
         }
     }

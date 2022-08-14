@@ -11,29 +11,46 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  */
 public enum OverlapType {
-    D("Unweighted overlap", "Relative overlap diversity normalized"),
-    SharedClonotypes("Clonotypes", "Number of shared clonotypes"),
-    F1("Frequencies", "Geometric mean of relative overlap frequencies"),
-    F2("Weighted overlap", "Сlonotype-wise sum of geometric mean frequencies"),
-    Jaccard("Jaccard", "Jaccard overlap"),
-    R_Intersection("Pearson", "Pearson correlation of clonotype frequencies, restricted only to the overlapping clonotypes"),
-    R_All("Pearson (all)", "Pearson correlation of clonotype frequencies (outer merge)");
+    SharedClonotypes("Shared clonotypes", "Number of shared clonotypes"),
+    RelativeDiversity("Relative diversity", "Relative overlap diversity normalized"),
+    F1Index("F1 index", "Geometric mean of relative overlap frequencies"),
+    F2Index("F2 index", "Сlonotype-wise sum of geometric mean frequencies"),
+    JaccardIndex("Jaccard index", "Jaccard index"),
+    Pearson("Pearson", "Pearson correlation of clonotype frequencies, restricted only to the overlapping clonotypes"),
+    PearsonAll("Pearson (all)", "Pearson correlation of clonotype frequencies (outer merge)");
 
-    public final String name;
-    public final String description;
+    public final String shortDescription;
+    public final String longDescription;
 
-    OverlapType(String name, String description) {
-        this.name = name;
-        this.description = description;
+    OverlapType(String shortDescription, String longDescription) {
+        this.shortDescription = shortDescription;
+        this.longDescription = longDescription;
+    }
+
+    private static Map<String, OverlapType> byNameIgnoreCase;
+
+    static {
+        byNameIgnoreCase = new HashMap<>();
+        for (OverlapType v : values()) {
+            byNameIgnoreCase.put(v.name().toLowerCase(), v);
+        }
     }
 
     public static OverlapType byName(String name) {
-        return Arrays.stream(values()).filter(s -> s.name.equals(name)).findFirst().orElse(null);
+        return byNameIgnoreCase.get(name.toLowerCase());
+    }
+
+    public static OverlapType byNameOrThrow(String name) {
+        OverlapType r = byName(name);
+        if (r == null)
+            throw new IllegalArgumentException("Unknown metric name: " + name);
+        return r;
     }
 }

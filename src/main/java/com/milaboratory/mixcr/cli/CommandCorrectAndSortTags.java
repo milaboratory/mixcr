@@ -31,11 +31,12 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.tag.*;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.*;
 import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 import java.util.*;
@@ -49,7 +50,7 @@ import static com.milaboratory.mixcr.cli.Util.default3;
 import static java.util.stream.Collectors.toMap;
 import static picocli.CommandLine.Option;
 
-@CommandLine.Command(name = CORRECT_AND_SORT_TAGS_COMMAND_NAME,
+@Command(name = CORRECT_AND_SORT_TAGS_COMMAND_NAME,
         sortOptions = false,
         separator = " ",
         description = "Applies error correction algorithm for tag sequences and sorts resulting file by tags.")
@@ -185,9 +186,11 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
     @Override
     public void run0() throws Exception {
         TempFileDest tempDest = TempFileManager.smartTempDestination(out, "", useSystemTemp);
+        long startTimeMillis = System.currentTimeMillis();
 
         final CorrectionNode correctionResult;
-        final CorrectionReport report;
+        final CorrectAndSortTagsReport correctAndSortTagsReport;
+        final CorrectionReport mitoolReport;
         final int[] targetTagIndices;
         final List<String> tagNames;
         try (VDJCAlignmentsReader mainReader = new VDJCAlignmentsReader(in)) {
@@ -240,10 +243,10 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                 }
 
                 correctionResult = corrector.correct(cInput, tagNames, whitelists, mainReader);
-                report = corrector.getReport();
+                mitoolReport = corrector.getReport();
             } else {
                 correctionResult = null;
-                report = null;
+                mitoolReport = null;
             }
 
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
@@ -280,7 +283,7 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                                 NucleotideSequence current = ((SequenceAndQualityTagValue) newTags[i]).data.getSequence();
                                 cn = cn.getNextLevel().get(current);
                                 if (cn == null) {
-                                    report.setFilteredRecords(report.getFilteredRecords() + 1);
+                                    mitoolReport.setFilteredRecords(mitoolReport.getFilteredRecords() + 1);
                                     return al.setTagCount(null); // will be filtered right before hash sorter
                                 }
                                 newTags[i] = new SequenceAndQualityTagValue(cn.getCorrectValue());
@@ -313,15 +316,22 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                 for (VDJCAlignments al : CUtils.it(sorted))
                     writer.write(al);
 
-                writer.writeFooter(mainReader.reports(), null); // TODO add correction report
+
+                correctAndSortTagsReport = new CorrectAndSortTagsReport(new Date(),
+                        getCommandLineArguments(),
+                        new String[]{in},
+                        new String[]{out},
+                        System.currentTimeMillis() - startTimeMillis,
+                        MiXCRVersionInfo.get().getShortestVersionString(),
+                        mitoolReport
+                );
+                writer.writeFooter(mainReader.reports(), null /*correctAndSortTagsReport*/); //fixme
             }
         }
 
-        if (report != null) {
-            report.writeReport(ReportHelper.STDOUT);
-            if (reportFile != null)
-                ReportUtil.appendReport(reportFile, report);
-        }
+        correctAndSortTagsReport.writeReport(ReportHelper.STDOUT);
+        if (reportFile != null)
+            ReportUtil.appendReport(reportFile, mitoolReport);
     }
 
     private static final class SortingStep {

@@ -97,8 +97,10 @@ public final class RunMiXCR {
                 }
             };
 
-            PreCloneReader preClones = PreCloneReader.fromAlignments(aProvider,
-                    parameters.cloneAssemblerParameters.getAssemblingFeatures());
+            PreCloneReader preClones = PreCloneReader.fromAlignments(
+                    aProvider,
+                    parameters.cloneAssemblerParameters.getAssemblingFeatures(),
+                    report);
             CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(preClones, assembler);
 
             //start progress reporting
@@ -307,8 +309,10 @@ public final class RunMiXCR {
         }
 
         public PreCloneReader asPreCloneReader() throws IOException {
-            return PreCloneReader.fromAlignments(resultReader(),
-                    parameters.cloneAssemblerParameters.getAssemblingFeatures());
+            return PreCloneReader.fromAlignments(
+                    resultReader(),
+                    parameters.cloneAssemblerParameters.getAssemblingFeatures(),
+                    __ -> {});
         }
     }
 

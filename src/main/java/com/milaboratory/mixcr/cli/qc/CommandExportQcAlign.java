@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
         separator = " ",
         description = "QC plot for alignments.")
 public class CommandExportQcAlign extends MiXCRCommand {
-    @Parameters(description = "sample1.vdjca ... align.pdf")
+    @Parameters(description = "sample1.vdjca ... align.[pdf|eps|png|jpeg]")
     public List<String> in;
     @Option(
             names = "--absolute-values",
@@ -53,6 +53,6 @@ public class CommandExportQcAlign extends MiXCRCommand {
                         .collect(Collectors.toList()),
                 !absoluteValues
         );
-        ExportKt.writePDF(Paths.get(getOutputFiles().get(0)), plt);
+        ExportKt.writeFile(Paths.get(getOutputFiles().get(0)), plt);
     }
 }

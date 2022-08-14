@@ -60,9 +60,9 @@ public final class DiversityMeasure {
                 Chao1,
                 Chao1Std,
                 ShannonWiener,
-                NormalizedShannonWeinerIndex,
+                NormalizedShannonWienerIndex,
                 GiniIndex,
-                InverseSimpson,
+                InverseSimpsonIndex,
                 EfronThisted,
                 EfronThistedStd,
         };
@@ -72,26 +72,31 @@ public final class DiversityMeasure {
     public static final DiversityMeasure Chao1 = Measure.Chao1.toDiversityMeasure();
     public static final DiversityMeasure Chao1Std = Measure.Chao1Std.toDiversityMeasure();
     public static final DiversityMeasure ShannonWiener = Measure.ShannonWiener.toDiversityMeasure();
-    public static final DiversityMeasure NormalizedShannonWeinerIndex = Measure.NormalizedShannonWeinerIndex.toDiversityMeasure();
-    public static final DiversityMeasure GiniIndex = Measure.Gini.toDiversityMeasure();
-    public static final DiversityMeasure InverseSimpson = Measure.InverseSimpson.toDiversityMeasure();
+    public static final DiversityMeasure NormalizedShannonWienerIndex = Measure.NormalizedShannonWienerIndex.toDiversityMeasure();
+    public static final DiversityMeasure GiniIndex = Measure.GiniIndex.toDiversityMeasure();
+    public static final DiversityMeasure InverseSimpsonIndex = Measure.InverseSimpsonIndex.toDiversityMeasure();
     public static final DiversityMeasure EfronThisted = Measure.EfronThisted.toDiversityMeasure();
     public static final DiversityMeasure EfronThistedStd = Measure.EfronThistedStd.toDiversityMeasure();
 
     public enum Measure {
-        Observed,
-        Chao1,
-        Chao1Std,
-        ShannonWiener,
-        NormalizedShannonWeinerIndex,
-        Gini,
-        GiniDiversity,
-        InverseSimpson,
-        EfronThisted,
-        EfronThistedStd;
+        Observed("Observed diversity"),
+        NormalizedShannonWienerIndex("Normalized Shannon-Wiener index"),
+        ShannonWiener("Shannon-Wiener diversity"),
+        Chao1("Chao1 estimate"),
+        Chao1Std("Chao1 estimate std dev"),
+        GiniIndex("Gini index"),
+        InverseSimpsonIndex("Inverse Simpson index"),
+        EfronThisted("Efron-Thisted estimate"),
+        EfronThistedStd("Efron-Thisted estimate std dev");
+
+        private final String readableName;
+
+        Measure(String readableName) {
+            this.readableName = readableName;
+        }
 
         public DiversityMeasure toDiversityMeasure() {
-            return new DiversityMeasure(this, this.name());
+            return new DiversityMeasure(this, readableName);
         }
     }
 }
