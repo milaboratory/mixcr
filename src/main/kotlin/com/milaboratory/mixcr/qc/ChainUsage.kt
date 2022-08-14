@@ -29,15 +29,6 @@ import kotlin.io.path.name
 
 
 object ChainUsage {
-    @JvmStatic
-    val DefaultChainsList = listOf(
-        TRAD_NAMED,
-        TRB_NAMED,
-        TRG_NAMED,
-        IGH_NAMED,
-        IGK_NAMED,
-        IGL_NAMED
-    )
 
     fun chainUsageAlign(
         files: List<Path>,
@@ -82,7 +73,7 @@ object ChainUsage {
         for ((s, rep) in file2report) {
             val erec = ChainUsageStatsRecord.EMPTY
 
-            val map = DefaultChainsList
+            val map = DEFAULT_EXPORT_CHAINS_LIST
                 .filter { chains.contains(it) }
                 .associateWith { rep.chains.getOrDefault(it, erec) }
 

@@ -246,7 +246,7 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                         MiXCRVersionInfo.get().getShortestVersionString(),
                         mitoolReport
                 );
-                writer.writeFooter(mainReader.reports(), correctAndSortTagsReport);
+                writer.writeFooter(mainReader.reports(), null /*correctAndSortTagsReport*/); //fixme
             }
         }
 

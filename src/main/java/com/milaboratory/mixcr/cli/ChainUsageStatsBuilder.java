@@ -63,9 +63,7 @@ public final class ChainUsageStatsBuilder implements ReportBuilder {
     Map<NamedChains, ChainUsageStatsRecord> getMap() {
         Map<NamedChains, RecordBuilder> r = new HashMap<>();
         for (Map.Entry<Chains, RecordBuilder> e : records.entrySet())
-            for (NamedChains knownChains : Arrays.asList(
-                    TRAD_NAMED, TRB_NAMED, TRG_NAMED,
-                    IGH_NAMED, IGK_NAMED, IGL_NAMED))
+            for (NamedChains knownChains : DEFAULT_EXPORT_CHAINS_LIST)
                 if (knownChains.chains.intersects(e.getKey()))
                     r.computeIfAbsent(knownChains, __ -> new RecordBuilder()).add(e.getValue());
         return r.entrySet().stream().collect(
