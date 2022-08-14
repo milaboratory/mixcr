@@ -74,7 +74,7 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
         List<Path> files = getInputFiles().stream().map(Paths::get)
                 .collect(Collectors.toList());
         List<NamedChains> chains = this.chains == null
-                ? ChainUsage.getDefaultChainsList()
+                ? Chains.DEFAULT_EXPORT_CHAINS_LIST
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
 
         Plot plt;
