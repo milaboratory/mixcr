@@ -809,7 +809,7 @@ public abstract class CommandAnalyze extends MiXCRCommand {
         }
 
         @Option(description = "UMI pattern to extract from the read.",
-                names = {"--tag-pattern"})
+                names = {"--umi-pattern"})
         public String umiPattern;
 
         @Option(description = "UMI pattern name from the built-in list.",
