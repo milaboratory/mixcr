@@ -22,6 +22,7 @@ import com.milaboratory.mitool.consensus.ConsensusResult;
 import com.milaboratory.mitool.consensus.GConsensusAssembler;
 import com.milaboratory.mitool.helpers.GroupOP;
 import com.milaboratory.mitool.helpers.PipeKt;
+import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.assembler.VDJCGeneAccumulator;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
@@ -44,8 +45,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class PreCloneAssembler {
     /**
-     * Reference points that will be projected onto the assembled consensus / pre-clone.
-     * Important Note: all the points are alignment attached and not checked for continuity.
+     * Reference points that will be projected onto the assembled consensus / pre-clone. Important Note: all the points
+     * are alignment attached and not checked for continuity.
      */
     private static final ReferencePoint[] ReferencePointsToProject = {
             ReferencePoint.VEndTrimmed,
@@ -65,6 +66,7 @@ public final class PreCloneAssembler {
 
     private final Function1<VDJCAlignments, TagTuple> groupingFunction;
     private final OutputPort<GroupOP<VDJCAlignments, TagTuple>> alignmentsReader1, alignmentsReader2;
+    private ClonalSequenceExtractionListener extractionListener;
 
     public PreCloneAssembler(PreCloneAssemblerParameters parameters,
                              GeneFeature[] assemblingFeatures,
@@ -79,6 +81,12 @@ public final class PreCloneAssembler {
         this.alignmentsReader1 = PipeKt.group(alignmentsReader1, groupingFunction);
         this.alignmentsReader2 = PipeKt.group(alignmentsReader2, groupingFunction);
         this.relativeMinScores = relativeMinScores;
+    }
+
+    public void setExtractionListener(ClonalSequenceExtractionListener extractionListener) {
+        if (this.extractionListener != null)
+            throw new IllegalStateException("extractionListener is already set");
+        this.extractionListener = extractionListener;
     }
 
     private static Function1<VDJCAlignments, TagTuple> groupingFunction(int depth) {
@@ -128,8 +136,12 @@ public final class PreCloneAssembler {
         for (VDJCAlignments al : CUtils.it(grp1)) {
             localIdx++;
             for (int sr = 0; sr < assemblingFeatures.length; sr++)
-                if ((row[sr] = al.getFeature(assemblingFeatures[sr])) == null)
+                if ((row[sr] = al.getFeature(assemblingFeatures[sr])) == null) {
+                    if (extractionListener != null) {
+                        extractionListener.onFailedToExtractClonalSequence(al);
+                    }
                     continue outer;
+                }
 
             assemblerInput.add(row);
             EnumMap<GeneType, List<GeneAndScore>> geneAndScores = new EnumMap<>(GeneType.class);

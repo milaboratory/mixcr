@@ -31,6 +31,9 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
     @JsonProperty("readsDroppedNoTargetSequence")
     public final long readsDroppedNoTargetSequence;
 
+    @JsonProperty("readsDroppedTooShortClonalSequence")
+    public final long readsDroppedTooShortClonalSequence;
+
     @JsonProperty("readsDroppedLowQuality")
     public final long readsDroppedLowQuality;
 
@@ -96,6 +99,7 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
                                 @JsonProperty("totalReadsProcessed") long totalReadsProcessed,
                                 @JsonProperty("initialClonesCreated") int initialClonesCreated,
                                 @JsonProperty("readsDroppedNoTargetSequence") long readsDroppedNoTargetSequence,
+                                @JsonProperty("readsDroppedTooShortClonalSequence") long readsDroppedTooShortClonalSequence,
                                 @JsonProperty("readsDroppedLowQuality") long readsDroppedLowQuality,
                                 @JsonProperty("coreReads") long coreReads,
                                 @JsonProperty("readsDroppedFailedMapping") long readsDroppedFailedMapping,
@@ -119,6 +123,7 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
         this.totalReadsProcessed = totalReadsProcessed;
         this.initialClonesCreated = initialClonesCreated;
         this.readsDroppedNoTargetSequence = readsDroppedNoTargetSequence;
+        this.readsDroppedTooShortClonalSequence = readsDroppedTooShortClonalSequence;
         this.readsDroppedLowQuality = readsDroppedLowQuality;
         this.coreReads = coreReads;
         this.readsDroppedFailedMapping = readsDroppedFailedMapping;
@@ -173,6 +178,8 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
                 .writePercentAndAbsoluteField("Reads pre-clustered due to the similar VJC-lists, percent of used", readsPreClustered, alignmentsInClones)
                 .writePercentAndAbsoluteField("Reads dropped due to the lack of a clone sequence, percent of total",
                         readsDroppedNoTargetSequence, totalReadsProcessed)
+                .writePercentAndAbsoluteField("Reads dropped due to a too short clonal sequence, percent of total",
+                        readsDroppedTooShortClonalSequence, totalReadsProcessed)
                 .writePercentAndAbsoluteField("Reads dropped due to low quality, percent of total",
                         clonesDroppedAsLowQuality, totalReadsProcessed)
                 .writePercentAndAbsoluteField("Reads dropped due to failed mapping, percent of total",

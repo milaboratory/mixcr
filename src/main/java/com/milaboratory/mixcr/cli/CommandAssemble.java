@@ -249,6 +249,7 @@ public class CommandAssemble extends MiXCRCommand {
                             cellLevel ? TagType.Cell : TagType.Molecule,
                             assemblerParameters.getAssemblingFeatures(),
                             params, preClonesFile, tempDest.addSuffix("pc.tmp"));
+                    assemblerRunner.setExtractionListener(reportBuilder);
                     SmartProgressReporter.startProgressReport(assemblerRunner);
 
                     // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
@@ -260,7 +261,9 @@ public class CommandAssemble extends MiXCRCommand {
                     preClones = assemblerRunner.createReader();
                 } else
                     // If there are no tags in the data, alignments are just wrapped into pre-clones
-                    preClones = PreCloneReader.fromAlignments(alignmentsReader, assemblerParameters.getAssemblingFeatures());
+                    preClones = PreCloneReader.fromAlignments(alignmentsReader,
+                            assemblerParameters.getAssemblingFeatures(),
+                            reportBuilder);
 
                 // Running assembler
                 CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
