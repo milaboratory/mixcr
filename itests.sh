@@ -133,8 +133,8 @@ if [[ $run_tests == true ]]; then
     run_test "${testName}.sh"
   done
 
-  if ls "${dir}/test_target/*.error" 1>/dev/null 2>&1; then
-    ls "${dir}/test_target/*.error"
+  if ls "${dir}"/test_target/*.error 1>/dev/null 2>&1; then
+    ls -1 "${dir}"/test_target/*.error
     echo "There are tests with errors."
     exit 1
   else
