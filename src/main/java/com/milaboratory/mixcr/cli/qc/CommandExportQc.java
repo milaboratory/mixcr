@@ -11,8 +11,11 @@
  */
 package com.milaboratory.mixcr.cli.qc;
 
+import com.milaboratory.mixcr.cli.MiXCRCommand;
+import com.milaboratory.mixcr.qc.SizeParameters;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 @Command(name = "qc",
         separator = " ",
@@ -20,4 +23,19 @@ import picocli.CommandLine.Command;
         subcommands = {
                 CommandLine.HelpCommand.class
         })
-public class CommandExportQc {}
+public abstract class CommandExportQc extends MiXCRCommand {
+    @Option(names = "--width",
+            description = "Plot width")
+    public int width = -1;
+
+    @Option(names = "--height",
+            description = "Plot height")
+    public int height = -1;
+
+    public SizeParameters getSizeParameters() {
+        if (width != -1 && height != -1)
+            return new SizeParameters(width, height);
+        else
+            return null;
+    }
+}

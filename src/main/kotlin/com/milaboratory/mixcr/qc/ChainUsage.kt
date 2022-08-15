@@ -35,8 +35,9 @@ object ChainUsage {
         percent: Boolean,
         showNonFunctional: Boolean,
         chains: List<NamedChains>,
+        hw: SizeParameters?
     ) =
-        chainUsage(files, percent, showNonFunctional, chains) {
+        chainUsage(files, percent, showNonFunctional, chains, hw) {
             (it.first() as AlignerReport).chainUsage
         }
 
@@ -45,8 +46,9 @@ object ChainUsage {
         percent: Boolean,
         showNonFunctional: Boolean,
         chains: List<NamedChains>,
+        hw: SizeParameters?
     ) =
-        chainUsage(files, percent, showNonFunctional, chains) {
+        chainUsage(files, percent, showNonFunctional, chains, hw) {
             it.filterIsInstance<CloneAssemblerReport>().first().clonalChainUsage
         } + ggtitle("Clonal chain usage")
 
@@ -55,7 +57,8 @@ object ChainUsage {
         percent: Boolean,
         showNonFunctional: Boolean,
         chains: List<NamedChains>,
-        usageExtractor: (List<MiXCRCommandReport>) -> ChainUsageStats,
+        hw: SizeParameters? = null,
+        usageExtractor: (List<MiXCRCommandReport>) -> ChainUsageStats
     ) = run {
         val typesToShow = if (showNonFunctional)
             listOf(typeProductive, typeStops, typeOOF)
@@ -136,7 +139,10 @@ object ChainUsage {
             .legendPositionTop()
             .legendDirectionVertical()
 
-        plt += ggsize(1000, 300 + 35 * files.size)
+        if (hw != null)
+            plt += ggsize(hw.width, hw.height)
+        else
+            plt += ggsize(1000, 300 + 35 * files.size)
 
 
         plt += labs(

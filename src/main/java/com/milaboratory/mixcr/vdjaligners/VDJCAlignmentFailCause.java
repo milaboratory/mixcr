@@ -12,17 +12,18 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 public enum VDJCAlignmentFailCause {
-    NoHits("Alignment failed, no hits (not TCR/IG?)"),
-    NoCDR3Parts("Alignment failed because of absence of CDR3 parts"),
-    NoVHits("Alignment failed because of absence of V hits"),
-    NoJHits("Alignment failed because of absence of J hits"),
-    VAndJOnDifferentTargets("No target with both V and J alignments"),
-    LowTotalScore("Alignment failed because of low total score"),
-    NoBarcode("Absent barcode"),
-    BarcodeNotInWhitelist("Barcode not in whitelist");
+    NoHits("Alignment failed, no hits (not TCR/IG?)", "No hits (not TCR/IG?)"),
+    NoCDR3Parts("Alignment failed because of absence of CDR3 parts", "No CDR3 parts"),
+    NoVHits("Alignment failed because of absence of V hits", "No V hits"),
+    NoJHits("Alignment failed because of absence of J hits", "No J hits"),
+    VAndJOnDifferentTargets("No target with both V and J alignments", "No target with both V and J"),
+    LowTotalScore("Alignment failed because of low total score", "Low total score"),
+    NoBarcode("Absent barcode", "Absent barcode");
     public final String reportLine;
+    public final String shortReportLine;
 
-    VDJCAlignmentFailCause(String reportLine) {
+    VDJCAlignmentFailCause(String reportLine, String shortReportLine) {
         this.reportLine = reportLine;
+        this.shortReportLine = shortReportLine;
     }
 }
