@@ -239,7 +239,7 @@ public class PartialAlignmentsAssemblerTest {
                     inputAlignments.usedGenes, true, false, writer::write);
 
             try (final VDJCAlignmentsReader reader = inputAlignments.resultReader()) {
-                writer.header(reader.getParameters(), reader.getUsedGenes(), reader.getTagsInfo());
+                writer.header(reader);
                 assembler.buildLeftPartsIndex(reader);
             }
             try (final VDJCAlignmentsReader reader = inputAlignments.resultReader()) {

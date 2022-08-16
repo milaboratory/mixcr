@@ -42,17 +42,17 @@ object Overlap {
     fun dataFrame(
         paResult: PostanalysisResult,
         fillDiagonal: Boolean,
-        metricsFilter: List<String>?,
+        metricsFilter: List<OverlapType>?,
     ) = run {
         val data = mutableListOf<OverlapRow>()
-        val mf = metricsFilter?.map { it.lowercase() }?.toSet()
+        val mf = metricsFilter?.toSet()
         for ((ch, charData) in paResult.data) {
             val preproc = charData.preproc
             for ((_, keys) in charData.data) {
                 for (metric in keys.data) {
                     @Suppress("UNCHECKED_CAST")
                     val key = metric.key as? OverlapKey<OverlapType> ?: throw RuntimeException()
-                    if (mf != null && !mf.contains(key.key.toString().lowercase())) {
+                    if (mf != null && !mf.contains(key.key)) {
                         continue
                     }
                     val sample1 = key.id1
@@ -75,7 +75,7 @@ object Overlap {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metricsFilter: List<String>?,
+        metricsFilter: List<OverlapType>?,
         fillDiagonal: Boolean,
         metadata: Metadata?,
     ) = run {
@@ -116,7 +116,7 @@ object Overlap {
         df: DataFrame<OverlapRow>,
         par: HeatmapParameters,
     ) = df.groupBy { metric }.groups.toList()
-        .map { sdf -> plot(df, par) + ggtitle(sdf.first()[OverlapRow::metric.name]!!.toString()) }
+        .map { sdf -> plot(sdf, par) + ggtitle(sdf.first().metric.shortDescription) }
 
 //    fun tables(
 //        df: DataFrame<OverlapRow>,

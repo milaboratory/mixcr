@@ -90,11 +90,11 @@ repositories {
 }
 
 val milibVersion = "2.0.0-11-master"
-val repseqioVersion = "1.4.0-20-trees"
-val mitoolVersion = "1.1.0-9-main"
-val miplotsVersion = "1.0.0-26-master"
+val repseqioVersion = "1.4.1-14-trees"
+val mitoolVersion = "1.1.0-13-main"
+val miplotsVersion = "1.0.0-24-master"
 val jacksonBomVersion = "2.13.3"
-val redberryPipeVersion = "1.2.0-5-trees"
+val redberryPipeVersion = "1.2.0-9-trees"
 
 dependencies {
     implementation("cc.redberry:pipe:$redberryPipeVersion")

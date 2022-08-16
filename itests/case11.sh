@@ -18,7 +18,7 @@ assert() {
 set -eux
 
 mixcr align -f \
-    --tag-pattern-name mikelov_et_al_2021 \
+    --tag-preset mikelov_et_al_2021 \
     -p kaligner2 -s hs \
     -OvParameters.geneFeatureToAlign=VTranscript \
     -OvParameters.parameters.floatingLeftBound=false \

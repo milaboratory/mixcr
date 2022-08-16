@@ -219,7 +219,7 @@ public final class Main {
         cmd.getSubcommands()
                 .get("exportPlots")
                 .addSubcommand("listMetrics", CommandSpec.forAnnotatedObject(CommandPaListMetrics.class))
-                .addSubcommand("biophysics", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportBiophysics.class))
+                .addSubcommand("cdr3metrics", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportCDR3Metrics.class))
                 .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportDiversity.class))
                 .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportVUsage.class))
                 .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportJUsage.class))

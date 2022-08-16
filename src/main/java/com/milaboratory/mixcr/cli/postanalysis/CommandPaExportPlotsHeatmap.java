@@ -25,9 +25,9 @@ public abstract class CommandPaExportPlotsHeatmap extends CommandPaExportPlots {
     public double vLabelsSize = -1.0;
 
     @Option(description = "Color palette for heatmap. Available names: diverging, viridis2magma, lime2rose, " +
-            "blue2red, teal2red, softSpectral, sequential, viridis, magma, sunset, rainbow, salinity, density. Default is sequential.",
+            "blue2red, teal2red, softSpectral, sequential, viridis, magma, sunset, rainbow, salinity, density. Default is density.",
             names = {"--palette"})
-    public String palette = "sequential";
+    public String palette = "density";
 
     UniversalPalette parsePallete(){
         return Palettes.parse(palette);

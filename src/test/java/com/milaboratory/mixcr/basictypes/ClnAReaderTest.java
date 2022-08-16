@@ -80,9 +80,8 @@ public class ClnAReaderTest {
                 .collect(Collectors.toList());
         CloneSet newCloneSet = new CloneSet(
                 modifyClones.apply(newClones), align.usedGenes,
-                align.parameters.alignerParameters,
-                CloneAssemblerParametersPresets.getByName("default"),
-                null,
+                new MiXCRMetaInfo(null, null,
+                        align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default")),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
         writer.writeClones(newCloneSet);
 
@@ -125,9 +124,8 @@ public class ClnAReaderTest {
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
-                align.parameters.alignerParameters,
-                CloneAssemblerParametersPresets.getByName("default"),
-                null,
+                new MiXCRMetaInfo(null, null,
+                        align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default")),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.writeFooter(Collections.emptyList(), null);

@@ -121,9 +121,10 @@ public class CommandAssemblePartialAlignments extends MiXCRCommand {
 
             int groupingDepth = reader1.getTagsInfo().getDepthFor(cellLevel ? TagType.Cell : TagType.Molecule);
 
-            writer.header(reader1.getParameters(), reader1.getUsedGenes(),
-                    // output data will be grouped only up to a groupingDepth
-                    reader1.getTagsInfo().setSorted(groupingDepth));
+            writer.header(reader1.getInfo()
+                            // output data will be grouped only up to a groupingDepth
+                            .updateTagInfo(ti -> ti.setSorted(groupingDepth)),
+                    reader1.getUsedGenes());
 
             PartialAlignmentsAssembler assembler = new PartialAlignmentsAssembler(assemblerParameters, reader1.getParameters(),
                     reader1.getUsedGenes(), !dropPartial, overlappedOnly,

@@ -71,7 +71,7 @@ public class CommandSortAlignments extends MiXCRCommand {
                                  new VDJCAlignmentsSerializer(reader), TempFileManager.getTempFile());
                  VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
 
-                writer.header(reader.getParameters(), reader.getUsedGenes(), reader.getTagsInfo());
+                writer.header(reader.getInfo().updateTagInfo(ti -> ti.setSorted(0)), reader.getUsedGenes());
 
                 final long nReads = reader.getNumberOfReads();
                 final CountingOutputPort<VDJCAlignments> counter = new CountingOutputPort<>(sorted);

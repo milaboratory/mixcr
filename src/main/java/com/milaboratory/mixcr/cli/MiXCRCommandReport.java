@@ -55,10 +55,14 @@ public abstract class MiXCRCommandReport implements MiXCRReport {
 
     public abstract String command();
 
+    public void writeHeader(ReportHelper helper) {
+        String command = command().substring(0, 1).toUpperCase() + command().substring(1);
+        helper.writeLine("============== " + command + " Report ==============");
+    }
+
     public void writeSuperReport(ReportHelper helper) {
         if (helper.isStdout()) {
-            String command = command().substring(0, 1).toUpperCase() + command().substring(1);
-            helper.writeLine("============== " + command + " Report ==============");
+            writeHeader(helper);
         }
 
         if (!helper.isStdout())

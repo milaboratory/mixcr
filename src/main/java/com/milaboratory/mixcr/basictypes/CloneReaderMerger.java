@@ -77,6 +77,11 @@ public class CloneReaderMerger implements CloneReader {
     }
 
     @Override
+    public MiXCRMetaInfo getInfo() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void close() throws Exception {
         Exception err = null;
         for (CloneReader r : readers) {

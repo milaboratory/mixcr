@@ -226,7 +226,7 @@ public abstract class CommandAnalyze extends MiXCRCommand {
             required = true)
     public String species = "hs";
 
-    @Option(description = CommonDescriptions.SPECIES,
+    @Option(description = "Aligner parameters preset",
             names = {"--align-preset"})
     public String alignPreset = null;
 
@@ -363,6 +363,8 @@ public abstract class CommandAnalyze extends MiXCRCommand {
         }
     }
 
+    protected abstract boolean needCorrectAndSortTags();
+
     CommandAlign mkAlign() {
         // align parameters
         List<String> alignParameters = new ArrayList<>(initialAlignParameters);
@@ -422,6 +424,33 @@ public abstract class CommandAnalyze extends MiXCRCommand {
         ap.spec = this.spec;
         new CommandLine(ap).parseArgs(alignParameters.toArray(new String[0]));
         return ap;
+    }
+
+    @Option(names = "--correctAndSortTagParameters",
+            description = "Additional parameters for correctAndSortTagParameters step specified with double quotes.",
+            arity = "1")
+    public List<String> correctAndSortTagsParameters = new ArrayList<>();
+
+    /** Build parameters for assemble partial */
+    public final CommandCorrectAndSortTags mkCorrectAndSortTags(String input, String output) {
+        List<String> correctAndSortTagsParameters = new ArrayList<>();
+
+        // adding report options
+        addReportOptions("correctAndSortTags", correctAndSortTagsParameters);
+
+        // add all override parameters
+        correctAndSortTagsParameters.addAll(this.correctAndSortTagsParameters
+                .stream()
+                .flatMap(s -> Arrays.stream(s.split(" ")))
+                .collect(Collectors.toList()));
+
+        correctAndSortTagsParameters.add(input);
+        correctAndSortTagsParameters.add(output);
+
+        // parse parameters
+        CommandCorrectAndSortTags ap = new CommandCorrectAndSortTags();
+        new CommandLine(ap).parseArgs(correctAndSortTagsParameters.toArray(new String[0]));
+        return inheritOptionsAndValidate(ap);
     }
 
     @Option(names = "--assemblePartial",
@@ -620,6 +649,10 @@ public abstract class CommandAnalyze extends MiXCRCommand {
         return outputNamePattern() + ".vdjca";
     }
 
+    public String fNameForCorrectedAlignments() {
+        return outputNamePattern() + ".corrected.vdjca";
+    }
+
     public String fNameForParAlignments(int round) {
         return outputNamePattern() + ".rescued_" + round + ".vdjca";
     }
@@ -647,7 +680,7 @@ public abstract class CommandAnalyze extends MiXCRCommand {
 
     @Override
     public void validate() {
-        super.validate();
+        // don't invoke parent validation of input/output existelnce
         if (report == null)
             warn("NOTE: report file is not specified, using " + getReport() + " to write report.");
         if (new File(outputNamePattern()).exists())
@@ -662,6 +695,13 @@ public abstract class CommandAnalyze extends MiXCRCommand {
         // --- Running alignments
         getAlign().run();
         String fileWithAlignments = fNameForAlignments();
+
+        // --- Running correctAndSortTags
+        if (needCorrectAndSortTags()) {
+            String correctedVDJCA = fNameForCorrectedAlignments();
+            mkCorrectAndSortTags(fileWithAlignments, correctedVDJCA).run();
+            fileWithAlignments = correctedVDJCA;
+        }
 
         // --- Running partial alignments
         for (int round = 0; round < nAssemblePartialRounds; ++round) {
@@ -768,6 +808,18 @@ public abstract class CommandAnalyze extends MiXCRCommand {
                 throwValidationException("--region-of-interest must cover CDR3");
         }
 
+        @Option(description = "UMI pattern to extract from the read.",
+                names = {"--umi-pattern"})
+        public String umiPattern;
+
+        @Option(description = "UMI pattern name from the built-in list.",
+                names = {"--tag-pattern-name"})
+        public String umiPatternName;
+
+        @Option(description = "Read UMI pattern from a file.",
+                names = {"--umi-pattern-file"})
+        public String umiPatternFile;
+
         @Override
         boolean include5UTRInRNA() {
             // (1) [ adapters == _Adapters.noAdapters ]
@@ -798,12 +850,33 @@ public abstract class CommandAnalyze extends MiXCRCommand {
         }
 
         @Override
+        protected boolean needCorrectAndSortTags() {
+            return umiPattern != null || umiPatternName != null || umiPatternFile != null;
+        }
+
+        @Override
         Collection<String> pipelineSpecificAlignParameters() {
-            return Arrays.asList(
+            List<String> list = new ArrayList<>(Arrays.asList(
                     "-OvParameters.parameters.floatingLeftBound=" + floatingV(),
                     "-OjParameters.parameters.floatingRightBound=" + floatingJ(),
                     "-OcParameters.parameters.floatingRightBound=" + floatingC()
-            );
+            ));
+            if (umiPattern != null) {
+                if (umiPattern.toLowerCase().contains("cell"))
+                    throw new IllegalArgumentException("UMI pattern can't contain cell barcodes.");
+
+                list.add("--tag-pattern");
+                list.add(umiPattern);
+            }
+            if (umiPatternName != null) {
+                list.add("--tag-pattern-name");
+                list.add(umiPatternName);
+            }
+            if (umiPatternFile != null) {
+                list.add("--tag-pattern-file");
+                list.add(umiPatternFile);
+            }
+            return list;
         }
 
         @Override
@@ -862,6 +935,11 @@ public abstract class CommandAnalyze extends MiXCRCommand {
             chains = Chains.ALL;
             nAssemblePartialRounds = 2;
             doNotExtendAlignments = false;
+        }
+
+        @Override
+        protected boolean needCorrectAndSortTags() {
+            return false;
         }
 
         @Override

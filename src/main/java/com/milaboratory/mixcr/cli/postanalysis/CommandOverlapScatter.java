@@ -106,7 +106,7 @@ public class CommandOverlapScatter extends MiXCRCommand {
                 parse(downsampling, CommandPa.extractTagsInfo(getInputFiles()), false, onlyProductive);
 
         for (NamedChains curChains : this.chains == null
-                ? Arrays.asList(TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED)
+                ? DEFAULT_EXPORT_CHAINS_LIST
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList())) {
 
             OverlapPreprocessorAdapter.Factory<Clone> downsampling = new OverlapPreprocessorAdapter.Factory<>(preproc.getPreproc(curChains.chains));

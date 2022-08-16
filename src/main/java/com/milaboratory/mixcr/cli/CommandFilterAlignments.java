@@ -137,7 +137,7 @@ public class CommandFilterAlignments extends MiXCRCommand {
                 sReads = new CountLimitingOutputPort<>(sReads, limit);
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
-            writer.header(reader.getParameters(), reader.getUsedGenes(), reader.getTagsInfo());
+            writer.header(reader);
             SmartProgressReporter.startProgressReport("Filtering", progress);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = getFilter();

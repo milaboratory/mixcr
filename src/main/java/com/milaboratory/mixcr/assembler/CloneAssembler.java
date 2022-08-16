@@ -24,11 +24,7 @@ import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
-import com.milaboratory.mixcr.basictypes.ClonalSequence;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.VDJCSProperties;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
@@ -142,9 +138,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             listener.onNewCloneCreated(accumulator);
     }
 
-    void onFailedToExtractTarget(PreClone preClone) {
+    void onTooShortClonalSequence(PreClone preClone) {
         if (listener != null)
-            listener.onFailedToExtractTarget(preClone);
+            listener.onTooShortClonalSequence(preClone);
     }
 
     void onTooManyLowQualityPoints(PreClone preClone) {
@@ -192,13 +188,6 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     void onCloneDropped(CloneAccumulator acc) {
         if (listener != null)
             listener.onCloneDropped(acc);
-    }
-
-    /* Fine filtering */
-
-    void onCloneDroppedInFineFiltering(CloneAccumulator clone) {
-        if (listener != null)
-            listener.onCloneDroppedInFineFiltering(clone);
     }
 
     public void setListener(CloneAssemblerListener listener) {
@@ -357,8 +346,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
-    public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters, TagsInfo tagsInfo) {
-        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), alignerParameters, parameters, tagsInfo, new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
+    public CloneSet getCloneSet(MiXCRMetaInfo info) {
+        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), info.withAssemblerParameters(parameters),
+                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {
@@ -390,7 +380,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             if (target == null) {
                 log(new AssemblerEvent(input.getIndex(), AssemblerEvent.DROPPED));
                 droppedAlignments.incrementAndGet();
-                onFailedToExtractTarget(input);
+                onTooShortClonalSequence(input);
                 return;
             }
 

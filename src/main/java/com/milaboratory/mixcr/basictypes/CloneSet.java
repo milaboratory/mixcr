@@ -29,9 +29,7 @@ import java.util.*;
  */
 public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasFeatureToAlign {
     String versionInfo;
-    final CloneAssemblerParameters assemblerParameters;
-    final VDJCAlignerParameters alignmentParameters;
-    final TagsInfo tagsInfo;
+    final MiXCRMetaInfo info;
     final VDJCSProperties.CloneOrdering ordering;
     final List<VDJCGene> usedGenes;
     final List<Clone> clones;
@@ -39,9 +37,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
     final TagCount totalTagCounts;
 
     public CloneSet(List<Clone> clones, Collection<VDJCGene> usedGenes,
-                    VDJCAlignerParameters alignmentParameters,
-                    CloneAssemblerParameters assemblerParameters,
-                    TagsInfo tagsInfo,
+                    MiXCRMetaInfo info,
                     VDJCSProperties.CloneOrdering ordering) {
         ArrayList<Clone> list = new ArrayList<>(clones);
         list.sort(ordering.comparator());
@@ -54,9 +50,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
             tagCountAggregator.add(clone.tagCount);
         }
         this.totalTagCounts = tagCountAggregator.createAndDestroy();
-        this.alignmentParameters = alignmentParameters;
-        this.assemblerParameters = assemblerParameters;
-        this.tagsInfo = tagsInfo;
+        this.info = info;
         this.ordering = ordering;
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(usedGenes));
         this.totalCount = totalCount;
@@ -84,9 +78,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
                 }
         }
         this.totalTagCounts = tagCountAggregator.createAndDestroy();
-        this.assemblerParameters = null;
-        this.alignmentParameters = null;
-        this.tagsInfo = null;
+        this.info = null;
         this.ordering = new VDJCSProperties.CloneOrdering();
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(genes.values()));
         this.totalCount = totalCount;
@@ -104,21 +96,25 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
         return clones.size();
     }
 
+    public MiXCRMetaInfo getInfo() {
+        return info;
+    }
+
     public GeneFeature[] getAssemblingFeatures() {
-        return assemblerParameters.getAssemblingFeatures();
+        return info.getAssemblerParameters().getAssemblingFeatures();
     }
 
     public CloneAssemblerParameters getAssemblerParameters() {
-        return assemblerParameters;
+        return info.getAssemblerParameters();
     }
 
     public VDJCAlignerParameters getAlignmentParameters() {
-        return alignmentParameters;
+        return info.getAlignerParameters();
     }
 
     @Override
     public TagsInfo getTagsInfo() {
-        return tagsInfo;
+        return info.getTagsInfo();
     }
 
     public VDJCSProperties.CloneOrdering getOrdering() {
@@ -131,7 +127,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
 
     @Override
     public GeneFeature getFeatureToAlign(GeneType geneType) {
-        return alignmentParameters.getFeatureToAlign(geneType);
+        return info.getAlignerParameters().getFeatureToAlign(geneType);
     }
 
     public double getTotalCount() {
@@ -159,8 +155,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
         newClones.sort(newOrdering.comparator());
         for (Clone nc : newClones)
             nc.parent = null;
-        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters,
-                in.tagsInfo, newOrdering);
+        return new CloneSet(newClones, in.usedGenes, in.info, newOrdering);
     }
 
     /**
@@ -175,7 +170,6 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
                 newClones.add(c);
             }
         }
-        return new CloneSet(newClones, in.usedGenes, in.alignmentParameters, in.assemblerParameters,
-                in.tagsInfo, in.ordering);
+        return new CloneSet(newClones, in.usedGenes, in.info, in.ordering);
     }
 }

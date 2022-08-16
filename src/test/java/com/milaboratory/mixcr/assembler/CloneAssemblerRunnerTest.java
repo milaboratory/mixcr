@@ -75,7 +75,7 @@ public class CloneAssemblerRunnerTest {
         //write alignments to byte array
         File vdjcaFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
-            writer.header(aligner, null);
+            writer.header(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
                 if (result.alignment != null)
@@ -105,12 +105,12 @@ public class CloneAssemblerRunnerTest {
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
         CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
-                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures()),
+                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures(), __ -> {}),
                 new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters));
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(alignerParameters, TagsInfo.NO_TAGS);
+        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(null, null, alignerParameters, null));
 
         File tmpClnsFile = TempFileManager.getTempFile();
 

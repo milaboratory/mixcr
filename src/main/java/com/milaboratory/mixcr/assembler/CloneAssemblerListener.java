@@ -16,9 +16,9 @@ import com.milaboratory.mixcr.assembler.preclone.PreClone;
 public interface CloneAssemblerListener {
     /* Initial Assembly */
 
-    void onNewCloneCreated(CloneAccumulator accumulator);
+    void onTooShortClonalSequence(PreClone preClone);
 
-    void onFailedToExtractTarget(PreClone preClone);
+    void onNewCloneCreated(CloneAccumulator accumulator);
 
     void onTooManyLowQualityPoints(PreClone preClone);
 
@@ -39,8 +39,4 @@ public interface CloneAssemblerListener {
     void onPreClustered(CloneAccumulator majorClone, CloneAccumulator minorClone);
 
     void onCloneDropped(CloneAccumulator clone);
-
-    /* Fine filtering */
-
-    void onCloneDroppedInFineFiltering(CloneAccumulator clone);
 }

@@ -162,7 +162,7 @@ public class OverlapBrowser implements CanReportProgressAndStage {
     }
 
     private static boolean isProductive(Clone c) {
-        return !c.isOutOfFrame(GeneFeature.CDR3) && !c.containsStops(GeneFeature.CDR3);
+        return !c.isOutOfFrameOrAbsent(GeneFeature.CDR3) && !c.containsStopsOrAbsent(GeneFeature.CDR3);
     }
 
     private static boolean hasChains(Clone c, NamedChains chains) {

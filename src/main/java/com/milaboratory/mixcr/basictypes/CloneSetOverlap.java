@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.blocks.FilteringPort;
+import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.TempFileManager;
@@ -48,6 +50,7 @@ public final class CloneSetOverlap {
         if (!needSort && !MergeStrategy.calculateStrategy(ordering.getProperties(), by).usesStreamOrdering())
             needSort = true;
 
+        Filter<Clone> cloneFilter = clone -> by.stream().allMatch(b -> b.get(clone) != null);
         if (needSort) {
             // HDD-offloading collator of alignments
             // Collate solely by cloneId (no sorting by mapping type, etc.);
@@ -62,6 +65,7 @@ public final class CloneSetOverlap {
                     Clone.class,
                     readers.stream()
                             .map(CloneReader::readClones)
+                            .map(it -> new FilteringPort<>(it, cloneFilter))
                             .collect(Collectors.toList()),
                     by,
                     5,
@@ -108,7 +112,11 @@ public final class CloneSetOverlap {
             };
         } else {
             MergeStrategy<Clone> strategy = MergeStrategy.calculateStrategy(ordering.getProperties(), by);
-            OutputPortCloseable<List<List<Clone>>> joinedPort = strategy.join(individualPorts);
+            @SuppressWarnings("resource")
+            OutputPortCloseable<List<List<Clone>>> joinedPort = strategy.join(individualPorts.
+                    stream()
+                    .map(it -> new FilteringPort<>(it, cloneFilter))
+                    .collect(Collectors.toList()));
             AtomicLong index = new AtomicLong(0);
             AtomicBoolean isFinished = new AtomicBoolean(false);
             long totalClones = readers.stream().mapToLong(CloneReader::numberOfClones).sum();

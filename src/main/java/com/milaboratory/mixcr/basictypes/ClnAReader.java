@@ -32,10 +32,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -64,9 +61,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
 
     // Read form file header
 
-    final VDJCAlignerParameters alignerParameters;
-    final CloneAssemblerParameters assemblerParameters;
-    final TagsInfo tagsInfo;
+    final MiXCRMetaInfo info;
     final VDJCSProperties.CloneOrdering ordering;
 
     final List<VDJCGene> usedGenes;
@@ -150,11 +145,9 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
             }
 
             this.versionInfo = pi.readUTF();
-            this.alignerParameters = pi.readObject(VDJCAlignerParameters.class);
-            this.assemblerParameters = pi.readObject(CloneAssemblerParameters.class);
-            this.tagsInfo = pi.readObject(TagsInfo.class);
+            this.info = Objects.requireNonNull(pi.readObject(MiXCRMetaInfo.class));
             this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.alignerParameters, libraryRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.info.getAlignerParameters(), libraryRegistry);
         }
 
         // read reports from footer
@@ -171,12 +164,17 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
         this(Paths.get(path), libraryRegistry, concurrency);
     }
 
+    @Override
+    public MiXCRMetaInfo getInfo() {
+        return info;
+    }
+
     /**
      * Aligner parameters
      */
     @Override
     public VDJCAlignerParameters getAlignerParameters() {
-        return alignerParameters;
+        return info.getAlignerParameters();
     }
 
     /**
@@ -184,7 +182,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
      */
     @Override
     public CloneAssemblerParameters getAssemblerParameters() {
-        return assemblerParameters;
+        return info.getAssemblerParameters();
     }
 
     /**
@@ -192,7 +190,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
      */
     @Override
     public TagsInfo getTagsInfo() {
-        return tagsInfo;
+        return info.getTagsInfo();
     }
 
     /**
@@ -204,7 +202,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
     }
 
     public GeneFeature[] getAssemblingFeatures() {
-        return assemblerParameters.getAssemblingFeatures();
+        return info.getAssemblerParameters().getAssemblingFeatures();
     }
 
     /**
@@ -262,7 +260,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
                 clones.add(reader.take());
         }
 
-        return new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, tagsInfo, ordering);
+        return new CloneSet(clones, usedGenes, info, ordering);
     }
 
     /**
@@ -320,7 +318,7 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
 
         CloneAlignmentsPort() {
             this.clones = input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
-            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, usedGenes, alignerParameters, assemblerParameters, tagsInfo, ordering);
+            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, usedGenes, info, ordering);
         }
 
         @Override

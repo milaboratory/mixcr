@@ -112,32 +112,30 @@ public class CommandAssemble extends MiXCRCommand {
 
     // Extracting V/D/J/C gene list from input vdjca file
     private List<VDJCGene> genes = null;
-    private VDJCAlignerParameters alignerParameters = null;
-    private TagsInfo tagsInfo = null;
+    private MiXCRMetaInfo info = null;
     private CloneAssemblerParameters assemblerParameters = null;
     private VDJCSProperties.CloneOrdering ordering = null;
 
     private void ensureParametersInitialized() {
-        if (assemblerParameters != null)
+        if (info != null)
             return;
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in,
                 VDJCLibraryRegistry.getDefault())) {
             genes = reader.getUsedGenes();
             // Saving aligner parameters to correct assembler parameters
-            alignerParameters = reader.getParameters();
-            tagsInfo = reader.getTagsInfo();
+            info = reader.getInfo();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        assert alignerParameters != null;
+        assert info != null;
 
         //set aligner parameters
         assemblerParameters = CloneAssemblerParametersPresets.getByName(assemblerParametersName);
         if (assemblerParameters == null)
             throwValidationException("Unknown parameters: " + assemblerParametersName);
         // noinspection ConstantConditions
-        assemblerParameters = assemblerParameters.updateFrom(alignerParameters);
+        assemblerParameters = assemblerParameters.updateFrom(info.getAlignerParameters());
 
         // Overriding JSON parameters
         if (!overrides.isEmpty()) {
@@ -177,12 +175,12 @@ public class CommandAssemble extends MiXCRCommand {
 
     public VDJCAlignerParameters getAlignerParameters() {
         ensureParametersInitialized();
-        return alignerParameters;
+        return info.getAlignerParameters();
     }
 
     public TagsInfo getTagsInfo() {
         ensureParametersInitialized();
-        return tagsInfo;
+        return info.getTagsInfo();
     }
 
     public VDJCSProperties.CloneOrdering getOrdering() {
@@ -249,6 +247,7 @@ public class CommandAssemble extends MiXCRCommand {
                             cellLevel ? TagType.Cell : TagType.Molecule,
                             assemblerParameters.getAssemblingFeatures(),
                             params, preClonesFile, tempDest.addSuffix("pc.tmp"));
+                    assemblerRunner.setExtractionListener(reportBuilder);
                     SmartProgressReporter.startProgressReport(assemblerRunner);
 
                     // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
@@ -260,7 +259,9 @@ public class CommandAssemble extends MiXCRCommand {
                     preClones = assemblerRunner.createReader();
                 } else
                     // If there are no tags in the data, alignments are just wrapped into pre-clones
-                    preClones = PreCloneReader.fromAlignments(alignmentsReader, assemblerParameters.getAssemblingFeatures());
+                    preClones = PreCloneReader.fromAlignments(alignmentsReader,
+                            assemblerParameters.getAssemblingFeatures(),
+                            reportBuilder);
 
                 // Running assembler
                 CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
@@ -279,7 +280,9 @@ public class CommandAssemble extends MiXCRCommand {
                 assemblerRunner.run();
 
                 // Getting results
-                final CloneSet cloneSet = CloneSet.reorder(assemblerRunner.getCloneSet(alignerParameters, tagsInfo), getOrdering());
+                final CloneSet cloneSet = CloneSet.reorder(
+                        assemblerRunner.getCloneSet(info.withAssemblerParameters(assemblerParameters)),
+                        getOrdering());
 
                 // Passing final cloneset to assemble last pieces of statistics for report
                 reportBuilder.onClonesetFinished(cloneSet);

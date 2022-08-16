@@ -97,8 +97,10 @@ public final class RunMiXCR {
                 }
             };
 
-            PreCloneReader preClones = PreCloneReader.fromAlignments(aProvider,
-                    parameters.cloneAssemblerParameters.getAssemblingFeatures());
+            PreCloneReader preClones = PreCloneReader.fromAlignments(
+                    aProvider,
+                    parameters.cloneAssemblerParameters.getAssemblingFeatures(),
+                    report);
             CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(preClones, assembler);
 
             //start progress reporting
@@ -106,7 +108,8 @@ public final class RunMiXCR {
 
             assemblerRunner.run();
 
-            CloneSet cloneSet = assemblerRunner.getCloneSet(align.parameters.alignerParameters, align.tagsInfo);
+            CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(null, align.tagsInfo,
+                    align.parameters.alignerParameters, align.parameters.cloneAssemblerParameters));
             return new AssembleResult(align, cloneSet, report.buildReport(), assembler);
         } finally {
             if (close)
@@ -116,7 +119,6 @@ public final class RunMiXCR {
 
     public static FullSeqAssembleResult assembleContigs(final AssembleResult assemble) {
         AlignResult align = assemble.alignResult;
-
 
         int totalClonesCount = 0;
         File tmpFile = getTempFile();
@@ -166,8 +168,11 @@ public final class RunMiXCR {
             throw new RuntimeException(e);
         }
 
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), align.usedGenes, align.parameters.alignerParameters,
-                align.parameters.cloneAssemblerParameters, align.tagsInfo, VDJCSProperties.CO_BY_COUNT);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), align.usedGenes,
+                new MiXCRMetaInfo(null, align.tagsInfo,
+                        align.parameters.alignerParameters,
+                        align.parameters.cloneAssemblerParameters),
+                VDJCSProperties.CO_BY_COUNT);
 
         return new FullSeqAssembleResult(assemble, cloneSet);
     }
@@ -284,7 +289,7 @@ public final class RunMiXCR {
             if (alignmentsFile == null) {
                 alignmentsFile = getTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
-                    writer.header(aligner.getParameters(), usedGenes, tagsInfo);
+                    writer.header(new MiXCRMetaInfo(null, tagsInfo, aligner.getParameters(), null), usedGenes);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);
@@ -304,8 +309,10 @@ public final class RunMiXCR {
         }
 
         public PreCloneReader asPreCloneReader() throws IOException {
-            return PreCloneReader.fromAlignments(resultReader(),
-                    parameters.cloneAssemblerParameters.getAssemblingFeatures());
+            return PreCloneReader.fromAlignments(
+                    resultReader(),
+                    parameters.cloneAssemblerParameters.getAssemblingFeatures(),
+                    __ -> {});
         }
     }
 

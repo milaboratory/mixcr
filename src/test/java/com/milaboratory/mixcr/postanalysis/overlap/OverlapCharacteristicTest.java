@@ -237,16 +237,16 @@ public class OverlapCharacteristicTest {
         assert2dEquals(expectedSharedElements, outputs.get(OverlapType.SharedClonotypes)
                 .reorder(datasetIds, datasetIds)
                 .drows(0, 0));
-        assert2dEquals(expectedD, outputs.get(OverlapType.D)
+        assert2dEquals(expectedD, outputs.get(OverlapType.RelativeDiversity)
                 .reorder(datasetIds, datasetIds)
                 .drows(0, 0));
-        assert2dEquals(expectedF1, outputs.get(OverlapType.F1)
+        assert2dEquals(expectedF1, outputs.get(OverlapType.F1Index)
                 .reorder(datasetIds, datasetIds)
                 .drows(0, 0));
-        assert2dEquals(expectedF2, outputs.get(OverlapType.F2)
+        assert2dEquals(expectedF2, outputs.get(OverlapType.F2Index)
                 .reorder(datasetIds, datasetIds)
                 .drows(0, 0));
-        assert2dEquals(expectedR, outputs.get(OverlapType.R_Intersection)
+        assert2dEquals(expectedR, outputs.get(OverlapType.Pearson)
                 .reorder(datasetIds, datasetIds)
                 .drows(0, 0));
     }

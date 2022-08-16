@@ -53,7 +53,7 @@ import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdHash
 public final class ClnAWriter implements
         AutoCloseable,
         CanReportProgressAndStage {
-    static final String MAGIC_V7 = "MiXCR.CLNA.V07";
+    static final String MAGIC_V7 = "MiXCR.CLNA.V08";
     static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
     /** Number of bytes in footer with meta information */
@@ -137,14 +137,11 @@ public final class ClnAWriter implements
                 o.writeUTF(MiXCRVersionInfo.get()
                         .getVersionString(AppVersionInfo.OutputType.ToFile));
 
-                // Writing aligner parameters
-                Objects.requireNonNull(cloneSet.alignmentParameters);
-                o.writeObject(cloneSet.alignmentParameters);
-                featureToAlignProvider = cloneSet.alignmentParameters;
+                // Writing header meta-info
+                o.writeObject(Objects.requireNonNull(cloneSet.info));
+                featureToAlignProvider = cloneSet.getAlignmentParameters();
 
-                // Writing assembler parameters, tags info and cloneset ordering
-                o.writeObject(cloneSet.assemblerParameters);
-                o.writeObject(cloneSet.tagsInfo);
+                // Writing clone-set ordering
                 o.writeObject(cloneSet.ordering);
 
                 // During deserialization, the same procedure (in the same order) will be applied to

@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.qc
 
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.tests.IntegrationTest
+import io.repseq.core.Chains
 import org.junit.Test
 import org.junit.experimental.categories.Category
 import java.nio.file.Files
@@ -40,8 +41,30 @@ class QcTest {
             AlignmentQC.alignQc(align, percent = false),
             AlignmentQC.alignQc(align, percent = true),
 
-            ChainUsage.chainUsageAlign(align, percent = false),
-            ChainUsage.chainUsageAlign(align, percent = true),
+            ChainUsage.chainUsageAlign(
+                align,
+                percent = false,
+                showNonFunctional = true,
+                Chains.DEFAULT_EXPORT_CHAINS_LIST
+            ),
+            ChainUsage.chainUsageAlign(
+                align,
+                percent = true,
+                showNonFunctional = true,
+                Chains.DEFAULT_EXPORT_CHAINS_LIST
+            ),
+            ChainUsage.chainUsageAlign(
+                align,
+                percent = false,
+                showNonFunctional = false,
+                Chains.DEFAULT_EXPORT_CHAINS_LIST
+            ),
+            ChainUsage.chainUsageAlign(
+                align,
+                percent = true,
+                showNonFunctional = false,
+                Chains.DEFAULT_EXPORT_CHAINS_LIST
+            ),
         )
 
         align.forEach { plt += Coverage.coveragePlot(it) }

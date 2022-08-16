@@ -165,6 +165,11 @@ public final class OverlapUtil {
             }
 
             @Override
+            public MiXCRMetaInfo getInfo() {
+                return inner.getInfo();
+            }
+
+            @Override
             public TagsInfo getTagsInfo() {
                 return inner.getTagsInfo();
             }

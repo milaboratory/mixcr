@@ -21,7 +21,7 @@ public class CommandPaExportTest {
     public void test1() {
         Main.main(
                 "exportPa",
-                "biophysics",
+                "cdr3metrics",
                 "--meta",
                 "scratch/metadata.csv",
                 "--primary-group",

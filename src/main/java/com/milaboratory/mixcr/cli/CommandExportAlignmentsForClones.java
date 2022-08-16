@@ -63,7 +63,7 @@ public class CommandExportAlignmentsForClones extends MiXCRCommand {
     public void run0() throws Exception {
         try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-            writer.header(clna.getAlignerParameters(), clna.getUsedGenes(), clna.getTagsInfo());
+            writer.header(clna.getInfo(), clna.getUsedGenes());
 
             long count = 0;
             if (getCloneIds().length == 0)

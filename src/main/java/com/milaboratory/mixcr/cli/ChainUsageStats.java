@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.util.ReportHelper;
 import io.repseq.core.Chains;
 import io.repseq.core.Chains.NamedChains;
@@ -30,12 +29,12 @@ public class ChainUsageStats implements MiXCRReport {
     @JsonProperty("chains")
     @JsonDeserialize(keyUsing = Chains.KnownChainsKeyDeserializer.class)
 //    @JsonSerialize(keyUsing = Chains.KnownChainsSerializer.class)
-    public final Map<NamedChains, Long> chains;
+    public final Map<NamedChains, ChainUsageStatsRecord> chains;
 
     @JsonCreator
     public ChainUsageStats(@JsonProperty("chimeras") long chimeras,
                            @JsonProperty("total") long total,
-                           @JsonProperty("chains") Map<NamedChains, Long> chains) {
+                           @JsonProperty("chains") Map<NamedChains, ChainUsageStatsRecord> chains) {
         this.chimeras = chimeras;
         this.total = total;
         this.chains = chains;
@@ -44,8 +43,11 @@ public class ChainUsageStats implements MiXCRReport {
     @Override
     public void writeReport(ReportHelper helper) {
         long total = this.total;
-        for (Map.Entry<NamedChains, Long> ch : chains.entrySet())
-            helper.writePercentAndAbsoluteField(ch.getKey().name + " chains", ch.getValue(), total);
+        for (Map.Entry<NamedChains, ChainUsageStatsRecord> ch : chains.entrySet()) {
+            helper.writePercentAndAbsoluteField(ch.getKey().name + " chains", ch.getValue().total, total);
+            helper.writePercentAndAbsoluteField(ch.getKey().name + " non-functional",
+                    ch.getValue().nonFunctional, ch.getValue().total);
+        }
     }
 
     @Override

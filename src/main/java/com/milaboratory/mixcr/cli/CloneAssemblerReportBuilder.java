@@ -11,21 +11,26 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.assembler.CloneAccumulator;
 import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReportBuilder;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuilder implements CloneAssemblerListener {
+public final class CloneAssemblerReportBuilder
+        extends AbstractCommandReportBuilder
+        implements CloneAssemblerListener, ClonalSequenceExtractionListener {
     private final ChainUsageStatsBuilder clonalChainUsage = new ChainUsageStatsBuilder();
     private PreCloneAssemblerReportBuilder preCloneAssemblerReportBuilder;
     long totalReadsProcessed = -1;
     final AtomicInteger initialClonesCreated = new AtomicInteger();
+    final AtomicLong readsDroppedTooShortClonalSequence = new AtomicLong();
     final AtomicLong readsDroppedNoTargetSequence = new AtomicLong();
     final AtomicLong readsDroppedLowQuality = new AtomicLong();
     final AtomicLong readsInClones = new AtomicLong();
@@ -35,14 +40,10 @@ public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuil
     final AtomicLong lowQualityRescued = new AtomicLong();
     final AtomicInteger clonesClustered = new AtomicInteger();
     final AtomicInteger clonesDroppedAsLowQuality = new AtomicInteger();
-    final AtomicInteger clonesDroppedInFineFiltering = new AtomicInteger();
     final AtomicLong readsDroppedWithLowQualityClones = new AtomicLong();
     final AtomicInteger clonesPreClustered = new AtomicInteger();
     final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
-    final AtomicLong readsAttachedByTags = new AtomicLong();
-    final AtomicLong readsFailedToAttachedByTags = new AtomicLong();
-    final AtomicLong readsWithAmbiguousAttachmentsByTags = new AtomicLong();
 
     public void setPreCloneAssemblerReportBuilder(PreCloneAssemblerReportBuilder preCloneAssemblerReport) {
         if (this.preCloneAssemblerReportBuilder != null)
@@ -60,8 +61,13 @@ public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuil
     }
 
     @Override
-    public void onFailedToExtractTarget(PreClone preClone) {
-        readsDroppedNoTargetSequence.addAndGet(preClone.getNumberOfReads());
+    public void onFailedToExtractClonalSequence(VDJCAlignments al) {
+        readsDroppedNoTargetSequence.incrementAndGet();
+    }
+
+    @Override
+    public void onTooShortClonalSequence(PreClone preClone) {
+        readsDroppedTooShortClonalSequence.addAndGet(preClone.getNumberOfReads());
     }
 
     @Override
@@ -115,12 +121,6 @@ public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuil
         deferred.addAndGet(-clone.getMappedCount());
     }
 
-    @Override
-    public void onCloneDroppedInFineFiltering(CloneAccumulator clone) {
-        onCloneDropped(clone);
-        clonesDroppedInFineFiltering.incrementAndGet();
-    }
-
     public void onClonesetFinished(CloneSet cloneSet) {
         for (Clone clone : cloneSet)
             clonalChainUsage.increment(clone);
@@ -132,18 +132,6 @@ public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuil
 
     public long getReadsInClonesBeforeClustering() {
         return lowQualityRescued.get() + coreReads.get();
-    }
-
-    public void onReadAttachedByTags() {
-        readsAttachedByTags.incrementAndGet();
-    }
-
-    public void onReadWithAmbiguousAttachmentsByTags() {
-        readsWithAmbiguousAttachmentsByTags.incrementAndGet();
-    }
-
-    public void onReadsFailedToAttachedByTags() {
-        readsFailedToAttachedByTags.incrementAndGet();
     }
 
     @Override
@@ -159,6 +147,7 @@ public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuil
                 totalReadsProcessed,
                 initialClonesCreated.get(),
                 readsDroppedNoTargetSequence.get(),
+                readsDroppedTooShortClonalSequence.get(),
                 readsDroppedLowQuality.get(),
                 coreReads.get(),
                 readsDroppedFailedMapping.get(),
@@ -167,16 +156,12 @@ public final class CloneAssemblerReportBuilder extends AbstractCommandReportBuil
                 readsClustered.get(),
                 getCloneCount(),
                 clonesDroppedAsLowQuality.get(),
-                clonesDroppedInFineFiltering.get(),
                 clonesPreClustered.get(),
                 readsPreClustered.get(),
                 readsInClones.get(),
                 getReadsInClonesBeforeClustering(),
                 readsDroppedWithLowQualityClones.get(),
-                clonalChainUsage.buildReport(),
-                readsAttachedByTags.get(),
-                readsWithAmbiguousAttachmentsByTags.get(),
-                readsFailedToAttachedByTags.get()
+                clonalChainUsage.buildReport()
         );
     }
 }

@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicLong;
@@ -57,9 +58,8 @@ public final class VDJCAlignmentsReader implements
     long alignmentsBegin;
     PrimitivIBlocks<VDJCAlignments>.Reader reader;
 
-    VDJCAlignerParameters parameters;
+    MiXCRMetaInfo info = null;
     List<VDJCGene> usedGenes;
-    TagsInfo tagsInfo;
 
     private List<MiXCRCommandReport> reports;
 
@@ -147,10 +147,9 @@ public final class VDJCAlignmentsReader implements
 
             versionInfo = pi.readUTF();
 
-            parameters = pi.readObject(VDJCAlignerParameters.class);
-            tagsInfo = pi.readObject(TagsInfo.class);
+            info = Objects.requireNonNull(pi.readObject(MiXCRMetaInfo.class));
 
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, parameters, vdjcRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, info.getAlignerParameters(), vdjcRegistry);
             this.iState = pi.getState();
         }
 
@@ -174,9 +173,14 @@ public final class VDJCAlignmentsReader implements
         return reader.getParent().getStats();
     }
 
+    public MiXCRMetaInfo getInfo() {
+        ensureInitialized();
+        return info;
+    }
+
     public synchronized VDJCAlignerParameters getParameters() {
         ensureInitialized();
-        return parameters;
+        return info.getAlignerParameters();
     }
 
     public synchronized List<VDJCGene> getUsedGenes() {
@@ -186,9 +190,8 @@ public final class VDJCAlignmentsReader implements
 
     @Override
     public TagsInfo getTagsInfo() {
-        // TODO 4.0 ensure not null everywhere
         ensureInitialized();
-        return tagsInfo;
+        return info.getTagsInfo();
     }
 
     /**
