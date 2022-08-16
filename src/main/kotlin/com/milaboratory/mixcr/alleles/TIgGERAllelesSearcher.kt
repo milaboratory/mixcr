@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.alleles
 
+import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutation
@@ -27,7 +28,8 @@ import kotlin.math.ceil
 class TIgGERAllelesSearcher(
     private val scoring: AlignmentScoring<NucleotideSequence>,
     private val sequence1: NucleotideSequence,
-    private val parameters: FindAllelesParameters
+    private val parameters: FindAllelesParameters,
+    private val knownRanges: Array<Range>
 ) : AllelesSearcher {
     override fun search(clones: List<CloneDescription>): List<AllelesSearcher.Result> {
         val mutations = clones.flatMap { it.mutations.asSequence() }.distinct()
@@ -46,7 +48,7 @@ class TIgGERAllelesSearcher(
         val foundAlleles = chooseAndGroupMutationsByAlleles(possibleAlleleMutations.toSet(), clones)
         val withZeroAllele = addZeroAlleleIfNeeded(foundAlleles, clones)
         val enriched = enrichAllelesWithMutationsThatExistsInAlmostAllClones(withZeroAllele, clones)
-        return enriched.map { AllelesSearcher.Result(it) }
+        return enriched.map { AllelesSearcher.Result(it, knownRanges) }
     }
 
     /**
@@ -55,7 +57,7 @@ class TIgGERAllelesSearcher(
     private fun enrichAllelesWithMutationsThatExistsInAlmostAllClones(
         alleles: Collection<Mutations<NucleotideSequence>>,
         clones: List<CloneDescription>
-    ) = alignClonesOnAlleles(clones, alleles, addZeroAllele = false)
+    ) = alignClonesOnAlleles(clones, alleles)
         .map { (allele, clones) ->
             if (clones.diversity() < parameters.minDiversityForMutation) {
                 return@map allele
@@ -82,7 +84,7 @@ class TIgGERAllelesSearcher(
         EMPTY_NUCLEOTIDE_MUTATIONS in foundAlleles -> foundAlleles
         //check if there are enough clones that more close to zero allele
         else -> {
-            val alleleDiversities = alignClonesOnAlleles(clones, foundAlleles, addZeroAllele = true)
+            val alleleDiversities = alignClonesOnAlleles(clones, foundAlleles + EMPTY_NUCLEOTIDE_MUTATIONS)
                 .mapValues { it.value.diversity() }
             val diversityOfZeroAllele = alleleDiversities[EMPTY_NUCLEOTIDE_MUTATIONS]!!
             val minDiversityOfNotZeroAllele =
@@ -105,20 +107,12 @@ class TIgGERAllelesSearcher(
 
     private fun alignClonesOnAlleles(
         clones: List<CloneDescription>,
-        alleles: Collection<Mutations<NucleotideSequence>>,
-        addZeroAllele: Boolean
+        alleles: Collection<Mutations<NucleotideSequence>>
     ): Map<Mutations<NucleotideSequence>, List<CloneDescription>> {
-        val alleleClones = when {
-            addZeroAllele -> alleles + EMPTY_NUCLEOTIDE_MUTATIONS
-            else -> alleles
-        }.associateWith { mutableListOf<CloneDescription>() }
+        val alleleClones = alleles.associateWith { mutableListOf<CloneDescription>() }
         clones.forEach { clone ->
-            val tryToAlignOn = when {
-                addZeroAllele && clone.mutations.size() > parameters.minClonesCountToTestForPossibleZeroAllele -> alleles + EMPTY_NUCLEOTIDE_MUTATIONS
-                else -> alleles
-            }
-            val alignedOn = tryToAlignOn.maxWithOrNull(
-                Comparator.comparing<Mutations<NucleotideSequence>, Int> { allele ->
+            val alignedOn = alleles.maxWithOrNull(
+                Comparator.comparingInt<Mutations<NucleotideSequence>> { allele ->
                     AlignmentUtils.calculateScore(
                         sequence1,
                         allele.invert().combineWith(clone.mutations),
@@ -126,7 +120,7 @@ class TIgGERAllelesSearcher(
                     )
                 }
                     //prefer to align on not zero allele
-                    .then(Comparator.comparing { allele -> if (allele == EMPTY_NUCLEOTIDE_MUTATIONS) 0 else 1 })
+                    .then(Comparator.comparingInt { allele -> if (allele == EMPTY_NUCLEOTIDE_MUTATIONS) 0 else 1 })
             )!!
             alleleClones.getValue(alignedOn) += clone
         }

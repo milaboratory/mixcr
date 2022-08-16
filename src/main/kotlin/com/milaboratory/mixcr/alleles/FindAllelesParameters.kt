@@ -61,11 +61,23 @@ data class FindAllelesParameters @JsonCreator constructor(
      * After an allele is found, it will be enriched with mutations that exists in this portion of clones that aligned on the allele.
      */
     @param:JsonProperty("portionOfClonesToSearchCommonMutationsInAnAllele") val portionOfClonesToSearchCommonMutationsInAnAllele: Double,
-    /**
-     * If after allele search there are left several clones, and this count more than the parameter, try to align it on zero allele
-     */
-    @param:JsonProperty("minClonesCountToTestForPossibleZeroAllele") val minClonesCountToTestForPossibleZeroAllele: Int,
-) : java.io.Serializable {
+    @param:JsonProperty("searchMutationsInCDR3") val searchMutationsInCDR3: SearchMutationsInCDR3Params
+) {
+    class SearchMutationsInCDR3Params @JsonCreator constructor(
+        /**
+         * Letter must be represented in not less than `minClonesCount` clones
+         */
+        @param:JsonProperty("minClonesCount") val minClonesCount: Int,
+        /**
+         * Portion of clones from group that must have the same letter
+         */
+        @param:JsonProperty("minPartOfTheSameLetter") val minPartOfTheSameLetter: Double,
+        /**
+         * Letter must be represented by not less than `minDiversity` diversity of complimentary gene
+         */
+        @param:JsonProperty("minDiversity") val minDiversity: Int,
+    )
+
     companion object {
         val presets = ParametersPresets<FindAllelesParameters>("find_alleles_parameters")
     }

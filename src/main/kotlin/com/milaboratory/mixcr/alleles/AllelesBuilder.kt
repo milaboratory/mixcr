@@ -9,7 +9,7 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-@file:Suppress("PrivatePropertyName")
+@file:Suppress("PrivatePropertyName", "LocalVariableName")
 
 package com.milaboratory.mixcr.alleles
 
@@ -19,8 +19,10 @@ import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mitool.helpers.get
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.alignmentsCover
@@ -42,6 +44,10 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.CDR3End
+import io.repseq.core.ReferencePoint.JBegin
+import io.repseq.core.ReferencePoint.VEnd
 import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
 import java.util.*
@@ -115,7 +121,6 @@ class AllelesBuilder(
         val partitioning = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
         val rangesToMatch = partitioning.getRanges(geneFeatureToMatch[geneType])
 
-        val complimentaryGeneType = complimentaryGeneType(geneType)
         val cloneDescriptors = clusterByTheSameGene.asSequence()
             //TODO remove after moving cut logic to contig
             .filter { clone ->
@@ -123,48 +128,166 @@ class AllelesBuilder(
             }
             .map { clone ->
                 CloneDescription(
-                    clone.getBestHit(geneType).alignments.asSequence()
-                        .filterNotNull()
-                        .flatMap { it.absoluteMutations.asSequence() }
-                        .filter { mutation ->
-                            val position = Mutation.getPosition(mutation)
-                            rangesToMatch.any { toMatch -> position in toMatch }
-                        }
-                        .asMutations(NucleotideSequence.ALPHABET),
-                    clone.ntLengthOf(CDR3),
-                    clone.getBestHit(complimentaryGeneType).gene.geneName
+                    clone.getBestHit(geneType).mutationsWithoutCDR3(rangesToMatch),
+                    clone.clusterIdentity(geneType)
                 )
             }
             .toList()
+        val sequence1 = clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1
         val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
             scoring[geneType],
-            clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1,
-            parameters
+            sequence1,
+            parameters,
+            rangesToMatch
         )
 
-        //TODO search for mutations in CDR3
-        // iterate over positions in CDR3 and align every clone to germline
-        // get mutations of every clone as proposals.
-        // Align every clone against every proposal. Choose proposal with maximum sum of score.
-        // Calculate sum of score fine on a letter in a sliding window.
-        // If it decreasing more than constant in left and right parts of a window, than stop (decide what choose as an end).
-        // May be size of a window depends on clones count
-        //
-        // What to do with P segment? May be use previous decisions as germline or generate more proposals based on mirroring
-        //
-        // Why it will works: on the end of a gene we will get chaotic nucleotides, otherwise few clones will have
-        // mutation that will not correspond with others in this position.
-        // So if it is an allele mutation score will decrease slightly and dramatically otherwise.
-        // Sliding window will allow to make decisions even on small count of clones (voting will be on 'count of clones' * 'window size')
-        return allelesSearcher.search(cloneDescriptors)
-            .map {
-                Allele(
-                    bestHit.gene,
-                    it.allele,
-                    bestHit.alignedFeature,
-                    rangesToMatch
+        val foundAlleles = allelesSearcher.search(cloneDescriptors)
+
+        val withMutationsInCDR3 = foundAlleles.map { foundAllele ->
+            foundAllele.withMutationsInCDR3(clusterByTheSameGene, rangesToMatch, geneType, sequence1)
+        }
+
+        return withMutationsInCDR3.map {
+            Allele(
+                bestHit.gene,
+                it.allele,
+                bestHit.alignedFeature,
+                rangesToMatch
+            )
+        }
+    }
+
+    private fun Clone.clusterIdentity(geneType: GeneType) = CloneDescription.ClusterIdentity(
+        ntLengthOf(CDR3),
+        getBestHit(complimentaryGeneType(geneType)).gene.geneName
+    )
+
+    private fun VDJCHit.mutationsWithoutCDR3(rangesToMatch: Array<out Range>) =
+        alignments.asSequence()
+            .filterNotNull()
+            .flatMap { it.absoluteMutations.asSequence() }
+            .filter { mutation ->
+                val position = Mutation.getPosition(mutation)
+                rangesToMatch.any { toMatch -> position in toMatch }
+            }
+            .asMutations(NucleotideSequence.ALPHABET)
+
+    /**
+     * Test positions in CDR3 of naive clones.
+     * Diversity of naive clones must be more than `parameters.minDiversityForAllele`
+     * Register allele mutation if letter is the same in all naive clones in this position (stop on found difference)
+     */
+    private fun AllelesSearcher.Result.withMutationsInCDR3(
+        clones: List<Clone>,
+        rangesToMatch: Array<Range>,
+        geneType: GeneType,
+        sequence1: NucleotideSequence
+    ): AllelesSearcher.Result {
+        val naiveClones = clones.asSequence()
+            //TODO remove after moving cut logic to contig
+            .filter { clone ->
+                clone.getBestHit(geneType).alignmentsCover(rangesToMatch)
+            }
+            .filter { clone ->
+                clone.getBestHit(geneType).mutationsWithoutCDR3(rangesToMatch) == allele
+            }
+            .toList()
+        if (naiveClones.size < parameters.searchMutationsInCDR3.minClonesCount) {
+            return this
+        }
+        val CDR3OfNaiveClones = naiveClones.map { it.getFeature(CDR3).sequence to it }.toMutableList()
+        val minCDR3Size = CDR3OfNaiveClones.minOf { it.first.size() }
+        // char by shift from CDR3 border.
+        val foundLettersInCDR3 = mutableListOf<Pair<Int, Byte>>()
+        for (i in 0 until minCDR3Size) {
+            val lettersInPosition = CDR3OfNaiveClones
+                .map { (CDR3, clone) ->
+                    val position = if (geneType == Variable) i else CDR3.size() - 1 - i
+                    CDR3.codeAt(position) to clone
+                }
+                .groupBy { it.first }
+            val mostFrequent = lettersInPosition.maxByOrNull { it.value.size }!!.key
+            val diversityOfMostFrequentLetter = lettersInPosition[mostFrequent]!!
+                .map { it.second.getBestHit(complimentaryGeneType(geneType)).gene.id }
+                .distinct().size
+            if (diversityOfMostFrequentLetter < parameters.searchMutationsInCDR3.minDiversity) break
+            if (lettersInPosition.size != 1) {
+                val countOfPretender = lettersInPosition[mostFrequent]!!.size
+                if (countOfPretender < parameters.searchMutationsInCDR3.minClonesCount) break
+                if (countOfPretender <= CDR3OfNaiveClones.size * parameters.searchMutationsInCDR3.minPartOfTheSameLetter) break
+            }
+            val clonesToExclude = (lettersInPosition - mostFrequent).values
+                .flatMap { it.map { (_, clone) -> clone } }
+                .toSet()
+            CDR3OfNaiveClones.removeIf { (_, clone) -> clone in clonesToExclude }
+            foundLettersInCDR3 += i to mostFrequent
+        }
+        if (foundLettersInCDR3.isEmpty()) return this
+        val bestHit = clones.first().getBestHit(geneType)
+        val partitioning = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
+        val foundMutations = mutableListOf<Int>()
+        var lastKnownShift = 0
+        for ((i, letter) in foundLettersInCDR3) {
+            val position = when (geneType) {
+                Variable -> {
+                    val CDR3BeginPosition = partitioning.getPosition(CDR3Begin)
+                    val shiftedPosition = CDR3BeginPosition + i
+                    if (partitioning.getPosition(VEnd) <= shiftedPosition) {
+                        //TODO
+                        break
+                    }
+                    shiftedPosition
+                }
+                else -> {
+                    val CDR3EndPosition = partitioning.getPosition(CDR3End)
+                    val shifterPosition = CDR3EndPosition - i - 1
+                    if (shifterPosition < partitioning.getPosition(JBegin)) {
+                        //TODO
+                        break
+                    }
+                    shifterPosition
+                }
+            }
+            lastKnownShift = i
+            val letterInGermline = sequence1[position]
+            if (letter != letterInGermline) {
+                foundMutations += Mutation.createSubstitution(position, letterInGermline.toInt(), letter.toInt())
+            }
+        }
+        val result = foundMutations
+            .asSequence()
+            .sortedBy { Mutation.getPosition(it) }
+            .asMutations(NucleotideSequence.ALPHABET)
+        val resultMutations = when (geneType) {
+            Variable -> allele.concat(result)
+            else -> result.concat(allele)
+        }
+        val resultKnownRanges = when (geneType) {
+            Variable -> when (knownRanges.last().upper) {
+                partitioning.getPosition(CDR3Begin) -> knownRanges.clone().also { copy ->
+                    copy[knownRanges.size - 1] = knownRanges.last()
+                        .setUpper(partitioning.getPosition(CDR3Begin) + lastKnownShift)
+                }
+                else -> knownRanges + Range(
+                    partitioning.getPosition(CDR3Begin),
+                    partitioning.getPosition(CDR3Begin) + lastKnownShift
                 )
             }
+            else -> when (knownRanges.first().lower) {
+                partitioning.getPosition(CDR3End) -> knownRanges.clone().also { copy ->
+                    copy[0] = knownRanges.first()
+                        .setLower(partitioning.getPosition(CDR3End) - lastKnownShift)
+                }
+                else -> knownRanges + Range(
+                    partitioning.getPosition(CDR3End) - lastKnownShift,
+                    partitioning.getPosition(CDR3End)
+                )
+            }
+        }
+        return AllelesSearcher.Result(
+            resultMutations,
+            resultKnownRanges
+        )
     }
 
     private fun complimentaryGeneType(geneType: GeneType): GeneType = when (geneType) {

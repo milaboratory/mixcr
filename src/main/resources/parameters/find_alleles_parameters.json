@@ -9,6 +9,11 @@
     "minDiversityForAllele": 5,
     "minPValueForRegression": 0.95,
     "minYIntersect": 0.125,
-    "portionOfClonesToSearchCommonMutationsInAnAllele": 0.99
+    "portionOfClonesToSearchCommonMutationsInAnAllele": 0.99,
+    "searchMutationsInCDR3": {
+      "minClonesCount": 5,
+      "minPartOfTheSameLetter": 0.7,
+      "minDiversity": 3
+    }
   }
 }

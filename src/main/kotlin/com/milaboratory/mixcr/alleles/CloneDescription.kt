@@ -21,10 +21,6 @@ data class CloneDescription(
     val mutations: Mutations<NucleotideSequence>,
     val clusterIdentity: ClusterIdentity
 ) {
-    constructor(mutations: Mutations<NucleotideSequence>, CDR3Length: Int, complimentaryGeneName: String) : this(
-        mutations,
-        ClusterIdentity(CDR3Length, complimentaryGeneName)
-    )
 
     data class ClusterIdentity(
         private val CDR3Length: Int,

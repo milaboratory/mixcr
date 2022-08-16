@@ -94,9 +94,11 @@ inline fun <reified T : Any> OutputPort<T>.sort(
 inline fun <reified T : Any> OutputPort<T>.groupBy(
     stateBuilder: PrimitivIOStateBuilder,
     tempFileDest: TempFileDest,
-    groupingCriteria: GroupingCriteria<T>
+    groupingCriteria: GroupingCriteria<T>,
+    readerConcurrency: Int = 8,
+    writerConcurrency: Int = 8
 ): OutputPort<List<T>> =
-    hashGrouping(groupingCriteria, stateBuilder, tempFileDest)
+    hashGrouping(groupingCriteria, stateBuilder, tempFileDest, readerConcurrency, writerConcurrency)
         .groupBySortedData(groupingCriteria)
 
 fun <T : Any, R> OutputPort<T>.withProgress(
