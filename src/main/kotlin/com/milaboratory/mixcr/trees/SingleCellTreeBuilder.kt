@@ -239,7 +239,7 @@ class SingleCellTreeBuilder(
                 .map { it.clone }
                 .take(2)
             val light = group
-                .filter { it.clone.getBestHit(Variable).gene.chains.intersects(Chains.IGKL) }
+                .filter { it.clone.getBestHit(Variable).gene.chains in arrayOf(Chains.IGK, Chains.IGL) }
                 .sortedByDescending { it.tagCount }
                 .map { it.clone }
                 .take(2)

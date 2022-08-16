@@ -146,7 +146,7 @@ data class CloneWithDatasetId(
     }
 }
 
-fun Clone.containsStops(feature: GeneFeature, VJBase: VJBase): Boolean {
+fun Clone.containsStopsOrAbsent(feature: GeneFeature, VJBase: VJBase): Boolean {
     val codingFeature = GeneFeature.getCodingGeneFeature(feature) ?: return true
     val partitionedTargets = getPartitionedTargets(VJBase.geneIds.V, VJBase.geneIds.J)
     for (i in partitionedTargets.indices) {
@@ -157,7 +157,7 @@ fun Clone.containsStops(feature: GeneFeature, VJBase: VJBase): Boolean {
     return false
 }
 
-fun Clone.isOutOfFrame(feature: GeneFeature, VJBase: VJBase): Boolean {
+fun Clone.isOutOfFrameOrAbsent(feature: GeneFeature, VJBase: VJBase): Boolean {
     val nt = getFeature(feature, VJBase)
     return nt == null || nt.size() % 3 != 0
 }

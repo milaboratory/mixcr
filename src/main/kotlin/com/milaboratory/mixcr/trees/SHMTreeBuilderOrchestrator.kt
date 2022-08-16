@@ -233,12 +233,12 @@ class SHMTreeBuilderOrchestrator(
         // filter non-productive clonotypes
         // todo only CDR3?
         fun matchForProductive(clone: Clone) = !productiveOnly ||
-                (!clone.containsStops(CDR3) && !clone.isOutOfFrame(CDR3))
+                (!clone.containsStopsOrAbsent(CDR3) && !clone.isOutOfFrameOrAbsent(CDR3))
 
         // filter non-productive clonotypes
         // todo only CDR3?
         fun matchForProductive(clone: Clone, VJBase: VJBase) = !productiveOnly ||
-                (!clone.containsStops(CDR3, VJBase) && !clone.isOutOfFrame(CDR3, VJBase))
+                (!clone.containsStopsOrAbsent(CDR3, VJBase) && !clone.isOutOfFrameOrAbsent(CDR3, VJBase))
 
         fun match(VJBase: VJBase): Boolean =
             (VGenesToSearch?.contains(VJBase.geneIds.V.name) ?: true) &&

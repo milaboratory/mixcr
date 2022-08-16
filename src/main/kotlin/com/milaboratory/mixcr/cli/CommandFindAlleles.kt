@@ -324,9 +324,7 @@ class CommandFindAlleles : MiXCRCommand() {
         val cloneSet = CloneSet(
             clones,
             resultLibrary.genes,
-            cloneReader.alignerParameters,
-            cloneReader.assemblerParameters.setAssemblingFeatures(assembleFeatures),
-            cloneReader.tagsInfo,
+            cloneReader.info,
             cloneReader.ordering()
         )
         ClnsWriter(this).use { clnsWriter ->

@@ -107,7 +107,7 @@ class AllelesBuilder(
         .filter { c ->
             // filter non-productive clonotypes
             // todo CDR3?
-            !parameters.productiveOnly || (!c.containsStops(CDR3) && !c.isOutOfFrame(CDR3))
+            !parameters.productiveOnly || (!c.containsStopsOrAbsent(CDR3) && !c.isOutOfFrameOrAbsent(CDR3))
         }
         .filter { c ->
             c.count > parameters.useClonesWithCountMoreThen
