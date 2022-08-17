@@ -14,11 +14,8 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.cli.MiXCRReport;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
 import com.milaboratory.util.CanReportProgress;
@@ -167,30 +164,6 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
     @Override
     public MiXCRMetaInfo getInfo() {
         return info;
-    }
-
-    /**
-     * Aligner parameters
-     */
-    @Override
-    public VDJCAlignerParameters getAlignerParameters() {
-        return info.getAlignerParameters();
-    }
-
-    /**
-     * Clone assembler parameters
-     */
-    @Override
-    public CloneAssemblerParameters getAssemblerParameters() {
-        return info.getAssemblerParameters();
-    }
-
-    /**
-     * Tags info
-     */
-    @Override
-    public TagsInfo getTagsInfo() {
-        return info.getTagsInfo();
     }
 
     /**

@@ -17,7 +17,7 @@ import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
-import com.milaboratory.primitivio.writeList
+import com.milaboratory.primitivio.writeCollection
 
 @Serializable(by = CloneOrFoundAncestor.SerializerImpl::class)
 class CloneOrFoundAncestor(
@@ -28,7 +28,7 @@ class CloneOrFoundAncestor(
     class SerializerImpl : BasicSerializer<CloneOrFoundAncestor>() {
         override fun write(output: PrimitivO, obj: CloneOrFoundAncestor) {
             output.writeInt(obj.id)
-            output.writeList(obj.clones)
+            output.writeCollection(obj.clones)
             output.writeObject(obj.mutationsSet)
         }
 

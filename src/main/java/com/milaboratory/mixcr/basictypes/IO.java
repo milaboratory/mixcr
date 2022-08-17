@@ -15,11 +15,8 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
@@ -32,35 +29,6 @@ import java.util.EnumMap;
 import java.util.Map;
 
 class IO {
-    public static class MiXCRMetaInfoSerializer implements Serializer<MiXCRMetaInfo> {
-        @Override
-        public void write(PrimitivO output, MiXCRMetaInfo obj) {
-            output.writeObject(obj.getTagPreset());
-            output.writeObject(obj.getTagsInfo());
-            output.writeObject(obj.getAlignerParameters());
-            output.writeObject(obj.getAssemblerParameters());
-        }
-
-        @Override
-        public MiXCRMetaInfo read(PrimitivI input) {
-            String tagPreset = input.readObject(String.class);
-            TagsInfo tagsInfo = input.readObject(TagsInfo.class);
-            VDJCAlignerParameters alignerParameters = input.readObject(VDJCAlignerParameters.class);
-            CloneAssemblerParameters assemblerParameters = input.readObject(CloneAssemblerParameters.class);
-            return new MiXCRMetaInfo(tagPreset, tagsInfo, alignerParameters, assemblerParameters);
-        }
-
-        @Override
-        public boolean isReference() {
-            return false;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
-
     public static class GeneAndScoreSerializer implements Serializer<GeneAndScore> {
         @Override
         public void write(PrimitivO output, GeneAndScore obj) {

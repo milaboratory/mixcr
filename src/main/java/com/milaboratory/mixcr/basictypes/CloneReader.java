@@ -35,9 +35,15 @@ public interface CloneReader extends VDJCFileHeaderData, ReportsFooterData, Auto
 
     MiXCRMetaInfo getInfo();
 
-    TagsInfo getTagsInfo();
+    default TagsInfo getTagsInfo() {
+        return getInfo().getTagsInfo();
+    }
 
-    VDJCAlignerParameters getAlignerParameters();
+    default VDJCAlignerParameters getAlignerParameters() {
+        return getInfo().getAlignerParameters();
+    }
 
-    CloneAssemblerParameters getAssemblerParameters();
+    default CloneAssemblerParameters getAssemblerParameters() {
+        return getInfo().getAssemblerParameters();
+    }
 }

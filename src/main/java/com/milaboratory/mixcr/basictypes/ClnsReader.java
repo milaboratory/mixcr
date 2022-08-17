@@ -13,11 +13,8 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.cli.MiXCRReport;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.Util;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
@@ -145,20 +142,6 @@ public class ClnsReader implements CloneReader, AutoCloseable {
     @Override
     public MiXCRMetaInfo getInfo() {
         return info;
-    }
-
-    @Override
-    public TagsInfo getTagsInfo() {
-        return info.getTagsInfo();
-    }
-
-    public VDJCAlignerParameters getAlignerParameters() {
-        return info.getAlignerParameters();
-    }
-
-    @Override
-    public CloneAssemblerParameters getAssemblerParameters() {
-        return info.getAssemblerParameters();
     }
 
     @Override

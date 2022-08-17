@@ -29,6 +29,7 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.GeneAndScore
+import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
@@ -221,6 +222,9 @@ class CommandFindAlleles : MiXCRCommand() {
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
+        require(cloneReaders.all { MiXCRMetaInfo.Feature.AllClonesAlignedByAssembleFeatures in it.info.features }) {
+            "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
+        }
 
         val allelesBuilder = AllelesBuilder(
             findAllelesParameters,
@@ -324,7 +328,7 @@ class CommandFindAlleles : MiXCRCommand() {
         val cloneSet = CloneSet(
             clones,
             resultLibrary.genes,
-            cloneReader.info,
+            cloneReader.info.withFeature(MiXCRMetaInfo.Feature.AllelesFound),
             cloneReader.ordering()
         )
         ClnsWriter(this).use { clnsWriter ->

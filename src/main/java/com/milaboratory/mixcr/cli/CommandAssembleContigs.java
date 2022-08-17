@@ -19,7 +19,6 @@ import com.milaboratory.mixcr.assembler.fullseq.*;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.Concurrency;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
@@ -48,6 +47,7 @@ import static com.milaboratory.util.StreamUtil.noMerge;
         description = "Assemble full sequences.")
 public class CommandAssembleContigs extends MiXCRCommand {
     public static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
+    public static final String CUT_BY_FEATURE_OPTION_NAME = "--cut-by-feature";
 
     public int threads = Runtime.getRuntime().availableProcessors();
 
@@ -79,6 +79,10 @@ public class CommandAssembleContigs extends MiXCRCommand {
     @Option(description = "Report file.",
             names = {"--debug-report"}, hidden = true)
     public String debugReportFile;
+
+    @Option(description = "Filter out clones that not covered by the feature. All clones alignments will be cut by this feature",
+            names = {CUT_BY_FEATURE_OPTION_NAME})
+    public String cutByFeature;
 
     @Option(description = CommonDescriptions.JSON_REPORT,
             names = {"-j", "--json-report"})
@@ -116,7 +120,6 @@ public class CommandAssembleContigs extends MiXCRCommand {
         List<VDJCGene> genes;
         MiXCRMetaInfo info;
         CloneAssemblerParameters cloneAssemblerParameters;
-        TagsInfo tagsInfo;
         VDJCSProperties.CloneOrdering ordering;
         List<MiXCRCommandReport> reports;
         try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
@@ -131,7 +134,6 @@ public class CommandAssembleContigs extends MiXCRCommand {
 
             info = reader.getInfo();
             cloneAssemblerParameters = reader.getAssemblerParameters();
-            tagsInfo = reader.getTagsInfo();
             genes = reader.getUsedGenes();
             IOUtil.registerGeneReferences(tmpOut, genes, info.getAlignerParameters());
 
@@ -259,7 +261,8 @@ public class CommandAssembleContigs extends MiXCRCommand {
                 clones[i++] = clone.setId(cloneId++);
         }
 
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, info, ordering);
+        MiXCRMetaInfo resultInfo = info.withoutFeature(MiXCRMetaInfo.Feature.AllClonesAlignedByAssembleFeatures.INSTANCE);
+        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, resultInfo, ordering);
 
         try (ClnsWriter writer = new ClnsWriter(out)) {
             writer.writeCloneSet(cloneSet);

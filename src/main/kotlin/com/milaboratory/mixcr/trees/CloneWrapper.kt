@@ -23,7 +23,7 @@ import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
-import com.milaboratory.primitivio.writeList
+import com.milaboratory.primitivio.writeCollection
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
@@ -79,10 +79,10 @@ class CloneWrapper(
     )
 
     class SerializerImpl : BasicSerializer<CloneWrapper>() {
-        override fun write(output: PrimitivO, `object`: CloneWrapper) {
-            output.writeList(`object`.clones)
-            output.writeObject(`object`.VJBase)
-            output.writeList(`object`.candidateVJBases)
+        override fun write(output: PrimitivO, obj: CloneWrapper) {
+            output.writeCollection(obj.clones)
+            output.writeObject(obj.VJBase)
+            output.writeCollection(obj.candidateVJBases)
         }
 
         override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(

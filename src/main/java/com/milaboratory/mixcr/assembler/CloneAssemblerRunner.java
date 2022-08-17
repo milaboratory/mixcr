@@ -17,9 +17,7 @@ import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ProgressAndStage;
 

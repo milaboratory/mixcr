@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 
 public class CloneAssemblerRunnerTest {
     @Test
@@ -57,7 +58,7 @@ public class CloneAssemblerRunnerTest {
 
     private static CloneSet runFullPipeline(String... fastqFiles) throws IOException, InterruptedException {
         //building alignments
-        VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
+        VDJCAlignerParameters alignerParameters = Objects.requireNonNull(VDJCParametersPresets.getByName("default"));
         VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerS(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
         for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
@@ -110,7 +111,7 @@ public class CloneAssemblerRunnerTest {
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(null, null, alignerParameters, null));
+        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(null, TagsInfo.NO_TAGS, alignerParameters, null, Collections.emptySet()));
 
         File tmpClnsFile = TempFileManager.getTempFile();
 

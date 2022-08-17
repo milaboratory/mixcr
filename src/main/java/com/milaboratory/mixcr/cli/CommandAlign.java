@@ -457,7 +457,9 @@ public class CommandAlign extends MiXCRCommand {
                     "', and put just a library name as -b / --library option value (e.g. '--library mylibrary').", false);
     }
 
-    /** Alignment report */
+    /**
+     * Alignment report
+     */
     public final AlignerReportBuilder reportBuilder = new AlignerReportBuilder();
 
     private QualityTrimmerParameters getQualityTrimmerParameters() {
@@ -573,7 +575,8 @@ public class CommandAlign extends MiXCRCommand {
                                         ? new TagsInfo(0, tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
                                         : TagsInfo.NO_TAGS,
                                 aligner.getParameters(),
-                                null
+                                null,
+                                Collections.emptySet()
                         ),
                         aligner.getUsedGenes()
                 );

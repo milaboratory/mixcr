@@ -36,7 +36,7 @@ import com.milaboratory.primitivio.mapNotNull
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.sort
-import com.milaboratory.primitivio.writeList
+import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.TempFileDest
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
@@ -354,8 +354,8 @@ class CellGroup(
 
     class SerializerImpl : BasicSerializer<CellGroup>() {
         override fun write(output: PrimitivO, obj: CellGroup) {
-            output.writeList(obj.heavy)
-            output.writeList(obj.light)
+            output.writeCollection(obj.heavy)
+            output.writeCollection(obj.light)
             output.writeObject(obj.cellBarcode)
         }
 
@@ -397,7 +397,7 @@ class GroupOfCells(
     class SerializerImpl : BasicSerializer<GroupOfCells>() {
         override fun write(output: PrimitivO, obj: GroupOfCells) {
             output.writeObject(obj.chainPairKey)
-            output.writeList(obj.cellBarcodes)
+            output.writeCollection(obj.cellBarcodes)
         }
 
         override fun read(input: PrimitivI): GroupOfCells = GroupOfCells(

@@ -46,7 +46,7 @@ import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.withProgress
-import com.milaboratory.primitivio.writeList
+import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import io.repseq.core.GeneFeature
@@ -708,7 +708,7 @@ internal class SHMTreeBuilderBySteps(
     ) {
         class SerializerImpl : BasicSerializer<Cluster>() {
             override fun write(output: PrimitivO, obj: Cluster) {
-                output.writeList(obj.clones)
+                output.writeCollection(obj.clones)
             }
 
             override fun read(input: PrimitivI): Cluster = Cluster(input.readList())

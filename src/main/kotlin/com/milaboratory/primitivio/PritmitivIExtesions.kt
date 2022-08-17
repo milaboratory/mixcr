@@ -31,9 +31,23 @@ inline fun <reified T : Any> PrimitivI.readObjectRequired(): T = readObject(T::c
 inline fun <reified K : Any, reified V : Any> PrimitivI.readMap(): Map<K, V> =
     Util.readMap(this, K::class.java, V::class.java)
 
-inline fun <reified T : Any> PrimitivI.readList(): List<T> = Util.readList(T::class.java, this)
+inline fun <reified T : Any> PrimitivI.readList(): List<T> = readCollection { mutableListOf() }
 
-fun PrimitivO.writeList(array: List<*>) = Util.writeList(array, this)
+inline fun <reified T : Any> PrimitivI.readSet(): Set<T> = readCollection { mutableSetOf() }
+
+fun PrimitivO.writeCollection(collection: Collection<*>) {
+    this.writeInt(collection.size)
+    collection.forEach {
+        this.writeObject(it)
+    }
+}
+
+inline fun <reified T : Any, C : MutableCollection<T>> PrimitivI.readCollection(supplier: (size: Int) -> C): C {
+    var size = this.readInt()
+    val list = supplier(size)
+    while (--size >= 0) list.add(this.readObjectRequired())
+    return list
+}
 
 fun PrimitivO.writeMap(array: Map<*, *>) = Util.writeMap(array, this)
 
