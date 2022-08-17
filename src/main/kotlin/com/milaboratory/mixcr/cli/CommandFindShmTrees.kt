@@ -16,7 +16,6 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.CloneWithDatasetId
@@ -209,10 +208,10 @@ class CommandFindShmTrees : MiXCRCommand() {
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
-        require(cloneReaders.all { MiXCRMetaInfo.Feature.AllelesFound in it.info.features }) {
+        require(cloneReaders.all { it.info.allelesFound }) {
             "Input files must be processed by ${CommandFindAlleles.FIND_ALLELES_COMMAND_NAME}"
         }
-        require(cloneReaders.all { MiXCRMetaInfo.Feature.AllClonesAlignedByAssembleFeatures in it.info.features }) {
+        require(cloneReaders.all { it.info.allClonesAlignedByAssembleFeatures }) {
             "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
         }
         val assemblerParameters = cloneReaders.first().assemblerParameters

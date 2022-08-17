@@ -37,7 +37,8 @@ data class MiXCRMetaInfo(
     val alignerParameters: VDJCAlignerParameters,
     /** Clone assembler parameters  */
     val assemblerParameters: CloneAssemblerParameters? = null,
-    val features: Set<Feature> = emptySet()
+    val allelesFound: Boolean,
+    val allClonesAlignedByAssembleFeatures: Boolean
 ) {
     fun withTagInfo(tagsInfo: TagsInfo): MiXCRMetaInfo =
         copy(tagsInfo = tagsInfo)
@@ -48,8 +49,10 @@ data class MiXCRMetaInfo(
     fun withAssemblerParameters(assemblerParameters: CloneAssemblerParameters): MiXCRMetaInfo =
         copy(assemblerParameters = assemblerParameters)
 
-    fun withFeature(feature: Feature) = copy(features = features + feature)
-    fun withoutFeature(feature: Feature) = copy(features = features - feature)
+    fun withAllelesFound() = copy(allelesFound = true)
+    fun withAllClonesAlignedByAssembleFeatures() = copy(allClonesAlignedByAssembleFeatures = true)
+
+    fun withoutAllClonesAlignedByAssembleFeatures() = copy(allClonesAlignedByAssembleFeatures = false)
 
     class SerializerImpl : BasicSerializer<MiXCRMetaInfo>() {
         override fun write(output: PrimitivO, obj: MiXCRMetaInfo) {
@@ -57,48 +60,30 @@ data class MiXCRMetaInfo(
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
             output.writeObject(obj.assemblerParameters)
-            output.writeCollection(obj.features)
+            output.writeCollection(buildList {
+                if (obj.allelesFound) {
+                    add("allelesFound")
+                }
+                if (obj.allClonesAlignedByAssembleFeatures) {
+                    add("allClonesAlignedByAssembleFeatures")
+                }
+            })
         }
 
-        override fun read(input: PrimitivI): MiXCRMetaInfo = MiXCRMetaInfo(
-            input.readObjectOptional(),
-            input.readObjectRequired(),
-            input.readObjectRequired(),
-            input.readObjectOptional(),
-            input.readSet()
-        )
-    }
-
-    @Serializable(by = Feature.SerializerImpl::class)
-    sealed interface Feature {
-        object AllelesFound : Feature
-
-        object AllClonesAlignedByAssembleFeatures : Feature
-
-        /**
-         * For forward capability
-         */
-        data class Unknown(
-            val toSerialize: String
-        ) : Feature
-
-        class SerializerImpl : BasicSerializer<Feature>() {
-            override fun write(output: PrimitivO, obj: Feature) {
-                output.writeObject(
-                    when (obj) {
-                        AllClonesAlignedByAssembleFeatures -> "AllClonesAlignedByAssembleFeatures"
-                        AllelesFound -> "AllelesFound"
-                        is Unknown -> obj.toSerialize
-                    }
-                )
-            }
-
-            override fun read(input: PrimitivI): Feature =
-                when (val source = input.readObject(String::class.java)) {
-                    "AllClonesAlignedByAssembleFeatures" -> AllClonesAlignedByAssembleFeatures
-                    "AllelesFound" -> AllelesFound
-                    else -> Unknown(source)
-                }
+        override fun read(input: PrimitivI): MiXCRMetaInfo {
+            val tagPreset = input.readObjectOptional<String>()
+            val tagsInfo = input.readObjectRequired<TagsInfo>()
+            val alignerParameters = input.readObjectRequired<VDJCAlignerParameters>()
+            val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
+            val flags = input.readSet<String>()
+            return MiXCRMetaInfo(
+                tagPreset,
+                tagsInfo,
+                alignerParameters,
+                assemblerParameters,
+                "allelesFound" in flags,
+                "allClonesAlignedByAssembleFeatures" in flags
+            )
         }
     }
 }

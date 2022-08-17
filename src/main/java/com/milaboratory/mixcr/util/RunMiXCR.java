@@ -113,7 +113,8 @@ public final class RunMiXCR {
                     align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                     align.parameters.alignerParameters,
                     align.parameters.cloneAssemblerParameters,
-                    Collections.emptySet()
+                    false,
+                    false
             ));
             return new AssembleResult(align, cloneSet, report.buildReport(), assembler);
         } finally {
@@ -181,7 +182,8 @@ public final class RunMiXCR {
                         align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters,
                         align.parameters.cloneAssemblerParameters,
-                        Collections.emptySet()
+                        false,
+                        false
                 ),
                 VDJCSProperties.CO_BY_COUNT
         );
@@ -306,7 +308,8 @@ public final class RunMiXCR {
                             tagsInfo != null ? tagsInfo : TagsInfo.NO_TAGS,
                             aligner.getParameters(),
                             null,
-                            Collections.emptySet()
+                            false,
+                            false
                     );
                     writer.header(info, usedGenes);
                     for (VDJCAlignments alignment : alignments)

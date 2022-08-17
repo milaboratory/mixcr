@@ -83,7 +83,7 @@ public class ClnAReaderTest {
                 modifyClones.apply(newClones), align.usedGenes,
                 new MiXCRMetaInfo(null, TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
-                        Collections.emptySet()),
+                        false, false),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
         writer.writeClones(newCloneSet);
 
@@ -128,7 +128,7 @@ public class ClnAReaderTest {
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
                 new MiXCRMetaInfo(null, TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
-                        Collections.emptySet()),
+                        false, false),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.writeFooter(Collections.emptyList(), null);

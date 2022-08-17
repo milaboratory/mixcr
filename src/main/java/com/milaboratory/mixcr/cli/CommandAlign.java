@@ -576,7 +576,8 @@ public class CommandAlign extends MiXCRCommand {
                                         : TagsInfo.NO_TAGS,
                                 aligner.getParameters(),
                                 null,
-                                Collections.emptySet()
+                                false,
+                                false
                         ),
                         aligner.getUsedGenes()
                 );
