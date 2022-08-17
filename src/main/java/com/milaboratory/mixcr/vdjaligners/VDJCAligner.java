@@ -51,7 +51,7 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     }
 
     public MiXCRMetaInfo getBaseMetaInfo() {
-        return new MiXCRMetaInfo(null, TagsInfo.NO_TAGS, parameters, null, false, false);
+        return new MiXCRMetaInfo(null, TagsInfo.NO_TAGS, parameters, null, null, null);
     }
 
     private static <R extends SequenceRead> long hash(R input) {

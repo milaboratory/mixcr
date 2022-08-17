@@ -261,7 +261,7 @@ public class CommandAssembleContigs extends MiXCRCommand {
                 clones[i++] = clone.setId(cloneId++);
         }
 
-        MiXCRMetaInfo resultInfo = info.withoutFeature(MiXCRMetaInfo.Feature.AllClonesAlignedByAssembleFeatures.INSTANCE);
+        MiXCRMetaInfo resultInfo = info.withoutAllClonesCutBy();
         CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, resultInfo, ordering);
 
         try (ClnsWriter writer = new ClnsWriter(out)) {

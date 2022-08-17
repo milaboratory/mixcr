@@ -111,7 +111,7 @@ public class CloneAssemblerRunnerTest {
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(null, TagsInfo.NO_TAGS, alignerParameters, null, false, false));
+        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(null, TagsInfo.NO_TAGS, alignerParameters, null, null, null));
 
         File tmpClnsFile = TempFileManager.getTempFile();
 

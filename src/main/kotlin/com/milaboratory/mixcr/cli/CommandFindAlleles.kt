@@ -221,8 +221,11 @@ class CommandFindAlleles : MiXCRCommand() {
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
-        require(cloneReaders.all { it.info.allClonesAlignedByAssembleFeatures }) {
+        require(cloneReaders.all { it.info.allClonesCutBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
+        }
+        require(cloneReaders.map { it.info.allClonesCutBy }.distinct().count() == 1) {
+            "Input files must not be cut by the same geneFeature"
         }
 
         val allelesBuilder = AllelesBuilder(
@@ -327,11 +330,11 @@ class CommandFindAlleles : MiXCRCommand() {
         val cloneSet = CloneSet(
             clones,
             resultLibrary.genes,
-            cloneReader.info.withAllelesFound(),
+            cloneReader.info.copy(foundAlleles = resultLibrary),
             cloneReader.ordering()
         )
         ClnsWriter(this).use { clnsWriter ->
-            clnsWriter.writeCloneSet(cloneSet, listOf(resultLibrary))
+            clnsWriter.writeCloneSet(cloneSet)
             //TODO make and write search alleles report
             clnsWriter.writeFooter(cloneReader.reports(), null)
         }

@@ -208,11 +208,17 @@ class CommandFindShmTrees : MiXCRCommand() {
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
-        require(cloneReaders.all { it.info.allelesFound }) {
+        require(cloneReaders.all { it.info.foundAlleles != null }) {
             "Input files must be processed by ${CommandFindAlleles.FIND_ALLELES_COMMAND_NAME}"
         }
-        require(cloneReaders.all { it.info.allClonesAlignedByAssembleFeatures }) {
+        require(cloneReaders.map { it.info.foundAlleles }.distinct().count() == 1) {
+            "All input files must be assembled with the same alleles"
+        }
+        require(cloneReaders.all { it.info.allClonesCutBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
+        }
+        require(cloneReaders.map { it.info.allClonesCutBy }.distinct().count() == 1) {
+            "Input files must not be cut by the same geneFeature"
         }
         val assemblerParameters = cloneReaders.first().assemblerParameters
         val scoringSet = ScoringSet(

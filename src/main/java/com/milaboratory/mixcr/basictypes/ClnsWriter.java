@@ -16,19 +16,15 @@ import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.primitivio.Util;
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
 import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCLibrary;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -57,20 +53,19 @@ public final class ClnsWriter implements AutoCloseable {
         this.output = output;
     }
 
-    public void writeHeaderFromCloneSet(CloneSet cloneSet, List<VDJCLibrary> libraries) {
+    public void writeHeaderFromCloneSet(CloneSet cloneSet) {
         writeHeader(
                 cloneSet.getInfo(),
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
-                libraries,
-                cloneSet.size());
+                cloneSet.size()
+        );
     }
 
     public void writeHeader(
             MiXCRMetaInfo info,
             VDJCSProperties.CloneOrdering ordering,
             List<VDJCGene> genes,
-            List<VDJCLibrary> libraries,
             int numberOfClones
     ) {
         try (PrimitivO o = output.beginPrimitivO(true)) {
@@ -86,7 +81,6 @@ public final class ClnsWriter implements AutoCloseable {
             o.writeObject(info);
             o.writeObject(ordering);
             o.writeInt(numberOfClones);
-            Util.writeMap(libraries.stream().collect(Collectors.toMap(VDJCLibrary::getName, VDJCLibrary::getData)), o);
 
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, info.getAlignerParameters());
         }
@@ -99,16 +93,12 @@ public final class ClnsWriter implements AutoCloseable {
         return output.beginPrimitivOBlocks(3, 512);
     }
 
-    public void writeCloneSet(CloneSet cloneSet, List<VDJCLibrary> libraries) {
-        writeHeaderFromCloneSet(cloneSet, libraries);
+    public void writeCloneSet(CloneSet cloneSet) {
+        writeHeaderFromCloneSet(cloneSet);
         InputPort<Clone> cloneIP = cloneWriter();
         for (Clone clone : cloneSet)
             cloneIP.put(clone);
         cloneIP.put(null);
-    }
-
-    public void writeCloneSet(CloneSet cloneSet) {
-        writeCloneSet(cloneSet, Collections.emptyList());
     }
 
     private List<MiXCRCommandReport> footer = null;

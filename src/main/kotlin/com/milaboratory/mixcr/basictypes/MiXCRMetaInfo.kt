@@ -20,8 +20,8 @@ import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
-import com.milaboratory.primitivio.readSet
-import com.milaboratory.primitivio.writeCollection
+import io.repseq.core.GeneFeature
+import io.repseq.core.VDJCLibrary
 
 /**
  * This class represents common meta-information stored in the headers of vdjca/clna/clns files.
@@ -37,8 +37,10 @@ data class MiXCRMetaInfo(
     val alignerParameters: VDJCAlignerParameters,
     /** Clone assembler parameters  */
     val assemblerParameters: CloneAssemblerParameters? = null,
-    val allelesFound: Boolean,
-    val allClonesAlignedByAssembleFeatures: Boolean
+    /** Library produced by search of alleles */
+    val foundAlleles: VDJCLibrary?,
+    /** If all clones cut by the same feature and cover this feature fully */
+    val allClonesCutBy: GeneFeature?
 ) {
     fun withTagInfo(tagsInfo: TagsInfo): MiXCRMetaInfo =
         copy(tagsInfo = tagsInfo)
@@ -49,10 +51,9 @@ data class MiXCRMetaInfo(
     fun withAssemblerParameters(assemblerParameters: CloneAssemblerParameters): MiXCRMetaInfo =
         copy(assemblerParameters = assemblerParameters)
 
-    fun withAllelesFound() = copy(allelesFound = true)
-    fun withAllClonesAlignedByAssembleFeatures() = copy(allClonesAlignedByAssembleFeatures = true)
+    fun withAllClonesCutBy(allClonesAlignedBy: GeneFeature) = copy(allClonesCutBy = allClonesAlignedBy)
 
-    fun withoutAllClonesAlignedByAssembleFeatures() = copy(allClonesAlignedByAssembleFeatures = false)
+    fun withoutAllClonesCutBy() = copy(allClonesCutBy = null)
 
     class SerializerImpl : BasicSerializer<MiXCRMetaInfo>() {
         override fun write(output: PrimitivO, obj: MiXCRMetaInfo) {
@@ -60,29 +61,18 @@ data class MiXCRMetaInfo(
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
             output.writeObject(obj.assemblerParameters)
-            output.writeCollection(buildList {
-                if (obj.allelesFound) {
-                    add("allelesFound")
-                }
-                if (obj.allClonesAlignedByAssembleFeatures) {
-                    add("allClonesAlignedByAssembleFeatures")
-                }
-            })
+            output.writeObject(obj.foundAlleles)
+            output.writeObject(obj.allClonesCutBy)
         }
 
         override fun read(input: PrimitivI): MiXCRMetaInfo {
-            val tagPreset = input.readObjectOptional<String>()
-            val tagsInfo = input.readObjectRequired<TagsInfo>()
-            val alignerParameters = input.readObjectRequired<VDJCAlignerParameters>()
-            val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
-            val flags = input.readSet<String>()
             return MiXCRMetaInfo(
-                tagPreset,
-                tagsInfo,
-                alignerParameters,
-                assemblerParameters,
-                "allelesFound" in flags,
-                "allClonesAlignedByAssembleFeatures" in flags
+                input.readObjectOptional(),
+                input.readObjectRequired(),
+                input.readObjectRequired(),
+                input.readObjectOptional(),
+                input.readObjectOptional(),
+                input.readObjectOptional()
             )
         }
     }
