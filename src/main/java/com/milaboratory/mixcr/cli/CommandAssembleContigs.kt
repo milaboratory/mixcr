@@ -9,282 +9,297 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.assembler.CloneFactory;
-import com.milaboratory.mixcr.assembler.fullseq.*;
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagCount;
-import com.milaboratory.mixcr.basictypes.tag.TagTuple;
-import com.milaboratory.mixcr.util.Concurrency;
-import com.milaboratory.primitivio.PipeDataInputReader;
-import com.milaboratory.primitivio.PrimitivI;
-import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.util.JsonOverrider;
-import com.milaboratory.util.ReportUtil;
-import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCGeneId;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import cc.redberry.pipe.CUtils
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
+import com.milaboratory.mixcr.assembler.CloneFactory
+import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReportBuilder
+import com.milaboratory.mixcr.basictypes.ClnAReader
+import com.milaboratory.mixcr.basictypes.ClnAReader.CloneAlignments
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
+import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
+import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.util.Concurrency
+import com.milaboratory.primitivio.PipeDataInputReader
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.StreamUtil
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.BufferedWriter
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.util.*
+import java.util.stream.Collectors
 
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
+@CommandLine.Command(
+    name = CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME,
+    sortOptions = true,
+    separator = " ",
+    description = ["Assemble full sequences."]
+)
+class CommandAssembleContigs : MiXCRCommand() {
+    @CommandLine.Parameters(description = ["clones.clna"], index = "0")
+    lateinit var `in`: String
 
-import static com.milaboratory.mixcr.cli.CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME;
-import static com.milaboratory.util.StreamUtil.noMerge;
+    @CommandLine.Parameters(description = ["clones.clns"], index = "1")
+    lateinit var out: String
 
-@Command(name = ASSEMBLE_CONTIGS_COMMAND_NAME,
-        sortOptions = true,
-        separator = " ",
-        description = "Assemble full sequences.")
-public class CommandAssembleContigs extends MiXCRCommand {
-    public static final String ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs";
-    public static final String CUT_BY_FEATURE_OPTION_NAME = "--cut-by-feature";
-
-    public int threads = Runtime.getRuntime().availableProcessors();
-
-    @Parameters(description = "clones.clna", index = "0")
-    public String in;
-
-    @Parameters(description = "clones.clns", index = "1")
-    public String out;
-
-    @Option(description = "Processing threads",
-            names = {"-t", "--threads"})
-    public void setThreads(int threads) {
-        if (threads <= 0)
-            throwValidationException("-t / --threads must be positive");
-        this.threads = threads;
-    }
-
-    @Option(names = "-O", description = "Overrides default parameter values.")
-    public Map<String, String> overrides = new HashMap<>();
-
-    @Option(description = CommonDescriptions.REPORT,
-            names = {"-r", "--report"})
-    public String reportFile;
-
-    @Option(description = "Ignore tags (UMIs, cell-barcodes)",
-            names = {"--ignore-tags"})
-    public boolean ignoreTags;
-
-    @Option(description = "Report file.",
-            names = {"--debug-report"}, hidden = true)
-    public String debugReportFile;
-
-    @Option(description = "Filter out clones that not covered by the feature. All clones alignments will be cut by this feature",
-            names = {CUT_BY_FEATURE_OPTION_NAME})
-    public String cutByFeature;
-
-    @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"-j", "--json-report"})
-    public String jsonReport = null;
-
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(in);
-    }
-
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.singletonList(out);
-    }
-
-    public FullSeqAssemblerParameters getFullSeqAssemblerParameters() {
-        FullSeqAssemblerParameters p = FullSeqAssemblerParameters.getByName("default");
-        if (!overrides.isEmpty()) {
-            // Perform parameters overriding
-            p = JsonOverrider.override(p, FullSeqAssemblerParameters.class, overrides);
-            if (p == null)
-                throwValidationException("failed to override some parameter: " + overrides);
+    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    var threads = Runtime.getRuntime().availableProcessors()
+        set(value) {
+            if (value <= 0) throwValidationException("-t / --threads must be positive")
+            field = value
         }
-        return p;
+
+    @CommandLine.Option(names = ["-O"], description = ["Overrides default parameter values."])
+    var overrides: Map<String, String> = HashMap()
+
+    @CommandLine.Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
+    var reportFile: String? = null
+
+    @CommandLine.Option(description = ["Ignore tags (UMIs, cell-barcodes)"], names = ["--ignore-tags"])
+    var ignoreTags = false
+
+    @CommandLine.Option(description = ["Report file."], names = ["--debug-report"], hidden = true)
+    var debugReportFile: String? = null
+
+    @CommandLine.Option(
+        description = ["Filter out clones that not covered by the feature. All clones alignments will be cut by this feature"],
+        names = [CUT_BY_FEATURE_OPTION_NAME]
+    )
+    var cutByFeatureParam: String? = null
+
+    private val cutByFeature by lazy {
+        when {
+            cutByFeatureParam != null -> GeneFeature.parse(cutByFeatureParam)
+            else -> null
+        }
     }
 
-    final FullSeqAssemblerReportBuilder reportBuilder = new FullSeqAssemblerReportBuilder();
+    @CommandLine.Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
+    var jsonReport: String? = null
 
-    @Override
-    public void run0() throws Exception {
-        long beginTimestamp = System.currentTimeMillis();
+    override fun getInputFiles() = listOf(`in`)
 
-        FullSeqAssemblerParameters assemblerParameters = getFullSeqAssemblerParameters();
-        int totalClonesCount = 0;
-        List<VDJCGene> genes;
-        MiXCRMetaInfo info;
-        CloneAssemblerParameters cloneAssemblerParameters;
-        VDJCSProperties.CloneOrdering ordering;
-        List<MiXCRCommandReport> reports;
-        try (ClnAReader reader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
-             PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(out))); // TODO ????
-             BufferedWriter debugReport = debugReportFile == null ? null : new BufferedWriter(new OutputStreamWriter(new FileOutputStream(debugReportFile)))) {
+    override fun getOutputFiles() = listOf(out)
 
-            reports = reader.reports();
-            ordering = reader.ordering();
+    // Perform parameters overriding
+    private val fullSeqAssemblerParameters: FullSeqAssemblerParameters
+        get() {
+            var p = FullSeqAssemblerParameters.getByName("default")
+            if (!overrides.isEmpty()) {
+                // Perform parameters overriding
+                p = JsonOverrider.override(p, FullSeqAssemblerParameters::class.java, overrides)
+                if (p == null) throwValidationException("failed to override some parameter: $overrides")
+            }
+            return p
+        }
 
-            final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
-                    reader.getAssemblingFeatures(), reader.getUsedGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
+    private val reportBuilder = FullSeqAssemblerReportBuilder()
 
-            info = reader.getInfo();
-            cloneAssemblerParameters = reader.getAssemblerParameters();
-            genes = reader.getUsedGenes();
-            IOUtil.registerGeneReferences(tmpOut, genes, info.getAlignerParameters());
+    override fun run0() {
+        val beginTimestamp = System.currentTimeMillis()
+        val assemblerParameters = fullSeqAssemblerParameters
+        var totalClonesCount = 0
+        val genes: List<VDJCGene>
+        val info: MiXCRMetaInfo
+        val cloneAssemblerParameters: CloneAssemblerParameters
+        val ordering: CloneOrdering
+        val reports: List<MiXCRCommandReport>
+        ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
+            PrimitivO(BufferedOutputStream(FileOutputStream(out))).use { tmpOut ->
+                debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it))) }.use { debugReport ->
+                    reports = reader.reports()
+                    ordering = reader.ordering()
+                    val cloneFactory = CloneFactory(
+                        reader.assemblerParameters.cloneFactoryParameters,
+                        reader.assemblingFeatures, reader.usedGenes, reader.alignerParameters.featuresToAlignMap
+                    )
+                    info = reader.info
+                    cloneAssemblerParameters = reader.assemblerParameters
+                    genes = reader.usedGenes
 
-            ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
-            SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort);
-
-            OutputPort<Clone[]> parallelProcessor = CUtils.orderedParallelProcessor(cloneAlignmentsPort, cloneAlignments -> {
-                Clone clone = cloneAlignments.clone;
-
-                if (ignoreTags)
-                    clone = clone.setTagCount(new TagCount(TagTuple.NO_TAGS, clone.getTagCount().sum()));
-
-                try {
-                    // Collecting statistics
-
-                    EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>> coverages = clone.getHitsMap()
-                            .entrySet().stream()
-                            .filter(e -> e.getValue() != null && e.getValue().length > 0)
-                            .collect(Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    e ->
-                                            Arrays.stream(e.getValue())
-                                                    .filter(h ->
-                                                            (h.getGeneType() != GeneType.Variable && h.getGeneType() != GeneType.Joining) ||
-                                                                    FullSeqAssembler.checkGeneCompatibility(h, cloneAssemblerParameters.getAssemblingFeatures()[0]))
-                                                    .collect(
-                                                            Collectors.toMap(
-                                                                    h -> h.getGene().getId(),
-                                                                    CoverageAccumulator::new
+                    IOUtil.registerGeneReferences(tmpOut, genes, info.alignerParameters)
+                    val cloneAlignmentsPort = reader.clonesAndAlignments()
+                    SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort)
+                    val parallelProcessor = cloneAlignmentsPort.mapInParallel(
+                        threads,
+                        buffer = 1024
+                    ) { cloneAlignments: CloneAlignments ->
+                        val clone = when {
+                            ignoreTags -> cloneAlignments.clone
+                                .setTagCount(TagCount(TagTuple.NO_TAGS, cloneAlignments.clone.tagCount.sum()))
+                            else -> cloneAlignments.clone
+                        }
+                        try {
+                            // Collecting statistics
+                            var coverages = clone.hitsMap
+                                .entries.stream()
+                                .filter { (_, value) -> value != null && value.isNotEmpty() }
+                                .collect(
+                                    Collectors.toMap(
+                                        { (key, _) -> key },
+                                        { (_, value) ->
+                                            Arrays.stream(
+                                                value
+                                            )
+                                                .filter { h ->
+                                                    h.geneType != Variable && h.geneType != Joining ||
+                                                            FullSeqAssembler.checkGeneCompatibility(
+                                                                h,
+                                                                cloneAssemblerParameters.assemblingFeatures[0]
                                                             )
-                                                    ),
-                                    noMerge(),
-                                    () -> new EnumMap<>(GeneType.class)));
+                                                }
+                                                .collect(
+                                                    Collectors.toMap(
+                                                        { h -> h.gene.id },
+                                                        { hit -> CoverageAccumulator(hit) })
+                                                )
+                                        },
+                                        StreamUtil.noMerge(),
+                                        { EnumMap(GeneType::class.java) }
+                                    )
+                                )
 
-                    // Filtering empty maps
-                    coverages = coverages.entrySet().stream()
-                            .filter(e -> !e.getValue().isEmpty())
-                            .collect(Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    noMerge(),
-                                    () -> new EnumMap<>(GeneType.class)));
-
-                    if (!coverages.containsKey(GeneType.Variable) || !coverages.containsKey(GeneType.Joining)) {
-                        // Something went really wrong
-                        reportBuilder.onAssemblyCanceled(clone);
-                        return new Clone[]{clone};
-                    }
-
-                    for (VDJCAlignments alignments : CUtils.it(cloneAlignments.alignments()))
-                        for (Map.Entry<GeneType, VDJCHit[]> e : alignments.getHitsMap().entrySet())
-                            for (VDJCHit hit : e.getValue())
-                                Optional.ofNullable(coverages.get(e.getKey()))
-                                        .flatMap(m -> Optional.ofNullable(m.get(hit.getGene().getId())))
-                                        .ifPresent(acc -> acc.accumulate(hit));
-
-                    // Selecting best hits for clonal sequence assembly based in the coverage information
-                    final EnumMap<GeneType, VDJCHit> bestGenes = coverages.entrySet().stream()
-                            .collect(Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    accs -> accs.getValue().entrySet().stream()
-                                            .max(Comparator.comparing(e -> e.getValue().getNumberOfCoveredPoints(1)))
-                                            .map(e -> e.getValue().hit).get(),
-                                    noMerge(),
-                                    () -> new EnumMap<>(GeneType.class)));
-
-                    // Performing contig assembly
-
-                    FullSeqAssembler fullSeqAssembler = new FullSeqAssembler(
-                            cloneFactory, assemblerParameters,
-                            clone, info.getAlignerParameters(),
-                            bestGenes.get(GeneType.Variable), bestGenes.get(GeneType.Joining)
-                    );
-
-                    fullSeqAssembler.setReport(reportBuilder);
-
-                    FullSeqAssembler.RawVariantsData rawVariantsData = fullSeqAssembler.calculateRawData(cloneAlignments::alignments);
-
-                    if (debugReport != null) {
-                        synchronized (debugReport) {
-                            try (FileOutputStream fos = new FileOutputStream(debugReportFile + "." + clone.getId())) {
-                                final String content = rawVariantsData.toCsv((byte) 10);
-                                fos.write(content.getBytes());
+                            // Filtering empty maps
+                            coverages = coverages.entries.stream()
+                                .filter { (_, value) -> value.isNotEmpty() }
+                                .collect(
+                                    Collectors.toMap(
+                                        { (key, _) -> key },
+                                        { (_, value) -> value },
+                                        StreamUtil.noMerge(),
+                                        { EnumMap(GeneType::class.java) }
+                                    )
+                                )
+                            if (!coverages.containsKey(Variable) || !coverages.containsKey(Joining)) {
+                                // Something went really wrong
+                                reportBuilder.onAssemblyCanceled(clone)
+                                return@mapInParallel arrayOf(clone)
+                            }
+                            for (alignments in CUtils.it(cloneAlignments.alignments())) {
+                                for ((key, value) in alignments.hitsMap) {
+                                    for (hit in value) {
+                                        Optional.ofNullable(coverages[key])
+                                            .flatMap { Optional.ofNullable(it[hit.gene.id]) }
+                                            .ifPresent { acc -> acc.accumulate(hit) }
+                                    }
+                                }
                             }
 
-                            try {
-                                debugReport.write("Clone: " + clone.getId());
-                                debugReport.newLine();
-                                debugReport.write(rawVariantsData.toString());
-                                debugReport.newLine();
-                                debugReport.newLine();
-                                debugReport.write("==========================================");
-                                debugReport.newLine();
-                                debugReport.newLine();
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
+                            // Selecting best hits for clonal sequence assembly based in the coverage information
+                            val bestGenes = coverages.entries.stream()
+                                .collect(
+                                    Collectors.toMap(
+                                        { (key, _) -> key },
+                                        { (_, value) ->
+                                            value.entries.stream()
+                                                .max(Comparator.comparing { (_, value1): Map.Entry<VDJCGeneId?, CoverageAccumulator> ->
+                                                    value1.getNumberOfCoveredPoints(1)
+                                                })
+                                                .map { (_, value1) -> value1.hit }
+                                                .get()
+                                        },
+                                        StreamUtil.noMerge(),
+                                        { EnumMap(GeneType::class.java) })
+                                )
+
+                            // Performing contig assembly
+                            val fullSeqAssembler = FullSeqAssembler(
+                                cloneFactory, assemblerParameters,
+                                clone, info.alignerParameters,
+                                bestGenes[Variable], bestGenes[Joining]
+                            )
+                            fullSeqAssembler.report = reportBuilder
+                            val rawVariantsData = fullSeqAssembler.calculateRawData { cloneAlignments.alignments() }
+                            if (debugReport != null) {
+                                @Suppress("BlockingMethodInNonBlockingContext")
+                                synchronized(debugReport) {
+                                    FileOutputStream(debugReportFile + "." + clone.id).use { fos ->
+                                        val content = rawVariantsData.toCsv(10.toByte())
+                                        fos.write(content.toByteArray())
+                                    }
+                                    debugReport.write("Clone: " + clone.id)
+                                    debugReport.newLine()
+                                    debugReport.write(rawVariantsData.toString())
+                                    debugReport.newLine()
+                                    debugReport.newLine()
+                                    debugReport.write("==========================================")
+                                    debugReport.newLine()
+                                    debugReport.newLine()
+                                }
                             }
+
+                            //TODO cut
+                            return@mapInParallel fullSeqAssembler.callVariants(rawVariantsData)
+                        } catch (re: Throwable) {
+                            throw RuntimeException("While processing clone #" + clone.id, re)
                         }
                     }
-
-                    return fullSeqAssembler.callVariants(rawVariantsData);
-                } catch (Throwable re) {
-                    throw new RuntimeException("While processing clone #" + clone.getId(), re);
+                    parallelProcessor.forEach { clones ->
+                        totalClonesCount += clones.size
+                        for (cl in clones) {
+                            tmpOut.writeObject(cl)
+                        }
+                    }
+                    assert(reportBuilder.initialCloneCount == reader.numberOfClones())
                 }
-            }, 1024, threads);
-
-            for (Clone[] clones : CUtils.it(parallelProcessor)) {
-                totalClonesCount += clones.length;
-                for (Clone cl : clones)
-                    tmpOut.writeObject(cl);
             }
-
-            assert reportBuilder.getInitialCloneCount() == reader.numberOfClones();
         }
-
-        assert reportBuilder.getFinalCloneCount() == totalClonesCount;
-        assert reportBuilder.getFinalCloneCount() >= reportBuilder.getInitialCloneCount();
-
-        int cloneId = 0;
-        Clone[] clones = new Clone[totalClonesCount];
-        try (PrimitivI tmpIn = new PrimitivI(new BufferedInputStream(new FileInputStream(out)))) {
-            IOUtil.registerGeneReferences(tmpIn, genes, info.getAlignerParameters());
-            int i = 0;
-            for (Clone clone : CUtils.it(new PipeDataInputReader<>(Clone.class, tmpIn, totalClonesCount)))
-                clones[i++] = clone.setId(cloneId++);
+        assert(reportBuilder.finalCloneCount == totalClonesCount)
+        assert(reportBuilder.finalCloneCount >= reportBuilder.initialCloneCount)
+        var cloneId = 0
+        val clones = arrayOfNulls<Clone>(totalClonesCount)
+        PrimitivI(BufferedInputStream(FileInputStream(out))).use { tmpIn ->
+            IOUtil.registerGeneReferences(tmpIn, genes, info.alignerParameters)
+            var i = 0
+            PipeDataInputReader(Clone::class.java, tmpIn, totalClonesCount.toLong()).forEach { clone ->
+                clones[i++] = clone.setId(cloneId++)
+            }
         }
-
-        MiXCRMetaInfo resultInfo = info.withoutAllClonesCutBy();
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), genes, resultInfo, ordering);
-
-        try (ClnsWriter writer = new ClnsWriter(out)) {
-            writer.writeCloneSet(cloneSet);
-
-
-            reportBuilder.setStartMillis(beginTimestamp);
-            reportBuilder.setInputFiles(in);
-            reportBuilder.setOutputFiles(out);
-            reportBuilder.setCommandLine(getCommandLineArguments());
-            reportBuilder.setFinishMillis(System.currentTimeMillis());
-
-            FullSeqAssemblerReport report = reportBuilder.buildReport();
+        val cloneSet = CloneSet(listOf(*clones), genes, info.copy(allClonesCutBy = cutByFeature), ordering)
+        ClnsWriter(out).use { writer ->
+            writer.writeCloneSet(cloneSet)
+            reportBuilder.setStartMillis(beginTimestamp)
+            reportBuilder.setInputFiles(`in`)
+            reportBuilder.setOutputFiles(out)
+            reportBuilder.commandLine = commandLineArguments
+            reportBuilder.setFinishMillis(System.currentTimeMillis())
+            val report = reportBuilder.buildReport()
             // Writing report to stout
-            ReportUtil.writeReportToStdout(report);
-
-            if (reportFile != null)
-                ReportUtil.appendReport(reportFile, report);
-
-            if (jsonReport != null)
-                ReportUtil.appendJsonReport(jsonReport, report);
-
-            writer.writeFooter(reports, report);
+            ReportUtil.writeReportToStdout(report)
+            if (reportFile != null) ReportUtil.appendReport(reportFile, report)
+            if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+            writer.writeFooter(reports, report)
         }
+    }
+
+    companion object {
+        const val ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs"
+        const val CUT_BY_FEATURE_OPTION_NAME = "--cut-by-feature"
     }
 }

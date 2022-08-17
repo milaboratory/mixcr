@@ -53,8 +53,6 @@ data class MiXCRMetaInfo(
 
     fun withAllClonesCutBy(allClonesAlignedBy: GeneFeature) = copy(allClonesCutBy = allClonesAlignedBy)
 
-    fun withoutAllClonesCutBy() = copy(allClonesCutBy = null)
-
     class SerializerImpl : BasicSerializer<MiXCRMetaInfo>() {
         override fun write(output: PrimitivO, obj: MiXCRMetaInfo) {
             output.writeObject(obj.tagPreset)
