@@ -33,7 +33,6 @@ import io.repseq.core.VDJCGeneId
 class TreeBuilderByUserData(
     private val tempDest: TempFileDest,
     private val stateBuilder: PrimitivIOStateBuilder,
-    private val geneFeatureToMatch: VJPair<GeneFeature>,
     private val assemblingFeatures: Array<GeneFeature>,
     private val SHMTreeBuilder: SHMTreeBuilder
 ) {
@@ -74,7 +73,6 @@ class TreeBuilderByUserData(
         val cloneWrappers = cluster
             .asSequence()
             .filter { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) == VJBase.CDR3length }
-            .filter { it.clone.coversFeature(geneFeatureToMatch, VJBase) }
             //filter compositions that not overlap with each another
             .filter { it.clone.formsAllRefPointsInCDR3(VJBase) }
             .groupBy { it.clone.targets.toList() }

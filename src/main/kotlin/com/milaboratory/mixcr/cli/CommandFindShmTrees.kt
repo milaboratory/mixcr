@@ -36,6 +36,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
 import picocli.CommandLine.Command
@@ -220,6 +221,7 @@ class CommandFindShmTrees : MiXCRCommand() {
         require(cloneReaders.map { it.info.allClonesCutBy }.distinct().count() == 1) {
             "Input files must not be cut by the same geneFeature"
         }
+        val allClonesCutBy = cloneReaders.first().info.allClonesCutBy!!
         val assemblerParameters = cloneReaders.first().assemblerParameters
         val scoringSet = ScoringSet(
             assemblerParameters.cloneFactoryParameters.vParameters.scoring,
@@ -230,8 +232,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             shmTreeBuilderParameters,
             scoringSet,
             cloneReaders,
-            //TODO check that clones are strictly aligned by assemblingFeatures
-            assemblerParameters.assemblingFeatures,
+            allClonesCutBy.map { GeneFeature(it.begin, it.end) }.toTypedArray(),
             tempDest,
             debugDirectory,
             VGenesToSearch,

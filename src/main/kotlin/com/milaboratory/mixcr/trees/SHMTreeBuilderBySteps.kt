@@ -106,8 +106,7 @@ internal class SHMTreeBuilderBySteps(
     private val relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>,
     private val clonesCount: Long,
     private val stateBuilder: PrimitivIOStateBuilder,
-    private val tempDest: TempFileDest,
-    private val geneFeatureToMatch: VJPair<GeneFeature>
+    private val tempDest: TempFileDest
 ) {
 
     private val initialStep: BuildingInitialTrees = steps.first() as BuildingInitialTrees
@@ -236,7 +235,6 @@ internal class SHMTreeBuilderBySteps(
                     VJBase(VJPair(VGeneId, JGeneId), mainClone.ntLengthOf(GeneFeature.CDR3, VGeneId, JGeneId))
                 }
             }
-            .filter { VJBase -> mainClone.coversFeature(geneFeatureToMatch, VJBase) }
             .filter { VJBase ->
                 clonesFilter.matchForProductive(mainClone, VJBase)
             }

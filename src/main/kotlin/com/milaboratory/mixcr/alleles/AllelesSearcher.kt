@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.alleles
 
-import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 
@@ -19,7 +18,6 @@ interface AllelesSearcher {
     fun search(clones: List<CloneDescription>): List<Result>
 
     class Result(
-        val allele: Mutations<NucleotideSequence>,
-        val knownRanges: Array<Range>
+        val allele: Mutations<NucleotideSequence>
     )
 }

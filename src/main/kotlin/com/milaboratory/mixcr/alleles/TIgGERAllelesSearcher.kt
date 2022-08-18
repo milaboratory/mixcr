@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.alleles
 
-import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutation
@@ -28,8 +27,7 @@ import kotlin.math.ceil
 class TIgGERAllelesSearcher(
     private val scoring: AlignmentScoring<NucleotideSequence>,
     private val sequence1: NucleotideSequence,
-    private val parameters: FindAllelesParameters,
-    private val knownRanges: Array<Range>
+    private val parameters: FindAllelesParameters
 ) : AllelesSearcher {
     override fun search(clones: List<CloneDescription>): List<AllelesSearcher.Result> {
         val mutations = clones.flatMap { it.mutations.asSequence() }.distinct()
@@ -48,7 +46,7 @@ class TIgGERAllelesSearcher(
         val foundAlleles = chooseAndGroupMutationsByAlleles(possibleAlleleMutations.toSet(), clones)
         val withZeroAllele = addZeroAlleleIfNeeded(foundAlleles, clones)
         val enriched = enrichAllelesWithMutationsThatExistsInAlmostAllClones(withZeroAllele, clones)
-        return enriched.map { AllelesSearcher.Result(it, knownRanges) }
+        return enriched.map { AllelesSearcher.Result(it) }
     }
 
     /**

@@ -21,7 +21,6 @@ import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.cli.BuildSHMTreeReport
-import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
@@ -33,10 +32,6 @@ import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
-import io.repseq.core.ReferencePoint.CDR3Begin
-import io.repseq.core.ReferencePoint.CDR3End
-import io.repseq.core.ReferencePoint.FR4End
-import io.repseq.core.ReferencePoint.UTR5Begin
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import java.io.File
@@ -69,15 +64,6 @@ class SHMTreeBuilderOrchestrator(
         scoringSet
     )
 
-    private val geneFeatureToMatch: VJPair<GeneFeature> = assemblingFeatures
-        .reduce(GeneFeature::append)
-        .let { geneFeatureToSearch ->
-            VJPair(
-                V = GeneFeature.intersection(geneFeatureToSearch, GeneFeature(UTR5Begin, CDR3Begin)),
-                J = GeneFeature.intersection(geneFeatureToSearch, GeneFeature(CDR3End, FR4End)),
-            )
-        }
-
     /**
      * @param userInput (datasetId:cloneId) = treeId
      */
@@ -88,7 +74,6 @@ class SHMTreeBuilderOrchestrator(
         val treeBuilder = TreeBuilderByUserData(
             tempDest,
             datasets.constructStateBuilder(),
-            geneFeatureToMatch,
             assemblingFeatures,
             SHMTreeBuilder
         )
@@ -137,8 +122,7 @@ class SHMTreeBuilderOrchestrator(
             relatedAllelesMutations(),
             datasets.sumOf { it.numberOfClones() }.toLong(),
             datasets.constructStateBuilder(),
-            tempDest,
-            geneFeatureToMatch
+            tempDest
         )
         val debugs = parameters.steps.indices.map {
             createDebug(it)
