@@ -1,7 +1,7 @@
 {
   "default": {
     "productiveOnly": true,
-    "useClonesWithCountMoreThen": 0,
+    "useClonesWithCountMoreThen": 1,
     "windowSizeForRegression": 10,
     "allowedSkippedPointsInRegression": 3,
     "minDiversityRatioBetweenAlleles": 0.75,
