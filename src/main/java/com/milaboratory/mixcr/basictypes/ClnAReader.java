@@ -21,7 +21,10 @@ import com.milaboratory.primitivio.blocks.*;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.LambdaSemaphore;
 import gnu.trove.map.hash.TIntIntHashMap;
-import io.repseq.core.*;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryId;
+import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -143,14 +146,14 @@ public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCl
             this.info = Objects.requireNonNull(pi.readObject(MiXCRMetaInfo.class));
             this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
 
-            VDJCLibrary foundAlleles = info.getFoundAlleles();
+            MiXCRMetaInfo.FoundAlleles foundAlleles = info.getFoundAlleles();
             if (foundAlleles != null) {
-                VDJCLibraryId foundAllelesLibraryId = new VDJCLibraryId(foundAlleles.getName(), foundAlleles.getTaxonId());
+                VDJCLibraryId foundAllelesLibraryId = foundAlleles.getLibraryIdWithoutChecksum();
                 boolean alreadyRegistered = libraryRegistry.getLoadedLibraries()
                         .stream()
                         .anyMatch(it -> it.getLibraryId().withoutChecksum().equals(foundAllelesLibraryId));
                 if (!alreadyRegistered) {
-                    libraryRegistry.registerLibrary(null, foundAlleles.getName(), foundAlleles.getData());
+                    libraryRegistry.registerLibrary(null, foundAlleles.getLibraryName(), foundAlleles.getLibraryData());
                 }
             }
 

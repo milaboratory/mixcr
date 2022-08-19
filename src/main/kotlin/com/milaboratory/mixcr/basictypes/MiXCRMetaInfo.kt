@@ -21,7 +21,8 @@ import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneFeature
-import io.repseq.core.VDJCLibrary
+import io.repseq.core.VDJCLibraryId
+import io.repseq.dto.VDJCLibraryData
 
 /**
  * This class represents common meta-information stored in the headers of vdjca/clna/clns files.
@@ -38,7 +39,7 @@ data class MiXCRMetaInfo(
     /** Clone assembler parameters  */
     val assemblerParameters: CloneAssemblerParameters? = null,
     /** Library produced by search of alleles */
-    val foundAlleles: VDJCLibrary?,
+    val foundAlleles: FoundAlleles?,
     /** If all clones cut by the same feature and cover this feature fully */
     val allClonesCutBy: GeneFeature?
 ) {
@@ -53,6 +54,26 @@ data class MiXCRMetaInfo(
 
     fun withAllClonesCutBy(allClonesAlignedBy: GeneFeature) = copy(allClonesCutBy = allClonesAlignedBy)
 
+    @Serializable(by = FoundAlleles.SerializerImpl::class)
+    data class FoundAlleles(
+        val libraryName: String,
+        val libraryData: VDJCLibraryData
+    ) {
+        val libraryIdWithoutChecksum: VDJCLibraryId get() = VDJCLibraryId(libraryName, libraryData.taxonId)
+
+        class SerializerImpl : BasicSerializer<FoundAlleles>() {
+            override fun write(output: PrimitivO, obj: FoundAlleles) {
+                output.writeObject(obj.libraryName)
+                output.writeObject(obj.libraryData)
+            }
+
+            override fun read(input: PrimitivI): FoundAlleles = FoundAlleles(
+                input.readObjectRequired(),
+                input.readObjectRequired()
+            )
+        }
+    }
+
     class SerializerImpl : BasicSerializer<MiXCRMetaInfo>() {
         override fun write(output: PrimitivO, obj: MiXCRMetaInfo) {
             output.writeObject(obj.tagPreset)
@@ -63,15 +84,13 @@ data class MiXCRMetaInfo(
             output.writeObject(obj.allClonesCutBy)
         }
 
-        override fun read(input: PrimitivI): MiXCRMetaInfo {
-            return MiXCRMetaInfo(
-                input.readObjectOptional(),
-                input.readObjectRequired(),
-                input.readObjectRequired(),
-                input.readObjectOptional(),
-                input.readObjectOptional(),
-                input.readObjectOptional()
-            )
-        }
+        override fun read(input: PrimitivI): MiXCRMetaInfo = MiXCRMetaInfo(
+            input.readObjectOptional(),
+            input.readObjectOptional() ?: TagsInfo.NO_TAGS,
+            input.readObjectRequired(),
+            input.readObjectOptional(),
+            input.readObjectOptional(),
+            input.readObjectOptional()
+        )
     }
 }

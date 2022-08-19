@@ -19,7 +19,6 @@ import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryId;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -101,14 +100,14 @@ public class ClnsReader implements CloneReader, AutoCloseable {
             info = Objects.requireNonNull(i.readObject(MiXCRMetaInfo.class));
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
             numberOfClones = i.readInt();
-            VDJCLibrary foundAlleles = info.getFoundAlleles();
+            MiXCRMetaInfo.FoundAlleles foundAlleles = info.getFoundAlleles();
             if (foundAlleles != null) {
-                VDJCLibraryId foundAllelesLibraryId = new VDJCLibraryId(foundAlleles.getName(), foundAlleles.getTaxonId());
+                VDJCLibraryId foundAllelesLibraryId = foundAlleles.getLibraryIdWithoutChecksum();
                 boolean alreadyRegistered = libraryRegistry.getLoadedLibraries()
                         .stream()
                         .anyMatch(it -> it.getLibraryId().withoutChecksum().equals(foundAllelesLibraryId));
                 if (!alreadyRegistered) {
-                    libraryRegistry.registerLibrary(null, foundAlleles.getName(), foundAlleles.getData());
+                    libraryRegistry.registerLibrary(null, foundAlleles.getLibraryName(), foundAlleles.getLibraryData());
                 }
             }
 

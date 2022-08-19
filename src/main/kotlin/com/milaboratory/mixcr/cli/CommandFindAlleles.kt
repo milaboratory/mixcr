@@ -29,6 +29,7 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.GeneAndScore
+import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -296,7 +297,12 @@ class CommandFindAlleles : MiXCRCommand() {
         val cloneSet = CloneSet(
             clones,
             resultLibrary.genes,
-            cloneReader.info.copy(foundAlleles = resultLibrary),
+            cloneReader.info.copy(
+                foundAlleles = MiXCRMetaInfo.FoundAlleles(
+                    resultLibrary.name,
+                    resultLibrary.data
+                )
+            ),
             cloneReader.ordering()
         )
         ClnsWriter(this).use { clnsWriter ->
