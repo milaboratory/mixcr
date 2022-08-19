@@ -20,6 +20,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.BuildSHMTreeReport
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivI
@@ -30,7 +31,6 @@ import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
-import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
@@ -43,7 +43,7 @@ class SHMTreeBuilderOrchestrator(
     private val parameters: SHMTreeBuilderParameters,
     private val scoringSet: ScoringSet,
     private val datasets: List<CloneReader>,
-    private val assemblingFeatures: Array<GeneFeature>,
+    private val assemblingFeatures: GeneFeatures,
     private val tempDest: TempFileDest,
     private val debugDirectory: Path,
     VGenesToSearch: Set<String>,

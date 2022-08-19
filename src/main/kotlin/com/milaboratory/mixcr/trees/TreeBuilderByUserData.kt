@@ -15,6 +15,7 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
@@ -23,7 +24,6 @@ import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.mapNotNull
 import com.milaboratory.util.TempFileDest
-import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
@@ -33,7 +33,7 @@ import io.repseq.core.VDJCGeneId
 class TreeBuilderByUserData(
     private val tempDest: TempFileDest,
     private val stateBuilder: PrimitivIOStateBuilder,
-    private val assemblingFeatures: Array<GeneFeature>,
+    private val assemblingFeatures: GeneFeatures,
     private val SHMTreeBuilder: SHMTreeBuilder
 ) {
     fun buildByUserData(

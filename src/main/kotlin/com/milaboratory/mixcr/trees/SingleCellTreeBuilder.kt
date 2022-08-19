@@ -15,6 +15,7 @@ import cc.redberry.pipe.OutputPort
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.tag.SequenceTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
@@ -50,7 +51,7 @@ class SingleCellTreeBuilder(
     private val tempDest: TempFileDest,
     private val clonesFilter: SHMTreeBuilderOrchestrator.ClonesFilter,
     private val scoringSet: ScoringSet,
-    private val assemblingFeatures: Array<GeneFeature>,
+    private val assemblingFeatures: GeneFeatures,
     private val SHMTreeBuilder: SHMTreeBuilder
 ) {
     fun buildTrees(

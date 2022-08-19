@@ -26,7 +26,14 @@ import net.jpountz.lz4.LZ4Compressor
 import java.util.concurrent.ThreadLocalRandom
 
 inline fun <reified T : Any> PrimitivI.readObjectOptional(): T? = readObject(T::class.java)
-inline fun <reified T : Any> PrimitivI.readObjectRequired(): T = readObject(T::class.java)
+inline fun <reified T : Any> PrimitivI.readObjectRequired(): T {
+    val result = readObject(T::class.java)
+    if (result != null) {
+        return result
+    } else {
+        throw IllegalStateException("Error on read ${T::class}, expected not null, but was null")
+    }
+}
 
 inline fun <reified K : Any, reified V : Any> PrimitivI.readMap(): Map<K, V> =
     Util.readMap(this, K::class.java, V::class.java)

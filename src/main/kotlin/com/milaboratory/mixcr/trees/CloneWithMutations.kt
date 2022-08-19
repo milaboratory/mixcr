@@ -16,13 +16,17 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.JCDR3Part
+import io.repseq.core.GeneFeature.VCDR3Part
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.ReferencePoint
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.CDR3End
 
 class CloneWithMutationsFromReconstructedRoot(
     val mutationsSet: MutationsSet,
@@ -42,7 +46,7 @@ class CloneWithMutationsFromVJGermline(
  * Represent all mutations as `MutationsFromVJGermline`
  * @see MutationsFromVJGermline
  */
-fun CloneWrapper.rebaseFromGermline(assemblingFeatures: Array<GeneFeature>): CloneWithMutationsFromVJGermline =
+fun CloneWrapper.rebaseFromGermline(assemblingFeatures: GeneFeatures): CloneWithMutationsFromVJGermline =
     CloneWithMutationsFromVJGermline(
         MutationsFromVJGermline(
             VJPair(
@@ -60,14 +64,13 @@ fun CloneWrapper.rebaseFromGermline(assemblingFeatures: Array<GeneFeature>): Clo
 
 private fun CloneWrapper.getMutationsWithoutCDR3(
     geneType: GeneType,
-    assemblingFeatures: Array<GeneFeature>
+    assemblingFeatures: GeneFeatures
 ): Map<GeneFeature, Mutations<NucleotideSequence>> {
     val hit = getHit(geneType)
     val partitioning = getPartitioning(geneType)
     return hit.alignments.flatMap { alignment ->
-        assemblingFeatures
-            .mapNotNull { GeneFeature.intersection(it, hit.alignedFeature) }
-            .map { it.cutCDR3PartOfFeature() }
+        (assemblingFeatures.intersection(hit.alignedFeature)?.features ?: emptyArray())
+            .map { it.withoutCDR3Part() }
             .map { geneFeature ->
                 val range = partitioning.getRange(geneFeature)
                 geneFeature to alignment.absoluteMutations.extractAbsoluteMutations(
@@ -78,15 +81,15 @@ private fun CloneWrapper.getMutationsWithoutCDR3(
     }.toMap()
 }
 
-private fun GeneFeature.cutCDR3PartOfFeature(): GeneFeature = when {
-    GeneFeature.intersection(this, GeneFeature.VCDR3Part) != null -> GeneFeature(firstPoint, ReferencePoint.CDR3Begin)
-    GeneFeature.intersection(this, GeneFeature.JCDR3Part) != null -> GeneFeature(ReferencePoint.CDR3End, lastPoint)
+private fun GeneFeature.withoutCDR3Part(): GeneFeature = when {
+    GeneFeature.intersection(this, VCDR3Part) != null -> GeneFeature(firstPoint, CDR3Begin)
+    GeneFeature.intersection(this, JCDR3Part) != null -> GeneFeature(CDR3End, lastPoint)
     else -> this
 }
 
 private fun getVMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<NucleotideSequence>, Range> {
     val hit = clone.getHit(Variable)
-    val CDR3Begin = hit.gene.partitioning.getRelativePosition(hit.alignedFeature, ReferencePoint.CDR3Begin)
+    val CDR3Begin = hit.gene.partitioning.getRelativePosition(hit.alignedFeature, CDR3Begin)
     val alignment = (0 until hit.alignments.size)
         .map { hit.getAlignment(it) }
         .firstOrNull { alignment ->
@@ -103,7 +106,7 @@ private fun getVMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<Nucleot
 
 private fun getJMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<NucleotideSequence>, Range> {
     val hit = clone.getHit(Joining)
-    val CDR3End = hit.gene.partitioning.getRelativePosition(hit.alignedFeature, ReferencePoint.CDR3End)
+    val CDR3End = hit.gene.partitioning.getRelativePosition(hit.alignedFeature, CDR3End)
     val alignment = (0 until hit.alignments.size)
         .map { hit.getAlignment(it) }
         .firstOrNull { alignment ->

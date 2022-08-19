@@ -18,6 +18,7 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.AttachClonesByDistanceChange
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.AttachClonesByNDN
@@ -100,7 +101,7 @@ private val groupingCriteria: GroupingCriteria<CloneWrapper> = object : Grouping
 internal class SHMTreeBuilderBySteps(
     private val steps: List<BuildSHMTreeStep>,
     private val scoringSet: ScoringSet,
-    private val assemblingFeatures: Array<GeneFeature>,
+    private val assemblingFeatures: GeneFeatures,
     private val shmTreeBuilder: SHMTreeBuilder,
     private val clonesFilter: SHMTreeBuilderOrchestrator.ClonesFilter,
     private val relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>,

@@ -36,7 +36,6 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
 import picocli.CommandLine.Command
@@ -215,13 +214,13 @@ class CommandFindShmTrees : MiXCRCommand() {
         require(cloneReaders.map { it.info.foundAlleles }.distinct().count() == 1) {
             "All input files must be assembled with the same alleles"
         }
-        require(cloneReaders.all { it.info.allClonesCutBy != null }) {
+        require(cloneReaders.all { it.info.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
         }
-        require(cloneReaders.map { it.info.allClonesCutBy }.distinct().count() == 1) {
+        require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must not be cut by the same geneFeature"
         }
-        val allClonesCutBy = cloneReaders.first().info.allClonesCutBy!!
+        val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
         val assemblerParameters = cloneReaders.first().assemblerParameters
         val scoringSet = ScoringSet(
             assemblerParameters.cloneFactoryParameters.vParameters.scoring,
@@ -232,7 +231,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             shmTreeBuilderParameters,
             scoringSet,
             cloneReaders,
-            allClonesCutBy.map { GeneFeature(it.begin, it.end) }.toTypedArray(),
+            allFullyCoveredBy,
             tempDest,
             debugDirectory,
             VGenesToSearch,

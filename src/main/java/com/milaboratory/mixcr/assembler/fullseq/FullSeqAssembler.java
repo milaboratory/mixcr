@@ -166,7 +166,7 @@ public final class FullSeqAssembler {
         this.jHit = baseJHit;
 
         // Checking parameters
-        if (parameters.outputMinimalSumQuality > parameters.branchingMinimalSumQuality)
+        if (parameters.getOutputMinimalSumQuality() > parameters.getBranchingMinimalSumQuality())
             throw new IllegalArgumentException("Wrong parameters. (branchingMinimalSumQuality must be greater than outputMinimalSumQuality)");
 
         this.cloneFactory = cloneFactory;
@@ -194,7 +194,7 @@ public final class FullSeqAssembler {
 
         this.clonalAssemblingFeatureVariantIndex = initVariantMappings(clone.getFeature(this.assemblingFeature).getSequence());
 
-        this.requiredMinimalSumQuality = Math.round(parameters.minimalMeanNormalizedQuality * clone.getCount());
+        this.requiredMinimalSumQuality = Math.round(parameters.getMinimalMeanNormalizedQuality() * clone.getCount());
 
         ReferencePoint
                 start = assemblingFeature.getFirstPoint(),
@@ -219,12 +219,12 @@ public final class FullSeqAssembler {
             this.lengthV =
                     gene.getPartitioning().getLength(vFeature)
                             - gene.getFeature(GeneFeature.intersection(assemblingFeature, vFeature)).size();
-            if (parameters.subCloningRegion != null) {
-                int p = gene.getPartitioning().getRelativePosition(vFeature, parameters.subCloningRegion.getFirstPoint());
+            if (parameters.getSubCloningRegion() != null) {
+                int p = gene.getPartitioning().getRelativePosition(vFeature, parameters.getSubCloningRegion().getFirstPoint());
                 if (p != -1)
                     splitRegionBegin = N_LEFT_DUMMIES + p;
 
-                p = gene.getPartitioning().getRelativePosition(vFeature, parameters.subCloningRegion.getLastPoint());
+                p = gene.getPartitioning().getRelativePosition(vFeature, parameters.getSubCloningRegion().getLastPoint());
                 if (p != -1)
                     splitRegionEnd = N_LEFT_DUMMIES + p;
             }
@@ -240,12 +240,12 @@ public final class FullSeqAssembler {
             this.jOffset = gene.getPartitioning().getRelativePosition(jFeature, assemblingFeature.getLastPoint());
             this.jLength = gene.getPartitioning().getLength(jFeature) - jOffset;
 
-            if (parameters.subCloningRegion != null) {
-                int p = gene.getPartitioning().getRelativePosition(jFeature, parameters.subCloningRegion.getLastPoint());
+            if (parameters.getSubCloningRegion() != null) {
+                int p = gene.getPartitioning().getRelativePosition(jFeature, parameters.getSubCloningRegion().getLastPoint());
                 if (p != -1)
                     splitRegionEnd = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset + p;
 
-                p = gene.getPartitioning().getRelativePosition(jFeature, parameters.subCloningRegion.getFirstPoint());
+                p = gene.getPartitioning().getRelativePosition(jFeature, parameters.getSubCloningRegion().getFirstPoint());
                 if (p != -1)
                     splitRegionBegin = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset + p;
             }
@@ -331,11 +331,11 @@ public final class FullSeqAssembler {
         Clone[] result = branchSequences.stream()
                 .map(branch -> buildClone(clean(branch)))
                 .filter(clone -> {
-                    if (parameters.postFiltering != NoFiltering) {
-                        for (GeneFeature.ReferenceRange range : Objects.requireNonNull(parameters.assemblingRegion)) {
-                            NucleotideSequence nFeature = clone.getNFeature(new GeneFeature(range.begin, range.end));
+                    if (parameters.getPostFiltering() != NoFiltering) {
+                        for (GeneFeature assemblingRegion : Objects.requireNonNull(parameters.getAssemblingRegions()).getFeatures()) {
+                            NucleotideSequence nFeature = clone.getNFeature(assemblingRegion);
                             if (nFeature == null) return false;
-                            if (parameters.postFiltering == OnlyFullyDefined && nFeature.containsWildcards()) {
+                            if (parameters.getPostFiltering() == OnlyFullyDefined && nFeature.containsWildcards()) {
                                 return false;
                             }
                         }
@@ -344,7 +344,7 @@ public final class FullSeqAssembler {
                 })
                 .toArray(Clone[]::new);
 
-        if (result.length == 0 && parameters.postFiltering == NoFiltering) {
+        if (result.length == 0 && parameters.getPostFiltering() == NoFiltering) {
             // In case assemble procedure failed to assemble even a single clonotype, returning original
             // clonotype, to prevent diversity losses
             report.onEmptyOutput(clone);
@@ -352,7 +352,7 @@ public final class FullSeqAssembler {
         }
 
         if (report != null)
-            report.afterVariantsClustered(clone, result, parameters.subCloningRegion);
+            report.afterVariantsClustered(clone, result, parameters.getSubCloningRegion());
 
         return result;
     }
@@ -455,21 +455,21 @@ public final class FullSeqAssembler {
      * Performs final sequence cleanup. Removes very short sub-targets, performes quality trimming.
      */
     BranchSequences clean(BranchSequences seq) {
-        if (parameters.trimmingParameters != null)
+        if (parameters.getTrimmingParameters() != null)
             for (int i = seq.ranges.length - 1; i >= 0; --i)
                 if (i == seq.assemblingFeatureTargetId) {
                     final Range[] ranges = QualityTrimmer.calculateIslandsFromInitialRange(seq.sequences[i].getQuality(),
-                            parameters.trimmingParameters,
+                            parameters.getTrimmingParameters(),
                             new Range(seq.assemblingFeatureOffset, seq.assemblingFeatureOffset + seq.assemblingFeatureLength));
                     seq = seq.splitCut(i, ranges);
                 } else {
                     // This also completely removes regions with low quality
                     final Range[] ranges = QualityTrimmer.calculateAllIslands(seq.sequences[i].getQuality(),
-                            parameters.trimmingParameters);
+                            parameters.getTrimmingParameters());
                     seq = seq.splitCut(i, ranges);
                 }
         for (int i = seq.ranges.length - 1; i >= 0; --i)
-            if (seq.sequences[i].size() < parameters.minimalContigLength && i != seq.assemblingFeatureTargetId)
+            if (seq.sequences[i].size() < parameters.getMinimalContigLength() && i != seq.assemblingFeatureTargetId)
                 seq = seq.without(i);
         return seq;
     }
@@ -841,7 +841,7 @@ public final class FullSeqAssembler {
                     continue;
 
                 boolean floatingLeftBound =
-                        !parameters.alignedRegionsOnly
+                        !parameters.isAlignedRegionsOnly()
                                 && i == 0
                                 && alignerParameters.getVAlignerParameters().getParameters().isFloatingLeftBound();
 
@@ -876,7 +876,7 @@ public final class FullSeqAssembler {
                  */
 
                 boolean vFloatingLeftBound =
-                        !parameters.alignedRegionsOnly
+                        !parameters.isAlignedRegionsOnly()
                                 && i == 0
                                 && alignerParameters.getVAlignerParameters().getParameters().isFloatingLeftBound();
 
@@ -911,7 +911,7 @@ public final class FullSeqAssembler {
                  */
 
                 boolean jFloatingRightBound =
-                        !parameters.alignedRegionsOnly
+                        !parameters.isAlignedRegionsOnly()
                                 && i == targets.ranges.length - 1
                                 && alignerParameters.getJAlignerParameters().getParameters().isFloatingRightBound();
 
@@ -945,7 +945,7 @@ public final class FullSeqAssembler {
                     continue;
 
                 boolean floatingRightBound =
-                        !parameters.alignedRegionsOnly
+                        !parameters.isAlignedRegionsOnly()
                                 && i == targets.ranges.length - 1
                                 && alignerParameters.getJAlignerParameters().getParameters().isFloatingRightBound();
 
@@ -1272,11 +1272,11 @@ public final class FullSeqAssembler {
         do {
             if (currentIndex == count || currentVariant != (int) (targets[currentIndex] >>> 40)) {
                 // Checking significance conditions
-                if ((1.0 * splittingPointsCount / (currentIndex - blockBegin) >= parameters.minimalNonEdgePointsFraction)
+                if ((1.0 * splittingPointsCount / (currentIndex - blockBegin) >= parameters.getMinimalNonEdgePointsFraction())
                         && variantSumQuality >= requiredMinimalSumQuality
-                        && ((variantSumQuality >= parameters.branchingMinimalSumQuality
-                        && variantSumQuality >= parameters.branchingMinimalQualityShare * totalSumQuality)
-                        || variantSumQuality >= parameters.decisiveBranchingSumQualityThreshold)) {
+                        && ((variantSumQuality >= parameters.getBranchingMinimalSumQuality()
+                        && variantSumQuality >= parameters.getBranchingMinimalQualityShare() * totalSumQuality)
+                        || variantSumQuality >= parameters.getDecisiveBranchingSumQualityThreshold())) {
                     // Variant is significant
                     BitSet reads = new BitSet();
                     for (int j = currentIndex - 1; j >= blockBegin; --j)
@@ -1315,8 +1315,8 @@ public final class FullSeqAssembler {
             // Checking best variant to meet output criteria
             // Always assemble assembling feature
             if (isAssemblingFeature ||
-                    (bestVariantSumQuality >= parameters.outputMinimalQualityShare * totalSumQuality &&
-                            bestVariantSumQuality >= parameters.outputMinimalSumQuality)) {
+                    (bestVariantSumQuality >= parameters.getOutputMinimalQualityShare() * totalSumQuality &&
+                            bestVariantSumQuality >= parameters.getOutputMinimalSumQuality())) {
                 // no significant variants
                 assert bestVariant != -1;
                 BitSet reads = new BitSet();
@@ -1826,11 +1826,11 @@ public final class FullSeqAssembler {
         List<PointSequence> points = new ArrayList<>();
         if (hasV) {
             if (vAlignment != null) {
-                if (parameters.assemblingRegion != null) {
+                if (parameters.getAssemblingRegions() != null) {
                     @SuppressWarnings("OptionalGetWithoutIsPresent")
                     GeneFeature alignedVFeature = vHit.get().getAlignedFeature();
-                    for (GeneFeature.ReferenceRange range : parameters.assemblingRegion) {
-                        GeneFeature intersection = GeneFeature.intersection(alignedVFeature, new GeneFeature(range.begin, range.end));
+                    for (GeneFeature assemblingRegion : parameters.getAssemblingRegions().getFeatures()) {
+                        GeneFeature intersection = GeneFeature.intersection(alignedVFeature, assemblingRegion);
                         // No intersection:
                         //                          |    assemblingRegion            |
                         // target  -----|---------|-------------------------------------->
@@ -1867,7 +1867,7 @@ public final class FullSeqAssembler {
                     }
                 } else {
                     int leftBound;
-                    if (parameters.alignedRegionsOnly) {
+                    if (parameters.isAlignedRegionsOnly()) {
                         leftBound = vAlignment.getSequence2Range().getFrom();
                     } else {
                         leftBound = 0;
@@ -1889,7 +1889,7 @@ public final class FullSeqAssembler {
                     );
                 }
             }
-        } else if (!parameters.alignedRegionsOnly && parameters.assemblingRegion == null) {
+        } else if (!parameters.isAlignedRegionsOnly() && parameters.getAssemblingRegions() == null) {
             if (target.getPartitioning().isAvailable(assemblingFeature.getFirstPoint())) {
                 int leftStop = target.getPartitioning().getPosition(assemblingFeature.getFirstPoint());
                 toPointSequencesNoAlignments(points, targetSeq, new Range(0, leftStop), N_LEFT_DUMMIES - leftStop);
@@ -1898,10 +1898,10 @@ public final class FullSeqAssembler {
 
         if (hasJ) {
             if (jAlignment != null) {
-                if (parameters.assemblingRegion != null) {
+                if (parameters.getAssemblingRegions() != null) {
                     GeneFeature alignedJFeature = jHit.get().getAlignedFeature();
-                    for (GeneFeature.ReferenceRange range : parameters.assemblingRegion) {
-                        GeneFeature intersection = GeneFeature.intersection(alignedJFeature, new GeneFeature(range.begin, range.end));
+                    for (GeneFeature assemblingRegion : parameters.getAssemblingRegions().getFeatures()) {
+                        GeneFeature intersection = GeneFeature.intersection(alignedJFeature, assemblingRegion);
                         // No intersection:
                         //           |    assemblingRegion            |
                         // target  ----------------------------------------|-------|----->
@@ -1945,7 +1945,7 @@ public final class FullSeqAssembler {
                         // This target starts after the end (right edge) of the assembling feature
                         leftBound = jAlignment.getSequence2Range().getFrom();
                     }
-                    int rightBound = parameters.alignedRegionsOnly ? jAlignment.getSequence2Range().getTo() : targetSeq.size();
+                    int rightBound = parameters.isAlignedRegionsOnly() ? jAlignment.getSequence2Range().getTo() : targetSeq.size();
                     toPointSequencesByAlignments(points,
                             jAlignment,
                             targetSeq,
@@ -1956,7 +1956,7 @@ public final class FullSeqAssembler {
                     );
                 }
             }
-        } else if (!parameters.alignedRegionsOnly && parameters.assemblingRegion == null) {
+        } else if (!parameters.isAlignedRegionsOnly() && parameters.getAssemblingRegions() == null) {
             if (target.getPartitioning().isAvailable(assemblingFeature.getLastPoint())) {
                 int rightStart = target.getPartitioning().getPosition(assemblingFeature.getLastPoint());
                 toPointSequencesNoAlignments(points, targetSeq, new Range(rightStart, targetSeq.size()), N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - rightStart);
@@ -2054,8 +2054,8 @@ public final class FullSeqAssembler {
                 quality = (byte) (((int) left + right) / 2);
 
             if (!inSplitRegion(point)
-                    || (seq.size() - seq2alignmentRange.getTo() < parameters.alignedSequenceEdgeDelta && seq.size() - to <= parameters.alignmentEdgeRegionSize)
-                    || (seq2alignmentRange.getFrom() < parameters.alignedSequenceEdgeDelta && from <= parameters.alignmentEdgeRegionSize))
+                    || (seq.size() - seq2alignmentRange.getTo() < parameters.getAlignedSequenceEdgeDelta() && seq.size() - to <= parameters.getAlignmentEdgeRegionSize())
+                    || (seq2alignmentRange.getFrom() < parameters.getAlignedSequenceEdgeDelta() && from <= parameters.getAlignmentEdgeRegionSize()))
                 quality |= 0x80; // isEdgePoint
 
             return new PointSequence(point, NSequenceWithQuality.EMPTY, quality);
@@ -2065,8 +2065,8 @@ public final class FullSeqAssembler {
         NSequenceWithQuality r = seq.getRange(from, to);
         byte quality = r.getQuality().minValue();
         if (!inSplitRegion(point)
-                || (seq.size() - seq2alignmentRange.getTo() < parameters.alignedSequenceEdgeDelta && seq.size() - to <= parameters.alignmentEdgeRegionSize)
-                || (seq2alignmentRange.getFrom() < parameters.alignedSequenceEdgeDelta && from <= parameters.alignmentEdgeRegionSize))
+                || (seq.size() - seq2alignmentRange.getTo() < parameters.getAlignedSequenceEdgeDelta() && seq.size() - to <= parameters.getAlignmentEdgeRegionSize())
+                || (seq2alignmentRange.getFrom() < parameters.getAlignedSequenceEdgeDelta() && from <= parameters.getAlignmentEdgeRegionSize()))
             quality |= 0x80;
         return new PointSequence(point, r, quality);
     }

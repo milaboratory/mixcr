@@ -41,7 +41,7 @@ data class MiXCRMetaInfo(
     /** Library produced by search of alleles */
     val foundAlleles: FoundAlleles?,
     /** If all clones cut by the same feature and cover this feature fully */
-    val allClonesCutBy: GeneFeature?
+    val allFullyCoveredBy: GeneFeatures?
 ) {
     fun withTagInfo(tagsInfo: TagsInfo): MiXCRMetaInfo =
         copy(tagsInfo = tagsInfo)
@@ -52,7 +52,8 @@ data class MiXCRMetaInfo(
     fun withAssemblerParameters(assemblerParameters: CloneAssemblerParameters): MiXCRMetaInfo =
         copy(assemblerParameters = assemblerParameters)
 
-    fun withAllClonesCutBy(allClonesAlignedBy: GeneFeature) = copy(allClonesCutBy = allClonesAlignedBy)
+    fun withAllClonesCutBy(allClonesAlignedBy: Array<GeneFeature>) =
+        copy(allFullyCoveredBy = GeneFeatures(allClonesAlignedBy))
 
     @Serializable(by = FoundAlleles.SerializerImpl::class)
     data class FoundAlleles(
@@ -81,7 +82,7 @@ data class MiXCRMetaInfo(
             output.writeObject(obj.alignerParameters)
             output.writeObject(obj.assemblerParameters)
             output.writeObject(obj.foundAlleles)
-            output.writeObject(obj.allClonesCutBy)
+            output.writeObject(obj.allFullyCoveredBy)
         }
 
         override fun read(input: PrimitivI): MiXCRMetaInfo = MiXCRMetaInfo(

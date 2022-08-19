@@ -29,6 +29,7 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.GeneAndScore
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSV
@@ -43,7 +44,6 @@ import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Diversity
@@ -188,19 +188,19 @@ class CommandFindAlleles : MiXCRCommand() {
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
-        require(cloneReaders.all { it.info.allClonesCutBy != null }) {
+        require(cloneReaders.all { it.info.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
         }
-        require(cloneReaders.map { it.info.allClonesCutBy }.distinct().count() == 1) {
+        require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must not be cut by the same geneFeature"
         }
-        val allClonesCutBy = cloneReaders.first().info.allClonesCutBy!!
+        val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
 
         val allelesBuilder = AllelesBuilder(
             findAllelesParameters,
             tempDest,
             cloneReaders,
-            allClonesCutBy
+            allFullyCoveredBy
         )
 
         val progressAndStage = ProgressAndStage("Grouping by the same V gene", 0.0)
@@ -224,7 +224,7 @@ class CommandFindAlleles : MiXCRCommand() {
         val cloneRebuild = CloneRebuild(
             resultLibrary,
             allelesMapping,
-            allClonesCutBy.map { GeneFeature(it.begin, it.end) }.toTypedArray(),
+            allFullyCoveredBy,
             threads,
             cloneReaders.first().assemblerParameters,
             cloneReaders.first().alignerParameters
@@ -379,14 +379,14 @@ class CommandFindAlleles : MiXCRCommand() {
 private class CloneRebuild(
     private val resultLibrary: VDJCLibrary,
     private val allelesMapping: Map<String, List<VDJCGeneId>>,
-    assemblingFeatures: Array<GeneFeature>,
+    assemblingFeatures: GeneFeatures,
     private val threads: Int,
     assemblerParameters: CloneAssemblerParameters,
     alignerParameters: VDJCAlignerParameters
 ) {
     private val cloneFactory = CloneFactory(
         assemblerParameters.cloneFactoryParameters,
-        assemblingFeatures,
+        assemblingFeatures.features,
         resultLibrary.genes,
         alignerParameters.featuresToAlignMap
     )

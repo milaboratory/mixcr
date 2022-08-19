@@ -21,6 +21,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.helpers.get
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.VJPair
@@ -44,9 +45,9 @@ import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint
 import io.repseq.core.ReferencePoint.CDR3Begin
 import io.repseq.core.ReferencePoint.CDR3End
-import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.ReferencePoint.FR4End
 import io.repseq.core.ReferencePoint.JBegin
+import io.repseq.core.ReferencePoint.UTR5Begin
 import io.repseq.core.ReferencePoint.VEnd
 import io.repseq.core.ReferencePoints
 import io.repseq.core.VDJCGene
@@ -58,7 +59,7 @@ class AllelesBuilder(
     private val parameters: FindAllelesParameters,
     private val tempDest: TempFileDest,
     private val datasets: List<CloneReader>,
-    private val allClonesCutBy: GeneFeature
+    private val allClonesCutBy: GeneFeatures
 ) {
     private val scoring: VJPair<AlignmentScoring<NucleotideSequence>> = VJPair(
         V = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring,
@@ -294,13 +295,28 @@ class AllelesBuilder(
     private fun metaForGeneratedGene(allele: Allele): SortedMap<String, SortedSet<String>> {
         val meta: SortedMap<String, SortedSet<String>> = TreeMap(allele.gene.data.meta)
         val knownFeatures = when (allele.gene.geneType) {
-            Variable -> GeneFeature.intersection(allClonesCutBy, GeneFeature(FR1Begin, CDR3Begin))
-                .append(GeneFeature(CDR3Begin, 0, allele.knownCDR3RangeLength))
-            Joining -> GeneFeature(CDR3End, -allele.knownCDR3RangeLength, 0)
-                .append(GeneFeature.intersection(allClonesCutBy, GeneFeature(CDR3End, FR4End)))
+            Variable -> {
+                val toAdd = GeneFeature(CDR3Begin, 0, allele.knownCDR3RangeLength)
+                val intersection = allClonesCutBy.intersection(GeneFeature(UTR5Begin, CDR3Begin))
+                if (intersection != null) {
+                    intersection + toAdd
+                } else {
+                    GeneFeatures(toAdd)
+                }
+            }
+            Joining -> {
+                val toAdd = GeneFeatures(GeneFeature(CDR3End, -allele.knownCDR3RangeLength, 0))
+                val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
+                if (intersection != null) {
+                    toAdd + intersection
+                } else {
+                    toAdd
+                }
+            }
             else -> throw UnsupportedOperationException()
         }
-        meta["alleleMutationsReliableGeneFeatures"] = sortedSetOf(GeneFeature.encode(knownFeatures))
+        meta["alleleMutationsReliableGeneFeatures"] =
+            knownFeatures.features.map { GeneFeature.encode(it) }.toSortedSet()
         meta["alleleVariantOf"] = sortedSetOf(allele.gene.name)
         return meta
     }

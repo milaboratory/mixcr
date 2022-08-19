@@ -19,12 +19,15 @@ import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters.PostFiltering.NoFiltering
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters.PostFiltering.OnlyFullyDefined
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReportBuilder
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAReader.CloneAlignments
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
@@ -95,9 +98,9 @@ class CommandAssembleContigs : MiXCRCommand() {
     )
     var cutByFeatureParam: String? = null
 
-    private val cutByFeature: GeneFeature? by lazy {
+    private val cutByFeature: GeneFeatures? by lazy {
         when {
-            cutByFeatureParam != null -> GeneFeature.parse(cutByFeatureParam)
+            cutByFeatureParam != null -> GeneFeatures.parse(cutByFeatureParam!!)
             else -> null
         }
     }
@@ -111,16 +114,22 @@ class CommandAssembleContigs : MiXCRCommand() {
 
     // Perform parameters overriding
     private val fullSeqAssemblerParameters: FullSeqAssemblerParameters by lazy {
-        var p = FullSeqAssemblerParameters.getByName("default")
+        var p = FullSeqAssemblerParameters.presets.getByName("default")!!
         if (overrides.isNotEmpty()) {
             // Perform parameters overriding
-            p = JsonOverrider.override(p, FullSeqAssemblerParameters::class.java, overrides)
-            if (p == null) throwValidationException("failed to override some parameter: $overrides")
+            val overrode = JsonOverrider.override(p, FullSeqAssemblerParameters::class.java, overrides)
+            if (overrode == null) throwValidationException("failed to override some parameter: $overrides")
+            p = overrode
         }
-        if (cutByFeature != null) {
-            p.subCloningRegion = cutByFeature
-            p.assemblingRegion = cutByFeature
-            p.postFiltering = FullSeqAssemblerParameters.PostFiltering.OnlyFullyDefined
+        cutByFeature?.let { cutByFeature ->
+            if (p.subCloningRegion != null) warn("subCloningRegion already set")
+            if (p.assemblingRegions != null) warn("assemblingRegions already set")
+            if (p.postFiltering != NoFiltering) warn("assemblingRegions already set")
+            p = p.copy(
+                subCloningRegion = cutByFeature.features.first(),
+                assemblingRegions = cutByFeature,
+                postFiltering = OnlyFullyDefined
+            )
         }
         p
     }
@@ -129,7 +138,7 @@ class CommandAssembleContigs : MiXCRCommand() {
 
     override fun validate() {
         if (fullSeqAssemblerParameters.postFiltering != FullSeqAssemblerParameters.PostFiltering.NoFiltering) {
-            if (fullSeqAssemblerParameters.assemblingRegion != null) {
+            if (fullSeqAssemblerParameters.assemblingRegions != null) {
                 throwValidationException("assemblingRegion must be set if postFiltering is not NoFiltering")
             }
         }
@@ -152,9 +161,12 @@ class CommandAssembleContigs : MiXCRCommand() {
             require(!assemblingFeature.isComposite) {
                 "Supports only non-composite gene features as an assemblingFeature."
             }
-            fullSeqAssemblerParameters.assemblingRegion?.let { assemblingRegion ->
-                require(GeneFeature.intersection(assemblingRegion, assemblingFeature) == assemblingFeature) {
-                    "AssemblingFeature of input must be included fully in assemblingRegion"
+            fullSeqAssemblerParameters.assemblingRegions?.let { assemblingRegions ->
+                val fullyIncluded = assemblingRegions.features.any { assemblingRegion ->
+                    GeneFeature.intersection(assemblingRegion, assemblingFeature) == assemblingFeature
+                }
+                require(fullyIncluded) {
+                    "AssemblingFeature of input must be included fully in assemblingRegions"
                 }
             }
 
@@ -307,7 +319,16 @@ class CommandAssembleContigs : MiXCRCommand() {
                 clones[i++] = clone.setId(cloneId++)
             }
         }
-        val cloneSet = CloneSet(listOf(*clones), genes, info.copy(allClonesCutBy = cutByFeature), ordering)
+        val resultInfo = if (
+            assemblerParameters.assemblingRegions != null &&
+            assemblerParameters.subCloningRegion == assemblerParameters.assemblingRegions.features.first() &&
+            assemblerParameters.postFiltering == OnlyFullyDefined
+        ) {
+            info.copy(allFullyCoveredBy = assemblerParameters.assemblingRegions)
+        } else {
+            info
+        }
+        val cloneSet = CloneSet(listOf(*clones), genes, resultInfo, ordering)
         ClnsWriter(out).use { writer ->
             writer.writeCloneSet(cloneSet)
             reportBuilder.setStartMillis(beginTimestamp)

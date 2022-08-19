@@ -342,7 +342,7 @@ public final class RunMiXCR {
     public static final class RunMiXCRAnalysis {
         public VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         public CloneAssemblerParameters cloneAssemblerParameters = CloneAssemblerParametersPresets.getByName("default");
-        public FullSeqAssemblerParameters fullSeqAssemblerParameters = FullSeqAssemblerParameters.getByName("default");
+        public FullSeqAssemblerParameters fullSeqAssemblerParameters = FullSeqAssemblerParameters.getPresets().getByName("default");
         public String library = "default";
         public Chains chains = Chains.ALL;
         public String species = "hs";
