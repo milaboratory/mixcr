@@ -76,9 +76,22 @@ public class FullSeqAssemblerParameters {
      */
     long outputMinimalSumQuality;
     /**
-     * Region where variants are allowed
+     * Gene feature limiting the set of positions where sufficient number of different nucleotides may split input
+     * into several clonotypes. If position is not covered by the region, and significant disagreement between
+     * nucleotides is observed, algorithm will produce "N" letter in the corresponding contig position to indicate the
+     * ambiguity. Null - means no subcloning region, and guarantees one to one input to output clonotype correspondence.
      */
     GeneFeature subCloningRegion;
+    /**
+     * Limits the region of the sequence to assemble during the procedure, no nucleotides will be assembled outside it.
+     * Null will result in assembly of the longest possible contig sequence.
+     */
+    GeneFeature assemblingRegion;
+    /**
+     * Used only if {@link #assemblingRegion} is not null. Sets filtering criteria to apply before outputting the
+     * resulting clonotypes.
+     */
+    PostFiltering postFiltering;
     /**
      * Parameters of trimmer, that performs final processing of the output contigs
      */
@@ -104,9 +117,12 @@ public class FullSeqAssemblerParameters {
             @JsonProperty("outputMinimalQualityShare") double outputMinimalQualityShare,
             @JsonProperty("outputMinimalSumQuality") long outputMinimalSumQuality,
             @JsonProperty("subCloningRegion") GeneFeature subCloningRegion,
+            @JsonProperty("assemblingRegion") GeneFeature assemblingRegion,
+            @JsonProperty("postFiltering") PostFiltering postFiltering,
             @JsonProperty("trimmingParameters") QualityTrimmerParameters trimmingParameters,
             @JsonProperty("minimalContigLength") int minimalContigLength,
-            @JsonProperty("alignedRegionsOnly") boolean alignedRegionsOnly) {
+            @JsonProperty("alignedRegionsOnly") boolean alignedRegionsOnly
+    ) {
         this.branchingMinimalQualityShare = branchingMinimalQualityShare;
         this.branchingMinimalSumQuality = branchingMinimalSumQuality;
         this.decisiveBranchingSumQualityThreshold = decisiveBranchingSumQualityThreshold;
@@ -117,9 +133,35 @@ public class FullSeqAssemblerParameters {
         this.outputMinimalQualityShare = outputMinimalQualityShare;
         this.outputMinimalSumQuality = outputMinimalSumQuality;
         this.subCloningRegion = subCloningRegion;
+        this.assemblingRegion = assemblingRegion;
+        this.postFiltering = postFiltering;
         this.trimmingParameters = trimmingParameters;
         this.minimalContigLength = minimalContigLength;
         this.alignedRegionsOnly = alignedRegionsOnly;
+    }
+
+    public GeneFeature getSubCloningRegion() {
+        return subCloningRegion;
+    }
+
+    public void setSubCloningRegion(GeneFeature subCloningRegion) {
+        this.subCloningRegion = subCloningRegion;
+    }
+
+    public GeneFeature getAssemblingRegion() {
+        return assemblingRegion;
+    }
+
+    public void setAssemblingRegion(GeneFeature assemblingRegion) {
+        this.assemblingRegion = assemblingRegion;
+    }
+
+    public PostFiltering getPostFiltering() {
+        return postFiltering;
+    }
+
+    public void setPostFiltering(PostFiltering postFiltering) {
+        this.postFiltering = postFiltering;
     }
 
     public double getBranchingMinimalQualityShare() {
@@ -222,7 +264,7 @@ public class FullSeqAssemblerParameters {
     public FullSeqAssemblerParameters clone() {
         return new FullSeqAssemblerParameters(branchingMinimalQualityShare, branchingMinimalSumQuality, decisiveBranchingSumQualityThreshold,
                 alignedSequenceEdgeDelta, alignmentEdgeRegionSize, minimalNonEdgePointsFraction, minimalMeanNormalizedQuality,
-                outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion,
+                outputMinimalQualityShare, outputMinimalSumQuality, subCloningRegion, assemblingRegion, postFiltering,
                 trimmingParameters, minimalContigLength, alignedRegionsOnly);
     }
 
@@ -283,5 +325,23 @@ public class FullSeqAssemblerParameters {
         if (params == null)
             return null;
         return params.clone();
+    }
+
+    /**
+     * Used only if {@link #assemblingRegion} is not null.
+     */
+    public enum PostFiltering {
+        /**
+         * Don't filter output clonotypes
+         */
+        NoFiltering,
+        /**
+         * Only clonotypes completely covering {@link #assemblingRegion} will be retained.
+         */
+        OnlyFullyAssembled,
+        /**
+         * Only clonotypes completely covering {@link #assemblingRegion} and having no "N" letters will be retained.
+         */
+        OnlyFullyDefined
     }
 }

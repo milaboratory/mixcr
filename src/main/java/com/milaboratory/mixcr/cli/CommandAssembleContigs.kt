@@ -14,8 +14,6 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.CUtils
-import com.milaboratory.core.alignment.Alignment
-import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
@@ -26,18 +24,13 @@ import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAReader.CloneAlignments
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
-import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.mixcr.util.alignmentsCover
 import com.milaboratory.primitivio.PipeDataInputReader
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
@@ -49,14 +42,8 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.StreamUtil
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import io.repseq.core.GeneType.Diversity
 import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.VDJC_REFERENCE
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.ReferencePoint.CDR3Begin
-import io.repseq.core.ReferencePoint.CDR3End
-import io.repseq.core.ReferencePoint.FR4End
-import io.repseq.core.ReferencePoint.UTR5Begin
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibraryRegistry
@@ -123,18 +110,30 @@ class CommandAssembleContigs : MiXCRCommand() {
     override fun getOutputFiles() = listOf(out)
 
     // Perform parameters overriding
-    private val fullSeqAssemblerParameters: FullSeqAssemblerParameters
-        get() {
-            var p = FullSeqAssemblerParameters.getByName("default")
-            if (!overrides.isEmpty()) {
-                // Perform parameters overriding
-                p = JsonOverrider.override(p, FullSeqAssemblerParameters::class.java, overrides)
-                if (p == null) throwValidationException("failed to override some parameter: $overrides")
-            }
-            return p
+    private val fullSeqAssemblerParameters: FullSeqAssemblerParameters by lazy {
+        var p = FullSeqAssemblerParameters.getByName("default")
+        if (overrides.isNotEmpty()) {
+            // Perform parameters overriding
+            p = JsonOverrider.override(p, FullSeqAssemblerParameters::class.java, overrides)
+            if (p == null) throwValidationException("failed to override some parameter: $overrides")
         }
+        if (cutByFeature != null) {
+            p.subCloningRegion = cutByFeature
+            p.assemblingRegion = cutByFeature
+            p.postFiltering = FullSeqAssemblerParameters.PostFiltering.OnlyFullyDefined
+        }
+        p
+    }
 
     private val reportBuilder = FullSeqAssemblerReportBuilder()
+
+    override fun validate() {
+        if (fullSeqAssemblerParameters.postFiltering != FullSeqAssemblerParameters.PostFiltering.NoFiltering) {
+            if (fullSeqAssemblerParameters.assemblingRegion != null) {
+                throwValidationException("assemblingRegion must be set if postFiltering is not NoFiltering")
+            }
+        }
+    }
 
     override fun run0() {
         val beginTimestamp = System.currentTimeMillis()
@@ -146,6 +145,19 @@ class CommandAssembleContigs : MiXCRCommand() {
         val ordering: CloneOrdering
         val reports: List<MiXCRCommandReport>
         ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
+            require(reader.assemblingFeatures.size == 1) {
+                "Supports only singular assemblingFeature."
+            }
+            val assemblingFeature = reader.assemblingFeatures.first()
+            require(!assemblingFeature.isComposite) {
+                "Supports only non-composite gene features as an assemblingFeature."
+            }
+            fullSeqAssemblerParameters.assemblingRegion?.let { assemblingRegion ->
+                require(GeneFeature.intersection(assemblingRegion, assemblingFeature) == assemblingFeature) {
+                    "AssemblingFeature of input must be included fully in assemblingRegion"
+                }
+            }
+
             PrimitivO(BufferedOutputStream(FileOutputStream(out))).use { tmpOut ->
                 debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it))) }.use { debugReport ->
                     reports = reader.reports()
@@ -270,7 +282,6 @@ class CommandAssembleContigs : MiXCRCommand() {
                             }
 
                             return@mapInParallel fullSeqAssembler.callVariants(rawVariantsData)
-                                .cutByGeneFeature(reader)
                         } catch (re: Throwable) {
                             throw RuntimeException("While processing clone #" + clone.id, re)
                         }
@@ -312,106 +323,6 @@ class CommandAssembleContigs : MiXCRCommand() {
             writer.writeFooter(reports, report)
         }
     }
-
-    private fun Array<Clone>.cutByGeneFeature(reader: CloneReader): Array<Clone> {
-        val cutByFeature = cutByFeature ?: return this
-        val assemblingFeatures = cutByFeature
-            .map { GeneFeature(it.begin, it.end) }
-            .toTypedArray()
-        val cloneFactory = CloneFactory(
-            reader.assemblerParameters.cloneFactoryParameters,
-            assemblingFeatures,
-            reader.usedGenes,
-            reader.alignerParameters.featuresToAlignMap
-        )
-
-        val geneFeatureToMatch = VJPair(
-            V = GeneFeature.intersection(cutByFeature, GeneFeature(UTR5Begin, CDR3Begin)),
-            J = GeneFeature.intersection(cutByFeature, GeneFeature(CDR3End, FR4End))
-        )
-        return mapNotNull { clone ->
-            clone.removeTargetsNotCoveredBy(geneFeatureToMatch)
-        }
-            .map { clone ->
-                val cutTargets = assemblingFeatures
-                    .map { clone.getFeature(it) }
-                    .toTypedArray()
-                val geneScores = EnumMap<GeneType, List<GeneAndScore>>(GeneType::class.java)
-                for (gt in VDJC_REFERENCE) {
-                    geneScores[gt] = clone.getHits(gt).map { hit -> hit.geneAndScore }
-                }
-
-                cloneFactory.create(
-                    clone.id,
-                    clone.count,
-                    geneScores,
-                    clone.tagCount,
-                    cutTargets,
-                    clone.group
-                )
-            }
-            .toTypedArray()
-    }
-
-    private fun Clone.removeTargetsNotCoveredBy(geneFeatureToMatch: VJPair<GeneFeature>): Clone? {
-        var VJHits = VJPair(
-            getHits(Variable),
-            getHits(Joining)
-        ).map { hits ->
-            hits.filter { hit -> hit.alignmentsCover(geneFeatureToMatch) }
-        }
-        if (VJHits.V.isEmpty() || VJHits.J.isEmpty()) return null
-        VJHits = VJHits.map { hits -> hits.removeAlignmentsNotCoveredBy(geneFeatureToMatch) }
-
-        val targetIndexesWithAlignments = (VJHits.V + VJHits.J + (getHits(Diversity) ?: emptyArray()))
-            .filterNotNull()
-            .flatMap { hit ->
-                (0 until hit.numberOfTargets())
-                    .filter { i -> hit.getAlignment(i) != null }
-            }
-            .distinct()
-            .sorted()
-
-        VJHits = VJHits.map { hits ->
-            hits.map { hit -> hit.filterAlignmentsByTargetIndexes(targetIndexesWithAlignments) }
-        }
-        val resultHits = EnumMap(hits)
-        resultHits[Variable] = VJHits.V.toTypedArray()
-        resultHits[Joining] = VJHits.J.toTypedArray()
-        return Clone(
-            targetIndexesWithAlignments.map { getTarget(it) }.toTypedArray(),
-            resultHits,
-            tagCount,
-            count,
-            id,
-            group
-        )
-    }
-
-    private fun List<VDJCHit>.removeAlignmentsNotCoveredBy(geneFeatureToMatch: VJPair<GeneFeature>) =
-        filter { it.alignmentsCover(geneFeatureToMatch) }
-            .map { hit ->
-                var result = hit
-                val partitioning = hit.gene.partitioning.getRelativeReferencePoints(hit.alignedFeature)
-                val rangesToMatch = partitioning.getRanges(geneFeatureToMatch[hit.geneType])
-
-                for (i in 0 until hit.numberOfTargets()) {
-                    val alignment: Alignment<NucleotideSequence>? = hit.getAlignment(i)
-                    if (alignment != null && rangesToMatch.none { toMatch -> toMatch in alignment.sequence1Range }) {
-                        result = hit.setAlignment(i, null)
-                    }
-                }
-                result
-            }
-
-    private fun VDJCHit.filterAlignmentsByTargetIndexes(targetIndexesWithAlignments: List<Int>): VDJCHit {
-        val filteredAlignments: Array<Alignment<NucleotideSequence>?> =
-            Array(targetIndexesWithAlignments.size) { i ->
-                getAlignment(targetIndexesWithAlignments[i])
-            }
-        return VDJCHit(gene, filteredAlignments, alignedFeature)
-    }
-
 
     companion object {
         const val ASSEMBLE_CONTIGS_COMMAND_NAME = "assembleContigs"

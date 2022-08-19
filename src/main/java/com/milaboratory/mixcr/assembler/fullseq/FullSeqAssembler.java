@@ -41,6 +41,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters.PostFiltering.NoFiltering;
+import static com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters.PostFiltering.OnlyFullyDefined;
 import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
 
@@ -56,50 +58,94 @@ public final class FullSeqAssembler {
     private static final int ASSEMBLING_FEATURE_VARIANT_INDEX = NucleotideSequence.ALPHABET.basicSize() + 1;
     private static final int N_VARIANT_INDEX = NucleotideSequence.ALPHABET.basicSize() + 2;
 
-    /** number of letters to the left of reference V gene in the global coordinate grid */
+    /**
+     * number of letters to the left of reference V gene in the global coordinate grid
+     */
     private static final int N_LEFT_DUMMIES = 1 << 14; // fixme
-    /** clone factory */
+    /**
+     * clone factory
+     */
     final CloneFactory cloneFactory;
-    /** initial clone */
+    /**
+     * initial clone
+     */
     final Clone clone;
-    /** clone assembled feature (must cover CDR3) */
+    /**
+     * clone assembled feature (must cover CDR3)
+     */
     final GeneFeature assemblingFeature;
-    /** top hit genes */
+    /**
+     * top hit genes
+     */
     final VDJCGenes genes;
-    /** whether V/J genes are aligned */
+    /**
+     * whether V/J genes are aligned
+     */
     final boolean hasV, hasJ; // always trues for now
-    /** length of aligned part of reference V gene */
+    /**
+     * length of aligned part of reference V gene
+     */
     final int lengthV;
-    /** length of aligned part of reference J gene */
+    /**
+     * length of aligned part of reference J gene
+     */
     final int jLength;
-    /** position of assembling feature in global grid (just "one letter") */
+    /**
+     * position of assembling feature in global grid (just "one letter")
+     */
     final int positionOfAssemblingFeature;
-    /** variant id of assembling feature of the target clonotype */
+    /**
+     * variant id of assembling feature of the target clonotype
+     */
     final int clonalAssemblingFeatureVariantIndex;
-    /** length of assembling feature in the clone */
+    /**
+     * length of assembling feature in the clone
+     */
     final int assemblingFeatureLength; // = 1
-    /** begin of the aligned J part in the reference J gene */
+    /**
+     * begin of the aligned J part in the reference J gene
+     */
     final int jOffset;
-    /** end of alignment of V gene in the global coordinate grid */
+    /**
+     * end of alignment of V gene in the global coordinate grid
+     */
     final int rightAssemblingFeatureBound;
-    /** splitting region in global coordinates */
+    /**
+     * splitting region in global coordinates
+     */
     final Range splitRegion;
-    /** parameters */
+    /**
+     * parameters
+     */
     final FullSeqAssemblerParameters parameters;
-    /** minimal sum quality, even for decisive sum quality */
+    /**
+     * minimal sum quality, even for decisive sum quality
+     */
     final long requiredMinimalSumQuality;
-    /** aligner parameters */
+    /**
+     * aligner parameters
+     */
     final VDJCAlignerParameters alignerParameters;
-    /** nucleotide sequence -> its integer index */
+    /**
+     * nucleotide sequence -> its integer index
+     */
     final TObjectIntHashMap<NucleotideSequence> sequenceToVariantId =
             new TObjectIntHashMap<>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);
-    /** integer index -> nucleotide sequence */
+    /**
+     * integer index -> nucleotide sequence
+     */
     final TIntObjectHashMap<NucleotideSequence> variantIdToSequence = new TIntObjectHashMap<>();
-    /** tag tuple -> its integer group index */
+    /**
+     * tag tuple -> its integer group index
+     */
     final TObjectIntHashMap<TagTuple> tagTupleToGroup;
-    /** integer group index -> tag tuple */
+    /**
+     * integer group index -> tag tuple
+     */
     final TIntObjectHashMap<TagTuple> groupToTagTuple;
-    /** base hits */
+    /**
+     * base hits
+     */
     final VDJCHit vHit, jHit;
 
     public FullSeqAssembler(CloneFactory cloneFactory,
@@ -284,9 +330,21 @@ public final class FullSeqAssembler {
 
         Clone[] result = branchSequences.stream()
                 .map(branch -> buildClone(clean(branch)))
+                .filter(clone -> {
+                    if (parameters.postFiltering != NoFiltering) {
+                        for (GeneFeature.ReferenceRange range : Objects.requireNonNull(parameters.assemblingRegion)) {
+                            NucleotideSequence nFeature = clone.getNFeature(new GeneFeature(range.begin, range.end));
+                            if (nFeature == null) return false;
+                            if (parameters.postFiltering == OnlyFullyDefined && nFeature.containsWildcards()) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                })
                 .toArray(Clone[]::new);
 
-        if (result.length == 0) {
+        if (result.length == 0 && parameters.postFiltering == NoFiltering) {
             // In case assemble procedure failed to assemble even a single clonotype, returning original
             // clonotype, to prevent diversity losses
             report.onEmptyOutput(clone);
@@ -1733,12 +1791,12 @@ public final class FullSeqAssembler {
         //                 ? null
         //                 : vHit.getAlignment(iTarget);
 
-        final Optional<VDJCHit> vHit = Arrays.stream(alignments.getHits(Variable) == null ? new VDJCHit[0] : alignments.getHits(Variable))
+        final Optional<VDJCHit> vHit = Arrays.stream(alignments.getHits(Variable))
                 .filter(hit -> hit != null && Objects.equals(genes.v, hit.getGene()))
                 .findFirst();
         Alignment<NucleotideSequence> vAlignment = vHit
                 .map(hit -> hit.getAlignment(iTarget))
-                .filter(al -> al != null && al.getSequence1Range().getFrom() <= lengthV)
+                .filter(al -> al.getSequence1Range().getFrom() <= lengthV)
                 .orElse(null);
 
         // VDJCHit jHit = alignments.getBestHit(Joining);
@@ -1750,12 +1808,12 @@ public final class FullSeqAssembler {
         //                 ? null
         //                 : jHit.getAlignment(iTarget);
 
-        final Optional<VDJCHit> jHit = Arrays.stream(alignments.getHits(Joining) == null ? new VDJCHit[0] : alignments.getHits(Joining))
+        final Optional<VDJCHit> jHit = Arrays.stream(alignments.getHits(Joining))
                 .filter(hit -> hit != null && Objects.equals(genes.j, hit.getGene()))
                 .findFirst();
         Alignment<NucleotideSequence> jAlignment = jHit
                 .map(hit -> hit.getAlignment(iTarget))
-                .filter(al -> al != null && al.getSequence1Range().getTo() >= jOffset)
+                .filter(al -> al.getSequence1Range().getTo() >= jOffset)
                 .orElse(null);
 
         VDJCPartitionedSequence target = alignments.getPartitionedTarget(iTarget,
@@ -1766,55 +1824,144 @@ public final class FullSeqAssembler {
         NSequenceWithQuality targetSeq = alignments.getTarget(iTarget);
 
         List<PointSequence> points = new ArrayList<>();
-        if (target.getPartitioning().isAvailable(assemblingFeature.getFirstPoint())) {
-            // This target contains left edge of the assembling feature
-            int leftStop = target.getPartitioning().getPosition(assemblingFeature.getFirstPoint());
-            if (hasV) {
-                if (vAlignment != null)
-                    toPointSequencesByAlignments(points,
+        if (hasV) {
+            if (vAlignment != null) {
+                if (parameters.assemblingRegion != null) {
+                    @SuppressWarnings("OptionalGetWithoutIsPresent")
+                    GeneFeature alignedVFeature = vHit.get().getAlignedFeature();
+                    for (GeneFeature.ReferenceRange range : parameters.assemblingRegion) {
+                        GeneFeature intersection = GeneFeature.intersection(alignedVFeature, new GeneFeature(range.begin, range.end));
+                        // No intersection:
+                        //                          |    assemblingRegion            |
+                        // target  -----|---------|-------------------------------------->
+                        if (intersection != null) {
+                            GeneFeature bounds;
+                            if (intersection.contains(assemblingFeature.getFirstPoint())) {
+                                //                       |    assemblingRegion            |
+                                //                               | assemblingFeature |
+                                // target        -----|----------------|-------------------------------------->
+                                // intersection  --------|-------------|-------------------------------------->
+                                //                       |       |
+                                //                 leftBound   rightBound
+                                bounds = new GeneFeature(intersection.getFirstPoint(), assemblingFeature.getFirstPoint());
+                            } else {
+                                //                       |           assemblingRegion              |
+                                //                                          | assemblingFeature |
+                                // target        -----|----------------|-------------------------------------->
+                                // intersection  --------|-------------|-------------------------------------->
+                                //                       |             |
+                                //                  leftBound     rightBound
+                                bounds = intersection;
+                            }
+                            toPointSequencesByAlignments(
+                                    points,
+                                    vAlignment,
+                                    targetSeq,
+                                    new Range(
+                                            target.getPartitioning().getPosition(bounds.getFirstPoint()),
+                                            target.getPartitioning().getPosition(bounds.getLastPoint())
+                                    ),
+                                    N_LEFT_DUMMIES
+                            );
+                        }
+                    }
+                } else {
+                    int leftBound;
+                    if (parameters.alignedRegionsOnly) {
+                        leftBound = vAlignment.getSequence2Range().getFrom();
+                    } else {
+                        leftBound = 0;
+                    }
+                    int rightBound;
+                    if (target.getPartitioning().isAvailable(assemblingFeature.getFirstPoint())) {
+                        // This target contains left edge of the assembling feature
+                        rightBound = target.getPartitioning().getPosition(assemblingFeature.getFirstPoint());
+                    } else {
+                        // This target ends before beginning (left edge) of the assembling feature
+                        rightBound = vAlignment.getSequence2Range().getTo();
+                    }
+                    toPointSequencesByAlignments(
+                            points,
                             vAlignment,
                             targetSeq,
-                            new Range(
-                                    parameters.alignedRegionsOnly ? vAlignment.getSequence2Range().getFrom() : 0,
-                                    leftStop),
-                            N_LEFT_DUMMIES);
-            } else if (!parameters.alignedRegionsOnly)
+                            new Range(leftBound, rightBound),
+                            N_LEFT_DUMMIES
+                    );
+                }
+            }
+        } else if (!parameters.alignedRegionsOnly && parameters.assemblingRegion == null) {
+            if (target.getPartitioning().isAvailable(assemblingFeature.getFirstPoint())) {
+                int leftStop = target.getPartitioning().getPosition(assemblingFeature.getFirstPoint());
                 toPointSequencesNoAlignments(points, targetSeq, new Range(0, leftStop), N_LEFT_DUMMIES - leftStop);
-        } else if (hasV && vAlignment != null)
-            // This target ends before beginning (left edge) of the assembling feature
-            toPointSequencesByAlignments(points,
-                    vAlignment,
-                    targetSeq,
-                    new Range(
-                            parameters.alignedRegionsOnly ? vAlignment.getSequence2Range().getFrom() : 0,
-                            vAlignment.getSequence2Range().getTo()),
-                    N_LEFT_DUMMIES);
+            }
+        }
 
-        if (target.getPartitioning().isAvailable(assemblingFeature.getLastPoint())) {
-            // This target contains right edge of the assembling feature
-            int rightStart = target.getPartitioning().getPosition(assemblingFeature.getLastPoint());
-            if (hasJ) {
-                if (jAlignment != null)
+        if (hasJ) {
+            if (jAlignment != null) {
+                if (parameters.assemblingRegion != null) {
+                    GeneFeature alignedJFeature = jHit.get().getAlignedFeature();
+                    for (GeneFeature.ReferenceRange range : parameters.assemblingRegion) {
+                        GeneFeature intersection = GeneFeature.intersection(alignedJFeature, new GeneFeature(range.begin, range.end));
+                        // No intersection:
+                        //           |    assemblingRegion            |
+                        // target  ----------------------------------------|-------|----->
+                        if (intersection != null) {
+                            GeneFeature bounds;
+                            if (intersection.contains(assemblingFeature.getLastPoint())) {
+                                //                 |    assemblingRegion                    |
+                                //                          | assemblingFeature |
+                                // target        ---------------------------|---------------------|----------->
+                                // intersection  ---------------------------|---------------|----------------->
+                                //                                              |           |
+                                //                                         leftBound   rightBound
+                                bounds = new GeneFeature(assemblingFeature.getLastPoint(), intersection.getLastPoint());
+                            } else {
+                                //                 |    assemblingRegion                    |
+                                //                          | assemblingFeature |
+                                // target        ----------------------------------|--------------|----------->
+                                // intersection  ----------------------------------|--------|----------------->
+                                //                                                 |        |
+                                //                                            leftBound   rightBound
+                                bounds = intersection;
+                            }
+                            toPointSequencesByAlignments(
+                                    points,
+                                    jAlignment,
+                                    targetSeq,
+                                    new Range(
+                                            target.getPartitioning().getPosition(bounds.getFirstPoint()),
+                                            target.getPartitioning().getPosition(bounds.getLastPoint())
+                                    ),
+                                    N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset
+                            );
+                        }
+                    }
+                } else {
+                    int leftBound;
+                    if (target.getPartitioning().isAvailable(assemblingFeature.getLastPoint())) {
+                        // This target contains right edge of the assembling feature
+                        leftBound = target.getPartitioning().getPosition(assemblingFeature.getLastPoint());
+                    } else {
+                        // This target starts after the end (right edge) of the assembling feature
+                        leftBound = jAlignment.getSequence2Range().getFrom();
+                    }
+                    int rightBound = parameters.alignedRegionsOnly ? jAlignment.getSequence2Range().getTo() : targetSeq.size();
                     toPointSequencesByAlignments(points,
                             jAlignment,
                             targetSeq,
-                            new Range(rightStart,
-                                    parameters.alignedRegionsOnly
-                                            ? jAlignment.getSequence2Range().getTo()
-                                            : targetSeq.size()),
-                            N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset);
-            } else
+                            new Range(
+                                    leftBound,
+                                    rightBound),
+                            N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset
+                    );
+                }
+            }
+        } else if (!parameters.alignedRegionsOnly && parameters.assemblingRegion == null) {
+            if (target.getPartitioning().isAvailable(assemblingFeature.getLastPoint())) {
+                int rightStart = target.getPartitioning().getPosition(assemblingFeature.getLastPoint());
                 toPointSequencesNoAlignments(points, targetSeq, new Range(rightStart, targetSeq.size()), N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - rightStart);
-        } else if (hasJ && jAlignment != null)
-            // This target starts after the end (right edge) of the assembling feature
-            toPointSequencesByAlignments(points,
-                    jAlignment,
-                    targetSeq,
-                    new Range(jAlignment.getSequence2Range().getFrom(),
-                            parameters.alignedRegionsOnly
-                                    ? jAlignment.getSequence2Range().getTo()
-                                    : targetSeq.size()),
-                    N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset);
+            }
+        }
 
         return points;
     }
