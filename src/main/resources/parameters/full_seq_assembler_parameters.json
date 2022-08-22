@@ -9,7 +9,7 @@
     "minimalMeanNormalizedQuality": 5.0,
     "alignmentEdgeRegionSize": 7,
     "minimalNonEdgePointsFraction": 0.25,
-    "subCloningRegion": null,
+    "subCloningRegions": null,
     "trimmingParameters": {
       "averageQualityThreshold": 10.0,
       "windowSize": 8

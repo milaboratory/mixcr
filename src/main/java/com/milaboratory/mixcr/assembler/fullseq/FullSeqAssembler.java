@@ -113,7 +113,7 @@ public final class FullSeqAssembler {
     /**
      * splitting region in global coordinates
      */
-    final Range splitRegion;
+    final Range[] splitRegions;
     /**
      * parameters
      */
@@ -219,15 +219,6 @@ public final class FullSeqAssembler {
             this.lengthV =
                     gene.getPartitioning().getLength(vFeature)
                             - gene.getFeature(GeneFeature.intersection(assemblingFeature, vFeature)).size();
-            if (parameters.getSubCloningRegion() != null) {
-                int p = gene.getPartitioning().getRelativePosition(vFeature, parameters.getSubCloningRegion().getFirstPoint());
-                if (p != -1)
-                    splitRegionBegin = N_LEFT_DUMMIES + p;
-
-                p = gene.getPartitioning().getRelativePosition(vFeature, parameters.getSubCloningRegion().getLastPoint());
-                if (p != -1)
-                    splitRegionEnd = N_LEFT_DUMMIES + p;
-            }
         } else
             this.lengthV = 0;
 
@@ -239,25 +230,47 @@ public final class FullSeqAssembler {
             GeneFeature jFeature = baseJHit.getAlignedFeature();
             this.jOffset = gene.getPartitioning().getRelativePosition(jFeature, assemblingFeature.getLastPoint());
             this.jLength = gene.getPartitioning().getLength(jFeature) - jOffset;
-
-            if (parameters.getSubCloningRegion() != null) {
-                int p = gene.getPartitioning().getRelativePosition(jFeature, parameters.getSubCloningRegion().getLastPoint());
-                if (p != -1)
-                    splitRegionEnd = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset + p;
-
-                p = gene.getPartitioning().getRelativePosition(jFeature, parameters.getSubCloningRegion().getFirstPoint());
-                if (p != -1)
-                    splitRegionBegin = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset + p;
-            }
         } else {
             this.jOffset = 0;
             this.jLength = 0;
         }
 
-        if (splitRegionBegin != -1 && splitRegionEnd != -1)
-            this.splitRegion = new Range(splitRegionBegin, splitRegionEnd);
-        else
-            this.splitRegion = null;
+        if (parameters.getSubCloningRegions() != null) {
+            List<Range> result = new ArrayList<>();
+            for (GeneFeature subCloningRegion : parameters.getSubCloningRegions().getFeatures()) {
+                if (hasJ) {
+                    VDJCGene gene = baseJHit.getGene();
+                    GeneFeature jFeature = baseJHit.getAlignedFeature();
+
+                    int p = gene.getPartitioning().getRelativePosition(jFeature, subCloningRegion.getFirstPoint());
+                    if (p != -1)
+                        splitRegionBegin = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset + p;
+
+                    p = gene.getPartitioning().getRelativePosition(jFeature, subCloningRegion.getLastPoint());
+                    if (p != -1)
+                        splitRegionEnd = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength - jOffset + p;
+                }
+
+                if (hasV) {
+                    GeneFeature vFeature = baseVHit.getAlignedFeature();
+                    VDJCGene gene = baseVHit.getGene();
+                    int p = gene.getPartitioning().getRelativePosition(vFeature, subCloningRegion.getFirstPoint());
+                    if (p != -1)
+                        splitRegionBegin = N_LEFT_DUMMIES + p;
+
+                    p = gene.getPartitioning().getRelativePosition(vFeature, subCloningRegion.getLastPoint());
+                    if (p != -1)
+                        splitRegionEnd = N_LEFT_DUMMIES + p;
+                }
+                if (splitRegionBegin == -1 || splitRegionEnd == -1) {
+                    throw new IllegalArgumentException("subCloningRegion " + subCloningRegion + " can't be found in aligned features");
+                }
+                result.add(new Range(splitRegionBegin, splitRegionEnd));
+            }
+            this.splitRegions = result.toArray(new Range[0]);
+        } else {
+            this.splitRegions = null;
+        }
 
         this.rightAssemblingFeatureBound = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength;
     }
@@ -352,7 +365,7 @@ public final class FullSeqAssembler {
         }
 
         if (report != null)
-            report.afterVariantsClustered(clone, result, parameters.getSubCloningRegion());
+            report.afterVariantsClustered(clone, result, parameters.getSubCloningRegions());
 
         return result;
     }
@@ -1017,7 +1030,7 @@ public final class FullSeqAssembler {
             tmp[0] = substituteAlignments(tmp[0], jHitAlignments);
 
         TagCount tagCount = this.clone.getTagCount();
-        if (tagCount != null && targets.groups != null && splitRegion != null) {
+        if (tagCount != null && targets.groups != null && splitRegions != null) {
             Set<TagTuple> tagTuples = new HashSet<>();
             TIntIterator it = targets.groups.iterator();
             while (it.hasNext())
@@ -2072,7 +2085,11 @@ public final class FullSeqAssembler {
     }
 
     private boolean inSplitRegion(int p) {
-        return splitRegion != null && splitRegion.contains(p);
+        if (splitRegions == null) return true;
+        for (Range splitRegion : splitRegions) {
+            if (splitRegion.contains(p)) return true;
+        }
+        return false;
     }
 
     /**

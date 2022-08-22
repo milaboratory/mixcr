@@ -122,11 +122,11 @@ class CommandAssembleContigs : MiXCRCommand() {
             p = overrode
         }
         cutByFeature?.let { cutByFeature ->
-            if (p.subCloningRegion != null) warn("subCloningRegion already set")
+            if (p.subCloningRegions != null) warn("subCloningRegion already set")
             if (p.assemblingRegions != null) warn("assemblingRegions already set")
             if (p.postFiltering != NoFiltering) warn("assemblingRegions already set")
             p = p.copy(
-                subCloningRegion = cutByFeature.features.first(),
+                subCloningRegions = cutByFeature,
                 assemblingRegions = cutByFeature,
                 postFiltering = OnlyFullyDefined
             )
@@ -321,7 +321,7 @@ class CommandAssembleContigs : MiXCRCommand() {
         }
         val resultInfo = if (
             assemblerParameters.assemblingRegions != null &&
-            assemblerParameters.subCloningRegion == assemblerParameters.assemblingRegions.features.first() &&
+            assemblerParameters.subCloningRegions == assemblerParameters.assemblingRegions &&
             assemblerParameters.postFiltering == OnlyFullyDefined
         ) {
             info.copy(allFullyCoveredBy = assemblerParameters.assemblingRegions)

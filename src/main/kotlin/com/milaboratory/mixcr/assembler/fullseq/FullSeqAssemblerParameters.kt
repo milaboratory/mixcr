@@ -11,19 +11,12 @@
  */
 package com.milaboratory.mixcr.assembler.fullseq
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.util.ParametersPresets
-import io.repseq.core.GeneFeature
 
-@JsonAutoDetect(
-    fieldVisibility = JsonAutoDetect.Visibility.ANY,
-    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-    getterVisibility = JsonAutoDetect.Visibility.NONE
-)
 data class FullSeqAssemblerParameters @JsonCreator constructor(
     /**
      * Minimal quality fraction (variant may be marked significant if `variantQuality > totalSumQuality *
@@ -74,7 +67,7 @@ data class FullSeqAssemblerParameters @JsonCreator constructor(
      * nucleotides is observed, algorithm will produce "N" letter in the corresponding contig position to indicate the
      * ambiguity. Null - means no subcloning region, and guarantees one to one input to output clonotype correspondence.
      */
-    @param:JsonProperty("subCloningRegion") val subCloningRegion: GeneFeature?,
+    @param:JsonProperty("subCloningRegions") val subCloningRegions: GeneFeatures?,
     /**
      * Limits the region of the sequence to assemble during the procedure, no nucleotides will be assembled outside it.
      * Null will result in assembly of the longest possible contig sequence.
