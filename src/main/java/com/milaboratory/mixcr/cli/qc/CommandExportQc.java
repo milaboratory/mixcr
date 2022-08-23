@@ -17,12 +17,6 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(name = "qc",
-        separator = " ",
-        description = "Export QC plots.",
-        subcommands = {
-                CommandLine.HelpCommand.class
-        })
 public abstract class CommandExportQc extends MiXCRCommand {
     @Option(names = "--width",
             description = "Plot width")
@@ -38,4 +32,12 @@ public abstract class CommandExportQc extends MiXCRCommand {
         else
             return null;
     }
+
+    @Command(name = "qc",
+            separator = " ",
+            description = "Export QC plots.",
+            subcommands = {
+                    CommandLine.HelpCommand.class
+            })
+    public static class CommandExportQcMain {}
 }

@@ -175,7 +175,7 @@ public final class Main {
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
                 .addSubcommand("exportReports", CommandExportReports.class)
-                .addSubcommand("exportQc", CommandExportQc.class)
+                .addSubcommand("exportQc", CommandExportQc.CommandExportQcMain.class)
 
                 .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
 

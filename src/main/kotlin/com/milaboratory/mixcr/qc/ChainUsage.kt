@@ -35,7 +35,7 @@ object ChainUsage {
         percent: Boolean,
         showNonFunctional: Boolean,
         chains: List<NamedChains>,
-        hw: SizeParameters?
+        hw: SizeParameters? = null
     ) =
         chainUsage(files, percent, showNonFunctional, chains, hw) {
             (it.first() as AlignerReport).chainUsage
@@ -46,7 +46,7 @@ object ChainUsage {
         percent: Boolean,
         showNonFunctional: Boolean,
         chains: List<NamedChains>,
-        hw: SizeParameters?
+        hw: SizeParameters? = null
     ) =
         chainUsage(files, percent, showNonFunctional, chains, hw) {
             it.filterIsInstance<CloneAssemblerReport>().first().clonalChainUsage
