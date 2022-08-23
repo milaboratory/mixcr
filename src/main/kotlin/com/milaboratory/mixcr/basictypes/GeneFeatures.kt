@@ -87,6 +87,8 @@ class GeneFeatures(
 
         override fun read(input: PrimitivI): GeneFeatures =
             GeneFeatures(input.readArray())
+
+        override fun isReference(): Boolean = true
     }
 
     companion object {
