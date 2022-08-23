@@ -20,6 +20,7 @@ import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
+import com.milaboratory.primitivio.writeObjectOptional
 import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCLibraryId
 import io.repseq.dto.VDJCLibraryData
@@ -77,17 +78,17 @@ data class MiXCRMetaInfo(
 
     class SerializerImpl : BasicSerializer<MiXCRMetaInfo>() {
         override fun write(output: PrimitivO, obj: MiXCRMetaInfo) {
-            output.writeObject(obj.tagPreset)
+            output.writeObjectOptional(obj.tagPreset)
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
-            output.writeObject(obj.assemblerParameters)
-            output.writeObject(obj.foundAlleles)
-            output.writeObject(obj.allFullyCoveredBy)
+            output.writeObjectOptional(obj.assemblerParameters)
+            output.writeObjectOptional(obj.foundAlleles)
+            output.writeObjectOptional(obj.allFullyCoveredBy)
         }
 
         override fun read(input: PrimitivI): MiXCRMetaInfo = MiXCRMetaInfo(
             input.readObjectOptional(),
-            input.readObjectOptional() ?: TagsInfo.NO_TAGS,
+            input.readObjectRequired(),
             input.readObjectRequired(),
             input.readObjectOptional(),
             input.readObjectOptional(),

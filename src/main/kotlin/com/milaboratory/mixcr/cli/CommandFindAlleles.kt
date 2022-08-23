@@ -208,7 +208,7 @@ class CommandFindAlleles : MiXCRCommand() {
         val VAlleles = allelesBuilder.searchForAlleles(Variable, progressAndStage, threads)
         val JAlleles = allelesBuilder.searchForAlleles(Joining, progressAndStage, threads)
 
-        val alleles: MutableMap<String, List<VDJCGeneData>> = (VAlleles + JAlleles).toMap(HashMap())
+        val alleles = (VAlleles + JAlleles).toMap(mutableMapOf())
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
         val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)
@@ -456,6 +456,7 @@ private class CloneRebuild(
                     positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.sequence1Range.upper))
                 )
                 val mutationsFromAllele = alignment.absoluteMutations.invert().combineWith(alleleMutations).invert()
+                //TODO realign sequence if alleleMutations have indels
                 val recalculatedScore = AlignmentUtils.calculateScore(
                     alleleMutations.mutate(alignment.sequence1),
                     seq1RangeAfterAlleleMutations,

@@ -25,7 +25,24 @@ import com.milaboratory.util.TempFileDest
 import net.jpountz.lz4.LZ4Compressor
 import java.util.concurrent.ThreadLocalRandom
 
-inline fun <reified T : Any> PrimitivI.readObjectOptional(): T? = readObject(T::class.java)
+fun <T : Any> PrimitivO.writeObjectOptional(obj: T?) {
+    if (obj == null) {
+        writeBoolean(false)
+    } else {
+        writeBoolean(true)
+        writeObject(obj)
+    }
+}
+
+inline fun <reified T : Any> PrimitivI.readObjectOptional(): T? {
+    val exist = readBoolean()
+    return if (exist) {
+        readObject(T::class.java)
+    } else {
+        null
+    }
+}
+
 inline fun <reified T : Any> PrimitivI.readObjectRequired(): T {
     val result = readObject(T::class.java)
     if (result != null) {
