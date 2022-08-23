@@ -11,7 +11,10 @@
  */
 package com.milaboratory.mixcr.vdjaligners;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
+
 public enum VDJCAlignmentFailCause {
+    @JsonEnumDefaultValue
     NoHits("Alignment failed, no hits (not TCR/IG?)", "No hits (not TCR/IG?)"),
     NoCDR3Parts("Alignment failed because of absence of CDR3 parts", "No CDR3 parts"),
     NoVHits("Alignment failed because of absence of V hits", "No V hits"),

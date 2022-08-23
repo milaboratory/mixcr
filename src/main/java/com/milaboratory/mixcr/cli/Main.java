@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.milaboratory.cli.ValidationException;
 import com.milaboratory.milm.MiXCRMain;
 import com.milaboratory.mixcr.cli.postanalysis.*;
@@ -60,6 +61,7 @@ public final class Main {
             MiXCRMain.lm.reportFeature("mixcr.subcommand2", args[1]);
 
         GlobalObjectMappers.addModifier(om -> om.registerModule(kotlinModule(builder -> Unit.INSTANCE)));
+        GlobalObjectMappers.addModifier(om -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE));
 
         handleParseResult(parseArgs(args).getParseResult(), args);
     }
