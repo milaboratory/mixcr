@@ -242,7 +242,7 @@ public class CommandCorrectAndSortTags extends MiXCRCommand {
                     }
                 }
 
-                correctionResult = corrector.correct(cInput, tagNames, whitelists, mainReader);
+                correctionResult = corrector.calculate(cInput, tagNames, whitelists, mainReader);
                 mitoolReport = corrector.getReport();
             } else {
                 correctionResult = null;
