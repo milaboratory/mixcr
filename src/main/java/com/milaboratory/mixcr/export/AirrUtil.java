@@ -20,7 +20,9 @@ import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.export.AirrColumns.ComplexReferencePoint;
 import com.milaboratory.util.BitArray;
 import com.milaboratory.util.StringUtil;
+import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 import io.repseq.util.IMGTPadding;
 
 import java.util.*;
@@ -31,6 +33,7 @@ import static io.repseq.core.ReferencePoint.*;
 
 public final class AirrUtil {
     public static final char PADDING_CHARACTER = '.';
+    private static final GeneFeature V_CORE = new GeneFeature(FR1Begin, FR3End);
 
     private AirrUtil() {
     }
@@ -90,31 +93,56 @@ public final class AirrUtil {
             Alignment<NucleotideSequence> al = bestHit.getAlignment(targetId);
             if (al == null)
                 continue;
+
+            VDJCGene gene = bestHit.getGene();
             actualGeneTypes.add(gt);
+
+            GeneFeature refGeneFeature = bestHit.getAlignedFeature();
+
+            // Incomplete V gene feature correction
+            {
+                GeneFeature extensionFeature;
+                if (gt == Variable
+                        && FR1Begin.compareTo(refGeneFeature.getFirstPoint()) < 0
+                        && gene.getPartitioning().isAvailable(extensionFeature = new GeneFeature(FR1Begin, refGeneFeature.getFirstPoint()))) {
+                    NucleotideSequence leftExtension = gene.getFeature(extensionFeature);
+                    refGeneFeature = new GeneFeature(extensionFeature, refGeneFeature);
+                    al = new Alignment<>(
+                            leftExtension.concatenate(al.getSequence1()),
+                            al.getAbsoluteMutations().move(leftExtension.size()),
+                            al.getSequence1Range().move(leftExtension.size()),
+                            al.getSequence2Range(),
+                            al.getScore()
+                    );
+                    // TODO update best hit ???
+                }
+            }
+
             bestHits.put(gt, bestHit);
             alignments.add(al.invert(target));
 
             // IMGT related code below
 
+            NucleotideSequence refGeneSequence = al.getSequence1();
             if (gt == Variable) {
-                cdr3Begin = bestHit.getGene().getPartitioning().getRelativePosition(bestHit.getAlignedFeature(), CDR3Begin);
-                int fr1Begin = bestHit.getGene().getPartitioning().getRelativePosition(bestHit.getAlignedFeature(), FR1Begin);
+                cdr3Begin = gene.getPartitioning().getRelativePosition(refGeneFeature, CDR3Begin);
+                int fr1Begin = gene.getPartitioning().getRelativePosition(refGeneFeature, FR1Begin);
                 if (fr1Begin >= 0) { // in case gene has no anchor point for the position
                     leftVDJPadding = al.getSequence1Range().getFrom() - fr1Begin;
                     if (leftVDJPadding > 0) {
                         leftVDJExtraRange = new Range(fr1Begin, al.getSequence1Range().getFrom());
-                        leftVDJExtra = al.getSequence1().getRange(leftVDJExtraRange);
+                        leftVDJExtra = refGeneSequence.getRange(leftVDJExtraRange);
                     }
                 }
             }
             if (gt == Joining) {
-                cdr3End = bestHit.getGene().getPartitioning().getRelativePosition(bestHit.getAlignedFeature(), CDR3End);
-                int fr4End = bestHit.getGene().getPartitioning().getRelativePosition(bestHit.getAlignedFeature(), FR4End);
+                cdr3End = gene.getPartitioning().getRelativePosition(refGeneFeature, CDR3End);
+                int fr4End = gene.getPartitioning().getRelativePosition(refGeneFeature, FR4End);
                 if (fr4End >= 0) { // in case gene has no anchor point for the position
                     rightVDJPadding = fr4End - al.getSequence1Range().getTo();
                     if (rightVDJPadding > 0) {
                         rightVDJExtraRange = new Range(al.getSequence1Range().getTo(), fr4End);
-                        rightVDJExtra = al.getSequence1().getRange(al.getSequence1Range().getTo(), fr4End);
+                        rightVDJExtra = refGeneSequence.getRange(al.getSequence1Range().getTo(), fr4End);
                     }
                 }
             }
@@ -122,8 +150,8 @@ public final class AirrUtil {
             if (!validPaddings)
                 continue;
 
-            List<IMGTPadding> germlinePaddings = IMGTPadding.calculateForSequence(bestHit.getGene().getPartitioning(),
-                    bestHit.getAlignedFeature());
+            List<IMGTPadding> germlinePaddings = IMGTPadding.calculateForSequence(gene.getPartitioning(),
+                    refGeneFeature);
             if (germlinePaddings == null)
                 validPaddings = false;
 
