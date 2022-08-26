@@ -43,8 +43,10 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Command(separator = " ",
-        description = "Build cloneset overlap and export into tab delimited file."
+@Command(
+        separator = " ",
+        description = "Build cloneset overlap and export into tab delimited file.",
+        sortOptions = false
 )
 public class CommandExportOverlap extends MiXCRCommand {
     @Parameters(description = "cloneset.{clns|clna}... output.tsv")

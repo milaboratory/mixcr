@@ -22,7 +22,12 @@ import java.util.*
 abstract class FieldExtractorsFactory<T : Any> {
     val fields: Array<Field<T>> by lazy {
         val initialized = allAvailableFields()
-        check(initialized.map { it.priority }.distinct().size == initialized.size)
+        check(initialized.map { it.priority }.distinct().size == initialized.size) {
+            initialized.groupBy { it.priority }.values
+                .filter { it.size > 1 }
+                .map { fields -> fields.map { it.cmdArgName } }
+                .toString() + " have the same priority"
+        }
         check(initialized.map { it.cmdArgName }.distinct().size == initialized.size)
         initialized.sortedBy { it.priority }.toTypedArray()
     }
@@ -50,7 +55,7 @@ abstract class FieldExtractorsFactory<T : Any> {
 
     open fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec, addPresetOptions: Boolean) {
         if (addPresetOptions) {
-            val possibleValues = presets.keys.joinToString(",") { "'$it'" }
+            val possibleValues = presets.keys.joinToString(", ") { "'$it'" }
             spec.addOption(
                 CommandLine.Model.OptionSpec
                     .builder("-p", "--preset")
@@ -58,6 +63,7 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .required(false)
                     .type(String::class.java)
                     .arity("1")
+                    .paramLabel("<preset>")
                     .build()
             )
             spec.addOption(
@@ -67,6 +73,7 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .required(false)
                     .type(String::class.java)
                     .arity("1")
+                    .paramLabel("<presetFile>")
                     .build()
             )
             spec.addOption(
@@ -86,7 +93,8 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .required(false)
                     .type(if (field.nArguments > 0) Array<String>::class.java else Boolean::class.javaPrimitiveType)
                     .arity(field.nArguments.toString())
-                    .descriptionKey(field.cmdArgName + " " + field.metaVars)
+                    .paramLabel(field.metaVars)
+                    .hideParamSyntax(true)
                     .hidden(field.deprecation != null)
                     .build()
             )

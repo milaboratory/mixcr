@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
-import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
@@ -29,12 +28,12 @@ import picocli.CommandLine.Parameters
     description = ["Export SHMTree as a table with a row for every node"]
 )
 class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
-    @Parameters(arity = "2", description = ["trees.${shmFileExtension} trees.tsv"])
-    override var inOut: List<String> = ArrayList()
+    @Parameters(index = "1", description = ["trees.tsv"])
+    override lateinit var out: String
 
     override fun run0() {
-        InfoWriter<SplittedTreeNodeFieldsExtractorsFactory.Wrapper>(outputFiles.first()).use { output ->
-            SHMTreesReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
+        InfoWriter<SplittedTreeNodeFieldsExtractorsFactory.Wrapper>(out).use { output ->
+            SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val fieldExtractors =
                     SplittedTreeNodeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)
                 output.attachInfoProviders(fieldExtractors)

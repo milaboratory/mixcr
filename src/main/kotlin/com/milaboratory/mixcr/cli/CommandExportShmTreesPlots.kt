@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.miplots.writePDF
@@ -5,9 +16,10 @@ import com.milaboratory.mixcr.postanalysis.plots.AlignmentOption
 import com.milaboratory.mixcr.postanalysis.plots.SeqPattern
 import com.milaboratory.mixcr.postanalysis.plots.ShmTreePlotter
 import com.milaboratory.mixcr.postanalysis.plots.TreeFilter
-import com.milaboratory.mixcr.trees.SHMTreesWriter
 import io.repseq.core.GeneFeature
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Paths
 
 @Command(
@@ -16,8 +28,8 @@ import java.nio.file.Paths
     description = ["Visualize SHM tree and save in PDF format"]
 )
 class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
-    @Parameters(arity = "2", description = ["trees.${SHMTreesWriter.shmFileExtension} plots.pdf"])
-    override var inOut: List<String> = ArrayList()
+    @Parameters(index = "1", description = ["plots.pdf"])
+    override lateinit var out: String
 
     @Option(
         names = ["--metadata", "-m"],
@@ -119,7 +131,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     override fun validate() {
         super.validate()
-        if (!outputFile.endsWith(".pdf"))
+        if (!out.endsWith(".pdf"))
             throwValidationException("Output file must have .pdf extension")
     }
 
@@ -155,7 +167,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     override fun run0() {
         val plots = ShmTreePlotter(
-            Paths.get(inputFile).toAbsolutePath(),
+            Paths.get(`in`).toAbsolutePath(),
             metadata?.let { Paths.get(it).toAbsolutePath() },
             filter = filter,
             limit = limit,
@@ -167,7 +179,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         ).plots
 
         writePDF(
-            Paths.get(outputFile).toAbsolutePath(),
+            Paths.get(`in`).toAbsolutePath(),
             plots
         )
     }

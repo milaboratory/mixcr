@@ -117,7 +117,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format."""
     @CommandLine.Command(
         name = "exportAlignments",
         separator = " ",
-        sortOptions = true,
+        sortOptions = false,
         description = ["Export V/D/J/C alignments into tab delimited file."]
     )
     class CommandExportAlignments : CommandExport<VDJCAlignments>(VDJCAlignmentsFieldsExtractorsFactory) {
@@ -148,7 +148,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format."""
     @CommandLine.Command(
         name = "exportClones",
         separator = " ",
-        sortOptions = true,
+        sortOptions = false,
         description = ["Export assembled clones into tab delimited file."]
     )
     class CommandExportClones : CommandExport<Clone>(CloneFieldsExtractorsFactory) {

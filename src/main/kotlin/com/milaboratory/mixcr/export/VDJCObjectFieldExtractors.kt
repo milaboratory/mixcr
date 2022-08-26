@@ -483,7 +483,7 @@ object VDJCObjectFieldExtractors {
             sb.toString()
         }
         this += FieldParameterless(
-            Order.targets + 100,
+            Order.targets + 200,
             "-targetQualities",
             "Export aligned sequence (target) qualities, separated with comma",
             "Target sequence qualities", "targetQualities"
@@ -647,7 +647,7 @@ private fun VDJCObject.aaMutations(
     geneFeature: GeneFeature,
     relativeTo: GeneFeature = geneFeature
 ): Mutations<AminoAcidSequence>? =
-    extractMutations(geneFeature, relativeTo) { mutations, seq1, seq2, range, tr ->
+    extractMutations(geneFeature, relativeTo) { mutations, seq1, _, range, tr ->
         if (tr == null) return@extractMutations null
         val aaMutations = MutationsUtil.nt2aa(seq1, mutations, tr, MAX_SHIFTED_TRIPLETS) ?: return@extractMutations null
         val aaPosFrom =
@@ -660,7 +660,7 @@ private fun VDJCObject.mutationsDetailed(
     geneFeature: GeneFeature,
     relativeTo: GeneFeature = geneFeature
 ): String? =
-    extractMutations(geneFeature, relativeTo) { mutations, seq1, seq2, range, tr ->
+    extractMutations(geneFeature, relativeTo) { mutations, seq1, _, _, tr ->
         if (tr == null) return@extractMutations null
         val descriptors =
             MutationsUtil.nt2aaDetailed(seq1, mutations, tr, MAX_SHIFTED_TRIPLETS) ?: return@extractMutations null
