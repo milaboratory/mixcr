@@ -17,7 +17,6 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
 import jetbrains.letsPlot.*
 import jetbrains.letsPlot.geom.geomBar
 import jetbrains.letsPlot.label.ggtitle
-import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.label.ylab
 import jetbrains.letsPlot.sampling.samplingNone
@@ -32,7 +31,8 @@ object AlignmentQC {
 
     fun alignQc(
         files: List<Path>,
-        percent: Boolean = false
+        percent: Boolean = false,
+        hw: SizeParameters? = null
     ) = run {
         val file2report = files.associate { it.fileName.name to IOUtil.extractReports(it).first() as AlignerReport }
 
@@ -83,7 +83,7 @@ object AlignmentQC {
                 "#A03080",     // VDJCAlignmentFailCause.VAndJOnDifferentTargets
                 "#702084",     // VDJCAlignmentFailCause.LowTotalScore,
                 "#451777",     // VDJCAlignmentFailCause.NoBarcode,
-                "#2B125C",     // VDJCAlignmentFailCause.BarcodeNotInWhitelist
+//                "#2B125C",     // VDJCAlignmentFailCause.BarcodeNotInWhitelist
             ),
             breaks = listOf(
                 successfullyAligned,
@@ -94,18 +94,16 @@ object AlignmentQC {
                 VDJCAlignmentFailCause.VAndJOnDifferentTargets,
                 VDJCAlignmentFailCause.LowTotalScore,
                 VDJCAlignmentFailCause.NoBarcode,
-                VDJCAlignmentFailCause.BarcodeNotInWhitelist
             ),
             labels = listOf(
                 "Successfully aligned",
-                VDJCAlignmentFailCause.NoHits.reportLine,
-                VDJCAlignmentFailCause.NoCDR3Parts.reportLine,
-                VDJCAlignmentFailCause.NoVHits.reportLine,
-                VDJCAlignmentFailCause.NoJHits.reportLine,
-                VDJCAlignmentFailCause.VAndJOnDifferentTargets.reportLine,
-                VDJCAlignmentFailCause.LowTotalScore.reportLine,
-                VDJCAlignmentFailCause.NoBarcode.reportLine,
-                VDJCAlignmentFailCause.BarcodeNotInWhitelist.reportLine
+                VDJCAlignmentFailCause.NoHits.shortReportLine,
+                VDJCAlignmentFailCause.NoCDR3Parts.shortReportLine,
+                VDJCAlignmentFailCause.NoVHits.shortReportLine,
+                VDJCAlignmentFailCause.NoJHits.shortReportLine,
+                VDJCAlignmentFailCause.VAndJOnDifferentTargets.shortReportLine,
+                VDJCAlignmentFailCause.LowTotalScore.shortReportLine,
+                VDJCAlignmentFailCause.NoBarcode.shortReportLine,
             ),
             guide = guideLegend(ncol = 2)
         )
@@ -130,8 +128,11 @@ object AlignmentQC {
             .legendPositionTop()
             .legendDirectionVertical()
 
+        if (hw != null)
+            plt += ggsize(hw.width, hw.height)
+        else
+            plt += ggsize(1000, 300 + 35 * files.size)
 
-        plt += ggsize(1000, 300 + 35 * files.size)
 
         plt
     }

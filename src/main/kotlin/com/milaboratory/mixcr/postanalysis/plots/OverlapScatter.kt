@@ -84,6 +84,7 @@ object OverlapScatter {
             df = df.update { frac1 }.with { count1 / sum1 }
             df = df.update { frac2 }.with { count2 / sum2 }
             df = df.update { geomMean }.with { sqrt(frac1 * frac2) }
+            df = df.drop { count1 == 0.0 || count2 == 0.0 }
             df
         }
 
@@ -104,7 +105,7 @@ object OverlapScatter {
             df = df.update { frac2 }.with { log10(frac2) }
         }
         val plt = GGScatter(
-            df.drop { count1 == 0.0 || count2 == 0.0 },
+            df,
             x = OverlapScatterRow::frac1.name,
             y = OverlapScatterRow::frac2.name,
             alpha = 0.5
