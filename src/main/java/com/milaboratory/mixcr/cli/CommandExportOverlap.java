@@ -15,6 +15,7 @@ import cc.redberry.pipe.CUtils;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory;
 import com.milaboratory.mixcr.export.FieldExtractor;
 import com.milaboratory.mixcr.export.OutputMode;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
@@ -28,6 +29,7 @@ import io.repseq.core.Chains.NamedChains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
+import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -60,7 +62,9 @@ public class CommandExportOverlap extends MiXCRCommand {
             names = {"--criteria"})
     public String overlapCriteria = "CDR3|AA|V|J";
 
-    /** auto-generated opts (exporters) injected manually */
+    /**
+     * auto-generated opts (exporters) injected manually
+     */
     private CommandSpec spec;
 
     @Override
@@ -97,13 +101,15 @@ public class CommandExportOverlap extends MiXCRCommand {
 
         extractors.add(new ExtractorUnique(
                 new FieldExtractor<Clone>() {
+                    @NotNull
                     @Override
                     public String getHeader() {
                         return (criteria.isAA ? "aaSeq" : "nSeq") + GeneFeature.encode(criteria.feature);
                     }
 
+                    @NotNull
                     @Override
-                    public String extractValue(Clone object) {
+                    public String extractValue(@NotNull Clone object) {
                         return criteria.isAA
                                 ? object.getAAFeature(criteria.feature).toString()
                                 : object.getNFeature(criteria.feature).toString();
@@ -113,13 +119,15 @@ public class CommandExportOverlap extends MiXCRCommand {
         if (criteria.withV)
             extractors.add(new ExtractorUnique(
                     new FieldExtractor<Clone>() {
+                        @NotNull
                         @Override
                         public String getHeader() {
                             return "vGene";
                         }
 
+                        @NotNull
                         @Override
-                        public String extractValue(Clone object) {
+                        public String extractValue(@NotNull Clone object) {
                             return object.getBestHit(GeneType.Variable).getGene().getName();
                         }
                     }
@@ -127,13 +135,15 @@ public class CommandExportOverlap extends MiXCRCommand {
         if (criteria.withJ)
             extractors.add(new ExtractorUnique(
                     new FieldExtractor<Clone>() {
+                        @NotNull
                         @Override
                         public String getHeader() {
                             return "jGene";
                         }
 
+                        @NotNull
                         @Override
-                        public String extractValue(Clone object) {
+                        public String extractValue(@NotNull Clone object) {
                             return object.getBestHit(GeneType.Joining).getGene().getName();
                         }
                     }
@@ -143,12 +153,12 @@ public class CommandExportOverlap extends MiXCRCommand {
         extractors.add(new TotalCount());
         extractors.add(new TotalFraction());
 
-        List<FieldExtractor<Clone>> fieldExtractors;
+        List<FieldExtractor<? super Clone>> fieldExtractors;
         try (CloneReader cReader = CloneSetIO.mkReader(Paths.get(samples.get(0)), VDJCLibraryRegistry.getDefault())) {
-            fieldExtractors = CommandExport
+            fieldExtractors = CloneFieldsExtractorsFactory.INSTANCE
                     .parseSpec(spec.commandLine().getParseResult())
                     .stream()
-                    .flatMap(f -> CommandExport.extractor(f, Clone.class, cReader, OutputMode.ScriptingFriendly).stream())
+                    .flatMap(f -> CloneFieldsExtractorsFactory.INSTANCE.extract(f, cReader, OutputMode.ScriptingFriendly).stream())
                     .collect(Collectors.toList());
         }
 
@@ -303,7 +313,7 @@ public class CommandExportOverlap extends MiXCRCommand {
         CommandExportOverlap export = new CommandExportOverlap();
         CommandSpec spec = CommandSpec.forAnnotatedObject(export);
         export.spec = spec; // inject spec manually
-        CommandExport.addOptionsToSpec(spec, Clone.class);
+        CloneFieldsExtractorsFactory.INSTANCE.addOptionsToSpec(spec, false);
         return spec;
     }
 }

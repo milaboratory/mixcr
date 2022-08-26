@@ -31,7 +31,6 @@ class SHMTreesWriter(
 ) : AutoCloseable {
     constructor(fileName: String) : this(PrimitivOHybrid(Paths.get(fileName)))
 
-    //TODO write less
     fun writeHeader(
         assemblerParameters: CloneAssemblerParameters,
         alignerParameters: VDJCAlignerParameters,

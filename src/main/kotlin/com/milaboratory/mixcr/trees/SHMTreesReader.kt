@@ -21,7 +21,6 @@ import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readMap
 import com.milaboratory.primitivio.readObjectRequired
-import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryId
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCLibraryData
@@ -31,7 +30,7 @@ import java.util.*
 
 class SHMTreesReader(
     private val input: PrimitivIHybrid,
-    libraryRegistry: VDJCLibraryRegistry
+    val libraryRegistry: VDJCLibraryRegistry
 ) : AutoCloseable by input, VDJCFileHeaderData {
     val assemblerParameters: CloneAssemblerParameters
     val alignerParameters: VDJCAlignerParameters
@@ -76,8 +75,8 @@ class SHMTreesReader(
             assemblerParameters = i.readObjectRequired()
             alignerParameters = i.readObjectRequired()
             tagsInfo = i.readObjectRequired()
-            val liberalise = i.readMap<String, VDJCLibraryData>()
-            liberalise.forEach { (name: String, libraryData: VDJCLibraryData) ->
+            val libraries = i.readMap<String, VDJCLibraryData>()
+            libraries.forEach { (name: String, libraryData: VDJCLibraryData) ->
                 val alreadyRegistered = libraryRegistry.loadedLibraries.stream()
                     .anyMatch {
                         it.libraryId.withoutChecksum() == VDJCLibraryId(name, libraryData.taxonId)

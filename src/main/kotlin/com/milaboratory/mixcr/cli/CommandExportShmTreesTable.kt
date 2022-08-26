@@ -11,18 +11,16 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.cli.CommandExport.FieldData
 import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.OutputMode
-import com.milaboratory.mixcr.export.SHNTreeFieldsExtractor
+import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
 import picocli.CommandLine.Command
-import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 
 @Command(
@@ -35,41 +33,13 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     @Parameters(arity = "2", description = ["trees.${shmFileExtension} trees.tsv"])
     override var inOut: List<String> = ArrayList()
 
-    @Option(description = ["Output column headers with spaces."], names = ["-v", "--with-spaces"])
-    var humanReadable = false
-
     override fun run0() {
         InfoWriter<SHMTreeForPostanalysis>(outputFiles.first()).use { output ->
 
-            val oMode = when {
-                humanReadable -> OutputMode.HumanFriendly
-                else -> OutputMode.ScriptingFriendly
-            }
-
-            val libraryRegistry = VDJCLibraryRegistry.getDefault()
-            SHMTreesReader(inputFile, libraryRegistry).use { reader ->
-                val treeExtractors = listOf(
-                    FieldData.mk("-treeId"),
-                    FieldData.mk("-uniqClonesCount"),
-                    FieldData.mk("-totalClonesCount"),
-                    FieldData.mk("-wildcardsScore"),
-                    FieldData.mk("-ndnOfMRCA"),
-                    FieldData.mk("-vHit"),
-                    FieldData.mk("-jHit"),
-                )
-
+            SHMTreesReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 output.attachInfoProviders(
-                    treeExtractors
-                        .flatMap {
-                            SHNTreeFieldsExtractor.extract(
-                                it,
-                                SHMTreeForPostanalysis::class.java,
-                                reader,
-                                oMode
-                            )
-                        }
+                    SHMTreeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)
                 )
-
                 output.ensureHeader()
 
                 reader.readTrees().forEach { shmTree ->
@@ -77,7 +47,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                         shmTree.forPostanalysis(
                             reader.fileNames,
                             reader.alignerParameters,
-                            libraryRegistry
+                            reader.libraryRegistry
                         )
                     )
                 }
@@ -87,5 +57,15 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
 
     companion object {
         const val COMMAND_NAME = "exportShmTrees"
+
+
+        @JvmStatic
+        fun mkCommandSpec(): CommandLine.Model.CommandSpec {
+            val command = CommandExportShmTreesTable()
+            val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(command)
+            command.spec = spec // inject spec manually
+            SHMTreeFieldsExtractorsFactory.addOptionsToSpec(spec, true)
+            return spec
+        }
     }
 }

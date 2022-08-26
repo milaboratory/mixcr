@@ -18,6 +18,7 @@ import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.util.FlatteningOutputPort
 import cc.redberry.pipe.util.TBranchOutputPort
+import cc.redberry.primitives.Filter
 import com.milaboratory.primitivio.blocks.PrimitivIBlocks
 import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks
@@ -106,8 +107,25 @@ fun <T : Any, R : Any> OutputPort<T>.flatMap(function: (element: T) -> Iterable<
         CUtils.asOutputPort(function(it))
     })
 
-fun <T : Any> OutputPort<T>.filter(test: (element: T) -> Boolean): OutputPortCloseable<T> =
+fun <T : Any> OutputPort<T>.filter(test: Filter<T>): OutputPortCloseable<T> =
     FilteringPort(this, test)
+
+fun <T : Any> OutputPort<T>.limit(limit: Long): OutputPortCloseable<T> = object : OutputPortCloseable<T> {
+    private var count = 0L
+
+    override fun take(): T? = when {
+        count < limit -> {
+            val result = this@limit.take()
+            count++
+            result
+        }
+        else -> null
+    }
+
+    override fun close() {
+        (this@limit as? OutputPortCloseable)?.close()
+    }
+}
 
 fun <T : Any> OutputPort<T>.forEach(action: (element: T) -> Unit): Unit =
     CUtils.it(this).forEach(action)

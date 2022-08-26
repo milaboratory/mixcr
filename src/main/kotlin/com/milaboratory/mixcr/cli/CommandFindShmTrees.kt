@@ -220,6 +220,10 @@ class CommandFindShmTrees : MiXCRCommand() {
         require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must not be cut by the same geneFeature"
         }
+
+        require(cloneReaders.map { it.info.tagsInfo }.distinct().count() == 1) {
+            "Input files with different tags are not supported yet"
+        }
         val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
         val assemblerParameters = cloneReaders.first().assemblerParameters
         val scoringSet = ScoringSet(

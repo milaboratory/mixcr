@@ -12,46 +12,53 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.export.OutputMode.HumanFriendly
+import com.milaboratory.mixcr.export.OutputMode.ScriptingFriendly
 
-abstract class FieldParameterless<T> protected constructor(
-    targetType: Class<T>,
-    command: String,
-    description: String,
+abstract class FieldParameterless<T : Any> protected constructor(
+    override val priority: Int,
+    override val cmdArgName: String,
+    override val description: String,
     private val hHeader: String,
-    private val sHeader: String
-) : AbstractField<T>(targetType, command, description) {
-    override fun nArguments(): Int = 0
+    private val sHeader: String,
+    override val deprecation: String? = null
+) : AbstractField<T>() {
+    override val nArguments: Int = 0
 
     protected abstract fun extract(`object`: T): String
 
     fun getHeader(outputMode: OutputMode): String = when (outputMode) {
-        OutputMode.HumanFriendly -> hHeader
-        OutputMode.ScriptingFriendly -> sHeader
+        HumanFriendly -> hHeader
+        ScriptingFriendly -> sHeader
     }
 
-    override fun create(
+    override fun create1(
         outputMode: OutputMode,
         headerData: VDJCFileHeaderData,
         args: Array<String>
-    ): FieldExtractor<T> = object : AbstractFieldExtractor<T>(getHeader(outputMode), this) {
-        override fun extractValue(`object`: T): String = extract(`object`)
+    ): FieldExtractor<T> = object : FieldExtractor<T> {
+        override val header = getHeader(outputMode)
+        override fun extractValue(obj: T): String = extract(obj)
     }
 
-    override fun metaVars(): String = ""
+    override val metaVars: String = ""
 
     companion object {
-        inline operator fun <reified T : Any> invoke(
+        operator fun <T : Any> invoke(
+            priority: Int,
             command: String,
             description: String,
             hHeader: String,
             sHeader: String,
-            noinline extractValue: (T) -> String
+            deprecation: String? = null,
+            extractValue: (T) -> String
         ) = object : FieldParameterless<T>(
-            T::class.java,
+            priority,
             command,
             description,
             hHeader,
-            sHeader
+            sHeader,
+            deprecation
         ) {
             override fun extract(`object`: T): String = extractValue(`object`)
         }

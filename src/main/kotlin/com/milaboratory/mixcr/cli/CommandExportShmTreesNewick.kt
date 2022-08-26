@@ -41,13 +41,12 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
             it.content.id.toString()
         }
 
-        val libraryRegistry = VDJCLibraryRegistry.getDefault()
-        SHMTreesReader(inputFile, libraryRegistry).use { reader ->
+        SHMTreesReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
             reader.readTrees().forEach { shmTree ->
                 val shmTreeForPostanalysis = shmTree.forPostanalysis(
                     reader.fileNames,
                     reader.alignerParameters,
-                    libraryRegistry
+                    reader.libraryRegistry
                 )
 
                 val newickFileOutput = outputDir.resolve("${shmTree.treeId}.tree")
