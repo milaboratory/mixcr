@@ -20,6 +20,7 @@ import com.milaboratory.mixcr.postanalysis.plots.GeneUsageRow;
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
+import jetbrains.letsPlot.intern.Plot;
 import org.jetbrains.kotlinx.dataframe.DataFrame;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -57,7 +58,7 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
         if (df.rowsCount() == 0)
             return;
 
-        List<byte[]> plot = GeneUsage.INSTANCE.plotAndSummary(df,
+        Plot plot = GeneUsage.INSTANCE.plot(df,
                 new HeatmapParameters(
                         !noSamplesDendro,
                         !noGenesDendro,
@@ -66,11 +67,12 @@ public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlots
                         hLabelsSize,
                         vLabelsSize,
                         false,
+                        parsePallete(),
                         width,
                         height
                 ));
 
-        writePlotsAndSummary(result.group, plot);
+        writePlots(result.group, plot);
     }
 
     @Command(name = "vUsage",

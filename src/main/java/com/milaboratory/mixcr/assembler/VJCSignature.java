@@ -37,21 +37,21 @@ public final class VJCSignature {
         if (vGene != DO_NOT_CHECK) {
             if (vGene == null && acc.hasInfoFor(GeneType.Variable))
                 return false;
-            if (vGene != null && acc.hasInfoFor(GeneType.Variable, vGene))
+            if (vGene != null && !acc.hasInfoFor(GeneType.Variable, vGene))
                 return false;
         }
 
         if (jGene != DO_NOT_CHECK) {
             if (jGene == null && acc.hasInfoFor(GeneType.Joining))
                 return false;
-            if (jGene != null && acc.hasInfoFor(GeneType.Joining, jGene))
+            if (jGene != null && !acc.hasInfoFor(GeneType.Joining, jGene))
                 return false;
         }
 
         if (cGene != DO_NOT_CHECK) {
             if (cGene == null && acc.hasInfoFor(GeneType.Constant))
                 return false;
-            if (cGene != null && acc.hasInfoFor(GeneType.Constant, cGene))
+            if (cGene != null && !acc.hasInfoFor(GeneType.Constant, cGene))
                 return false;
         }
 

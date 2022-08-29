@@ -39,14 +39,13 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Command(separator = " ",
         description = "Build cloneset overlap and export into tab delimited file."
 )
-public class CommandExportOverlap extends ACommandWithOutputMiXCR {
-    @Parameters(description = "cloneset.{clns|clna}...")
+public class CommandExportOverlap extends MiXCRCommand {
+    @Parameters(description = "cloneset.{clns|clna}... output.tsv")
     public List<String> inOut;
 
     @Option(description = "Chains to export",
@@ -69,6 +68,11 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
         return inOut.subList(0, inOut.size() - 1);
     }
 
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(inOut.get(inOut.size() - 1));
+    }
+
     public Path getOut(NamedChains chains) {
         Path out = Paths.get(inOut.get(inOut.size() - 1)).toAbsolutePath();
         if (chains == Chains.ALL_NAMED)
@@ -84,7 +88,6 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
     @Override
     public void run0() throws Exception {
         List<String> samples = getInputFiles();
-        boolean needRecalculateCount = this.chains != null || onlyProductive;
         List<NamedChains> chains = this.chains == null
                 ? Collections.singletonList(Chains.ALL_NAMED)
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
@@ -161,11 +164,9 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
 
         OverlapBrowser overlapBrowser = new OverlapBrowser(chains, onlyProductive);
         SmartProgressReporter.startProgressReport(overlapBrowser);
-        Map<NamedChains, double[]> counts = null;
-        if (needRecalculateCount)
-            counts = overlapBrowser.computeCounts(samples);
+        Map<NamedChains, double[]> counts = overlapBrowser.computeCounts(samples);
 
-        OverlapDataset<Clone> overlap = OverlapUtil.overlap(samples, criteria.ordering());
+        OverlapDataset<Clone> overlap = OverlapUtil.overlap(samples, __ -> true, criteria.ordering());
         try (OutputPortWithProgress<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
             for (Map<NamedChains, OverlapGroup<Clone>> row : CUtils.it(overlapBrowser.overlap(counts, port))) {
                 for (Map.Entry<NamedChains, OverlapGroup<Clone>> e : row.entrySet()) {
@@ -176,58 +177,10 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
         writers.forEach((___, w) -> w.close());
     }
 
-    private static OverlapGroup<Clone> filter(OverlapGroup<Clone> row, Predicate<Clone> criteria, boolean inPlace) {
-        if (inPlace) {
-            boolean empty = true;
-            for (List<Clone> l : row) {
-                l.removeIf(c -> !criteria.test(c));
-                if (!l.isEmpty())
-                    empty = false;
-            }
-            if (empty)
-                return null;
-            else
-                return row;
-        } else {
-            boolean empty = true;
-            List<List<Clone>> r = new ArrayList<>();
-            for (List<Clone> l : row) {
-                List<Clone> f = l.stream().filter(criteria).collect(Collectors.toList());
-                r.add(f);
-                if (!f.isEmpty())
-                    empty = false;
-            }
-            if (empty)
-                return null;
-            else
-                return new OverlapGroup<>(r);
-        }
-    }
-
-    private static boolean isProductive(Clone c) {
-        return !c.isOutOfFrame(GeneFeature.CDR3) && !c.containsStops(GeneFeature.CDR3);
-    }
-
-    private static boolean hasChains(Clone c, NamedChains chains) {
-        return chains == Chains.ALL_NAMED || Arrays.stream(GeneType.VJC_REFERENCE).anyMatch(gt -> {
-            Chains clChains = c.getAllChains(gt);
-            if (clChains == null)
-                return false;
-            return clChains.intersects(chains.chains);
-        });
-    }
-
-    private static OverlapGroup<Clone> forChains(OverlapGroup<Clone> row, NamedChains chains) {
-        return chains == Chains.ALL_NAMED ? row : filter(row, c -> hasChains(c, chains), false);
-    }
-
-    private OverlapGroup<Clone> filterProductive(OverlapGroup<Clone> row, boolean inPlace) {
-        return onlyProductive ? filter(row, CommandExportOverlap::isProductive, inPlace) : row;
-    }
-
     private static final class InfoWriter implements AutoCloseable {
         final PrintWriter writer;
         final List<String> samples;
+        final List<String> samplesNames;
         final List<OverlapFieldExtractor> extractors;
 
         public InfoWriter(Path out, List<String> samples,
@@ -238,11 +191,19 @@ public class CommandExportOverlap extends ACommandWithOutputMiXCR {
                 throw new RuntimeException(e);
             }
             this.samples = samples;
+            this.samplesNames = samples.stream().map(InfoWriter::removeExt).collect(Collectors.toList());
+            ;
             this.extractors = extractors;
         }
 
+        static String removeExt(String sampleName) {
+            return sampleName
+                    .replace(".clns", "")
+                    .replace(".clna", "");
+        }
+
         void writeHeader() {
-            writer.println(extractors.stream().flatMap(e -> e.header(samples).stream()).collect(Collectors.joining("\t")));
+            writer.println(extractors.stream().flatMap(e -> e.header(samplesNames).stream()).collect(Collectors.joining("\t")));
         }
 
         void writeRow(OverlapGroup<Clone> row) {

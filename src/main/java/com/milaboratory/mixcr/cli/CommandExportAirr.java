@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.*;
@@ -42,12 +43,12 @@ import static picocli.CommandLine.*;
 @Command(name = "exportAirr",
         separator = " ",
         description = "Exports a clns, clna or vdjca file to Airr formatted tsv file.")
-public class CommandExportAirr extends ACommandMiXCR {
+public class CommandExportAirr extends MiXCRCommand {
     @Option(description = "Target id (use -1 to export from the target containing CDR3).",
             names = {"-t", "--target"})
     public int targetId = -1;
 
-    @Option(description = "If this option alignment fields will be padded with IMGT-style gaps.",
+    @Option(description = "If this option is specified, alignment fields will be padded with IMGT-style gaps.",
             names = {"-g", "--imgt-gaps"})
     public boolean withPadding = false;
 
@@ -65,12 +66,22 @@ public class CommandExportAirr extends ACommandMiXCR {
     @Parameters(index = "1", description = "output.tsv", arity = "0..1")
     public String out = null;
 
-    private IOUtil.MiXCRFileInfo info0 = null;
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
 
-    public String getType() {
-        if (info0 == null)
-            info0 = (IOUtil.MiXCRFileInfo) fileInfoExtractorInstance.getFileInfo(in);
-        return info0.fileType;
+    @Override
+    protected List<String> getOutputFiles() {
+        return out == null ? Collections.emptyList() : Collections.singletonList(out);
+    }
+
+    private MiXCRFileType fileType = null;
+
+    public MiXCRFileType getType() {
+        if (fileType == null)
+            fileType = IOUtil.extractFileType(Paths.get(in));
+        return fileType;
     }
 
     private FieldExtractor<AirrVDJCObjectWrapper> nFeature(GeneFeature gf, String header) {
@@ -195,7 +206,7 @@ public class CommandExportAirr extends ACommandMiXCR {
         CanReportProgress progressReporter = null;
 
         switch (getType()) {
-            case MAGIC_CLNA:
+            case CLNA:
                 extractors = CloneExtractors();
                 ClnAReader clnaReader = new ClnAReader(inPath, libraryRegistry, 4);
                 //noinspection unchecked,rawtypes
@@ -204,7 +215,7 @@ public class CommandExportAirr extends ACommandMiXCR {
                 closeable = clnaReader;
                 progressReporter = SmartProgressReporter.extractProgress(cPort, clnaReader.numberOfClones());
                 break;
-            case MAGIC_CLNS:
+            case CLNS:
                 extractors = CloneExtractors();
                 ClnsReader clnsReader = new ClnsReader(inPath, libraryRegistry);
 
@@ -221,7 +232,7 @@ public class CommandExportAirr extends ACommandMiXCR {
                 closeable = clnsReader;
                 progressReporter = SmartProgressReporter.extractProgress(cPort, maxCount);
                 break;
-            case MAGIC_VDJC:
+            case VDJCA:
                 extractors = AlignmentsExtractors();
                 VDJCAlignmentsReader alignmentsReader = new VDJCAlignmentsReader(inPath, libraryRegistry);
                 //noinspection unchecked,rawtypes

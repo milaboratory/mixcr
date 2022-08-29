@@ -90,6 +90,11 @@ public final class AdditiveMetrics {
         }
 
         @Override
+        public String toString() {
+            return "Length of " + geneFeature + ", " + (aminoAcid ? "aa" : "nt");
+        }
+
+        @Override
         public int hashCode() {
             return Objects.hash(geneFeature, aminoAcid);
         }
@@ -110,6 +115,11 @@ public final class AdditiveMetrics {
             if (vj < 0)
                 return Double.NaN;
             return vj;
+        }
+
+        @Override
+        public String toString() {
+            return "Added nucleotides";
         }
 
         @Override
@@ -148,6 +158,11 @@ public final class AdditiveMetrics {
             AAPropertyNormalized that = (AAPropertyNormalized) o;
             return property == that.property &&
                     Objects.equals(geneFeature, that.geneFeature);
+        }
+
+        @Override
+        public String toString() {
+            return property + " of " + geneFeature;
         }
 
         @Override

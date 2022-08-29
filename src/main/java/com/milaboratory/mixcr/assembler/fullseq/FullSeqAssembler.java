@@ -20,11 +20,7 @@ import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.*;
 import com.milaboratory.core.sequence.quality.QualityTrimmer;
 import com.milaboratory.mixcr.assembler.CloneFactory;
-import com.milaboratory.mixcr.basictypes.GeneAndScore;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -220,13 +216,13 @@ public final class FullSeqAssembler {
         this.rightAssemblingFeatureBound = N_LEFT_DUMMIES + lengthV + assemblingFeatureLength;
     }
 
-    FullSeqAssemblerReport report = null;
+    FullSeqAssemblerReportBuilder report = null;
 
-    public void setReport(FullSeqAssemblerReport report) {
+    public void setReport(FullSeqAssemblerReportBuilder report) {
         this.report = report;
     }
 
-    public FullSeqAssemblerReport getReport() {
+    public FullSeqAssemblerReportBuilder getReport() {
         return report;
     }
 
@@ -963,7 +959,7 @@ public final class FullSeqAssembler {
             tmp[0] = substituteAlignments(tmp[0], jHitAlignments);
 
         TagCount tagCount = this.clone.getTagCount();
-        if (tagCount != null && targets.groups != null) {
+        if (tagCount != null && targets.groups != null && splitRegion != null) {
             Set<TagTuple> tagTuples = new HashSet<>();
             TIntIterator it = targets.groups.iterator();
             while (it.hasNext())
@@ -1435,8 +1431,8 @@ public final class FullSeqAssembler {
     }
 
     /**
-     * Represents aggregated information about nucleotide states for all positions in all reads aggregated with {@link
-     * #calculateRawData(Supplier)}.
+     * Represents aggregated information about nucleotide states for all positions in all reads aggregated with
+     * {@link #calculateRawData(Supplier)}.
      */
     public final class RawVariantsData {
         /**

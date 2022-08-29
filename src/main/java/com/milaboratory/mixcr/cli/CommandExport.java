@@ -32,22 +32,23 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Model.OptionSpec;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParseResult;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static cc.redberry.primitives.FilterUtil.ACCEPT_ALL;
 import static cc.redberry.primitives.FilterUtil.and;
-import static com.milaboratory.mixcr.basictypes.IOUtil.*;
 
 
 @Command(separator = " ")
-public abstract class CommandExport<T extends VDJCObject> extends ACommandSimpleExportMiXCR {
+public abstract class CommandExport<T extends VDJCObject> extends MiXCRCommand {
     /** type class */
     private final Class<T> clazz;
 
@@ -56,6 +57,12 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
     }
 
     public static final String DEFAULT_PRESET = "full";
+
+    @Parameters(description = "data.[vdjca|clns|clna]", index = "0")
+    public String in;
+
+    @Parameters(description = "table.tsv", index = "1", arity = "0..1")
+    public String out = null;
 
     @Option(description = "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
             names = {"-c", "--chains"})
@@ -94,6 +101,16 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
         if (limit <= 0)
             throwExecutionException("--limit must be positive");
         this.limit = limit;
+    }
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return out == null ? Collections.emptyList() : Collections.singletonList(out);
     }
 
     public Chains getChains() {
@@ -206,7 +223,7 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
         @Option(description = "Split clones by tag values",
                 names = {"--split-by-tag"})
-        public List<String> splitByTag = new ArrayList<>();
+        public String splitByTag;
 
         public CommandExportClones() {
             super(Clone.class);
@@ -239,10 +256,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                     }
                 }
                 TagsInfo tagsInfo = set.getTagsInfo();
-                ExportClones exportClones = new ExportClones(set, writer, limit,
-                        splitByTag.stream()
-                                .mapToInt(tagsInfo::indexOf)
-                                .toArray());
+                ExportClones exportClones = new ExportClones(
+                        set, writer, limit,
+                        splitByTag == null ? 0 : (tagsInfo.indexOf(splitByTag) + 1)
+                );
                 SmartProgressReporter.startProgressReport(exportClones, System.err);
                 exportClones.run();
                 if (initialSet.size() > set.size()) {
@@ -268,13 +285,13 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             @Override
             public boolean accept(Clone clone) {
                 if (filterOutOfFrames) {
-                    if (clone.isOutOfFrame(GeneFeature.CDR3))
+                    if (clone.isOutOfFrameOrAbsent(GeneFeature.CDR3))
                         return false;
                 }
 
                 if (filterStopCodons)
                     for (GeneFeature assemblingFeature : clone.getParentCloneSet().getAssemblingFeatures())
-                        if (clone.containsStops(assemblingFeature))
+                        if (clone.containsStopsOrAbsent(assemblingFeature))
                             return false;
 
                 return true;
@@ -302,14 +319,14 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
             final long size;
             volatile long current = 0;
             final long limit;
-            final int[] splitByTags;
+            final int splitByLevel;
 
-            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit, int[] splitByTags) {
+            private ExportClones(CloneSet clones, InfoWriter<Clone> writer, long limit, int splitByLevel) {
                 this.clones = clones;
                 this.writer = writer;
                 this.size = clones.size();
                 this.limit = limit;
-                this.splitByTags = splitByTags;
+                this.splitByLevel = splitByLevel;
             }
 
             @Override
@@ -334,11 +351,11 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
                     Stream<Clone> stream = Stream.of(clone);
 
-                    for (int tagIndex : splitByTags) {
+                    if (splitByLevel > 0) {
                         stream = stream.flatMap(cl -> {
                             TagCount tagCount = cl.getTagCount();
                             double sum = tagCount.sum();
-                            return Arrays.stream(tagCount.splitBy(tagIndex))
+                            return Arrays.stream(tagCount.splitBy(splitByLevel))
                                     .map(tc -> new Clone(clone.getTargets(), clone.getHits(),
                                             tc, 1.0 * cl.getCount() * tc.sum() / sum, clone.getId(), clone.getGroup()));
                         });
@@ -570,12 +587,12 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
 
     public static AlignmentsAndHeader openAlignmentsPort(String in) {
         try {
-            switch (fileInfoExtractorInstance.getFileInfo(in).fileType) {
-                case MAGIC_VDJC:
+            switch (IOUtil.extractFileType(Paths.get(in))) {
+                case VDJCA:
                     VDJCAlignmentsReader vdjcaReader = null;
                     vdjcaReader = new VDJCAlignmentsReader(in, VDJCLibraryRegistry.getDefault());
                     return new AlignmentsAndHeader(vdjcaReader, vdjcaReader);
-                case MAGIC_CLNA:
+                case CLNA:
                     ClnAReader clnaReader = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
                     OutputPortCloseable<VDJCAlignments> source = clnaReader.readAllAlignments();
                     return new AlignmentsAndHeader(
@@ -595,10 +612,10 @@ public abstract class CommandExport<T extends VDJCObject> extends ACommandSimple
                                     return source.take();
                                 }
                             }, clnaReader);
-                case MAGIC_CLNS:
+                case CLNS:
                     throw new RuntimeException("Can't export alignments from *.clns file: " + in);
                 default:
-                    throw new RuntimeException("Unknown file type: " + in);
+                    throw new RuntimeException();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

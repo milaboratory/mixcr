@@ -59,7 +59,7 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> lengthOf(SetPreprocessorFactory<Clone> preproc, WeightFunction<Clone> wt, GeneFeature gf, boolean aa) {
-        String name = (aa ? "aa" : "nt") + "LengthOf" + GeneFeature.encode(gf);
+        String name = "Length of " + GeneFeature.encode(gf) + ", " + (aa ? "aa" : "nt");
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
@@ -77,7 +77,7 @@ public final class AdditiveCharacteristics {
 
 
     public static AdditiveCharacteristic<String, Clone> addedNucleotides(SetPreprocessorFactory<Clone> preproc, WeightFunction<Clone> wt) {
-        String name = "AddedNucleotides";
+        String name = "Added nucleotides";
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
@@ -101,7 +101,7 @@ public final class AdditiveCharacteristics {
                                                                              WeightFunction<Clone> wt,
                                                                              AAProperties.AAProperty property,
                                                                              GeneFeature gf) {
-        String name = property.name() + "of" + GeneFeature.encode(gf) + "Normalized";
+        String name = property.name() + " of " + GeneFeature.encode(gf) + " (normalized)";
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
@@ -127,7 +127,7 @@ public final class AdditiveCharacteristics {
                                                                    GeneFeature gf,
                                                                    AAProperties.Adjustment adjustment,
                                                                    int nLetters) {
-        String name = property.name() + "of" + GeneFeature.encode(gf);
+        String name = property.name() + " of " + GeneFeature.encode(gf);
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,
@@ -151,7 +151,7 @@ public final class AdditiveCharacteristics {
                                                                      WeightFunction<Clone> wt,
                                                                      GeneType geneType,
                                                                      KeyFunction<String, Clone> keyFunction) {
-        String name = geneType.getLetter() + "Usage";
+        String name = geneType.getLetter() + "-usage";
         return new AdditiveCharacteristic<>(
                 name,
                 preproc,

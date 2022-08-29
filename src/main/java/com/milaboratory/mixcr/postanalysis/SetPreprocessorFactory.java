@@ -15,7 +15,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.mixcr.postanalysis.downsampling.ClonesDownsamplingPreprocessorFactory;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorByReadsFactory;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorByTagsFactory;
 import com.milaboratory.mixcr.postanalysis.preproc.*;
 
 import java.util.ArrayList;
@@ -33,7 +34,8 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = NoPreprocessing.Factory.class, name = "none"),
-        @JsonSubTypes.Type(value = ClonesDownsamplingPreprocessorFactory.class, name = "downsample"),
+        @JsonSubTypes.Type(value = DownsamplingPreprocessorByReadsFactory.class, name = "downsampleByReads"),
+        @JsonSubTypes.Type(value = DownsamplingPreprocessorByTagsFactory.class, name = "downsampleByTags"),
         @JsonSubTypes.Type(value = OverlapPreprocessorAdapter.Factory.class, name = "overlap"),
         @JsonSubTypes.Type(value = PreprocessorChain.Factory.class, name = "chain"),
         @JsonSubTypes.Type(value = FilterPreprocessor.Factory.class, name = "filter"),
@@ -47,8 +49,10 @@ public interface SetPreprocessorFactory<T> {
     String id();
 
     @SuppressWarnings("unchecked")
-    default SetPreprocessorFactory<T> filter(boolean before, ElementPredicate<T>... predicates) {
-        FilterPreprocessor.Factory<T> filter = new FilterPreprocessor.Factory<>(Arrays.asList(predicates), WeightFunctions.Default());
+    default SetPreprocessorFactory<T> filter(boolean before,
+                                             WeightFunction<T> weightFunction,
+                                             ElementPredicate<T>... predicates) {
+        FilterPreprocessor.Factory<T> filter = new FilterPreprocessor.Factory<>(Arrays.asList(predicates), weightFunction);
         if (this instanceof PreprocessorChain.Factory) {
             PreprocessorChain.Factory<T> p = (PreprocessorChain.Factory<T>) this;
             List<SetPreprocessorFactory<T>> list = new ArrayList<>();
@@ -72,22 +76,24 @@ public interface SetPreprocessorFactory<T> {
         return new PreprocessorChain.Factory<T>(before, this);
     }
 
-    default SetPreprocessorFactory<T> filterAfter(ElementPredicate<T>... predicates) {
-        return filter(false, predicates);
+    @SuppressWarnings({"unused", "unchecked"})
+    default SetPreprocessorFactory<T> filterAfter(WeightFunction<T> weightFunction, ElementPredicate<T>... predicates) {
+        return filter(false, weightFunction, predicates);
     }
 
-    default SetPreprocessorFactory<T> filterFirst(ElementPredicate<T>... predicates) {
-        return filter(true, predicates);
-    }
-
-    @SuppressWarnings("unchecked")
-    default SetPreprocessorFactory<T> filterAfter(List<ElementPredicate<T>> predicates) {
-        return filter(false, predicates.toArray(new ElementPredicate[0]));
+    @SuppressWarnings({"unused", "unchecked"})
+    default SetPreprocessorFactory<T> filterFirst(WeightFunction<T> weightFunction, ElementPredicate<T>... predicates) {
+        return filter(true, weightFunction, predicates);
     }
 
     @SuppressWarnings("unchecked")
-    default SetPreprocessorFactory<T> filterFirst(List<ElementPredicate<T>> predicates) {
-        return filter(true, predicates.toArray(new ElementPredicate[0]));
+    default SetPreprocessorFactory<T> filterAfter(WeightFunction<T> weightFunction, List<ElementPredicate<T>> predicates) {
+        return filter(false, weightFunction, predicates.toArray(new ElementPredicate[0]));
+    }
+
+    @SuppressWarnings("unchecked")
+    default SetPreprocessorFactory<T> filterFirst(WeightFunction<T> weightFunction, List<ElementPredicate<T>> predicates) {
+        return filter(true, weightFunction, predicates.toArray(new ElementPredicate[0]));
     }
 
 }

@@ -11,10 +11,9 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.cli.BinaryFileInfo;
-import com.milaboratory.cli.BinaryFileInfoExtractor;
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.primitivio.HasPrimitivIOState;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
@@ -28,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,7 +40,6 @@ public class IOUtil {
     public static final String END_MAGIC = "#MiXCR.File.End#";
     private static final byte[] END_MAGIC_BYTES = END_MAGIC.getBytes(StandardCharsets.US_ASCII);
     public static final int END_MAGIC_LENGTH = END_MAGIC_BYTES.length;
-    public static final MiXCRFileInfoExtractor fileInfoExtractorInstance = new MiXCRFileInfoExtractor();
 
     public static byte[] getEndMagicBytes() {
         return END_MAGIC_BYTES.clone();
@@ -50,11 +47,11 @@ public class IOUtil {
 
     /**
      * Writes minimal required header information to PrimitivO state and executes minimal required state initialization
-     * procedure for compact serialization of {@link VDJCAlignments} objects (so that all the sequences and genes
-     * will be serialized as references).
+     * procedure for compact serialization of {@link VDJCAlignments} objects (so that all the sequences and genes will
+     * be serialized as references).
      *
-     * Use {@link IOUtil#stdVDJCPrimitivIStateInit(PrimitivI, HasFeatureToAlign, VDJCLibraryRegistry)} as
-     * this method counterpart.
+     * Use {@link IOUtil#stdVDJCPrimitivIStateInit(PrimitivI, HasFeatureToAlign, VDJCLibraryRegistry)} as this method
+     * counterpart.
      */
     public static void stdVDJCPrimitivOStateInit(PrimitivO o, List<VDJCGene> genes,
                                                  HasFeatureToAlign featuresToAlign) {
@@ -80,7 +77,7 @@ public class IOUtil {
     }
 
     public static void registerGeneReferences(HasPrimitivIOState ioState, List<VDJCGene> genes,
-                                               HasFeatureToAlign featuresToAlign) {
+                                              HasFeatureToAlign featuresToAlign) {
         // Putting genes references and feature sequences to be serialized/deserialized as references
         for (VDJCGene gene : genes) {
             // Each gene is a singleton
@@ -167,47 +164,69 @@ public class IOUtil {
         else return ct.createOutputStream(os, 65536);
     }
 
-    public static final class MiXCRFileInfoExtractor implements BinaryFileInfoExtractor {
-        private MiXCRFileInfoExtractor() {}
+    public enum MiXCRFileType {
+        CLNA, CLNS, VDJCA
+    }
 
-        @Override
-        public BinaryFileInfo getFileInfo(File file) {
-            try {
-                Path path = file.toPath();
+    public static MiXCRFileType extractFileType(Path path) {
+        try {
+            if (!Files.isRegularFile(path))
+                throw new IllegalArgumentException("Not a regular file: " + path);
 
-                if (!Files.isRegularFile(path))
-                    return null;
+            try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                if (channel.size() < BEGIN_MAGIC_LENGTH + END_MAGIC_LENGTH)
+                    throw new IllegalArgumentException("Unknown file type: " + path);
 
-                try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
-                    if (channel.size() < BEGIN_MAGIC_LENGTH + END_MAGIC_LENGTH)
-                        return null;
+                byte[] beginMagic = new byte[BEGIN_MAGIC_LENGTH];
+                channel.read(ByteBuffer.wrap(beginMagic));
+                String magicFull = new String(beginMagic, StandardCharsets.US_ASCII);
+                String magicShort = new String(beginMagic, 0, BEGIN_MAGIC_LENGTH_SHORT,
+                        StandardCharsets.US_ASCII);
 
-                    byte[] beginMagic = new byte[BEGIN_MAGIC_LENGTH];
-                    channel.read(ByteBuffer.wrap(beginMagic));
-                    String magicFull = new String(beginMagic, StandardCharsets.US_ASCII);
-                    String magicShort = new String(beginMagic, 0, BEGIN_MAGIC_LENGTH_SHORT,
-                            StandardCharsets.US_ASCII);
+                if (!magicShort.equals(MAGIC_VDJC) && !magicShort.equals(MAGIC_CLNS)
+                        && !magicShort.equals(MAGIC_CLNA))
+                    throw new IllegalArgumentException("Unknown file type: " + path);
 
-                    if (!magicShort.equals(MAGIC_VDJC) && !magicShort.equals(MAGIC_CLNS)
-                            && !magicShort.equals(MAGIC_CLNA))
-                        return null;
-
-                    byte[] endMagic = new byte[END_MAGIC_LENGTH];
-                    channel.read(ByteBuffer.wrap(endMagic), channel.size() - END_MAGIC_LENGTH);
-                    return new MiXCRFileInfo(magicShort, magicFull, Arrays.equals(endMagic, getEndMagicBytes()));
+                byte[] endMagic = new byte[END_MAGIC_LENGTH];
+                channel.read(ByteBuffer.wrap(endMagic), channel.size() - END_MAGIC_LENGTH);
+                switch (magicShort) {
+                    case MAGIC_VDJC:
+                        return MiXCRFileType.VDJCA;
+                    case MAGIC_CLNA:
+                        return MiXCRFileType.CLNA;
+                    case MAGIC_CLNS:
+                        return MiXCRFileType.CLNS;
+                    default:
+                        throw new IllegalArgumentException("Unknown file type: " + path);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    /**
-     * Represent MiXCR binary file information (type, magic bytes, and whether it passes integrity test)
-     */
-    public static final class MiXCRFileInfo extends BinaryFileInfo {
-        public MiXCRFileInfo(String fileType, String fullMagic, boolean valid) {
-            super(fileType, fullMagic, valid);
+    public static List<MiXCRCommandReport> extractReports(Path file) {
+        switch (extractFileType(file)) {
+            case VDJCA:
+                try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
+                    return reader.reports();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            case CLNA:
+                try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
+                    return reader.reports();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            case CLNS:
+                try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
+                    return reader.reports();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            default:
+                throw new RuntimeException();
         }
     }
 }

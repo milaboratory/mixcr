@@ -174,7 +174,6 @@ public class SetPreprocessorSummary {
     /**
      * Write preprocessing summary data to CSV file with columns characteristic | samples | ....
      */
-    @SuppressWarnings("unchecked")
     public static void overlapByCharToCSV(Path path,
                                           PostanalysisSchema<OverlapGroup<Clone>> schema,
                                           PostanalysisResult result,
@@ -189,12 +188,12 @@ public class SetPreprocessorSummary {
 
         List<List<Object>> rows = new ArrayList<>();
         for (Map.Entry<Set<OverlapType>, Characteristic<?, OverlapGroup<Clone>>> eCh : m.entrySet()) {
-            String ch = eCh.getKey().stream().map(it -> it.name).collect(Collectors.joining("/"));
+            String ch = eCh.getKey().stream().map(it -> it.shortDescription).collect(Collectors.joining("/"));
             String preproc = eCh.getValue().preprocessor.id();
             SetPreprocessorSummary preprocSummary = result.preprocSummary.get(preproc);
             addRows(rows, ch, preproc, preprocSummary);
         }
-        writeTable(rows, path, sep);
+        writeTable(rows, true, path, sep);
     }
 
     @SuppressWarnings("unchecked")
@@ -218,7 +217,18 @@ public class SetPreprocessorSummary {
             SetPreprocessorSummary preprocSummary = result.preprocSummary.get(preproc);
             addRows(rows, ch, preproc, preprocSummary);
         }
-        writeTable(rows, path, sep);
+        writeTable(rows, true, path, sep);
+    }
+
+    /**
+     * Write preprocessing summary data to CSV file
+     */
+    public static void toCSV(Path path,
+                             SetPreprocessorSummary preprocSummary,
+                             String sep) {
+        List<List<Object>> rows = new ArrayList<>();
+        addRows(rows, null, null, preprocSummary);
+        writeTable(rows, false, path, sep);
     }
 
     private static void addRows(List<List<Object>> rows, String ch, String preproc, SetPreprocessorSummary preprocSummary) {
@@ -228,9 +238,12 @@ public class SetPreprocessorSummary {
             if (stats == null)
                 continue;
             List<Object> row = new ArrayList<>();
-            row.add(ch);
-            row.add(sample);
-            row.add(preproc);
+            if (ch != null)
+                row.add(ch);
+            if (sample != null)
+                row.add(sample);
+            if (preproc != null)
+                row.add(preproc);
             addStat(row, SetPreprocessorStat.cumulative(stats));
             for (SetPreprocessorStat stat : stats) {
                 row.add(stat.preprocId);
@@ -241,6 +254,7 @@ public class SetPreprocessorSummary {
     }
 
     private static void writeTable(List<List<Object>> rows,
+                                   boolean byChar,
                                    Path path,
                                    String sep) {
         int nCols = rows.stream().mapToInt(List::size).max().orElse(0);
@@ -250,16 +264,18 @@ public class SetPreprocessorSummary {
         }
 
         List<String> header = new ArrayList<>();
-        header.add("characteristic");
+        if (byChar)
+            header.add("characteristic");
         header.add("sample");
-        for (int i = 0; i < (nCols - 1) / 5; i++) {
+        for (int i = 0; i < (nCols - (byChar ? 2 : 1)) / 5; i++) {
             String suff;
             if (i == 0)
                 suff = "";
             else
                 suff = "#" + i;
 
-            header.add("preprocessor" + suff);
+            if (byChar || i != 0)
+                header.add("preprocessor" + suff);
             header.add("nElementsBefore" + suff);
             header.add("sumWeightBefore" + suff);
             header.add("nElementsAfter" + suff);
@@ -275,17 +291,19 @@ public class SetPreprocessorSummary {
             }
             writer.write("\n");
 
-            for (int i = 0; ; i++) {
-                for (int j = 0; ; j++) {
-                    writer.write(rows.get(i).get(j).toString());
-                    if (j == rows.get(i).size() - 1)
+            if (!rows.isEmpty())
+                for (int i = 0; ; i++) {
+                    if (!rows.get(i).isEmpty())
+                        for (int j = 0; ; j++) {
+                            writer.write(rows.get(i).get(j).toString());
+                            if (j == rows.get(i).size() - 1)
+                                break;
+                            writer.write(sep);
+                        }
+                    if (i == rows.size() - 1)
                         break;
-                    writer.write(sep);
+                    writer.write("\n");
                 }
-                if (i == rows.size() - 1)
-                    break;
-                writer.write("\n");
-            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

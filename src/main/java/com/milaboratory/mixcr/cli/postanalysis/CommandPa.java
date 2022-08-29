@@ -13,12 +13,11 @@ package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.basictypes.CloneSetIO;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.cli.ACommandWithOutputMiXCR;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParameters;
+import com.milaboratory.mixcr.cli.MiXCRCommand;
+import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
 import com.milaboratory.util.StringUtil;
 import io.repseq.core.Chains;
-import io.repseq.core.VDJCLibraryRegistry;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -39,9 +38,7 @@ import static java.util.stream.Collectors.toList;
 /**
  *
  */
-public abstract class CommandPa extends ACommandWithOutputMiXCR {
-    public static final NamedChains[] CHAINS = {TRAD_NAMED, TRB_NAMED, TRG_NAMED, IGH_NAMED, IGKL_NAMED};
-
+public abstract class CommandPa extends MiXCRCommand {
     @Parameters(description = "cloneset.{clns|clna}... result.json.gz|result.json")
     public List<String> inOut;
 
@@ -60,7 +57,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
     @Option(description = CommonDescriptions.WEIGHT_FUNCTION,
             names = {"--default-weight-function"},
-            required = false)
+            required = true)
     public String defaultWeightFunction;
 
     @Option(description = "Filter specified chains",
@@ -121,15 +118,15 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
     }
 
     static TagsInfo extractTagsInfo(List<String> l) {
+        return extractTagsInfo(l, true);
+    }
+
+    static TagsInfo extractTagsInfo(List<String> l, boolean check) {
         Set<TagsInfo> set = new HashSet<>();
         for (String in : l) {
-            try {
-                set.add(CloneSetIO.mkReader(Paths.get(in), VDJCLibraryRegistry.getDefault()).getTagsInfo());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            set.add(CloneSetIO.extractTagsInfo(Paths.get(in)));
         }
-        if (set.size() != 1) {
+        if (check && set.size() != 1) {
             throw new IllegalArgumentException("Input files have different tags structure");
         } else
             return set.iterator().next();
@@ -141,7 +138,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
         if (!out().endsWith(".json") && !out().endsWith(".json.gz"))
             throwValidationException("Output file name should ends with .json.gz or .json");
         try {
-            PostanalysisParameters.parseDownsampling(defaultDownsampling, getTagsInfo(), dropOutliers);
+            DownsamplingParameters.parse(defaultDownsampling, getTagsInfo(), dropOutliers, onlyProductive);
         } catch (Throwable t) {
             throwValidationException(t.getMessage());
         }
@@ -208,6 +205,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
 
     private Map<String, List<Object>> _metadata = null;
 
+    /** Map of columns */
     protected Map<String, List<Object>> metadata() {
         if (metadata == null)
             return null;
@@ -321,7 +319,7 @@ public abstract class CommandPa extends ACommandWithOutputMiXCR {
                 if (c.intersects(mc.chains))
                     results.add(run0(new IsolationGroup(mc, group.group), group.samples));
             } else
-                for (NamedChains knownChains : CHAINS) {
+                for (NamedChains knownChains : DEFAULT_EXPORT_CHAINS_LIST) {
                     if (c.intersects(knownChains.chains)) {
                         results.add(run0(new IsolationGroup(knownChains, group.group), group.samples));
                     }

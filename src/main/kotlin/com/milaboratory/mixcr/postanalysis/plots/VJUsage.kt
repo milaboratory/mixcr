@@ -71,7 +71,7 @@ object VJUsage {
         df: DataFrame<VJUsageRow>,
         pp: HeatmapParameters,
     ) = df.groupBy { "sample"<String>() }.groups.toList()
-        .map { sdf -> plot(df, pp) + ggtitle(sdf.first()[VJUsageRow::sample.name]!!.toString()) }
+        .map { sdf -> plot(sdf, pp) + ggtitle(sdf.first()[VJUsageRow::sample.name]!!.toString()) }
 
     fun plot(
         df: DataFrame<VJUsageRow>,

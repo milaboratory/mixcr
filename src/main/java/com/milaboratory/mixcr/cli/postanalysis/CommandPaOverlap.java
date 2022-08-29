@@ -12,26 +12,33 @@
 package com.milaboratory.mixcr.cli.postanalysis;
 
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.CloneReader;
+import com.milaboratory.mixcr.basictypes.CloneReaderMerger;
 import com.milaboratory.mixcr.cli.CommonDescriptions;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
-import com.milaboratory.mixcr.postanalysis.WeightFunctions;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
-import com.milaboratory.mixcr.postanalysis.preproc.FilterPreprocessor;
-import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersPreset;
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema;
 import com.milaboratory.util.JsonOverrider;
+import com.milaboratory.util.LambdaSemaphore;
 import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.StringUtil;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Command(name = "overlap",
         sortOptions = false,
@@ -41,6 +48,11 @@ public class CommandPaOverlap extends CommandPa {
     @Option(description = CommonDescriptions.OVERLAP_CRITERIA,
             names = {"--criteria"})
     public String overlapCriteria = "CDR3|AA|V|J";
+
+    @Option(description = "Aggregate samples in groups by specified metadata columns",
+            names = {"--factor-by"},
+            split = ",")
+    public List<String> factoryBy;
 
     public CommandPaOverlap() {
     }
@@ -63,22 +75,85 @@ public class CommandPaOverlap extends CommandPa {
         return _parameters;
     }
 
+    private OverlapDataset<Clone> overlapDataset(IsolationGroup group, List<String> samples) {
+        if (factoryBy == null || factoryBy.isEmpty())
+            return OverlapUtil.overlap(
+                    samples,
+                    new ElementPredicate.IncludeChains(group.chains.chains),
+                    OverlapUtil.parseCriteria(overlapCriteria).ordering()
+            );
+        else {
+            Map<String, List<Object>> metadata = metadata();
+            @SuppressWarnings("unchecked")
+            List<String> mSamples = (List) metadata.get("sample");
+
+            // sample -> metadata sample
+            Map<String, String> sample2meta = StringUtil.matchLists(samples, mSamples);
+            for (Map.Entry<String, String> e : sample2meta.entrySet()) {
+                if (e.getValue() == null)
+                    throw new IllegalArgumentException("Malformed metadata: can't find metadata row for sample " + e.getKey());
+            }
+
+            // metadata sample -> actual sample
+            Map<String, String> meta2sample = sample2meta.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+
+            // agg group -> sample
+            Map<String, List<String>> group2samples = new HashMap<>();
+            for (int i = 0; i < mSamples.size(); i++) {
+                int iSample = i;
+
+                String sample = meta2sample.get(mSamples.get(i));
+                if (sample == null)
+                    continue;
+
+                String aggGroup = factoryBy.stream()
+                        .map(a -> metadata.get(a).get(iSample).toString())
+                        .collect(Collectors.joining(","));
+
+                group2samples.computeIfAbsent(aggGroup, __ -> new ArrayList<>())
+                        .add(sample);
+            }
+
+            List<String> datasetIds = new ArrayList<>();
+            List<CloneReader> readers = new ArrayList<>();
+            // Limits concurrency across all readers
+            LambdaSemaphore concurrencyLimiter = new LambdaSemaphore(32);
+            for (Map.Entry<String, List<String>> e : group2samples.entrySet()) {
+                CloneReaderMerger reader = new CloneReaderMerger(e.getValue().stream().map(it ->
+                {
+                    try {
+                        return OverlapUtil.mkCheckedReader(Paths.get(it),
+                                new ElementPredicate.IncludeChains(group.chains.chains),
+                                concurrencyLimiter
+                        );
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }).collect(Collectors.toList()));
+
+                datasetIds.add(e.getKey());
+                readers.add(reader);
+            }
+            return OverlapUtil.overlap(
+                    datasetIds,
+                    OverlapUtil.parseCriteria(overlapCriteria).ordering(),
+                    readers
+            );
+        }
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(samples.size(), getTagsInfo());
-        PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(true, groups)
-                .transform(ch -> ch.override(ch.name,
-                        ch.preprocessor
-                                .before(new OverlapPreprocessorAdapter.Factory<>(
-                                        new FilterPreprocessor.Factory<>(WeightFunctions.Count,
-                                                new ElementPredicate.IncludeChains(group.chains.chains)))))
-                );
-
-        OverlapDataset<Clone> overlapDataset = OverlapUtil.overlap(
-                samples,
-                OverlapUtil.parseCriteria(overlapCriteria).ordering()
-        );
+        OverlapDataset<Clone> overlapDataset = overlapDataset(group, samples);
+        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(
+                overlapDataset.datasetIds.size(),
+                // we do not specify chains here, since we will filter
+                // each dataset individually before overlap to speed up computations
+                null,
+                getTagsInfo());
+        PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(true, groups);
 
         PostanalysisRunner<OverlapGroup<Clone>> runner = new PostanalysisRunner<>();
         runner.addCharacteristics(schema.getAllCharacterisitcs());
@@ -88,4 +163,5 @@ public class CommandPaOverlap extends CommandPa {
 
         return new PaResultByGroup(group, schema, result);
     }
+
 }

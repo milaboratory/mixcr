@@ -13,7 +13,9 @@ package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.Position.*
-import com.milaboratory.miplots.color.Palletes
+import com.milaboratory.miplots.color.DiscretePalette
+import com.milaboratory.miplots.color.Palettes
+import com.milaboratory.miplots.color.UniversalPalette
 import com.milaboratory.miplots.heatmap.*
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters.Companion.hLabelSize
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters.Companion.vLabelSize
@@ -34,6 +36,7 @@ data class HeatmapParameters(
     val hLabelsSize: Double,
     val vLabelsSize: Double,
     val fillNaZeroes: Boolean,
+    val palette: UniversalPalette,
     override val width: Int,
     override val height: Int,
 ) : WithPlotSize {
@@ -41,7 +44,7 @@ data class HeatmapParameters(
     companion object {
         fun defaultHLabelSize(labels: List<String>) = run {
             val l = labels.maxOfOrNull { it.length } ?: 0
-            (0.9 * l / 3)
+            (0.9 * l / 2)
         }
 
         fun defaultVLabelSize(labels: List<String>) = defaultHLabelSize(labels)
@@ -67,13 +70,13 @@ fun mkHeatmap(
         yOrder = if (params.clusterY) Hierarchical() else null,
         fillNoValue = params.fillNaZeroes,
         noValue = 0.0,
-        fillPalette = Palletes.Diverging.lime90rose130
+        fillPalette = params.palette
     )
 
     plt = plt.withBorder()
 
     val ncats = params.colorKey?.map { df[it.key].distinct().size() }?.sum() ?: 0
-    var pallete = Palletes.Categorical.auto(ncats)
+    var pallete = Palettes.Categorical.auto(ncats)
     params.colorKey?.let {
         val first = Position.values().map { p -> p to true }.toMap().toMutableMap()
         for (key in it) {
@@ -108,9 +111,9 @@ fun mkHeatmap(
     }
 
     if (params.clusterX)
-        plt = plt.withDendrogram(pos = Position.Top, 0.1)
+        plt = plt.withDendrogram(pos = Top, 0.1)
     if (params.clusterY)
-        plt = plt.withDendrogram(pos = Position.Right, 0.1)
+        plt = plt.withDendrogram(pos = Right, 0.1)
 
     plt = plt.withLabels(
         Bottom,

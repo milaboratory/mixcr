@@ -14,10 +14,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.ReferencePoint;
-import io.repseq.core.SequencePartitioning;
+import io.repseq.core.*;
 
 import java.util.EnumMap;
 
@@ -96,5 +93,31 @@ public final class TargetPartitioning extends SequencePartitioning {
         if (position < 0)
             return -2 - position;
         return position;
+    }
+
+    /** Principal position of reference point relative to the aligned part of this target sequence */
+    public RelativePointSide getRelativeSide(ReferencePoint point) {
+        RelativePointSide result = RelativePointSide.Unknown;
+        for (GeneType gt : GeneType.VDJC_REFERENCE) {
+            VDJCHit hit = hits.get(gt);
+            if (hit == null)
+                continue;
+            VDJCGene gene = hit.getGene();
+            GeneFeature alignedFeature = hit.getAlignedFeature();
+            Alignment<NucleotideSequence> alignment = hit.getAlignment(targetIndex);
+            if (alignment == null)
+                continue;
+            Range seq1Range = alignment.getSequence1Range();
+            for (int p : new int[]{seq1Range.getFrom(), seq1Range.getTo()}) {
+                RelativePointSide side = gene.getPartitioning().getRelativeSide(alignedFeature, p, point);
+                if (side == RelativePointSide.Unknown)
+                    continue;
+                if (result == RelativePointSide.Unknown)
+                    result = side;
+                else if (result != side)
+                    return RelativePointSide.MatchOrInside;
+            }
+        }
+        return result;
     }
 }

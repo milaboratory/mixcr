@@ -16,9 +16,6 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.Processor;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.CountingOutputPort;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitool.refinement.CorrectionNode;
@@ -30,31 +27,33 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
 import com.milaboratory.mixcr.basictypes.tag.*;
+import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
-import com.milaboratory.util.ReportHelper;
-import com.milaboratory.util.SmartProgressReporter;
-import com.milaboratory.util.TempFileDest;
-import com.milaboratory.util.TempFileManager;
+import com.milaboratory.util.*;
 import com.milaboratory.util.sorting.HashSorter;
 import gnu.trove.list.array.TIntArrayList;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
 import static com.milaboratory.mixcr.cli.CommandCorrectAndSortTags.CORRECT_AND_SORT_TAGS_COMMAND_NAME;
 import static picocli.CommandLine.Option;
 
-@CommandLine.Command(name = CORRECT_AND_SORT_TAGS_COMMAND_NAME,
+@Command(name = CORRECT_AND_SORT_TAGS_COMMAND_NAME,
         sortOptions = false,
         separator = " ",
         description = "Applies error correction algorithm for tag sequences and sorts resulting file by tags.")
-public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandCorrectAndSortTags extends MiXCRCommand {
     static final String CORRECT_AND_SORT_TAGS_COMMAND_NAME = "correctAndSortTags";
+
+    @Parameters(description = "alignments.vdjca", index = "0")
+    public String in;
+
+    @Parameters(description = "alignments.corrected.vdjca", index = "1")
+    public String out;
 
     @Option(description = "Don't correct barcodes, only sort alignments by tags.",
             names = {"--dont-correct"})
@@ -99,6 +98,16 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
             names = {"-r", "--report"})
     public String reportFile;
 
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
+
     TagCorrectorParameters getParameters() {
         return new TagCorrectorParameters(
                 power, backgroundSubstitutionRate, backgroundIndelRate,
@@ -107,16 +116,13 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
     }
 
     @Override
-    public ActionConfiguration<?> getConfiguration() {
-        return new CorrectTagsConfiguration(getParameters());
-    }
-
-    @Override
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         TempFileDest tempDest = TempFileManager.smartTempDestination(out, "", useSystemTemp);
+        long startTimeMillis = System.currentTimeMillis();
 
         final CorrectionNode correctionResult;
-        final CorrectionReport report;
+        final CorrectAndSortTagsReport correctAndSortTagsReport;
+        final CorrectionReport mitoolReport;
         final int[] targetTagIndices;
         final List<String> tagNames;
         try (VDJCAlignmentsReader mainReader = new VDJCAlignmentsReader(in)) {
@@ -154,11 +160,14 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                     return tags;
                 };
                 OutputPort<NSequenceWithQuality[]> cInput = CUtils.wrap(mainReader, mapper);
-                correctionResult = corrector.correct(cInput, tagNames, mainReader);
-                report = corrector.getReport();
+
+                // Running correction
+                // TODO Collections.EMPTY_MAP -> presets
+                correctionResult = corrector.correct(cInput, tagNames, Collections.EMPTY_MAP, mainReader);
+                mitoolReport = corrector.getReport();
             } else {
                 correctionResult = null;
-                report = null;
+                mitoolReport = null;
             }
 
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
@@ -195,7 +204,7 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                                 NucleotideSequence current = ((SequenceAndQualityTagValue) newTags[i]).data.getSequence();
                                 cn = cn.getNextLevel().get(current);
                                 if (cn == null) {
-                                    report.setFilteredRecords(report.getFilteredRecords() + 1);
+                                    mitoolReport.setFilteredRecords(mitoolReport.getFilteredRecords() + 1);
                                     return al.setTagCount(null); // will be filtered right before hash sorter
                                 }
                                 newTags[i] = new SequenceAndQualityTagValue(cn.getCorrectValue());
@@ -222,43 +231,28 @@ public class CommandCorrectAndSortTags extends ACommandWithSmartOverwriteWithSin
                         SmartProgressReporter.extractProgress(sorted, mainReader.getNumberOfAlignments()));
 
                 // Initializing and writing results to the output file
-                writer.header(mainReader, getFullPipelineConfiguration(),
+                writer.header(mainReader,
                         mainReader.getTagsInfo().setSorted(mainReader.getTagsInfo().size()));
                 writer.setNumberOfProcessedReads(mainReader.getNumberOfReads());
                 for (VDJCAlignments al : CUtils.it(sorted))
                     writer.write(al);
+
+
+                correctAndSortTagsReport = new CorrectAndSortTagsReport(new Date(),
+                        getCommandLineArguments(),
+                        new String[]{in},
+                        new String[]{out},
+                        System.currentTimeMillis() - startTimeMillis,
+                        MiXCRVersionInfo.get().getShortestVersionString(),
+                        mitoolReport
+                );
+                writer.writeFooter(mainReader.reports(), null /*correctAndSortTagsReport*/); //fixme
             }
         }
 
-        if (report != null)
-            report.writeReport(ReportHelper.STDOUT);
-    }
-
-    public static final class CorrectTagsConfiguration implements ActionConfiguration<CorrectTagsConfiguration> {
-        final TagCorrectorParameters parameters;
-
-        @JsonCreator
-        public CorrectTagsConfiguration(@JsonProperty("parameters") TagCorrectorParameters parameters) {
-            this.parameters = parameters;
-        }
-
-        @Override
-        public String actionName() {
-            return CORRECT_AND_SORT_TAGS_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            CorrectTagsConfiguration that = (CorrectTagsConfiguration) o;
-            return parameters.equals(that.parameters);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(parameters);
-        }
+        correctAndSortTagsReport.writeReport(ReportHelper.STDOUT);
+        if (reportFile != null)
+            ReportUtil.appendReport(reportFile, mitoolReport);
     }
 
     private static final class SortingStep {

@@ -75,6 +75,8 @@ public interface PreClone {
         EnumMap<GeneType, VDJCHit[]> hitsMap = alignment.getHitsMap();
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
             VDJCHit[] hits = hitsMap.get(gt);
+            if (hits == null)
+                continue;
             List<GeneAndScore> gss = new ArrayList<>(hits.length);
             for (VDJCHit hit : hits)
                 gss.add(new GeneAndScore(hit.getGene().getId(), hit.getScore()));

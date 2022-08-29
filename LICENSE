@@ -51,14 +51,25 @@ In this License:
 
 "User" means the Individual User or Non-Profit Organization exercising the
  Licensed Rights under this License.
+ 
+"Academic License" means license issued for solely educational or public 
+ research purposes to an Individual User that has been identified by as an 
+ Academic Institution or Student or Non-Profit Organization.
+
+"Business License" means license issued for a commercial company or entity of a 
+ For-Profit Organization that grants the rights for the company to download and 
+ run and operate Software without violating Copyright and Similar Rights.
+
 
 Section 2 - License Grant.
 
 Subject to the terms and conditions of this License, the Licensor hereby grants
 the User a worldwide, non-exclusive, royalty-free, non-sublicensable,
 non-transferable license to exercise the Licensed Rights in the Software to
-download, install, use, reproduce, copy, modify and distribute any part of the
-Software for Non-Commercial Use only.
+download, install and use of the Software for Non-Commercial Use only.
+
+The User is not authorized by this License to modify, distribute or make 
+derivatives of the Software.
 
 The User is not authorized by this License to assert or claim that the User or
 its use of the Software is, connected with, or sponsored, endorsed, or granted
@@ -69,7 +80,7 @@ Patent and trademark rights are not licensed under this License.
 Those desiring to incorporate the Software into commercial products or use the
 Software or any derivatives from the Software for any commercial purposes
 should contact MiLaboratories Inc., which owns exclusive licensing and
-distribution rights for the Software , using the following email address:
+distribution rights for the Software, using the following email address:
 licensing@milaboratories.com.
 
 Section 3 - License Conditions.
@@ -77,23 +88,12 @@ Section 3 - License Conditions.
 A User's exercise of the Licensed Rights is expressly made subject to the
 following conditions:
 
-(1) If the User distributes the Software (including in modified form), the User
-must:(a) retain the following if it is supplied by the Licensor with the
-Software:
-• identification of the creator(s) of the Software and any others designated to
-  receive attribution, in any reasonable manner requested by the Licensor
-  (including by pseudonym if designated);
-• a Licensor’s copyright notice;
-• a notice that refers to the disclaimer of warranties in Section 4
-  (Disclaimer of Warranties and Limitation of Liability) below; and
-• a URL or hyperlink to the Software to the extent reasonably practicable;
-  (b) indicate if the User has modified the Software and retain an indication
-  of any previous modifications; and(c) indicate the Software (including any
-  modifications and derivatives) are licensed under this License, and include
-  the text of, or the URI or hyperlink to, this License.(2) If requested by the
-  Licensor, the User must remove any of the information required by paragraph
-  (a) above to the extent reasonably practicable.(3) The User shall not
+  (1) If requested by the Licensor, the User must remove the Software.
+
+  (2) The User shall not
   (and shall not allow any other person to):
+• distribute the software for third parties;
+• provide the access to the software for third parties;
 • decompile, disassemble, or otherwise reverse engineer the Software or attempt
   to discover any source code or underlying ideas or algorithms of the
   Software;
@@ -110,8 +110,17 @@ Software:
   Software. The User may only use such third-party software as integrated with
   and part of the Software. The licensors of the third-party software are
   intended beneficiaries of this License as it pertains to the User’s rights to
-  use such software. Section 4 - Disclaimer of Warranties and Limitation of
-  Liability.
+  use such software.
+  
+Any collaboration between Non-Commercial or Non-Profit User and For-Profit Company
+requires Business License. 
+
+Any result obtained in collaboration between Non-Commercial or Non-Profit User and 
+For-Profit Company without obtaining Business License is a breach of this License 
+Agreement. 
+
+
+Section 4 - Disclaimer of Warranties and Limitation of Liability.
 
 THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE LICENSOR HAS NO
 OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
@@ -225,4 +234,4 @@ Software, please contact us using the details below:
 https://milaboratories.com/contacts
 licensing@milaboratories.com
 
-This document was last updated on June 1, 2022
+This document was last updated on August 30, 2022

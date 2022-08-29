@@ -12,11 +12,12 @@
 package com.milaboratory.mixcr.assembler.preclone;
 
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
+import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import io.repseq.core.GeneFeature;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public interface PreCloneReader extends AutoCloseable {
@@ -24,10 +25,9 @@ public interface PreCloneReader extends AutoCloseable {
     OutputPortWithProgress<PreClone> readPreClones();
 
     /**
-     * Creates streamed alignments reader.
-     * Must output at least one alignment assigned for each of the pre-clones returned by a pre-clone reader.
-     * Alignments must be ordered the same way as pre-clones.
-     * Must output all unassigned alignments before all assigned.
+     * Creates streamed alignments reader. Must output at least one alignment assigned for each of the pre-clones
+     * returned by a pre-clone reader. Alignments must be ordered the same way as pre-clones. Must output all unassigned
+     * alignments before all assigned.
      */
     OutputPortWithProgress<VDJCAlignments> readAlignments();
 
@@ -38,7 +38,9 @@ public interface PreCloneReader extends AutoCloseable {
      * Returns a PreCloneReader view of a given VDJCAlignmentsReader representing a set of pre-clones that are formed as
      * a one-to-one image of alignments that completely covers provided set of gene features
      */
-    static PreCloneReader fromAlignments(AlignmentsProvider alignmentsReader, GeneFeature[] geneFeatures) {
+    static PreCloneReader fromAlignments(AlignmentsProvider alignmentsReader,
+                                         GeneFeature[] geneFeatures,
+                                         ClonalSequenceExtractionListener listener) {
         return new PreCloneReader() {
             private boolean alignmentPredicate(VDJCAlignments al) {
                 for (GeneFeature geneFeature : geneFeatures)
@@ -47,8 +49,15 @@ public interface PreCloneReader extends AutoCloseable {
                 return true;
             }
 
+            final AtomicBoolean firstRun = new AtomicBoolean(true);
+            final AtomicBoolean reportFailedToExtract = new AtomicBoolean(true);
+
             @Override
             public OutputPortWithProgress<PreClone> readPreClones() {
+                if (!firstRun.get())
+                    reportFailedToExtract.set(false);
+                if (firstRun.get())
+                    firstRun.set(false);
                 //noinspection resource
                 OutputPortWithProgress<VDJCAlignments> alignmentReader = readAlignments();
                 return new OutputPortWithProgress<PreClone>() {
@@ -60,8 +69,13 @@ public interface PreCloneReader extends AutoCloseable {
                     @Override
                     public PreClone take() {
                         VDJCAlignments al;
-                        //noinspection StatementWithEmptyBody
-                        while ((al = alignmentReader.take()) != null && al.getCloneIndex() == -1) ;
+                        while ((al = alignmentReader.take()) != null) {
+                            if (al.getCloneIndex() == -1) {
+                                if (reportFailedToExtract.get())
+                                    listener.onFailedToExtractClonalSequence(al);
+                            } else
+                                break;
+                        }
                         if (al == null)
                             return null;
                         return PreClone.fromAlignment(al.getCloneIndex(), al, geneFeatures);
@@ -103,7 +117,7 @@ public interface PreCloneReader extends AutoCloseable {
                                 return null;
 
 
-                            if(alignmentPredicate(al))
+                            if (alignmentPredicate(al))
                                 al = al.withCloneIndexAndMappingType(idGenerator.getAndIncrement(), (byte) 0)
                                         .setAlignmentsIndex(al.getAlignmentsIndex());
 

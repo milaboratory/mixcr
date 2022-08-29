@@ -18,6 +18,7 @@ import cc.redberry.pipe.blocks.Buffer;
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.blocks.PrimitivIOBlockHeader;
@@ -27,6 +28,7 @@ import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ProgressAndStage;
 import com.milaboratory.util.TempFileDest;
 import com.milaboratory.util.sorting.HashSorter;
+import io.repseq.core.GeneFeature;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -35,6 +37,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.milaboratory.mixcr.basictypes.FieldCollection.*;
 
+/**
+ * Represents a writer for the container of a result of alignment data assembly by a set of tags
+ * given fixed assembling features. Main use is to store pre-assembled data before clonotype assembly.
+ */
 public final class FilePreCloneWriter implements AutoCloseable, CanReportProgressAndStage {
     // Headers marking special positions in file
     public static final byte UNASSIGNED_ALIGNMENTS_END_MARK_BYTE_0 = 1;
@@ -82,11 +88,13 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
         this.cloneSorterInput = cloneBuffer.createInputPort();
     }
 
-    public void init(VDJCAlignmentsReader alignmentReader) {
+    public void init(VDJCAlignmentsReader alignmentReader, GeneFeature[] assemblingFeatures, TagsInfo tagsInfo) {
         // Writing header in raw primitivIO mode and initializing primitivIO state
         try (PrimitivO o = this.output.beginPrimitivO(true)) {
             o.writeObject(alignmentReader.getParameters());
             o.writeLong(alignmentReader.getNumberOfReads());
+            o.writeObject(assemblingFeatures);
+            o.writeObject(tagsInfo);
             IOUtil.stdVDJCPrimitivOStateInit(o, alignmentReader.getUsedGenes(), alignmentReader.getParameters());
         }
 

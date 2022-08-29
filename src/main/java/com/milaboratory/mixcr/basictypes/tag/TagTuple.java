@@ -14,8 +14,10 @@ package com.milaboratory.mixcr.basictypes.tag;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.milaboratory.primitivio.annotations.Serializable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * Class represents a tuple of tags associated with a sequence, alignment, clone or other entity.
@@ -23,7 +25,7 @@ import java.util.Arrays;
  * Tag may be a sample name, cell marker or unique molecular identifier.
  */
 @Serializable(by = IO.TagTupleSerializer.class)
-public final class TagTuple implements Comparable<TagTuple> {
+public final class TagTuple implements Comparable<TagTuple>, Iterable<TagValue> {
     public static final TagTuple NO_TAGS = new TagTuple();
 
     final TagValue[] tags;
@@ -36,13 +38,6 @@ public final class TagTuple implements Comparable<TagTuple> {
         for (TagValue tag : tags)
             hasher.putInt(tag.hashCode());
         this.hash = hasher.hash().hashCode();
-    }
-
-    public TagTuple project(int... idxs) {
-        TagValue[] t = new TagValue[idxs.length];
-        for (int i = 0; i < idxs.length; i++)
-            t[i] = tags[idxs[i]];
-        return new TagTuple(t);
     }
 
     /** Returns whether the tag tuple contains only key tag values, so can be used as a grouping key. */
@@ -102,6 +97,17 @@ public final class TagTuple implements Comparable<TagTuple> {
         return new TagTuple(newTags);
     }
 
+    /**
+     * Returns tag tuple prefix of a specified depth.
+     */
+    public TagTuple prefix(int depth) {
+        if (depth == tags.length)
+            return key();
+        if (depth == 0)
+            return NO_TAGS;
+        return new TagTuple(Arrays.copyOf(tags, depth));
+    }
+
     public TagValue get(int idx) {
         return tags[idx];
     }
@@ -113,6 +119,12 @@ public final class TagTuple implements Comparable<TagTuple> {
     /** Returns clone of internal array */
     public TagValue[] asArray() {
         return tags.clone();
+    }
+
+    @NotNull
+    @Override
+    public Iterator<TagValue> iterator() {
+        return Arrays.asList(tags).iterator();
     }
 
     @Override

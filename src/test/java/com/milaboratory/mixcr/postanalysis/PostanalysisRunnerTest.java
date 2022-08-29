@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.postanalysis;
 
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityCharacteristic;
 import com.milaboratory.mixcr.postanalysis.downsampling.DownsampleValueChooser;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorFactory;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorMVHGFactory;
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
 import com.milaboratory.mixcr.postanalysis.preproc.FilterPreprocessor;
 import com.milaboratory.mixcr.postanalysis.preproc.SelectTop;
@@ -49,7 +49,7 @@ public class PostanalysisRunnerTest {
                     }
                 });
 
-        DownsamplingPreprocessorFactory<TestObject> downsamplingPreproc = new DownsamplingPreprocessorFactory<>(
+        DownsamplingPreprocessorMVHGFactory<TestObject> downsamplingPreproc = new DownsamplingPreprocessorMVHGFactory<>(
                 new DownsampleValueChooser.Fixed(downsampling),
                 c -> (long) c.weight, TestObject::setWeight, true
         );

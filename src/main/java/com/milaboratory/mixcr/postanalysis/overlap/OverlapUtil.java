@@ -16,6 +16,7 @@ import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.LambdaSemaphore;
@@ -30,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -79,6 +81,7 @@ public final class OverlapUtil {
 
     public static OverlapDataset<Clone> overlap(
             List<String> samples,
+            Predicate<Clone> filter,
             List<? extends VDJCSProperties.VDJCSProperty<? super Clone>> by
     ) {
         // Limits concurrency across all readers
@@ -89,6 +92,7 @@ public final class OverlapUtil {
                     try {
                         return mkCheckedReader(
                                 Paths.get(s).toAbsolutePath(),
+                                filter,
                                 concurrencyLimiter);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -108,6 +112,12 @@ public final class OverlapUtil {
     }
 
     public static CloneReader mkCheckedReader(Path path,
+                                              LambdaSemaphore concurrencyLimiter) throws IOException {
+        return mkCheckedReader(path, __ -> true, concurrencyLimiter);
+    }
+
+    public static CloneReader mkCheckedReader(Path path,
+                                              Predicate<Clone> filter,
                                               LambdaSemaphore concurrencyLimiter) throws IOException {
         ClnsReader inner = new ClnsReader(
                 path,
@@ -130,12 +140,16 @@ public final class OverlapUtil {
 
                     @Override
                     public Clone take() {
-                        Clone t = in.take();
-                        if (t == null)
-                            return null;
-                        if (t.getFeature(GeneFeature.CDR3) == null)
-                            return take();
-                        return t;
+                        while (true) {
+                            Clone t = in.take();
+                            if (t == null)
+                                return null;
+                            if (t.getFeature(GeneFeature.CDR3) == null)
+                                continue;
+                            if (!filter.test(t))
+                                continue;
+                            return t;
+                        }
                     }
                 };
             }
@@ -168,6 +182,11 @@ public final class OverlapUtil {
             @Override
             public CloneAssemblerParameters getAssemblerParameters() {
                 return inner.getAssemblerParameters();
+            }
+
+            @Override
+            public List<MiXCRCommandReport> reports() {
+                return inner.reports();
             }
         };
     }

@@ -17,7 +17,9 @@ import htsjdk.samtools.SamReaderFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanReportProgress {
     private final AtomicLong numberOfProcessedAlignments = new AtomicLong(0);
@@ -39,6 +41,10 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
 
     public long getNumberOfUnpairedReads() {
         return numberOfUnpairedReads.get();
+    }
+
+    public BAMReader(String[] bamFiles, boolean dropNonVDJChromosomes) {
+        this(Stream.of(bamFiles).map(Paths::get).toArray(Path[]::new), dropNonVDJChromosomes);
     }
 
     public BAMReader(Path[] bamFiles, boolean dropNonVDJChromosomes) {

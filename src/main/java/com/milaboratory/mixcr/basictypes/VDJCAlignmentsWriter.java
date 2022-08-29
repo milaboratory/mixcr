@@ -12,8 +12,8 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
@@ -30,18 +30,19 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPosition {
     public static final int DEFAULT_ENCODER_THREADS = 3;
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
-    static final String MAGIC_V16 = "MiXCR.VDJC.V16";
-    static final String MAGIC = MAGIC_V16;
+    static final String MAGIC_V17 = "MiXCR.VDJC.V17";
+    static final String MAGIC = MAGIC_V17;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
     /** Number of bytes in footer with meta information */
-    static final int FOOTER_LENGTH = 8 + 8 + IOUtil.END_MAGIC_LENGTH;
+    static final int FOOTER_LENGTH = 8 + 8 + 8 + IOUtil.END_MAGIC_LENGTH;
 
     private final boolean highCompression;
 
@@ -101,17 +102,16 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
-    public void header(VDJCAlignmentsReader reader, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
-        header(reader.getParameters(), reader.getUsedGenes(), pipelineConfiguration, tagsInfo);
+    public void header(VDJCAlignmentsReader reader, TagsInfo tagsInfo) {
+        header(reader.getParameters(), reader.getUsedGenes(), tagsInfo);
     }
 
-    public void header(VDJCAligner aligner, PipelineConfiguration pipelineConfiguration, TagsInfo tagsInfo) {
-        header(aligner.getParameters(), aligner.getUsedGenes(), pipelineConfiguration, tagsInfo);
+    public void header(VDJCAligner aligner, TagsInfo tagsInfo) {
+        header(aligner.getParameters(), aligner.getUsedGenes(), tagsInfo);
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes,
-                       PipelineConfiguration pipelineConfiguration, TagsInfo tags) {
+    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, TagsInfo tags) {
         if (parameters == null || genes == null)
             throw new IllegalArgumentException();
 
@@ -131,9 +131,6 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
 
             // Writing parameters
             o.writeObject(parameters);
-
-            // Writing history
-            o.writeObject(pipelineConfiguration);
 
             // Information about tags
             o.writeObject(tags);
@@ -177,9 +174,26 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         writer.write(alignment);
     }
 
+    private List<MiXCRCommandReport> footer = null;
+
+    /**
+     * Write reports chain
+     */
+    public void writeFooter(List<MiXCRCommandReport> reports, MiXCRCommandReport report) {
+        if (footer != null)
+            throw new IllegalStateException("Footer already written");
+        this.footer = new ArrayList<>();
+        if (reports != null)
+            footer.addAll(reports);
+        if (report != null)
+            footer.add(report);
+    }
+
     @Override
     public synchronized void close() {
         try {
+            if (footer == null)
+                throw new IllegalStateException("Footer not written");
             if (!closed) {
                 writer.close(); // This will also write stream termination symbol/block to the stream
 
@@ -187,6 +201,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
                 if (MiXCRDebug.DEBUG)
                     System.out.println(writer.getParent().getStats());
 
+                long footerStartPosition = output.getPosition();
                 try (PrimitivO o = output.beginPrimitivO()) {
                     // // [ numberOfProcessedReads : long ]
                     // byte[] footer = new byte[8];
@@ -196,8 +211,13 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
                     // AlignmentsIO.writeLongBE(numberOfProcessedReads, footer, 0);
                     // o.write(footer);
 
-                    // Total size = 8 + 8 + END_MAGIC_LENGTH
+                    o.writeInt(footer.size());
+                    for (MiXCRCommandReport report : footer) {
+                        o.writeObject(report);
+                    }
 
+                    // Total size = 8 + 8 + 8 + END_MAGIC_LENGTH
+                    o.writeLong(footerStartPosition);
                     o.writeLong(numberOfAlignments);
                     o.writeLong(numberOfProcessedReads);
 

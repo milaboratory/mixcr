@@ -38,7 +38,7 @@ import static io.repseq.core.ReferencePoint.*;
         hidden = true,
         separator = " ",
         description = "Alignments statistics.")
-public class CommandAlignmentsStats extends ACommandMiXCR {
+public class CommandAlignmentsStats extends MiXCRCommand {
     @Parameters(index = "0", description = "input_file.vdjca")
     public String in;
     @Parameters(index = "1", description = "[output.txt]", arity = "0..1")

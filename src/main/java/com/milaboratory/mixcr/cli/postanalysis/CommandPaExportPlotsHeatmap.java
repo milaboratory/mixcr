@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
+import com.milaboratory.miplots.color.Palettes;
+import com.milaboratory.miplots.color.UniversalPalette;
 import picocli.CommandLine.Option;
 
 public abstract class CommandPaExportPlotsHeatmap extends CommandPaExportPlots {
@@ -21,4 +23,13 @@ public abstract class CommandPaExportPlotsHeatmap extends CommandPaExportPlots {
     @Option(description = "Height of vertical labels. One unit corresponds to the height of one tile.",
             names = {"--v-labels-size"})
     public double vLabelsSize = -1.0;
+
+    @Option(description = "Color palette for heatmap. Available names: diverging, viridis2magma, lime2rose, " +
+            "blue2red, teal2red, softSpectral, sequential, viridis, magma, sunset, rainbow, salinity, density. Default is density.",
+            names = {"--palette"})
+    public String palette = "density";
+
+    UniversalPalette parsePallete(){
+        return Palettes.parse(palette);
+    }
 }

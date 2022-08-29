@@ -44,7 +44,7 @@ import java.util.stream.IntStream;
                 "Output file name will be transformed into '_R1'/'_R2' pair in case of paired end reads. Use cloneId = -1 to " +
                 "export alignments not assigned to any clone (not assembled). If no clone ids are specified (only input " +
                 "and output filenames are specified) all reads assigned to clonotypes will be exported.")
-public class CommandExportReadsForClones extends ACommandWithOutputMiXCR {
+public class CommandExportReadsForClones extends MiXCRCommand {
     @Parameters(index = "0", description = "input_file.clna")
     public String in;
 

@@ -33,6 +33,7 @@ import org.junit.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class VDJCAlignerSTest {
@@ -54,7 +55,7 @@ public class VDJCAlignerSTest {
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.header(aligner, null, null);
+                writer.header(aligner, null);
                 header = writer.getPosition();
                 for (SingleRead read : CUtils.it(reader)) {
                     VDJCAlignmentResult<SingleRead> result = aligner.process(read);
@@ -63,6 +64,7 @@ public class VDJCAlignerSTest {
                         alignemntsList.add(result.alignment);
                     }
                 }
+                writer.writeFooter(Collections.emptyList(), null);
             }
         }
         Assert.assertTrue(alignemntsList.size() > 10);

@@ -17,13 +17,15 @@ import com.milaboratory.mixcr.cli.CommandExportAlignmentsPretty;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
+import io.repseq.core.RelativePointSide;
+import io.repseq.core.SequencePartitioning;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
 
 import static io.repseq.core.GeneFeature.*;
-import static io.repseq.core.ReferencePoint.FR3Begin;
-import static io.repseq.core.ReferencePoint.FR3End;
+import static io.repseq.core.ReferencePoint.*;
 import static org.junit.Assert.*;
 
 /**
@@ -144,6 +146,38 @@ public class VDJCObjectTest {
             }
             if (seq != null && cdr3 != null)
                 assertTrue(seq.toString().contains(cdr3.getSequence().toString().toUpperCase()));
+        }
+    }
+
+    @Test
+    public void test6() throws Exception {
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+                RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
+                RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
+
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+        for (int i = 0; i < align.alignments.size(); ++i) {
+            VDJCAlignments al = align.alignments.get(i);
+            for (int tIdx = 0; tIdx < al.numberOfTargets(); tIdx++) {
+                VDJCPartitionedSequence pt = al.getPartitionedTarget(tIdx);
+                if(pt == null)
+                    continue;
+                TargetPartitioning partitioning = pt.getPartitioning();
+                if(partitioning.isAvailable(CDR3)){
+                    Assert.assertEquals(RelativePointSide.MatchOrInside,
+                            partitioning.getRelativeSide(CDR3Begin));
+                    Assert.assertEquals(RelativePointSide.MatchOrInside,
+                            partitioning.getRelativeSide(CDR3End));
+                    Assert.assertEquals(RelativePointSide.Left,
+                            partitioning.getRelativeSide(FR1Begin));
+                }
+                if(partitioning.isAvailable(FR1Begin)){
+                    Assert.assertEquals(RelativePointSide.Right,
+                            partitioning.getRelativeSide(CDR3End));
+                    Assert.assertEquals(RelativePointSide.Right,
+                            partitioning.getRelativeSide(CDR3Begin));
+                }
+            }
         }
     }
 }

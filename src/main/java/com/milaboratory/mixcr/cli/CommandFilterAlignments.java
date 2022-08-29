@@ -15,11 +15,6 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.CountLimitingOutputPort;
 import cc.redberry.primitives.Filter;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.milaboratory.cli.ActionConfiguration;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -34,12 +29,12 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import static com.milaboratory.mixcr.cli.CommandFilterAlignments.FILTER_ALIGNMENTS_COMMAND_NAME;
 
@@ -47,8 +42,14 @@ import static com.milaboratory.mixcr.cli.CommandFilterAlignments.FILTER_ALIGNMEN
         sortOptions = true,
         separator = " ",
         description = "Filter alignments.")
-public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
+public class CommandFilterAlignments extends MiXCRCommand {
     static final String FILTER_ALIGNMENTS_COMMAND_NAME = "filterAlignments";
+
+    @Parameters(description = "alignments.vdjca", index = "0")
+    public String in;
+
+    @Parameters(description = "alignments.filtered.vdjca", index = "1")
+    public String out;
 
     @Option(description = "Specifies immunological protein chain gene for an alignment. If many, " +
             "separated by ','. Available genes: IGH, IGL, IGK, TRA, TRB, TRG, TRD.",
@@ -80,6 +81,16 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
     @Option(description = "List of read ids to export",
             names = {"-i", "--read-ids"})
     public List<Long> ids = new ArrayList<>();
+
+    @Override
+    protected List<String> getInputFiles() {
+        return Collections.singletonList(in);
+    }
+
+    @Override
+    protected List<String> getOutputFiles() {
+        return Collections.singletonList(out);
+    }
 
     TLongHashSet getReadIds() {
         if (ids.isEmpty())
@@ -117,14 +128,7 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
     }
 
     @Override
-    public ActionConfiguration getConfiguration() {
-        return new FilterConfiguration(getChains(),
-                chimerasOnly,
-                limit, getReadIds() == null ? null : getReadIds().toArray(), getContainFeature(), getCdr3Equals());
-    }
-
-    @Override
-    public void run1() throws Exception {
+    public void run0() throws Exception {
         try (VDJCAlignmentsReader reader = getInputReader();
              VDJCAlignmentsWriter writer = getOutputWriter()) {
             CanReportProgress progress = reader;
@@ -133,8 +137,7 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
                 sReads = new CountLimitingOutputPort<>(sReads, limit);
                 progress = SmartProgressReporter.extractProgress((CountLimitingOutputPort<?>) sReads);
             }
-            writer.header(reader.getParameters(), reader.getUsedGenes(),
-                    getFullPipelineConfiguration(), reader.getTagsInfo());
+            writer.header(reader.getParameters(), reader.getUsedGenes(), reader.getTagsInfo());
             SmartProgressReporter.startProgressReport("Filtering", progress);
             int total = 0, passed = 0;
             final AlignmentsFilter filter = getFilter();
@@ -146,6 +149,7 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
                 }
             }
             writer.setNumberOfProcessedReads(reader.getNumberOfReads());
+            writer.writeFooter(reader.reports(), null);
             System.out.printf("%s alignments analysed\n", total);
             System.out.printf("%s alignments written (%.1f%%)\n", passed, 100.0 * passed / total);
         }
@@ -207,63 +211,6 @@ public class CommandFilterAlignments extends ACommandWithSmartOverwriteWithSingl
                 return object.isChimera();
 
             return true;
-        }
-    }
-
-    @JsonAutoDetect(
-            fieldVisibility = JsonAutoDetect.Visibility.ANY,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE)
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.CLASS,
-            include = JsonTypeInfo.As.PROPERTY,
-            property = "type")
-    public static class FilterConfiguration implements ActionConfiguration {
-        public final Chains chains;
-        public final boolean chimerasOnly;
-        public final long limit;
-        public final long[] ids;
-        public final GeneFeature containFeature;
-        public final NucleotideSequence cdr3Equals;
-
-        @JsonCreator
-        public FilterConfiguration(@JsonProperty("chains") Chains chains,
-                                   @JsonProperty("chimerasOnly") boolean chimerasOnly,
-                                   @JsonProperty("limit") long limit,
-                                   @JsonProperty("ids") long[] ids,
-                                   @JsonProperty("containFeature") GeneFeature containFeature,
-                                   @JsonProperty("cdr3Equals") NucleotideSequence cdr3Equals) {
-            this.chains = chains;
-            this.chimerasOnly = chimerasOnly;
-            this.limit = limit;
-            this.ids = ids;
-            this.containFeature = containFeature;
-            this.cdr3Equals = cdr3Equals;
-        }
-
-        @Override
-        public String actionName() {
-            return FILTER_ALIGNMENTS_COMMAND_NAME;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            FilterConfiguration that = (FilterConfiguration) o;
-            return chimerasOnly == that.chimerasOnly &&
-                    limit == that.limit &&
-                    Objects.equals(chains, that.chains) &&
-                    Arrays.equals(ids, that.ids) &&
-                    Objects.equals(containFeature, that.containFeature) &&
-                    Objects.equals(cdr3Equals, that.cdr3Equals);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = Objects.hash(chains, chimerasOnly, limit, containFeature, cdr3Equals);
-            result = 31 * result + Arrays.hashCode(ids);
-            return result;
         }
     }
 }

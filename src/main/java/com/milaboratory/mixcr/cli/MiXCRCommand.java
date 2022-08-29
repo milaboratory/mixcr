@@ -11,17 +11,13 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.cli.BinaryFileInfo;
+import com.milaboratory.cli.ACommand;
 
-import static com.milaboratory.mixcr.basictypes.IOUtil.fileInfoExtractorInstance;
-
-public interface MiXCRCommand {
-    void throwValidationException(String message, boolean printHelp);
-
-    /** Validate injected parameters and options */
-    default void validateInfo(String inputFile) {
-        BinaryFileInfo info = fileInfoExtractorInstance.getFileInfo(inputFile);
-        if (info != null && !info.valid)
-            throwValidationException("ERROR: input file \"" + inputFile + "\" is corrupted.", false);
+/**
+ *
+ */
+public abstract class MiXCRCommand extends ACommand {
+    public MiXCRCommand() {
+        super("mixcr");
     }
 }

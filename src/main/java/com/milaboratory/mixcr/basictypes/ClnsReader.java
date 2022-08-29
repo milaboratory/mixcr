@@ -13,9 +13,10 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.cli.PipelineConfiguration;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.cli.MiXCRCommandReport;
+import com.milaboratory.mixcr.cli.MiXCRReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
@@ -36,11 +37,9 @@ import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
 /**
  *
  */
-public class ClnsReader extends PipelineConfigurationReaderMiXCR implements CloneReader, VDJCFileHeaderData, AutoCloseable {
+public class ClnsReader implements CloneReader, AutoCloseable {
     private final PrimitivIHybrid input;
     private final VDJCLibraryRegistry libraryRegistry;
-
-    private final PipelineConfiguration pipelineConfiguration;
     private final VDJCAlignerParameters alignerParameters;
     private final CloneAssemblerParameters assemblerParameters;
     private final TagsInfo tagsInfo;
@@ -48,8 +47,8 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     private final String versionInfo;
     private final List<VDJCGene> usedGenes;
     private final int numberOfClones;
-
     private final long clonesPosition;
+    private final List<MiXCRCommandReport> reports;
 
     public ClnsReader(String file, VDJCLibraryRegistry libraryRegistry) throws IOException {
         this(Paths.get(file), libraryRegistry, 3);
@@ -88,7 +87,9 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             }
         }
 
-        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(-IOUtil.END_MAGIC_LENGTH)) {
+        long reportsStartPosition;
+        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(-ClnsWriter.FOOTER_LENGTH)) {
+            reportsStartPosition = pi.readLong();
             // Checking file consistency
             byte[] endMagic = new byte[IOUtil.END_MAGIC_LENGTH];
             pi.readFully(endMagic);
@@ -99,7 +100,6 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         // read header
         try (PrimitivI i = input.beginPrimitivI(true)) {
             versionInfo = i.readUTF();
-            pipelineConfiguration = i.readObject(PipelineConfiguration.class);
             alignerParameters = i.readObject(VDJCAlignerParameters.class);
             assemblerParameters = i.readObject(CloneAssemblerParameters.class);
             tagsInfo = i.readObject(TagsInfo.class);
@@ -107,6 +107,14 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
             numberOfClones = i.readInt();
 
             usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry);
+        }
+
+        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(reportsStartPosition)) {
+            int nReports = pi.readInt();
+            reports = new ArrayList<>();
+            for (int i = 0; i < nReports; i++) {
+                reports.add((MiXCRCommandReport) pi.readObject(MiXCRReport.class));
+            }
         }
 
         this.clonesPosition = input.getPosition();
@@ -124,11 +132,6 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
         CloneSet cloneSet = new CloneSet(clones, usedGenes, alignerParameters, assemblerParameters, tagsInfo, ordering);
         cloneSet.versionInfo = versionInfo;
         return cloneSet;
-    }
-
-    @Override
-    public PipelineConfiguration getPipelineConfiguration() {
-        return pipelineConfiguration;
     }
 
     @Override
@@ -158,6 +161,11 @@ public class ClnsReader extends PipelineConfigurationReaderMiXCR implements Clon
     @Override
     public List<VDJCGene> getUsedGenes() {
         return usedGenes;
+    }
+
+    @Override
+    public List<MiXCRCommandReport> reports() {
+        return reports;
     }
 
     @Override
