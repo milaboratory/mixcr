@@ -38,6 +38,7 @@ import com.milaboratory.mitool.helpers.FSKt;
 import com.milaboratory.mitool.pattern.PatternCollection;
 import com.milaboratory.mitool.pattern.search.*;
 import com.milaboratory.mitool.report.ParseReport;
+import com.milaboratory.mixcr.bam.BAMReader;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
@@ -74,10 +75,11 @@ import static com.milaboratory.mixcr.cli.CommandAlign.ALIGN_COMMAND_NAME;
         description = "Builds alignments with V,D,J and C genes for input sequencing reads.")
 public class CommandAlign extends MiXCRCommand {
     static final String ALIGN_COMMAND_NAME = "align";
+
     @Parameters(arity = "2..3",
             paramLabel = "files",
             hideParamSyntax = true,
-            description = "file_R1.(fastq[.gz]|fasta) [file_R2.fastq[.gz]] alignments.vdjca\n" +
+            description = "file_R1.(fastq[.gz]|fasta|bam|sam) [file_R2.(fastq[.gz]|bam|sam)] [file_RN.(bam|sam)] alignments.vdjca\n" +
                     "Use \"{{n}}\" if you want to concatenate files from multiple lanes, like:\n" +
                     "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz")
     private List<String> inOut = new ArrayList<>();
@@ -168,6 +170,11 @@ public class CommandAlign extends MiXCRCommand {
             names = {"-d", "--no-merge"},
             hidden = true)
     public boolean noMerge = false;
+
+    @Option(description = "Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)",
+            names = {"--drop-non-vdj"},
+            hidden = true)
+    public boolean dropNonVDJ = false;
 
     @Deprecated
     @Option(description = "Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
@@ -315,7 +322,11 @@ public class CommandAlign extends MiXCRCommand {
     }
 
     public boolean isInputPaired() {
-        return getInputFiles().size() == 2;
+        return getInputFiles().size() == 2 || isInputBAM();
+    }
+
+    public boolean isInputBAM() {
+        return getInputFiles().get(0).toLowerCase().endsWith(".bam") || getInputFiles().get(0).toLowerCase().endsWith(".sam");
     }
 
     public SequenceReaderCloseable<? extends SequenceRead> createReader() throws IOException {
@@ -333,7 +344,14 @@ public class CommandAlign extends MiXCRCommand {
             }
         };
 
-        if (isInputPaired()) {
+        if (isInputBAM()) {
+            List<String> bamNames = getInputFiles();
+            Path[] readers = new Path[bamNames.size()];
+            for (int i = 0; i < bamNames.size(); i++) {
+                readers[i] = Paths.get(bamNames.get(i));
+            }
+            return new BAMReader(readers, dropNonVDJ, true);
+        } else if (isInputPaired()) {
             List<List<Path>> resolved = getInputFiles().stream()
                     .map(rf -> FSKt.expandPathNPattern(Paths.get(rf)))
                     .collect(Collectors.toList());
@@ -366,6 +384,7 @@ public class CommandAlign extends MiXCRCommand {
             }
         }
     }
+
 
     public TagSearchPlan getTagPattern() {
         if (tagPattern == null && tagPatternName == null && tagPatternFile == null)
