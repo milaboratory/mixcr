@@ -44,7 +44,7 @@ import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.forEachInParallel
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.primitivio.writeCollection
@@ -175,7 +175,7 @@ internal class SHMTreeBuilderBySteps(
                     "Building results"
                 ) { clusters ->
                     val result = clusters
-                        .mapInParallel(threads) { cluster ->
+                        .mapInParallelOrdered(threads) { cluster ->
                             getResult(cluster.clones, debugs.last().treesAfterDecisionsWriter)
                         }
                         .flatten()

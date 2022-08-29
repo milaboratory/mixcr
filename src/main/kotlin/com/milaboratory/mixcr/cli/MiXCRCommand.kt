@@ -9,15 +9,8 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import com.milaboratory.cli.ACommand;
+import com.milaboratory.cli.ACommand
 
-/**
- *
- */
-public abstract class MiXCRCommand extends ACommand {
-    public MiXCRCommand() {
-        super("mixcr");
-    }
-}
+abstract class MiXCRCommand : ACommand("mixcr")

@@ -32,7 +32,7 @@ import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.mapNotNull
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
@@ -110,7 +110,7 @@ class SingleCellTreeBuilder(
                         val rebasedChainPairs = groupDuplicatesAndRebaseFromGermline(cellGroups)
                         clustersBuilder.buildClusters(rebasedChainPairs)
                     }
-                    .mapInParallel(threads) { clusterOfCells ->
+                    .mapInParallelOrdered(threads) { clusterOfCells ->
                         //TODO build linked topology
                         //TODO what to do with the same clones that exists in several nodes because mutations was in other chain
                         listOf(

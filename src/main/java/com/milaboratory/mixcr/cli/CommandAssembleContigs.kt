@@ -38,7 +38,7 @@ import com.milaboratory.primitivio.PipeDataInputReader
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
@@ -185,9 +185,9 @@ class CommandAssembleContigs : MiXCRCommand() {
                     IOUtil.registerGeneReferences(tmpOut, genes, info.alignerParameters)
                     val cloneAlignmentsPort = reader.clonesAndAlignments()
                     SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort)
-                    val parallelProcessor = cloneAlignmentsPort.mapInParallel(
+                    val parallelProcessor = cloneAlignmentsPort.mapInParallelOrdered(
                         threads,
-                        buffer = 1024
+                        bufferSize = 1024
                     ) { cloneAlignments: CloneAlignments ->
                         val clone = when {
                             ignoreTags -> cloneAlignments.clone
@@ -238,7 +238,7 @@ class CommandAssembleContigs : MiXCRCommand() {
                             if (!coverages.containsKey(Variable) || !coverages.containsKey(Joining)) {
                                 // Something went really wrong
                                 reportBuilder.onAssemblyCanceled(clone)
-                                return@mapInParallel arrayOf(clone)
+                                return@mapInParallelOrdered arrayOf(clone)
                             }
                             for (alignments in CUtils.it(cloneAlignments.alignments())) {
                                 for ((key, value) in alignments.hitsMap) {
@@ -293,7 +293,7 @@ class CommandAssembleContigs : MiXCRCommand() {
                                 }
                             }
 
-                            return@mapInParallel fullSeqAssembler.callVariants(rawVariantsData)
+                            return@mapInParallelOrdered fullSeqAssembler.callVariants(rawVariantsData)
                         } catch (re: Throwable) {
                             throw RuntimeException("While processing clone #" + clone.id, re)
                         }

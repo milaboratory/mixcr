@@ -14,9 +14,15 @@ package com.milaboratory.primitivio
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.OutputPortCloseable
+import cc.redberry.pipe.Processor
 import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
+import cc.redberry.pipe.blocks.Merger
+import cc.redberry.pipe.blocks.ParallelProcessor
+import cc.redberry.pipe.util.Chunk
 import cc.redberry.pipe.util.FlatteningOutputPort
+import cc.redberry.pipe.util.Indexer
+import cc.redberry.pipe.util.OrderedOutputPort
 import cc.redberry.pipe.util.TBranchOutputPort
 import cc.redberry.primitives.Filter
 import com.milaboratory.primitivio.blocks.PrimitivIBlocks
@@ -69,17 +75,39 @@ inline fun <reified T : Any> PrimitivI.readArray(): Array<T> = Array(readInt()) 
     readObject(T::class.java)
 }
 
+operator fun <T : Any, E : T, R : Any> Processor<T, R>.invoke(input: E): R = process(input)
+
+inline operator fun <T : Any, reified R : Any> Processor<T, R>.invoke(chunk: Chunk<out T>): Chunk<out R> =
+    Chunk(Array(chunk.size()) { i ->
+        process(chunk[i])
+    })
+
 fun <T : Any, R : Any> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
+
+fun <T : Any, R : Any> OutputPort<T>.mapInParallelOrdered(
+    threads: Int,
+    bufferSize: Int = Buffer.DEFAULT_SIZE,
+    function: (T) -> R
+): OutputPort<R> = CUtils.orderedParallelProcessor(this, function, bufferSize, threads)
 
 fun <T : Any, R : Any> OutputPort<T>.mapInParallel(
     threads: Int,
-    buffer: Int = Buffer.DEFAULT_SIZE,
+    bufferSize: Int = Buffer.DEFAULT_SIZE,
     function: (T) -> R
-): OutputPort<R> = CUtils.orderedParallelProcessor(this, function, buffer, threads)
+): ParallelProcessor<T, R> = ParallelProcessor(this, function, bufferSize, threads)
 
 fun <T : Any, R : Any> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPortCloseable<R> = flatMap {
     listOfNotNull(function(it))
 }
+
+fun <T : Any> OutputPort<T>.chunked(chunkSize: Int): OutputPort<Chunk<T>> = CUtils.chunked(this, chunkSize)
+
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> OutputPort<Chunk<out T>>.unchunked(): OutputPort<T> = CUtils.unchunked(this as OutputPort<Chunk<T>>)
+
+fun <T : Any> OutputPort<T>.buffered(bufferSize: Int): Merger<T> = CUtils.buffered(this, bufferSize)
+
+fun <T : Any> OutputPort<T>.ordered(indexer: Indexer<T>): OutputPort<T> = OrderedOutputPort(this, indexer)
 
 fun <T : Any> List<OutputPort<T>>.flatten(): OutputPortCloseable<T> =
     FlatteningOutputPort(CUtils.asOutputPort(this))

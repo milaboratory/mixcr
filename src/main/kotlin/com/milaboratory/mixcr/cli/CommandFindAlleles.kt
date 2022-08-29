@@ -35,7 +35,7 @@ import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDelete
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.toList
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
@@ -407,7 +407,7 @@ private class CloneRebuild(
      */
     fun rebuildClones(input: OutputPort<Clone>): List<Clone> =
         input
-            .mapInParallel(threads) { clone ->
+            .mapInParallelOrdered(threads) { clone ->
                 cloneFactory.create(
                     clone.id,
                     clone.count,
