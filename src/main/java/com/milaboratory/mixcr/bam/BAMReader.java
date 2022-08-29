@@ -6,6 +6,9 @@ import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.core.io.sequence.*;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
+import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceQuality;
+import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.TempFileManager;
@@ -21,6 +24,10 @@ import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
+import static com.milaboratory.core.sequence.NucleotideSequence.ALPHABET;
+import static com.milaboratory.core.sequence.SequenceQuality.BAD_QUALITY_VALUE;
+import static com.milaboratory.core.sequence.SequenceQuality.GOOD_QUALITY_VALUE;
+
 public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanReportProgress {
     private final AtomicLong numberOfProcessedAlignments = new AtomicLong(0);
     private final AtomicLong numberOfPairedReads = new AtomicLong(0);
@@ -28,8 +35,9 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
     private SingleReadImpl currRead;
     private SingleReadImpl nextRead;
     private OutputPort<SingleReadImpl> singleReadImplOutputPort;
-    private CountingOutputPort<SAMRecord> progressChecker;
+    private final CountingOutputPort<SAMRecord> progressChecker;
     private final SamReader[] readers;
+    private final boolean replaceWildcards;
 
     public long getNumberOfProcessedAlignments() {
         return numberOfProcessedAlignments.get();
@@ -43,11 +51,12 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
         return numberOfUnpairedReads.get();
     }
 
-    public BAMReader(String[] bamFiles, boolean dropNonVDJChromosomes) {
-        this(Stream.of(bamFiles).map(Paths::get).toArray(Path[]::new), dropNonVDJChromosomes);
+    public BAMReader(String[] bamFiles, boolean dropNonVDJChromosomes, boolean replaceWildcards) {
+        this(Stream.of(bamFiles).map(Paths::get).toArray(Path[]::new), dropNonVDJChromosomes, replaceWildcards);
     }
 
-    public BAMReader(Path[] bamFiles, boolean dropNonVDJChromosomes) {
+    public BAMReader(Path[] bamFiles, boolean dropNonVDJChromosomes, boolean replaceWildcards) {
+        this.replaceWildcards = replaceWildcards;
         readers = new SamReader[bamFiles.length];
         for (int i = 0; i < bamFiles.length; i++) {
             readers[i] = SamReaderFactory.makeDefault().open(bamFiles[i]);
@@ -80,9 +89,14 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
                 rec.reverseComplement(true);
             }
 
+            NSequenceWithQuality nSeq = new NSequenceWithQuality(rec.getReadString(), rec.getBaseQualityString());
+            if (replaceWildcards) {
+                nSeq = replaceWildcards(nSeq);
+            }
+
             // The Id of paired read is it order in pair {1, 2}, or {0} for unpaired
             return new SingleReadImpl(rec.getReadPairedFlag() ? (rec.getFirstOfPairFlag() ? 1 : 2) : 0,
-                    new NSequenceWithQuality(rec.getReadString(), rec.getBaseQualityString()),
+                    nSeq,
                     rec.getReadName());
         });
 
@@ -108,6 +122,17 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
 
         currRead = singleReadImplOutputPort.take();
         nextRead = singleReadImplOutputPort.take();
+    }
+
+    private static NSequenceWithQuality replaceWildcards(NSequenceWithQuality r) {
+        NucleotideSequence sequence = r.getSequence();
+
+        byte[] quality = new byte[sequence.size()];
+        for (int i = 0; i < quality.length; ++i)
+            quality[i] = ALPHABET.isWildcard(sequence.codeAt(i)) ?
+                    BAD_QUALITY_VALUE : GOOD_QUALITY_VALUE;
+        return new NSequenceWithQuality(SequencesUtils.wildcardsToRandomBasic(sequence, sequence.hashCode()),
+                new SequenceQuality(quality));
     }
 
     @Override

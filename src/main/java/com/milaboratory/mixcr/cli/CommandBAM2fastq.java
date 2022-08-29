@@ -19,20 +19,24 @@ import java.util.stream.Stream;
         description = "Converts BAM/SAM file to paired/unpaired fastq files")
 public class CommandBAM2fastq extends MiXCRCommand {
     @Option(names = {"-b", "--bam"}, description = "BAM files for conversion.", required = true)
-    private String[] bamFiles;
+    public String[] bamFiles;
 
-    @Option(names = {"-f1", "--fastq1"}, description = "File for first reads.", required = true)
-    private String fastq1;
+    @Option(names = {"-r1"}, description = "File for first reads.", required = true)
+    public String fastq1;
 
-    @Option(names = {"-f2", "--fastq2"}, description = "File for second reads.", required = true)
-    private String fastq2;
+    @Option(names = {"-r2"}, description = "File for second reads.", required = true)
+    public String fastq2;
 
-    @Option(names = {"-fu", "--fastqUnpaired"}, description = "File for unpaired reads.", required = true)
-    private String fastqUnpaired;
+    @Option(names = {"-u"}, description = "File for unpaired reads.", required = true)
+    public String fastqUnpaired;
 
-    @Option(names = {"-v", "--drop-non-vdj"},
+    @Option(names = {"--drop-non-vdj"},
             description = "Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)")
     public boolean dropNonVDJ = false;
+
+    @Option(names = {"--keep-wildcards"},
+            description = "Keep sequences with wildcards in the output")
+    public boolean keepWildcards = false;
 
     @Override
     protected List<String> getInputFiles() {
@@ -46,7 +50,7 @@ public class CommandBAM2fastq extends MiXCRCommand {
 
     @Override
     public void run0() throws Exception {
-        try (BAMReader converter = new BAMReader(bamFiles, dropNonVDJ)) {
+        try (BAMReader converter = new BAMReader(bamFiles, dropNonVDJ, !keepWildcards)) {
             SequenceRead read;
             try (PairedFastqWriter wr = new PairedFastqWriter(fastq1, fastq2);
                  SingleFastqWriter swr = new SingleFastqWriter(fastqUnpaired)) {

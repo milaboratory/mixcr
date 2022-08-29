@@ -39,7 +39,6 @@ import com.milaboratory.mitool.pattern.PatternCollection;
 import com.milaboratory.mitool.pattern.search.*;
 import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.bam.BAMReader;
-import com.milaboratory.mixcr.bam.BAMReaderWrapper;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
@@ -351,7 +350,7 @@ public class CommandAlign extends MiXCRCommand {
             for (int i = 0; i < bamNames.size(); i++) {
                 readers[i] = Paths.get(bamNames.get(i));
             }
-            return new BAMReaderWrapper(new BAMReader(readers, dropNonVDJ));
+            return new BAMReader(readers, dropNonVDJ, true);
         } else if (isInputPaired()) {
             List<List<Path>> resolved = getInputFiles().stream()
                     .map(rf -> FSKt.expandPathNPattern(Paths.get(rf)))

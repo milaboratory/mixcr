@@ -74,39 +74,39 @@ public class BAMReaderTest {
         for (int i = 0; i < bamName.length; i++) {
             readers[i] = Paths.get(Objects.requireNonNull(classLoader.getResource(bamName[i])).getPath());
         }
-        BAMReader converter = new BAMReader(readers, false);
+        try (BAMReader converter = new BAMReader(readers, false, false)) {
 
-        File res_f1 = File.createTempFile("my_r1", ".fastq");
-        File res_f2 = File.createTempFile("my_r2", ".fastq");
-        File res_fu = File.createTempFile("my_ru", ".fastq");
+            File res_f1 = File.createTempFile("my_r1", ".fastq");
+            File res_f2 = File.createTempFile("my_r2", ".fastq");
+            File res_fu = File.createTempFile("my_ru", ".fastq");
 
-        SequenceRead read;
-        try (PairedFastqWriter wr = new PairedFastqWriter(res_f1, res_f2);
-             SingleFastqWriter swr = new SingleFastqWriter(res_fu)) {
-            while ((read = converter.take()) != null) {
-                if (read instanceof PairedRead) {
-                    wr.write((PairedRead) read);
-                } else if (read instanceof SingleRead) {
-                    swr.write((SingleRead) read);
+            SequenceRead read;
+            try (PairedFastqWriter wr = new PairedFastqWriter(res_f1, res_f2);
+                 SingleFastqWriter swr = new SingleFastqWriter(res_fu)) {
+                while ((read = converter.take()) != null) {
+                    if (read instanceof PairedRead) {
+                        wr.write((PairedRead) read);
+                    } else if (read instanceof SingleRead) {
+                        swr.write((SingleRead) read);
+                    }
                 }
             }
-        }
 
-        int targetHash = 0;
-        for (int i = 0; i < fastq1Name.length; i++) {
-            File fastq1File = new File(Objects.requireNonNull(classLoader.getResource(fastq1Name[i])).getFile());
-            File fastq2File = new File(Objects.requireNonNull(classLoader.getResource(fastq2Name[i])).getFile());
-            targetHash ^= fastqFilesHash(fastq1File, fastq2File);
-        }
-        if (unpairedFastqName != null) {
-            for (String s : unpairedFastqName) {
-                File fastq1File = new File(Objects.requireNonNull(classLoader.getResource(s)).getFile());
-                targetHash ^= fastqFileHash(fastq1File);
+            int targetHash = 0;
+            for (int i = 0; i < fastq1Name.length; i++) {
+                File fastq1File = new File(Objects.requireNonNull(classLoader.getResource(fastq1Name[i])).getFile());
+                File fastq2File = new File(Objects.requireNonNull(classLoader.getResource(fastq2Name[i])).getFile());
+                targetHash ^= fastqFilesHash(fastq1File, fastq2File);
             }
+            if (unpairedFastqName != null) {
+                for (String s : unpairedFastqName) {
+                    File fastq1File = new File(Objects.requireNonNull(classLoader.getResource(s)).getFile());
+                    targetHash ^= fastqFileHash(fastq1File);
+                }
+            }
+            int resultHash = fastqFilesHash(res_f1, res_f2) ^ fastqFileHash(res_fu);
+            Assert.assertEquals(targetHash, resultHash);
         }
-        int resultHash = fastqFilesHash(res_f1, res_f2) ^ fastqFileHash(res_fu);
-        Assert.assertEquals(targetHash, resultHash);
-
     }
 
     @Test
