@@ -389,6 +389,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         // parse parameters
         val ap = CommandAssemble()
         CommandLine(ap).parseArgs(*assembleParameters.toTypedArray())
+        ap.ensureParametersInitialized()
         ap.cloneAssemblerParameters.updateFrom(mkAlign().alignerParameters)
         return ap
     }

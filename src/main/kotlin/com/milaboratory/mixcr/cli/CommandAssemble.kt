@@ -9,359 +9,284 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.util.StatusReporter;
-import com.milaboratory.mixcr.assembler.*;
-import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters;
-import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner;
-import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagTuple;
-import com.milaboratory.mixcr.basictypes.tag.TagType;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.util.*;
-import io.repseq.core.*;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import cc.redberry.pipe.util.StatusReporter
+import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
+import com.milaboratory.mixcr.assembler.CloneAssembler
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
+import com.milaboratory.mixcr.assembler.CloneAssemblerParametersPresets
+import com.milaboratory.mixcr.assembler.CloneAssemblerRunner
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
+import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
+import com.milaboratory.mixcr.basictypes.ClnAWriter
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.basictypes.VDJCSProperties
+import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.util.ArraysUtils
+import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
+import java.util.*
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
+@CommandLine.Command(name = CommandAssemble.ASSEMBLE_COMMAND_NAME, separator = " ", description = ["Assemble clones."])
+class CommandAssemble : MiXCRCommand() {
+    @CommandLine.Parameters(description = ["alignments.vdjca"], index = "0")
+    lateinit var `in`: String
 
-import static com.milaboratory.mixcr.cli.CommandAssemble.ASSEMBLE_COMMAND_NAME;
-import static com.milaboratory.util.TempFileManager.smartTempDestination;
+    @CommandLine.Parameters(description = ["clones.[clns|clna]"], index = "1")
+    lateinit var out: String
 
-@Command(name = ASSEMBLE_COMMAND_NAME,
-        separator = " ",
-        description = "Assemble clones.")
-public class CommandAssemble extends MiXCRCommand {
-    static final String ASSEMBLE_COMMAND_NAME = "assemble";
+    @CommandLine.Option(description = ["Clone assembling parameters preset."], names = ["-p", "--preset"])
+    var assemblerParametersName = "default"
 
-    @Parameters(description = "alignments.vdjca", index = "0")
-    public String in;
-
-    @Parameters(description = "clones.[clns|clna]", index = "1")
-    public String out;
-
-    @Option(description = "Clone assembling parameters preset.",
-            names = {"-p", "--preset"})
-    public String assemblerParametersName = "default";
-
-    @Option(description = "Processing threads",
-            names = {"-t", "--threads"})
-    public void setThreads(int threads) {
-        System.out.println("-t / --threads is deprecated for \"mixcr assemble ...\" and ignored for this call...");
+    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    fun setThreads(threads: Int) {
+        println("-t / --threads is deprecated for \"mixcr assemble ...\" and ignored for this call...")
     }
 
-    @Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
-            names = {"--use-system-temp"})
-    public boolean useSystemTemp = false;
+    @CommandLine.Option(
+        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
+        names = ["--use-system-temp"]
+    )
+    var useSystemTemp = false
 
-    @Option(description = "Use higher compression for output file.",
-            names = {"--high-compression"})
-    public boolean highCompression = false;
+    @CommandLine.Option(description = ["Use higher compression for output file."], names = ["--high-compression"])
+    var highCompression = false
 
-    @Option(description = "Sort by sequence. Clones in the output file will be sorted by clonal sequence," +
-            "which allows to build overlaps between clonesets.",
-            names = {"-s", "--sort-by-sequence"})
-    public boolean sortBySequence = false;
+    @CommandLine.Option(
+        description = ["Sort by sequence. Clones in the output file will be sorted by clonal sequence," +
+                "which allows to build overlaps between clonesets."], names = ["-s", "--sort-by-sequence"]
+    )
+    var sortBySequence = false
 
-    @Option(description = CommonDescriptions.REPORT,
-            names = {"-r", "--report"})
-    public String reportFile;
+    @CommandLine.Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
+    var reportFile: String? = null
 
-    @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"-j", "--json-report"})
-    public String jsonReport;
+    @CommandLine.Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
+    var jsonReport: String? = null
 
-    @Option(description = "Show buffer statistics.",
-            names = {"--buffers"}, hidden = true)
-    public boolean reportBuffers;
+    @CommandLine.Option(description = ["Show buffer statistics."], names = ["--buffers"], hidden = true)
+    var reportBuffers = false
 
-    @Option(description = "If this option is specified, output file will be written in \"Clones & " +
-            "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
-            "This file then can be used to build wider contigs for clonal sequence and extract original " +
-            "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage).",
-            names = {"-a", "--write-alignments"})
-    public boolean isClnaOutput = false;
+    @CommandLine.Option(
+        description = ["If this option is specified, output file will be written in \"Clones & " +
+                "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
+                "This file then can be used to build wider contigs for clonal sequence and extract original " +
+                "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage)."],
+        names = ["-a", "--write-alignments"]
+    )
+    var isClnaOutput = false
 
-    @Option(description = "If tags are present, do assemble pre-clones on the cell level rather than on the molecule level. " +
-            "If there are no molecular tags in the data, but cell tags are present, this option will be used by default. " +
-            "This option has no effect on the data without tags.",
-            names = {"--cell-level"})
-    public boolean cellLevel = false;
+    @CommandLine.Option(
+        description = ["If tags are present, do assemble pre-clones on the cell level rather than on the molecule level. " +
+                "If there are no molecular tags in the data, but cell tags are present, this option will be used by default. " +
+                "This option has no effect on the data without tags."], names = ["--cell-level"]
+    )
+    var cellLevel = false
 
-    @Option(names = "-O", description = "Overrides default parameter values.")
-    private Map<String, String> overrides = new HashMap<>();
+    @CommandLine.Option(names = ["-O"], description = ["Overrides default parameter values."])
+    private val overrides: Map<String, String> = emptyMap()
 
-    @Option(names = "-P", description = "Overrides default pre-clone assembler parameter values.")
-    private Map<String, String> preCloneAssemblerOverrides = new HashMap<>();
+    @CommandLine.Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
+    private val preCloneAssemblerOverrides: Map<String, String> = emptyMap()
+    override fun getInputFiles(): List<String> = listOf(`in`)
 
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(in);
-    }
-
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.singletonList(out);
-    }
+    override fun getOutputFiles(): List<String> = listOf(out)
 
     // Extracting V/D/J/C gene list from input vdjca file
-    private List<VDJCGene> genes = null;
-    private MiXCRMetaInfo info = null;
-    private CloneAssemblerParameters assemblerParameters = null;
-    private VDJCSProperties.CloneOrdering ordering = null;
+    private lateinit var genes: List<VDJCGene>
+    private lateinit var info: MiXCRMetaInfo
+    lateinit var cloneAssemblerParameters: CloneAssemblerParameters
+    private lateinit var ordering: CloneOrdering
 
-    private void ensureParametersInitialized() {
-        if (info != null)
-            return;
-
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in,
-                VDJCLibraryRegistry.getDefault())) {
-            genes = reader.getUsedGenes();
+    fun ensureParametersInitialized() {
+        if (this::info.isInitialized) return
+        VDJCAlignmentsReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+            genes = reader.usedGenes
             // Saving aligner parameters to correct assembler parameters
-            info = reader.getInfo();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            info = reader.info
         }
-        assert info != null;
 
         //set aligner parameters
-        assemblerParameters = CloneAssemblerParametersPresets.getByName(assemblerParametersName);
-        if (assemblerParameters == null)
-            throwValidationException("Unknown parameters: " + assemblerParametersName);
-        // noinspection ConstantConditions
-        assemblerParameters = assemblerParameters.updateFrom(info.getAlignerParameters());
+        cloneAssemblerParameters = CloneAssemblerParametersPresets.getByName(assemblerParametersName)
+            ?: throwValidationExceptionKotlin("Unknown parameters: $assemblerParametersName")
+        cloneAssemblerParameters = cloneAssemblerParameters.updateFrom(info.alignerParameters)
 
         // Overriding JSON parameters
-        if (!overrides.isEmpty()) {
-            assemblerParameters = JsonOverrider.override(assemblerParameters, CloneAssemblerParameters.class,
-                    overrides);
-            if (assemblerParameters == null)
-                throwValidationException("Failed to override some parameter: " + overrides);
+        if (overrides.isNotEmpty()) {
+            cloneAssemblerParameters = JsonOverrider.override(
+                cloneAssemblerParameters, CloneAssemblerParameters::class.java,
+                overrides
+            ) ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
         }
-
-        if (sortBySequence) {
-            GeneFeature[] assemblingFeatures = assemblerParameters.getAssemblingFeatures();
+        ordering = if (sortBySequence) {
+            val assemblingFeatures = cloneAssemblerParameters.assemblingFeatures
 
             // Any CDR3 containing feature will become first
-            for (int i = 0; i < assemblingFeatures.length; i++)
-                if (assemblingFeatures[i].contains(GeneFeature.CDR3)) {
-                    if (i != 0)
-                        ArraysUtils.swap(assemblingFeatures, 0, i);
-                    break;
+            for (i in assemblingFeatures.indices) {
+                if (CDR3 in assemblingFeatures[i]) {
+                    if (i != 0) ArraysUtils.swap(assemblingFeatures, 0, i)
+                    break
                 }
-
-            ordering = VDJCSProperties.cloneOrderingByNucleotide(assemblingFeatures,
-                    GeneType.Variable, GeneType.Joining);
+            }
+            VDJCSProperties.cloneOrderingByNucleotide(assemblingFeatures, Variable, Joining)
         } else {
-            ordering = VDJCSProperties.CO_BY_COUNT;
+            VDJCSProperties.CO_BY_COUNT
         }
-    }
-
-    public CloneAssemblerParameters getCloneAssemblerParameters() {
-        ensureParametersInitialized();
-        return assemblerParameters;
-    }
-
-    public List<VDJCGene> getGenes() {
-        ensureParametersInitialized();
-        return genes;
-    }
-
-    public VDJCAlignerParameters getAlignerParameters() {
-        ensureParametersInitialized();
-        return info.getAlignerParameters();
-    }
-
-    public TagsInfo getTagsInfo() {
-        ensureParametersInitialized();
-        return info.getTagsInfo();
-    }
-
-    public VDJCSProperties.CloneOrdering getOrdering() {
-        ensureParametersInitialized();
-        return ordering;
     }
 
     /**
      * Assemble report
      */
-    public final CloneAssemblerReportBuilder reportBuilder = new CloneAssemblerReportBuilder();
+    private val reportBuilder = CloneAssemblerReportBuilder()
 
-    @Override
-    public void run0() throws Exception {
+    override fun run0() {
+        ensureParametersInitialized()
         // Saving initial timestamp
-        long beginTimestamp = System.currentTimeMillis();
+        val beginTimestamp = System.currentTimeMillis()
 
         // Will be used for several operations requiring disk offloading
-        TempFileDest tempDest = smartTempDestination(out, "", useSystemTemp);
+        val tempDest = TempFileManager.smartTempDestination(out, "", useSystemTemp)
 
         // Checking consistency between actionParameters.doWriteClnA() value and file extension
-        if ((out.toLowerCase().endsWith(".clna") && !isClnaOutput) ||
-                (out.toLowerCase().endsWith(".clns") && isClnaOutput))
-            warn("WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and\n" +
-                    ".clna if -a / --write-alignments options specified.");
-
-        try (VDJCAlignmentsReader alignmentsReader = new VDJCAlignmentsReader(in)) {
-
-            CloneAssemblerParameters assemblerParameters = getCloneAssemblerParameters();
-            List<VDJCGene> genes = getGenes();
-            VDJCAlignerParameters alignerParameters = getAlignerParameters();
-            TagsInfo tagsInfo = getTagsInfo();
-
-            // tagsInfo.getSortingLevel()
-
-            // Performing assembly
-            try (CloneAssembler assembler = new CloneAssembler(assemblerParameters,
-                    isClnaOutput,
-                    genes, alignerParameters.getFeaturesToAlignMap())) {
+        if (out.lowercase(Locale.getDefault())
+                .endsWith(".clna") && !isClnaOutput || out.lowercase(Locale.getDefault())
+                .endsWith(".clns") && isClnaOutput
+        ) warn(
+            """
+    WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and
+    .clna if -a / --write-alignments options specified.
+    """.trimIndent()
+        )
+        VDJCAlignmentsReader(`in`).use { alignmentsReader ->
+            CloneAssembler(
+                cloneAssemblerParameters,
+                isClnaOutput,
+                genes,
+                info.alignerParameters.featuresToAlignMap
+            ).use { assembler ->
                 // Creating event listener to collect run statistics
-                reportBuilder.setStartMillis(beginTimestamp);
-                reportBuilder.setInputFiles(in);
-                reportBuilder.setOutputFiles(out);
-                reportBuilder.setCommandLine(getCommandLineArguments());
-
-                assembler.setListener(reportBuilder);
-
-                PreCloneReader preClones;
-                if (tagsInfo.hasTagsWithType(TagType.Cell) || tagsInfo.hasTagsWithType(TagType.Molecule)) {
-                    Path preClonesFile = tempDest.resolvePath("preclones.pc");
-
-                    PreCloneAssemblerParameters params = PreCloneAssemblerParameters.getDefaultParameters(cellLevel);
-
-                    if (!preCloneAssemblerOverrides.isEmpty()) {
-                        params = JsonOverrider.override(params,
-                                PreCloneAssemblerParameters.class,
-                                preCloneAssemblerOverrides);
-                        if (params == null)
-                            throwValidationException("Failed to override some pre-clone assembler parameters: " + preCloneAssemblerOverrides);
-                    }
-
-                    PreCloneAssemblerRunner assemblerRunner = new PreCloneAssemblerRunner(
+                reportBuilder.setStartMillis(beginTimestamp)
+                reportBuilder.setInputFiles(`in`)
+                reportBuilder.setOutputFiles(out)
+                reportBuilder.commandLine = commandLineArguments
+                assembler.setListener(reportBuilder)
+                val preClones: PreCloneReader =
+                    if (info.tagsInfo.hasTagsWithType(TagType.Cell) || info.tagsInfo.hasTagsWithType(TagType.Molecule)) {
+                        val preClonesFile = tempDest.resolvePath("preclones.pc")
+                        val params: PreCloneAssemblerParameters = run {
+                            val defaultParameters = PreCloneAssemblerParameters.getDefaultParameters(cellLevel)
+                            when {
+                                preCloneAssemblerOverrides.isNotEmpty() -> {
+                                    JsonOverrider.override(
+                                        defaultParameters,
+                                        PreCloneAssemblerParameters::class.java,
+                                        preCloneAssemblerOverrides
+                                    )
+                                        ?: throwValidationExceptionKotlin("Failed to override some pre-clone assembler parameters: $preCloneAssemblerOverrides")
+                                }
+                                else -> defaultParameters
+                            }
+                        }
+                        val assemblerRunner = PreCloneAssemblerRunner(
                             alignmentsReader,
-                            cellLevel ? TagType.Cell : TagType.Molecule,
-                            assemblerParameters.getAssemblingFeatures(),
-                            params, preClonesFile, tempDest.addSuffix("pc.tmp"));
-                    assemblerRunner.setExtractionListener(reportBuilder);
-                    SmartProgressReporter.startProgressReport(assemblerRunner);
+                            if (cellLevel) TagType.Cell else TagType.Molecule,
+                            cloneAssemblerParameters.assemblingFeatures,
+                            params, preClonesFile, tempDest.addSuffix("pc.tmp")
+                        )
+                        assemblerRunner.setExtractionListener(reportBuilder)
+                        SmartProgressReporter.startProgressReport(assemblerRunner)
 
-                    // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
-                    assemblerRunner.run();
+                        // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
+                        assemblerRunner.run()
 
-                    // Setting report into a big report object
-                    reportBuilder.setPreCloneAssemblerReportBuilder(assemblerRunner.getReport());
-
-                    preClones = assemblerRunner.createReader();
-                } else
-                    // If there are no tags in the data, alignments are just wrapped into pre-clones
-                    preClones = PreCloneReader.fromAlignments(alignmentsReader,
-                            assemblerParameters.getAssemblingFeatures(),
-                            reportBuilder);
+                        // Setting report into a big report object
+                        reportBuilder.setPreCloneAssemblerReportBuilder(assemblerRunner.report)
+                        assemblerRunner.createReader()
+                    } else  // If there are no tags in the data, alignments are just wrapped into pre-clones
+                        PreCloneReader.fromAlignments(
+                            alignmentsReader,
+                            cloneAssemblerParameters.assemblingFeatures,
+                            reportBuilder
+                        )
 
                 // Running assembler
-                CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
-                        preClones,
-                        assembler);
-                SmartProgressReporter.startProgressReport(assemblerRunner);
-
+                val assemblerRunner = CloneAssemblerRunner(
+                    preClones,
+                    assembler
+                )
+                SmartProgressReporter.startProgressReport(assemblerRunner)
                 if (reportBuffers) {
-                    StatusReporter reporter = new StatusReporter();
-                    reporter.addCustomProviderFromLambda(() ->
-                            new StatusReporter.Status(
-                                    "Reader buffer: FIXME " /*+ assemblerRunner.getQueueSize()*/,
-                                    assemblerRunner.isFinished()));
-                    reporter.start();
+                    val reporter = StatusReporter()
+                    reporter.addCustomProviderFromLambda {
+                        StatusReporter.Status(
+                            "Reader buffer: FIXME " /*+ assemblerRunner.getQueueSize()*/,
+                            assemblerRunner.isFinished
+                        )
+                    }
+                    reporter.start()
                 }
-                assemblerRunner.run();
+                assemblerRunner.run()
 
                 // Getting results
-                final CloneSet cloneSet = CloneSet.reorder(
-                        assemblerRunner.getCloneSet(info.withAssemblerParameters(assemblerParameters)),
-                        getOrdering());
+                val cloneSet = CloneSet.reorder(
+                    assemblerRunner.getCloneSet(info.withAssemblerParameters(cloneAssemblerParameters)),
+                    ordering
+                )
 
                 // Passing final cloneset to assemble last pieces of statistics for report
-                reportBuilder.onClonesetFinished(cloneSet);
-
-                assert cloneSet.getClones().size() == reportBuilder.getCloneCount();
-                reportBuilder.setTotalReads(alignmentsReader.getNumberOfReads());
+                reportBuilder.onClonesetFinished(cloneSet)
+                assert(cloneSet.clones.size == reportBuilder.cloneCount)
+                reportBuilder.setTotalReads(alignmentsReader.numberOfReads)
 
 
                 // Writing results
-                CloneAssemblerReport report;
+                var report: CloneAssemblerReport
                 if (isClnaOutput) {
-                    try (ClnAWriter writer = new ClnAWriter(out, tempDest, highCompression)) {
+                    ClnAWriter(out, tempDest, highCompression).use { writer ->
 
                         // writer will supply current stage and completion percent to the progress reporter
-                        SmartProgressReporter.startProgressReport(writer);
+                        SmartProgressReporter.startProgressReport(writer)
                         // Writing clone block
-
-                        writer.writeClones(cloneSet);
-
-                        // Pre-soring alignments
-                        try (AlignmentsMappingMerger merged = new AlignmentsMappingMerger(
-                                preClones.readAlignments(),
-                                assembler.getAssembledReadsPort())) {
-                            writer.collateAlignments(merged, assembler.getAlignmentsCount());
-                        }
-
-                        reportBuilder.setFinishMillis(System.currentTimeMillis());
-                        report = reportBuilder.buildReport();
-
-                        writer.writeFooter(alignmentsReader.reports(), report);
-                        writer.writeAlignmentsAndIndex();
+                        writer.writeClones(cloneSet)
+                        AlignmentsMappingMerger(preClones.readAlignments(), assembler.assembledReadsPort)
+                            .use { merged ->
+                                writer.collateAlignments(merged, assembler.alignmentsCount)
+                            }
+                        reportBuilder.setFinishMillis(System.currentTimeMillis())
+                        report = reportBuilder.buildReport()
+                        writer.writeFooter(alignmentsReader.reports(), report)
+                        writer.writeAlignmentsAndIndex()
                     }
-                } else
-                    try (ClnsWriter writer = new ClnsWriter(out)) {
-                        writer.writeCloneSet(cloneSet);
-
-                        reportBuilder.setFinishMillis(System.currentTimeMillis());
-                        report = reportBuilder.buildReport();
-
-                        writer.writeFooter(alignmentsReader.reports(), report);
-                    }
+                } else ClnsWriter(out).use { writer ->
+                    writer.writeCloneSet(cloneSet)
+                    reportBuilder.setFinishMillis(System.currentTimeMillis())
+                    report = reportBuilder.buildReport()
+                    writer.writeFooter(alignmentsReader.reports(), report)
+                }
 
                 // Writing report to stout
-                ReportUtil.writeReportToStdout(report);
-
-                if (reportFile != null)
-                    ReportUtil.appendReport(reportFile, report);
-
-                if (jsonReport != null)
-                    ReportUtil.appendJsonReport(jsonReport, report);
+                ReportUtil.writeReportToStdout(report)
+                if (reportFile != null) ReportUtil.appendReport(reportFile, report)
+                if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
             }
         }
     }
 
-    private static VDJCAlignments setMappingCloneIndex(VDJCAlignments al, int cloneIndex) {
-        return al.withCloneIndexAndMappingType(cloneIndex, ReadToCloneMapping.ADDITIONAL_MAPPING_MASK);
-    }
-
-    private static final class TagSignature {
-        final TagTuple tags;
-        final VDJCGeneId gene;
-
-        public TagSignature(TagTuple tags, VDJCGeneId gene) {
-            this.tags = tags;
-            this.gene = gene;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TagSignature that = (TagSignature) o;
-            return tags.equals(that.tags) &&
-                    gene.equals(that.gene);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(tags, gene);
-        }
+    companion object {
+        const val ASSEMBLE_COMMAND_NAME = "assemble"
     }
 }

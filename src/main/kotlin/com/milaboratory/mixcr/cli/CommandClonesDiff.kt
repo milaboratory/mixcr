@@ -9,54 +9,59 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.util.ReportHelper;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGeneId;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.util.ReportHelper
+import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.VDJCGeneId
+import picocli.CommandLine
+import java.io.PrintStream
+import java.nio.file.Files
+import java.nio.file.Paths
 
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.util.*;
+@CommandLine.Command(
+    name = "clonesDiff",
+    separator = " ",
+    sortOptions = true,
+    description = ["Calculates the difference between two .clns files."]
+)
+class CommandClonesDiff : MiXCRCommand() {
+    @CommandLine.Parameters(description = ["input1.clns"], index = "0")
+    lateinit var in1: String
 
-@Command(name = "clonesDiff",
-        separator = " ",
-        sortOptions = true,
-        description = "Calculates the difference between two .clns files.")
-public class CommandClonesDiff extends MiXCRCommand {
-    @Parameters(description = "input1.clns", index = "0")
-    public String in1;
+    @CommandLine.Parameters(description = ["input2.clns"], index = "1")
+    lateinit var in2: String
 
-    @Parameters(description = "input2.clns", index = "1")
-    public String in2;
+    @CommandLine.Parameters(description = ["[report]"], index = "2", arity = "0..1")
+    var report: String? = null
 
-    @Parameters(description = "[report]", index = "2", arity = "0..1")
-    public String report = null;
+    @CommandLine.Option(
+        names = ["-v"],
+        description = ["Use V gene in clone comparison (include it as a clone key along with a clone sequence)."],
+        paramLabel = "v"
+    )
+    var useV = false
 
-    @Option(names = {"-v"}, description = "Use V gene in clone comparison (include it as a clone key along " +
-            "with a clone sequence).")
-    public boolean v = false;
+    @CommandLine.Option(
+        names = ["-j"],
+        description = ["Use J gene in clone comparison (include it as a clone key along with a clone sequence)."],
+        paramLabel = "j"
+    )
+    var useJ = false
 
-    @Option(names = {"-j"}, description = "Use J gene in clone comparison (include it as a clone key along " +
-            "with a clone sequence).")
-    public boolean j = false;
-
-    @Option(names = {"-c"}, description = "Use C gene in clone comparison (include it as a clone key along " +
-            "with a clone sequence).")
-    public boolean c = false;
-
-    public boolean useV() {return v;}
-
-    public boolean useJ() {return j;}
-
-    public boolean useC() {return c;}
+    @CommandLine.Option(
+        names = ["-c"],
+        description = ["Use C gene in clone comparison (include it as a clone key along with a clone sequence)."],
+        paramLabel = "c"
+    )
+    var useC = false
 
     //@Parameter(names = {"-o1", "--only-in-first"}, description = "output for alignments contained only " +
     //        "in the first .vdjca file")
@@ -74,142 +79,120 @@ public class CommandClonesDiff extends MiXCRCommand {
     //public String geneFeatureToMatch = "CDR3";
     //@Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for match")
     //public int hitsCompareLevel = 1;
+    override fun getInputFiles(): List<String> = listOf(in1, in2)
 
+    override fun getOutputFiles(): List<String> = listOfNotNull(report)
 
-    @Override
-    protected List<String> getInputFiles() {
-        return Arrays.asList(in1, in2);
-    }
-
-    @Override
-    protected List<String> getOutputFiles() {
-        return report == null ? Collections.emptyList() : Collections.singletonList(report);
-    }
-
-    @Override
-    public void run0() throws Exception {
-        try (PrintStream report = this.report == null ? System.out : new PrintStream(new FileOutputStream(this.report))) {
-
-            CloneSet cs1 = CloneSetIO.read(in1);
-            CloneSet cs2 = CloneSetIO.read(in2);
-
-            HashMap<CKey, CRec> recs = new HashMap<>();
-
-            populate(recs, cs1, 0);
-            populate(recs, cs2, 1);
-
-            int newClones1 = 0, newClones2 = 0;
-            long newClones1Reads = 0, newClones2Reads = 0;
-
-            for (CRec cRec : recs.values()) {
+    @Throws(Exception::class)
+    override fun run0() {
+        when (report) {
+            null -> System.out
+            else -> PrintStream(Files.newOutputStream(Paths.get(report!!)))
+        }.use { report ->
+            val cs1 = CloneSetIO.read(in1)
+            val cs2 = CloneSetIO.read(in2)
+            val recs = mutableMapOf<CKey, CRec>()
+            populate(recs, cs1, 0)
+            populate(recs, cs2, 1)
+            var newClones1 = 0
+            var newClones2 = 0
+            var newClones1Reads: Long = 0
+            var newClones2Reads: Long = 0
+            for (cRec in recs.values) {
                 if (cRec.clones[0] == null) {
-                    newClones2++;
-                    newClones2Reads += cRec.clones[1].getCount();
+                    newClones2++
+                    newClones2Reads += cRec.clones[1]!!.count.toLong()
                 }
-
                 if (cRec.clones[1] == null) {
-                    newClones1++;
-                    newClones1Reads += cRec.clones[0].getCount();
+                    newClones1++
+                    newClones1Reads += cRec.clones[0]!!.count.toLong()
                 }
             }
-
-            report.println("Unique clones in cloneset 1: " + newClones1 + " (" + ReportHelper.PERCENT_FORMAT.format(100.0 * newClones1 / cs1.size()) + "%)");
-            report.println("Reads in unique clones in cloneset 1: " + newClones1Reads + " (" + ReportHelper.PERCENT_FORMAT.format(100.0 * newClones1Reads / cs1.getTotalCount()) + "%)");
-
-            report.println("Unique clones in cloneset 2: " + newClones2 + " (" + ReportHelper.PERCENT_FORMAT.format(100.0 * newClones2 / cs2.size()) + "%)");
-            report.println("Reads in unique clones in cloneset 2: " + newClones2Reads + " (" + ReportHelper.PERCENT_FORMAT.format(100.0 * newClones2Reads / cs2.getTotalCount()) + "%)");
+            report.println(
+                "Unique clones in cloneset 1: $newClones1 " +
+                        "(${ReportHelper.PERCENT_FORMAT.format(100.0 * newClones1 / cs1.size())}%)"
+            )
+            report.println(
+                "Reads in unique clones in cloneset 1: $newClones1Reads " +
+                        "(${ReportHelper.PERCENT_FORMAT.format(100.0 * newClones1Reads / cs1.totalCount)}%)"
+            )
+            report.println(
+                "Unique clones in cloneset 2: $newClones2 " +
+                        "(${ReportHelper.PERCENT_FORMAT.format(100.0 * newClones2 / cs2.size())}%)"
+            )
+            report.println(
+                "Reads in unique clones in cloneset 2: $newClones2Reads " +
+                        "(${ReportHelper.PERCENT_FORMAT.format(100.0 * newClones2Reads / cs2.totalCount)}%)"
+            )
         }
     }
 
-    private void populate(Map<CKey, CRec> recs, CloneSet cs, int i) {
-        for (Clone clone : cs) {
-            CKey key = getKey(clone);
-            CRec cRec = recs.get(key);
-            if (cRec == null)
-                recs.put(key, cRec = new CRec());
-
-            if (cRec.clones[i] != null) {
-                String error = "";
-                char letter = 'X';
-                if (!Objects.equals(
-                        getBestGene(cRec.clones[i], GeneType.Variable),
-                        getBestGene(clone, GeneType.Variable)))
-                    letter = 'v';
-                if (!Objects.equals(
-                        getBestGene(cRec.clones[i], GeneType.Joining),
-                        getBestGene(clone, GeneType.Joining)))
-                    letter = 'j';
-                if (!Objects.equals(
-                        getBestGene(cRec.clones[i], GeneType.Constant),
-                        getBestGene(clone, GeneType.Constant)))
-                    letter = 'c';
-
-                if (letter != 'X')
-                    error = "Error: clones with the same key present in one of the clonesets. Seems that clones were assembled " +
-                            "using -OseparateBy" + Character.toUpperCase(letter) + "=true option, please add -" + letter + " option to this command.";
-
-                throwValidationException(error);
+    private fun populate(recs: MutableMap<CKey, CRec>, cs: CloneSet, i: Int) {
+        for (clone in cs) {
+            val key = getKey(clone)
+            val cRec = recs.computeIfAbsent(key) { CRec() }
+            cRec.clones[i]?.let { unexpectedClone ->
+                val letter = when {
+                    getBestGene(unexpectedClone, Constant) != getBestGene(clone, Constant) -> 'c'
+                    getBestGene(unexpectedClone, Joining) != getBestGene(clone, Joining) -> 'j'
+                    getBestGene(unexpectedClone, Variable) != getBestGene(clone, Variable) -> 'v'
+                    else -> 'X'
+                }
+                val error: String = when {
+                    letter != 'X' -> "Error: clones with the same key present in one of the clonesets. Seems that clones were assembled " +
+                            "using -OseparateBy${letter.uppercaseChar()}=true option, please add -$letter option to this command."
+                    else -> ""
+                }
+                throwValidationException(error)
             }
-
-            cRec.clones[i] = clone;
+            cRec.clones[i] = clone
         }
     }
 
-    private VDJCGeneId getBestGene(Clone clone, GeneType geneType) {
-        return clone.getBestHit(geneType) == null ? null : clone.getBestHit(geneType).getGene().getId();
+    private fun getBestGene(clone: Clone, geneType: GeneType): VDJCGeneId? {
+        return clone.getBestHit(geneType)?.gene?.id
     }
 
-    private CKey getKey(Clone clone) {
-        final NucleotideSequence[] clonalSequence = new NucleotideSequence[clone.numberOfTargets()];
-        for (int i = 0; i < clonalSequence.length; i++)
-            clonalSequence[i] = clone.getTarget(i).getSequence();
-
-        final VDJCGeneId v = useV() ? getBestGene(clone, GeneType.Variable) : null;
-
-        final VDJCGeneId j = useJ() ? getBestGene(clone, GeneType.Joining) : null;
-
-        final VDJCGeneId c = useC() ? getBestGene(clone, GeneType.Constant) : null;
-
-        return new CKey(clonalSequence, v, j, c);
+    private fun getKey(clone: Clone): CKey {
+        val clonalSequence = Array<NucleotideSequence>(clone.numberOfTargets()) { i ->
+            clone.getTarget(i).sequence
+        }
+        val v = if (useV) getBestGene(clone, Variable) else null
+        val j = if (useJ) getBestGene(clone, Joining) else null
+        val c = if (useC) getBestGene(clone, Constant) else null
+        return CKey(clonalSequence, v, j, c)
     }
 
-    private static final class CRec {
-        final Clone[] clones = new Clone[2];
+    private class CRec {
+        val clones = arrayOfNulls<Clone>(2)
     }
 
-    private static final class CKey {
-        final NucleotideSequence[] clonalSequence;
-        final VDJCGeneId v, j, c;
+    private class CKey(
+        val clonalSequence: Array<NucleotideSequence>,
+        val v: VDJCGeneId?,
+        val j: VDJCGeneId?,
+        val c: VDJCGeneId?
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
 
-        public CKey(NucleotideSequence[] clonalSequence, VDJCGeneId v, VDJCGeneId j, VDJCGeneId c) {
-            this.clonalSequence = clonalSequence;
-            this.v = v;
-            this.j = j;
-            this.c = c;
+            other as CKey
+
+            if (!clonalSequence.contentEquals(other.clonalSequence)) return false
+            if (v != other.v) return false
+            if (j != other.j) return false
+            if (c != other.c) return false
+
+            return true
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof CKey)) return false;
-
-            CKey cKey = (CKey) o;
-
-            // Probably incorrect - comparing Object[] arrays with Arrays.equals
-            if (!Arrays.equals(clonalSequence, cKey.clonalSequence)) return false;
-            if (v != null ? !v.equals(cKey.v) : cKey.v != null) return false;
-            if (j != null ? !j.equals(cKey.j) : cKey.j != null) return false;
-            return c != null ? c.equals(cKey.c) : cKey.c == null;
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = Arrays.hashCode(clonalSequence);
-            result = 31 * result + (v != null ? v.hashCode() : 0);
-            result = 31 * result + (j != null ? j.hashCode() : 0);
-            result = 31 * result + (c != null ? c.hashCode() : 0);
-            return result;
+        override fun hashCode(): Int {
+            var result = clonalSequence.contentHashCode()
+            result = 31 * result + (v?.hashCode() ?: 0)
+            result = 31 * result + (j?.hashCode() ?: 0)
+            result = 31 * result + (c?.hashCode() ?: 0)
+            return result
         }
     }
 }
