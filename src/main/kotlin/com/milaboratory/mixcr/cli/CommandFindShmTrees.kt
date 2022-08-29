@@ -61,7 +61,7 @@ class CommandFindShmTrees : MiXCRCommand() {
     @Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationException("-t / --threads must be positive")
+            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
             field = value
         }
 
@@ -140,13 +140,13 @@ class CommandFindShmTrees : MiXCRCommand() {
     var useSystemTemp = false
 
     private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
-        var result = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
-        if (result == null) throwValidationException("Unknown parameters: $shmTreeBuilderParametersName")
+        var result: SHMTreeBuilderParameters = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
+            ?: throwValidationExceptionKotlin("Unknown parameters: $shmTreeBuilderParametersName")
         if (overrides.isNotEmpty()) {
-            result = JsonOverrider.override(result!!, SHMTreeBuilderParameters::class.java, overrides)
-            if (result == null) throwValidationException("Failed to override some parameter: $overrides")
+            result = JsonOverrider.override(result, SHMTreeBuilderParameters::class.java, overrides)
+                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
         }
-        result!!
+        result
     }
 
     private fun ensureParametersInitialized() {
@@ -160,26 +160,26 @@ class CommandFindShmTrees : MiXCRCommand() {
             warn("NOTE: report file is not specified, using $reportFileName to write report.")
         }
         if (!outputTreesPath.endsWith(".$shmFileExtension")) {
-            throwValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
+            throwValidationExceptionKotlin("Output file should have extension $shmFileExtension. Given $outputTreesPath")
         }
         if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
-            throwValidationException("First step must be BuildingInitialTrees")
+            throwValidationExceptionKotlin("First step must be BuildingInitialTrees")
         }
         if (buildFrom != null) {
             if (!buildFrom!!.endsWith(".tsv")) {
-                throwValidationException("--build-from must be .tsv, got $buildFrom")
+                throwValidationExceptionKotlin("--build-from must be .tsv, got $buildFrom")
             }
             if (VGenesToFilter.isNotEmpty()) {
-                throwValidationException("--v-gene-names must be empty if --build-from is specified")
+                throwValidationExceptionKotlin("--v-gene-names must be empty if --build-from is specified")
             }
             if (JGenesToFilter.isNotEmpty()) {
-                throwValidationException("--j-gene-names must be empty if --build-from is specified")
+                throwValidationExceptionKotlin("--j-gene-names must be empty if --build-from is specified")
             }
             if (CDR3LengthToFilter.isNotEmpty()) {
-                throwValidationException("--cdr3-lengths must be empty if --build-from is specified")
+                throwValidationExceptionKotlin("--cdr3-lengths must be empty if --build-from is specified")
             }
             if (minCountForClone != null) {
-                throwValidationException("--min-count must be empty if --build-from is specified")
+                throwValidationExceptionKotlin("--min-count must be empty if --build-from is specified")
             }
             if (report != null) {
                 println("WARN: argument --report will not be used with --build-from")

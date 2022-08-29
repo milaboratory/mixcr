@@ -140,7 +140,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
     @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationException("-t / --threads must be positive")
+            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
             field = value
         }
 
@@ -153,7 +153,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
 
     @CommandLine.Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
     fun setLimit(limit: Int) {
-        if (limit <= 0) throwValidationException("ERROR: -n / --limit must be positive", false)
+        if (limit <= 0) throwValidationExceptionKotlin("ERROR: -n / --limit must be positive", false)
         this.limit = limit.toLong()
     }
 
@@ -198,7 +198,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         hidden = true
     )
     fun setSaveReadDescription(b: Boolean) {
-        throwValidationException("--save-description was removed in 3.0: use -OsaveOriginalReads=true instead")
+        throwValidationExceptionKotlin("--save-description was removed in 3.0: use -OsaveOriginalReads=true instead")
     }
 
     @CommandLine.Option(
@@ -214,7 +214,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         hidden = true
     )
     fun setSaveOriginalReads(b: Boolean) {
-        throwValidationException("--save-reads was removed in 3.0: use -OsaveOriginalReads=true instead")
+        throwValidationExceptionKotlin("--save-reads was removed in 3.0: use -OsaveOriginalReads=true instead")
     }
 
     @CommandLine.Option(description = ["Pipe not aligned R1 reads into separate file."], names = ["--not-aligned-R1"])
@@ -258,7 +258,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
                 .readValue(File(alignerParametersName), VDJCAlignerParameters::class.java)
         } else {
             alignerParameters = VDJCParametersPresets.getByName(alignerParametersName)
-            if (alignerParameters == null) throwValidationException("Unknown aligner parameters: $alignerParametersName")
+                ?: throwValidationExceptionKotlin("Unknown aligner parameters: $alignerParametersName")
             if (overrides.isNotEmpty()) {
                 // Printing warning message for some common mistakes in parameter overrides
                 for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) warn(
@@ -270,7 +270,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
                 // Perform parameters overriding
                 alignerParameters =
                     JsonOverrider.override(alignerParameters, VDJCAlignerParameters::class.java, overrides)
-                if (alignerParameters == null) throwValidationException("Failed to override some parameter: $overrides")
+                        ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
             }
         }
 
@@ -358,7 +358,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         val options = listOf(tagPattern, tagPreset, tagPatternFile)
         if (options.all { it == null }) return null
         if (options.count { it != null } != 1)
-            throwValidationException("--tag-pattern, --tag-pattern-name and --tag-pattern-file can't be used together")
+            throwValidationExceptionKotlin("--tag-pattern, --tag-pattern-name and --tag-pattern-file can't be used together")
         val preset: LibraryStructurePreset? = tagPreset?.let { getPresetByName(it) }
         val tagPattern: String? = when {
             this.tagPattern != null -> this.tagPattern
@@ -366,8 +366,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             tagPatternFile != null -> try {
                 String(Files.readAllBytes(Paths.get(tagPatternFile!!)))
             } catch (e: IOException) {
-                throwValidationException(e.message)
-                throw AssertionError()
+                throwValidationExceptionKotlin(e.message!!)
             }
             else -> throw AssertionError()
         }
@@ -400,17 +399,17 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         val readShortcuts = parseInfo.readTags
             .map { name -> readSearchPlan.tagShortcut(name) }
         if (readShortcuts.isEmpty())
-            throwValidationException("Tag pattern has no read (payload) groups, nothing to align.", false)
-        if (readShortcuts.size > 2) throwValidationException(
+            throwValidationExceptionKotlin("Tag pattern has no read (payload) groups, nothing to align.", false)
+        if (readShortcuts.size > 2) throwValidationExceptionKotlin(
             "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported.",
             false
         )
         if (failedReadsR1 != null) {
-            if (failedReadsR2 == null && readShortcuts.size == 2) throwValidationException(
+            if (failedReadsR2 == null && readShortcuts.size == 2) throwValidationExceptionKotlin(
                 "Option --not-aligned-R2 is not specified but tag pattern defines two payload reads.",
                 false
             )
-            if (failedReadsR2 != null && readShortcuts.size == 1) throwValidationException(
+            if (failedReadsR2 != null && readShortcuts.size == 1) throwValidationExceptionKotlin(
                 "Option --not-aligned-R2 is specified but tag pattern defines only one payload read.",
                 false
             )
@@ -424,10 +423,10 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
 
     override fun validate() {
         super.validate()
-        if (inOut.size > 3) throwValidationException("Too many input files.")
-        if (inOut.size < 2) throwValidationException("No output file.")
-        if (failedReadsR2 != null && failedReadsR1 == null) throwValidationException("Wrong input for --not-aligned-R1,2")
-        if (failedReadsR1 != null && !taggedAnalysis() && failedReadsR2 != null != isInputPaired) throwValidationException(
+        if (inOut.size > 3) throwValidationExceptionKotlin("Too many input files.")
+        if (inOut.size < 2) throwValidationExceptionKotlin("No output file.")
+        if (failedReadsR2 != null && failedReadsR1 == null) throwValidationExceptionKotlin("Wrong input for --not-aligned-R1,2")
+        if (failedReadsR1 != null && !taggedAnalysis() && failedReadsR2 != null != isInputPaired) throwValidationExceptionKotlin(
             "Option --not-aligned-R2 is not set.",
             false
         )
@@ -438,7 +437,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
                 "libraries",
                 "mylibrary.json"
             ).toString()
-            throwValidationException(
+            throwValidationExceptionKotlin(
                 "Library name can't be a path. Place your library to one of the library search locations " +
                         "(e.g. '$libraryLocations', and put just a library name as -b / --library option value (e.g. '--library mylibrary').",
                 false
@@ -505,11 +504,11 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
                     "re-run with --verbose option to see the list of excluded genes and exclusion reason."
         )
         if (verbose && numberOfExcludedNFGenes > 0) warn("WARNING: $numberOfExcludedNFGenes non-functional genes excluded.")
-        if (aligner.vGenesToAlign.isEmpty()) throwExecutionException(
+        if (aligner.vGenesToAlign.isEmpty()) throwExecutionExceptionKotlin(
             "No V genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option)."
         )
-        if (aligner.jGenesToAlign.isEmpty()) throwExecutionException(
+        if (aligner.jGenesToAlign.isEmpty()) throwExecutionExceptionKotlin(
             "No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option)."
         )

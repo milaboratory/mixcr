@@ -13,4 +13,19 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.ACommand
 
-abstract class MiXCRCommand : ACommand("mixcr")
+abstract class MiXCRCommand : ACommand("mixcr") {
+    fun throwValidationExceptionKotlin(message: String, printHelp: Boolean): Nothing {
+        super.throwValidationException(message, printHelp)
+        error(message)
+    }
+
+    fun throwValidationExceptionKotlin(message: String): Nothing {
+        super.throwValidationException(message)
+        error(message)
+    }
+
+    fun throwExecutionExceptionKotlin(message: String): Nothing {
+        super.throwExecutionException(message)
+        error(message)
+    }
+}

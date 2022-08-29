@@ -132,7 +132,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     override fun validate() {
         super.validate()
         if (!out.endsWith(".pdf"))
-            throwValidationException("Output file must have .pdf extension")
+            throwValidationExceptionKotlin("Output file must have .pdf extension")
     }
 
     val alignment by lazy {

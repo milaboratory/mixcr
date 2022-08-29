@@ -76,7 +76,7 @@ class CommandAssembleContigs : MiXCRCommand() {
     @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationException("-t / --threads must be positive")
+            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
             field = value
         }
 
@@ -117,9 +117,8 @@ class CommandAssembleContigs : MiXCRCommand() {
         var p = FullSeqAssemblerParameters.presets.getByName("default")!!
         if (overrides.isNotEmpty()) {
             // Perform parameters overriding
-            val overrode = JsonOverrider.override(p, FullSeqAssemblerParameters::class.java, overrides)
-            if (overrode == null) throwValidationException("failed to override some parameter: $overrides")
-            p = overrode
+            p = JsonOverrider.override(p, FullSeqAssemblerParameters::class.java, overrides)
+                ?: throwValidationExceptionKotlin("failed to override some parameter: $overrides")
         }
         cutByFeature?.let { cutByFeature ->
             if (p.subCloningRegions != null) warn("subCloningRegion already set")
@@ -139,7 +138,7 @@ class CommandAssembleContigs : MiXCRCommand() {
     override fun validate() {
         if (fullSeqAssemblerParameters.postFiltering != FullSeqAssemblerParameters.PostFiltering.NoFiltering) {
             if (fullSeqAssemblerParameters.assemblingRegions != null) {
-                throwValidationException("assemblingRegion must be set if postFiltering is not NoFiltering")
+                throwValidationExceptionKotlin("assemblingRegion must be set if postFiltering is not NoFiltering")
             }
         }
     }

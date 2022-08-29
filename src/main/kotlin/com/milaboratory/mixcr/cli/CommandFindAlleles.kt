@@ -96,7 +96,7 @@ class CommandFindAlleles : MiXCRCommand() {
     private val outputClnsFiles: List<String> by lazy {
         val template = inOut[inOut.size - 1]
         if (!template.endsWith(".clns")) {
-            throwValidationException("Wrong template: command produces only clns $template")
+            throwValidationExceptionKotlin("Wrong template: command produces only clns $template")
         }
         val clnsFiles = inputFiles
             .map { Paths.get(it).toAbsolutePath() }
@@ -107,7 +107,7 @@ class CommandFindAlleles : MiXCRCommand() {
             }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
-            throwValidationException("Output clns files are not uniq: $clnsFiles")
+            throwValidationExceptionKotlin("Output clns files are not uniq: $clnsFiles")
         }
         clnsFiles
     }
@@ -122,7 +122,7 @@ class CommandFindAlleles : MiXCRCommand() {
     @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationException("-t / --threads must be positive")
+            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
             field = value
         }
 
@@ -159,24 +159,24 @@ class CommandFindAlleles : MiXCRCommand() {
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
-        var result = FindAllelesParameters.presets.getByName(findAllelesParametersName)
-        if (result == null) throwValidationException("Unknown parameters: $findAllelesParametersName")
+        var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
+            ?: throwValidationExceptionKotlin("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
-            result = JsonOverrider.override(result!!, FindAllelesParameters::class.java, overrides)
-            if (result == null) throwValidationException("Failed to override some parameter: $overrides")
+            result = JsonOverrider.override(result, FindAllelesParameters::class.java, overrides)
+                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
         }
-        result!!
+        result
     }
 
     override fun validate() {
         if (libraryOutput != null) {
             if (!libraryOutput!!.endsWith(".json")) {
-                throwValidationException("--export-library must be json: $libraryOutput")
+                throwValidationExceptionKotlin("--export-library must be json: $libraryOutput")
             }
         }
         if (allelesMutationsOutput != null) {
             if (!allelesMutationsOutput!!.endsWith(".csv")) {
-                throwValidationException("--export-alleles-mutations must be csv: $allelesMutationsOutput")
+                throwValidationExceptionKotlin("--export-alleles-mutations must be csv: $allelesMutationsOutput")
             }
         }
     }

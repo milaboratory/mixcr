@@ -64,7 +64,7 @@ abstract class CommandExport<T : VDJCObject> private constructor(
 
     @CommandLine.Option(description = ["List available export fields"], names = ["-lf", "--list-fields"], hidden = true)
     fun setListFields(@Suppress("UNUSED_PARAMETER") b: Boolean) {
-        throwExecutionException("-lf / --list-fields is removed in version 3.0: use help <exportCommand> for help")
+        throwExecutionExceptionKotlin("-lf / --list-fields is removed in version 3.0: use help <exportCommand> for help")
     }
 
     @CommandLine.Option(
@@ -83,7 +83,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format."""
     @CommandLine.Option(description = ["Output only first N records"], names = ["-n", "--limit"])
     var limit = Long.MAX_VALUE
         set(value) {
-            if (value <= 0) throwExecutionException("--limit must be positive")
+            if (value <= 0) throwExecutionExceptionKotlin("--limit must be positive")
             field = value
         }
 
