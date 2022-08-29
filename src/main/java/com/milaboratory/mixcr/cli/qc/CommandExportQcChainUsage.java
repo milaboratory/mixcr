@@ -14,12 +14,12 @@ package com.milaboratory.mixcr.cli.qc;
 import com.milaboratory.miplots.ExportKt;
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType;
-import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.qc.ChainUsage;
+import com.milaboratory.mixcr.qc.SizeParameters;
 import io.repseq.core.Chains;
 import io.repseq.core.Chains.NamedChains;
 import jetbrains.letsPlot.intern.Plot;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -28,10 +28,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CommandLine.Command(name = "chainUsage",
+@Command(name = "chainUsage",
         separator = " ",
         description = "Chain usage plot.")
-public class CommandExportQcChainUsage extends MiXCRCommand {
+public class CommandExportQcChainUsage extends CommandExportQc {
     @Parameters(description = "sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]")
     public List<String> in;
     @Option(
@@ -78,6 +78,7 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
                 : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
 
         Plot plt;
+        SizeParameters hw = getSizeParameters();
         switch (fileType) {
             case CLNA:
             case CLNS:
@@ -86,13 +87,15 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
                             files,
                             !absoluteValues,
                             !hideNonFunctional,
-                            chains
+                            chains,
+                            hw
                     );
                 else plt = ChainUsage.INSTANCE.chainUsageAssemble(
                         files,
                         !absoluteValues,
                         !hideNonFunctional,
-                        chains
+                        chains,
+                        hw
                 );
                 break;
             case VDJCA:
@@ -100,7 +103,8 @@ public class CommandExportQcChainUsage extends MiXCRCommand {
                         files,
                         !absoluteValues,
                         !hideNonFunctional,
-                        chains
+                        chains,
+                        hw
                 );
                 break;
             default:

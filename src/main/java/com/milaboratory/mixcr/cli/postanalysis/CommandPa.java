@@ -118,11 +118,15 @@ public abstract class CommandPa extends MiXCRCommand {
     }
 
     static TagsInfo extractTagsInfo(List<String> l) {
+        return extractTagsInfo(l, true);
+    }
+
+    static TagsInfo extractTagsInfo(List<String> l, boolean check) {
         Set<TagsInfo> set = new HashSet<>();
         for (String in : l) {
             set.add(CloneSetIO.extractTagsInfo(Paths.get(in)));
         }
-        if (set.size() != 1) {
+        if (check && set.size() != 1) {
             throw new IllegalArgumentException("Input files have different tags structure");
         } else
             return set.iterator().next();

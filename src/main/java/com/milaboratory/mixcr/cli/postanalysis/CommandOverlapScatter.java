@@ -41,7 +41,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.repseq.core.Chains.*;
+import static io.repseq.core.Chains.DEFAULT_EXPORT_CHAINS_LIST;
+import static io.repseq.core.Chains.NamedChains;
 
 @Command(name = "overlapScatterPlot",
         separator = " ",
@@ -103,7 +104,9 @@ public class CommandOverlapScatter extends MiXCRCommand {
     @Override
     public void run0() throws Exception {
         DownsamplingParameters preproc = DownsamplingParameters.
-                parse(downsampling, CommandPa.extractTagsInfo(getInputFiles()), false, onlyProductive);
+                parse(downsampling,
+                        CommandPa.extractTagsInfo(getInputFiles(), !downsampling.equalsIgnoreCase("none")),
+                        false, onlyProductive);
 
         for (NamedChains curChains : this.chains == null
                 ? DEFAULT_EXPORT_CHAINS_LIST

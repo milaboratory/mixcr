@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli.qc;
 import com.milaboratory.miplots.ExportKt;
 import com.milaboratory.mixcr.cli.MiXCRCommand;
 import com.milaboratory.mixcr.qc.AlignmentQC;
+import com.milaboratory.mixcr.qc.SizeParameters;
 import jetbrains.letsPlot.intern.Plot;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 @Command(name = "align",
         separator = " ",
         description = "QC plot for alignments.")
-public class CommandExportQcAlign extends MiXCRCommand {
+public class CommandExportQcAlign extends CommandExportQc {
     @Parameters(description = "sample1.vdjca ... align.[pdf|eps|png|jpeg]")
     public List<String> in;
     @Option(
@@ -51,7 +52,8 @@ public class CommandExportQcAlign extends MiXCRCommand {
         Plot plt = AlignmentQC.INSTANCE.alignQc(
                 getInputFiles().stream().map(Paths::get)
                         .collect(Collectors.toList()),
-                !absoluteValues
+                !absoluteValues,
+                getSizeParameters()
         );
         ExportKt.writeFile(Paths.get(getOutputFiles().get(0)), plt);
     }
