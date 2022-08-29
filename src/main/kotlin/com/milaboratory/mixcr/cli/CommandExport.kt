@@ -30,6 +30,7 @@ import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.util.Concurrency
+import com.milaboratory.mixcr.util.and
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.limit
@@ -179,11 +180,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format."""
         @CommandLine.Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         var splitByTag: String? = null
 
-        override fun mkFilter(): Filter<Clone> {
-            val superFilter = super.mkFilter()
-            val cFilter = CFilter(filterOutOfFrames, filterStops)
-            return Filter { clone -> superFilter.accept(clone) && cFilter.accept(clone) }
-        }
+        override fun mkFilter(): Filter<Clone> = super.mkFilter().and(CFilter(filterOutOfFrames, filterStops))
 
         override fun run1(fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<Clone>>) {
             InfoWriter<Clone>(out).use { writer ->
