@@ -93,8 +93,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
-import java.util.function.Consumer
-import java.util.function.Function
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import kotlin.math.max
@@ -264,9 +262,8 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             if (overrides.isNotEmpty()) {
                 // Printing warning message for some common mistakes in parameter overrides
                 for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) warn(
-                    "WARNING: most probably you want to change \"" + key[0] +
-                            "Parameters.relativeMinScore\" instead of \"" + key[0] +
-                            "Parameters.parameters.relativeMinScore\". " +
+                    "WARNING: most probably you want to change \"${key[0]}Parameters.relativeMinScore\" " +
+                            "instead of \"${key[0]}Parameters.parameters.relativeMinScore\". " +
                             "The latter should be touched only in a very specific cases."
                 )
 
@@ -297,10 +294,11 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
 
         // Performing V featureToAlign correction if needed
         if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
+            val currentGenFeature = encode(alignerParameters.vAlignerParameters.geneFeatureToAlign)
             warn(
-                "WARNING: forcing -OvParameters.geneFeatureToAlign=" + encode(correctingFeature) +
-                        " since current gene feature (" + encode(alignerParameters.vAlignerParameters.geneFeatureToAlign) + ") is absent in " +
-                        ReportHelper.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV) + "% of V genes."
+                "WARNING: forcing -OvParameters.geneFeatureToAlign=${encode(correctingFeature)} " +
+                        "since current gene feature ($currentGenFeature) is absent in " +
+                        "${ReportHelper.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV)}% of V genes."
             )
             alignerParameters.vAlignerParameters.geneFeatureToAlign = correctingFeature
         }
@@ -323,7 +321,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
 
     private fun createReader(): SequenceReaderCloseable<out SequenceRead> {
         // Common single fastq reader constructor
-        val readerFactory = Function<Path, SingleFastqReader> { path: Path ->
+        val readerFactory: (Path) -> SingleFastqReader = { path: Path ->
             SingleFastqReader(
                 FileInputStream(path.toFile()),
                 SingleFastqReader.DEFAULT_QUALITY_FORMAT,
@@ -333,36 +331,25 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             )
         }
         return if (isInputPaired) {
-            val resolved = inputFiles.stream()
-                .map { rf: String -> expandPathNPattern(Paths.get(rf)) }
-                .collect(Collectors.toList())
-            MiXCRMain.lm.reportApplicationInputs(resolved.stream()
-                .flatMap { obj: List<Path> -> obj.stream() }
-                .collect(Collectors.toList()))
-            val readers = resolved.stream()
-                .map { rs: List<Path> ->
-                    ConcatenatingSingleReader(
-                        rs.stream()
-                            .map(readerFactory)
-                            .collect(Collectors.toList())
-                    )
-                }
-                .collect(Collectors.toList())
+            val resolved = inputFiles.map { rf: String -> expandPathNPattern(Paths.get(rf)) }
+            MiXCRMain.lm.reportApplicationInputs(resolved.flatten())
+            val readers = resolved.map { paths ->
+                ConcatenatingSingleReader(paths.map(readerFactory))
+            }
             PairedFastqReader(readers[0], readers[1])
         } else {
             val `in` = inputFiles[0]
             val s = `in`.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            if (s[s.size - 1] == "fasta" || s[s.size - 1] == "fa") FastaSequenceReaderWrapper(
-                FastaReader(`in`, NucleotideSequence.ALPHABET),
-                true
-            ) else {
-                val resolved = expandPathNPattern(Paths.get(`in`))
-                MiXCRMain.lm.reportApplicationInputs(resolved)
-                ConcatenatingSingleReader(
-                    resolved.stream()
-                        .map(readerFactory)
-                        .collect(Collectors.toList())
+            when {
+                s[s.size - 1] == "fasta" || s[s.size - 1] == "fa" -> FastaSequenceReaderWrapper(
+                    FastaReader(`in`, NucleotideSequence.ALPHABET),
+                    true
                 )
+                else -> {
+                    val resolved = expandPathNPattern(Paths.get(`in`))
+                    MiXCRMain.lm.reportApplicationInputs(resolved)
+                    ConcatenatingSingleReader(resolved.map(readerFactory))
+                }
             }
         }
     }
@@ -514,8 +501,8 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             }
         }
         if (numberOfExcludedFGenes > 0) warn(
-            "WARNING: " + numberOfExcludedFGenes + " functional genes were excluded, re-run " +
-                    "with --verbose option to see the list of excluded genes and exclusion reason."
+            "WARNING: $numberOfExcludedFGenes functional genes were excluded, " +
+                    "re-run with --verbose option to see the list of excluded genes and exclusion reason."
         )
         if (verbose && numberOfExcludedNFGenes > 0) warn("WARNING: $numberOfExcludedNFGenes non-functional genes excluded.")
         if (aligner.vGenesToAlign.isEmpty()) throwExecutionException(
@@ -552,12 +539,17 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
                         ),
                         aligner.usedGenes
                     )
-                    var sReads: OutputPort<out SequenceRead> = reader
-                    var progress: CanReportProgress? = reader as CanReportProgress
-                    if (limit != 0L) {
-                        sReads = CountLimitingOutputPort(sReads, limit)
-                        progress = SmartProgressReporter.extractProgress(sReads as CountLimitingOutputPort<*>)
+                    val sReads: OutputPort<out SequenceRead> = when {
+                        limit != 0L -> CountLimitingOutputPort(reader, limit)
+                        else -> reader
                     }
+
+                    val progress: CanReportProgress = when (sReads) {
+                        is CountLimitingOutputPort -> SmartProgressReporter.extractProgress(sReads)
+                        is CanReportProgress -> sReads
+                        else -> throw IllegalArgumentException()
+                    }
+
 
                     // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
                     // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
@@ -577,7 +569,9 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
                         val rep = ReadTrimmerReportBuilder()
                         readTrimmerProcessor = ReadTrimmerProcessor(qualityTrimmerParameters, rep)
                         reportBuilder.setTrimmingReportBuilder(rep)
-                    } else readTrimmerProcessor = null
+                    } else {
+                        readTrimmerProcessor = null
+                    }
 
                     // Creating processor from aligner
                     val processor: Processor<SequenceRead, VDJCAlignmentResult<SequenceRead>> = when {
@@ -587,10 +581,11 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
                                 reportBuilder.onFailedAlignment(input, VDJCAlignmentFailCause.NoBarcode)
                                 return@Processor VDJCAlignmentResult(input)
                             }
-                            var read = parsed.payloadRead
-                            if (readTrimmerProcessor != null) read = readTrimmerProcessor.process(read)
-                            val alignmentResult = aligner(read)
-                            alignmentResult.withTagTuple(parsed.tags)
+                            val read = when (readTrimmerProcessor) {
+                                null -> parsed.payloadRead
+                                else -> readTrimmerProcessor.process(parsed.payloadRead)
+                            }
+                            aligner(read).withTagTuple(parsed.tags)
                         }
                         else -> aligner
                     }
@@ -724,65 +719,48 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         }
     }
 
-    inner class ParseInfo(tags: List<TagInfo>, readTags: List<String>) {
-        val tags: List<TagInfo>
+    data class ParseInfo(
+        val tags: List<TagInfo>,
         val readTags: List<String>
-
-        init {
-            Objects.requireNonNull(tags)
-            Objects.requireNonNull(readTags)
-            this.tags = tags
-            this.readTags = readTags
-        }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || javaClass != other.javaClass) return false
-            val parseInfo = other as ParseInfo
-            return tags == parseInfo.tags && readTags == parseInfo.readTags
-        }
-
-        override fun hashCode(): Int {
-            return Objects.hash(tags, readTags)
-        }
-    }
+    )
 
     private fun parseTagsFromSet(names: Set<String>): ParseInfo {
         val tags: MutableList<TagInfo> = ArrayList()
         val readTags: MutableList<String> = ArrayList()
         for (name in names) {
-            if (name.startsWith("S")) tags.add(
-                TagInfo(
+            when {
+                name.startsWith("S") -> tags += TagInfo(
                     TagType.Sample,
                     TagValueType.SequenceAndQuality,
                     name,
                     0
                 )
-            ) else if (name.startsWith("CELL")) tags.add(
-                TagInfo(
+                name.startsWith("CELL") -> tags += TagInfo(
                     TagType.Cell,
                     TagValueType.SequenceAndQuality,
                     name,
                     0
                 )
-            ) else if (name.startsWith("UMI") || name.startsWith("MI")) tags.add(
-                TagInfo(
+                name.startsWith("UMI") || name.startsWith("MI") -> tags += TagInfo(
                     TagType.Molecule,
                     TagValueType.SequenceAndQuality,
                     name,
                     0
                 )
-            ) else if (name.matches(Regex("R\\d+"))) readTags.add(name) else warn(
-                "Can't recognize tag type for name \"$name\", this tag will be ignored during analysis."
-            )
+                name.matches(Regex("R\\d+")) -> readTags += name
+                else -> warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
+            }
         }
-        Collections.sort(tags)
-        for (i in tags.indices) tags[i] = tags[i].withIndex(i)
-        tags.stream().map { obj: TagInfo -> obj.type }
-            .collect(Collectors.toSet())
-            .forEach(Consumer { tt: TagType -> MiXCRMain.lm.reportFeature("mixcr.tag-type", tt.toString()) })
-        Collections.sort(readTags)
-        return ParseInfo(tags, readTags)
+        tags
+            .map { it.type }
+            .distinct()
+            .forEach { tagType -> MiXCRMain.lm.reportFeature("mixcr.tag-type", tagType.toString()) }
+        return ParseInfo(
+            tags
+                .sorted()
+                .mapIndexed { i, tag -> tag.withIndex(i) },
+            readTags.sorted()
+        )
     }
 
     companion object {

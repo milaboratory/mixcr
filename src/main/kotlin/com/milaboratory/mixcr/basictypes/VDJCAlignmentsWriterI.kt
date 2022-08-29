@@ -9,52 +9,25 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.basictypes
 
-import io.repseq.core.VDJCGene;
-
-import java.util.List;
+import io.repseq.core.VDJCGene
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public interface VDJCAlignmentsWriterI extends AutoCloseable {
-    void setNumberOfProcessedReads(long numberOfProcessedReads);
+interface VDJCAlignmentsWriterI : AutoCloseable {
+    fun setNumberOfProcessedReads(numberOfProcessedReads: Long)
+    fun header(reader: VDJCAlignmentsReader?)
+    fun header(info: MiXCRMetaInfo?, genes: List<VDJCGene?>?)
+    fun write(alignment: VDJCAlignments?)
 
-    void header(VDJCAlignmentsReader reader);
-
-    void header(MiXCRMetaInfo info, List<VDJCGene> genes);
-
-    void write(VDJCAlignments alignment);
-
-    @Override
-    void close();
-
-    final class DummyWriter implements VDJCAlignmentsWriterI {
-        public static final DummyWriter INSTANCE = new DummyWriter();
-
-        private DummyWriter() {
-        }
-
-        @Override
-        public void setNumberOfProcessedReads(long numberOfProcessedReads) {
-        }
-
-        @Override
-        public void header(VDJCAlignmentsReader reader) {
-        }
-
-        @Override
-        public void header(MiXCRMetaInfo info, List<VDJCGene> genes) {
-        }
-
-        @Override
-        public void write(VDJCAlignments alignment) {
-        }
-
-        @Override
-        public void close() {
-        }
+    object DummyWriter : VDJCAlignmentsWriterI {
+        override fun setNumberOfProcessedReads(numberOfProcessedReads: Long) {}
+        override fun header(reader: VDJCAlignmentsReader?) {}
+        override fun header(info: MiXCRMetaInfo?, genes: List<VDJCGene?>?) {}
+        override fun write(alignment: VDJCAlignments?) {}
+        override fun close() {}
     }
 }

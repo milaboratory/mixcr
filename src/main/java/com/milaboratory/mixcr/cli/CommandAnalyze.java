@@ -613,7 +613,7 @@ public abstract class CommandAnalyze extends MiXCRCommand {
 
         // parse parameters
         CommandLine cmd = new CommandLine(CommandExport.mkClonesSpec());
-        cmd.parse(array);
+        cmd.parseArgs(array);
         return inheritOptionsAndValidate((CommandExport.CommandExportClones) cmd.getCommandSpec().userObject());
     }
 
