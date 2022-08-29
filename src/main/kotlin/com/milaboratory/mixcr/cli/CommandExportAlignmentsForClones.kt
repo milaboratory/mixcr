@@ -9,82 +9,67 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.mixcr.basictypes.ClnAReader;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.util.Concurrency;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.milaboratory.mixcr.basictypes.ClnAReader
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
+import com.milaboratory.mixcr.util.Concurrency
+import com.milaboratory.primitivio.forEach
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
 
 /**
  *
  */
-@Command(name = "exportAlignmentsForClones",
-        sortOptions = true,
-        separator = " ",
-        description = "Export alignments for particular clones from \"clones & alignments\" (*.clna) file.")
-public class CommandExportAlignmentsForClones extends MiXCRCommand {
-    static final String EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME = "exportAlignmentsForClones";
+@CommandLine.Command(
+    name = CommandExportAlignmentsForClones.EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME,
+    sortOptions = true,
+    separator = " ",
+    description = ["Export alignments for particular clones from \"clones & alignments\" (*.clna) file."]
+)
+class CommandExportAlignmentsForClones : MiXCRCommand() {
+    @CommandLine.Parameters(index = "0", description = ["clones.clna"])
+    lateinit var `in`: String
 
-    @Parameters(index = "0", description = "clones.clna")
-    public String in;
+    @CommandLine.Parameters(index = "1", description = ["alignments.vdjca"])
+    lateinit var out: String
 
-    @Parameters(index = "1", description = "alignments.vdjca")
-    public String out = null;
+    @CommandLine.Option(names = ["--id"], description = ["[cloneId1 [cloneId2 [cloneId3]]]"], arity = "0..*")
+    var ids: List<Int> = ArrayList()
+    override fun getInputFiles(): List<String> = listOf(`in`)
 
-    @Option(names = "--id", description = "[cloneId1 [cloneId2 [cloneId3]]]", arity = "0..*")
-    public List<Integer> ids = new ArrayList<>();
+    override fun getOutputFiles(): List<String> = listOf(out)
 
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(in);
-    }
+    private val cloneIds: IntArray
+        get() = ids.sorted().toIntArray()
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.singletonList(out);
-    }
-
-    public int[] getCloneIds() {
-        return ids.stream().mapToInt(Integer::intValue).sorted().toArray();
-    }
-
-    @Override
-    public void run0() throws Exception {
-        try (ClnAReader clna = new ClnAReader(in, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4));
-             VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-            writer.header(clna.getInfo(), clna.getUsedGenes());
-
-            long count = 0;
-            if (getCloneIds().length == 0)
-                for (VDJCAlignments al : CUtils.it(clna.readAllAlignments())) {
-                    if (al.getCloneIndex() == -1)
-                        continue;
-                    writer.write(al);
-                    ++count;
-                }
-            else
-                for (int id : getCloneIds()) {
-                    OutputPortCloseable<VDJCAlignments> reader = clna.readAlignmentsOfClone(id);
-                    VDJCAlignments al;
-                    while ((al = reader.take()) != null) {
-                        writer.write(al);
-                        ++count;
+    override fun run0() {
+        ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
+            VDJCAlignmentsWriter(out).use { writer ->
+                writer.header(clna.info, clna.usedGenes)
+                var count: Long = 0
+                if (cloneIds.isEmpty()) {
+                    clna.readAllAlignments().forEach { al ->
+                        if (al.cloneIndex == -1L) return@forEach
+                        writer.write(al)
+                        ++count
+                    }
+                } else {
+                    for (id in cloneIds) {
+                        val reader = clna.readAlignmentsOfClone(id)
+                        reader.forEach { al ->
+                            writer.write(al)
+                            ++count
+                        }
                     }
                 }
-
-            writer.setNumberOfProcessedReads(count);
-            writer.writeFooter(clna.reports(), null);
+                writer.setNumberOfProcessedReads(count)
+                writer.writeFooter(clna.reports(), null)
+            }
         }
+    }
+
+    companion object {
+        const val EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME = "exportAlignmentsForClones"
     }
 }

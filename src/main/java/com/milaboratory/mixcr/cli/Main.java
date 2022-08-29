@@ -184,7 +184,7 @@ public final class Main {
                 .addSubcommand("exportAirr", CommandExportAirr.class)
 
                 .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
-                .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones.class)
+                .addSubcommand(CommandExportAlignmentsForClones.EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME, CommandExportAlignmentsForClones.class)
                 .addSubcommand("exportReads", CommandExportReads.class)
 
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)

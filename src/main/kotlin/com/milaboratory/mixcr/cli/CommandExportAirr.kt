@@ -9,277 +9,250 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
-import cc.redberry.pipe.util.CountLimitingOutputPort;
-import cc.redberry.pipe.util.CountingOutputPort;
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper;
-import com.milaboratory.mixcr.export.FieldExtractor;
-import com.milaboratory.util.CanReportProgress;
-import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCLibraryRegistry;
-import org.apache.commons.io.output.CloseShieldOutputStream;
+import cc.redberry.pipe.CUtils
+import cc.redberry.pipe.OutputPortCloseable
+import cc.redberry.pipe.util.CountLimitingOutputPort
+import cc.redberry.pipe.util.CountingOutputPort
+import com.milaboratory.mixcr.basictypes.ClnAReader
+import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.basictypes.VDJCObject
+import com.milaboratory.mixcr.export.AirrColumns
+import com.milaboratory.mixcr.export.AirrColumns.AirrAlignmentBoundary
+import com.milaboratory.mixcr.export.AirrColumns.AlignmentCigar
+import com.milaboratory.mixcr.export.AirrColumns.AlignmentId
+import com.milaboratory.mixcr.export.AirrColumns.CloneId
+import com.milaboratory.mixcr.export.AirrColumns.CompleteVDJ
+import com.milaboratory.mixcr.export.AirrColumns.ComplexReferencePoint
+import com.milaboratory.mixcr.export.AirrColumns.GermlineAlignment
+import com.milaboratory.mixcr.export.AirrColumns.Leftmost
+import com.milaboratory.mixcr.export.AirrColumns.NFeature
+import com.milaboratory.mixcr.export.AirrColumns.NFeatureFromAlign
+import com.milaboratory.mixcr.export.AirrColumns.NFeatureLength
+import com.milaboratory.mixcr.export.AirrColumns.Productive
+import com.milaboratory.mixcr.export.AirrColumns.RevComp
+import com.milaboratory.mixcr.export.AirrColumns.Rightmost
+import com.milaboratory.mixcr.export.AirrColumns.SequenceAlignment
+import com.milaboratory.mixcr.export.AirrColumns.SequenceAlignmentBoundary
+import com.milaboratory.mixcr.export.AirrColumns.VDJCCalls
+import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper
+import com.milaboratory.mixcr.export.FieldExtractor
+import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.SmartProgressReporter
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import io.repseq.core.GeneType.VDJC_REFERENCE
+import io.repseq.core.ReferencePoint
+import io.repseq.core.VDJCLibraryRegistry
+import org.apache.commons.io.output.CloseShieldOutputStream
+import picocli.CommandLine
+import java.io.PrintStream
+import java.nio.file.Paths
 
-import java.io.PrintStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+@CommandLine.Command(
+    name = "exportAirr",
+    separator = " ",
+    description = ["Exports a clns, clna or vdjca file to Airr formatted tsv file."]
+)
+class CommandExportAirr : MiXCRCommand() {
+    @CommandLine.Option(
+        description = ["Target id (use -1 to export from the target containing CDR3)."],
+        names = ["-t", "--target"]
+    )
+    var targetId = -1
 
-import static com.milaboratory.mixcr.basictypes.IOUtil.*;
-import static com.milaboratory.mixcr.export.AirrColumns.*;
-import static io.repseq.core.GeneFeature.*;
-import static io.repseq.core.GeneType.*;
-import static io.repseq.core.ReferencePoint.*;
-import static picocli.CommandLine.*;
+    @CommandLine.Option(
+        description = ["If this option is specified, alignment fields will be padded with IMGT-style gaps."],
+        names = ["-g", "--imgt-gaps"]
+    )
+    var withPadding = false
 
-@Command(name = "exportAirr",
-        separator = " ",
-        description = "Exports a clns, clna or vdjca file to Airr formatted tsv file.")
-public class CommandExportAirr extends MiXCRCommand {
-    @Option(description = "Target id (use -1 to export from the target containing CDR3).",
-            names = {"-t", "--target"})
-    public int targetId = -1;
+    @CommandLine.Option(
+        description = ["Get fields like fwr1, cdr2, etc.. from alignment."],
+        names = ["-a", "--from-alignment"]
+    )
+    var fromAlignment = false
 
-    @Option(description = "If this option is specified, alignment fields will be padded with IMGT-style gaps.",
-            names = {"-g", "--imgt-gaps"})
-    public boolean withPadding = false;
+    @CommandLine.Option(
+        description = ["Limit number of filtered alignments; no more " +
+                "than N alignments will be outputted"], names = ["-n", "--limit"]
+    )
+    var limit: Int? = null
 
-    @Option(description = "Get fields like fwr1, cdr2, etc.. from alignment.",
-            names = {"-a", "--from-alignment"})
-    public boolean fromAlignment = false;
+    @CommandLine.Parameters(index = "0", description = ["input_file.[vdjca|clna|clns]"])
+    lateinit var `in`: String
 
-    @Option(description = "Limit number of filtered alignments; no more " +
-            "than N alignments will be outputted",
-            names = {"-n", "--limit"})
-    public Integer limit = null;
+    @CommandLine.Parameters(index = "1", description = ["output.tsv"], arity = "0..1")
+    var out: String? = null
+    override fun getInputFiles(): List<String> = listOf(`in`)
 
-    @Parameters(index = "0", description = "input_file.[vdjca|clna|clns]")
-    public String in;
-    @Parameters(index = "1", description = "output.tsv", arity = "0..1")
-    public String out = null;
+    override fun getOutputFiles(): List<String> = listOfNotNull(out)
 
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(in);
+    private val fileType: MiXCRFileType by lazy {
+        IOUtil.extractFileType(Paths.get(`in`))
     }
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return out == null ? Collections.emptyList() : Collections.singletonList(out);
+    private fun nFeature(gf: GeneFeature, header: String): FieldExtractor<AirrVDJCObjectWrapper> {
+        require(!gf.isComposite)
+        return when {
+            fromAlignment -> NFeatureFromAlign(
+                targetId, withPadding,
+                AirrColumns.Single(gf.firstPoint), AirrColumns.Single(gf.lastPoint),
+                header
+            )
+            else -> NFeature(gf, header)
+        }
     }
 
-    private MiXCRFileType fileType = null;
-
-    public MiXCRFileType getType() {
-        if (fileType == null)
-            fileType = IOUtil.extractFileType(Paths.get(in));
-        return fileType;
+    private fun commonExtractors(): List<FieldExtractor<AirrVDJCObjectWrapper>> {
+        val vnpEnd: ComplexReferencePoint = Leftmost(ReferencePoint.VEndTrimmed, ReferencePoint.VEnd)
+        val dnpBegin: ComplexReferencePoint = Rightmost(ReferencePoint.DBegin, ReferencePoint.DBeginTrimmed)
+        val dnpEnd: ComplexReferencePoint = Leftmost(ReferencePoint.DEnd, ReferencePoint.DEndTrimmed)
+        val jnpBegin: ComplexReferencePoint = Rightmost(ReferencePoint.JBegin, ReferencePoint.JBeginTrimmed)
+        val np1End: ComplexReferencePoint = Leftmost(dnpBegin, jnpBegin)
+        val ret = mutableListOf<FieldExtractor<AirrVDJCObjectWrapper>>()
+        ret += listOf(
+            AirrColumns.Sequence(targetId),
+            RevComp(),
+            Productive(),
+            VDJCCalls(GeneType.Variable),
+            VDJCCalls(GeneType.Diversity),
+            VDJCCalls(GeneType.Joining),
+            VDJCCalls(GeneType.Constant),
+            SequenceAlignment(targetId, withPadding),
+            GermlineAlignment(targetId, withPadding),
+            CompleteVDJ(targetId),
+            NFeature(GeneFeature.CDR3, "junction"),
+            AirrColumns.AAFeature(GeneFeature.CDR3, "junction_aa"),
+            NFeature(targetId, vnpEnd, np1End, "np1"),
+            NFeature(targetId, dnpEnd, jnpBegin, "np2"),
+            nFeature(GeneFeature.CDR1, "cdr1"),
+            AirrColumns.AAFeature(GeneFeature.CDR1, "cdr1_aa"),
+            nFeature(GeneFeature.CDR2, "cdr2"),
+            AirrColumns.AAFeature(GeneFeature.CDR2, "cdr2_aa"),
+            nFeature(GeneFeature.ShortCDR3, "cdr3"),
+            AirrColumns.AAFeature(GeneFeature.ShortCDR3, "cdr3_aa"),
+            nFeature(GeneFeature.FR1, "fwr1"),
+            AirrColumns.AAFeature(GeneFeature.FR1, "fwr1_aa"),
+            nFeature(GeneFeature.FR2, "fwr2"),
+            AirrColumns.AAFeature(GeneFeature.FR2, "fwr2_aa"),
+            nFeature(GeneFeature.FR3, "fwr3"),
+            AirrColumns.AAFeature(GeneFeature.FR3, "fwr3_aa"),
+            nFeature(GeneFeature.FR4, "fwr4"),
+            AirrColumns.AAFeature(GeneFeature.FR4, "fwr4_aa"),
+            AirrColumns.AlignmentScoring(targetId, GeneType.Variable),
+            AlignmentCigar(targetId, GeneType.Variable),
+            AirrColumns.AlignmentScoring(targetId, GeneType.Diversity),
+            AlignmentCigar(targetId, GeneType.Diversity),
+            AirrColumns.AlignmentScoring(targetId, GeneType.Joining),
+            AlignmentCigar(targetId, GeneType.Joining),
+            AirrColumns.AlignmentScoring(targetId, GeneType.Constant),
+            AlignmentCigar(targetId, GeneType.Constant),
+            NFeatureLength(GeneFeature.CDR3, "junction_length"),
+            NFeatureLength(targetId, vnpEnd, np1End, "np1_length"),
+            NFeatureLength(targetId, dnpEnd, jnpBegin, "np2_length")
+        )
+        for (gt in VDJC_REFERENCE) {
+            for (start in booleanArrayOf(true, false)) {
+                for (germline in booleanArrayOf(true, false)) {
+                    ret += SequenceAlignmentBoundary(targetId, gt, start, germline)
+                }
+            }
+        }
+        for (gt in VDJC_REFERENCE) {
+            for (start in booleanArrayOf(true, false)) {
+                ret += AirrAlignmentBoundary(targetId, withPadding, gt, start)
+            }
+        }
+        return ret
     }
 
-    private FieldExtractor<AirrVDJCObjectWrapper> nFeature(GeneFeature gf, String header) {
-        if (gf.isComposite())
-            throw new IllegalArgumentException();
-        return fromAlignment
-                ? new NFeatureFromAlign(targetId, withPadding,
-                new Single(gf.getFirstPoint()), new Single(gf.getLastPoint()),
-                header)
-                : new NFeature(gf, header);
+    private fun cloneExtractors(): List<FieldExtractor<AirrVDJCObjectWrapper>> {
+        val ret = mutableListOf<FieldExtractor<AirrVDJCObjectWrapper>>()
+        ret += CloneId()
+        ret += commonExtractors()
+        ret += AirrColumns.CloneCount()
+        return ret
     }
 
-    @SuppressWarnings("UnnecessaryLocalVariable")
-    private List<FieldExtractor<AirrVDJCObjectWrapper>> CommonExtractors() {
-        ComplexReferencePoint vnpEnd = new Leftmost(VEndTrimmed, VEnd);
-        ComplexReferencePoint dnpBegin = new Rightmost(DBegin, DBeginTrimmed);
-        ComplexReferencePoint dnpEnd = new Leftmost(DEnd, DEndTrimmed);
-        ComplexReferencePoint jnpBegin = new Rightmost(JBegin, JBeginTrimmed);
-
-        ComplexReferencePoint np1Begin = vnpEnd;
-        ComplexReferencePoint np1End = new Leftmost(dnpBegin, jnpBegin);
-
-        ComplexReferencePoint np2Begin = dnpEnd;
-        ComplexReferencePoint np2End = jnpBegin;
-
-        List<FieldExtractor<AirrVDJCObjectWrapper>> ret = new ArrayList<>(Arrays.asList(
-                new Sequence(targetId),
-                new RevComp(),
-                new Productive(),
-
-                new VDJCCalls(Variable),
-                new VDJCCalls(Diversity),
-                new VDJCCalls(Joining),
-                new VDJCCalls(Constant),
-
-                new SequenceAlignment(targetId, withPadding),
-                new GermlineAlignment(targetId, withPadding),
-
-                new CompleteVDJ(targetId),
-
-                new NFeature(CDR3, "junction"),
-                new AAFeature(CDR3, "junction_aa"),
-
-                new NFeature(targetId, np1Begin, np1End, "np1"),
-                new NFeature(targetId, np2Begin, np2End, "np2"),
-
-                nFeature(CDR1, "cdr1"),
-                new AAFeature(CDR1, "cdr1_aa"),
-
-                nFeature(CDR2, "cdr2"),
-                new AAFeature(CDR2, "cdr2_aa"),
-
-                nFeature(ShortCDR3, "cdr3"),
-                new AAFeature(ShortCDR3, "cdr3_aa"),
-
-                nFeature(FR1, "fwr1"),
-                new AAFeature(FR1, "fwr1_aa"),
-
-                nFeature(FR2, "fwr2"),
-                new AAFeature(FR2, "fwr2_aa"),
-
-                nFeature(FR3, "fwr3"),
-                new AAFeature(FR3, "fwr3_aa"),
-
-                nFeature(FR4, "fwr4"),
-                new AAFeature(FR4, "fwr4_aa"),
-
-                new AlignmentScoring(targetId, Variable),
-                new AlignmentCigar(targetId, Variable),
-
-                new AlignmentScoring(targetId, Diversity),
-                new AlignmentCigar(targetId, Diversity),
-
-                new AlignmentScoring(targetId, Joining),
-                new AlignmentCigar(targetId, Joining),
-
-                new AlignmentScoring(targetId, Constant),
-                new AlignmentCigar(targetId, Constant),
-
-                new NFeatureLength(CDR3, "junction_length"),
-                new NFeatureLength(targetId, np1Begin, np1End, "np1_length"),
-                new NFeatureLength(targetId, np2Begin, np2End, "np2_length")
-        ));
-
-        for (GeneType gt : VDJC_REFERENCE)
-            for (boolean start : new boolean[]{true, false})
-                for (boolean germline : new boolean[]{true, false})
-                    ret.add(new SequenceAlignmentBoundary(targetId, gt, start, germline));
-
-        for (GeneType gt : VDJC_REFERENCE)
-            for (boolean start : new boolean[]{true, false})
-                ret.add(new AirrAlignmentBoundary(targetId, withPadding, gt, start));
-
-        return ret;
+    private fun alignmentsExtractors(): List<FieldExtractor<AirrVDJCObjectWrapper>> {
+        val ret = mutableListOf<FieldExtractor<AirrVDJCObjectWrapper>>()
+        ret += AlignmentId()
+        ret += commonExtractors()
+        return ret
     }
 
-    private List<FieldExtractor<AirrVDJCObjectWrapper>> CloneExtractors() {
-        List<FieldExtractor<AirrVDJCObjectWrapper>> ret = new ArrayList<>();
-        ret.add(new CloneId());
-        ret.addAll(CommonExtractors());
-        ret.add(new CloneCount());
-        return ret;
-    }
-
-    private List<FieldExtractor<AirrVDJCObjectWrapper>> AlignmentsExtractors() {
-        List<FieldExtractor<AirrVDJCObjectWrapper>> ret = new ArrayList<>();
-        ret.add(new AlignmentId());
-        ret.addAll(CommonExtractors());
-        return ret;
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void run0() throws Exception {
-        List<FieldExtractor<AirrVDJCObjectWrapper>> extractors;
-        AutoCloseable closeable;
-        OutputPortCloseable<VDJCObject> port;
-
-        Path inPath = Paths.get(in);
-        VDJCLibraryRegistry libraryRegistry = VDJCLibraryRegistry.getDefault();
-        CountingOutputPort cPort;
-        CanReportProgress progressReporter = null;
-
-        switch (getType()) {
-            case CLNA:
-                extractors = CloneExtractors();
-                ClnAReader clnaReader = new ClnAReader(inPath, libraryRegistry, 4);
-                //noinspection unchecked,rawtypes
-                cPort = new CountingOutputPort<>((OutputPortCloseable) clnaReader.readClones());
-                port = cPort;
-                closeable = clnaReader;
-                progressReporter = SmartProgressReporter.extractProgress(cPort, clnaReader.numberOfClones());
-                break;
-            case CLNS:
-                extractors = CloneExtractors();
-                ClnsReader clnsReader = new ClnsReader(inPath, libraryRegistry);
+    override fun run0() {
+        val extractors: List<FieldExtractor<AirrVDJCObjectWrapper>>
+        val closeable: AutoCloseable
+        var port: OutputPortCloseable<out VDJCObject>
+        val inPath = Paths.get(`in`)
+        val libraryRegistry = VDJCLibraryRegistry.getDefault()
+        val cPort: CountingOutputPort<out VDJCObject>
+        var progressReporter: CanReportProgress? = null
+        when (fileType) {
+            MiXCRFileType.CLNA -> {
+                extractors = cloneExtractors()
+                val clnaReader = ClnAReader(inPath, libraryRegistry, 4)
+                cPort = CountingOutputPort(clnaReader.readClones())
+                port = cPort
+                closeable = clnaReader
+                progressReporter = SmartProgressReporter.extractProgress(cPort, clnaReader.numberOfClones().toLong())
+            }
+            MiXCRFileType.CLNS -> {
+                extractors = cloneExtractors()
+                val clnsReader = ClnsReader(inPath, libraryRegistry)
 
                 // I know, still writing airr is much slower...
-                int maxCount = 0;
-                try (OutputPortCloseable<Clone> p = clnsReader.readClones()) {
-                    for (Clone ignore : CUtils.it(p))
-                        ++maxCount;
-                }
-
-                //noinspection unchecked,rawtypes
-                cPort = new CountingOutputPort<>((OutputPortCloseable) clnsReader.readClones());
-                port = cPort;
-                closeable = clnsReader;
-                progressReporter = SmartProgressReporter.extractProgress(cPort, maxCount);
-                break;
-            case VDJCA:
-                extractors = AlignmentsExtractors();
-                VDJCAlignmentsReader alignmentsReader = new VDJCAlignmentsReader(inPath, libraryRegistry);
-                //noinspection unchecked,rawtypes
-                port = (OutputPortCloseable) alignmentsReader;
-                closeable = alignmentsReader;
-                progressReporter = alignmentsReader;
-                break;
-            default:
-                throwValidationException("Unexpected file type.");
-                return;
-        }
-
-
-        if (limit != null) {
-            CountLimitingOutputPort clop = new CountLimitingOutputPort(port, limit);
-            port = clop;
-            progressReporter = SmartProgressReporter.extractProgress(clop);
-        }
-
-        SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter);
-
-        try (PrintStream output = out == null
-                ? new PrintStream(new CloseShieldOutputStream(System.out))
-                : new PrintStream(out);
-             AutoCloseable c = closeable; OutputPortCloseable<VDJCObject> p = port) {
-            boolean first = true;
-
-            for (FieldExtractor<AirrVDJCObjectWrapper> extractor : extractors) {
-                if (!first)
-                    output.print("\t");
-                first = false;
-                output.print(extractor.getHeader());
+                var maxCount = 0
+                clnsReader.readClones().use { p -> for (ignore in CUtils.it(p)) ++maxCount }
+                cPort = CountingOutputPort(clnsReader.readClones())
+                port = cPort
+                closeable = clnsReader
+                progressReporter = SmartProgressReporter.extractProgress(cPort, maxCount.toLong())
             }
-            output.println();
-
-            for (VDJCObject obj : CUtils.it(port)) {
-                first = true;
-
-                AirrVDJCObjectWrapper wrapper = new AirrVDJCObjectWrapper(obj);
-
-                for (FieldExtractor<AirrVDJCObjectWrapper> extractor : extractors) {
-                    if (!first)
-                        output.print("\t");
-                    first = false;
-                    output.print(extractor.extractValue(wrapper));
+            MiXCRFileType.VDJCA -> {
+                extractors = alignmentsExtractors()
+                val alignmentsReader = VDJCAlignmentsReader(inPath, libraryRegistry)
+                port = alignmentsReader
+                closeable = alignmentsReader
+                progressReporter = alignmentsReader
+            }
+        }
+        if (limit != null) {
+            val clop = CountLimitingOutputPort(port, limit!!.toLong())
+            port = clop
+            progressReporter = SmartProgressReporter.extractProgress(clop)
+        }
+        SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter)
+        when (out) {
+            null -> PrintStream(CloseShieldOutputStream.wrap(System.out))
+            else -> PrintStream(out!!)
+        }.use { output ->
+            closeable.use { c ->
+                port.use { p ->
+                    var first = true
+                    for (extractor in extractors) {
+                        if (!first) output.print("\t")
+                        first = false
+                        output.print(extractor.header)
+                    }
+                    output.println()
+                    for (obj in CUtils.it(port)) {
+                        first = true
+                        val wrapper = AirrVDJCObjectWrapper(obj)
+                        for (extractor in extractors) {
+                            if (!first) output.print("\t")
+                            first = false
+                            output.print(extractor.extractValue(wrapper))
+                        }
+                        output.println()
+                    }
                 }
-                output.println();
             }
         }
     }

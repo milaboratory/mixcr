@@ -59,6 +59,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.util.Defaults.default3
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
@@ -374,12 +375,12 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         println(tagPattern)
         val searchSettings = ReadSearchSettings(
             SearchSettings(
-                Util.default3(
+                default3(
                     tagMaxBudget,
                     preset,
-                    { it!!.maxErrorBudget },
+                    LibraryStructurePreset::maxErrorBudget,
                     SearchSettings.DEFAULT_BIT_BUDGET
-                )!!,
+                ),
                 SearchSettings.DEFAULT_LENGTH_REWARD, Default
             ),
             if (isInputPaired) if (tagUnstranded) ReadSearchMode.PairedUnknown else ReadSearchMode.PairedDirect else ReadSearchMode.Single

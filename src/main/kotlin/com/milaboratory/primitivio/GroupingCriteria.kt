@@ -54,26 +54,28 @@ inline fun <reified T : Any> OutputPort<T>.hashGrouping(
     groupingCriteria: GroupingCriteria<T>,
     stateBuilder: PrimitivIOStateBuilder,
     tempFileDest: TempFileDest,
+    bitsPerStep: Int = 5,
     readerConcurrency: Int = 8,
-    writerConcurrency: Int = 8
-): OutputPortCloseable<T> {
-    // todo check memory budget
-    val memoryBudget = when {
+    writerConcurrency: Int = 8,
+    objectSizeInitialGuess: Long = 256 * FileUtils.ONE_KB,
+    memoryBudget: Long = when {
         Runtime.getRuntime().maxMemory() > 10 * FileUtils.ONE_GB -> Runtime.getRuntime().maxMemory() / 8L
         else -> 256 * FileUtils.ONE_MB
     }
+): OutputPortCloseable<T> {
+    // todo check memory budget
     return HashSorter(
         T::class.java,
         groupingCriteria::hashCodeForGroup,
         groupingCriteria.comparator,
-        5,
+        bitsPerStep,
         tempFileDest,
         readerConcurrency,
         writerConcurrency,
         stateBuilder.oState,
         stateBuilder.iState,
         memoryBudget,
-        256 * FileUtils.ONE_KB
+        objectSizeInitialGuess
     ).port(this)
 }
 
