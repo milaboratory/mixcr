@@ -741,6 +741,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
                 if (acc.getSequence().getConcatenated().getQuality().minValue() < parameters.minimalQuality) {
                     dropped.accept(acc);
+                    ++deleted;
                     continue;
                 }
 
