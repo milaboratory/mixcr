@@ -108,7 +108,14 @@ public final class RunMiXCR {
 
             assemblerRunner.run();
 
-            CloneSet cloneSet = assemblerRunner.getCloneSet(align.parameters.alignerParameters, align.tagsInfo);
+            CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(
+                    null,
+                    align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
+                    align.parameters.alignerParameters,
+                    align.parameters.cloneAssemblerParameters,
+                    null,
+                    null
+            ));
             return new AssembleResult(align, cloneSet, report.buildReport(), assembler);
         } finally {
             if (close)
@@ -118,7 +125,6 @@ public final class RunMiXCR {
 
     public static FullSeqAssembleResult assembleContigs(final AssembleResult assemble) {
         AlignResult align = assemble.alignResult;
-
 
         int totalClonesCount = 0;
         File tmpFile = getTempFile();
@@ -168,8 +174,19 @@ public final class RunMiXCR {
             throw new RuntimeException(e);
         }
 
-        CloneSet cloneSet = new CloneSet(Arrays.asList(clones), align.usedGenes, align.parameters.alignerParameters,
-                align.parameters.cloneAssemblerParameters, align.tagsInfo, VDJCSProperties.CO_BY_COUNT);
+        CloneSet cloneSet = new CloneSet(
+                Arrays.asList(clones),
+                align.usedGenes,
+                new MiXCRMetaInfo(
+                        null,
+                        align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
+                        align.parameters.alignerParameters,
+                        align.parameters.cloneAssemblerParameters,
+                        null,
+                        null
+                ),
+                VDJCSProperties.CO_BY_COUNT
+        );
 
         return new FullSeqAssembleResult(assemble, cloneSet);
     }
@@ -286,7 +303,15 @@ public final class RunMiXCR {
             if (alignmentsFile == null) {
                 alignmentsFile = getTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
-                    writer.header(aligner.getParameters(), usedGenes, tagsInfo);
+                    MiXCRMetaInfo info = new MiXCRMetaInfo(
+                            null,
+                            tagsInfo != null ? tagsInfo : TagsInfo.NO_TAGS,
+                            aligner.getParameters(),
+                            null,
+                            null,
+                            null
+                    );
+                    writer.header(info, usedGenes);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);
@@ -309,14 +334,15 @@ public final class RunMiXCR {
             return PreCloneReader.fromAlignments(
                     resultReader(),
                     parameters.cloneAssemblerParameters.getAssemblingFeatures(),
-                    __ -> {});
+                    __ -> {
+                    });
         }
     }
 
     public static final class RunMiXCRAnalysis {
         public VDJCAlignerParameters alignerParameters = VDJCParametersPresets.getByName("default");
         public CloneAssemblerParameters cloneAssemblerParameters = CloneAssemblerParametersPresets.getByName("default");
-        public FullSeqAssemblerParameters fullSeqAssemblerParameters = FullSeqAssemblerParameters.getByName("default");
+        public FullSeqAssemblerParameters fullSeqAssemblerParameters = FullSeqAssemblerParameters.getPresets().getByName("default");
         public String library = "default";
         public Chains chains = Chains.ALL;
         public String species = "hs";

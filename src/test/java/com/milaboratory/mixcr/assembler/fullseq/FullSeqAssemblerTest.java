@@ -21,10 +21,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.CommandExportClonesPretty;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
@@ -47,7 +44,7 @@ import java.util.stream.StreamSupport;
 public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
-                    3, 7, 0.25, 3.0, 0.5, 50, GeneFeature.VDJRegion,
+                    3, 7, 0.25, 3.0, 0.5, 50, new GeneFeatures(GeneFeature.VDJRegion), null, FullSeqAssemblerParameters.PostFiltering.NoFiltering,
                     new QualityTrimmerParameters(20.0f, 8), 20, false);
 
     static final class MasterSequence {

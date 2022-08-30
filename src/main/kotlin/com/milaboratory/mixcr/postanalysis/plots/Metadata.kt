@@ -18,6 +18,7 @@ import org.jetbrains.kotlinx.dataframe.RowFilter
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
 import org.jetbrains.kotlinx.dataframe.io.readTSV
+import java.nio.file.Path
 
 fun AnyFrame.isNumeric(col: String) = this[col].all { it == null || it is Number }
 fun AnyFrame.isCategorical(col: String) = !isNumeric(col)
@@ -26,6 +27,11 @@ typealias Metadata = AnyFrame
 
 @JvmName("readMetadataNullable")
 fun readMetadata(path: String?): Metadata? = if (path == null) null else readMetadata(path)
+
+/**
+ * Read metadata from file
+ */
+fun readMetadata(path: Path): Metadata = readMetadata(path.toAbsolutePath().toString())
 
 /**
  * Read metadata from file

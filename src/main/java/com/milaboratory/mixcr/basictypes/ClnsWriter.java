@@ -13,11 +13,8 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.InputPort;
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
 import io.repseq.core.VDJCGene;
@@ -33,11 +30,13 @@ import java.util.List;
  *
  */
 public final class ClnsWriter implements AutoCloseable {
-    static final String MAGIC_V12 = "MiXCR.CLNS.V12";
-    static final String MAGIC = MAGIC_V12;
+    static final String MAGIC_V13 = "MiXCR.CLNS.V13";
+    static final String MAGIC = MAGIC_V13;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
-    /** Number of bytes in footer with meta information */
+    /**
+     * Number of bytes in footer with meta information
+     */
     static final int FOOTER_LENGTH = 8 + IOUtil.END_MAGIC_LENGTH;
 
     final PrimitivOHybrid output;
@@ -56,22 +55,17 @@ public final class ClnsWriter implements AutoCloseable {
 
     public void writeHeaderFromCloneSet(CloneSet cloneSet) {
         writeHeader(
-                cloneSet.getAlignmentParameters(),
-                cloneSet.getAssemblerParameters(),
-                cloneSet.getTagsInfo(),
+                cloneSet.getInfo(),
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
-                cloneSet,
-                cloneSet.size());
+                cloneSet.size()
+        );
     }
 
     public void writeHeader(
-            VDJCAlignerParameters alignmentParameters,
-            CloneAssemblerParameters assemblerParameters,
-            TagsInfo tagsInfo,
+            MiXCRMetaInfo info,
             VDJCSProperties.CloneOrdering ordering,
             List<VDJCGene> genes,
-            HasFeatureToAlign featureToAlign,
             int numberOfClones
     ) {
         try (PrimitivO o = output.beginPrimitivO(true)) {
@@ -84,13 +78,11 @@ public final class ClnsWriter implements AutoCloseable {
                             AppVersionInfo.OutputType.ToFile));
 
             // Writing analysis meta-information
-            o.writeObject(alignmentParameters);
-            o.writeObject(assemblerParameters);
-            o.writeObject(tagsInfo);
+            o.writeObject(info);
             o.writeObject(ordering);
             o.writeInt(numberOfClones);
 
-            IOUtil.stdVDJCPrimitivOStateInit(o, genes, featureToAlign);
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, info.getAlignerParameters());
         }
     }
 

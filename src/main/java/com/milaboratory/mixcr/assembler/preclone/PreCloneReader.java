@@ -67,6 +67,11 @@ public interface PreCloneReader extends AutoCloseable {
                     }
 
                     @Override
+                    public void finish() {
+                        alignmentReader.finish();
+                    }
+
+                    @Override
                     public PreClone take() {
                         VDJCAlignments al;
                         while ((al = alignmentReader.take()) != null) {
@@ -107,6 +112,11 @@ public interface PreCloneReader extends AutoCloseable {
                     @Override
                     public long currentIndex() {
                         return reader.currentIndex();
+                    }
+
+                    @Override
+                    public void finish() {
+                        reader.finish();
                     }
 
                     @Override

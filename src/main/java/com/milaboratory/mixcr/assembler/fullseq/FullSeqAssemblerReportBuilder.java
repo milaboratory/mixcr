@@ -15,6 +15,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler.VariantBranch;
 import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.GeneFeatures;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.cli.AbstractCommandReportBuilder;
 import io.repseq.core.GeneFeature;
@@ -56,6 +57,7 @@ public class FullSeqAssemblerReportBuilder extends AbstractCommandReportBuilder 
     public int getFinalCloneCount() {
         return finalCloneCount.get();
     }
+
     public void onVariantClustered(VariantBranch minor) {
         clonesClustered.incrementAndGet();
         readsClustered.addAndGet(minor.count);
@@ -84,7 +86,7 @@ public class FullSeqAssemblerReportBuilder extends AbstractCommandReportBuilder 
         totalReadsProcessed.addAndGet(initialClone.getCount());
     }
 
-    public void afterVariantsClustered(Clone initialClone, Clone[] branches, GeneFeature subCloningRegion) {
+    public void afterVariantsClustered(Clone initialClone, Clone[] branches, GeneFeatures subCloningRegions) {
         initialCloneCount.incrementAndGet();
         finalCloneCount.addAndGet(branches.length);
         totalReadsProcessed.addAndGet(initialClone.getCount());
@@ -103,15 +105,18 @@ public class FullSeqAssemblerReportBuilder extends AbstractCommandReportBuilder 
                 totalAmbiguousLetters.addAndGet(numberOfN);
             }
 
-            if (subCloningRegion != null) {
-                VDJCObject.CaseSensitiveNucleotideSequence f = branch.getIncompleteFeature(subCloningRegion);
-                if (f != null) {
-                    int numberOfNInSplittingRegion = numberOfWildcards(f);
-                    if (numberOfNInSplittingRegion > 0) {
-                        clonesWithAmbiguousLettersInSplittingRegion.incrementAndGet();
-                        readsWithAmbiguousLettersInSplittingRegion.addAndGet(branch.getCount());
-                        totalAmbiguousLettersInSplittingRegion.addAndGet(numberOfNInSplittingRegion);
+            if (subCloningRegions != null) {
+                int numberOfNInSplittingRegion = 0;
+                for (GeneFeature subCloningRegion : subCloningRegions.getFeatures()) {
+                    VDJCObject.CaseSensitiveNucleotideSequence f = branch.getIncompleteFeature(subCloningRegion);
+                    if (f != null) {
+                        numberOfNInSplittingRegion += numberOfWildcards(f);
                     }
+                }
+                if (numberOfNInSplittingRegion > 0) {
+                    clonesWithAmbiguousLettersInSplittingRegion.incrementAndGet();
+                    readsWithAmbiguousLettersInSplittingRegion.addAndGet(branch.getCount());
+                    totalAmbiguousLettersInSplittingRegion.addAndGet(numberOfNInSplittingRegion);
                 }
             }
         }

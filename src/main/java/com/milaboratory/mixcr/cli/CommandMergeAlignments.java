@@ -56,11 +56,8 @@ public class CommandMergeAlignments extends MiXCRCommand {
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(getOutputFiles().get(0))) {
             reader.initNextReader();
             SmartProgressReporter.startProgressReport("Merging", reader);
-            writer.header(
-                    reader.currentInnerReader.getParameters(),
-                    reader.currentInnerReader.getUsedGenes(),
-                    reader.currentInnerReader.getTagsInfo()
-            );
+            // FIXME shouldn't be something changed in the header ?
+            writer.header(reader.currentInnerReader);
             for (VDJCAlignments record : CUtils.it(reader))
                 writer.write(record);
             writer.setNumberOfProcessedReads(reader.readIdOffset.get());

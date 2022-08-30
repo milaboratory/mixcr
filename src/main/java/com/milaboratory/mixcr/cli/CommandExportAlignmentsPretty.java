@@ -34,8 +34,9 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -215,9 +216,9 @@ public class CommandExportAlignmentsPretty extends MiXCRCommand {
         long total = 0, filtered = 0;
         try (CommandExport.AlignmentsAndHeader readerAndHeader = CommandExport.openAlignmentsPort(in);
              PrintStream output = out == null ? System.out :
-                     new PrintStream(new BufferedOutputStream(new FileOutputStream(out), 32768))
+                     new PrintStream(new BufferedOutputStream(Files.newOutputStream(Paths.get(out)), 32768))
         ) {
-            OutputPortCloseable<VDJCAlignments> reader = readerAndHeader.port;
+            OutputPortCloseable<VDJCAlignments> reader = readerAndHeader.getPort();
             long countBefore = limitBefore == null ? Long.MAX_VALUE : limitBefore;
             long countAfter = limitAfter == null ? Long.MAX_VALUE : limitAfter;
             long skipAfter = this.skipAfter == null ? 0 : this.skipAfter;

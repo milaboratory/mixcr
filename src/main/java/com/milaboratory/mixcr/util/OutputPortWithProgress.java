@@ -11,11 +11,13 @@
  */
 package com.milaboratory.mixcr.util;
 
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.util.CanReportProgress;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.ToLongFunction;
 
 public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanReportProgress {
     /**
@@ -23,13 +25,23 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
      */
     long currentIndex();
 
-    static <T> OutputPortWithProgress<T> wrap(CanReportProgress progressReporter, OutputPortCloseable<T> inner) {
+    /**
+     * Finish progress without closing underling port
+     */
+    void finish();
+
+    static <T> OutputPortWithProgress<T> wrap(CanReportProgress progressReporter, OutputPort<T> inner) {
         final AtomicBoolean isFinished = new AtomicBoolean(false);
         final AtomicLong index = new AtomicLong(0);
         return new OutputPortWithProgress<T>() {
             @Override
             public long currentIndex() {
                 return index.get();
+            }
+
+            @Override
+            public void finish() {
+                isFinished.set(true);
             }
 
             @Override
@@ -56,18 +68,25 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
             @Override
             public void close() {
                 isFinished.set(true);
-                inner.close();
+                if (inner instanceof OutputPortCloseable) {
+                    ((OutputPortCloseable<?>) inner).close();
+                }
             }
         };
     }
 
-    static <T> OutputPortWithProgress<T> wrap(long expectedSize, OutputPortCloseable<? extends T> inner) {
+    static <T> OutputPortWithProgress<T> wrap(long expectedSize, OutputPort<? extends T> inner) {
         final AtomicBoolean isFinished = new AtomicBoolean(false);
         final AtomicLong index = new AtomicLong(0);
         return new OutputPortWithProgress<T>() {
             @Override
             public long currentIndex() {
                 return index.get();
+            }
+
+            @Override
+            public void finish() {
+                isFinished.set(true);
             }
 
             @Override
@@ -94,7 +113,54 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
             @Override
             public void close() {
                 isFinished.set(true);
-                inner.close();
+                if (inner instanceof OutputPortCloseable) {
+                    ((OutputPortCloseable<?>) inner).close();
+                }
+            }
+        };
+    }
+
+    static <T> OutputPortWithProgress<T> wrap(long expectedSum, OutputPort<? extends T> inner, ToLongFunction<T> countPerElement) {
+        final AtomicBoolean isFinished = new AtomicBoolean(false);
+        final AtomicLong index = new AtomicLong(0);
+        return new OutputPortWithProgress<T>() {
+            @Override
+            public long currentIndex() {
+                return index.get();
+            }
+
+            @Override
+            public void finish() {
+                isFinished.set(true);
+            }
+
+            @Override
+            public T take() {
+                T t = inner.take();
+                if (t == null) {
+                    isFinished.set(true);
+                    return null;
+                }
+                index.addAndGet(countPerElement.applyAsLong(t));
+                return t;
+            }
+
+            @Override
+            public double getProgress() {
+                return 1.0 * index.get() / expectedSum;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return isFinished.get();
+            }
+
+            @Override
+            public void close() {
+                isFinished.set(true);
+                if (inner instanceof OutputPortCloseable) {
+                    ((OutputPortCloseable<?>) inner).close();
+                }
             }
         };
     }

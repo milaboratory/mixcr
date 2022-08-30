@@ -13,12 +13,9 @@ package com.milaboratory.mixcr.postanalysis.overlap;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -53,6 +50,11 @@ public final class OverlapUtil {
                     @Override
                     public long currentIndex() {
                         return port.currentIndex();
+                    }
+
+                    @Override
+                    public void finish() {
+
                     }
 
                     @Override
@@ -160,8 +162,8 @@ public final class OverlapUtil {
             }
 
             @Override
-            public TagsInfo getTagsInfo() {
-                return inner.getTagsInfo();
+            public MiXCRMetaInfo getInfo() {
+                return inner.getInfo();
             }
 
             @Override
@@ -172,16 +174,6 @@ public final class OverlapUtil {
             @Override
             public List<VDJCGene> getUsedGenes() {
                 return inner.getUsedGenes();
-            }
-
-            @Override
-            public VDJCAlignerParameters getAlignerParameters() {
-                return inner.getAlignerParameters();
-            }
-
-            @Override
-            public CloneAssemblerParameters getAssemblerParameters() {
-                return inner.getAssemblerParameters();
             }
 
             @Override

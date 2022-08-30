@@ -157,6 +157,11 @@ public class OverlapCharacteristicTest {
                     }
 
                     @Override
+                    public void finish() {
+
+                    }
+
+                    @Override
                     public void close() {
                         inner.close();
                     }

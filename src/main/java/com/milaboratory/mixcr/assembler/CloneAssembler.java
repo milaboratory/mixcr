@@ -24,11 +24,7 @@ import com.milaboratory.core.tree.MutationGuide;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
-import com.milaboratory.mixcr.basictypes.ClonalSequence;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.VDJCSProperties;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
@@ -194,13 +190,6 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             listener.onCloneDropped(acc);
     }
 
-    /* Fine filtering */
-
-    void onCloneDroppedInFineFiltering(CloneAccumulator clone) {
-        if (listener != null)
-            listener.onCloneDroppedInFineFiltering(clone);
-    }
-
     public void setListener(CloneAssemblerListener listener) {
         this.listener = listener;
     }
@@ -357,8 +346,15 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
-    public CloneSet getCloneSet(VDJCAlignerParameters alignerParameters, TagsInfo tagsInfo) {
-        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), alignerParameters, parameters, tagsInfo, new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
+    public CloneSet getCloneSet(MiXCRMetaInfo info) {
+        return new CloneSet(
+                Arrays.asList(realClones),
+                usedGenes.values(),
+                info
+                        .withAssemblerParameters(parameters)
+                        .withAllClonesCutBy(parameters.assemblingFeatures),
+                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())
+        );
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {

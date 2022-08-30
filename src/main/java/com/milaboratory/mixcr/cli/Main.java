@@ -202,7 +202,13 @@ public final class Main {
                 .addSubcommand("alignmentsStat", CommandAlignmentsStats.class)
                 .addSubcommand("listLibraries", CommandListLibraries.class)
                 .addSubcommand("versionInfo", CommandVersionInfo.class)
-                .addSubcommand("slice", CommandSlice.class);
+                .addSubcommand("slice", CommandSlice.class)
+
+                .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees.class)
+                .addSubcommand(CommandExportShmTreesTableWithNodes.COMMAND_NAME, CommandExportShmTreesTableWithNodes.mkCommandSpec())
+                .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
+                .addSubcommand(CommandExportShmTreesNewick.COMMAND_NAME, CommandExportShmTreesNewick.class)
+                .addSubcommand(CommandFindAlleles.FIND_ALLELES_COMMAND_NAME, CommandFindAlleles.class);
 
         cmd.getSubcommands()
                 .get("analyze")
@@ -223,7 +229,9 @@ public final class Main {
                 .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportJUsage.class))
                 .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportIsotypeUsage.class))
                 .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJUsage.class))
-                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class));
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class))
+
+                .addSubcommand("shmTrees", CommandSpec.forAnnotatedObject(CommandExportShmTreesPlots.class));
 
         cmd.getSubcommands()
                 .get("exportQc")

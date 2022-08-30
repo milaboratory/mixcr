@@ -12,12 +12,9 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil;
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks;
@@ -36,7 +33,7 @@ import java.util.List;
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPosition {
     public static final int DEFAULT_ENCODER_THREADS = 3;
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
-    static final String MAGIC_V17 = "MiXCR.VDJC.V17";
+    static final String MAGIC_V17 = "MiXCR.VDJC.V18";
     static final String MAGIC = MAGIC_V17;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
@@ -102,17 +99,14 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         this.numberOfProcessedReads = numberOfProcessedReads;
     }
 
-    public void header(VDJCAlignmentsReader reader, TagsInfo tagsInfo) {
-        header(reader.getParameters(), reader.getUsedGenes(), tagsInfo);
-    }
-
-    public void header(VDJCAligner aligner, TagsInfo tagsInfo) {
-        header(aligner.getParameters(), aligner.getUsedGenes(), tagsInfo);
+    @Override
+    public void header(VDJCAlignmentsReader reader) {
+        header(reader.getInfo(), reader.getUsedGenes());
     }
 
     @Override
-    public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, TagsInfo tags) {
-        if (parameters == null || genes == null)
+    public void header(MiXCRMetaInfo info, List<VDJCGene> genes) {
+        if (info == null || genes == null)
             throw new IllegalArgumentException();
 
         if (writer != null)
@@ -130,12 +124,9 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
                             AppVersionInfo.OutputType.ToFile));
 
             // Writing parameters
-            o.writeObject(parameters);
+            o.writeObject(info);
 
-            // Information about tags
-            o.writeObject(tags);
-
-            IOUtil.stdVDJCPrimitivOStateInit(o, genes, parameters);
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, info.getAlignerParameters());
         }
 
         writer = output.beginPrimitivOBlocks(encoderThreads, alignmentsInBlock,

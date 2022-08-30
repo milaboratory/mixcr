@@ -81,6 +81,11 @@ public final class CloneSetOverlap {
                 }
 
                 @Override
+                public void finish() {
+
+                }
+
+                @Override
                 public void close() {
                     merger.close();
                 }
@@ -119,6 +124,11 @@ public final class CloneSetOverlap {
                 @Override
                 public long currentIndex() {
                     return index.get();
+                }
+
+                @Override
+                public void finish() {
+
                 }
 
                 @Override

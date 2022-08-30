@@ -83,7 +83,7 @@ public class CommandSlice extends MiXCRCommand {
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in);
              VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-            writer.header(reader, reader.getTagsInfo());
+            writer.header(reader);
             for (VDJCAlignments alignments : CUtils.it(reader)) {
                 if (set.removeAll(alignments.getReadIds()))
                     writer.write(alignments);
@@ -128,8 +128,7 @@ public class CommandSlice extends MiXCRCommand {
                 i++;
             }
 
-            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getAlignmentParameters(),
-                    cloneSet.getAssemblerParameters(), cloneSet.getTagsInfo(), cloneSet.getOrdering());
+            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getInfo(), cloneSet.getOrdering());
 
             OutputPort<VDJCAlignments> allAlignmentsPortRaw = new FlatteningOutputPort<>(CUtils.asOutputPort(allAlignmentsList));
             AtomicLong idGen = new AtomicLong();

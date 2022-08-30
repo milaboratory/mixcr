@@ -11,8 +11,6 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.VDJCGene;
 
 import java.util.List;
@@ -24,7 +22,9 @@ import java.util.List;
 public interface VDJCAlignmentsWriterI extends AutoCloseable {
     void setNumberOfProcessedReads(long numberOfProcessedReads);
 
-    void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, TagsInfo tagsInfo);
+    void header(VDJCAlignmentsReader reader);
+
+    void header(MiXCRMetaInfo info, List<VDJCGene> genes);
 
     void write(VDJCAlignments alignment);
 
@@ -42,7 +42,11 @@ public interface VDJCAlignmentsWriterI extends AutoCloseable {
         }
 
         @Override
-        public void header(VDJCAlignerParameters parameters, List<VDJCGene> genes, TagsInfo tagsInfo) {
+        public void header(VDJCAlignmentsReader reader) {
+        }
+
+        @Override
+        public void header(MiXCRMetaInfo info, List<VDJCGene> genes) {
         }
 
         @Override

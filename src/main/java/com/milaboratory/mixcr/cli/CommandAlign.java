@@ -35,14 +35,12 @@ import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor;
 import com.milaboratory.milm.MiXCRMain;
 import com.milaboratory.mitool.helpers.FSKt;
-import com.milaboratory.mitool.pattern.PatternCollection;
+import com.milaboratory.mitool.pattern.LibraryStructurePresetCollection;
+import com.milaboratory.mitool.pattern.LibraryStructurePresetCollection.LibraryStructurePreset;
 import com.milaboratory.mitool.pattern.search.*;
 import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.bam.BAMReader;
-import com.milaboratory.mixcr.basictypes.SequenceHistory;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.*;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.*;
@@ -64,6 +62,8 @@ import java.util.stream.Collectors;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
+import static com.milaboratory.mitool.pattern.search.SearchSettings.DEFAULT_BIT_BUDGET;
+import static com.milaboratory.mitool.pattern.search.SearchSettings.DEFAULT_LENGTH_REWARD;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK;
 import static com.milaboratory.mixcr.basictypes.tag.TagType.*;
 import static com.milaboratory.mixcr.basictypes.tag.TagValueType.SequenceAndQuality;
@@ -209,38 +209,35 @@ public class CommandAlign extends MiXCRCommand {
             names = {"--buffers"}, hidden = true)
     public boolean reportBuffers = false;
 
-    // @Option(description = "Specify this option for 10x datasets to extract cell and UMI barcode information from " +
-    //         "the first read",
-    //         names = {"--10x"})
-    // public boolean tenX = false;
-
     @Option(description = "Tag pattern to extract from the read.",
             names = {"--tag-pattern"})
     public String tagPattern;
 
-    @Option(description = "Tag pattern name from the built-in list.",
-            names = {"--tag-pattern-name"})
-    public String tagPatternName;
-
     @Option(description = "Read tag pattern from a file.",
             names = {"--tag-pattern-file"})
     public String tagPatternFile;
+
+    @Option(description = "Tag architecture preset to load from the built-in list. " +
+            "This also implies different default settings related to tag processing for other steps executed for the " +
+            "output file.",
+            names = {"--tag-preset"})
+    public String tagPreset;
 
     @Option(description = "If paired-end input is used, determines whether to try all combinations of mate-pairs or only match " +
             "reads to the corresponding pattern sections (i.e. first file to first section, etc...)",
             names = {"--tag-parse-unstranded"})
     public boolean tagUnstranded = false;
 
-    @Option(description = "Maximal bit budget, higher values allows more substitutions in small letters.",
+    @Option(description = "Maximal bit budget, higher values allows more substitutions in small letters. (default: " +
+            DEFAULT_BIT_BUDGET + " or from tag preset)",
             names = {"--tag-max-budget"})
-    public double tagMaxBudget = 10.0;
+    public Double tagMaxBudget = null;
 
     private VDJCAlignerParameters vdjcAlignerParameters = null;
 
     public VDJCAlignerParameters getAlignerParameters() {
         if (vdjcAlignerParameters != null)
             return vdjcAlignerParameters;
-
         VDJCAlignerParameters alignerParameters;
         if (alignerParametersName.endsWith(".json")) {
             try {
@@ -318,7 +315,7 @@ public class CommandAlign extends MiXCRCommand {
     }
 
     public boolean taggedAnalysis() {
-        return tagPattern != null || tagPatternName != null || tagPatternFile != null;
+        return tagPattern != null || tagPreset != null || tagPatternFile != null;
     }
 
     public boolean isInputPaired() {
@@ -387,18 +384,20 @@ public class CommandAlign extends MiXCRCommand {
 
 
     public TagSearchPlan getTagPattern() {
-        if (tagPattern == null && tagPatternName == null && tagPatternFile == null)
+        if (tagPattern == null && tagPreset == null && tagPatternFile == null)
             return null;
 
-        if ((tagPattern != null ? 1 : 0) + (tagPatternName != null ? 1 : 0) + (tagPatternFile != null ? 1 : 0) != 1)
+        if ((tagPattern != null ? 1 : 0) + (tagPreset != null ? 1 : 0) + (tagPatternFile != null ? 1 : 0) != 1)
             throwValidationException("--tag-pattern, --tag-pattern-name and --tag-pattern-file can't be used together");
 
         String tagPattern;
+        LibraryStructurePreset preset = null;
         if (this.tagPattern != null)
             tagPattern = this.tagPattern;
-        else if (this.tagPatternName != null)
-            tagPattern = PatternCollection.INSTANCE.getPatternByName(this.tagPatternName);
-        else if (this.tagPatternFile != null)
+        else if (this.tagPreset != null) {
+            preset = LibraryStructurePresetCollection.INSTANCE.getPresetByName(this.tagPreset);
+            tagPattern = preset.getPattern();
+        } else if (this.tagPatternFile != null)
             try {
                 tagPattern = new String(Files.readAllBytes(Paths.get(this.tagPatternFile)));
             } catch (IOException e) {
@@ -411,8 +410,12 @@ public class CommandAlign extends MiXCRCommand {
         System.out.println("Tags will be extracted using the following pattern:");
         System.out.println(tagPattern);
 
-        ReadSearchSettings searchSettings = new ReadSearchSettings(new SearchSettings(tagMaxBudget, 0.1,
-                new MatcherSettings(3, 7)),
+        ReadSearchSettings searchSettings = new ReadSearchSettings(
+                new SearchSettings(
+                        Util.default3(tagMaxBudget,
+                                preset, LibraryStructurePreset::getMaxErrorBudget,
+                                DEFAULT_BIT_BUDGET),
+                        DEFAULT_LENGTH_REWARD, MatcherSettings.Companion.getDefault()),
                 isInputPaired()
                         ? tagUnstranded
                         ? ReadSearchMode.PairedUnknown
@@ -473,7 +476,9 @@ public class CommandAlign extends MiXCRCommand {
                     "', and put just a library name as -b / --library option value (e.g. '--library mylibrary').", false);
     }
 
-    /** Alignment report */
+    /**
+     * Alignment report
+     */
     public final AlignerReportBuilder reportBuilder = new AlignerReportBuilder();
 
     private QualityTrimmerParameters getQualityTrimmerParameters() {
@@ -509,10 +514,13 @@ public class CommandAlign extends MiXCRCommand {
 
         // Tags
         TagSearchPlan tagSearchPlan = getTagPattern();
+        boolean pairedPayload = tagSearchPlan != null
+                ? tagSearchPlan.readShortcuts.size() == 2
+                : isInputPaired();
 
         // Creating aligner
         VDJCAligner aligner = VDJCAligner.createAligner(alignerParameters,
-                tagSearchPlan != null ? tagSearchPlan.readShortcuts.size() == 2 : isInputPaired(),
+                pairedPayload,
                 !noMerge);
 
         int numberOfExcludedNFGenes = 0;
@@ -575,15 +583,23 @@ public class CommandAlign extends MiXCRCommand {
 
              SequenceWriter notAlignedWriter = failedReadsR1 == null
                      ? null
-                     : (isInputPaired()
+                     : (pairedPayload
                      ? new PairedFastqWriter(failedReadsR1, failedReadsR2)
                      : new SingleFastqWriter(failedReadsR1));
         ) {
             if (writer != null)
-                writer.header(aligner,
-                        tagSearchPlan != null
-                                ? new TagsInfo(0, tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
-                                : TagsInfo.NO_TAGS);
+                writer.header(new MiXCRMetaInfo(
+                                tagPreset,
+                                tagSearchPlan != null
+                                        ? new TagsInfo(0, tagSearchPlan.tagInfos.toArray(new TagInfo[0]))
+                                        : TagsInfo.NO_TAGS,
+                                aligner.getParameters(),
+                                null,
+                                null,
+                                null
+                        ),
+                        aligner.getUsedGenes()
+                );
 
             OutputPort<? extends SequenceRead> sReads = reader;
             CanReportProgress progress = (CanReportProgress) reader;
@@ -749,7 +765,7 @@ public class CommandAlign extends MiXCRCommand {
         }
 
         public TaggedSequence parse(SequenceRead read) {
-            ReadSearchResult result = plan.search(read);
+            MicRecord result = plan.search(read);
             report.consume(result);
             ReadSearchHit hit = result.getHit();
             if (hit == null)

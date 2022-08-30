@@ -78,6 +78,11 @@ public interface SetPreprocessor<T> {
                                 }
 
                                 @Override
+                                public void finish() {
+                                    inner.finish();
+                                }
+
+                                @Override
                                 public void close() {
                                     inner.close();
                                 }

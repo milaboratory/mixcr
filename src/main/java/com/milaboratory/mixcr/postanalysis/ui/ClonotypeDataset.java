@@ -12,16 +12,10 @@
 package com.milaboratory.mixcr.postanalysis.ui;
 
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneReader;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.basictypes.VDJCSProperties;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -102,23 +96,13 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
     }
 
     @Override
-    public TagsInfo getTagsInfo() {
-        return reader.getTagsInfo();
-    }
-
-    @Override
-    public VDJCAlignerParameters getAlignerParameters() {
-        return reader.getAlignerParameters();
+    public MiXCRMetaInfo getInfo() {
+        return reader.getInfo();
     }
 
     @Override
     public void close() throws Exception {
         reader.close();
-    }
-
-    @Override
-    public CloneAssemblerParameters getAssemblerParameters() {
-        return reader.getAssemblerParameters();
     }
 
     @Override

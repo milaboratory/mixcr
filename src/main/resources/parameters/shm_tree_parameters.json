@@ -1,0 +1,38 @@
+{
+  "default": {
+    "productiveOnly": true,
+    "singleCell": {
+      "type": "simpleClustering",
+      "algorithm": {
+        "type": "SingleLinkage",
+        "maxNDNDistanceForHeavyChain": 1.0,
+        "maxNDNDistanceForLightChain": 1.0
+      }
+    },
+    "topologyBuilder": {
+      "topToVoteOnNDNSize": 5,
+      "NDNScoreMultiplier": 2.5,
+      "penaltyForReversedMutations": 10,
+      "countOfNodesToProbe": 3
+    },
+    "steps": [
+      {
+        "name": "BuildingInitialTrees",
+        "algorithm": {
+          "type": "BronKerbosch",
+          "commonMutationsCountForClustering": 5,
+          "maxNDNDistanceForClustering": 1.0
+        }
+      },
+      {
+        "name": "AttachClonesByDistanceChange",
+        "threshold": 0.45,
+        "maxNDNDistance": 1.5
+      },
+      {
+        "name": "CombineTrees",
+        "maxNDNDistanceBetweenRoots": 0.3
+      }
+    ]
+  }
+}

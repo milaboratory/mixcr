@@ -1,0 +1,19 @@
+{
+  "default": {
+    "productiveOnly": true,
+    "useClonesWithCountMoreThen": 1,
+    "windowSizeForRegression": 10,
+    "allowedSkippedPointsInRegression": 3,
+    "minDiversityRatioBetweenAlleles": 0.75,
+    "minDiversityForMutation": 3,
+    "minDiversityForAllele": 5,
+    "minPValueForRegression": 0.95,
+    "minYIntersect": 0.125,
+    "portionOfClonesToSearchCommonMutationsInAnAllele": 0.99,
+    "searchMutationsInCDR3": {
+      "minClonesCount": 5,
+      "minPartOfTheSameLetter": 0.7,
+      "minDiversity": 3
+    }
+  }
+}
