@@ -37,15 +37,19 @@ import java.util.function.Function;
 /**
  * Reader of CLNA file format.
  */
-public final class ClnAReader implements CloneReader, VDJCFileHeaderData, AutoCloseable {
+public final class ClnAReader implements CloneReader, AutoCloseable {
     final PrimitivIHybrid input;
 
     // Index data
 
     final long firstClonePosition;
-    /** last element = position of the last alignments block end */
+    /**
+     * last element = position of the last alignments block end
+     */
     final long[] index;
-    /** First record always zero */
+    /**
+     * First record always zero
+     */
     final long[] counts;
     /**
      * cloneId -> index in index e.g. alignments for clone with id0 starts from position index[cloneMapping.get(id0)]

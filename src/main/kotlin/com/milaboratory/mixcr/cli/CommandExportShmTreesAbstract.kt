@@ -12,25 +12,21 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.trees.SHMTreesWriter
-import picocli.CommandLine.Parameters
+import picocli.CommandLine
 
 abstract class CommandExportShmTreesAbstract : MiXCRCommand() {
-    @Parameters(
-        arity = "2",
-        description = ["trees.${SHMTreesWriter.shmFileExtension} output"]
-    )
-    open var inOut: List<String> = ArrayList()
+    @CommandLine.Parameters(index = "0", description = ["trees.${SHMTreesWriter.shmFileExtension}"])
+    lateinit var `in`: String
 
-    override fun getInputFiles(): List<String> = listOf(inOut.first())
+    abstract var out: String
 
-    override fun getOutputFiles(): List<String> = listOf(inOut.last())
+    override fun getInputFiles(): List<String> = listOf(`in`)
 
-    protected val inputFile get() = inputFiles.first()
-    protected val outputFile get() = outputFiles.first()
+    override fun getOutputFiles(): List<String> = listOf(out)
 
     override fun validate() {
-        if (!inputFile.endsWith(".${SHMTreesWriter.shmFileExtension}")) {
-            throwValidationException("Input file should have extension ${SHMTreesWriter.shmFileExtension}. Given $inputFile")
+        if (!`in`.endsWith(".${SHMTreesWriter.shmFileExtension}")) {
+            throwValidationException("Input file should have extension ${SHMTreesWriter.shmFileExtension}. Given $`in`")
         }
     }
 }

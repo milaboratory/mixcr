@@ -72,7 +72,7 @@ import kotlin.collections.set
     name = CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
     sortOptions = false,
     separator = " ",
-    description = ["Find allele variants in clns."]
+    description = ["Find allele variants in clnx."]
 )
 class CommandFindAlleles : MiXCRCommand() {
     @CommandLine.Parameters(
@@ -126,16 +126,25 @@ class CommandFindAlleles : MiXCRCommand() {
             field = value
         }
 
-    @CommandLine.Option(description = ["File to write library with found alleles."], names = ["--export-library"])
+    @CommandLine.Option(
+        description = ["File to write library with found alleles."],
+        names = ["--export-library"],
+        paramLabel = "<path>"
+    )
     var libraryOutput: String? = null
 
-    @CommandLine.Option(description = ["File to description of each allele."], names = ["--export-alleles-mutations"])
+    @CommandLine.Option(
+        description = ["File to description of each allele."],
+        names = ["--export-alleles-mutations"],
+        paramLabel = "<path>"
+    )
     var allelesMutationsOutput: String? = null
 
     @CommandLine.Option(
         description = ["Find alleles parameters preset."],
         names = ["-p", "--preset"],
-        defaultValue = "default"
+        defaultValue = "default",
+        paramLabel = "preset"
     )
     lateinit var findAllelesParametersName: String
 
