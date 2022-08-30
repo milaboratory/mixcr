@@ -47,6 +47,7 @@ import com.milaboratory.mitool.pattern.search.ReadSearchSettings
 import com.milaboratory.mitool.pattern.search.ReadTagShortcut
 import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReport
+import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.basictypes.SequenceHistory
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
@@ -87,6 +88,7 @@ import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
+import picocli.CommandLine.Option
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -109,9 +111,11 @@ class CommandAlign : MiXCRCommand() {
         arity = "2..3",
         paramLabel = "files",
         hideParamSyntax = true,
-        description = ["""file_R1.(fastq[.gz]|fasta) [file_R2.fastq[.gz]] alignments.vdjca
-Use "{{n}}" if you want to concatenate files from multiple lanes, like:
-my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
+        description = [
+            "file_R1.(fastq[.gz]|fasta|bam|sam) [file_R2.(fastq[.gz]|bam|sam)] [file_RN.(bam|sam)] alignments.vdjca",
+            "Use {{n}} if you want to concatenate files from multiple lanes, like:",
+            "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"
+        ]
     )
     private val inOut: List<String> = mutableListOf()
 
@@ -119,61 +123,61 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
 
     override fun getOutputFiles(): List<String> = inOut.subList(inOut.size - 1, inOut.size)
 
-    @CommandLine.Option(description = ["Size of buffer for FASTQ readers"], names = ["--read-buffer"])
+    @Option(description = ["Size of buffer for FASTQ readers"], names = ["--read-buffer"])
     var readBufferSize = 1 shl 22
 
-    @CommandLine.Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"], required = true)
+    @Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"], required = true)
     lateinit var species: String
 
-    @CommandLine.Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
+    @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
     var reportFile: String? = null
 
-    @CommandLine.Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
+    @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
     var jsonReport: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["V/D/J/C gene library"],
         names = ["-b", "--library"],
         paramLabel = "library"
     )
     var libraryName = "default"
 
-    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    @Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
             if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
             field = value
         }
 
-    @CommandLine.Option(
+    @Option(
         description = ["Use higher compression for output file, 10~25%% slower, minus 30~50%% of file size."],
         names = ["--high-compression"]
     )
     var highCompression = false
     var limit: Long = 0
 
-    @CommandLine.Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
+    @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
     fun setLimit(limit: Int) {
         if (limit <= 0) throwValidationExceptionKotlin("ERROR: -n / --limit must be positive", false)
         this.limit = limit.toLong()
     }
 
-    @CommandLine.Option(
+    @Option(
         description = ["Read pre-processing: trimming quality threshold"],
         names = ["--trimming-quality-threshold"]
     )
     var trimmingQualityThreshold: Byte = 0 // 17
 
-    @CommandLine.Option(description = ["Read pre-processing: trimming window size"], names = ["--trimming-window-size"])
+    @Option(description = ["Read pre-processing: trimming window size"], names = ["--trimming-window-size"])
     var trimmingWindowSize: Byte = 6 // 3
 
-    @CommandLine.Option(description = ["Parameters preset."], names = ["-p", "--preset"])
+    @Option(description = ["Parameters preset."], names = ["-p", "--preset"])
     var alignerParametersName = "default"
 
-    @CommandLine.Option(names = ["-O"], description = ["Overrides default aligner parameter values"])
+    @Option(names = ["-O"], description = ["Overrides default aligner parameter values"])
     var overrides: Map<String, String> = mutableMapOf()
 
-    @CommandLine.Option(
+    @Option(
         description = ["Specifies immunological chain / gene(s) for alignment. If many, separate by comma ','. " +
                 "%nAvailable chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc..."],
         names = ["-c", "--chains"],
@@ -188,11 +192,18 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             field = value
         }
 
-    @CommandLine.Option(description = ["Do not merge paired reads."], names = ["-d", "--no-merge"], hidden = true)
+    @Option(description = ["Do not merge paired reads."], names = ["-d", "--no-merge"], hidden = true)
     var noMerge = false
 
+    @Option(
+        description = ["Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)"],
+        names = ["--drop-non-vdj"],
+        hidden = true
+    )
+    var dropNonVDJ = false
+
     @Deprecated("")
-    @CommandLine.Option(
+    @Option(
         description = ["Copy read(s) description line from .fastq or .fasta to .vdjca file (can then be " +
                 "exported with -descrR1 and -descrR2 options in exportAlignments action)."],
         names = ["-a", "--save-description"],
@@ -202,14 +213,14 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         throwValidationExceptionKotlin("--save-description was removed in 3.0: use -OsaveOriginalReads=true instead")
     }
 
-    @CommandLine.Option(
+    @Option(
         description = ["Write alignment results for all input reads (even if alignment failed)."],
         names = ["--write-all"]
     )
     var writeAllResults = false
 
     @Deprecated("")
-    @CommandLine.Option(
+    @Option(
         description = ["Copy original reads (sequences + qualities + descriptions) to .vdjca file."],
         names = ["-g", "--save-reads"],
         hidden = true
@@ -218,36 +229,42 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         throwValidationExceptionKotlin("--save-reads was removed in 3.0: use -OsaveOriginalReads=true instead")
     }
 
-    @CommandLine.Option(description = ["Pipe not aligned R1 reads into separate file."], names = ["--not-aligned-R1"])
+    @Option(description = ["Pipe not aligned R1 reads into separate file."], names = ["--not-aligned-R1"])
     var failedReadsR1: String? = null
 
-    @CommandLine.Option(description = ["Pipe not aligned R2 reads into separate file."], names = ["--not-aligned-R2"])
+    @Option(description = ["Pipe not aligned R2 reads into separate file."], names = ["--not-aligned-R2"])
     var failedReadsR2: String? = null
 
-    @CommandLine.Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
+    @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
     var reportBuffers = false
 
-    @CommandLine.Option(description = ["Tag pattern to extract from the read."], names = ["--tag-pattern"])
+//    @Option(
+//        description = ["Specify this option for 10x datasets to extract cell and UMI barcode information from the first read"],
+//        names = ["--10x"]
+//    )
+//    var tenX: Boolean = false
+
+    @Option(description = ["Tag pattern to extract from the read."], names = ["--tag-pattern"])
     var tagPattern: String? = null
 
-    @CommandLine.Option(description = ["Read tag pattern from a file."], names = ["--tag-pattern-file"])
+    @Option(description = ["Read tag pattern from a file."], names = ["--tag-pattern-file"])
     var tagPatternFile: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Tag architecture preset to load from the built-in list. " +
                 "This also implies different default settings related to tag processing for other steps executed for the " +
                 "output file."], names = ["--tag-preset"]
     )
     var tagPreset: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["If paired-end input is used, determines whether to try all combinations of mate-pairs or only match " +
                 "reads to the corresponding pattern sections (i.e. first file to first section, etc...)"],
         names = ["--tag-parse-unstranded"]
     )
     var tagUnstranded = false
 
-    @CommandLine.Option(
+    @Option(
         description = ["Maximal bit budget, higher values allows more substitutions in small letters. (default: " +
                 SearchSettings.DEFAULT_BIT_BUDGET + " or from tag preset)"], names = ["--tag-max-budget"]
     )
@@ -314,7 +331,12 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
     private fun taggedAnalysis(): Boolean = tagPattern != null || tagPreset != null || tagPatternFile != null
 
     private val isInputPaired: Boolean
-        get() = inputFiles.size == 2
+        get() = inputFiles.size == 2 || isInputBAM
+
+    private val isInputBAM: Boolean
+        get() = inputFiles[0].lowercase(Locale.getDefault()).endsWith(".bam")
+                || inputFiles[0].lowercase(Locale.getDefault()).endsWith(".sam")
+
 
     private fun createReader(): SequenceReaderCloseable<out SequenceRead> {
         // Common single fastq reader constructor
@@ -327,7 +349,13 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
                 true, true
             )
         }
-        return if (isInputPaired) {
+        return if (isInputBAM) {
+            val bamNames = inputFiles
+            val readers = Array<Path>(bamNames.size) { i ->
+                Paths.get(bamNames[i])
+            }
+            BAMReader(readers, dropNonVDJ, true)
+        } else if (isInputPaired) {
             val resolved = inputFiles.map { rf: String -> expandPathNPattern(Paths.get(rf)) }
             MiXCRMain.lm.reportApplicationInputs(resolved.flatten())
             val readers = resolved.map { paths ->
@@ -355,10 +383,10 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         val options = listOf(tagPattern, tagPreset, tagPatternFile)
         if (options.all { it == null }) return null
         if (options.count { it != null } != 1)
-            throwValidationExceptionKotlin("--tag-pattern, --tag-pattern-name and --tag-pattern-file can't be used together")
+            throwValidationExceptionKotlin("--tag-pattern, --tag-preset and --tag-pattern-file can't be used together")
         val preset: LibraryStructurePreset? = tagPreset?.let { getPresetByName(it) }
-        val tagPattern: String? = when {
-            this.tagPattern != null -> this.tagPattern
+        val resultTagPattern: String = when {
+            tagPattern != null -> tagPattern!!
             preset != null -> preset.pattern
             tagPatternFile != null -> try {
                 String(Files.readAllBytes(Paths.get(tagPatternFile!!)))
@@ -368,7 +396,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             else -> throw AssertionError()
         }
         println("Tags will be extracted using the following pattern:")
-        println(tagPattern)
+        println(resultTagPattern)
         val searchSettings = ReadSearchSettings(
             SearchSettings(
                 default3(
@@ -381,7 +409,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             ),
             if (isInputPaired) if (tagUnstranded) ReadSearchMode.PairedUnknown else ReadSearchMode.PairedDirect else ReadSearchMode.Single
         )
-        val readSearchPlan = create(tagPattern!!, searchSettings)
+        val readSearchPlan = create(resultTagPattern, searchSettings)
         val parseInfo = parseTagsFromSet(readSearchPlan.allTags)
         println("The following tags and their roles were recognised:")
         println("  Payload tags: " + java.lang.String.join(", ", parseInfo.readTags))

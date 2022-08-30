@@ -171,6 +171,8 @@ public final class Main {
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
                 .addSubcommand("extend", CommandExtend.class)
 
+                .addSubcommand("bam2fastq", CommandBAM2fastq.class)
+
                 .addSubcommand("exportAlignments", CommandExport.mkAlignmentsSpec())
                 .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty.class)
                 .addSubcommand("exportClones", CommandExport.mkClonesSpec())
