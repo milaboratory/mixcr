@@ -9,41 +9,30 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import io.repseq.core.VDJCLibrary;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine.Command;
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+@CommandLine.Command(
+    name = "listLibraries",
+    sortOptions = true,
+    hidden = true,
+    separator = " ",
+    description = ["List all available library by scanning all library search paths."]
+)
+class CommandListLibraries : MiXCRCommand() {
+    override fun getInputFiles(): List<String> = emptyList()
 
-@Command(name = "listLibraries",
-        sortOptions = true,
-        hidden = true,
-        separator = " ",
-        description = "List all available library by scanning all library search paths.")
-public class CommandListLibraries extends MiXCRCommand {
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.emptyList();
-    }
+    override fun getOutputFiles(): List<String> = emptyList()
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public void run0() {
-        VDJCLibraryRegistry.getDefault().loadAllLibraries();
-        System.out.println("Available libraries:");
-        List<VDJCLibrary> loadedLibraries = new ArrayList<>(VDJCLibraryRegistry.getDefault().getLoadedLibraries());
-        Collections.sort(loadedLibraries);
-        for (VDJCLibrary library : loadedLibraries) {
-            System.out.println(library.getLibraryId());
-            System.out.println(VDJCLibraryRegistry.getDefault().getSpeciesNames(library.getTaxonId()));
+    override fun run0() {
+        VDJCLibraryRegistry.getDefault().loadAllLibraries()
+        println("Available libraries:")
+        val loadedLibraries = VDJCLibraryRegistry.getDefault().loadedLibraries
+        for (library in loadedLibraries.sorted()) {
+            println(library.libraryId)
+            println(VDJCLibraryRegistry.getDefault().getSpeciesNames(library.taxonId))
         }
     }
 }

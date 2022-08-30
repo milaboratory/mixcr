@@ -9,216 +9,172 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.blocks.ParallelProcessor;
-import cc.redberry.pipe.util.OrderedOutputPort;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milaboratory.core.alignment.AlignmentScoring;
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.util.VDJCObjectExtender;
-import com.milaboratory.util.ReportUtil;
-import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.Chains;
-import io.repseq.core.GeneType;
-import io.repseq.core.ReferencePoint;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import cc.redberry.pipe.CUtils
+import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.blocks.ParallelProcessor
+import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
+import com.milaboratory.mixcr.basictypes.VDJCObject
+import com.milaboratory.mixcr.util.VDJCObjectExtender
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
+import com.milaboratory.primitivio.asSequence
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
+import io.repseq.core.Chains
+import io.repseq.core.ReferencePoint
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
+import java.nio.file.Paths
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.*;
+@CommandLine.Command(
+    name = CommandExtend.EXTEND_COMMAND_NAME,
+    sortOptions = true,
+    separator = " ",
+    description = ["Impute alignments or clones with germline sequences."]
+)
+class CommandExtend : MiXCRCommand() {
+    @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+    lateinit var `in`: String
 
-import static com.milaboratory.mixcr.basictypes.IOUtil.extractFileType;
-import static com.milaboratory.mixcr.cli.CommandExtend.EXTEND_COMMAND_NAME;
+    @CommandLine.Parameters(description = ["extendeed.[vdjca|clns|clna]"], index = "1")
+    lateinit var out: String
 
-@Command(name = EXTEND_COMMAND_NAME,
-        sortOptions = true,
-        separator = " ",
-        description = "Impute alignments or clones with germline sequences.")
-public class CommandExtend extends MiXCRCommand {
-    public static final String EXTEND_COMMAND_NAME = "extend";
+    @CommandLine.Option(
+        description = ["Apply procedure only to alignments with specific immunological-receptor chains."],
+        names = ["-c", "--chains"]
+    )
+    var chains = "TCR"
 
-    @Parameters(description = "data.[vdjca|clns|clna]", index = "0")
-    public String in;
+    @CommandLine.Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
+    var reportFile: String? = null
 
-    @Parameters(description = "extendeed.[vdjca|clns|clna]", index = "1")
-    public String out;
+    @CommandLine.Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
+    var jsonReport: String? = null
 
-    @Option(description = "Apply procedure only to alignments with specific immunological-receptor chains.",
-            names = {"-c", "--chains"})
-    public String chains = "TCR";
+    @CommandLine.Option(description = ["Quality score value to assign imputed sequences"], names = ["-q", "--quality"])
+    var extensionQuality: Byte = 30
 
-    @Option(description = CommonDescriptions.REPORT,
-            names = {"-r", "--report"})
-    public String reportFile;
+    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    var threads = Runtime.getRuntime().availableProcessors()
+        set(value) {
+            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+            field = value
+        }
 
-    @Option(description = CommonDescriptions.JSON_REPORT,
-            names = {"-j", "--json-report"})
-    public String jsonReport = null;
+    @CommandLine.Option(description = ["V extension anchor point."], names = ["--v-anchor"])
+    var vAnchorPoint = "CDR3Begin"
 
-    @Option(description = "Quality score value to assign imputed sequences",
-            names = {"-q", "--quality"})
-    public byte extensionQuality = 30;
+    @CommandLine.Option(description = ["J extension anchor point."], names = ["--j-anchor"])
+    var jAnchorPoint = "CDR3End"
 
-    public int threads = Runtime.getRuntime().availableProcessors();
-    ;
+    @CommandLine.Option(description = ["Minimal V hit score to perform left extension."], names = ["--min-v-score"])
+    var minimalVScore = 100
 
-    @Option(description = "Processing threads",
-            names = {"-t", "--threads"})
-    public void setThreads(int threads) {
-        if (threads < 0)
-            throwValidationException("-t / --threads must be positive");
-        this.threads = threads;
-    }
+    @CommandLine.Option(
+        description = ["Minimal J hit score alignment to perform right extension."],
+        names = ["--min-j-score"]
+    )
+    var minimalJScore = 70
 
-    @Option(description = "V extension anchor point.",
-            names = {"--v-anchor"})
-    public String vAnchorPoint = "CDR3Begin";
+    override fun getInputFiles(): List<String> = listOf(`in`)
 
-    @Option(description = "J extension anchor point.",
-            names = {"--j-anchor"})
-    public String jAnchorPoint = "CDR3End";
+    override fun getOutputFiles(): List<String> = listOf(out)
 
-    @Option(description = "Minimal V hit score to perform left extension.",
-            names = {"--min-v-score"})
-    public int minimalVScore = 100;
-
-    @Option(description = "Minimal J hit score alignment to perform right extension.",
-            names = {"--min-j-score"})
-    public int minimalJScore = 70;
-
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(in);
-    }
-
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.singletonList(out);
-    }
-
-    public Chains getChains() {
-        return Chains.parse(chains);
-    }
-
-    public ReferencePoint getVAnchorPoint() {
-        return ReferencePoint.parse(vAnchorPoint);
-    }
-
-    public ReferencePoint getJAnchorPoint() {
-        return ReferencePoint.parse(jAnchorPoint);
-    }
-
-    @Override
-    public void run0() throws Exception {
-        switch (extractFileType(Paths.get(in))) {
-            case VDJCA:
-                processVDJCA();
-                break;
-            case CLNS:
-                processClns();
-                break;
-            case CLNA:
-                throwValidationException("Operation is not supported for ClnA files.");
-                break;
-            default:
-                throwValidationException("Not supported file type.");
+    override fun run0() {
+        when (IOUtil.extractFileType(Paths.get(`in`))!!) {
+            MiXCRFileType.VDJCA -> processVDJCA()
+            MiXCRFileType.CLNS -> processClns()
+            MiXCRFileType.CLNA -> throwValidationException("Operation is not supported for ClnA files.")
         }
     }
 
-    void processClns() throws IOException {
-        try (ClnsReader reader = new ClnsReader(in, VDJCLibraryRegistry.getDefault())) {
-            CloneSet cloneSet = reader.getCloneSet();
+    private fun processClns() {
+        ClnsReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+            val cloneSet = reader.cloneSet
+            val outputPort = CUtils.asOutputPort(cloneSet)
+            val process = processWrapper(outputPort, cloneSet.alignmentParameters)
 
-            OutputPort<Clone> outputPort = CUtils.asOutputPort(cloneSet);
-            ProcessWrapper<Clone> process = new ProcessWrapper<>(outputPort,
-                    cloneSet.getAlignmentParameters().getVAlignerParameters().getParameters().getScoring(),
-                    cloneSet.getAlignmentParameters().getJAlignerParameters().getParameters().getScoring());
-
-            List<Clone> clones = new ArrayList<>(cloneSet.getClones().size());
-            for (Clone clone : CUtils.it(process.getOutput()))
-                clones.add(clone.resetParentCloneSet());
-
-            clones.sort(Comparator.comparing(Clone::getId));
-
-            CloneSet newCloneSet = new CloneSet(clones, cloneSet.getUsedGenes(), cloneSet.getInfo(), cloneSet.getOrdering());
-
-            try (ClnsWriter writer = new ClnsWriter(out)) {
-                writer.writeCloneSet(newCloneSet);
-                writer.writeFooter(reader.reports(), process.report);
+            val clones = process.output
+                .asSequence()
+                .map { clone -> clone.resetParentCloneSet() }
+                .sortedBy { it.id }
+                .toList()
+            val newCloneSet = CloneSet(clones, cloneSet.usedGenes, cloneSet.info, cloneSet.ordering)
+            ClnsWriter(out).use { writer ->
+                writer.writeCloneSet(newCloneSet)
+                val report = process.finish()
+                writer.writeFooter(reader.reports(), report)
             }
         }
     }
 
-    @SuppressWarnings("unchecked")
-    void processVDJCA() throws IOException {
-        try (final VDJCAlignmentsReader reader = new VDJCAlignmentsReader(in);
-             final VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(out)) {
-            SmartProgressReporter.startProgressReport("Extending alignments", reader);
+    private fun processVDJCA() {
+        VDJCAlignmentsReader(`in`).use { reader ->
+            VDJCAlignmentsWriter(out).use { writer ->
+                SmartProgressReporter.startProgressReport("Extending alignments", reader)
+                writer.header(reader)
+                val process = processWrapper(reader, reader.parameters)
 
-            writer.header(reader);
-
-            ProcessWrapper<VDJCAlignments> process = new ProcessWrapper<>(reader,
-                    reader.getParameters().getVAlignerParameters().getParameters().getScoring(),
-                    reader.getParameters().getJAlignerParameters().getParameters().getScoring());
-
-            // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
-            // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
-            // may break the alignment (gaps there are already consolidated as much as possible)
-            Set<GeneType> gtRequiringIndelShifts = reader.getParameters().getGeneTypesWithLinearScoring();
-
-            for (VDJCAlignments alignments : CUtils.it(new OrderedOutputPort<>(process.getOutput(), VDJCAlignments::getAlignmentsIndex)))
-                writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts));
-
-            writer.setNumberOfProcessedReads(reader.getNumberOfReads());
-            process.finish();
-            writer.writeFooter(reader.reports(), process.report);
+                // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
+                // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
+                // may break the alignment (gaps there are already consolidated as much as possible)
+                val gtRequiringIndelShifts = reader.parameters.geneTypesWithLinearScoring
+                process.output
+                    .asSequence()
+                    .sortedBy { it.alignmentsIndex }
+                    .forEach { alignments ->
+                        writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts))
+                    }
+                writer.setNumberOfProcessedReads(reader.numberOfReads)
+                val report = process.finish()
+                writer.writeFooter(reader.reports(), report)
+            }
         }
     }
 
-    final class ProcessWrapper<T extends VDJCObject> {
-        final AbstractCommandReportBuilder reportBuilder;
-        final ParallelProcessor<T, T> output;
+    private fun <T : VDJCObject> processWrapper(
+        input: OutputPort<T>,
+        alignerParameters: VDJCAlignerParameters
+    ): ProcessWrapper<T> {
+        val extender = VDJCObjectExtender<T>(
+            Chains.parse(chains), extensionQuality,
+            alignerParameters.vAlignerParameters.scoring,
+            alignerParameters.jAlignerParameters.scoring,
+            minimalVScore, minimalJScore,
+            ReferencePoint.parse(vAnchorPoint),
+            ReferencePoint.parse(jAnchorPoint)
+        )
+        val output = ParallelProcessor(input, extender, threads)
+        extender.setStartMillis(System.currentTimeMillis())
+        extender.setInputFiles(`in`)
+        extender.setOutputFiles(out)
+        extender.commandLine = commandLineArguments
+        return ProcessWrapper(extender, output)
+    }
 
-        MiXCRCommandReport report;
-
-        public ProcessWrapper(OutputPort<T> input,
-                              AlignmentScoring<NucleotideSequence> vScoring,
-                              AlignmentScoring<NucleotideSequence> jScoring) {
-            VDJCObjectExtender<T> extender = new VDJCObjectExtender<>(getChains(), extensionQuality,
-                    vScoring, jScoring,
-                    minimalVScore, minimalJScore,
-                    getVAnchorPoint(),
-                    getJAnchorPoint());
-            this.output = new ParallelProcessor<>(input, extender, threads);
-            this.reportBuilder = extender;
-            reportBuilder.setStartMillis(System.currentTimeMillis());
-            reportBuilder.setInputFiles(in);
-            reportBuilder.setOutputFiles(out);
-            reportBuilder.setCommandLine(getCommandLineArguments());
-        }
-
-        public OutputPort<T> getOutput() {
-            return output;
-        }
-
-        public void finish() throws JsonProcessingException {
-            reportBuilder.setFinishMillis(System.currentTimeMillis());
-            report = reportBuilder.buildReport();
+    private inner class ProcessWrapper<T : VDJCObject>(
+        val reportBuilder: AbstractCommandReportBuilder,
+        val output: ParallelProcessor<T, T>
+    ) {
+        fun finish(): MiXCRCommandReport {
+            reportBuilder.setFinishMillis(System.currentTimeMillis())
+            val report = reportBuilder.buildReport()!!
             // Writing report to stout
-            ReportUtil.writeReportToStdout(report);
-
-            if (reportFile != null)
-                ReportUtil.appendReport(reportFile, report);
-
-            if (jsonReport != null)
-                ReportUtil.appendJsonReport(jsonReport, report);
+            ReportUtil.writeReportToStdout(report)
+            if (reportFile != null) ReportUtil.appendReport(reportFile, report)
+            if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+            return report
         }
+    }
+
+    companion object {
+        const val EXTEND_COMMAND_NAME = "extend"
     }
 }

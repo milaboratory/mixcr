@@ -9,61 +9,41 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import com.milaboratory.cli.ABaseCommand;
-import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.mixcr.util.MiXCRVersionInfo;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
+import com.milaboratory.cli.ABaseCommand
+import com.milaboratory.cli.AppVersionInfo
+import com.milaboratory.mixcr.util.MiXCRVersionInfo
+import io.repseq.core.VDJCLibraryRegistry
+import io.repseq.core.VDJCLibraryRegistry.ClasspathLibraryResolver
+import io.repseq.core.VDJCLibraryRegistry.FolderLibraryResolver
+import picocli.CommandLine
 
-import java.util.ArrayList;
-import java.util.Arrays;
+@CommandLine.Command(name = "mixcr", versionProvider = CommandMain.VersionProvider::class, separator = " ")
+class CommandMain internal constructor() : ABaseCommand("mixcr") {
+    @CommandLine.Option(
+        names = ["-v", "--version"],
+        versionHelp = true,
+        description = ["print version information and exit"]
+    )
+    var versionRequested = false
 
-@Command(name = "mixcr",
-        versionProvider = CommandMain.VersionProvider.class,
-        separator = " ")
-public class CommandMain extends ABaseCommand {
-    CommandMain() {
-        super("mixcr");
-    }
-
-    @Option(names = {"-v", "--version"},
-            versionHelp = true,
-            description = "print version information and exit")
-    boolean versionRequested;
-
-    // @Option(names = {"-h", "--help"},
-    //         hidden = true)
-    // @Override
-    // public void requestHelp(boolean b) {
-    //     throwValidationException("ERROR: -h / --help is not supported: use `mixcr help` for usage.");
-    // }
-
-    static final class VersionProvider implements CommandLine.IVersionProvider {
-        @Override
-        public String[] getVersion() throws Exception {
-            ArrayList<String> lines = new ArrayList<>();
-
-            lines.addAll(Arrays.asList(MiXCRVersionInfo
-                    .get()
-                    .getVersionString(AppVersionInfo.OutputType.ToConsole, true)
-                    .split("\n")));
-
-            lines.add("");
-            lines.add("Library search path:");
-
-            for (VDJCLibraryRegistry.LibraryResolver resolvers : VDJCLibraryRegistry.getDefault()
-                    .getLibraryResolvers()) {
-                if (resolvers instanceof VDJCLibraryRegistry.ClasspathLibraryResolver)
-                    lines.add("- built-in libraries");
-                if (resolvers instanceof VDJCLibraryRegistry.FolderLibraryResolver)
-                    lines.add("- " + ((VDJCLibraryRegistry.FolderLibraryResolver) resolvers).getPath());
+    internal class VersionProvider : CommandLine.IVersionProvider {
+        override fun getVersion(): Array<String> {
+            val lines = mutableListOf<String>()
+            lines += MiXCRVersionInfo.get()
+                .getVersionString(AppVersionInfo.OutputType.ToConsole, true)
+                .split("\n".toRegex()).dropLastWhile { it.isEmpty() }
+            lines += ""
+            lines += "Library search path:"
+            for (resolver in VDJCLibraryRegistry.getDefault().libraryResolvers) {
+                lines += when (resolver) {
+                    is ClasspathLibraryResolver -> "- built-in libraries"
+                    is FolderLibraryResolver -> "- ${resolver.path}"
+                    else -> throw UnsupportedOperationException()
+                }
             }
-
-            return lines.toArray(new String[lines.size()]);
+            return lines.toTypedArray()
         }
     }
 }
