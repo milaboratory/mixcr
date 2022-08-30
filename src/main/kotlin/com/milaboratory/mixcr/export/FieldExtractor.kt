@@ -9,20 +9,11 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.export;
+package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData;
+const val NULL = ""
 
-public interface Field<T> {
-    boolean canExtractFrom(Class<?> type);
-
-    String getCommand();
-
-    String getDescription();
-
-    int nArguments();
-
-    String metaVars();
-
-    FieldExtractor<T> create(OutputMode outputMode, VDJCFileHeaderData headerData, String[] args);
+interface FieldExtractor<in T : Any> {
+    val header: String
+    fun extractValue(obj: T): String
 }

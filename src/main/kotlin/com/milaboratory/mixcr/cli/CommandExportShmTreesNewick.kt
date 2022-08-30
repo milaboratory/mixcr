@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.mixcr.trees.NewickTreePrinter
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
-import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
@@ -27,27 +26,26 @@ import kotlin.io.path.writeText
     name = CommandExportShmTreesNewick.COMMAND_NAME,
     sortOptions = false,
     separator = " ",
-    description = ["Export SHMTree as a table with a row for every node"]
+    description = ["Export SHMTree as newick"]
 )
 class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
-    @Parameters(arity = "2", description = ["trees.$shmFileExtension output_dir"])
-    override var inOut: List<String> = ArrayList()
+    @Parameters(index = "1", description = ["output directory to write newick files"])
+    override lateinit var out: String
 
     override fun run0() {
-        val outputDir = Path(outputFiles.first())
+        val outputDir = Path(out)
         outputDir.toFile().mkdirs()
 
         val newickTreePrinter = NewickTreePrinter<SHMTreeForPostanalysis.BaseNode> {
             it.content.id.toString()
         }
 
-        val libraryRegistry = VDJCLibraryRegistry.getDefault()
-        SHMTreesReader(inputFile, libraryRegistry).use { reader ->
+        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
             reader.readTrees().forEach { shmTree ->
                 val shmTreeForPostanalysis = shmTree.forPostanalysis(
                     reader.fileNames,
                     reader.alignerParameters,
-                    libraryRegistry
+                    reader.libraryRegistry
                 )
 
                 val newickFileOutput = outputDir.resolve("${shmTree.treeId}.tree")

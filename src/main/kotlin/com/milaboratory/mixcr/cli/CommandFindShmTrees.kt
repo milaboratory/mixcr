@@ -38,6 +38,7 @@ import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
+import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -79,7 +80,9 @@ class CommandFindShmTrees : MiXCRCommand() {
     @Option(
         description = ["SHM tree builder parameters preset."],
         names = ["-p", "--preset"],
-        defaultValue = "default"
+        defaultValue = "default",
+        paramLabel = "preset",
+        showDefaultValue = CommandLine.Help.Visibility.ALWAYS
     )
     lateinit var shmTreeBuilderParametersName: String
 
@@ -87,16 +90,16 @@ class CommandFindShmTrees : MiXCRCommand() {
     var report: String? = null
 
     @Option(description = ["List of VGene names to filter clones"], names = ["-v", "--v-gene-names"])
-    var VGenesToSearch: Set<String> = HashSet()
+    var VGenesToFilter: Set<String> = HashSet()
 
     @Option(description = ["List of JGene names to filter clones"], names = ["-j", "--j-gene-names"])
-    var JGenesToSearch: Set<String> = HashSet()
+    var JGenesToFilter: Set<String> = HashSet()
 
     @Option(
         description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
         names = ["-cdr3", "--cdr3-lengths"]
     )
-    var CDR3LengthToSearch: Set<Int> = HashSet()
+    var CDR3LengthToFilter: Set<Int> = HashSet()
 
     @Option(
         description = ["Filter clones with counts great or equal to that parameter"],
@@ -108,12 +111,12 @@ class CommandFindShmTrees : MiXCRCommand() {
     var reportPdf: String? = null
 
     @Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
-    var debugDirectoryPath: String? = null
+    var debugDirectory: String? = null
 
-    private val debugDirectory: Path by lazy {
-        when (debugDirectoryPath) {
+    private val debugDirectoryPath: Path by lazy {
+        when (debugDirectory) {
             null -> tempDest.resolvePath("trees_debug")
-            else -> Paths.get(debugDirectoryPath!!)
+            else -> Paths.get(debugDirectory!!)
         }.also { it.toFile().mkdirs() }
     }
 
@@ -148,7 +151,7 @@ class CommandFindShmTrees : MiXCRCommand() {
 
     private fun ensureParametersInitialized() {
         shmTreeBuilderParameters
-        debugDirectory
+        debugDirectoryPath
     }
 
     override fun validate() {
@@ -166,13 +169,13 @@ class CommandFindShmTrees : MiXCRCommand() {
             if (!buildFrom!!.endsWith(".tsv")) {
                 throwValidationException("--build-from must be .tsv, got $buildFrom")
             }
-            if (VGenesToSearch.isNotEmpty()) {
+            if (VGenesToFilter.isNotEmpty()) {
                 throwValidationException("--v-gene-names must be empty if --build-from is specified")
             }
-            if (JGenesToSearch.isNotEmpty()) {
+            if (JGenesToFilter.isNotEmpty()) {
                 throwValidationException("--j-gene-names must be empty if --build-from is specified")
             }
-            if (CDR3LengthToSearch.isNotEmpty()) {
+            if (CDR3LengthToFilter.isNotEmpty()) {
                 throwValidationException("--cdr3-lengths must be empty if --build-from is specified")
             }
             if (minCountForClone != null) {
@@ -184,7 +187,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             if (reportPdf != null) {
                 println("WARN: argument --report-pdf will not be used with --build-from")
             }
-            if (debugDirectoryPath != null) {
+            if (debugDirectory != null) {
                 println("WARN: argument --debug will not be used with --build-from")
             }
         }
@@ -220,6 +223,10 @@ class CommandFindShmTrees : MiXCRCommand() {
         require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must not be cut by the same geneFeature"
         }
+
+        require(cloneReaders.map { it.info.tagsInfo }.distinct().count() == 1) {
+            "Input files with different tags are not supported yet"
+        }
         val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
         val assemblerParameters = cloneReaders.first().assemblerParameters
         val scoringSet = ScoringSet(
@@ -233,10 +240,10 @@ class CommandFindShmTrees : MiXCRCommand() {
             cloneReaders,
             allFullyCoveredBy,
             tempDest,
-            debugDirectory,
-            VGenesToSearch,
-            JGenesToSearch,
-            CDR3LengthToSearch,
+            debugDirectoryPath,
+            VGenesToFilter,
+            JGenesToFilter,
+            CDR3LengthToFilter,
             minCountForClone
         )
         if (buildFrom != null) {

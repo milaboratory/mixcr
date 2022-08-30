@@ -12,9 +12,8 @@
 package com.milaboratory.mixcr.export;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCObject;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.Util;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
@@ -29,15 +28,16 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ListIterator;
 
+import static com.milaboratory.mixcr.export.OutputMode.HumanFriendly;
+
 public class FieldExtractorsTest {
     @Test
-    public void testAnchorPoints1() throws Exception {
+    public void testAnchorPoints1() {
         final boolean print = false;
         final Well44497b rg = new Well44497b(12312);
 
@@ -57,7 +57,12 @@ public class FieldExtractorsTest {
         // 250V + 60CDR3 (20V 7N 10D 3N 20J) + 28J + 100C + 100N
         // "{CDR3Begin(-250)}V*270 NNNNNNN {DBegin(0)}D*10 NNN {CDR3End(-20):FR4End} {CBegin}C*100 N*100"
 
-        final FieldExtractors.ExtractDefaultReferencePointsPositions extractor = new FieldExtractors.ExtractDefaultReferencePointsPositions();
+        final FieldExtractor<? super VDJCAlignments> extractor =
+                Arrays.stream(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE.getFields())
+                        .filter(it -> it.getCmdArgName().equals("-defaultAnchorPoints"))
+                        .findFirst()
+                        .map(it -> it.create(HumanFriendly, () -> TagsInfo.NO_TAGS, new String[0]))
+                        .orElseThrow(IllegalArgumentException::new);
 
         F6 goAssert = new F6() {
             @Override
@@ -82,7 +87,7 @@ public class FieldExtractorsTest {
                     System.out.println();
                 }
 
-                String val = extractor.extract(al);
+                String val = extractor.extractValue(al);
 
                 if (print)
                     System.out.println(val);
@@ -145,7 +150,7 @@ public class FieldExtractorsTest {
 
     @Ignore
     @Test
-    public void bestHits() throws Exception {
+    public void bestHits() {
         for (GeneType type : GeneType.values()) {
             String u = type.name().substring(0, 1).toUpperCase();
             String l = u.toLowerCase();
@@ -177,7 +182,7 @@ public class FieldExtractorsTest {
 
     @Ignore
     @Test
-    public void bestAlignments() throws Exception {
+    public void bestAlignments() {
         for (GeneType type : GeneType.values()) {
             String u = type.name().substring(0, 1).toUpperCase();
             String l = u.toLowerCase();
@@ -216,15 +221,26 @@ public class FieldExtractorsTest {
     @Ignore
     @Test
     public void testName() throws Exception {
-        for (Class clazz : Arrays.asList(VDJCObject.class, VDJCAlignments.class, Clone.class)) {
-            try (FileOutputStream out = new FileOutputStream(new File("doc/ExportFields" + clazz.getSimpleName() + ".rst"))) {
-                out.write(printDocumentation(clazz).getBytes());
-            }
+        try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsVDJCAlignments.rst")) {
+            out.write(printDocumentation(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE).getBytes());
+        }
+        try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsClone.rst")) {
+            out.write(printDocumentation(CloneFieldsExtractorsFactory.INSTANCE).getBytes());
         }
     }
 
-    public static String printDocumentation(Class clazz) {
-        ArrayList<String>[] cols = FieldExtractors.getDescriptionSpecificForClass(clazz);
+    private static ArrayList<String>[] getDescription(Field<?>[] fields) {
+        @SuppressWarnings("unchecked")
+        ArrayList<String>[] description = new ArrayList[]{new ArrayList<String>(), new ArrayList<String>()};
+        for (Field<?> field : fields) {
+            description[0].add(field.getCmdArgName() + " " + field.getMetaVars());
+            description[1].add(field.getDescription());
+        }
+        return description;
+    }
+
+    public static String printDocumentation(FieldExtractorsFactory<?> fieldExtractors) {
+        ArrayList<String>[] cols = getDescription(fieldExtractors.getFields());
         cols[0].add(0, "Field name");
         cols[1].add(0, "Description");
         ListIterator<String>[] iterators = new ListIterator[]{cols[0].listIterator(), cols[1].listIterator()};

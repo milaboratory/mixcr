@@ -20,6 +20,7 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
 import com.milaboratory.mixcr.export.AirrUtil.AirrAlignment;
 import io.repseq.core.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -37,11 +38,13 @@ public final class AirrColumns {
     }
 
     public static final class CloneId implements FieldExtractor<AirrVDJCObjectWrapper> {
+        @NotNull
         @Override
         public String getHeader() {
             return "sequence_id";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             return "clone." + object.asClone().getId();
@@ -49,11 +52,13 @@ public final class AirrColumns {
     }
 
     public static final class AlignmentId implements FieldExtractor<AirrVDJCObjectWrapper> {
+        @NotNull
         @Override
         public String getHeader() {
             return "sequence_id";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             return "read." + object.asAlignment().getMinReadId();
@@ -67,11 +72,13 @@ public final class AirrColumns {
             this.targetId = targetId;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return "sequence";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
@@ -80,23 +87,27 @@ public final class AirrColumns {
     }
 
     public static final class RevComp implements FieldExtractor<AirrVDJCObjectWrapper> {
+        @NotNull
         @Override
         public String getHeader() {
             return "rev_comp";
         }
 
+        @NotNull
         @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
+        public String extractValue(@NotNull AirrVDJCObjectWrapper object) {
             return "F";
         }
     }
 
     public static class Productive implements FieldExtractor<AirrVDJCObjectWrapper> {
+        @NotNull
         @Override
         public String getHeader() {
             return "productive";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             NSequenceWithQuality cdr3nt = object.object.getFeature(GeneFeature.CDR3);
@@ -117,11 +128,13 @@ public final class AirrColumns {
             this.gt = gt;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return gt.getLetterLowerCase() + "_call";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             return Arrays.stream(object.object.getHits(gt))
@@ -137,11 +150,13 @@ public final class AirrColumns {
             this.gt = gt;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return Character.toLowerCase(gt.getLetter()) + "_call";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             VDJCGene bestHitGene = object.object.getBestHitGene(gt);
@@ -160,6 +175,7 @@ public final class AirrColumns {
 
         public abstract String extractValue(AirrAlignment object);
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
@@ -175,11 +191,13 @@ public final class AirrColumns {
             super(targetId, withPadding);
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return "sequence_alignment";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrAlignment object) {
             return airrStr(object.getSequence(withPadding));
@@ -191,11 +209,13 @@ public final class AirrColumns {
             super(targetId, withPadding);
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return "germline_alignment";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrAlignment object) {
             return airrStr(object.getGermline(withPadding));
@@ -301,6 +321,7 @@ public final class AirrColumns {
             this.header = header;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return header;
@@ -345,13 +366,15 @@ public final class AirrColumns {
             this.header = header;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return header;
         }
 
+        @NotNull
         @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
+        public String extractValue(@NotNull AirrVDJCObjectWrapper object) {
             if (feature != null) {
                 NSequenceWithQuality feature = object.object.getFeature(this.feature);
                 if (feature == null)
@@ -424,11 +447,13 @@ public final class AirrColumns {
             this.header = header;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return header;
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             AminoAcidSequence feature = object.object.getAAFeature(this.feature);
@@ -447,6 +472,7 @@ public final class AirrColumns {
             this.geneType = geneType;
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
@@ -471,6 +497,7 @@ public final class AirrColumns {
             super(targetId, geneType);
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return geneType.getLetterLowerCase() + "_score";
@@ -507,6 +534,7 @@ public final class AirrColumns {
             this.germline = germline;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return geneType.getLetterLowerCase() + "_" +
@@ -531,6 +559,7 @@ public final class AirrColumns {
             this.start = start;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return geneType.getLetterLowerCase() + "_alignment_" +
@@ -547,11 +576,13 @@ public final class AirrColumns {
     }
 
     public static final class CloneCount implements FieldExtractor<AirrVDJCObjectWrapper> {
+        @NotNull
         @Override
         public String getHeader() {
             return "duplicate_count";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             return "" + (int) Math.round(object.asClone().getCount());
@@ -565,11 +596,13 @@ public final class AirrColumns {
             this.targetId = targetId;
         }
 
+        @NotNull
         @Override
         public String getHeader() {
             return "complete_vdj";
         }
 
+        @NotNull
         @Override
         public String extractValue(AirrVDJCObjectWrapper object) {
             int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;

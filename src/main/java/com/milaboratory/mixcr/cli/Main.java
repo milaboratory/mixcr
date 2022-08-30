@@ -205,8 +205,8 @@ public final class Main {
                 .addSubcommand("slice", CommandSlice.class)
 
                 .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees.class)
-                .addSubcommand(CommandExportShmTreesTableWithNodes.COMMAND_NAME, CommandExportShmTreesTableWithNodes.class)
-                .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.class)
+                .addSubcommand(CommandExportShmTreesTableWithNodes.COMMAND_NAME, CommandExportShmTreesTableWithNodes.mkCommandSpec())
+                .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
                 .addSubcommand(CommandExportShmTreesNewick.COMMAND_NAME, CommandExportShmTreesNewick.class)
                 .addSubcommand(CommandFindAlleles.FIND_ALLELES_COMMAND_NAME, CommandFindAlleles.class);
 

@@ -14,23 +14,44 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mitool.helpers.get
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.VJ_REFERENCE
+import kotlin.collections.set
+import kotlin.math.log2
 
-object SHNTreeFieldsExtractor : BaseFieldExtractors() {
-    override fun initFields(): Array<Field<out Any>> {
-        val fields = mutableListOf<Field<SHMTreeForPostanalysis>>()
+object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostanalysis>() {
+    override val presets: Map<String, List<FieldCommandArgs>> = buildMap {
+        this["full"] = listOf(
+            FieldCommandArgs("-treeId"),
+            FieldCommandArgs("-uniqClonesCount"),
+            FieldCommandArgs("-totalClonesCount"),
+            FieldCommandArgs("-wildcardsScore"),
+            FieldCommandArgs("-ndnOfMRCA"),
+            FieldCommandArgs("-vHit"),
+            FieldCommandArgs("-jHit"),
+        )
 
-        fields += FieldParameterless(
+        this["min"] = listOf(
+            FieldCommandArgs("-treeId"),
+            FieldCommandArgs("-vHit"),
+            FieldCommandArgs("-jHit"),
+        )
+    }
+
+    override val defaultPreset: String = "full"
+
+    override fun allAvailableFields(): List<Field<SHMTreeForPostanalysis>> = buildList {
+        this += FieldParameterless(
+            Order.treeMainParams + 100,
             "-treeId",
             "SHM tree id",
             "Tree id",
             "treeId"
         ) { it.meta.treeId.toString() }
 
-        fields += FieldParameterless(
+        this += FieldParameterless(
+            Order.treeMainParams + 200,
             "-uniqClonesCount",
             "Number of uniq clones in the SHM tree",
             "Uniq clones count",
@@ -39,7 +60,8 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
             shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
         }
 
-        fields += FieldParameterless(
+        this += FieldParameterless(
+            Order.treeMainParams + 300,
             "-totalClonesCount",
             "Total sum of counts of clones in the SHM tree",
             "Total clones count",
@@ -48,7 +70,21 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
             shmTree.tree.allNodes().sumOf { (_, node) -> node.content.clones.sumOf { it.clone.count } }.toString()
         }
 
-        fields += FieldParameterless(
+        VJ_REFERENCE.forEach { type ->
+            val l = type.letter
+            this += FieldParameterless(
+                Order.orderForBestHit(type),
+                "-${l.lowercaseChar()}Hit",
+                "Export best $l hit",
+                "Best $l hit",
+                "best${l}Hit"
+            ) {
+                it.meta.rootInfo.VJBase.geneIds[type].name
+            }
+        }
+
+        this += FieldParameterless(
+            Order.treeStats + 100,
             "-wildcardsScore",
             "Count of possible nucleotide sequences of CDR3 in MRCA",
             "Wildcards score",
@@ -56,14 +92,15 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
         ) { shmTree ->
             val CDR3Sequence = shmTree.mrca.targetNSequence(CDR3)!!
             val wildcardSized = (0 until CDR3Sequence.size())
-                .map { CDR3Sequence[it] }
+                .map { CDR3Sequence.codeAt(it) }
                 .filter { NucleotideSequence.ALPHABET.isWildcard(it) }
                 .map { NucleotideSequence.ALPHABET.codeToWildcard(it) }
-                .map { it.basicSize() }
-            wildcardSized.fold(1, Int::times).toString()
+                .map { log2(it.basicSize().toDouble()) }
+            wildcardSized.sum().toString()
         }
 
-        fields += FieldParameterless(
+        this += FieldParameterless(
+            Order.treeStats + 200,
             "-ndnOfMRCA",
             "NDN nucleotide sequence of MRCA",
             "mrcaNDN",
@@ -71,22 +108,5 @@ object SHNTreeFieldsExtractor : BaseFieldExtractors() {
         ) { shmTree ->
             shmTree.mrca.NDN.toString()
         }
-
-        // Best hits
-        for (type in VJ_REFERENCE) {
-            val l = type.letter
-            fields.add(
-                FieldParameterless(
-                    "-${l.lowercaseChar()}Hit",
-                    "Export best $l hit",
-                    "Best $l hit",
-                    "best${l}Hit"
-                ) {
-                    it.meta.rootInfo.VJBase.geneIds[type].name
-                }
-            )
-        }
-
-        return fields.toTypedArray()
     }
 }
