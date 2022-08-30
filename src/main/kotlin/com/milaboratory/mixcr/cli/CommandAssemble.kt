@@ -98,10 +98,10 @@ class CommandAssemble : MiXCRCommand() {
     var cellLevel = false
 
     @CommandLine.Option(names = ["-O"], description = ["Overrides default parameter values."])
-    private val overrides: Map<String, String> = emptyMap()
+    private val overrides: Map<String, String> = mutableMapOf()
 
     @CommandLine.Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
-    private val preCloneAssemblerOverrides: Map<String, String> = emptyMap()
+    private val preCloneAssemblerOverrides: Map<String, String> = mutableMapOf()
     override fun getInputFiles(): List<String> = listOf(`in`)
 
     override fun getOutputFiles(): List<String> = listOf(out)

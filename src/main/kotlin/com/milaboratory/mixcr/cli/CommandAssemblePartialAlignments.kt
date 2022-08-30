@@ -40,7 +40,7 @@ class CommandAssemblePartialAlignments : MiXCRCommand() {
     lateinit var out: String
 
     @CommandLine.Option(names = ["-O"], description = ["Overrides default parameter values."])
-    var overrides: Map<String, String> = emptyMap()
+    var overrides: Map<String, String> = mutableMapOf()
 
     @CommandLine.Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
     var reportFile: String? = null

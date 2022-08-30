@@ -94,7 +94,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
 
     ///////////////////////////////////////////// Common options /////////////////////////////////////////////
     @CommandLine.Parameters(description = ["input_file1 [input_file2] analysisOutputName"])
-    var inOut: List<String> = emptyList()
+    var inOut: List<String> = mutableListOf()
 
     @CommandLine.Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"], required = true)
     var species = "hs"
@@ -183,7 +183,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         description = ["Additional parameters for align step specified with double quotes (e.g --align \"--limit 1000\" --align \"-OminSumScore=100\" etc."],
         arity = "1"
     )
-    var alignParameters: List<String> = emptyList()
+    var alignParameters: List<String> = mutableListOf()
 
     private val cmdAlign: CommandAlign by lazy {
         inheritOptionsAndValidate(mkAlign())
@@ -274,7 +274,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         description = ["Additional parameters for correctAndSortTagParameters step specified with double quotes."],
         arity = "1"
     )
-    var correctAndSortTagsParameters: List<String> = emptyList()
+    var correctAndSortTagsParameters: List<String> = mutableListOf()
 
     /** Build parameters for assemble partial  */
     private fun mkCorrectAndSortTags(input: String, output: String): CommandCorrectAndSortTags {
@@ -302,7 +302,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         description = ["Additional parameters for assemblePartial step specified with double quotes (e.g --assemblePartial \"--overlappedOnly\" --assemblePartial \"-OkOffset=0\" etc."],
         arity = "1"
     )
-    var assemblePartialParameters: List<String> = emptyList()
+    var assemblePartialParameters: List<String> = mutableListOf()
 
     /** Build parameters for assemble partial  */
     private fun mkAssemblePartial(input: String, output: String): CommandAssemblePartialAlignments {
@@ -330,7 +330,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         description = ["Additional parameters for extend step specified with double quotes (e.g --extend \"--chains TRB\" --extend \"--quality 0\" etc."],
         arity = "1"
     )
-    var extendAlignmentsParameters: List<String> = emptyList()
+    var extendAlignmentsParameters: List<String> = mutableListOf()
 
     /** Build parameters for extender  */
     private fun mkExtend(input: String, output: String): CommandExtend {
@@ -359,7 +359,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         description = ["Additional parameters for assemble step specified with double quotes (e.g --assemble \"-OassemblingFeatures=[V5UTR+L1+L2+FR1,FR3+CDR3]\" --assemble \"-ObadQualityThreshold=0\" etc."],
         arity = "1"
     )
-    var assembleParameters: List<String> = emptyList()
+    var assembleParameters: List<String> = mutableListOf()
 
     /** Build parameters for assemble  */
     private fun getAssemble(input: String, output: String): CommandAssemble {
@@ -399,7 +399,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         description = ["Additional parameters for assemble contigs step specified with double quotes"],
         arity = "1"
     )
-    var assembleContigParameters: List<String> = emptyList()
+    var assembleContigParameters: List<String> = mutableListOf()
 
     /** Build parameters for assemble  */
     private fun mkAssembleContigs(input: String, output: String): CommandAssembleContigs {
@@ -428,7 +428,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         description = ["Additional parameters for exportClones step specified with double quotes (e.g --export \"-p full\" --export \"-cloneId\" etc."],
         arity = "1"
     )
-    var exportParameters: List<String> = emptyList()
+    var exportParameters: List<String> = mutableListOf()
 
     /** Build parameters for export  */
     private fun mkExport(input: String, output: String, chains: String): CommandExport.CommandExportClones {

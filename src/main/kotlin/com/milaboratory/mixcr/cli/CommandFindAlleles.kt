@@ -85,7 +85,7 @@ class CommandFindAlleles : MiXCRCommand() {
             "Resulted outputs must be uniq"
         ]
     )
-    private val inOut: List<String> = ArrayList()
+    private val inOut: List<String> = mutableListOf()
 
     @CommandLine.Option(
         description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
@@ -149,7 +149,7 @@ class CommandFindAlleles : MiXCRCommand() {
     lateinit var findAllelesParametersName: String
 
     @CommandLine.Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
-    var overrides: Map<String, String> = HashMap()
+    var overrides: Map<String, String> = mutableMapOf()
 
     private val tempDest: TempFileDest by lazy {
         if (!useSystemTemp) {

@@ -113,7 +113,7 @@ class CommandAlign : MiXCRCommand() {
 Use "{{n}}" if you want to concatenate files from multiple lanes, like:
 my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
     )
-    private val inOut: List<String> = ArrayList()
+    private val inOut: List<String> = mutableListOf()
 
     override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
 
@@ -171,7 +171,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
     var alignerParametersName = "default"
 
     @CommandLine.Option(names = ["-O"], description = ["Overrides default aligner parameter values"])
-    var overrides: Map<String, String> = HashMap()
+    var overrides: Map<String, String> = mutableMapOf()
 
     @CommandLine.Option(
         description = ["Specifies immunological chain / gene(s) for alignment. If many, separate by comma ','. " +
@@ -283,7 +283,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             alignerParameters.vAlignerParameters.geneFeatureToAlign.hasReversedRegions() -> VRegionWithP
             else -> VRegion
         }
-        for (gene in vdjcLibrary.getGenes(getChains())) {
+        for (gene in vdjcLibrary.getGenes(Chains.parse(chains))) {
             if (gene.geneType == GeneType.Variable) {
                 totalV++
                 if (!alignerParameters.containsRequiredFeature(gene)) {
@@ -304,10 +304,6 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
             alignerParameters.vAlignerParameters.geneFeatureToAlign = correctingFeature
         }
         alignerParameters
-    }
-
-    fun getChains(): Chains {
-        return Chains.parse(chains)
     }
 
     private val vdjcLibrary: VDJCLibrary by lazy {
@@ -484,7 +480,7 @@ my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"""]
         )
         var numberOfExcludedNFGenes = 0
         var numberOfExcludedFGenes = 0
-        for (gene in vdjcLibrary.getGenes(getChains())) {
+        for (gene in vdjcLibrary.getGenes(Chains.parse(chains))) {
             val featureSequence = alignerParameters.extractFeatureToAlign(gene)
 
             // exclusionReason is null ==> gene is not excluded

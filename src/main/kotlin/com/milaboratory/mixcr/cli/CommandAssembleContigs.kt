@@ -81,7 +81,7 @@ class CommandAssembleContigs : MiXCRCommand() {
         }
 
     @CommandLine.Option(names = ["-O"], description = ["Overrides default parameter values."])
-    var overrides: Map<String, String> = HashMap()
+    var overrides: Map<String, String> = mutableMapOf()
 
     @CommandLine.Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
     var reportFile: String? = null

@@ -50,7 +50,7 @@ class CommandExportClonesPretty : MiXCRCommand() {
     var limitAfter: Int? = null
 
     @CommandLine.Option(description = ["List of clone ids to export"], names = ["-i", "--clone-ids"])
-    var ids: List<Int> = emptyList()
+    var ids: List<Int> = mutableListOf()
 
     @CommandLine.Option(description = ["Number of output alignments to skip"], names = ["-s", "--skip"])
     var skipAfter: Int? = null

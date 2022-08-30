@@ -122,7 +122,7 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
                 "--whitelist CELL=preset:737K-august-2016 or -w UMI=file:my_umi_whitelist.txt. If not specified mixcr will set " +
                 "correct whitelists if --tag-preset was used on align step."]
     )
-    var whitelists: Map<String, String> = emptyMap()
+    var whitelists: Map<String, String> = mutableMapOf()
 
     @CommandLine.Option(description = ["Use system temp folder for temporary files."], names = ["--use-system-temp"])
     var useSystemTemp = false

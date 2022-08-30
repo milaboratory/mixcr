@@ -56,7 +56,7 @@ import kotlin.io.path.Path
 )
 class CommandFindShmTrees : MiXCRCommand() {
     @Parameters(arity = "2..*", description = ["input_file.clns [input_file2.clns ....] output_file.$shmFileExtension"])
-    private val inOut: List<String> = ArrayList()
+    private val inOut: List<String> = mutableListOf()
 
     @Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
@@ -75,7 +75,7 @@ class CommandFindShmTrees : MiXCRCommand() {
         get() = inOut[inOut.size - 1]
 
     @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
-    var overrides: Map<String, String> = HashMap()
+    var overrides: Map<String, String> = mutableMapOf()
 
     @Option(
         description = ["SHM tree builder parameters preset."],
@@ -90,16 +90,16 @@ class CommandFindShmTrees : MiXCRCommand() {
     var report: String? = null
 
     @Option(description = ["List of VGene names to filter clones"], names = ["-v", "--v-gene-names"])
-    var VGenesToFilter: Set<String> = HashSet()
+    var VGenesToFilter: Set<String> = mutableSetOf()
 
     @Option(description = ["List of JGene names to filter clones"], names = ["-j", "--j-gene-names"])
-    var JGenesToFilter: Set<String> = HashSet()
+    var JGenesToFilter: Set<String> = mutableSetOf()
 
     @Option(
         description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
         names = ["-cdr3", "--cdr3-lengths"]
     )
-    var CDR3LengthToFilter: Set<Int> = HashSet()
+    var CDR3LengthToFilter: Set<Int> = mutableSetOf()
 
     @Option(
         description = ["Filter clones with counts great or equal to that parameter"],

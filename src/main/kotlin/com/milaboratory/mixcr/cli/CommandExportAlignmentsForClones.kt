@@ -35,7 +35,7 @@ class CommandExportAlignmentsForClones : MiXCRCommand() {
     lateinit var out: String
 
     @CommandLine.Option(names = ["--id"], description = ["[cloneId1 [cloneId2 [cloneId3]]]"], arity = "0..*")
-    var ids: List<Int> = ArrayList()
+    var ids: List<Int> = mutableListOf()
     override fun getInputFiles(): List<String> = listOf(`in`)
 
     override fun getOutputFiles(): List<String> = listOf(out)

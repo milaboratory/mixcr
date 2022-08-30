@@ -94,13 +94,13 @@ class CommandExportAlignmentsPretty : MiXCRCommand() {
     var printDescriptions = false
 
     @CommandLine.Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"])
-    var readIds: List<Long> = emptyList()
+    var readIds: List<Long> = mutableListOf()
 
     @CommandLine.Option(description = ["Alignment index"], names = ["--alignment-idx"])
-    var alignmentIdx: List<Long> = emptyList()
+    var alignmentIdx: List<Long> = mutableListOf()
 
     @CommandLine.Option(description = ["List of clone ids to export"], names = ["--clone-ids"])
-    var cloneIds: List<Long> = emptyList()
+    var cloneIds: List<Long> = mutableListOf()
 
     override fun getInputFiles(): List<String> = listOf(`in`)
 
