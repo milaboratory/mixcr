@@ -474,7 +474,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
 
     /** the pattern of output file name ("myOutput" will produce "myOutput.vdjca", "myOutput.clns" etc files)  */
     private val outputNamePattern: String
-        get() = inOut[inOut.size - 1]
+        get() = inOut.last()
 
     private val fNameForReport: String
         get() = "$outputNamePattern.report"

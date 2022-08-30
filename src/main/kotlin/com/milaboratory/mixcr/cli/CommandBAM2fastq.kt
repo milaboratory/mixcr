@@ -1,72 +1,72 @@
-package com.milaboratory.mixcr.cli;
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
+package com.milaboratory.mixcr.cli
 
-import com.milaboratory.core.io.sequence.PairedRead;
-import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.core.io.sequence.SingleRead;
-import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
-import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
-import com.milaboratory.mixcr.bam.BAMReader;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
+import com.milaboratory.core.io.sequence.PairedRead
+import com.milaboratory.core.io.sequence.SingleRead
+import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
+import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
+import com.milaboratory.mixcr.bam.BAMReader
+import com.milaboratory.primitivio.forEach
+import picocli.CommandLine
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+@CommandLine.Command(
+    name = "BAM2fastq",
+    hidden = true,
+    description = ["Converts BAM/SAM file to paired/unpaired fastq files"]
+)
+class CommandBAM2fastq : MiXCRCommand() {
+    @CommandLine.Option(names = ["-b", "--bam"], description = ["BAM files for conversion."], required = true)
+    lateinit var bamFiles: Array<String>
 
-@Command(name = "BAM2fastq", hidden = true,
-        description = "Converts BAM/SAM file to paired/unpaired fastq files")
-public class CommandBAM2fastq extends MiXCRCommand {
-    @Option(names = {"-b", "--bam"}, description = "BAM files for conversion.", required = true)
-    public String[] bamFiles;
+    @CommandLine.Option(names = ["-r1"], description = ["File for first reads."], required = true)
+    lateinit var fastq1: String
 
-    @Option(names = {"-r1"}, description = "File for first reads.", required = true)
-    public String fastq1;
+    @CommandLine.Option(names = ["-r2"], description = ["File for second reads."], required = true)
+    lateinit var fastq2: String
 
-    @Option(names = {"-r2"}, description = "File for second reads.", required = true)
-    public String fastq2;
+    @CommandLine.Option(names = ["-u"], description = ["File for unpaired reads."], required = true)
+    lateinit var fastqUnpaired: String
 
-    @Option(names = {"-u"}, description = "File for unpaired reads.", required = true)
-    public String fastqUnpaired;
+    @CommandLine.Option(
+        names = ["--drop-non-vdj"],
+        description = ["Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)"]
+    )
+    var dropNonVDJ = false
 
-    @Option(names = {"--drop-non-vdj"},
-            description = "Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)")
-    public boolean dropNonVDJ = false;
+    @CommandLine.Option(names = ["--keep-wildcards"], description = ["Keep sequences with wildcards in the output"])
+    var keepWildcards = false
 
-    @Option(names = {"--keep-wildcards"},
-            description = "Keep sequences with wildcards in the output")
-    public boolean keepWildcards = false;
+    override fun getInputFiles(): List<String> = bamFiles.toList()
 
-    @Override
-    protected List<String> getInputFiles() {
-        return Arrays.asList(bamFiles);
-    }
+    override fun getOutputFiles(): List<String> = listOf(fastq1, fastq2, fastqUnpaired)
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return Stream.of(fastq1, fastq2, fastqUnpaired).filter(Objects::nonNull).collect(Collectors.toList());
-    }
-
-    @Override
-    public void run0() throws Exception {
-        try (BAMReader converter = new BAMReader(bamFiles, dropNonVDJ, !keepWildcards)) {
-            SequenceRead read;
-            try (PairedFastqWriter wr = new PairedFastqWriter(fastq1, fastq2);
-                 SingleFastqWriter swr = new SingleFastqWriter(fastqUnpaired)) {
-                while ((read = converter.take()) != null) {
-                    if (read instanceof PairedRead) {
-                        wr.write((PairedRead) read);
-                    } else if (read instanceof SingleRead) {
-                        swr.write((SingleRead) read);
+    override fun run0() {
+        BAMReader(bamFiles, dropNonVDJ, !keepWildcards).use { converter ->
+            PairedFastqWriter(fastq1, fastq2).use { wr ->
+                SingleFastqWriter(fastqUnpaired).use { swr ->
+                    converter.forEach { read ->
+                        when (read) {
+                            is PairedRead -> wr.write(read)
+                            is SingleRead -> swr.write(read)
+                            else -> throw IllegalArgumentException()
+                        }
                     }
                 }
             }
-
-            System.out.println("Your fastq files are ready.");
-            System.out.println(converter.getNumberOfProcessedAlignments() + " alignments processed.");
-            System.out.println(converter.getNumberOfPairedReads() + " paired reads.");
-            System.out.println(converter.getNumberOfUnpairedReads() + " unpaired reads.");
+            println("Your fastq files are ready.")
+            println(converter.numberOfProcessedAlignments.toString() + " alignments processed.")
+            println(converter.numberOfPairedReads.toString() + " paired reads.")
+            println(converter.numberOfUnpairedReads.toString() + " unpaired reads.")
         }
     }
 }

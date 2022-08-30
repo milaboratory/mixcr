@@ -72,7 +72,7 @@ class CommandFindShmTrees : MiXCRCommand() {
     private val clnsFileNames: List<String>
         get() = inputFiles
     private val outputTreesPath: String
-        get() = inOut[inOut.size - 1]
+        get() = inOut.last()
 
     @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
     var overrides: Map<String, String> = mutableMapOf()

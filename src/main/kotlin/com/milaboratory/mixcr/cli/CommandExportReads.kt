@@ -9,87 +9,65 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils;
-import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.core.io.sequence.SequenceWriter;
-import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter;
-import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import com.milaboratory.util.SmartProgressReporter;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
+import com.milaboratory.core.io.sequence.PairedRead
+import com.milaboratory.core.io.sequence.SequenceWriter
+import com.milaboratory.core.io.sequence.SingleRead
+import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
+import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.util.SmartProgressReporter
+import picocli.CommandLine
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+@CommandLine.Command(
+    name = "exportReads",
+    sortOptions = true,
+    separator = " ",
+    description = ["Export original reads from vdjca file."]
+)
+class CommandExportReads : MiXCRCommand() {
+    @CommandLine.Parameters(description = ["input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]"], arity = "1..3")
+    var inOut: List<String> = mutableListOf()
 
-@Command(name = "exportReads",
-        sortOptions = true,
-        separator = " ",
-        description = "Export original reads from vdjca file.")
-public class CommandExportReads extends MiXCRCommand {
-    @Parameters(description = "input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]", arity = "1..3")
-    public List<String> inOut;
+    override fun getInputFiles(): List<String> = listOf(inOut.first())
 
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(inOut.get(0));
-    }
+    public override fun getOutputFiles(): List<String> = inOut.subList(1, inOut.size)
 
-    @Override
-    public List<String> getOutputFiles() {
-        if (inOut.size() == 1)
-            return Collections.emptyList();
-
-        if (inOut.size() == 2)
-            return Collections.singletonList(inOut.get(1));
-
-        if (inOut.size() == 3)
-            return Arrays.asList(inOut.get(1), inOut.get(2));
-
-        throwValidationException("Required parameters missing.");
-        return null;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void run0() throws Exception {
-        try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(getInputFiles().get(0));
-             SequenceWriter writer = createWriter()) {
-            SmartProgressReporter.startProgressReport("Extracting reads", reader, System.err);
-
-            for (VDJCAlignments alignments : CUtils.it(reader)) {
-                List<SequenceRead> reads = alignments.getOriginalReads();
-                if (reads == null)
-                    throwExecutionException("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).");
-
-                for (SequenceRead read : reads) {
-                    if (read.numberOfReads() == 1 && (writer instanceof PairedFastqWriter))
-                        throwExecutionException("VDJCA file contains single-end reads, but two output files are specified.");
-
-                    if (read.numberOfReads() == 2 && (writer instanceof SingleFastqWriter))
-                        throwExecutionException("VDJCA file contains paired-end reads, but only one / no output file is specified.");
-
-                    writer.write(read);
+    override fun run0() {
+        VDJCAlignmentsReader(inputFiles.first()).use { reader ->
+            createWriter().use { writer ->
+                SmartProgressReporter.startProgressReport("Extracting reads", reader, System.err)
+                reader.forEach { alignments ->
+                    val reads = alignments.originalReads
+                        ?: throwExecutionExceptionKotlin("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).")
+                    for (read in reads) {
+                        when (writer) {
+                            is PairedFastqWriter -> {
+                                if (read.numberOfReads() == 1)
+                                    throwExecutionExceptionKotlin("VDJCA file contains single-end reads, but two output files are specified.")
+                                writer.write(read as PairedRead)
+                            }
+                            is SingleFastqWriter -> {
+                                if (read.numberOfReads() == 2)
+                                    throwExecutionExceptionKotlin("VDJCA file contains paired-end reads, but only one / no output file is specified.")
+                                writer.write(read as SingleRead)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    public SequenceWriter<?> createWriter() throws IOException {
-        List<String> outputFiles = getOutputFiles();
-        switch (outputFiles.size()) {
-            case 0:
-                return new SingleFastqWriter(System.out);
-            case 1:
-                return new SingleFastqWriter(outputFiles.get(0));
-            case 2:
-                return new PairedFastqWriter(outputFiles.get(0), outputFiles.get(1));
+    private fun createWriter(): SequenceWriter<*> {
+        val outputFiles = outputFiles
+        return when (outputFiles.size) {
+            0 -> SingleFastqWriter(System.out)
+            1 -> SingleFastqWriter(outputFiles[0])
+            2 -> PairedFastqWriter(outputFiles[0], outputFiles[1])
+            else -> throw IllegalArgumentException()
         }
-        throw new RuntimeException();
     }
 }

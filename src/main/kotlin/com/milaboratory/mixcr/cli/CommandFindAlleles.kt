@@ -94,7 +94,7 @@ class CommandFindAlleles : MiXCRCommand() {
     var useSystemTemp = false
 
     private val outputClnsFiles: List<String> by lazy {
-        val template = inOut[inOut.size - 1]
+        val template = inOut.last()
         if (!template.endsWith(".clns")) {
             throwValidationExceptionKotlin("Wrong template: command produces only clns $template")
         }

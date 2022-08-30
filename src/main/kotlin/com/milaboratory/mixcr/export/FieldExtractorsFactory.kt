@@ -45,11 +45,12 @@ abstract class FieldExtractorsFactory<T : Any> {
         val humanReadable = cmdParseResult.matchedOption("--with-spaces")?.getValue<Boolean>() ?: false
         val oMode = if (humanReadable) OutputMode.HumanFriendly else OutputMode.ScriptingFriendly
 
-        val fields = mutableListOf<FieldCommandArgs>()
-        fields.addAll(parseSpec(cmdParseResult))
+        var fields = parseSpec(cmdParseResult)
 
         // if no options specified
-        if (fields.isEmpty()) fields.addAll(presets[defaultPreset]!!)
+        if (fields.isEmpty()) {
+            fields = presets[defaultPreset]!!
+        }
         return fields.flatMap { fieldData -> extract(fieldData, header, oMode) }
     }
 
