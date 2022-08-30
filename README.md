@@ -1,4 +1,4 @@
-[![image](https://readthedocs.org/projects/mixcr/badge/?version=latest)](https://mixcr.readthedocs.io)
+[![image](https://img.shields.io/badge/documentation-v4.x-brightgreen)](https://docs.milaboratories.com)
 
 
 ![MiXCR logo](./doc/_static/MiXCR_logo_dark.png#gh-light-mode-only)
@@ -39,6 +39,8 @@ Other key features:
     - positions of all immunologically relevant points in output sequences
     - and many more informative columns
 - Ability to backtrack fate of each raw sequencing read through the whole pipeline 
+
+See full documentation at [https://docs.milaboratories.com](https://docs.milaboratories.com).
 
 ## Who uses MiXCR 
 MiXCR is used by 8 out of 10 world leading pharmaceutical companies in the R&D for:
@@ -189,9 +191,7 @@ To activate the license do one of the following:
 
 ## Usage & documentation
 
-See usage examples in the official documentation https://mixcr.readthedocs.io/en/master/quickstart.html
-
-Detailed documentation can be found at https://mixcr.readthedocs.io/
+See usage examples and detailed documentation at https://docs.milaboratories.com
 
 If you haven't found the answer to your question in the docs, or have any suggestions concerning new features, feel free to create an issue here, on GitHub, or write an email to support@milaboratory.com .
 
