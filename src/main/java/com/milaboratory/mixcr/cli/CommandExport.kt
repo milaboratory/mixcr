@@ -338,7 +338,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
                             clnaReader.close()
                         }
 
-                        override fun take(): VDJCAlignments = source.take()
+                        override fun take(): VDJCAlignments? = source.take()
                     }
                     AlignmentsAndHeader(port, clnaReader)
                 }
