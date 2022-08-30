@@ -76,7 +76,7 @@ abstract class CommandExport<T : VDJCObject> private constructor(
         warn(
             """"-s" / "--no-spaces" option is deprecated.
 Scripting friendly output format now used by default.
-Use "-v" / "--with-spaces" to switch back to human readable format."""
+Use "-v" / "--with-spaces" to switch back to human readable format.""".trimIndent()
         )
     }
 
