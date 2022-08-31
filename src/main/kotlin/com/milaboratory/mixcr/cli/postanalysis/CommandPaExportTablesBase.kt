@@ -11,14 +11,12 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import picocli.CommandLine.Parameters;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
+import picocli.CommandLine.Parameters
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.*
+import java.util.List
 
 abstract class CommandPaExportTablesBase extends CommandPaExport {
     @Parameters(description = "Path for output files", index = "1", defaultValue = "path/table.tsv")

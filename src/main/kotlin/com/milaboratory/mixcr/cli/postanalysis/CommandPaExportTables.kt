@@ -11,12 +11,7 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupOutputExtractor;
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
-import com.milaboratory.mixcr.postanalysis.ui.OutputTable;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
+import picocli.CommandLine.Command
 
 @Command(name = "exportTables",
         sortOptions = false,

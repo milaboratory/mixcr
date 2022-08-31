@@ -11,11 +11,9 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema;
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * PA results for isolation group.

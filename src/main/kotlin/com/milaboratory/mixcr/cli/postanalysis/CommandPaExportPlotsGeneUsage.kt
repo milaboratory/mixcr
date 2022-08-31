@@ -11,23 +11,18 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.miplots.Position;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
-import com.milaboratory.mixcr.postanalysis.plots.ColorKey;
-import com.milaboratory.mixcr.postanalysis.plots.GeneUsage;
-import com.milaboratory.mixcr.postanalysis.plots.GeneUsageRow;
-import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters;
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
-import jetbrains.letsPlot.intern.Plot;
-import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.postanalysis.PostanalysisResult
+import com.milaboratory.mixcr.postanalysis.plots.GeneUsage
+import com.milaboratory.mixcr.postanalysis.plots.GeneUsageRow
+import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
+import jetbrains.letsPlot.intern.Plot
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import java.util.List
 
 public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlotsHeatmapWithGroupBy {
     abstract String group();

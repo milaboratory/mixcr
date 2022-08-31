@@ -11,27 +11,25 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.miplots.StandardPlots.PlotType;
-import com.milaboratory.miplots.stat.util.PValueCorrection;
-import com.milaboratory.miplots.stat.util.RefGroup;
-import com.milaboratory.miplots.stat.util.TestMethod;
-import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod;
-import com.milaboratory.miplots.stat.xdiscrete.LabelFormat;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
-import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure;
-import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow;
-import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics;
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
-import jetbrains.letsPlot.intern.Plot;
-import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import com.milaboratory.miplots.StandardPlots.PlotType
+import com.milaboratory.miplots.stat.util.RefGroup
+import com.milaboratory.miplots.stat.util.TestMethod
+import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
+import com.milaboratory.miplots.stat.xdiscrete.LabelFormat
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.postanalysis.PostanalysisResult
+import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure
+import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow
+import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
+import jetbrains.letsPlot.intern.Plot
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import java.util.*
+import java.util.function.Predicate
+import java.util.stream.Collectors
 
 public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
     @Option(description = "Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +

@@ -11,17 +11,15 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.mixcr.cli.MiXCRCommand;
-import io.repseq.core.Chains;
-import io.repseq.core.Chains.NamedChains;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
-
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import io.repseq.core.Chains
+import io.repseq.core.Chains.NamedChains
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Paths
+import java.util.*
+import java.util.List
+import java.util.Set
+import java.util.stream.Collectors
 
 /**
  *

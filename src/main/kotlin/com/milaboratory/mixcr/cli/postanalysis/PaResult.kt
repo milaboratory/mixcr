@@ -11,17 +11,13 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.util.GlobalObjectMappers;
-
-import java.io.*;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.milaboratory.util.GlobalObjectMappers
+import java.io.*
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 /**
  * PA results (written to disk)

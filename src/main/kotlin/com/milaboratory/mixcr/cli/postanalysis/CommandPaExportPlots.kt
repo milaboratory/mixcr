@@ -11,41 +11,39 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.miplots.ExportKt;
-import com.milaboratory.miplots.ExportType;
-import com.milaboratory.mixcr.cli.CommonDescriptions;
-import com.milaboratory.mixcr.postanalysis.plots.Filter;
-import com.milaboratory.mixcr.postanalysis.plots.MetadataKt;
-import com.milaboratory.util.StringUtil;
-import jetbrains.letsPlot.intern.Plot;
-import org.jetbrains.kotlinx.dataframe.DataFrame;
-import org.jetbrains.kotlinx.dataframe.api.ToDataFrameKt;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import com.milaboratory.miplots.ExportKt
+import com.milaboratory.miplots.ExportType
+import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.postanalysis.plots.MetadataKt
+import com.milaboratory.util.StringUtil
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.api.ToDataFrameKt
+import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import static
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.*
+import java.util.List
+import java.util.Map
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+java.util.stream.Collectors.toList;
 
-import static java.util.stream.Collectors.toList;
-
-@Command(name = "exportPlots",
-        separator = " ",
-        description = "Export postanalysis plots.")
+@Command(
+    name = "exportPlots",
+    separator = " ",
+    description = "Export postanalysis plots."
+)
 public abstract class CommandPaExportPlots extends CommandPaExport {
     @Option(description = CommonDescriptions.METADATA,
-            names = {"--metadata"})
+        names = { "--metadata" })
     public String metadata;
 
-    @Option(description = "Plot width",
+    @Option(
+        description = "Plot width",
             names = {"--width"})
     public int width = 0;
 

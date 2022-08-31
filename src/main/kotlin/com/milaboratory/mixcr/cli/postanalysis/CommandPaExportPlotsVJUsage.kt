@@ -11,19 +11,17 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters;
-import com.milaboratory.mixcr.postanalysis.plots.VJUsage;
-import com.milaboratory.mixcr.postanalysis.plots.VJUsageRow;
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual;
-import jetbrains.letsPlot.intern.Plot;
-import org.jetbrains.kotlinx.dataframe.DataFrame;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-
-import java.util.Collections;
-import java.util.List;
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
+import com.milaboratory.mixcr.postanalysis.plots.VJUsage
+import com.milaboratory.mixcr.postanalysis.plots.VJUsageRow
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
+import jetbrains.letsPlot.intern.Plot
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import java.util.*
 
 @Command(name = "vjUsage",
         sortOptions = false,

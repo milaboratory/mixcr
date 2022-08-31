@@ -11,17 +11,15 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.repseq.core.Chains;
-import io.repseq.core.Chains.NamedChains;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import io.repseq.core.Chains
+import io.repseq.core.Chains.NamedChains
+import java.util.*
+import java.util.Map
+import java.util.stream.Collectors
 
 /**
  * Group of samples with specific metadata properties projected onto specific chains. Common downsampling is applied for
