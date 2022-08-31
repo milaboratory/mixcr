@@ -136,6 +136,7 @@ class CommandAssembleContigs : MiXCRCommand() {
     private val reportBuilder = FullSeqAssemblerReportBuilder()
 
     override fun validate() {
+        super.validate()
         if (fullSeqAssemblerParameters.postFiltering != FullSeqAssemblerParameters.PostFiltering.NoFiltering) {
             if (fullSeqAssemblerParameters.assemblingRegions != null) {
                 throwValidationExceptionKotlin("assemblingRegion must be set if postFiltering is not NoFiltering")

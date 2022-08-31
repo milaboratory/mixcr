@@ -9,161 +9,121 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import cc.redberry.pipe.CUtils;
-import com.milaboratory.mixcr.basictypes.ClnsWriter;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.cli.CommonDescriptions;
-import com.milaboratory.mixcr.cli.MiXCRCommand;
-import com.milaboratory.mixcr.postanalysis.Dataset;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessor;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat;
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
-import com.milaboratory.mixcr.postanalysis.ui.ClonotypeDataset;
-import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import io.repseq.core.Chains;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import com.milaboratory.mitool.helpers.drainToNoClose
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.postanalysis.SetPreprocessor
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
+import com.milaboratory.mixcr.postanalysis.ui.ClonotypeDataset
+import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
+import com.milaboratory.primitivio.port
+import com.milaboratory.primitivio.toList
+import io.repseq.core.Chains
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
+@CommandLine.Command(name = "downsample", separator = " ", description = ["Downsample clonesets."])
+class CommandDownsample : MiXCRCommand() {
+    @CommandLine.Parameters(description = ["cloneset.{clns|clna}..."], arity = "1..*")
+    lateinit var `in`: List<String>
 
-@Command(name = "downsample",
-        separator = " ",
-        description = "Downsample clonesets.")
-public class CommandDownsample extends MiXCRCommand {
-    @Parameters(description = "cloneset.{clns|clna}...")
-    public List<String> in;
+    @CommandLine.Option(description = ["Filter specific chains"], names = ["-c", "--chains"], required = true)
+    var chains = "ALL"
 
-    @Option(description = "Filter specific chains",
-            names = {"-c", "--chains"},
-            required = true)
-    public String chains = "ALL";
+    @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    var onlyProductive = false
 
-    @Option(description = CommonDescriptions.ONLY_PRODUCTIVE,
-            names = {"--only-productive"})
-    public boolean onlyProductive = false;
+    @CommandLine.Option(description = [CommonDescriptions.DOWNSAMPLING], names = ["--downsampling"], required = true)
+    lateinit var downsampling: String
 
-    @Option(description = CommonDescriptions.DOWNSAMPLING,
-            names = {"--downsampling"},
-            required = true)
-    public String downsampling;
+    @CommandLine.Option(
+        description = ["Write downsampling summary tsv/csv table."],
+        names = ["--summary"],
+        required = false
+    )
+    var summary: String? = null
 
-    @Option(description = "Write downsampling summary tsv/csv table.",
-            names = {"--summary"},
-            required = false)
-    public String summary;
-    @Option(description = "Suffix to add to output clns file.",
-            names = {"--suffix"})
-    public String suffix = "downsampled";
+    @CommandLine.Option(description = ["Suffix to add to output clns file."], names = ["--suffix"])
+    var suffix = "downsampled"
 
-    @Option(description = "Output path prefix.",
-            names = {"--out"})
-    public String out;
+    @CommandLine.Option(description = ["Output path prefix."], names = ["--out"])
+    var out: String? = null
 
-    @Override
-    protected List<String> getInputFiles() {
-        return new ArrayList<>(in);
+    private val outPath: Path?
+        get() = out?.let { Paths.get(it) }
+
+    override fun getInputFiles(): List<String> = `in`
+
+    override fun getOutputFiles(): List<String> = inputFiles.map { output(it).toString() }
+
+    override fun validate() {
+        super.validate()
+        summary?.let { summary ->
+            if (!summary.endsWith(".tsv") && !summary.endsWith(".csv"))
+                throwValidationExceptionKotlin("summary table should ends with .csv/.tsv")
+        }
     }
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return getInputFiles().stream().map(this::output).map(Path::toString).collect(Collectors.toList());
+    private fun output(input: String): Path {
+        val fileNameWithoutExtension = Paths.get(input).fileName.toString()
+            .replace(".clna", "")
+            .replace(".clns", "")
+        val outName = "$fileNameWithoutExtension.$chains.$suffix.clns"
+        return (outPath?.resolve(outName) ?: Paths.get(outName)).toAbsolutePath()
     }
 
-    @Override
-    public void validate() {
-        super.validate();
-        if (summary != null && (!summary.endsWith(".tsv") && !summary.endsWith(".csv")))
-            throwValidationException("summary table should ends with .csv/.tsv");
-    }
-
-    private Path output(String input) {
-        String outName = Paths.get(input).getFileName().toString()
-                .replace(".clna", "")
-                .replace(".clns", "")
-                + "." + chains + "." + suffix + ".clns";
-        return out == null
-                ? Paths.get(outName).toAbsolutePath()
-                : Paths.get(out).resolve(outName).toAbsolutePath();
-    }
-
-    private void ensureOutputPathExists() {
-        if (out != null) {
-            try {
-                Files.createDirectories(Paths.get(out).toAbsolutePath());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+    private fun ensureOutputPathExists() {
+        if (outPath != null) {
+            Files.createDirectories(outPath!!.toAbsolutePath())
         }
         if (summary != null) {
-            try {
-                Files.createDirectories(Paths.get(suffix).toAbsolutePath().getParent());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            Files.createDirectories(Paths.get(summary!!).toAbsolutePath().parent)
         }
     }
 
-    @Override
-    public void run0() throws Exception {
-        List<ClonotypeDataset> datasets = in.stream()
-                .map(file ->
-                        new ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault())
-                ).collect(Collectors.toList());
-
-        SetPreprocessor<Clone> preproc = DownsamplingParameters
-                .parse(this.downsampling, CommandPa.extractTagsInfo(getInputFiles()), false, onlyProductive)
-                .getPreproc(Chains.getByName(chains))
-                .newInstance();
-
-        Dataset<Clone>[] result = SetPreprocessor.processDatasets(preproc, datasets);
-        ensureOutputPathExists();
-
-        for (int i = 0; i < result.length; i++) {
-            String input = in.get(i);
-            try (ClnsWriter clnsWriter = new ClnsWriter(output(input).toFile())) {
-                List<Clone> downsampled = new ArrayList<>();
-                for (Clone c : CUtils.it(result[i].mkElementsPort()))
-                    downsampled.add(c);
-
-                ClonotypeDataset r = datasets.get(i);
-                clnsWriter.writeHeader(r.getInfo(), r.ordering(), r.getUsedGenes(), downsampled.size());
-
-                CUtils.drain(CUtils.asOutputPort(downsampled), clnsWriter.cloneWriter());
-                clnsWriter.writeFooter(Collections.emptyList(), null);
+    override fun run0() {
+        val datasets = `in`.map { file -> ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault()) }
+        val preprocessor = DownsamplingParameters
+            .parse(downsampling, CommandPa.extractTagsInfo(inputFiles), false, onlyProductive)
+            .getPreprocessor(Chains.getByName(chains))
+            .newInstance()
+        val results = SetPreprocessor.processDatasets(preprocessor, datasets)
+        ensureOutputPathExists()
+        for (i in results.indices) {
+            ClnsWriter(output(`in`[i]).toFile()).use { clnsWriter ->
+                val result = datasets[i]
+                val downsampled = result.mkElementsPort().toList()
+                clnsWriter.writeHeader(result.info, result.ordering(), result.usedGenes, downsampled.size)
+                downsampled.port.drainToNoClose(clnsWriter.cloneWriter())
+                clnsWriter.writeFooter(emptyList(), null)
             }
         }
-
-        TIntObjectHashMap<List<SetPreprocessorStat>> summaryStat = preproc.getStat();
-        for (int i = 0; i < result.length; i++) {
-            String input = in.get(i);
-            SetPreprocessorStat stat = SetPreprocessorStat.cumulative(summaryStat.get(i));
-            System.out.println(input + ":" +
-                    " isDropped=" + stat.dropped +
-                    " nClonesBefore=" + stat.nElementsBefore +
-                    " nClonesAfter=" + stat.nElementsAfter +
-                    " sumWeightBefore=" + stat.sumWeightBefore +
-                    " sumWeightAfter=" + stat.sumWeightAfter
-            );
+        val summaryStat = preprocessor.stat
+        for (i in results.indices) {
+            val stat = SetPreprocessorStat.cumulative(summaryStat[i])
+            println(
+                `in`[i] + ":" +
+                        " isDropped=" + stat.dropped +
+                        " nClonesBefore=" + stat.nElementsBefore +
+                        " nClonesAfter=" + stat.nElementsAfter +
+                        " sumWeightBefore=" + stat.sumWeightBefore +
+                        " sumWeightAfter=" + stat.sumWeightAfter
+            )
         }
-
         if (summary != null) {
-            Map<String, List<SetPreprocessorStat>> summaryTable = new HashMap<>();
-            for (int i = 0; i < in.size(); i++)
-                summaryTable.put(in.get(i), summaryStat.get(i));
-
-            SetPreprocessorSummary.toCSV(Paths.get(summary).toAbsolutePath(),
-                    new SetPreprocessorSummary(summaryTable),
-                    summary.endsWith("csv") ? "," : "\t");
+            val summaryTable = `in`.withIndex().associate { (i, file) -> file to summaryStat[i] }
+            SetPreprocessorSummary.toCSV(
+                Paths.get(summary!!).toAbsolutePath(),
+                SetPreprocessorSummary(summaryTable),
+                if (summary!!.endsWith("csv")) "," else "\t"
+            )
         }
     }
 }

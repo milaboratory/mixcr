@@ -9,59 +9,48 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.postanalysis.Dataset;
-import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
-import com.milaboratory.mixcr.postanalysis.ui.*;
-import com.milaboratory.util.JsonOverrider;
-import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine.Command;
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.postanalysis.PostanalysisRunner
+import com.milaboratory.mixcr.postanalysis.ui.ClonotypeDataset
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersPreset
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema
+import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.SmartProgressReporter
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-@Command(name = "individual",
-        sortOptions = false,
-        separator = " ",
-        description = "Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype metrics")
-public class CommandPaIndividual extends CommandPa {
-    public CommandPaIndividual() {}
-
-    private PostanalysisParametersIndividual _parameters;
-
-    private PostanalysisParametersIndividual getParameters() {
-        if (_parameters != null)
-            return _parameters;
-        _parameters = PostanalysisParametersPreset.getByNameIndividual("default");
-        _parameters.defaultDownsampling = defaultDownsampling;
-        _parameters.defaultDropOutliers = dropOutliers;
-        _parameters.defaultOnlyProductive = onlyProductive;
-        _parameters.defaultWeightFunction = defaultWeightFunction;
-        if (!overrides.isEmpty()) {
-            _parameters = JsonOverrider.override(_parameters, PostanalysisParametersIndividual.class, overrides);
-            if (_parameters == null)
-                throwValidationException("Failed to override some parameter: " + overrides);
+@CommandLine.Command(
+    name = "individual",
+    sortOptions = false,
+    separator = " ",
+    description = ["Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype metrics"]
+)
+class CommandPaIndividual : CommandPa() {
+    private val parameters: PostanalysisParametersIndividual by lazy {
+        val result = PostanalysisParametersPreset.getByNameIndividual("default")
+        result.defaultDownsampling = defaultDownsampling
+        result.defaultDropOutliers = dropOutliers
+        result.defaultOnlyProductive = onlyProductive
+        result.defaultWeightFunction = defaultWeightFunction
+        when {
+            overrides.isEmpty() -> result
+            else -> JsonOverrider.override(result, PostanalysisParametersIndividual::class.java, overrides)
+                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
         }
-        return _parameters;
     }
 
-    @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        List<CharacteristicGroup<?, Clone>> groups = getParameters().getGroups(group.chains.chains, getTagsInfo());
-        PostanalysisSchema<Clone> schema = new PostanalysisSchema<>(false, groups);
-        PostanalysisRunner runner = new PostanalysisRunner<>();
-        runner.addCharacteristics(schema.getAllCharacterisitcs());
-
-        List<Dataset> datasets = samples.stream()
-                .map(file ->
-                        new ClonotypeDataset(getSampleId(file), file, VDJCLibraryRegistry.getDefault())
-                ).collect(Collectors.toList());
-
-        SmartProgressReporter.startProgressReport(runner);
-        return new PaResultByGroup(group, schema, runner.run(datasets));
+    override fun run(group: IsolationGroup, samples: List<String>): PaResultByGroup {
+        val groups = parameters.getGroups(group.chains.chains, tagsInfo)
+        val schema = PostanalysisSchema(false, groups)
+        val runner = PostanalysisRunner<Clone>()
+        runner.addCharacteristics(schema.allCharacterisitcs)
+        val datasets = samples.map { file ->
+            ClonotypeDataset(getSampleId(file), file, VDJCLibraryRegistry.getDefault())
+        }
+        SmartProgressReporter.startProgressReport(runner)
+        return PaResultByGroup(group, schema, runner.run(datasets))
     }
 }

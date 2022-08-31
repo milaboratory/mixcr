@@ -169,6 +169,7 @@ class CommandFindAlleles : MiXCRCommand() {
     }
 
     override fun validate() {
+        super.validate()
         if (libraryOutput != null) {
             if (!libraryOutput!!.endsWith(".json")) {
                 throwValidationExceptionKotlin("--export-library must be json: $libraryOutput")

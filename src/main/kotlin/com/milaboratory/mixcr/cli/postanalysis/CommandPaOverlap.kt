@@ -9,159 +9,113 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneReader;
-import com.milaboratory.mixcr.basictypes.CloneReaderMerger;
-import com.milaboratory.mixcr.cli.CommonDescriptions;
-import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
-import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
-import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
-import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
-import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
-import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersPreset;
-import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema;
-import com.milaboratory.util.JsonOverrider;
-import com.milaboratory.util.LambdaSemaphore;
-import com.milaboratory.util.SmartProgressReporter;
-import com.milaboratory.util.StringUtil;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.CloneReaderMerger
+import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.postanalysis.PostanalysisRunner
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
+import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
+import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate.IncludeChains
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersPreset
+import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema
+import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.LambdaSemaphore
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.StringUtil
+import picocli.CommandLine
+import java.nio.file.Paths
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+@CommandLine.Command(name = "overlap", sortOptions = false, separator = " ", description = ["Overlap analysis"])
+class CommandPaOverlap : CommandPa() {
+    @CommandLine.Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
+    var overlapCriteria = "CDR3|AA|V|J"
 
-@Command(name = "overlap",
-        sortOptions = false,
-        separator = " ",
-        description = "Overlap analysis")
-public class CommandPaOverlap extends CommandPa {
-    @Option(description = CommonDescriptions.OVERLAP_CRITERIA,
-            names = {"--criteria"})
-    public String overlapCriteria = "CDR3|AA|V|J";
+    @CommandLine.Option(
+        description = ["Aggregate samples in groups by specified metadata columns"],
+        names = ["--factor-by"],
+        split = ","
+    )
+    var factoryBy: List<String> = mutableListOf()
 
-    @Option(description = "Aggregate samples in groups by specified metadata columns",
-            names = {"--factor-by"},
-            split = ",")
-    public List<String> factoryBy;
-
-    public CommandPaOverlap() {
-    }
-
-    private PostanalysisParametersOverlap _parameters;
-
-    private PostanalysisParametersOverlap getParameters() {
-        if (_parameters != null)
-            return _parameters;
-        _parameters = PostanalysisParametersPreset.getByNameOverlap("default");
-        _parameters.defaultDownsampling = defaultDownsampling;
-        _parameters.defaultDropOutliers = dropOutliers;
-        _parameters.defaultOnlyProductive = onlyProductive;
-        _parameters.defaultWeightFunction = defaultWeightFunction;
-        if (!overrides.isEmpty()) {
-            _parameters = JsonOverrider.override(_parameters, PostanalysisParametersOverlap.class, overrides);
-            if (_parameters == null)
-                throwValidationException("Failed to override some parameter: " + overrides);
+    private val parameters: PostanalysisParametersOverlap by lazy {
+        val result = PostanalysisParametersPreset.getByNameOverlap("default")
+        result.defaultDownsampling = defaultDownsampling
+        result.defaultDropOutliers = dropOutliers
+        result.defaultOnlyProductive = onlyProductive
+        result.defaultWeightFunction = defaultWeightFunction
+        when {
+            overrides.isEmpty() -> result
+            else -> JsonOverrider.override(result, PostanalysisParametersOverlap::class.java, overrides)
+                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
         }
-        return _parameters;
     }
 
-    private OverlapDataset<Clone> overlapDataset(IsolationGroup group, List<String> samples) {
-        if (factoryBy == null || factoryBy.isEmpty())
-            return OverlapUtil.overlap(
-                    samples,
-                    new ElementPredicate.IncludeChains(group.chains.chains),
-                    OverlapUtil.parseCriteria(overlapCriteria).ordering()
-            );
-        else {
-            Map<String, List<Object>> metadata = metadata();
-            @SuppressWarnings("unchecked")
-            List<String> mSamples = (List) metadata.get("sample");
+    private fun overlapDataset(group: IsolationGroup, samples: List<String>): OverlapDataset<Clone> =
+        if (factoryBy.isEmpty()) OverlapUtil.overlap(
+            samples,
+            IncludeChains(group.chains.chains),
+            OverlapUtil.parseCriteria(overlapCriteria).ordering()
+        ) else {
+            val metadata = metadata!!
+            val mSamples: List<String> = metadata["sample"]!!.map { it as String }
 
             // sample -> metadata sample
-            Map<String, String> sample2meta = StringUtil.matchLists(samples, mSamples);
-            for (Map.Entry<String, String> e : sample2meta.entrySet()) {
-                if (e.getValue() == null)
-                    throw new IllegalArgumentException("Malformed metadata: can't find metadata row for sample " + e.getKey());
+            val sample2meta = StringUtil.matchLists(samples, mSamples)
+            for ((key, value) in sample2meta) {
+                requireNotNull(value) { "Malformed metadata: can't find metadata row for sample $key" }
             }
 
             // metadata sample -> actual sample
-            Map<String, String> meta2sample = sample2meta.entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+            val meta2sample = sample2meta.entries.associate { (key, value) -> value to key }
 
             // agg group -> sample
-            Map<String, List<String>> group2samples = new HashMap<>();
-            for (int i = 0; i < mSamples.size(); i++) {
-                int iSample = i;
-
-                String sample = meta2sample.get(mSamples.get(i));
-                if (sample == null)
-                    continue;
-
-                String aggGroup = factoryBy.stream()
-                        .map(a -> metadata.get(a).get(iSample).toString())
-                        .collect(Collectors.joining(","));
-
-                group2samples.computeIfAbsent(aggGroup, __ -> new ArrayList<>())
-                        .add(sample);
+            val group2samples = mutableMapOf<String, MutableList<String>>()
+            for (i in mSamples.indices) {
+                val sample = meta2sample[mSamples[i]] ?: continue
+                val aggGroup = factoryBy.joinToString(",") { metadata[it]!![i].toString() }
+                group2samples.computeIfAbsent(aggGroup) { mutableListOf() }
+                    .add(sample)
             }
-
-            List<String> datasetIds = new ArrayList<>();
-            List<CloneReader> readers = new ArrayList<>();
+            val datasetIds = mutableListOf<String>()
+            val readers = mutableListOf<CloneReader>()
             // Limits concurrency across all readers
-            LambdaSemaphore concurrencyLimiter = new LambdaSemaphore(32);
-            for (Map.Entry<String, List<String>> e : group2samples.entrySet()) {
-                CloneReaderMerger reader = new CloneReaderMerger(e.getValue().stream().map(it ->
-                {
-                    try {
-                        return OverlapUtil.mkCheckedReader(Paths.get(it),
-                                new ElementPredicate.IncludeChains(group.chains.chains),
-                                concurrencyLimiter
-                        );
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }).collect(Collectors.toList()));
-
-                datasetIds.add(e.getKey());
-                readers.add(reader);
+            val concurrencyLimiter = LambdaSemaphore(32)
+            for ((key, value) in group2samples) {
+                val reader = CloneReaderMerger(value.map {
+                    OverlapUtil.mkCheckedReader(
+                        Paths.get(it),
+                        IncludeChains(group.chains.chains),
+                        concurrencyLimiter
+                    )
+                })
+                datasetIds += key
+                readers += reader
             }
-            return OverlapUtil.overlap(
-                    datasetIds,
-                    OverlapUtil.parseCriteria(overlapCriteria).ordering(),
-                    readers
-            );
+            OverlapUtil.overlap(
+                datasetIds,
+                OverlapUtil.parseCriteria(overlapCriteria).ordering(),
+                readers
+            )
         }
+
+    override fun run(group: IsolationGroup, samples: List<String>): PaResultByGroup {
+        val overlapDataset = overlapDataset(group, samples)
+        val groups = parameters.getGroups(
+            overlapDataset.datasetIds.size,  // we do not specify chains here, since we will filter
+            // each dataset individually before overlap to speed up computations
+            null,
+            tagsInfo
+        )
+        val schema = PostanalysisSchema(true, groups)
+        val runner = PostanalysisRunner<OverlapGroup<Clone>>()
+        runner.addCharacteristics(schema.allCharacterisitcs)
+        SmartProgressReporter.startProgressReport(runner)
+        val result = runner.run(overlapDataset)
+        return PaResultByGroup(group, schema, result)
     }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    PaResultByGroup run(IsolationGroup group, List<String> samples) {
-        OverlapDataset<Clone> overlapDataset = overlapDataset(group, samples);
-        List<CharacteristicGroup<?, OverlapGroup<Clone>>> groups = getParameters().getGroups(
-                overlapDataset.datasetIds.size(),
-                // we do not specify chains here, since we will filter
-                // each dataset individually before overlap to speed up computations
-                null,
-                getTagsInfo());
-        PostanalysisSchema<OverlapGroup<Clone>> schema = new PostanalysisSchema<>(true, groups);
-
-        PostanalysisRunner<OverlapGroup<Clone>> runner = new PostanalysisRunner<>();
-        runner.addCharacteristics(schema.getAllCharacterisitcs());
-
-        SmartProgressReporter.startProgressReport(runner);
-        PostanalysisResult result = runner.run(overlapDataset);
-
-        return new PaResultByGroup(group, schema, result);
-    }
-
 }
