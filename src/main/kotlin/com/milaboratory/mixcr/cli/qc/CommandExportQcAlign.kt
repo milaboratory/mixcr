@@ -9,52 +9,31 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.qc;
+package com.milaboratory.mixcr.cli.qc
 
-import com.milaboratory.miplots.ExportKt;
-import com.milaboratory.mixcr.cli.MiXCRCommand;
-import com.milaboratory.mixcr.qc.AlignmentQC;
-import com.milaboratory.mixcr.qc.SizeParameters;
-import jetbrains.letsPlot.intern.Plot;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import com.milaboratory.miplots.writeFile
+import com.milaboratory.mixcr.qc.AlignmentQC.alignQc
+import picocli.CommandLine
+import java.nio.file.Paths
 
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
+@CommandLine.Command(name = "align", separator = " ", description = ["QC plot for alignments."])
+class CommandExportQcAlign : CommandExportQc() {
+    @CommandLine.Parameters(description = ["sample1.vdjca ... align.[pdf|eps|png|jpeg]"], arity = "2..*")
+    var `in`: List<String> = mutableListOf()
 
+    @CommandLine.Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
+    var absoluteValues = false
 
-@Command(name = "align",
-        separator = " ",
-        description = "QC plot for alignments.")
-public class CommandExportQcAlign extends CommandExportQc {
-    @Parameters(description = "sample1.vdjca ... align.[pdf|eps|png|jpeg]")
-    public List<String> in;
-    @Option(
-            names = "--absolute-values",
-            description = "Plot in absolute values instead of percent"
-    )
-    public boolean absoluteValues = false;
+    override fun getInputFiles(): List<String> = `in`.subList(0, `in`.size - 1)
 
-    @Override
-    protected List<String> getInputFiles() {
-        return in.subList(0, in.size() - 1);
-    }
+    override fun getOutputFiles(): List<String> = listOf(`in`.last())
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return in.subList(in.size() - 1, in.size());
-    }
-
-    @Override
-    public void run0() throws Exception {
-        Plot plt = AlignmentQC.INSTANCE.alignQc(
-                getInputFiles().stream().map(Paths::get)
-                        .collect(Collectors.toList()),
-                !absoluteValues,
-                getSizeParameters()
-        );
-        ExportKt.writeFile(Paths.get(getOutputFiles().get(0)), plt);
+    override fun run0() {
+        val plt = alignQc(
+            inputFiles.map { Paths.get(it) },
+            !absoluteValues,
+            sizeParameters
+        )
+        writeFile(Paths.get(outputFiles.first()), plt)
     }
 }

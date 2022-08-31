@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
 import com.milaboratory.mixcr.basictypes.ClnsReader
@@ -25,6 +24,7 @@ import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.util.VDJCObjectExtender
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.asSequence
+import com.milaboratory.primitivio.port
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
@@ -98,7 +98,7 @@ class CommandExtend : MiXCRCommand() {
     private fun processClns() {
         ClnsReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
             val cloneSet = reader.cloneSet
-            val outputPort = CUtils.asOutputPort(cloneSet)
+            val outputPort = cloneSet.port
             val process = processWrapper(outputPort, cloneSet.alignmentParameters)
 
             val clones = process.output

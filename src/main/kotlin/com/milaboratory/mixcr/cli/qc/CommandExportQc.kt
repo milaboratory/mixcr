@@ -9,35 +9,27 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.qc;
+package com.milaboratory.mixcr.cli.qc
 
-import com.milaboratory.mixcr.cli.MiXCRCommand;
-import com.milaboratory.mixcr.qc.SizeParameters;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
+import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.qc.SizeParameters
+import picocli.CommandLine
 
-public abstract class CommandExportQc extends MiXCRCommand {
-    @Option(names = "--width",
-            description = "Plot width")
-    public int width = -1;
+abstract class CommandExportQc : MiXCRCommand() {
+    @CommandLine.Option(names = ["--width"], description = ["Plot width"])
+    var width = -1
 
-    @Option(names = "--height",
-            description = "Plot height")
-    public int height = -1;
+    @CommandLine.Option(names = ["--height"], description = ["Plot height"])
+    var height = -1
 
-    public SizeParameters getSizeParameters() {
-        if (width != -1 && height != -1)
-            return new SizeParameters(width, height);
-        else
-            return null;
-    }
+    val sizeParameters: SizeParameters?
+        get() = if (width != -1 && height != -1) SizeParameters(width, height) else null
 
-    @Command(name = "qc",
-            separator = " ",
-            description = "Export QC plots.",
-            subcommands = {
-                    CommandLine.HelpCommand.class
-            })
-    public static class CommandExportQcMain {}
+    @CommandLine.Command(
+        name = "qc",
+        separator = " ",
+        description = ["Export QC plots."],
+        subcommands = [CommandLine.HelpCommand::class]
+    )
+    class CommandExportQcMain
 }

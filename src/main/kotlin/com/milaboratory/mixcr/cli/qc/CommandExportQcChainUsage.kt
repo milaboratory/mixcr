@@ -9,107 +9,84 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.qc;
+package com.milaboratory.mixcr.cli.qc
 
-import com.milaboratory.miplots.ExportKt;
-import com.milaboratory.mixcr.basictypes.IOUtil;
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType;
-import com.milaboratory.mixcr.qc.ChainUsage;
-import com.milaboratory.mixcr.qc.SizeParameters;
-import io.repseq.core.Chains;
-import io.repseq.core.Chains.NamedChains;
-import jetbrains.letsPlot.intern.Plot;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import com.milaboratory.miplots.writeFile
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAlign
+import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
+import io.repseq.core.Chains
+import picocli.CommandLine
+import java.nio.file.Paths
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
+@CommandLine.Command(name = "chainUsage", separator = " ", description = ["Chain usage plot."])
+class CommandExportQcChainUsage : CommandExportQc() {
+    @CommandLine.Parameters(description = ["sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]"], arity = "2..*")
+    var `in`: List<String> = mutableListOf()
 
-@Command(name = "chainUsage",
-        separator = " ",
-        description = "Chain usage plot.")
-public class CommandExportQcChainUsage extends CommandExportQc {
-    @Parameters(description = "sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]")
-    public List<String> in;
-    @Option(
-            names = "--absolute-values",
-            description = "Plot in absolute values instead of percent"
+    @CommandLine.Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
+    var absoluteValues = false
+
+    @CommandLine.Option(
+        names = ["--align-chain-usage"],
+        description = ["When specifying .clnx files on input force to plot chain usage for alignments"]
     )
-    public boolean absoluteValues = false;
-    @Option(
-            names = "--align-chain-usage",
-            description = "When specifying .clnx files on input force to plot chain usage for alignments"
+    var alignChainUsage = false
+
+    @CommandLine.Option(
+        names = ["--chains"],
+        description = ["Specify which chains to export. Possible values: TRAD, TRB, TRG, IGH, IGK, IGL."],
+        split = ","
     )
-    public boolean alignChainUsage = false;
+    var chains: List<String>? = null
 
-    @Option(
-            names = "--chains",
-            description = "Specify which chains to export. Possible values: TRAD, TRB, TRG, IGH, IGK, IGL.",
-            split = ","
+    @CommandLine.Option(
+        names = ["--hide-non-functional"],
+        description = ["Hide fractions of non-functional CDR3s (out-of-frames and containing stops)"]
     )
-    public List<String> chains;
+    var hideNonFunctional = false
 
-    @Option(
-            names = "--hide-non-functional",
-            description = "Hide fractions of non-functional CDR3s (out-of-frames and containing stops)"
-    )
-    public boolean hideNonFunctional;
+    override fun getInputFiles(): List<String> = `in`.subList(0, `in`.size - 1)
 
-    @Override
-    protected List<String> getInputFiles() {
-        return in.subList(0, in.size() - 1);
-    }
+    override fun getOutputFiles(): List<String> = listOf(`in`.last())
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return in.subList(in.size() - 1, in.size());
-    }
-
-    @Override
-    public void run0() throws Exception {
-        MiXCRFileType fileType = IOUtil.extractFileType(Paths.get(in.get(0)));
-        List<Path> files = getInputFiles().stream().map(Paths::get)
-                .collect(Collectors.toList());
-        List<NamedChains> chains = this.chains == null
-                ? Chains.DEFAULT_EXPORT_CHAINS_LIST
-                : this.chains.stream().map(Chains::getNamedChains).collect(Collectors.toList());
-
-        Plot plt;
-        SizeParameters hw = getSizeParameters();
-        switch (fileType) {
-            case CLNA:
-            case CLNS:
-                if (alignChainUsage)
-                    plt = ChainUsage.INSTANCE.chainUsageAlign(
-                            files,
-                            !absoluteValues,
-                            !hideNonFunctional,
-                            chains,
-                            hw
-                    );
-                else plt = ChainUsage.INSTANCE.chainUsageAssemble(
-                        files,
-                        !absoluteValues,
-                        !hideNonFunctional,
-                        chains,
-                        hw
-                );
-                break;
-            case VDJCA:
-                plt = ChainUsage.INSTANCE.chainUsageAlign(
-                        files,
-                        !absoluteValues,
-                        !hideNonFunctional,
-                        chains,
-                        hw
-                );
-                break;
-            default:
-                throw new RuntimeException();
+    override fun run0() {
+        val files = inputFiles.map { Paths.get(it) }
+        val fileTypes = files.map { IOUtil.extractFileType(it)!! }
+        if (fileTypes.distinct().size != 1) {
+            throwExecutionExceptionKotlin("Input files should have the same file type, got ${fileTypes.distinct()}")
         }
-        ExportKt.writeFile(Paths.get(getOutputFiles().get(0)), plt);
+        val fileType = fileTypes.first()
+        val chains = chains?.map { Chains.getNamedChains(it) } ?: Chains.DEFAULT_EXPORT_CHAINS_LIST
+        val hw = sizeParameters!!
+        val plot = when (fileType) {
+            CLNA, CLNS -> when {
+                alignChainUsage -> chainUsageAlign(
+                    files,
+                    !absoluteValues,
+                    !hideNonFunctional,
+                    chains,
+                    hw
+                )
+                else -> chainUsageAssemble(
+                    files,
+                    !absoluteValues,
+                    !hideNonFunctional,
+                    chains,
+                    hw
+                )
+            }
+            VDJCA -> chainUsageAlign(
+                files,
+                !absoluteValues,
+                !hideNonFunctional,
+                chains,
+                hw
+            )
+        }
+        writeFile(Paths.get(outputFiles[0]), plot)
     }
 }

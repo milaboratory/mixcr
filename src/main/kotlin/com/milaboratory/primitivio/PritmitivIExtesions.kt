@@ -82,6 +82,9 @@ inline operator fun <T : Any, reified R : Any> Processor<T, R>.invoke(chunk: Chu
         process(chunk[i])
     })
 
+val <T : Any> Iterable<T>.port: OutputPort<T>
+    get() = CUtils.asOutputPort(this)
+
 fun <T : Any, R : Any> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
 
 fun <T : Any, R : Any> OutputPort<T>.mapInParallelOrdered(
@@ -110,13 +113,13 @@ fun <T : Any> OutputPort<T>.buffered(bufferSize: Int): Merger<T> = CUtils.buffer
 fun <T : Any> OutputPort<T>.ordered(indexer: Indexer<T>): OutputPort<T> = OrderedOutputPort(this, indexer)
 
 fun <T : Any> List<OutputPort<T>>.flatten(): OutputPortCloseable<T> =
-    FlatteningOutputPort(CUtils.asOutputPort(this))
+    FlatteningOutputPort(this.port)
 
 fun <T : Any> OutputPort<List<T>>.flatten(): OutputPortCloseable<T> = flatMap { it }
 
 fun <T : Any, R : Any> OutputPort<T>.flatMap(function: (element: T) -> Iterable<R>): OutputPortCloseable<R> =
     FlatteningOutputPort(CUtils.wrap(this) {
-        CUtils.asOutputPort(function(it))
+        function(it).port
     })
 
 fun <T : Any> OutputPort<T>.filter(test: Filter<T>): OutputPortCloseable<T> =
