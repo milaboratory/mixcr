@@ -37,21 +37,17 @@ class CommandVersionInfo : MiXCRCommand() {
 
     override fun run0() {
         when (IOUtil.extractFileType(Paths.get(inputFile))) {
-            VDJCA -> {
-                VDJCAlignmentsReader(inputFile).use { reader ->
-                    reader.ensureInitialized()
-                    println("MagicBytes = " + reader.magic)
-                    println(reader.versionInfo)
-                }
+            VDJCA -> VDJCAlignmentsReader(inputFile).use { reader ->
+                reader.ensureInitialized()
+                println("MagicBytes = " + reader.magic)
+                println(reader.versionInfo)
             }
             CLNS -> {
                 val cs = CloneSetIO.read(inputFile)
                 println(cs.versionInfo)
             }
-            CLNA -> {
-                ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
-                    .use { reader -> println(reader.versionInfo) }
-            }
+            CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
+                .use { reader -> println(reader.versionInfo) }
             else -> throwValidationExceptionKotlin("Wrong file type.")
         }
     }

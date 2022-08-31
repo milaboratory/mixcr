@@ -80,10 +80,7 @@ class CommandAlignmentsStats : MiXCRCommand() {
 
         val collector = Collector(collectors)
         VDJCAlignmentsReader(`in`).use { reader ->
-            when (out) {
-                null -> System.out
-                else -> PrintStream(BufferedOutputStream(FileOutputStream(out!!), 32768))
-            }.use { output ->
+            (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it), 32768)) } ?: System.out).use { output ->
                 SmartProgressReporter.startProgressReport("Analysis", reader)
                 CUtils.processAllInParallel(reader, collector, min(4, Runtime.getRuntime().availableProcessors()))
                 collector.end()

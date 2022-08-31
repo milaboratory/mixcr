@@ -23,8 +23,6 @@ import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGeneId
 import picocli.CommandLine
 import java.io.PrintStream
-import java.nio.file.Files
-import java.nio.file.Paths
 
 @CommandLine.Command(
     name = "clonesDiff",
@@ -83,12 +81,8 @@ class CommandClonesDiff : MiXCRCommand() {
 
     override fun getOutputFiles(): List<String> = listOfNotNull(report)
 
-    @Throws(Exception::class)
     override fun run0() {
-        when (report) {
-            null -> System.out
-            else -> PrintStream(Files.newOutputStream(Paths.get(report!!)))
-        }.use { report ->
+        (report?.let { PrintStream(it) } ?: System.out).use { report ->
             val cs1 = CloneSetIO.read(in1)
             val cs2 = CloneSetIO.read(in2)
             val recs = mutableMapOf<CKey, CRec>()

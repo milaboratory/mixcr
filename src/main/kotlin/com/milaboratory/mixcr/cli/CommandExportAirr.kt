@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.util.CountLimitingOutputPort
 import cc.redberry.pipe.util.CountingOutputPort
@@ -41,6 +40,7 @@ import com.milaboratory.mixcr.export.AirrColumns.SequenceAlignmentBoundary
 import com.milaboratory.mixcr.export.AirrColumns.VDJCCalls
 import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper
 import com.milaboratory.mixcr.export.FieldExtractor
+import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.GeneFeature
@@ -48,7 +48,6 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.VDJC_REFERENCE
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
-import org.apache.commons.io.output.CloseShieldOutputStream
 import picocli.CommandLine
 import java.io.PrintStream
 import java.nio.file.Paths
@@ -209,7 +208,11 @@ class CommandExportAirr : MiXCRCommand() {
 
                 // I know, still writing airr is much slower...
                 var maxCount = 0
-                clnsReader.readClones().use { p -> for (ignore in CUtils.it(p)) ++maxCount }
+                clnsReader.readClones().use { p ->
+                    p.forEach {
+                        ++maxCount
+                    }
+                }
                 cPort = CountingOutputPort(clnsReader.readClones())
                 port = cPort
                 closeable = clnsReader
@@ -229,12 +232,9 @@ class CommandExportAirr : MiXCRCommand() {
             progressReporter = SmartProgressReporter.extractProgress(clop)
         }
         SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter)
-        when (out) {
-            null -> PrintStream(CloseShieldOutputStream.wrap(System.out))
-            else -> PrintStream(out!!)
-        }.use { output ->
-            closeable.use { c ->
-                port.use { p ->
+        (out?.let { PrintStream(it) } ?: System.out).use { output ->
+            closeable.use {
+                port.use {
                     var first = true
                     for (extractor in extractors) {
                         if (!first) output.print("\t")
@@ -242,7 +242,7 @@ class CommandExportAirr : MiXCRCommand() {
                         output.print(extractor.header)
                     }
                     output.println()
-                    for (obj in CUtils.it(port)) {
+                    port.forEach { obj ->
                         first = true
                         val wrapper = AirrVDJCObjectWrapper(obj)
                         for (extractor in extractors) {

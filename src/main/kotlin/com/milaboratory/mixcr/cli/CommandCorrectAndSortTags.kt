@@ -228,7 +228,6 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
             if (corrector != null) {
                 SmartProgressReporter.startProgressReport(corrector)
             }
-            mitoolReport = corrector?.report
             val correctionResult: CorrectionNode? = when (corrector) {
                 null -> null
                 else -> {
@@ -257,6 +256,7 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
                     corrector.correct(cInput, tagNames, whitelists, mainReader)
                 }
             }
+            mitoolReport = corrector?.report
             VDJCAlignmentsWriter(out).use { writer ->
                 val secondaryReader = mainReader.readAlignments()
                 val stateBuilder = PrimitivIOStateBuilder()
@@ -286,22 +286,22 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
 
                 // Creating output port with corrected and filtered tags
                 val hsInput = secondaryReader
-                    .map { al: VDJCAlignments ->
-                        if (noCorrect) return@map al
-                        val newTags = al.tagCount.singletonTuple.asArray()
+                    .map { vdjcAlignments ->
+                        if (noCorrect) return@map vdjcAlignments
+                        val newTags = vdjcAlignments.tagCount.singletonTuple.asArray()
                         var cn = correctionResult
                         for (i in targetTagIndices) {
                             val current = (newTags[i] as SequenceAndQualityTagValue).data.sequence
                             cn = cn!!.nextLevel[current]
                             if (cn == null) {
                                 mitoolReport!!.filteredRecords = mitoolReport.filteredRecords + 1
-                                return@map al.setTagCount(null) // will be filtered right before hash sorter
+                                return@map vdjcAlignments.setTagCount(null) // will be filtered right before hash sorter
                             }
                             newTags[i] = SequenceAndQualityTagValue(cn.correctValue)
                         }
-                        al.setTagCount(TagCount(TagTuple(*newTags)))
+                        vdjcAlignments.setTagCount(TagCount(TagTuple(*newTags)))
                     }
-                    .filter { al: VDJCAlignments -> al.tagCount != null }
+                    .filter { vdjcAlignments -> vdjcAlignments.tagCount != null }
 
                 // Running initial hash sorter
                 var sorted = CountingOutputPort(

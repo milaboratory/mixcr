@@ -27,9 +27,8 @@ import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import picocli.CommandLine
 import java.io.BufferedOutputStream
+import java.io.FileOutputStream
 import java.io.PrintStream
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.util.*
 
 @CommandLine.Command(
@@ -158,10 +157,7 @@ class CommandExportAlignmentsPretty : MiXCRCommand() {
         var total: Long = 0
         var filtered: Long = 0
         openAlignmentsPort(`in`).use { readerAndHeader ->
-            when (out) {
-                null -> System.out
-                else -> PrintStream(BufferedOutputStream(Files.newOutputStream(Paths.get(out!!)), 32768))
-            }.use { output ->
+            (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it), 32768)) } ?: System.out).use { output ->
                 val reader = readerAndHeader.port
                 val countBefore = limitBefore ?: Int.MAX_VALUE
                 val countAfter = limitAfter ?: Int.MAX_VALUE

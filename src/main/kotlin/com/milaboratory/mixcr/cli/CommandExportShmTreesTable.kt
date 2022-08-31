@@ -34,7 +34,6 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
 
     override fun run0() {
         InfoWriter<SHMTreeForPostanalysis>(outputFiles.first()).use { output ->
-
             SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
                 output.attachInfoProviders(
                     SHMTreeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)

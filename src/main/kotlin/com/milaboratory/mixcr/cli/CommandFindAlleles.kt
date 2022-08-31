@@ -377,9 +377,8 @@ class CommandFindAlleles : MiXCRCommand() {
         return usedGenes
     }
 
-    private fun anyClone(cloneReaders: List<CloneReader>): Clone {
-        cloneReaders[0].readClones().use { port -> return port.take() }
-    }
+    private fun anyClone(cloneReaders: List<CloneReader>): Clone =
+        cloneReaders[0].readClones().use { it.take() }
 
     companion object {
         const val FIND_ALLELES_COMMAND_NAME = "findAlleles"

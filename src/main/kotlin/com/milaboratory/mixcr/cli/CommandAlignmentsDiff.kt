@@ -15,6 +15,7 @@ import cc.redberry.pipe.CUtils
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI.DummyWriter
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus
 import com.milaboratory.util.ReportHelper
@@ -23,8 +24,6 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import picocli.CommandLine
 import java.io.PrintStream
-import java.nio.file.Files
-import java.nio.file.Paths
 
 @CommandLine.Command(
     name = "alignmentsDiff",
@@ -82,14 +81,11 @@ class CommandAlignmentsDiff : MiXCRCommand() {
     override fun run0() {
         VDJCAlignmentsReader(in1).use { reader1 ->
             VDJCAlignmentsReader(in2).use { reader2 ->
-                (if (onlyFirst == null) VDJCAlignmentsWriterI.DummyWriter else VDJCAlignmentsWriter(onlyFirst)).use { only1 ->
-                    if (onlySecond == null) VDJCAlignmentsWriterI.DummyWriter else VDJCAlignmentsWriter(onlySecond).use { only2 ->
-                        if (diff1 == null) VDJCAlignmentsWriterI.DummyWriter else VDJCAlignmentsWriter(diff1).use { diff1 ->
-                            if (diff2 == null) VDJCAlignmentsWriterI.DummyWriter else VDJCAlignmentsWriter(diff2).use { diff2 ->
-                                when (report) {
-                                    null -> System.out
-                                    else -> PrintStream(Files.newOutputStream(Paths.get(report!!)))
-                                }.use { report ->
+                (onlyFirst?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { only1 ->
+                    (onlySecond?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { only2 ->
+                        (diff1?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { diff1 ->
+                            (diff2?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { diff2 ->
+                                (report?.let { PrintStream(it) } ?: System.out).use { report ->
                                     val readerForProgress = when {
                                         reader1.numberOfReads > reader2.numberOfReads -> reader1
                                         else -> reader2

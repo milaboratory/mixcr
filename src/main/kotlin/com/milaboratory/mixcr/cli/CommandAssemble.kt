@@ -263,19 +263,19 @@ class CommandAssemble : MiXCRCommand() {
                         // Writing clone block
                         writer.writeClones(cloneSet)
                         AlignmentsMappingMerger(preClones.readAlignments(), assembler.assembledReadsPort)
-                            .use { merged ->
-                                writer.collateAlignments(merged, assembler.alignmentsCount)
-                            }
+                            .use { merged -> writer.collateAlignments(merged, assembler.alignmentsCount) }
                         reportBuilder.setFinishMillis(System.currentTimeMillis())
                         report = reportBuilder.buildReport()
                         writer.writeFooter(alignmentsReader.reports(), report)
                         writer.writeAlignmentsAndIndex()
                     }
-                } else ClnsWriter(out).use { writer ->
-                    writer.writeCloneSet(cloneSet)
-                    reportBuilder.setFinishMillis(System.currentTimeMillis())
-                    report = reportBuilder.buildReport()
-                    writer.writeFooter(alignmentsReader.reports(), report)
+                } else {
+                    ClnsWriter(out).use { writer ->
+                        writer.writeCloneSet(cloneSet)
+                        reportBuilder.setFinishMillis(System.currentTimeMillis())
+                        report = reportBuilder.buildReport()
+                        writer.writeFooter(alignmentsReader.reports(), report)
+                    }
                 }
 
                 // Writing report to stout

@@ -111,16 +111,12 @@ class CommandExportClonesPretty : MiXCRCommand() {
         return resultFilter
     }
 
-    @Throws(Exception::class)
     override fun run0() {
         val filter = mkFilter()
         var total: Long = 0
         var filtered: Long = 0
         val cloneSet = CloneSetIO.read(`in`)
-        when (out) {
-            null -> System.out
-            else -> PrintStream(BufferedOutputStream(FileOutputStream(out!!), 32768))
-        }.use { output ->
+        (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it), 32768)) } ?: System.out).use { output ->
             val countBefore = limitBefore ?: Int.MAX_VALUE
             val countAfter = limitAfter ?: Int.MAX_VALUE
             val skipAfter = skipAfter ?: 0
