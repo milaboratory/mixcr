@@ -9,100 +9,105 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.util.ArraysUtils;
-import com.milaboratory.util.SmartProgressReporter;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine;
-import picocli.CommandLine.Parameters;
+import com.milaboratory.mixcr.basictypes.ClnAReader
+import com.milaboratory.mixcr.basictypes.ClnAWriter
+import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.basictypes.VDJCSProperties
+import com.milaboratory.util.ArraysUtils
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
+import java.nio.file.Paths
 
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
+@CommandLine.Command(
+    name = CommandSortClones.SORT_CLONES_COMMAND_NAME,
+    sortOptions = true,
+    separator = " ",
+    description = ["Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows to build overlaps between clonesets."]
+)
+class CommandSortClones : MiXCRCommand() {
+    @CommandLine.Parameters(description = ["clones.[clns|clna]"], index = "0")
+    lateinit var `in`: String
 
-import static com.milaboratory.mixcr.cli.CommandSortClones.SORT_CLONES_COMMAND_NAME;
-import static com.milaboratory.util.TempFileManager.smartTempDestination;
+    @CommandLine.Parameters(description = ["clones.sorted.clns"], index = "1")
+    lateinit var out: String
 
+    @CommandLine.Option(
+        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
+        names = ["--use-system-temp"]
+    )
+    var useSystemTemp = false
 
-@CommandLine.Command(name = SORT_CLONES_COMMAND_NAME,
-        sortOptions = true,
-        separator = " ",
-        description = "Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows to build overlaps between clonesets.")
-public class CommandSortClones extends MiXCRCommand {
-    static final String SORT_CLONES_COMMAND_NAME = "sortClones";
+    override fun getInputFiles(): List<String> = listOf(`in`)
 
-    @Parameters(description = "clones.[clns|clna]", index = "0")
-    public String in;
+    override fun getOutputFiles(): List<String> = listOf(out)
 
-    @Parameters(description = "clones.sorted.clns", index = "1")
-    public String out;
-
-    @CommandLine.Option(description = "Use system temp folder for temporary files, the output folder will be used if this option is omitted.",
-            names = {"--use-system-temp"})
-    public boolean useSystemTemp = false;
-
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(in);
-    }
-
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.singletonList(out);
-    }
-
-    @Override
-    public void run0() throws Exception {
-        switch (IOUtil.extractFileType(Paths.get(in))) {
-            case CLNS:
-                try (ClnsReader reader = new ClnsReader(Paths.get(in), VDJCLibraryRegistry.getDefault());
-                     ClnsWriter writer = new ClnsWriter(out)) {
-
-                    GeneFeature[] assemblingFeatures = reader.getAssemblerParameters().getAssemblingFeatures();
-
-                    // Any CDR3 containing feature will become first
-                    for (int i = 0; i < assemblingFeatures.length; i++)
-                        if (assemblingFeatures[i].contains(GeneFeature.CDR3)) {
-                            if (i != 0)
-                                ArraysUtils.swap(assemblingFeatures, 0, i);
-                            break;
-                        }
-
-                    VDJCSProperties.CloneOrdering ordering = VDJCSProperties.cloneOrderingByNucleotide(assemblingFeatures,
-                            GeneType.Variable, GeneType.Joining);
-
-                    writer.writeCloneSet(CloneSet.reorder(reader.getCloneSet(), ordering));
-                    writer.writeFooter(reader.reports(), null);
+    override fun run0() {
+        when (IOUtil.extractFileType(Paths.get(`in`))!!) {
+            CLNS -> ClnsReader(Paths.get(`in`), VDJCLibraryRegistry.getDefault()).use { reader ->
+                ClnsWriter(out).use { writer ->
+                    val assemblingFeatures =
+                        sortGeneFeaturesContainingCDR3First(reader.assemblerParameters.assemblingFeatures)
+                    val ordering = VDJCSProperties.cloneOrderingByNucleotide(
+                        assemblingFeatures,
+                        Variable, Joining
+                    )
+                    writer.writeCloneSet(CloneSet.reorder(reader.cloneSet, ordering))
+                    writer.writeFooter(reader.reports(), null)
                 }
-                return;
-
-            case CLNA:
-                try (ClnAReader reader = new ClnAReader(Paths.get(in), VDJCLibraryRegistry.getDefault(), Runtime.getRuntime().availableProcessors());
-                     ClnAWriter writer = new ClnAWriter(out, smartTempDestination(out, "", useSystemTemp))) {
-                    SmartProgressReporter.startProgressReport(writer);
-
-                    GeneFeature[] assemblingFeatures = reader.getAssemblerParameters().getAssemblingFeatures();
-
-                    // Any CDR3 containing feature will become first
-                    for (int i = 0; i < assemblingFeatures.length; i++)
-                        if (assemblingFeatures[i].contains(GeneFeature.CDR3)) {
-                            if (i != 0)
-                                ArraysUtils.swap(assemblingFeatures, 0, i);
-                            break;
-                        }
-
-                    VDJCSProperties.CloneOrdering ordering = VDJCSProperties.cloneOrderingByNucleotide(assemblingFeatures,
-                            GeneType.Variable, GeneType.Joining);
-
-                    writer.writeClones(CloneSet.reorder(reader.readCloneSet(), ordering));
-                    writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments());
-                    writer.writeFooter(reader.reports(), null);
-                    writer.writeAlignmentsAndIndex();
+            }
+            CLNA -> ClnAReader(
+                Paths.get(`in`),
+                VDJCLibraryRegistry.getDefault(),
+                Runtime.getRuntime().availableProcessors()
+            ).use { reader ->
+                ClnAWriter(out, TempFileManager.smartTempDestination(out, "", useSystemTemp)).use { writer ->
+                    SmartProgressReporter.startProgressReport(writer)
+                    val assemblingFeatures =
+                        sortGeneFeaturesContainingCDR3First(reader.assemblerParameters.assemblingFeatures)
+                    val ordering = VDJCSProperties.cloneOrderingByNucleotide(
+                        assemblingFeatures,
+                        Variable, Joining
+                    )
+                    writer.writeClones(CloneSet.reorder(reader.readCloneSet(), ordering))
+                    writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments())
+                    writer.writeFooter(reader.reports(), null)
+                    writer.writeAlignmentsAndIndex()
                 }
+            }
+            VDJCA -> throwValidationExceptionKotlin("File type is not supported by this command")
         }
+    }
+
+    private fun sortGeneFeaturesContainingCDR3First(geneFeatures: Array<GeneFeature>): Array<GeneFeature> {
+        val sorted = geneFeatures.clone()
+
+        // Any CDR3 containing feature will become first
+        var i = 0
+        while (i < sorted.size) {
+            if (sorted[i].contains(CDR3)) {
+                if (i != 0) ArraysUtils.swap(sorted, 0, i)
+                break
+            }
+            i++
+        }
+        return sorted
+    }
+
+    companion object {
+        const val SORT_CLONES_COMMAND_NAME = "sortClones"
     }
 }

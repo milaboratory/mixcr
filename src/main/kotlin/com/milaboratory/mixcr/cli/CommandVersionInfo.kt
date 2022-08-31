@@ -9,53 +9,50 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli;
+package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.basictypes.ClnAReader;
-import com.milaboratory.mixcr.basictypes.CloneSet;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
-import io.repseq.core.VDJCLibraryRegistry;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
+import com.milaboratory.mixcr.basictypes.ClnAReader
+import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
+import java.nio.file.Paths
 
-import java.util.Collections;
-import java.util.List;
+@CommandLine.Command(
+    name = "versionInfo",
+    separator = " ",
+    description = ["Output information about MiXCR version which generated the file."]
+)
+class CommandVersionInfo : MiXCRCommand() {
+    @CommandLine.Parameters(description = ["input_file"])
+    lateinit var inputFile: String
 
-@Command(name = "versionInfo",
-        separator = " ",
-        description = "Output information about MiXCR version which generated the file.")
-public class CommandVersionInfo extends MiXCRCommand {
-    @Parameters(description = "input_file")
-    public String inputFile;
+    override fun getInputFiles(): List<String> = listOf(inputFile)
 
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(inputFile);
-    }
+    override fun getOutputFiles(): List<String> = emptyList()
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public void run0() throws Exception {
-        String i = inputFile.toLowerCase();
-        if (i.endsWith(".vdjca.gz") || i.endsWith(".vdjca")) {
-            try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(inputFile)) {
-                reader.ensureInitialized();
-                System.out.println("MagicBytes = " + reader.getMagic());
-                System.out.println(reader.getVersionInfo());
+    override fun run0() {
+        when (IOUtil.extractFileType(Paths.get(inputFile))) {
+            VDJCA -> {
+                VDJCAlignmentsReader(inputFile).use { reader ->
+                    reader.ensureInitialized()
+                    println("MagicBytes = " + reader.magic)
+                    println(reader.versionInfo)
+                }
             }
-        } else if (i.endsWith(".clns.gz") || i.endsWith(".clns")) {
-            CloneSet cs = CloneSetIO.read(inputFile);
-            System.out.println(cs.getVersionInfo());
-        } else if (i.endsWith(".clna")) {
-            try (ClnAReader reader = new ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)) {
-                System.out.println(reader.getVersionInfo());
+            CLNS -> {
+                val cs = CloneSetIO.read(inputFile)
+                println(cs.versionInfo)
             }
-        } else
-            throwValidationException("Wrong file type.");
+            CLNA -> {
+                ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
+                    .use { reader -> println(reader.versionInfo) }
+            }
+            else -> throwValidationExceptionKotlin("Wrong file type.")
+        }
     }
 }
