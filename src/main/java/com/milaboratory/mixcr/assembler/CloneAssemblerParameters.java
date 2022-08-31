@@ -266,7 +266,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     }
 
     public boolean isMappingEnabled() {
-        return maxBadPointsPercent > 0.0;
+        return badQualityThreshold > 0 && maxBadPointsPercent > 0.0;
     }
 
     public boolean isClusteringEnabled() {
