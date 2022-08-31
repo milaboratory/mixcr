@@ -9,97 +9,84 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.miplots.Position
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.postanalysis.PostanalysisResult
-import com.milaboratory.mixcr.postanalysis.plots.GeneUsage
-import com.milaboratory.mixcr.postanalysis.plots.GeneUsageRow
+import com.milaboratory.mixcr.postanalysis.plots.ColorKey
+import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.dataFrame
+import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.plot
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
-import jetbrains.letsPlot.intern.Plot
-import org.jetbrains.kotlinx.dataframe.DataFrame
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import java.util.List
+import picocli.CommandLine
+import java.util.stream.Collectors
 
-public abstract class CommandPaExportPlotsGeneUsage extends CommandPaExportPlotsHeatmapWithGroupBy {
-    abstract String group();
+abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGroupBy() {
+    abstract fun group(): String
 
-    @Option(description = "Don't add samples dendrogram.",
-            names = {"--no-samples-dendro"})
-    public boolean noSamplesDendro;
+    @CommandLine.Option(description = ["Don't add samples dendrogram."], names = ["--no-samples-dendro"])
+    var noSamplesDendro = false
 
-    @Option(description = "Don't add genes dendrogram.",
-            names = {"--no-genes-dendro"})
-    public boolean noGenesDendro;
+    @CommandLine.Option(description = ["Don't add genes dendrogram."], names = ["--no-genes-dendro"])
+    var noGenesDendro = false
 
-    @Option(description = "Add color key layer.",
-            names = {"--color-key"})
-    public List<String> colorKey = new ArrayList<>();
+    @CommandLine.Option(description = ["Add color key layer."], names = ["--color-key"])
+    var colorKey: List<String> = mutableListOf()
 
-    @Override
-    void run(PaResultByGroup result) {
-        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
-        PostanalysisResult paResult = result.result.forGroup(ch);
-        DataFrame<?> metadata = metadata();
-        DataFrame<GeneUsageRow> df = GeneUsage.INSTANCE.dataFrame(
-                paResult,
-                metadata
-        );
-        df = filter(df);
-
-        if (df.rowsCount() == 0)
-            return;
-
-        Plot plot = GeneUsage.INSTANCE.plot(df,
-                new HeatmapParameters(
-                        !noSamplesDendro,
-                        !noGenesDendro,
-                        colorKey.stream().map(it -> new ColorKey(it, Position.Bottom)).collect(Collectors.toList()),
-                        groupBy,
-                        hLabelsSize,
-                        vLabelsSize,
-                        false,
-                        parsePallete(),
-                        width,
-                        height
-                ));
-
-        writePlots(result.group, plot);
+    override fun run(result: PaResultByGroup) {
+        val ch = result.schema.getGroup<Clone>(group())
+        val df = dataFrame(result.result.forGroup(ch), metadataDf)
+            .filterByMetadata()
+        if (df.rowsCount() == 0) return
+        val plot = plot(
+            df,
+            HeatmapParameters(
+                !noSamplesDendro,
+                !noGenesDendro,
+                colorKey.stream().map { it: String? ->
+                    ColorKey(
+                        it!!, Position.Bottom
+                    )
+                }.collect(Collectors.toList()),
+                groupBy,
+                hLabelsSize,
+                vLabelsSize,
+                false,
+                parsePallete(),
+                width,
+                height
+            )
+        )
+        writePlots(result.group, plot)
     }
 
-    @Command(name = "vUsage",
-            sortOptions = false,
-            separator = " ",
-            description = "Export V gene usage heatmap")
-    public static class ExportVUsage extends CommandPaExportPlotsGeneUsage {
-        @Override
-        String group() {
-            return PostanalysisParametersIndividual.VUsage;
-        }
+    @CommandLine.Command(
+        name = "vUsage",
+        sortOptions = false,
+        separator = " ",
+        description = ["Export V gene usage heatmap"]
+    )
+    class ExportVUsage : CommandPaExportPlotsGeneUsage() {
+        override fun group(): String = PostanalysisParametersIndividual.VUsage
     }
 
-    @Command(name = "jUsage",
-            sortOptions = false,
-            separator = " ",
-            description = "Export J gene usage heatmap")
-    public static class ExportJUsage extends CommandPaExportPlotsGeneUsage {
-        @Override
-        String group() {
-            return PostanalysisParametersIndividual.JUsage;
-        }
+    @CommandLine.Command(
+        name = "jUsage",
+        sortOptions = false,
+        separator = " ",
+        description = ["Export J gene usage heatmap"]
+    )
+    class ExportJUsage : CommandPaExportPlotsGeneUsage() {
+        override fun group(): String = PostanalysisParametersIndividual.JUsage
     }
 
-    @Command(name = "isotypeUsage",
-            sortOptions = false,
-            separator = " ",
-            description = "Export isotype usage heatmap")
-    public static class ExportIsotypeUsage extends CommandPaExportPlotsGeneUsage {
-        @Override
-        String group() {
-            return PostanalysisParametersIndividual.IsotypeUsage;
-        }
+    @CommandLine.Command(
+        name = "isotypeUsage",
+        sortOptions = false,
+        separator = " ",
+        description = ["Export isotype usage heatmap"]
+    )
+    class ExportIsotypeUsage : CommandPaExportPlotsGeneUsage() {
+        override fun group(): String = PostanalysisParametersIndividual.IsotypeUsage
     }
 }

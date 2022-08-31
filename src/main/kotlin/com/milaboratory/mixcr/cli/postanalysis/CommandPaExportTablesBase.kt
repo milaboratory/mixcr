@@ -9,64 +9,49 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import picocli.CommandLine.Parameters
+import picocli.CommandLine
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
-import java.util.List
 
-abstract class CommandPaExportTablesBase extends CommandPaExport {
-    @Parameters(description = "Path for output files", index = "1", defaultValue = "path/table.tsv")
-    public String out;
-
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.emptyList(); // output will be always overriden
+abstract class CommandPaExportTablesBase : CommandPaExport {
+    @CommandLine.Parameters(description = ["Path for output files"], index = "1", defaultValue = "path/table.tsv")
+    lateinit var out: String
+    override fun getOutputFiles(): List<String> {
+        return emptyList() // output will be always overriden
     }
 
-    public CommandPaExportTablesBase() {}
+    constructor()
 
-    CommandPaExportTablesBase(PaResult paResult, String out) {
-        super(paResult);
-        this.out = out;
+    constructor(paResult: PaResult, out: String) : super(paResult) {
+        this.out = out
     }
 
-    @Override
-    public void validate() {
-        super.validate();
+    override fun validate() {
+        super.validate()
         if (!out.endsWith(".tsv") && !out.endsWith(".csv"))
-            throwValidationException("Output file must have .tsv or .csv extension");
+            throwValidationExceptionKotlin("Output file must have .tsv or .csv extension")
     }
 
-    protected Path outDir() {
-        return Paths.get(out).toAbsolutePath().getParent();
+    protected fun outDir(): Path = Paths.get(out).toAbsolutePath().parent
+
+    protected fun outPrefix(): String {
+        val fName = Paths.get(out).fileName.toString()
+        return fName.dropLast(4)
     }
 
-    protected String outPrefix() {
-        String fName = Paths.get(out).getFileName().toString();
-        return fName.substring(0, fName.length() - 4);
+    protected fun outExtension(group: IsolationGroup): String =
+        group.extension() + "." + out.takeLast(3)
+
+    protected fun separator(): String =
+        if (out.endsWith("tsv")) "\t" else ","
+
+    override fun run(result: PaResultByGroup) {
+        Files.createDirectories(outDir())
+        run1(result)
     }
 
-    protected String outExtension(IsolationGroup group) {
-        return group.extension() + "." + out.substring(out.length() - 3);
-    }
-
-    protected String separator() {
-        return out.endsWith("tsv") ? "\t" : ",";
-    }
-
-    @Override
-    void run(PaResultByGroup result) {
-        try {
-            Files.createDirectories(outDir());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        run1(result);
-    }
-
-    abstract void run1(PaResultByGroup result);
+    abstract fun run1(result: PaResultByGroup)
 }

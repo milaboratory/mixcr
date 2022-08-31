@@ -9,102 +9,89 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.miplots.Position.Bottom
+import com.milaboratory.miplots.Position.Left
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapType
-import com.milaboratory.mixcr.postanalysis.plots.*
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
+import com.milaboratory.mixcr.postanalysis.plots.ColorKey
+import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
+import com.milaboratory.mixcr.postanalysis.plots.Overlap.dataFrame
+import com.milaboratory.mixcr.postanalysis.plots.Overlap.filterOverlap
+import com.milaboratory.mixcr.postanalysis.plots.Overlap.plots
+import com.milaboratory.mixcr.postanalysis.plots.OverlapRow
+import com.milaboratory.mixcr.postanalysis.plots.parseFilter
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap
-import jetbrains.letsPlot.intern.Plot
 import org.jetbrains.kotlinx.dataframe.DataFrame
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import java.util.List
+import picocli.CommandLine
 import java.util.stream.Collectors
 
-@Command(name = "overlap",
-        sortOptions = false,
-        separator = " ",
-        description = "Export overlap heatmaps")
-public class CommandPaExportPlotsOverlap extends CommandPaExportPlotsHeatmapWithGroupBy {
-    @Option(description = "Don't add dendrograms",
-            names = {"--no-dendro"})
-    public boolean noDendro;
+@CommandLine.Command(name = "overlap", sortOptions = false, separator = " ", description = ["Export overlap heatmaps"])
+class CommandPaExportPlotsOverlap : CommandPaExportPlotsHeatmapWithGroupBy() {
+    @CommandLine.Option(description = ["Don't add dendrograms"], names = ["--no-dendro"])
+    var noDendro = false
 
-    @Option(description = "Add color key layer; prefix 'x_' (add to the bottom) or 'y_' (add to the left) should be used.",
-            names = {"--color-key"})
-    public List<String> colorKey = new ArrayList<>();
-
-    @Option(description = "Fill diagonal line",
-            names = {"--fill-diagonal"}
+    @CommandLine.Option(
+        description = ["Add color key layer; prefix 'x_' (add to the bottom) or 'y_' (add to the left) should be used."],
+        names = ["--color-key"],
+        paramLabel = "colorKey"
     )
-    public boolean fillDiagonal = false;
+    var colorKeysParam: List<String> = mutableListOf()
 
-    @Option(description = "Select specific metrics to export.",
-            names = {"--metric"})
-    public List<String> metrics;
+    @CommandLine.Option(description = ["Fill diagonal line"], names = ["--fill-diagonal"])
+    var fillDiagonal = false
 
-    DataFrame<OverlapRow> filterOverlap(DataFrame<OverlapRow> df) {
-        if (filterByMetadata != null) {
-            for (String f : filterByMetadata) {
-                Filter filter = MetadataKt.parseFilter(metadata(), f);
-                df = Overlap.INSTANCE.filterOverlap(filter, df);
+    @CommandLine.Option(description = ["Select specific metrics to export."], names = ["--metric"])
+    var metrics: List<String>? = null
+
+    private fun DataFrame<OverlapRow>.filterOverlapByMetadata(): DataFrame<OverlapRow> {
+        var result = this
+        filterByMetadata?.let { filterByMetadata ->
+            for (f in filterByMetadata) {
+                val filter = metadataDf!!.parseFilter(f)
+                result = filterOverlap(filter, result)
             }
         }
-        return df;
+        return result
     }
 
-    private List<OverlapType> metricsFilter() {
-        if (metrics == null || metrics.isEmpty())
-            return null;
-        return metrics.stream()
-                .map(OverlapType::byNameOrThrow)
-                .collect(Collectors.toList());
+    private fun metricsFilter(): List<OverlapType>? {
+        return if (metrics == null || metrics!!.isEmpty()) null else metrics!!.stream()
+            .map { name: String? -> OverlapType.byNameOrThrow(name) }
+            .collect(Collectors.toList())
     }
 
-    @Override
-    void run(PaResultByGroup result) {
-        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(PostanalysisParametersOverlap.Overlap);
-        PostanalysisResult paResult = result.result.forGroup(ch);
-        DataFrame<?> metadata = metadata();
-
-        List<OverlapType> metrics = metricsFilter();
-        DataFrame<OverlapRow> df = Overlap.INSTANCE.dataFrame(
-                paResult,
-                metrics,
-                fillDiagonal,
-                metadata
-        );
-        df = filterOverlap(df);
-
-        if (df.rowsCount() == 0)
-            return;
-
-        if (df.get("weight").distinct().toList().size() <= 1)
-            return;
-
-        List<String> colorKey = this.colorKey.stream()
-                .map(it -> it.startsWith("x_") || it.startsWith("y_") ? it : "x_" + it)
-                .collect(Collectors.toList());
-
-        HeatmapParameters par = new HeatmapParameters(
-                !noDendro,
-                !noDendro,
-                colorKey.stream()
-                        .map(it -> new ColorKey(it, it.startsWith("x") ? Position.Bottom : Position.Left))
-                        .collect(Collectors.toList()),
-                groupBy,
-                hLabelsSize,
-                vLabelsSize,
-                false,
-                parsePallete(),
-                width,
-                height
-        );
-
-        List<Plot> plots = Overlap.INSTANCE.plots(df, par);
-        writePlots(result.group, plots);
+    override fun run(result: PaResultByGroup) {
+        val ch = result.schema.getGroup<Clone>(PostanalysisParametersOverlap.Overlap)
+        val df: DataFrame<OverlapRow> = dataFrame(
+            result.result.forGroup(ch),
+            metricsFilter(),
+            fillDiagonal,
+            metadataDf
+        ).filterOverlapByMetadata()
+        if (df.rowsCount() == 0) return
+        if (df["weight"].distinct().toList().size <= 1) return
+        val colorKeys = colorKeysParam.map { key ->
+            when {
+                key.startsWith("x_") -> ColorKey(key, Bottom)
+                key.startsWith("y_") -> ColorKey(key, Left)
+                else -> ColorKey("x_$key", Bottom)
+            }
+        }
+        val par = HeatmapParameters(
+            !noDendro,
+            !noDendro,
+            colorKeys,
+            groupBy,
+            hLabelsSize,
+            vLabelsSize,
+            false,
+            parsePallete(),
+            width,
+            height
+        )
+        val plots = plots(df, par)
+        writePlots(result.group, plots)
     }
 }

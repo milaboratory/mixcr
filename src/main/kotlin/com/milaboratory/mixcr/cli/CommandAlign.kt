@@ -18,6 +18,7 @@ import cc.redberry.pipe.util.Chunk
 import cc.redberry.pipe.util.CountLimitingOutputPort
 import cc.redberry.pipe.util.StatusReporter
 import cc.redberry.pipe.util.StatusReporter.StatusProvider
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.core.io.CompressionType
 import com.milaboratory.core.io.sequence.ConcatenatingSingleReader
 import com.milaboratory.core.io.sequence.SequenceRead
@@ -272,8 +273,7 @@ class CommandAlign : MiXCRCommand() {
     val alignerParameters: VDJCAlignerParameters by lazy {
         var alignerParameters: VDJCAlignerParameters
         if (alignerParametersName.endsWith(".json")) {
-            alignerParameters = GlobalObjectMappers.getOneLine()
-                .readValue(File(alignerParametersName), VDJCAlignerParameters::class.java)
+            alignerParameters = GlobalObjectMappers.getOneLine().readValue(File(alignerParametersName))
         } else {
             alignerParameters = VDJCParametersPresets.getByName(alignerParametersName)
                 ?: throwValidationExceptionKotlin("Unknown aligner parameters: $alignerParametersName")

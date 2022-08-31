@@ -9,81 +9,65 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import io.repseq.core.Chains
+import io.repseq.core.Chains.KnownChainsDeserializer
+import io.repseq.core.Chains.KnownChainsSerializer
 import io.repseq.core.Chains.NamedChains
-import java.util.*
-import java.util.Map
-import java.util.stream.Collectors
 
 /**
  * Group of samples with specific metadata properties projected onto specific chains. Common downsampling is applied for
  * all samples in the group.
  */
-public class IsolationGroup {
-    /** Chains */
-    @JsonProperty("chains")
-    @JsonSerialize(using = Chains.KnownChainsSerializer.class)
-    @JsonDeserialize(using = Chains.KnownChainsDeserializer.class)
-    final NamedChains chains;
-    /** Metadata field=value; always sorted by key */
-    @JsonProperty("groups")
-    final Map<String, Object> group;
-
-    @JsonCreator
-    public IsolationGroup(@JsonProperty("chains") NamedChains chains,
-                          @JsonProperty("groups") Map<String, Object> group) {
-        this.chains = chains;
-        this.group = group == null ? null : sortByKey(group);
+data class IsolationGroup private constructor(
+    /** Chains  */
+    @field:JsonDeserialize(using = KnownChainsDeserializer::class)
+    @field:JsonSerialize(using = KnownChainsSerializer::class)
+    @field:JsonProperty("chains")
+    val chains: NamedChains,
+    /** Metadata field=value; always sorted by key  */
+    @field:JsonProperty("groups")
+    val group: Map<String, Any>?
+) {
+    fun toString(withChains: Boolean): String {
+        val str = group?.entries?.joinToString(",") { (key, value) -> "$key=$value" } ?: ""
+        return when {
+            withChains -> "chains=${chains.name}${if (str.isEmpty()) "" else ",$str"}"
+            else -> str
+        }
     }
 
-    private static LinkedHashMap<String, Object> sortByKey(Map<String, Object> group) {
-        return group.entrySet().stream().sorted(Map.Entry.comparingByKey()).collect(Collectors.toMap(
-                Map.Entry::getKey, Map.Entry::getValue, (a, __) -> a, LinkedHashMap::new
-        ));
-    }
-
-    public String toString(boolean withChains) {
-        String str = group.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(","));
-        if (withChains)
-            return "chains=" + chains.name + (str.isEmpty() ? "" : "," + str);
-        else
-            return str;
-    }
-
-    @Override
-    public String toString() {
-        return toString(true);
-    }
+    override fun toString(): String = toString(true)
 
     /**
      * Generate file extension for specific group
      */
-    public String extension() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(".").append(chains.name);
-        for (Object v : group.values()) {
-            if (!v.toString().equalsIgnoreCase(chains.name))
-                sb.append(".").append(v);
-        }
-        return sb.toString();
+    fun extension(): String {
+        val sb = StringBuilder()
+        sb.append(".").append(chains.name)
+        group?.values
+            ?.filterNot { it.toString().equals(chains.name, ignoreCase = true) }
+            ?.forEach { sb.append(".").append(it) }
+        return sb.toString()
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        IsolationGroup that = (IsolationGroup) o;
-        return Objects.equals(chains, that.chains) && Objects.equals(group, that.group);
-    }
+    companion object {
+        private fun sortByKey(group: Map<String, Any>): Map<String, Any> = group.entries
+            .sortedBy { it.key }
+            .associateTo(LinkedHashMap()) { it.key to it.value }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(chains, group);
+        @JsonCreator
+        @JvmStatic
+        operator fun invoke(
+            @JsonProperty("chains") chains: NamedChains,
+            @JsonProperty("groups") group: Map<String, Any>?
+        ) = IsolationGroup(
+            chains,
+            if (group == null) null else sortByKey(group)
+        )
     }
 }

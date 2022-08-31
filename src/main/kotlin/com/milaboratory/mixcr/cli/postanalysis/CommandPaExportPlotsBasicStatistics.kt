@@ -9,216 +9,203 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.miplots.StandardPlots.PlotType
+import com.milaboratory.miplots.stat.util.PValueCorrection
 import com.milaboratory.miplots.stat.util.RefGroup
 import com.milaboratory.miplots.stat.util.TestMethod
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
-import com.milaboratory.miplots.stat.xdiscrete.LabelFormat
+import com.milaboratory.miplots.stat.xdiscrete.LabelFormat.Companion.Formatted
+import com.milaboratory.miplots.stat.xdiscrete.LabelFormat.Companion.Significance
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure
-import com.milaboratory.mixcr.postanalysis.plots.BasicStatRow
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics
-import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
+import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.dataFrame
+import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.parsePlotType
+import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.plots
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
-import jetbrains.letsPlot.intern.Plot
-import org.jetbrains.kotlinx.dataframe.DataFrame
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
+import picocli.CommandLine
 import java.util.*
-import java.util.function.Predicate
-import java.util.stream.Collectors
 
-public abstract class CommandPaExportPlotsBasicStatistics extends CommandPaExportPlots {
-    @Option(description = "Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +
-            "lineplot, lineplot-bindot, lineplot-jitter, " +
-            "violin, violin-bindot, barplot, barplot-stacked, " +
-            "scatter",
-            names = {"--plot-type"})
-    public String plotType;
+abstract class CommandPaExportPlotsBasicStatistics : CommandPaExportPlots() {
+    @CommandLine.Option(
+        description = ["Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +
+                "lineplot, lineplot-bindot, lineplot-jitter, " +
+                "violin, violin-bindot, barplot, barplot-stacked, scatter"],
+        names = ["--plot-type"]
+    )
+    var plotType: String? = null
 
-    @Option(description = "Primary group",
-            names = {"-p", "--primary-group"})
-    public String primaryGroup;
+    @CommandLine.Option(description = ["Primary group"], names = ["-p", "--primary-group"])
+    var primaryGroup: String? = null
 
-    @Option(description = "List of comma separated primary group values",
-            names = {"-pv", "--primary-group-values"},
-            split = ",")
-    public List<String> primaryGroupValues;
+    @CommandLine.Option(
+        description = ["List of comma separated primary group values"],
+        names = ["-pv", "--primary-group-values"],
+        split = ","
+    )
+    var primaryGroupValues: List<String>? = null
 
-    @Option(description = "Secondary group",
-            names = {"-s", "--secondary-group"})
-    public String secondaryGroup;
+    @CommandLine.Option(description = ["Secondary group"], names = ["-s", "--secondary-group"])
+    var secondaryGroup: String? = null
 
-    @Option(description = "List of comma separated secondary group values",
-            names = {"-sv", "--secondary-group-values"},
-            split = ",")
-    public List<String> secondaryGroupValues;
+    @CommandLine.Option(
+        description = ["List of comma separated secondary group values"],
+        names = ["-sv", "--secondary-group-values"],
+        split = ","
+    )
+    var secondaryGroupValues: List<String>? = null
 
-    @Option(description = "Facet by",
-            names = {"--facet-by"})
-    public String facetBy;
+    @CommandLine.Option(description = ["Facet by"], names = ["--facet-by"])
+    var facetBy: String? = null
 
-    @Option(description = "Select specific metrics to export.",
-            names = {"--metric"},
-            split = ",")
-    public List<String> metrics;
+    @CommandLine.Option(description = ["Select specific metrics to export."], names = ["--metric"], split = ",")
+    var metrics: List<String>? = null
 
-    @Option(description = "Hide overall p-value",
-            names = {"--hide-overall-p-value"})
-    public boolean hideOverallPValue;
+    @CommandLine.Option(description = ["Hide overall p-value"], names = ["--hide-overall-p-value"])
+    var hideOverallPValue = false
 
-    @Option(description = "Show pairwise p-value comparisons",
-            names = {"--pairwise-comparisons"})
-    public boolean pairwiseComparisons;
+    @CommandLine.Option(description = ["Show pairwise p-value comparisons"], names = ["--pairwise-comparisons"])
+    var pairwiseComparisons = false
 
-    @Option(description = "Reference group. Can be \"all\" or some specific value.",
-            names = {"--ref-group"})
-    public String refGroup;
+    @CommandLine.Option(
+        description = ["Reference group. Can be \"all\" or some specific value."],
+        names = ["--ref-group"],
+        paramLabel = "refGroup"
+    )
+    var refGroupParam: String? = null
 
-    @Option(description = "Hide non-significant observations",
-            names = {"--hide-non-significant"})
-    public boolean hideNS;
+    @CommandLine.Option(description = ["Hide non-significant observations"], names = ["--hide-non-significant"])
+    var hideNS = false
 
-    @Option(description = "Do paired analysis",
-            names = {"--paired"})
-    public boolean paired;
+    @CommandLine.Option(description = ["Do paired analysis"], names = ["--paired"])
+    var paired = false
 
-    @Option(description = "Test method. Default is Wilcoxon. Available methods: Wilcoxon, ANOVA, TTest, KruskalWallis, KolmogorovSmirnov",
-            names = {"--method"})
-    public String method = "Wilcoxon";
+    @CommandLine.Option(
+        description = ["Test method. Default is Wilcoxon. Available methods: Wilcoxon, ANOVA, TTest, KruskalWallis, KolmogorovSmirnov"],
+        names = ["--method"]
+    )
+    var method: String = "Wilcoxon"
 
-    @Option(description = "Test method for multiple groups comparison. Default is KruskalWallis. Available methods: ANOVA, KruskalWallis, KolmogorovSmirnov",
-            names = {"--method-multiple-groups"})
-    public String methodForMultipleGroups = "KruskalWallis";
+    @CommandLine.Option(
+        description = ["Test method for multiple groups comparison. Default is KruskalWallis. Available methods: ANOVA, KruskalWallis, KolmogorovSmirnov"],
+        names = ["--method-multiple-groups"]
+    )
+    var methodForMultipleGroups: String = "KruskalWallis"
 
-    @Option(description = "Method used to adjust p-values. Default is Holm. Available methods: none, BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm, Hommel",
-            names = {"--p-adjust-method"})
-    public String pAdjustMethod = "Holm";
+    @CommandLine.Option(
+        description = ["Method used to adjust p-values. Default is Holm. Available methods: none, BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm, Hommel"],
+        names = ["--p-adjust-method"]
+    )
+    var pAdjustMethod: String = "Holm"
 
-    @Option(description = "Show significance level instead of p-values",
-            names = {"--show-significance"})
-    public boolean showSignificance;
+    @CommandLine.Option(description = ["Show significance level instead of p-values"], names = ["--show-significance"])
+    var showSignificance = false
 
-    abstract String group();
+    abstract fun group(): String
 
-    abstract Predicate<String> metricsFilter();
+    abstract fun metricsFilter(): (String) -> Boolean
 
-    @Override
-    public void validate() {
-        super.validate();
-        if (!out.endsWith("pdf") && (metrics == null || metrics.isEmpty()))
-            throwValidationException("For export in " + out.substring(out.length() - 3).toUpperCase() + "" +
-                    "Use --metrics option to specify only one metric to export. Or use PDF format for export.");
-    }
-
-    @Override
-    void run(PaResultByGroup result) {
-        CharacteristicGroup<Clone, ?> ch = result.schema.getGroup(group());
-        PostanalysisResult paResult = result.result.forGroup(ch);
-        DataFrame<?> metadata = metadata();
-        Predicate<String> mf = metricsFilter();
-        DataFrame<BasicStatRow> df = BasicStatistics.INSTANCE.dataFrame(
-                paResult,
-                mf::test,
-                metadata
-        );
-
-        df = filter(df);
-        if (df.rowsCount() == 0)
-            return;
-
-        RefGroup rg = null;
-        if (Objects.equals(refGroup, "all"))
-            rg = RefGroup.Companion.getAll();
-        else if (refGroup != null)
-            rg = RefGroup.Companion.of(refGroup);
-
-        PlotType plotType = BasicStatistics.INSTANCE.parsePlotType(this.plotType);
-
-        LabelFormat labelFormat = showSignificance
-                ? LabelFormat.Companion.getSignificance()
-                : new LabelFormat.Companion.Formatted();
-
-        BasicStatistics.PlotParameters par = new BasicStatistics.PlotParameters(
-                plotType,
-                primaryGroup,
-                secondaryGroup,
-                primaryGroupValues,
-                secondaryGroupValues,
-                facetBy,
-                !hideOverallPValue,
-                pairwiseComparisons,
-                rg,
-                hideNS,
-                null,
-                labelFormat,
-                labelFormat,
-                paired,
-                TestMethod.valueOf(method),
-                TestMethod.valueOf(methodForMultipleGroups),
-                pAdjustMethod.equals("none") ? null : PValueCorrection.Method.valueOf(pAdjustMethod),
-                CorrelationMethod.Pearson
-        );
-
-        List<Plot> plots = BasicStatistics.INSTANCE.plots(df, par);
-        writePlots(result.group, plots);
-    }
-
-    @Command(name = "cdr3metrics",
-            sortOptions = false,
-            separator = " ",
-            description = "Export CDR3 metrics")
-    public static class ExportCDR3Metrics extends CommandPaExportPlotsBasicStatistics {
-        @Override
-        String group() {
-            return PostanalysisParametersIndividual.CDR3Metrics;
+    override fun validate() {
+        super.validate()
+        if (!out.endsWith("pdf") && metrics.isNullOrEmpty()) {
+            val ext = out.takeLast(3).uppercase(Locale.getDefault())
+            throwValidationExceptionKotlin(
+                "For export in $ext Use --metrics option to specify only one metric to export. Or use PDF format for export."
+            )
         }
+    }
 
-        @Override
-        Predicate<String> metricsFilter() {
-            if (metrics == null || metrics.isEmpty())
-                return t -> true;
-            HashSet<String> set = new HashSet<>(Arrays.asList(PostanalysisParametersIndividual.SUPPORTED_CDR3_METRICS));
-            for (String m : metrics) {
-                if (!set.contains(m.toLowerCase()))
-                    throw new IllegalArgumentException("Unknown metric: " + m);
+    override fun run(result: PaResultByGroup) {
+        val ch = result.schema.getGroup<Clone>(group())
+        val dataFrame = dataFrame(result.result.forGroup(ch), metadataDf, metricsFilter())
+            .filterByMetadata()
+        if (dataFrame.rowsCount() == 0) return
+        val refGroup: RefGroup? = when {
+            refGroupParam == "all" -> RefGroup.all
+            refGroupParam != null -> RefGroup.of(refGroupParam!!)
+            else -> null
+        }
+        val plotType = parsePlotType(plotType)
+        val labelFormat = if (showSignificance) Significance else Formatted()
+        val par = BasicStatistics.PlotParameters(
+            plotType,
+            primaryGroup,
+            secondaryGroup,
+            primaryGroupValues,
+            secondaryGroupValues,
+            facetBy,
+            !hideOverallPValue,
+            pairwiseComparisons,
+            refGroup,
+            hideNS,
+            null,
+            labelFormat,
+            labelFormat,
+            paired,
+            TestMethod.valueOf(method),
+            TestMethod.valueOf(methodForMultipleGroups),
+            if (pAdjustMethod == "none") null else PValueCorrection.Method.valueOf(pAdjustMethod),
+            CorrelationMethod.Pearson
+        )
+        val plots = plots(dataFrame, par)
+        writePlots(result.group, plots)
+    }
+
+    @CommandLine.Command(
+        name = "cdr3metrics",
+        sortOptions = false,
+        separator = " ",
+        description = ["Export CDR3 metrics"]
+    )
+    class ExportCDR3Metrics : CommandPaExportPlotsBasicStatistics() {
+        override fun group(): String = PostanalysisParametersIndividual.CDR3Metrics
+
+        override fun metricsFilter(): (String) -> Boolean {
+            val metrics = metrics
+            if (metrics.isNullOrEmpty()) return { true }
+            val set = setOf(*PostanalysisParametersIndividual.SUPPORTED_CDR3_METRICS)
+            metrics.forEach {
+                require(it.lowercase(Locale.getDefault()) in set) { "Unknown metric: $it" }
             }
-            return new HashSet<>(metrics)::contains;
+            val metricsAsSet = metrics.toSet()
+            return { it in metricsAsSet }
         }
     }
 
-    @Command(name = "diversity",
-            sortOptions = false,
-            separator = " ",
-            description = "Export diversity metrics")
-    public static class ExportDiversity extends CommandPaExportPlotsBasicStatistics {
-        @Override
-        String group() {
-            return PostanalysisParametersIndividual.Diversity;
-        }
+    @CommandLine.Command(
+        name = "diversity",
+        sortOptions = false,
+        separator = " ",
+        description = ["Export diversity metrics"]
+    )
+    class ExportDiversity : CommandPaExportPlotsBasicStatistics() {
+        override fun group(): String = PostanalysisParametersIndividual.Diversity
 
-        @Override
-        Predicate<String> metricsFilter() {
-            if (metrics == null || metrics.isEmpty())
-                return t -> true;
-            HashMap<String, String> map = new HashMap<String, String>() {{
-                put("chao1".toLowerCase(), DiversityMeasure.Chao1.name);
-                put("efronThisted".toLowerCase(), DiversityMeasure.EfronThisted.name);
-                put("inverseSimpsonIndex".toLowerCase(), DiversityMeasure.InverseSimpsonIndex.name);
-                put("giniIndex".toLowerCase(), DiversityMeasure.GiniIndex.name);
-                put("observed".toLowerCase(), DiversityMeasure.Observed.name);
-                put("shannonWiener".toLowerCase(), DiversityMeasure.ShannonWiener.name);
-                put("normalizedShannonWienerIndex".toLowerCase(), DiversityMeasure.NormalizedShannonWienerIndex.name);
-                put("d50", "d50");
-            }};
-            for (String m : metrics) {
-                if (!map.containsKey(m.toLowerCase()))
-                    throw new IllegalArgumentException("Unknown metric: " + m);
+        override fun metricsFilter(): (String) -> Boolean {
+            val metrics = metrics
+            if (metrics.isNullOrEmpty()) return { true }
+            val map = buildMap {
+                put("chao1".lowercase(Locale.getDefault()), DiversityMeasure.Chao1.name)
+                put("efronThisted".lowercase(Locale.getDefault()), DiversityMeasure.EfronThisted.name)
+                put("inverseSimpsonIndex".lowercase(Locale.getDefault()), DiversityMeasure.InverseSimpsonIndex.name)
+                put("giniIndex".lowercase(Locale.getDefault()), DiversityMeasure.GiniIndex.name)
+                put("observed".lowercase(Locale.getDefault()), DiversityMeasure.Observed.name)
+                put("shannonWiener".lowercase(Locale.getDefault()), DiversityMeasure.ShannonWiener.name)
+                put(
+                    "normalizedShannonWienerIndex".lowercase(Locale.getDefault()),
+                    DiversityMeasure.NormalizedShannonWienerIndex.name
+                )
+                put("d50", "d50")
             }
-            return metrics.stream().map(String::toLowerCase).map(map::get).collect(Collectors.toSet())::contains;
+            for (m in metrics) {
+                require(m.lowercase(Locale.getDefault()) in map) { "Unknown metric: $m" }
+            }
+            val metricsAsSet = metrics
+                .map { it.lowercase(Locale.getDefault()) }
+                .map { key -> map[key] }
+                .toSet()
+            return { it in metricsAsSet }
         }
     }
 }

@@ -9,13 +9,18 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.util.GlobalObjectMappers
-import java.io.*
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
@@ -23,59 +28,39 @@ import java.util.zip.GZIPOutputStream
  * PA results (written to disk)
  */
 @JsonAutoDetect
-public final class PaResult {
-    /** Metadata. Null if was not specified */
-    @JsonProperty("metadata")
-    public final Map<String, List<Object>> metadata;
-    /** Metadata categories used to isolate samples into groups */
-    @JsonProperty("isolatedGroups")
-    public final List<String> isolationGroups;
-    /** Results for groups */
-    @JsonProperty("results")
-    public final List<PaResultByGroup> results;
-
-    @JsonCreator
-    public PaResult(@JsonProperty("metadata") Map<String, List<Object>> metadata,
-                    @JsonProperty("isolationGroups") List<String> isolationGroups,
-                    @JsonProperty("results") List<PaResultByGroup> results) {
-        this.metadata = metadata;
-        this.isolationGroups = isolationGroups;
-        this.results = results;
+class PaResult @JsonCreator constructor(
+    /** Metadata. Null if was not specified  */
+    @param:JsonProperty("metadata") val metadata: Map<String, List<Any>>?,
+    /** Metadata categories used to isolate samples into groups  */
+    @param:JsonProperty("isolationGroups") val isolationGroups: List<String>,
+    /** Results for groups  */
+    @param:JsonProperty("results") val results: List<PaResultByGroup>
+) {
+    fun writeJson(path: Path) {
+        when {
+            path.fileName.toString().endsWith(".json") ->
+                GlobalObjectMappers.getPretty().writeValue(path.toFile(), this)
+            path.fileName.toString().endsWith(".json.gz") ->
+                FileOutputStream(path.toFile()).use { fs ->
+                    GZIPOutputStream(BufferedOutputStream(fs)).use { zs ->
+                        GlobalObjectMappers.getOneLine().writeValue(zs, this)
+                    }
+                }
+            else -> throw IllegalArgumentException("path should ends with .json.gz or .json but was $path")
+        }
     }
 
-    public static void writeJson(Path path, PaResult paResult) {
-        if (path.getFileName().toString().endsWith(".json")) {
-            try {
-                GlobalObjectMappers.getPretty().writeValue(path.toFile(), paResult);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else if (path.getFileName().toString().endsWith(".json.gz")) {
-            try (FileOutputStream fs = new FileOutputStream(path.toFile());
-                 GZIPOutputStream zs = new GZIPOutputStream(new BufferedOutputStream(fs))) {
-                GlobalObjectMappers.getOneLine().writeValue(zs, paResult);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else
-            throw new IllegalArgumentException("path should ends with .json.gz or .json but was " + path);
-    }
-
-    public static PaResult readJson(Path path) {
-        if (path.getFileName().toString().endsWith(".json")) {
-            try {
-                return GlobalObjectMappers.getPretty().readValue(path.toFile(), PaResult.class);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else if (path.getFileName().toString().endsWith(".json.gz"))
-            try (FileInputStream fs = new FileInputStream(path.toFile());
-                 GZIPInputStream zs = new GZIPInputStream(new BufferedInputStream(fs))) {
-                return GlobalObjectMappers.getOneLine().readValue(zs, PaResult.class);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        else
-            throw new IllegalArgumentException("path should ends with .json.gz or .json");
+    companion object {
+        fun readJson(path: Path): PaResult = when {
+            path.fileName.toString().endsWith(".json") ->
+                GlobalObjectMappers.getPretty().readValue(path.toFile())
+            path.fileName.toString().endsWith(".json.gz") ->
+                FileInputStream(path.toFile()).use { fs ->
+                    GZIPInputStream(BufferedInputStream(fs)).use { zs ->
+                        GlobalObjectMappers.getOneLine().readValue(zs)
+                    }
+                }
+            else -> throw IllegalArgumentException("path should ends with .json.gz or .json")
+        }
     }
 }

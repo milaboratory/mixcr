@@ -9,28 +9,27 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary;
-import picocli.CommandLine.Command;
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
+import picocli.CommandLine
 
-@Command(name = "exportPreprocTables",
-        sortOptions = false,
-        separator = " ",
-        description = "Export preprocessing summary tables.")
-public final class CommandPaExportTablesPreprocSummary extends CommandPaExportTablesBase {
-    public CommandPaExportTablesPreprocSummary() {}
+@CommandLine.Command(
+    name = "exportPreprocTables",
+    sortOptions = false,
+    separator = " ",
+    description = ["Export preprocessing summary tables."]
+)
+class CommandPaExportTablesPreprocSummary : CommandPaExportTablesBase {
+    constructor()
+    constructor(paResult: PaResult, out: String) : super(paResult, out) {}
 
-    public CommandPaExportTablesPreprocSummary(PaResult paResult, String out) {
-        super(paResult, out);
-    }
-
-    @Override
-    void run1(PaResultByGroup result) {
+    override fun run1(result: PaResultByGroup) {
         SetPreprocessorSummary.byCharToCSV(
-                outDir().resolve(outPrefix() + outExtension(result.group)),
-                result.schema,
-                result.result,
-                separator());
+            outDir().resolve(outPrefix() + outExtension(result.group)),
+            result.schema,
+            result.result,
+            separator()
+        )
     }
 }

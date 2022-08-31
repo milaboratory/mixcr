@@ -9,32 +9,32 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import picocli.CommandLine.Command
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult
+import picocli.CommandLine
 
-@Command(name = "exportTables",
-        sortOptions = false,
-        separator = " ",
-        description = "CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap")
-public final class CommandPaExportTables extends CommandPaExportTablesBase {
-    public CommandPaExportTables() {}
+@CommandLine.Command(
+    name = "exportTables",
+    sortOptions = false,
+    separator = " ",
+    description = ["CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap"]
+)
+class CommandPaExportTables : CommandPaExportTablesBase {
+    constructor()
+    constructor(paResult: PaResult, out: String) : super(paResult, out) {}
 
-    public CommandPaExportTables(PaResult paResult, String out) {
-        super(paResult, out);
-    }
-
-    @Override
-    void run1(PaResultByGroup result) {
-        for (CharacteristicGroup<?, ?> table : result.schema.tables) {
-            writeTables(outExtension(result.group), result.result.getTable(table));
+    override fun run1(result: PaResultByGroup) {
+        for (table in result.schema.tables) {
+            writeTables(outExtension(result.group), result.result.getTable(table))
         }
     }
 
-    <K> void writeTables(String extension, CharacteristicGroupResult<K> tableResult) {
-        for (CharacteristicGroupOutputExtractor<K> view : tableResult.group.views)
-            for (OutputTable t : view.getTables(tableResult).values()) {
-                t.writeCSV(outDir(), outPrefix() + ".", separator(), extension);
+    private fun <K> writeTables(extension: String, tableResult: CharacteristicGroupResult<K>) {
+        for (view in tableResult.group.views) {
+            for (table in view.getTables(tableResult).values) {
+                table.writeCSV(outDir(), outPrefix() + ".", separator(), extension)
             }
+        }
     }
 }

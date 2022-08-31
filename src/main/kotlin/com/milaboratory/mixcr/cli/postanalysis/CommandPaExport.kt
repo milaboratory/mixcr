@@ -9,62 +9,58 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
 
+package com.milaboratory.mixcr.cli.postanalysis
+
+import com.milaboratory.mixcr.cli.MiXCRCommand
 import io.repseq.core.Chains
-import io.repseq.core.Chains.NamedChains
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine
 import java.nio.file.Paths
-import java.util.*
-import java.util.List
-import java.util.Set
-import java.util.stream.Collectors
 
 /**
  *
  */
-public abstract class CommandPaExport extends MiXCRCommand {
-    @Parameters(description = "Input file with postanalysis results.", index = "0", defaultValue = "pa.json.gz")
-    public String in;
-    @Option(description = "Export for specific chains only",
-            names = {"--chains"})
-    public List<String> chains;
-    /** Cached PA result */
-    private PaResult paResult = null;
+abstract class CommandPaExport : MiXCRCommand {
+    @CommandLine.Parameters(
+        description = ["Input file with postanalysis results."],
+        index = "0",
+        defaultValue = "pa.json.gz"
+    )
+    lateinit var `in`: String
 
-    public CommandPaExport() {}
+    @CommandLine.Option(description = ["Export for specific chains only"], names = ["--chains"])
+    var chains: List<String>? = null
 
-    /** Constructor used to export tables from code */
-    CommandPaExport(PaResult paResult) {
-        this.paResult = paResult;
+    private val parsedPaResultFromInput: PaResult by lazy {
+        PaResult.readJson(Paths.get(`in`).toAbsolutePath())
     }
 
-    @Override
-    protected List<String> getInputFiles() {
-        return Collections.singletonList(in);
+    private val paResultFromConstructor: PaResult?
+
+    constructor() {
+        paResultFromConstructor = null
     }
+
+    /** Constructor used to export tables from code  */
+    internal constructor(paResult: PaResult) {
+        this.paResultFromConstructor = paResult
+    }
+
+    override fun getInputFiles(): List<String> = listOf(`in`)
 
     /**
      * Get full PA result
      */
-    protected PaResult getPaResult() {
-        if (paResult != null)
-            return paResult;
-        return paResult = PaResult.readJson(Paths.get(in).toAbsolutePath());
-    }
+    protected fun getPaResult(): PaResult = paResultFromConstructor ?: parsedPaResultFromInput
 
-    @Override
-    public void run0() throws Exception {
-        Set<NamedChains> set = chains == null
-                ? null
-                : chains.stream().map(Chains::getNamedChains).collect(Collectors.toSet());
-
-        for (PaResultByGroup r : getPaResult().results) {
-            if (set == null || set.stream().anyMatch(c -> c.chains.intersects(r.group.chains.chains)))
-                run(r);
+    override fun run0() {
+        val set = chains?.map { name: String -> Chains.getNamedChains(name) }?.toSet()
+        for (r in getPaResult().results) {
+            if (set == null || set.any { c -> c.chains.intersects(r.group.chains.chains) }) {
+                run(r)
+            }
         }
     }
 
-    abstract void run(PaResultByGroup result);
+    abstract fun run(result: PaResultByGroup)
 }

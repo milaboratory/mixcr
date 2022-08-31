@@ -238,7 +238,7 @@ abstract class CommandPa : MiXCRCommand() {
         }
         val result = PaResult(metadata, isolationGroups, results)
         Files.createDirectories(outputPath().parent)
-        PaResult.writeJson(outputPath(), result)
+        result.writeJson(outputPath())
 
         // export tables & preprocessing summary
         CommandPaExportTables(result, tablesOut()).run0()
@@ -246,7 +246,7 @@ abstract class CommandPa : MiXCRCommand() {
     }
 
     private fun run0(group: IsolationGroup, samples: List<String>): PaResultByGroup {
-        println("Running for " + group.toString(chainsColumn() == null))
+        println("Running for ${group.toString(chainsColumn() == null)}")
         return run(group, samples)
     }
 

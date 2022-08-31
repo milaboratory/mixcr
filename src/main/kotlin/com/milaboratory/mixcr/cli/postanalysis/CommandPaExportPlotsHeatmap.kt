@@ -9,27 +9,31 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.miplots.color.Palettes;
-import com.milaboratory.miplots.color.UniversalPalette;
-import picocli.CommandLine.Option;
+import com.milaboratory.miplots.color.Palettes.parse
+import com.milaboratory.miplots.color.UniversalPalette
+import picocli.CommandLine
 
-public abstract class CommandPaExportPlotsHeatmap extends CommandPaExportPlots {
-    @Option(description = "Width of horizontal labels. One unit corresponds to the width of one tile.",
-            names = {"--h-labels-size"})
-    public double hLabelsSize = -1.0;
+abstract class CommandPaExportPlotsHeatmap : CommandPaExportPlots() {
+    @CommandLine.Option(
+        description = ["Width of horizontal labels. One unit corresponds to the width of one tile."],
+        names = ["--h-labels-size"]
+    )
+    var hLabelsSize = -1.0
 
-    @Option(description = "Height of vertical labels. One unit corresponds to the height of one tile.",
-            names = {"--v-labels-size"})
-    public double vLabelsSize = -1.0;
+    @CommandLine.Option(
+        description = ["Height of vertical labels. One unit corresponds to the height of one tile."],
+        names = ["--v-labels-size"]
+    )
+    var vLabelsSize = -1.0
 
-    @Option(description = "Color palette for heatmap. Available names: diverging, viridis2magma, lime2rose, " +
-            "blue2red, teal2red, softSpectral, sequential, viridis, magma, sunset, rainbow, salinity, density. Default is density.",
-            names = {"--palette"})
-    public String palette = "density";
+    @CommandLine.Option(
+        description = ["Color palette for heatmap. Available names: diverging, viridis2magma, lime2rose, " +
+                "blue2red, teal2red, softSpectral, sequential, viridis, magma, sunset, rainbow, salinity, density. Default is density."],
+        names = ["--palette"]
+    )
+    var palette = "density"
 
-    UniversalPalette parsePallete(){
-        return Palettes.parse(palette);
-    }
+    fun parsePallete(): UniversalPalette = parse(palette)
 }

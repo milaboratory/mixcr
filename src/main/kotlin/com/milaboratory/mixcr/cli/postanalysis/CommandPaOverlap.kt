@@ -56,11 +56,13 @@ class CommandPaOverlap : CommandPa() {
     }
 
     private fun overlapDataset(group: IsolationGroup, samples: List<String>): OverlapDataset<Clone> =
-        if (factoryBy.isEmpty()) OverlapUtil.overlap(
-            samples,
-            IncludeChains(group.chains.chains),
-            OverlapUtil.parseCriteria(overlapCriteria).ordering()
-        ) else {
+        if (factoryBy.isEmpty()) {
+            OverlapUtil.overlap(
+                samples,
+                IncludeChains(group.chains.chains),
+                OverlapUtil.parseCriteria(overlapCriteria).ordering()
+            )
+        } else {
             val metadata = metadata!!
             val mSamples: List<String> = metadata["sample"]!!.map { it as String }
 

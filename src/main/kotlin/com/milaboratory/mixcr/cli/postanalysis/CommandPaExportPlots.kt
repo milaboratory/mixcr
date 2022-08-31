@@ -9,144 +9,118 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis;
+package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.miplots.ExportKt
-import com.milaboratory.miplots.ExportType
+import com.milaboratory.miplots.ExportType.Companion.determine
+import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.postanalysis.plots.MetadataKt
+import com.milaboratory.mixcr.postanalysis.plots.parseFilter
+import com.milaboratory.mixcr.postanalysis.plots.readMetadata
 import com.milaboratory.util.StringUtil
+import jetbrains.letsPlot.intern.Plot
 import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.api.ToDataFrameKt
+import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import picocli.CommandLine
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
-import static
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
-import java.util.List
-import java.util.Map
 
-java.util.stream.Collectors.toList;
+@CommandLine.Command(name = "exportPlots", separator = " ", description = ["Export postanalysis plots."])
+abstract class CommandPaExportPlots : CommandPaExport() {
+    @CommandLine.Option(description = [CommonDescriptions.METADATA], names = ["--metadata"])
+    var metadata: String? = null
 
-@Command(
-    name = "exportPlots",
-    separator = " ",
-    description = "Export postanalysis plots."
-)
-public abstract class CommandPaExportPlots extends CommandPaExport {
-    @Option(description = CommonDescriptions.METADATA,
-        names = { "--metadata" })
-    public String metadata;
+    @CommandLine.Option(description = ["Plot width"], names = ["--width"])
+    var width = 0
 
-    @Option(
-        description = "Plot width",
-            names = {"--width"})
-    public int width = 0;
+    @CommandLine.Option(description = ["Plot height"], names = ["--height"])
+    var height = 0
 
-    @Option(description = "Plot height",
-            names = {"--height"})
-    public int height = 0;
+    @CommandLine.Option(
+        description = ["Filter by metadata. Possible filters column=value, column>=value etc."],
+        names = ["--filter"],
+        split = ","
+    )
+    var filterByMetadata: List<String>? = null
 
-    @Option(description = "Filter by metadata. Possible filters column=value, column>=value etc.",
-            names = {"--filter"},
-            split = ",")
-    public List<String> filterByMetadata;
+    @CommandLine.Parameters(description = ["Output PDF/EPS/PNG/JPEG file name"], index = "1", defaultValue = "plot.pdf")
+    lateinit var out: String
 
-    @Parameters(description = "Output PDF/EPS/PNG/JPEG file name", index = "1", defaultValue = "plot.pdf")
-    public String out;
+    override fun getOutputFiles(): List<String> = emptyList() // output will be always overriden
 
-    @Override
-    protected List<String> getOutputFiles() {
-        return Collections.emptyList(); // output will be always overriden
+    protected fun <T> DataFrame<T>.filterByMetadata(): DataFrame<T> {
+        var result = this
+        filterByMetadata?.let { filterByMetadata ->
+            for (f in filterByMetadata.map { f -> metadataDf!!.parseFilter(f) }) {
+                result = f.apply(result)
+            }
+        }
+        return result
     }
 
-    protected <T> DataFrame<T> filter(DataFrame<T> df) {
-        if (filterByMetadata != null)
-            for (Filter f : filterByMetadata.stream().map(f -> MetadataKt.parseFilter(metadata(), f)).collect(Collectors.toList()))
-                df = f.apply(df);
-        return df;
+    /** Get metadata from file  */
+    protected val metadataDf: DataFrame<*>? by lazy {
+        when {
+            metadata != null -> readMetadata(metadata)
+            else -> getPaResult().metadata?.toDataFrame()
+        }
     }
 
-    private DataFrame<?> metadataDf;
-
-    /** Get metadata from file */
-    protected DataFrame<?> metadata() {
-        if (metadataDf != null)
-            return metadataDf;
-        if (metadata != null)
-            return metadataDf = MetadataKt.readMetadata(metadata);
-        if (getPaResult().metadata != null)
-            return metadataDf = ToDataFrameKt.toDataFrame(getPaResult().metadata);
-        return null;
-    }
-
-    @Override
-    public void validate() {
-        super.validate();
+    override fun validate() {
+        super.validate()
         try {
-            ExportType.determine(Paths.get(out));
-        } catch (Exception e) {
-            throwValidationException("Unsupported file extension (possible: pdf, eps, svg, png): " + out);
+            determine(Paths.get(out))
+        } catch (e: Exception) {
+            throwValidationExceptionKotlin("Unsupported file extension (possible: pdf, eps, svg, png): $out")
         }
-        if (metadata != null && !metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
-            throwValidationException("Metadata should be .csv or .tsv");
-        if (metadata != null) {
-            if (!metadata().containsColumn("sample"))
-                throwValidationException("Metadata must contain 'sample' column");
-            List<String> samples = getInputFiles();
-            @SuppressWarnings("unchecked")
-            Map<String, String> mapping = StringUtil.matchLists(
-                    samples,
-                    ((List<Object>) metadata().get("sample").toList())
-                            .stream().map(Object::toString).collect(toList())
-            );
-            if (mapping.size() < samples.size() || mapping.values().stream().anyMatch(Objects::isNull))
-                throwValidationException("Metadata samples does not match input file names.");
+        metadata?.let { metadata ->
+            if (!metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
+                throwValidationExceptionKotlin("Metadata should be .csv or .tsv")
+
+            if (!metadataDf!!.containsColumn("sample"))
+                throwValidationExceptionKotlin("Metadata must contain 'sample' column")
+            val samples = inputFiles
+            val mapping = StringUtil.matchLists(
+                samples,
+                metadataDf!!["sample"].toList().map { it!!.toString() }
+            )
+            if (mapping.size < samples.size || mapping.values.any { it == null })
+                throwValidationExceptionKotlin("Metadata samples does not match input file names.")
         }
-        if (filterByMetadata != null && metadata() == null)
-            throwValidationException("Filter is specified by metadata is not.");
+        if (filterByMetadata != null && metadataDf == null)
+            throwValidationExceptionKotlin("Filter is specified by metadata is not.")
     }
 
-    String plotDestStr(IsolationGroup group) {
-        String ext = out.substring(out.length() - 4);
-        return out.substring(0, out.length() - 4) + group.extension() + ext;
+    private fun plotDestStr(group: IsolationGroup): String {
+        val ext = out.takeLast(4)
+        val withoutExt = out.dropLast(4)
+        return withoutExt + group.extension() + ext
     }
 
-    Path plotDestPath(IsolationGroup group) {
-        return Paths.get(plotDestStr(group));
+    private fun plotDestPath(group: IsolationGroup): Path = Paths.get(plotDestStr(group))
+
+    private fun ensureOutputPathExists() {
+        Files.createDirectories(Paths.get(out).toAbsolutePath().parent)
     }
 
-    protected void ensureOutputPathExists() {
-        try {
-            Files.createDirectories(Paths.get(out).toAbsolutePath().getParent());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    //    void writePlotsAndSummary(IsolationGroup group, List<byte[]> plots) {
+    //        ensureOutputPathExists();
+    //        ExportKt.writePDF(plotDestPath(group), plots);
+    //    }
+    fun writePlots(group: IsolationGroup, plots: List<Plot>) {
+        ensureOutputPathExists()
+        writeFile(plotDestPath(group), plots)
     }
 
-//    void writePlotsAndSummary(IsolationGroup group, List<byte[]> plots) {
-//        ensureOutputPathExists();
-//        ExportKt.writePDF(plotDestPath(group), plots);
-//    }
-
-    void writePlots(IsolationGroup group, List<Plot> plots) {
-        ensureOutputPathExists();
-        ExportKt.writeFile(plotDestPath(group), plots);
+    fun writePlots(group: IsolationGroup?, plot: Plot) {
+        writePlots(group!!, listOf(plot))
     }
 
-    void writePlots(IsolationGroup group, Plot plot) {
-        writePlots(group, Collections.singletonList(plot));
-    }
-
-    @Command(name = "exportPlots",
-            separator = " ",
-            description = "Export postanalysis plots.",
-            subcommands = {
-                    CommandLine.HelpCommand.class
-            })
-    public static class CommandExportPlotsMain {}
+    @CommandLine.Command(
+        name = "exportPlots",
+        separator = " ",
+        description = ["Export postanalysis plots."],
+        subcommands = [CommandLine.HelpCommand::class]
+    )
+    class CommandExportPlotsMain
 }
