@@ -29,6 +29,8 @@ import io.repseq.core.Chains.NamedChains
 import picocli.CommandLine
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.extension
+import kotlin.io.path.nameWithoutExtension
 
 @CommandLine.Command(name = "overlapScatterPlot", separator = " ", description = ["Plot overlap scatter-plot."])
 class CommandOverlapScatter : MiXCRCommand() {
@@ -68,10 +70,10 @@ class CommandOverlapScatter : MiXCRCommand() {
 
     private fun outputPath(chains: NamedChains): Path {
         if (chains == Chains.ALL_NAMED) return Paths.get(out)
-        val fName = fName(out)
-        val fileNameWithoutExtension = fName.substring(0, fName.length - 3)
+        val fname = fName(out)
+        val fext = fExt(out)
         return Paths.get(out).toAbsolutePath().parent.resolve(
-            "$fileNameWithoutExtension${chains.name}.pdf"
+            "$fname.${chains.name}.$fext"
         )
     }
 
@@ -107,5 +109,6 @@ class CommandOverlapScatter : MiXCRCommand() {
         }
     }
 
-    private fun fName(file: String): String = Paths.get(file).toAbsolutePath().fileName.toString()
+    private fun fName(file: String): String = Paths.get(file).toAbsolutePath().nameWithoutExtension
+    private fun fExt(file: String): String = Paths.get(file).toAbsolutePath().extension
 }
