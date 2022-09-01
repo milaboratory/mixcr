@@ -20,11 +20,21 @@ import gnu.trove.map.hash.TIntLongHashMap
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.ReferencePoint.*
+import io.repseq.core.ReferencePoint.CDR1Begin
+import io.repseq.core.ReferencePoint.CDR2Begin
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.FR1Begin
+import io.repseq.core.ReferencePoint.FR2Begin
+import io.repseq.core.ReferencePoint.FR3Begin
+import io.repseq.core.ReferencePoint.FR4Begin
+import io.repseq.core.ReferencePoint.FR4End
 import io.repseq.core.RelativePointSide
-import jetbrains.letsPlot.*
+import jetbrains.letsPlot.elementBlank
+import jetbrains.letsPlot.elementLine
+import jetbrains.letsPlot.elementRect
 import jetbrains.letsPlot.geom.geomLine
 import jetbrains.letsPlot.geom.geomPoint
+import jetbrains.letsPlot.ggplot
 import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.xlab
@@ -34,6 +44,7 @@ import jetbrains.letsPlot.scale.scaleColorManual
 import jetbrains.letsPlot.scale.scaleXContinuous
 import jetbrains.letsPlot.scale.scaleXReverse
 import jetbrains.letsPlot.scale.scaleYContinuous
+import jetbrains.letsPlot.theme
 import java.nio.file.Path
 import java.util.*
 import kotlin.math.max
@@ -359,7 +370,7 @@ object Coverage {
     fun coveragePlot(
         vdjca: Path,
         showAlignmentsBoundaries: Boolean = false
-    ) = run {
+    ): List<Plot> = run {
         val r1 = TargetCoverage(Target.R1, showAlignmentsBoundaries)
         val r2 = TargetCoverage(Target.R2, showAlignmentsBoundaries)
         val overlap = TargetCoverage(Target.Overlap, showAlignmentsBoundaries)

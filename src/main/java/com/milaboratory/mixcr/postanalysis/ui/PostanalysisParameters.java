@@ -90,12 +90,12 @@ public abstract class PostanalysisParameters {
             return parseWeightFunction(this.weightFunction == null ? parent.defaultWeightFunction : this.weightFunction, tagsInfo);
         }
 
-        public SetPreprocessorFactory<Clone> preproc(Chains chains) {
-            return getDownsamplingParameters().getPreproc(chains);
+        public SetPreprocessorFactory<Clone> preprocessor(Chains chains) {
+            return getDownsamplingParameters().getPreprocessor(chains);
         }
 
         PreprocessorAndWeight<Clone> pwTuple(Chains chains) {
-            return new PreprocessorAndWeight<>(preproc(chains), weightFunction());
+            return new PreprocessorAndWeight<>(preprocessor(chains), weightFunction());
         }
 
         OverlapPreprocessorAndWeight<Clone> opwTuple(Chains chains) {
@@ -103,7 +103,7 @@ public abstract class PostanalysisParameters {
         }
 
         public SetPreprocessorFactory<OverlapGroup<Clone>> overlapPreproc(Chains chains) {
-            return new OverlapPreprocessorAdapter.Factory<>(preproc(chains));
+            return new OverlapPreprocessorAdapter.Factory<>(preprocessor(chains));
         }
 
         @Override

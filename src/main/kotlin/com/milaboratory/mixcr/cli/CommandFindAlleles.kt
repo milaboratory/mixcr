@@ -35,7 +35,7 @@ import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDelete
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.toList
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
@@ -85,7 +85,7 @@ class CommandFindAlleles : MiXCRCommand() {
             "Resulted outputs must be uniq"
         ]
     )
-    private val inOut: List<String> = ArrayList()
+    private val inOut: List<String> = mutableListOf()
 
     @CommandLine.Option(
         description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
@@ -94,9 +94,9 @@ class CommandFindAlleles : MiXCRCommand() {
     var useSystemTemp = false
 
     private val outputClnsFiles: List<String> by lazy {
-        val template = inOut[inOut.size - 1]
+        val template = inOut.last()
         if (!template.endsWith(".clns")) {
-            throwValidationException("Wrong template: command produces only clns $template")
+            throwValidationExceptionKotlin("Wrong template: command produces only clns $template")
         }
         val clnsFiles = inputFiles
             .map { Paths.get(it).toAbsolutePath() }
@@ -107,7 +107,7 @@ class CommandFindAlleles : MiXCRCommand() {
             }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
-            throwValidationException("Output clns files are not uniq: $clnsFiles")
+            throwValidationExceptionKotlin("Output clns files are not uniq: $clnsFiles")
         }
         clnsFiles
     }
@@ -122,7 +122,7 @@ class CommandFindAlleles : MiXCRCommand() {
     @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationException("-t / --threads must be positive")
+            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
             field = value
         }
 
@@ -149,7 +149,7 @@ class CommandFindAlleles : MiXCRCommand() {
     lateinit var findAllelesParametersName: String
 
     @CommandLine.Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
-    var overrides: Map<String, String> = HashMap()
+    var overrides: Map<String, String> = mutableMapOf()
 
     private val tempDest: TempFileDest by lazy {
         if (!useSystemTemp) {
@@ -159,24 +159,25 @@ class CommandFindAlleles : MiXCRCommand() {
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
-        var result = FindAllelesParameters.presets.getByName(findAllelesParametersName)
-        if (result == null) throwValidationException("Unknown parameters: $findAllelesParametersName")
+        var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
+            ?: throwValidationExceptionKotlin("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
-            result = JsonOverrider.override(result!!, FindAllelesParameters::class.java, overrides)
-            if (result == null) throwValidationException("Failed to override some parameter: $overrides")
+            result = JsonOverrider.override(result, FindAllelesParameters::class.java, overrides)
+                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
         }
-        result!!
+        result
     }
 
     override fun validate() {
+        super.validate()
         if (libraryOutput != null) {
             if (!libraryOutput!!.endsWith(".json")) {
-                throwValidationException("--export-library must be json: $libraryOutput")
+                throwValidationExceptionKotlin("--export-library must be json: $libraryOutput")
             }
         }
         if (allelesMutationsOutput != null) {
             if (!allelesMutationsOutput!!.endsWith(".csv")) {
-                throwValidationException("--export-alleles-mutations must be csv: $allelesMutationsOutput")
+                throwValidationExceptionKotlin("--export-alleles-mutations must be csv: $allelesMutationsOutput")
             }
         }
     }
@@ -376,9 +377,8 @@ class CommandFindAlleles : MiXCRCommand() {
         return usedGenes
     }
 
-    private fun anyClone(cloneReaders: List<CloneReader>): Clone {
-        cloneReaders[0].readClones().use { port -> return port.take() }
-    }
+    private fun anyClone(cloneReaders: List<CloneReader>): Clone =
+        cloneReaders[0].readClones().use { it.take() }
 
     companion object {
         const val FIND_ALLELES_COMMAND_NAME = "findAlleles"
@@ -407,7 +407,7 @@ private class CloneRebuild(
      */
     fun rebuildClones(input: OutputPort<Clone>): List<Clone> =
         input
-            .mapInParallel(threads) { clone ->
+            .mapInParallelOrdered(threads) { clone ->
                 cloneFactory.create(
                     clone.id,
                     clone.count,

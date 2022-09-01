@@ -25,8 +25,9 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommand() {
     override fun getOutputFiles(): List<String> = listOf(out)
 
     override fun validate() {
+        super.validate()
         if (!`in`.endsWith(".${SHMTreesWriter.shmFileExtension}")) {
-            throwValidationException("Input file should have extension ${SHMTreesWriter.shmFileExtension}. Given $`in`")
+            throwValidationExceptionKotlin("Input file should have extension ${SHMTreesWriter.shmFileExtension}. Given $`in`")
         }
     }
 }

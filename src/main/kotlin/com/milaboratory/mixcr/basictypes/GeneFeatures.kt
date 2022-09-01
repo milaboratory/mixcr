@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.basictypes
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
-import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
@@ -96,11 +96,7 @@ class GeneFeatures(
         @JsonCreator
         fun parse(value: String): GeneFeatures =
             if (value.startsWith("[")) {
-                val parsed = GlobalObjectMappers.getOneLine()
-                    .readValue(value, object : TypeReference<Array<String>>() {})
-                    .map { GeneFeature.parse(it) }
-                    .toTypedArray()
-                GeneFeatures(parsed)
+                GeneFeatures(GlobalObjectMappers.getOneLine().readValue<Array<GeneFeature>>(value))
             } else {
                 GeneFeatures(GeneFeature.parse(value))
             }

@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.postanalysis.plots
 
-import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.miplots.plusAssign
@@ -21,7 +20,9 @@ import com.milaboratory.miplots.stat.xcontinious.plusAssign
 import com.milaboratory.miplots.stat.xcontinious.statCor
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
+import com.milaboratory.primitivio.forEach
 import io.repseq.core.GeneFeature
+import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.label.ylab
 import jetbrains.letsPlot.scale.scaleXContinuous
@@ -31,7 +32,13 @@ import jetbrains.letsPlot.scale.ylim
 import jetbrains.letsPlot.theme
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
-import org.jetbrains.kotlinx.dataframe.api.*
+import org.jetbrains.kotlinx.dataframe.api.drop
+import org.jetbrains.kotlinx.dataframe.api.max
+import org.jetbrains.kotlinx.dataframe.api.min
+import org.jetbrains.kotlinx.dataframe.api.sum
+import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import org.jetbrains.kotlinx.dataframe.api.update
+import org.jetbrains.kotlinx.dataframe.api.with
 import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
@@ -68,13 +75,13 @@ object OverlapScatter {
     /**
      * Imports data into DataFrame
      **/
-    fun dataFrame(overlapData: OutputPort<OverlapGroup<Clone>>) =
+    fun dataFrame(overlapData: OutputPort<OverlapGroup<Clone>>): DataFrame<OverlapScatterRow> =
         run {
             val rows = mutableListOf<OverlapScatterRow>()
-            for (gr in CUtils.it(overlapData)) {
+            overlapData.forEach { gr ->
                 if (gr.size() != 2)
                     throw IllegalArgumentException("Expected pair of samples got " + gr.size())
-                rows.add(OverlapScatterRowImpl(gr))
+                rows += OverlapScatterRowImpl(gr)
             }
 
             var df = rows.toDataFrame()
@@ -98,7 +105,7 @@ object OverlapScatter {
     fun plot(
         _df: DataFrame<OverlapScatterRow>,
         par: PlotParameters,
-    ) = run {
+    ): Plot = run {
         var df = _df
         if (par.log10) {
             df = df.update { frac1 }.with { log10(frac1) }

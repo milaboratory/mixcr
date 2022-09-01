@@ -21,7 +21,7 @@ import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.mapNotNull
 import com.milaboratory.util.TempFileDest
 import io.repseq.core.GeneFeature.CDR3
@@ -46,7 +46,7 @@ class TreeBuilderByUserData(
             val treeId = cluster.first().treeId
             asCloneWrappers(cluster, treeId) to treeId
         }
-        .mapInParallel(threads) { (cluster, treeId) ->
+        .mapInParallelOrdered(threads) { (cluster, treeId) ->
             val rebasedFromGermline = cluster
                 .map { cloneWrapper -> cloneWrapper.rebaseFromGermline(assemblingFeatures) }
             val result = SHMTreeBuilder.buildATreeFromRoot(rebasedFromGermline)

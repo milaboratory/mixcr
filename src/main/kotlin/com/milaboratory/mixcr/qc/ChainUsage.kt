@@ -12,10 +12,28 @@
 package com.milaboratory.mixcr.qc
 
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.cli.*
-import io.repseq.core.Chains.*
-import jetbrains.letsPlot.*
+import com.milaboratory.mixcr.cli.AlignerReport
+import com.milaboratory.mixcr.cli.ChainUsageStats
+import com.milaboratory.mixcr.cli.ChainUsageStatsRecord
+import com.milaboratory.mixcr.cli.CloneAssemblerReport
+import com.milaboratory.mixcr.cli.MiXCRCommandReport
+import io.repseq.core.Chains.DEFAULT_EXPORT_CHAINS_LIST
+import io.repseq.core.Chains.IGH_NAMED
+import io.repseq.core.Chains.IGK_NAMED
+import io.repseq.core.Chains.IGL_NAMED
+import io.repseq.core.Chains.NamedChains
+import io.repseq.core.Chains.TRAD_NAMED
+import io.repseq.core.Chains.TRB_NAMED
+import io.repseq.core.Chains.TRG_NAMED
+import jetbrains.letsPlot.Pos
+import jetbrains.letsPlot.Stat
+import jetbrains.letsPlot.coordFlip
+import jetbrains.letsPlot.elementBlank
+import jetbrains.letsPlot.elementLine
+import jetbrains.letsPlot.elementText
 import jetbrains.letsPlot.geom.geomBar
+import jetbrains.letsPlot.ggplot
+import jetbrains.letsPlot.ggsize
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.label.xlab
@@ -24,6 +42,7 @@ import jetbrains.letsPlot.sampling.samplingNone
 import jetbrains.letsPlot.scale.guideLegend
 import jetbrains.letsPlot.scale.scaleFillManual
 import jetbrains.letsPlot.scale.scaleXDiscrete
+import jetbrains.letsPlot.theme
 import java.nio.file.Path
 import kotlin.io.path.name
 
@@ -36,10 +55,9 @@ object ChainUsage {
         showNonFunctional: Boolean,
         chains: List<NamedChains>,
         hw: SizeParameters? = null
-    ) =
-        chainUsage(files, percent, showNonFunctional, chains, hw) {
-            (it.first() as AlignerReport).chainUsage
-        }
+    ) = chainUsage(files, percent, showNonFunctional, chains, hw) {
+        (it.first() as AlignerReport).chainUsage
+    }
 
     fun chainUsageAssemble(
         files: List<Path>,

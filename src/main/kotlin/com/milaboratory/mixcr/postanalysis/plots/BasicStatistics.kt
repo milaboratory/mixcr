@@ -32,7 +32,15 @@ import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
-import org.jetbrains.kotlinx.dataframe.api.*
+import org.jetbrains.kotlinx.dataframe.api.convertToString
+import org.jetbrains.kotlinx.dataframe.api.filter
+import org.jetbrains.kotlinx.dataframe.api.first
+import org.jetbrains.kotlinx.dataframe.api.groupBy
+import org.jetbrains.kotlinx.dataframe.api.isEmpty
+import org.jetbrains.kotlinx.dataframe.api.replace
+import org.jetbrains.kotlinx.dataframe.api.rows
+import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import org.jetbrains.kotlinx.dataframe.api.with
 
 /**
  * DataFrame row for single statistical char group
@@ -58,7 +66,7 @@ object BasicStatistics {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metricsFilter: ((String) -> Boolean)?,
+        metricsFilter: (String) -> Boolean,
     ): DataFrame<BasicStatRow> = run {
         val data = mutableListOf<BasicStatRow>()
 
@@ -66,7 +74,7 @@ object BasicStatistics {
             for ((sampleId, keys) in charData.data) {
                 for (metric in keys.data) {
                     val key = metric.key.toString()
-                    if (metricsFilter != null && !metricsFilter(key)) {
+                    if (!metricsFilter(key)) {
                         continue
                     }
                     data += BasicStatRow(
@@ -86,13 +94,14 @@ object BasicStatistics {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metricsFilter: ((String) -> Boolean)?,
         metadata: Metadata?,
-    ) = run {
-        var df = dataFrame(paResult, metricsFilter)
-        if (metadata != null)
-            df = df.withMetadata(metadata)
-        df
+        metricsFilter: (String) -> Boolean = { true },
+    ): DataFrame<BasicStatRow> {
+        val df = this.dataFrame(paResult, metricsFilter)
+        return when {
+            metadata != null -> df.withMetadata(metadata)
+            else -> df
+        }
     }
 
     /**
@@ -100,9 +109,9 @@ object BasicStatistics {
      **/
     fun dataFrame(
         paResult: PostanalysisResult,
-        metricsFilter: ((String) -> Boolean)?,
         metadataPath: String?,
-    ) = dataFrame(paResult, metricsFilter, readMetadata(metadataPath))
+        metricsFilter: (String) -> Boolean = { true },
+    ) = dataFrame(paResult, readMetadata(metadataPath), metricsFilter)
 
     data class PlotParameters(
         val plotType: PlotType? = null,

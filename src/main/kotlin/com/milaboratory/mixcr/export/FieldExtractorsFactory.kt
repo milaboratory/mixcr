@@ -45,15 +45,16 @@ abstract class FieldExtractorsFactory<T : Any> {
         val humanReadable = cmdParseResult.matchedOption("--with-spaces")?.getValue<Boolean>() ?: false
         val oMode = if (humanReadable) OutputMode.HumanFriendly else OutputMode.ScriptingFriendly
 
-        val fields = mutableListOf<FieldCommandArgs>()
-        fields.addAll(parseSpec(cmdParseResult))
+        var fields = parseSpec(cmdParseResult)
 
         // if no options specified
-        if (fields.isEmpty()) fields.addAll(presets[defaultPreset]!!)
+        if (fields.isEmpty()) {
+            fields = presets[defaultPreset]!!
+        }
         return fields.flatMap { fieldData -> extract(fieldData, header, oMode) }
     }
 
-    open fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec, addPresetOptions: Boolean) {
+    fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec, addPresetOptions: Boolean) {
         if (addPresetOptions) {
             val possibleValues = presets.keys.joinToString(", ") { "'$it'" }
             spec.addOption(
@@ -106,30 +107,30 @@ abstract class FieldExtractorsFactory<T : Any> {
 
 
     fun extract(
-        fd: FieldCommandArgs,
+        cmd: FieldCommandArgs,
         header: VDJCFileHeaderData,
-        m: OutputMode
+        mode: OutputMode
     ): List<FieldExtractor<T>> {
-        val field = fields.firstOrNull { f -> fd.field.equals(f.cmdArgName, ignoreCase = true) }
-        field ?: throw IllegalArgumentException("illegal field: " + fd.field)
+        val field = fields.firstOrNull { f -> cmd.field.equals(f.cmdArgName, ignoreCase = true) }
+        field ?: throw IllegalArgumentException("illegal field: " + cmd.field)
         return when (field.nArguments) {
             0 -> {
                 require(
-                    fd.args.isEmpty() || (fd.args.size == 1 && (fd.args[0].lowercase() in arrayOf("true", "false")))
+                    cmd.args.isEmpty() || (cmd.args.size == 1 && (cmd.args[0].lowercase() in arrayOf("true", "false")))
                 )
-                listOf(field.create(m, header, emptyArray()))
+                listOf(field.create(mode, header, emptyArray()))
             }
             else -> buildList {
                 var i = 0
-                while (i < fd.args.size) {
-                    add(field.create(m, header, fd.args.copyOfRange(i, i + field.nArguments)))
+                while (i < cmd.args.size) {
+                    add(field.create(mode, header, cmd.args.copyOfRange(i, i + field.nArguments)))
                     i += field.nArguments
                 }
             }
         }
     }
 
-    open fun parseFile(file: String): List<FieldCommandArgs> = buildList {
+    private fun parseFile(file: String): List<FieldCommandArgs> = buildList {
         BufferedReader(FileReader(file)).use { reader ->
             while (true) {
                 var line = reader.readLine() ?: break
@@ -140,7 +141,7 @@ abstract class FieldExtractorsFactory<T : Any> {
         }
     }
 
-    open fun parseSpec(parseResult: CommandLine.ParseResult): List<FieldCommandArgs> = buildList {
+    fun parseSpec(parseResult: CommandLine.ParseResult): List<FieldCommandArgs> = buildList {
         for (opt in parseResult.matchedOptions()) {
             if (opt.longestName() == "--preset") {
                 val preset: String = opt.getValue()
@@ -169,10 +170,9 @@ abstract class FieldExtractorsFactory<T : Any> {
 
     class FieldCommandArgs(val field: String, val args: Array<String>) {
         companion object {
-            operator fun invoke(vararg args: String): FieldCommandArgs {
-                @Suppress("UNCHECKED_CAST")
-                return FieldCommandArgs(args[0], args.copyOfRange(1, args.size) as Array<String>)
-            }
+            @Suppress("UNCHECKED_CAST")
+            operator fun invoke(vararg args: String): FieldCommandArgs =
+                FieldCommandArgs(args[0], args.copyOfRange(1, args.size) as Array<String>)
         }
     }
 

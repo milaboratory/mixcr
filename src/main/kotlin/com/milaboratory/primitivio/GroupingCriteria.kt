@@ -15,11 +15,14 @@ import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mixcr.util.OutputPortWithProgress
+import com.milaboratory.util.ObjectSerializer
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sorting.HashSorter
 import com.milaboratory.util.sorting.Sorter
 import org.apache.commons.io.FileUtils
+import java.io.File
 import java.util.function.ToLongFunction
 
 interface GroupingCriteria<T> {
@@ -54,42 +57,57 @@ inline fun <reified T : Any> OutputPort<T>.hashGrouping(
     groupingCriteria: GroupingCriteria<T>,
     stateBuilder: PrimitivIOStateBuilder,
     tempFileDest: TempFileDest,
+    bitsPerStep: Int = 5,
     readerConcurrency: Int = 8,
-    writerConcurrency: Int = 8
-): OutputPortCloseable<T> {
-    // todo check memory budget
-    val memoryBudget = when {
+    writerConcurrency: Int = 8,
+    objectSizeInitialGuess: Long = 256 * FileUtils.ONE_KB,
+    memoryBudget: Long = when {
         Runtime.getRuntime().maxMemory() > 10 * FileUtils.ONE_GB -> Runtime.getRuntime().maxMemory() / 8L
         else -> 256 * FileUtils.ONE_MB
     }
+): OutputPortCloseable<T> {
+    // todo check memory budget
     return HashSorter(
         T::class.java,
         groupingCriteria::hashCodeForGroup,
         groupingCriteria.comparator,
-        5,
+        bitsPerStep,
         tempFileDest,
         readerConcurrency,
         writerConcurrency,
         stateBuilder.oState,
         stateBuilder.iState,
         memoryBudget,
-        256 * FileUtils.ONE_KB
+        objectSizeInitialGuess
     ).port(this)
 }
 
-inline fun <reified T : Any> OutputPort<T>.sort(
-    tempFileDest: TempFileDest,
+inline fun <reified T : Any, R> OutputPort<T>.sort(
     comparator: Comparator<T>,
-    chunkSize: Int = 512 * 1024
-): OutputPortCloseable<T> {
-    return Sorter.sort(
-        this,
-        comparator,
-        chunkSize,
-        T::class.java,
-        tempFileDest.resolveFile("sort")
-    )
-}
+    tempFile: File = TempFileManager.getTempFile(),
+    chunkSize: Int = 512 * 1024,
+    block: (OutputPort<T>) -> R
+): R = Sorter.sort(
+    this,
+    comparator,
+    chunkSize,
+    T::class.java,
+    tempFile
+).use(block)
+
+fun <T : Any, R> OutputPort<T>.sort(
+    comparator: Comparator<T>,
+    serializer: ObjectSerializer<T>,
+    tempFile: File = TempFileManager.getTempFile(),
+    chunkSize: Int = 512 * 1024,
+    block: (OutputPort<T>) -> R
+): R = Sorter.sort(
+    this,
+    comparator,
+    chunkSize,
+    serializer,
+    tempFile
+).use(block)
 
 inline fun <reified T : Any> OutputPort<T>.groupBy(
     stateBuilder: PrimitivIOStateBuilder,

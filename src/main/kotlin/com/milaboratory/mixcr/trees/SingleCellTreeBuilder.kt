@@ -32,7 +32,7 @@ import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.mapNotNull
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
@@ -71,25 +71,25 @@ class SingleCellTreeBuilder(
                 stateBuilder,
                 blockSize = 100
             ) { cache ->
-                val sortedCellGroups = cache()
+                val cellBarcodesToGroupChainPair = mutableMapOf<CellBarcodeWithDatasetId, ChainPairKey>()
+                cache()
                     .groupCellsByChainPairs()
                     //on resolving intersection prefer larger groups
                     .sort(
-                        tempDest.addSuffix("tree.builder.sc.sort_by_cell_barcodes_count"),
-                        Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed()
-                    )
-
-                //decision about every barcode, to what pair of heavy and light chains it belongs
-                val cellBarcodesToGroupChainPair = mutableMapOf<CellBarcodeWithDatasetId, ChainPairKey>()
-                sortedCellGroups.forEach { cellGroup ->
-                    val newBarcodes = cellGroup.cellBarcodes - cellBarcodesToGroupChainPair.keys
-                    //TODO count and print how much was filtered
-                    if (newBarcodes.size > 1) {
-                        newBarcodes.forEach {
-                            cellBarcodesToGroupChainPair[it] = cellGroup.chainPairKey
+                        Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed(),
+                        tempDest.resolveFile("tree.builder.sc.sort_by_cell_barcodes_count")
+                    ) { sortedCellGroups ->
+                        //decision about every barcode, to what pair of heavy and light chains it belongs
+                        sortedCellGroups.forEach { cellGroup ->
+                            val newBarcodes = cellGroup.cellBarcodes - cellBarcodesToGroupChainPair.keys
+                            //TODO count and print how much was filtered
+                            if (newBarcodes.size > 1) {
+                                newBarcodes.forEach {
+                                    cellBarcodesToGroupChainPair[it] = cellGroup.chainPairKey
+                                }
+                            }
                         }
                     }
-                }
 
                 val clusterPredictor = ClustersBuilder.ClusterPredictorForCellGroup(
                     parameters.algorithm.maxNDNDistanceForHeavyChain,
@@ -110,7 +110,7 @@ class SingleCellTreeBuilder(
                         val rebasedChainPairs = groupDuplicatesAndRebaseFromGermline(cellGroups)
                         clustersBuilder.buildClusters(rebasedChainPairs)
                     }
-                    .mapInParallel(threads) { clusterOfCells ->
+                    .mapInParallelOrdered(threads) { clusterOfCells ->
                         //TODO build linked topology
                         //TODO what to do with the same clones that exists in several nodes because mutations was in other chain
                         listOf(
