@@ -14,10 +14,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.FlatteningOutputPort;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.VDJCGene;
 
 import java.util.ArrayList;
@@ -52,23 +49,8 @@ public class CloneReaderMerger implements CloneReader {
     }
 
     @Override
-    public TagsInfo getTagsInfo() {
-        return rep.getTagsInfo();
-    }
-
-    @Override
     public List<VDJCGene> getUsedGenes() {
         return rep.getUsedGenes();
-    }
-
-    @Override
-    public VDJCAlignerParameters getAlignerParameters() {
-        return rep.getAlignerParameters();
-    }
-
-    @Override
-    public CloneAssemblerParameters getAssemblerParameters() {
-        return rep.getAssemblerParameters();
     }
 
     @Override

@@ -20,6 +20,7 @@ import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParametersPresets;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.util.TempFileManager;
@@ -80,8 +81,9 @@ public class ClnAReaderTest {
                 .collect(Collectors.toList());
         CloneSet newCloneSet = new CloneSet(
                 modifyClones.apply(newClones), align.usedGenes,
-                new MiXCRMetaInfo(null, null,
-                        align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default")),
+                new MiXCRMetaInfo(null, TagsInfo.NO_TAGS,
+                        align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
+                        null, null),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
         writer.writeClones(newCloneSet);
 
@@ -124,8 +126,9 @@ public class ClnAReaderTest {
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
-                new MiXCRMetaInfo(null, null,
-                        align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default")),
+                new MiXCRMetaInfo(null, TagsInfo.NO_TAGS,
+                        align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
+                        null, null),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.writeFooter(Collections.emptyList(), null);

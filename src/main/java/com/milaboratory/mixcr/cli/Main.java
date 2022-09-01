@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.milaboratory.cli.ValidationException;
 import com.milaboratory.milm.MiXCRMain;
 import com.milaboratory.mixcr.cli.postanalysis.*;
@@ -60,6 +61,7 @@ public final class Main {
             MiXCRMain.lm.reportFeature("mixcr.subcommand2", args[1]);
 
         GlobalObjectMappers.addModifier(om -> om.registerModule(kotlinModule(builder -> Unit.INSTANCE)));
+        GlobalObjectMappers.addModifier(om -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE));
 
         handleParseResult(parseArgs(args).getParseResult(), args);
     }
@@ -169,20 +171,22 @@ public final class Main {
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
                 .addSubcommand("extend", CommandExtend.class)
 
+                .addSubcommand("bam2fastq", CommandBAM2fastq.class)
+
                 .addSubcommand("exportAlignments", CommandExport.mkAlignmentsSpec())
                 .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty.class)
                 .addSubcommand("exportClones", CommandExport.mkClonesSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
                 .addSubcommand("exportReports", CommandExportReports.class)
-                .addSubcommand("exportQc", CommandExportQc.class)
+                .addSubcommand("exportQc", CommandExportQc.CommandExportQcMain.class)
 
                 .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
 
                 .addSubcommand("exportAirr", CommandExportAirr.class)
 
                 .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
-                .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones.class)
+                .addSubcommand(CommandExportAlignmentsForClones.EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME, CommandExportAlignmentsForClones.class)
                 .addSubcommand("exportReads", CommandExportReads.class)
 
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)
@@ -198,7 +202,13 @@ public final class Main {
                 .addSubcommand("alignmentsStat", CommandAlignmentsStats.class)
                 .addSubcommand("listLibraries", CommandListLibraries.class)
                 .addSubcommand("versionInfo", CommandVersionInfo.class)
-                .addSubcommand("slice", CommandSlice.class);
+                .addSubcommand("slice", CommandSlice.class)
+
+                .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees.class)
+                .addSubcommand(CommandExportShmTreesTableWithNodes.COMMAND_NAME, CommandExportShmTreesTableWithNodes.mkCommandSpec())
+                .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
+                .addSubcommand(CommandExportShmTreesNewick.COMMAND_NAME, CommandExportShmTreesNewick.class)
+                .addSubcommand(CommandFindAlleles.FIND_ALLELES_COMMAND_NAME, CommandFindAlleles.class);
 
         cmd.getSubcommands()
                 .get("analyze")
@@ -219,7 +229,9 @@ public final class Main {
                 .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportJUsage.class))
                 .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.ExportIsotypeUsage.class))
                 .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJUsage.class))
-                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class));
+                .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class))
+
+                .addSubcommand("shmTrees", CommandSpec.forAnnotatedObject(CommandExportShmTreesPlots.class));
 
         cmd.getSubcommands()
                 .get("exportQc")

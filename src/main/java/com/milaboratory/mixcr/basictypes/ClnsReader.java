@@ -13,15 +13,13 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.cli.MiXCRReport;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibraryId;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.io.IOException;
@@ -30,6 +28,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC;
 import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
@@ -98,9 +97,20 @@ public class ClnsReader implements CloneReader, AutoCloseable {
         // read header
         try (PrimitivI i = input.beginPrimitivI(true)) {
             versionInfo = i.readUTF();
-            info = i.readObject(MiXCRMetaInfo.class);
+            info = Objects.requireNonNull(i.readObject(MiXCRMetaInfo.class));
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
             numberOfClones = i.readInt();
+            MiXCRMetaInfo.FoundAlleles foundAlleles = info.getFoundAlleles();
+            if (foundAlleles != null) {
+                VDJCLibraryId foundAllelesLibraryId = foundAlleles.getLibraryIdWithoutChecksum();
+                boolean alreadyRegistered = libraryRegistry.getLoadedLibraries()
+                        .stream()
+                        .anyMatch(it -> it.getLibraryId().withoutChecksum().equals(foundAllelesLibraryId));
+                if (!alreadyRegistered) {
+                    libraryRegistry.registerLibrary(null, foundAlleles.getLibraryName(), foundAlleles.getLibraryData());
+                }
+            }
+
             usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, info.getAlignerParameters(), libraryRegistry);
         }
 
@@ -132,20 +142,6 @@ public class ClnsReader implements CloneReader, AutoCloseable {
     @Override
     public MiXCRMetaInfo getInfo() {
         return info;
-    }
-
-    @Override
-    public TagsInfo getTagsInfo() {
-        return info.getTagsInfo();
-    }
-
-    public VDJCAlignerParameters getAlignerParameters() {
-        return info.getAlignerParameters();
-    }
-
-    @Override
-    public CloneAssemblerParameters getAssemblerParameters() {
-        return info.getAssemblerParameters();
     }
 
     @Override

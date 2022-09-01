@@ -62,7 +62,7 @@ public final class DownsamplingParameters {
      * Return preprocessor use to analyze specific chains. If chains == null, returns preprocessor without chains
      * filtering.
      */
-    public SetPreprocessorFactory<Clone> getPreproc(Chains chains) {
+    public SetPreprocessorFactory<Clone> getPreprocessor(Chains chains) {
         if (chains == null)
             return preproc;
         else
@@ -79,17 +79,17 @@ public final class DownsamplingParameters {
             boolean onlyProductive
     ) {
         if (downsampling.equalsIgnoreCase("none")) {
-            SetPreprocessorFactory<Clone> preproc;
+            SetPreprocessorFactory<Clone> preprocessor;
             if (onlyProductive)
-                preproc = new FilterPreprocessor.Factory<>(WeightFunctions.Default(),
+                preprocessor = new FilterPreprocessor.Factory<>(WeightFunctions.Default(),
                         new ElementPredicate.NoStops(GeneFeature.CDR3),
                         new ElementPredicate.NoOutOfFrames(GeneFeature.CDR3)
                 );
             else
-                preproc = new NoPreprocessing.Factory<>();
+                preprocessor = new NoPreprocessing.Factory<>();
 
             return new DownsamplingParameters(
-                    preproc,
+                    preprocessor,
                     WeightFunctions.Default(),
                     tagsInfo,
                     null,

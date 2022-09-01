@@ -347,8 +347,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     public CloneSet getCloneSet(MiXCRMetaInfo info) {
-        return new CloneSet(Arrays.asList(realClones), usedGenes.values(), info.withAssemblerParameters(parameters),
-                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
+        return new CloneSet(
+                Arrays.asList(realClones),
+                usedGenes.values(),
+                info
+                        .withAssemblerParameters(parameters)
+                        .withAllClonesCutBy(parameters.assemblingFeatures),
+                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())
+        );
     }
 
     public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {
@@ -731,6 +737,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
                 if (acc.getSequence().getConcatenated().getQuality().minValue() < parameters.minimalQuality) {
                     dropped.accept(acc);
+                    ++deleted;
                     continue;
                 }
 

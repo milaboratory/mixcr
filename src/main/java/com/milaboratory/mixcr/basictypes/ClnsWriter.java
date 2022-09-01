@@ -30,11 +30,13 @@ import java.util.List;
  *
  */
 public final class ClnsWriter implements AutoCloseable {
-    static final String MAGIC_V12 = "MiXCR.CLNS.V13";
-    static final String MAGIC = MAGIC_V12;
+    static final String MAGIC_V13 = "MiXCR.CLNS.V13";
+    static final String MAGIC = MAGIC_V13;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
-    /** Number of bytes in footer with meta information */
+    /**
+     * Number of bytes in footer with meta information
+     */
     static final int FOOTER_LENGTH = 8 + IOUtil.END_MAGIC_LENGTH;
 
     final PrimitivOHybrid output;
@@ -56,7 +58,8 @@ public final class ClnsWriter implements AutoCloseable {
                 cloneSet.getInfo(),
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
-                cloneSet.size());
+                cloneSet.size()
+        );
     }
 
     public void writeHeader(

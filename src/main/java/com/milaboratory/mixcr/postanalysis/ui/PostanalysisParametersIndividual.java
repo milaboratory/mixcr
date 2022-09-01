@@ -69,7 +69,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
                 diversity.getGroup(chains),
                 new CharacteristicGroup<>(VUsage,
                         Arrays.asList(AdditiveCharacteristics.segmentUsage(
-                                vUsage.preproc(chains),
+                                vUsage.preprocessor(chains),
                                 vUsage.weightFunction(),
                                 GeneType.Variable)),
                         Arrays.asList(new GroupSummary.Simple<>())
@@ -77,7 +77,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
                 new CharacteristicGroup<>(JUsage,
                         Arrays.asList(AdditiveCharacteristics.segmentUsage(
-                                jUsage.preproc(chains),
+                                jUsage.preprocessor(chains),
                                 jUsage.weightFunction(),
                                 GeneType.Joining
                         )),
@@ -86,7 +86,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
                 new CharacteristicGroup<>(VJUsage,
                         Arrays.asList(AdditiveCharacteristics.vjSegmentUsage(
-                                vjUsage.preproc(chains),
+                                vjUsage.preprocessor(chains),
                                 vjUsage.weightFunction()
                         )),
                         Arrays.asList(new GroupSummary.VJUsage<>())
@@ -94,7 +94,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
                 new CharacteristicGroup<>(IsotypeUsage,
                         Arrays.asList(AdditiveCharacteristics.isotypeUsage(
-                                isotypeUsage.preproc(chains),
+                                isotypeUsage.preprocessor(chains),
                                 isotypeUsage.weightFunction()
                         )),
                         Arrays.asList(new GroupSummary.Simple<>())
@@ -102,7 +102,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
                 new CharacteristicGroup<>(CDR3Spectratype,
                         Arrays.asList(new SpectratypeCharacteristic("CDR3 spectratype",
-                                cdr3Spectratype.preproc(chains),
+                                cdr3Spectratype.preprocessor(chains),
                                 cdr3Spectratype.weightFunction(),
                                 10,
                                 new SpectratypeKeyFunction<>(new KeyFunctions.AAFeature(GeneFeature.CDR3), GeneFeature.CDR3, false))),
@@ -110,13 +110,13 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
                 new CharacteristicGroup<>(VSpectratype,
                         Arrays.asList(AdditiveCharacteristics.VSpectratype(
-                                vSpectratype.preproc(chains),
+                                vSpectratype.preprocessor(chains),
                                 vSpectratype.weightFunction())),
                         Collections.singletonList(new GroupSummary.Simple<>())),
 
                 new CharacteristicGroup<>(VSpectratypeMean,
                         Arrays.asList(AdditiveCharacteristics.VSpectratypeMean(
-                                vSpectratypeMean.preproc(chains),
+                                vSpectratypeMean.preprocessor(chains),
                                 vSpectratypeMean.weightFunction())),
                         Collections.singletonList(new GroupSummary.Simple<>()))
         );
@@ -170,15 +170,15 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         public CharacteristicGroup<?, Clone> getGroup(Chains chains) {
             return new CharacteristicGroup<>(CDR3Metrics,
                     Arrays.asList(
-                            lengthOf(cdr3lenNT.preproc(chains), cdr3lenNT.weightFunction(), GeneFeature.CDR3, false).setName("CDR3 length, nt"),
-                            lengthOf(cdr3lenAA.preproc(chains), cdr3lenAA.weightFunction(), GeneFeature.CDR3, true).setName("CDR3 length, aa"),
-                            lengthOf(ndnLenNT.preproc(chains), ndnLenNT.weightFunction(), GeneFeature.VJJunction, false).setName("NDN length, nt"),
-                            addedNucleotides(addedNNT.preproc(chains), addedNNT.weightFunction()).setName("Added N, nt"),
-                            biophysics(strength.preproc(chains), strength.weightFunction(), AAProperties.AAProperty.N2Strength, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Strength"),
-                            biophysics(hydrophobicity.preproc(chains), hydrophobicity.weightFunction(), AAProperties.AAProperty.N2Hydrophobicity, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Hydrophobicity"),
-                            biophysics(surface.preproc(chains), surface.weightFunction(), AAProperties.AAProperty.N2Surface, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Surface"),
-                            biophysics(volume.preproc(chains), volume.weightFunction(), AAProperties.AAProperty.N2Volume, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Volume"),
-                            biophysics(charge.preproc(chains), charge.weightFunction(), AAProperties.AAProperty.Charge, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Charge")
+                            lengthOf(cdr3lenNT.preprocessor(chains), cdr3lenNT.weightFunction(), GeneFeature.CDR3, false).setName("CDR3 length, nt"),
+                            lengthOf(cdr3lenAA.preprocessor(chains), cdr3lenAA.weightFunction(), GeneFeature.CDR3, true).setName("CDR3 length, aa"),
+                            lengthOf(ndnLenNT.preprocessor(chains), ndnLenNT.weightFunction(), GeneFeature.VJJunction, false).setName("NDN length, nt"),
+                            addedNucleotides(addedNNT.preprocessor(chains), addedNNT.weightFunction()).setName("Added N, nt"),
+                            biophysics(strength.preprocessor(chains), strength.weightFunction(), AAProperties.AAProperty.N2Strength, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Strength"),
+                            biophysics(hydrophobicity.preprocessor(chains), hydrophobicity.weightFunction(), AAProperties.AAProperty.N2Hydrophobicity, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Hydrophobicity"),
+                            biophysics(surface.preprocessor(chains), surface.weightFunction(), AAProperties.AAProperty.N2Surface, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Surface"),
+                            biophysics(volume.preprocessor(chains), volume.weightFunction(), AAProperties.AAProperty.N2Volume, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Volume"),
+                            biophysics(charge.preprocessor(chains), charge.weightFunction(), AAProperties.AAProperty.Charge, GeneFeature.CDR3, AAProperties.Adjustment.LeadingCenter, 5).setName("Charge")
                     ),
                     Collections.singletonList(new GroupSummary.Simple<>()));
         }
@@ -245,7 +245,7 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
                             p.weight, p.preproc, l.toArray(new DiversityMeasure[0])))));
 
             chars.add(new DiversityCharacteristic<>("d50", new WeightFunctions.Count(),
-                    d50.preproc(chains).then(new SelectTop.Factory<>(WeightFunctions.Count, 0.5)),
+                    d50.preprocessor(chains).then(new SelectTop.Factory<>(WeightFunctions.Count, 0.5)),
                     new DiversityMeasure[]{
                             DiversityMeasure.Observed.overrideName("d50")
                     }));

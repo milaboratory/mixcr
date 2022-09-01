@@ -15,9 +15,15 @@ import com.milaboratory.util.StringUtil
 import org.jetbrains.kotlinx.dataframe.AnyFrame
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.RowFilter
-import org.jetbrains.kotlinx.dataframe.api.*
+import org.jetbrains.kotlinx.dataframe.api.add
+import org.jetbrains.kotlinx.dataframe.api.all
+import org.jetbrains.kotlinx.dataframe.api.cast
+import org.jetbrains.kotlinx.dataframe.api.filter
+import org.jetbrains.kotlinx.dataframe.api.leftJoin
+import org.jetbrains.kotlinx.dataframe.api.remove
 import org.jetbrains.kotlinx.dataframe.io.read
 import org.jetbrains.kotlinx.dataframe.io.readTSV
+import java.nio.file.Path
 
 fun AnyFrame.isNumeric(col: String) = this[col].all { it == null || it is Number }
 fun AnyFrame.isCategorical(col: String) = !isNumeric(col)
@@ -26,6 +32,11 @@ typealias Metadata = AnyFrame
 
 @JvmName("readMetadataNullable")
 fun readMetadata(path: String?): Metadata? = if (path == null) null else readMetadata(path)
+
+/**
+ * Read metadata from file
+ */
+fun readMetadata(path: Path): Metadata = readMetadata(path.toAbsolutePath().toString())
 
 /**
  * Read metadata from file
@@ -72,7 +83,7 @@ fun <T> attachMetadata(
         .remove("_meta_join_")
 }
 
-fun Metadata.parseFilter(expr: String) =
+fun Metadata.parseFilter(expr: String): Filter =
     // equality
     if (expr.contains("=")) {
         val (column, value) = expr.split("=")

@@ -64,6 +64,7 @@ java {
 
 application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
+    applicationDefaultJvmArgs = listOf("-Xmx8g")
 }
 
 tasks.withType<JavaCompile> {
@@ -89,13 +90,17 @@ repositories {
 }
 
 val milibVersion = "2.0.0-17-master"
-val repseqioVersion = "1.4.1-5-master"
-val mitoolVersion = "1.1.0-13-main"
+val repseqioVersion = "1.4.1-17-master"
+val mitoolVersion = "1.1.0-16-main"
 val miplotsVersion = "1.0.0-24-master"
 val jacksonBomVersion = "2.13.3"
+val redberryPipeVersion = "1.2.0-5-master"
 
 dependencies {
-    implementation("com.milaboratory:milib:$milibVersion")
+    implementation("cc.redberry:pipe:$redberryPipeVersion")
+    implementation("com.milaboratory:milib:$milibVersion") {
+        exclude("cc.redberry", "pipe")
+    }
     implementation("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
     }
@@ -117,10 +122,13 @@ dependencies {
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.itextpdf:itext7-core:7.2.1")
     implementation("com.itextpdf:layout:7.2.1")
+    implementation("com.github.samtools:htsjdk:2.24.1")
+    implementation("org.slf4j:slf4j-nop:1.7.36")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
+    testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
