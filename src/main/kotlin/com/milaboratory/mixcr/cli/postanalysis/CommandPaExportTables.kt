@@ -33,7 +33,7 @@ class CommandPaExportTables : CommandPaExportTablesBase {
     private fun <K> writeTables(extension: String, tableResult: CharacteristicGroupResult<K>) {
         for (view in tableResult.group.views) {
             for (table in view.getTables(tableResult).values) {
-                table.writeCSV(outDir(), outPrefix() + ".", separator(), extension)
+                table.writeCSV(outDir(), "sample", outPrefix() + ".", separator(), extension)
             }
         }
     }

@@ -171,7 +171,7 @@ public class PostanalysisSchemaIntegrationTest {
         OutputTable table = result.getTable(individualPA.getGroup("vjUsage")).getOutputs().get(GroupSummary.key);
 
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        table.writeCSV(new PrintStream(bs), "\t");
+        table.writeCSV(new PrintStream(bs), "sample","\t");
         bs.close();
         Assert.assertTrue(bs.toString().split("\n").length > 500);
 //        table.writeCSV(System.out, "\t");
