@@ -71,7 +71,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             "-tagFractions",
             "All tags with fractions",
             "All tags",
-            "taqFractions"
+            "tagFractions"
         ) { clone: Clone ->
             clone.tagFractions.toString()
         }
