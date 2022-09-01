@@ -21,6 +21,7 @@ import com.milaboratory.util.GlobalObjectMappers
 import picocli.CommandLine
 import java.io.File
 import java.io.IOException
+import java.nio.file.Paths
 
 @CommandLine.Command(
     name = "listMetrics",
@@ -38,7 +39,7 @@ class CommandPaListMetrics : MiXCRCommand() {
 
     override fun run0() {
         val paResult: PaResult = try {
-            GlobalObjectMappers.getPretty().readValue(File(`in`))
+            PaResult.readJson(Paths.get(`in`))
         } catch (e: IOException) {
             throwValidationExceptionKotlin("Corrupted PA file.")
         }
