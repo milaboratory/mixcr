@@ -43,7 +43,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     )
     var filterByMetadata: List<String>? = null
 
-    @CommandLine.Parameters(description = ["Output PDF/EPS/PNG/JPEG file name"], index = "1", defaultValue = "plot.pdf")
+    @CommandLine.Parameters(description = ["Output PDF/EPS/PNG/JPEG file name"], index = "1")
     lateinit var out: String
 
     override fun getOutputFiles(): List<String> = emptyList() // output will be always overriden

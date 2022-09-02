@@ -24,7 +24,6 @@ abstract class CommandPaExport : MiXCRCommand {
     @CommandLine.Parameters(
         description = ["Input file with postanalysis results."],
         index = "0",
-        defaultValue = "pa.json.gz"
     )
     lateinit var `in`: String
 
