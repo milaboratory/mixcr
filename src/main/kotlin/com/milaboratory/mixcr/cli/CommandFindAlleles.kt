@@ -60,8 +60,9 @@ import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
-import org.apache.commons.io.FilenameUtils
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
@@ -70,44 +71,49 @@ import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
+import kotlin.io.path.createDirectories
+import kotlin.io.path.extension
+import kotlin.io.path.nameWithoutExtension
 
-@CommandLine.Command(
+@Command(
     name = CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
     sortOptions = false,
     separator = " ",
     description = ["Find allele variants in clnx."]
 )
 class CommandFindAlleles : MiXCRCommand() {
-    @CommandLine.Parameters(
+    @Parameters(
         arity = "2..*",
+        paramLabel = "input_file.clns [input_file2.clns ....] output_template.clns",
+        hideParamSyntax = true,
         description = [
-            "input_file.clns [input_file2.clns ....] output_template.clns",
             "output_template may contain {file_name} and {file_dir_path},",
             "outputs for 'input_file.clns input_file2.clns /output/folder/{file_name}_with_alleles.clns' will be /output/folder/input_file_with_alleles.clns and /output/folder/input_file2_with_alleles.clns,",
             "outputs for '/some/folder1/input_file.clns /some/folder2/input_file2.clns {file_dir_path}/{file_name}_with_alleles.clns' will be /seme/folder1/input_file_with_alleles.clns and /some/folder2/input_file2_with_alleles.clns",
             "Resulted outputs must be uniq"
         ]
     )
-    private val inOut: List<String> = mutableListOf()
+    lateinit var inOut: List<Path>
 
-    @CommandLine.Option(
+    @Option(
         description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
         names = ["--use-system-temp"]
     )
     var useSystemTemp = false
 
-    private val outputClnsFiles: List<String> by lazy {
-        val template = inOut.last()
+    private val outputClnsFiles: List<Path> by lazy {
+        val template = inOut.last().toString()
         if (!template.endsWith(".clns")) {
             throwValidationExceptionKotlin("Wrong template: command produces only clns $template")
         }
-        val clnsFiles = inputFiles
-            .map { Paths.get(it).toAbsolutePath() }
-            .map { path: Path ->
+        val clnsFiles = inOut.dropLast(1)
+            .map { it.toAbsolutePath() }
+            .map { path ->
                 template
-                    .replace(Regex("\\{file_name}"), FilenameUtils.removeExtension(path.fileName.toString()))
+                    .replace(Regex("\\{file_name}"), path.nameWithoutExtension)
                     .replace(Regex("\\{file_dir_path}"), path.parent.toString())
             }
+            .map { Paths.get(it) }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
             throwValidationExceptionKotlin("Output clns files are not uniq: $clnsFiles")
@@ -115,50 +121,47 @@ class CommandFindAlleles : MiXCRCommand() {
         clnsFiles
     }
 
-    public override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
+    public override fun getInputFiles(): List<String> = inOut.dropLast(1).map { it.toString() }
 
-    public override fun getOutputFiles(): List<String> = when {
-        libraryOutput != null -> outputClnsFiles + libraryOutput!!
-        else -> outputClnsFiles
-    }
+    public override fun getOutputFiles(): List<String> = (outputClnsFiles + listOfNotNull(libraryOutput))
+        .map { it.toString() }
 
-    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    @Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
             if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
             field = value
         }
 
-    @CommandLine.Option(
+    @Option(
         description = ["File to write library with found alleles."],
         names = ["--export-library"],
         paramLabel = "<path>"
     )
-    var libraryOutput: String? = null
+    var libraryOutput: Path? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["File to description of each allele."],
         names = ["--export-alleles-mutations"],
         paramLabel = "<path>"
     )
-    var allelesMutationsOutput: String? = null
+    var allelesMutationsOutput: Path? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Find alleles parameters preset."],
         names = ["-p", "--preset"],
         defaultValue = "default",
-        paramLabel = "preset"
+        paramLabel = "<preset>"
     )
     lateinit var findAllelesParametersName: String
 
-    @CommandLine.Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
+    @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
     var overrides: Map<String, String> = mutableMapOf()
 
     private val tempDest: TempFileDest by lazy {
-        if (!useSystemTemp) {
-            Paths.get(outputClnsFiles.first()).toAbsolutePath().parent.toFile().mkdirs()
-        }
-        TempFileManager.smartTempDestination(outputClnsFiles.first(), "", useSystemTemp)
+        val path = outputClnsFiles.first().toAbsolutePath().parent
+        if (!useSystemTemp) path.createDirectories()
+        TempFileManager.smartTempDestination(path, "", useSystemTemp)
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
@@ -173,13 +176,13 @@ class CommandFindAlleles : MiXCRCommand() {
 
     override fun validate() {
         super.validate()
-        if (libraryOutput != null) {
-            if (!libraryOutput!!.endsWith(".json")) {
+        libraryOutput?.let { libraryOutput ->
+            if (!libraryOutput.extension.endsWith("json")) {
                 throwValidationExceptionKotlin("--export-library must be json: $libraryOutput")
             }
         }
-        if (allelesMutationsOutput != null) {
-            if (!allelesMutationsOutput!!.endsWith(".csv")) {
+        allelesMutationsOutput?.let { allelesMutationsOutput ->
+            if (!allelesMutationsOutput.extension.endsWith("csv")) {
                 throwValidationExceptionKotlin("--export-alleles-mutations must be csv: $allelesMutationsOutput")
             }
         }
@@ -225,10 +228,9 @@ class CommandFindAlleles : MiXCRCommand() {
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
         val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)
-        if (libraryOutput != null) {
-            val libraryOutputFile = Paths.get(libraryOutput!!).toAbsolutePath()
-            libraryOutputFile.parent.toFile().mkdirs()
-            GlobalObjectMappers.getOneLine().writeValue(libraryOutputFile.toFile(), resultLibrary.data)
+        libraryOutput?.let { libraryOutput ->
+            libraryOutput.toAbsolutePath().parent.createDirectories()
+            GlobalObjectMappers.getOneLine().writeValue(libraryOutput.toFile(), resultLibrary.data)
         }
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
@@ -256,14 +258,15 @@ class CommandFindAlleles : MiXCRCommand() {
                             allelesStatistics.increment(clone.getBestHit(geneType).gene.geneName)
                         }
                     }
-                    File(outputClnsFiles[i]).writeMappedClones(mapperClones, resultLibrary, cloneReader)
+                    outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
+                    outputClnsFiles[i].toFile().writeMappedClones(mapperClones, resultLibrary, cloneReader)
                 }
             }
         }
         progressAndStage.finish()
-        if (allelesMutationsOutput != null) {
-            Paths.get(allelesMutationsOutput!!).toAbsolutePath().parent.toFile().mkdirs()
-            printAllelesMutationsOutput(resultLibrary, allelesStatistics)
+        allelesMutationsOutput?.let { allelesMutationsOutput ->
+            allelesMutationsOutput.toAbsolutePath().parent.createDirectories()
+            printAllelesMutationsOutput(resultLibrary, allelesStatistics, allelesMutationsOutput.toFile())
         }
     }
 
@@ -271,8 +274,12 @@ class CommandFindAlleles : MiXCRCommand() {
         merge(key, 1) { old, _ -> old + 1 }
     }
 
-    private fun printAllelesMutationsOutput(resultLibrary: VDJCLibrary, allelesStatistics: Map<String, Int>) {
-        PrintStream(allelesMutationsOutput!!).use { output ->
+    private fun printAllelesMutationsOutput(
+        resultLibrary: VDJCLibrary,
+        allelesStatistics: Map<String, Int>,
+        allelesMutationsOutput: File
+    ) {
+        PrintStream(allelesMutationsOutput).use { output ->
             val columns = mapOf<String, (VDJCGene) -> Any?>(
                 "alleleName" to { it.name },
                 "geneName" to { it.geneName },
@@ -295,8 +302,8 @@ class CommandFindAlleles : MiXCRCommand() {
             )
             val genes = resultLibrary.genes
                 .filter { it.geneType in VJ_REFERENCE }
-                .sortedWith(Comparator.comparing { it: VDJCGene -> it.geneType }
-                    .thenComparing { it: VDJCGene -> it.name })
+                .sortedWith(Comparator.comparing { gene: VDJCGene -> gene.geneType }
+                    .thenComparing { gene: VDJCGene -> gene.name })
             writeXSV(output, genes, columns, ";")
         }
     }

@@ -11,23 +11,30 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.trees.SHMTreesWriter
-import picocli.CommandLine
+import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
+import kotlin.io.path.extension
 
 abstract class CommandExportShmTreesAbstract : MiXCRCommand() {
-    @CommandLine.Parameters(index = "0", description = ["trees.${SHMTreesWriter.shmFileExtension}"])
-    lateinit var `in`: String
+    @Parameters(
+        index = "0",
+        paramLabel = "trees.$shmFileExtension",
+        hideParamSyntax = true,
+        description = ["Input file produced by ${CommandFindShmTrees.COMMAND_NAME}"]
+    )
+    lateinit var `in`: Path
 
-    abstract var out: String
+    abstract var out: Path
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override fun getInputFiles(): List<String> = listOf(`in`.toString())
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override fun getOutputFiles(): List<String> = listOf(out.toString())
 
     override fun validate() {
         super.validate()
-        if (!`in`.endsWith(".${SHMTreesWriter.shmFileExtension}")) {
-            throwValidationExceptionKotlin("Input file should have extension ${SHMTreesWriter.shmFileExtension}. Given $`in`")
+        if (!`in`.extension.endsWith(shmFileExtension)) {
+            throwValidationExceptionKotlin("Input file should have extension $shmFileExtension. Given $`in`")
         }
     }
 }

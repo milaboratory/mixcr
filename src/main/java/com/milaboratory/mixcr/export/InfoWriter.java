@@ -25,7 +25,12 @@ public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
 
     public InfoWriter(String file) throws FileNotFoundException {
         this(file == null ? new CloseShieldOutputStream(System.out) :
-                new BufferedOutputStream(new FileOutputStream(new File(file)), 65536));
+                new BufferedOutputStream(new FileOutputStream(file), 65536));
+    }
+
+    public InfoWriter(File file) throws FileNotFoundException {
+        this(file == null ? new CloseShieldOutputStream(System.out) :
+                new BufferedOutputStream(new FileOutputStream(file), 65536));
     }
 
     public void attachInfoProvider(FieldExtractor<? super T> provider) {

@@ -19,7 +19,8 @@ import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
-import kotlin.io.path.Path
+import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @Command(
@@ -29,12 +30,16 @@ import kotlin.io.path.writeText
     description = ["Export SHMTree as newick"]
 )
 class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
-    @Parameters(index = "1", description = ["output directory to write newick files"])
-    override lateinit var out: String
+    @Parameters(
+        index = "1",
+        paramLabel = "outputDir",
+        hideParamSyntax = true,
+        description = ["output directory to write newick files"]
+    )
+    override lateinit var out: Path
 
     override fun run0() {
-        val outputDir = Path(out)
-        outputDir.toFile().mkdirs()
+        out.createDirectories()
 
         val newickTreePrinter = NewickTreePrinter<SHMTreeForPostanalysis.BaseNode> {
             it.content.id.toString()
@@ -48,7 +53,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
                     reader.libraryRegistry
                 )
 
-                val newickFileOutput = outputDir.resolve("${shmTree.treeId}.tree")
+                val newickFileOutput = out.resolve("${shmTree.treeId}.tree")
 
                 newickFileOutput.writeText(newickTreePrinter.print(shmTreeForPostanalysis.tree))
             }
