@@ -15,9 +15,11 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.core.Range
+import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
+import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
@@ -33,6 +35,7 @@ import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSV
+import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.mapInParallelOrdered
@@ -411,7 +414,7 @@ private class CloneRebuild(
                 cloneFactory.create(
                     clone.id,
                     clone.count,
-                    clone.scoresWithAddedAlleles(),
+                    calculateScoresWithAddedAlleles(clone),
                     clone.tagCount,
                     clone.targets,
                     clone.group
@@ -419,22 +422,22 @@ private class CloneRebuild(
             }
             .toList()
 
-    private fun Clone.scoresWithAddedAlleles(): EnumMap<GeneType, List<GeneAndScore>> {
+    private fun calculateScoresWithAddedAlleles(clone: Clone): EnumMap<GeneType, List<GeneAndScore>> {
         val originalGeneScores = EnumMap<GeneType, List<GeneAndScore>>(GeneType::class.java)
         //copy D and C
         for (gt in arrayOf(Diversity, Constant)) {
-            originalGeneScores[gt] = getHits(gt).map { hit ->
+            originalGeneScores[gt] = clone.getHits(gt).map { hit ->
                 val mappedGeneId = VDJCGeneId(resultLibrary.libraryId, hit.gene.name)
                 GeneAndScore(mappedGeneId, hit.score)
             }
         }
         //add hits with alleles and add delta score
         for (gt in VJ_REFERENCE) {
-            originalGeneScores[gt] = getHits(gt).flatMap { hit ->
+            val allGeneAndScores = clone.getHits(gt).flatMap { hit ->
                 allelesMapping[hit.gene.name]!!.map { foundAlleleId ->
                     if (foundAlleleId.name != hit.gene.name) {
-                        //TODO use only one allele if they are too different (use relative min score from assemble parameters)
                         val scoreDelta = scoreDelta(
+                            clone,
                             resultLibrary[foundAlleleId.name],
                             cloneFactory.parameters.getVJCParameters(gt).scoring,
                             hit.alignments
@@ -445,36 +448,53 @@ private class CloneRebuild(
                     }
                 }
             }
+            val maxScore = allGeneAndScores.maxOf { it.score }
+            val scoreThreshold = maxScore * cloneFactory.parameters.getVJCParameters(gt).relativeMinScore
+            originalGeneScores[gt] = allGeneAndScores.filter { it.score >= scoreThreshold }
         }
         return originalGeneScores
     }
 
     private fun scoreDelta(
+        clone: Clone,
         foundAllele: VDJCGene,
         scoring: AlignmentScoring<NucleotideSequence>,
         alignments: Array<Alignment<NucleotideSequence>?>
     ): Float {
-        var scoreDelta = 0.0f
         //recalculate score for every alignment based on found allele
-        for (alignment in alignments) {
-            if (alignment == null) continue
-            val alleleMutations = foundAllele.data.baseSequence.mutations
-            if (alleleMutations != null) {
-                val seq1RangeAfterAlleleMutations = Range(
-                    positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.sequence1Range.lower)),
-                    positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.sequence1Range.upper))
-                )
-                val mutationsFromAllele = alignment.absoluteMutations.invert().combineWith(alleleMutations).invert()
-                //TODO realign sequence if alleleMutations have indels
-                val recalculatedScore = AlignmentUtils.calculateScore(
-                    alleleMutations.mutate(alignment.sequence1),
-                    seq1RangeAfterAlleleMutations,
-                    mutationsFromAllele.extractAbsoluteMutationsForRange(seq1RangeAfterAlleleMutations),
-                    scoring
-                )
+        val alleleMutations = foundAllele.data.baseSequence.mutations ?: return 0.0f
+        val alleleHasIndels = alleleMutations.asSequence().any { Mutation.isInDel(it) }
+        var scoreDelta = 0.0f
+        alignments
+            .filterNotNull()
+            .forEachIndexed { index, alignment ->
+                val recalculatedScore = when {
+                    //in case of indels invert().combineWith(alleleMutations).invert() may work incorrect
+                    alleleHasIndels -> {
+                        val seq1RangeAfterAlleleMutations = Range(
+                            positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.sequence1Range.lower)),
+                            positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.sequence1Range.upper))
+                        )
+                        Aligner.alignGlobal(
+                            scoring,
+                            alleleMutations.mutate(alignment.sequence1),
+                            clone.getTarget(index).sequence,
+                            seq1RangeAfterAlleleMutations.lower,
+                            seq1RangeAfterAlleleMutations.upper,
+                            alignment.sequence2Range.lower,
+                            alignment.sequence2Range.upper,
+                        ).score
+                    }
+                    else -> AlignmentUtils.calculateScore(
+                        alleleMutations.mutate(alignment.sequence1),
+                        alignment.sequence1Range,
+                        alignment.absoluteMutations.invert().combineWith(alleleMutations).invert()
+                            .extractAbsoluteMutationsForRange(alignment.sequence1Range),
+                        scoring
+                    ).toFloat()
+                }
                 scoreDelta += recalculatedScore - alignment.score
             }
-        }
         return scoreDelta
     }
 }
