@@ -210,7 +210,7 @@ class CommandAssembleContigs : MiXCRCommand() {
                                                     h.geneType != Variable && h.geneType != Joining ||
                                                             FullSeqAssembler.checkGeneCompatibility(
                                                                 h,
-                                                                cloneAssemblerParameters.assemblingFeatures[0]
+                                                                cloneAssemblerParameters.assemblingFeatures
                                                             )
                                                 }
                                                 .collect(

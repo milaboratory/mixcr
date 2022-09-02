@@ -2100,10 +2100,12 @@ public final class FullSeqAssembler {
      * @param assemblingFeature clonal assembling feature
      * @return true if gene is compatible
      */
-    public static boolean checkGeneCompatibility(VDJCHit hit, GeneFeature assemblingFeature) {
-        GeneFeature vFeature = hit.getAlignedFeature();
+    public static boolean checkGeneCompatibility(VDJCHit hit, GeneFeature[] assemblingFeature) {
+        GeneFeature alignedFeature = hit.getAlignedFeature();
+        GeneFeature targetFeature = GeneFeature.intersection(new GeneFeature(assemblingFeature), alignedFeature);
+        if (targetFeature == null)
+            return false;
         VDJCGene gene = hit.getGene();
-        GeneFeature targetFeature = GeneFeature.intersection(assemblingFeature, vFeature);
         return gene.getPartitioning().isAvailable(targetFeature);
     }
 }
