@@ -17,7 +17,6 @@ import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.pattern.LibraryStructurePresetCollection.LibraryStructurePreset
 import com.milaboratory.mitool.pattern.LibraryStructurePresetCollection.getPresetByName
 import com.milaboratory.mitool.pattern.SequenceSetCollection.loadSequenceSetByAddress
-import com.milaboratory.mitool.refinement.CorrectionNode
 import com.milaboratory.mitool.refinement.CorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
@@ -33,14 +32,9 @@ import com.milaboratory.mixcr.util.Defaults.default3
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
-import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.hashGrouping
-import com.milaboratory.primitivio.map
-import com.milaboratory.util.ReportHelper
-import com.milaboratory.util.ReportUtil
-import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.*
 import gnu.trove.list.array.TIntArrayList
 import org.apache.commons.io.FileUtils
 import picocli.CommandLine
@@ -207,7 +201,7 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
             val indicesBuilder = TIntArrayList()
             for (ti in mainReader.tagsInfo.indices) {
                 val tag = mainReader.tagsInfo[ti]
-                assert(ti == tag.index) /* just in case*/
+                assert(ti == tag.index) /* just in case */
                 if (tag.valueType == TagValueType.SequenceAndQuality) indicesBuilder.add(ti)
                 tagNames += tag.name
             }
@@ -216,33 +210,14 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
                 (if (noCorrect) "Sorting" else "Correction") +
                         " will be applied to the following tags: ${tagNames.joinToString(", ")}"
             )
-            val corrector = when {
-                noCorrect -> null
-                else -> TagCorrector(
-                    preset.calculateParameters(),
-                    tempDest.addSuffix("tags"),
-                    memoryBudget,
-                    4, 4
-                )
-            }
-            if (corrector != null) {
-                SmartProgressReporter.startProgressReport(corrector)
-            }
-            val correctionResult: CorrectionNode? = when (corrector) {
-                null -> null
-                else -> {
-                    // Extractor of tag information from the alignments for the tag corrector
-                    val cInput = mainReader.map { input: VDJCAlignments ->
-                        if (input.tagCount.size() != 1) throwExecutionException(
-                            "This procedure don't support aggregated tags. " +
-                                    "Please run tag correction for *.vdjca files produced by 'align'."
-                        )
-                        val tagTuple = input.tagCount.tuples().iterator().next()
-                        Array(targetTagIndices.size) { i ->
-                            (tagTuple[targetTagIndices[i]] as SequenceAndQualityTagValue).data
-                        }
-                    }
 
+            val (corrected, progress: CanReportProgress, numberOfAlignments) = when {
+                noCorrect -> {
+                    mitoolReport = null
+                    Triple(mainReader, mainReader, mainReader.numberOfAlignments)
+                }
+
+                else -> {
                     // Running correction
                     val whitelistsOptions = preset.getWhitelistsOptions()
                     val whitelists = mutableMapOf<Int, ShortSequenceSet>()
@@ -253,72 +228,106 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
                             whitelists[i] = loadSequenceSetByAddress(t)
                         }
                     }
-                    corrector.calculate(cInput, tagNames, whitelists, mainReader)
-                }
-            }
-            mitoolReport = corrector?.report
-            VDJCAlignmentsWriter(out).use { writer ->
-                val secondaryReader = mainReader.readAlignments()
-                val stateBuilder = PrimitivIOStateBuilder()
-                IOUtil.registerGeneReferences(stateBuilder, mainReader.usedGenes, mainReader.parameters)
-                val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> = { tagIdx ->
-                    hashGrouping(
-                        GroupingCriteria.groupBy { al ->
-                            val tagTuple = al.tagCount.singletonTuple
-                            (tagTuple[tagIdx] as SequenceAndQualityTagValue).data.sequence
+
+                    val corrector = TagCorrector(
+                        preset.calculateParameters(),
+                        tagNames,
+                        tempDest.addSuffix("tags"),
+                        whitelists,
+                        memoryBudget,
+                        4, 4
+                    )
+
+                    SmartProgressReporter.startProgressReport(corrector)
+
+                    // Will read the input stream once and extract all the required information from it
+                    corrector.initialize(mainReader, { al -> al.alignmentsIndex }) {
+                        if (it.tagCount.size() != 1) throwExecutionException(
+                            "This procedure don't support aggregated tags. " +
+                                    "Please run tag correction for *.vdjca files produced by 'align'."
+                        )
+                        val tagTuple = it.tagCount.tuples().iterator().next()
+                        Array(targetTagIndices.size) { tIdxIdx -> // <- local index for the procedure
+                            (tagTuple[targetTagIndices[tIdxIdx]] as SequenceAndQualityTagValue).data
+                        }
+                    }
+
+                    // Running correction, results are temporarily persisted in temp file, so the object can be used
+                    // multiple time to perform the correction and stream corrected and filtered results
+                    corrector.calculate()
+
+                    // Available after calculation finishes
+                    mitoolReport = corrector.report
+
+                    // Creating another alignment stream from the same container file to apply correction
+                    val secondaryReader = mainReader.readAlignments()
+
+                    Triple(
+                        corrector.applyCorrection(secondaryReader, { al -> al.alignmentsIndex }) { al, newTagValues ->
+                            // starting off the copy of original alignment tags array
+                            val updatedTags = al.tagCount.singletonTuple.asArray()
+                            targetTagIndices.forEachIndexed { tIdxIdx, tIdx ->
+                                // tIdxIdx - local index for the procedure
+                                // tIdx - index inside the alignment object
+                                updatedTags[tIdx] = SequenceAndQualityTagValue(newTagValues[tIdxIdx])
+                            }
+                            // Applying updated tags values and returning updated alignments object
+                            al.setTagCount(TagCount(TagTuple(*updatedTags)))
                         },
-                        stateBuilder,
-                        tempDest.addSuffix("hashsorter.$tagIdx"),
-                        bitsPerStep = 4,
-                        readerConcurrency = 4,
-                        writerConcurrency = 4,
-                        objectSizeInitialGuess = 10_000,
-                        memoryBudget = memoryBudget
+                        secondaryReader,
+                        corrector.report.outputRecords
                     )
                 }
+            }
+
+            VDJCAlignmentsWriter(out).use { writer ->
+                val alPioState = PrimitivIOStateBuilder()
+                IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.parameters)
+
+                // Reusable routine to perform has-based soring of alignments by tag with specific index
+                val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> =
+                    { tIdx -> // <- index inside the alignment object
+                        hashGrouping(
+                            GroupingCriteria.groupBy { al ->
+                                val tagTuple = al.tagCount.singletonTuple
+                                (tagTuple[tIdx] as SequenceAndQualityTagValue).data.sequence
+                            },
+                            alPioState,
+                            tempDest.addSuffix("hashsorter.$tIdx"),
+                            bitsPerStep = 4,
+                            readerConcurrency = 4,
+                            writerConcurrency = 4,
+                            objectSizeInitialGuess = 10_000,
+                            memoryBudget = memoryBudget
+                        )
+                    }
+
+                // Progress reporter for the first sorting step
                 SmartProgressReporter.startProgressReport(
                     when {
                         !noCorrect -> "Applying correction & sorting alignments by ${tagNames[targetTagIndices.size - 1]}"
                         else -> "Sorting alignments by ${tagNames[targetTagIndices.size - 1]}"
                     },
-                    secondaryReader
+                    progress
                 )
-
-                // Creating output port with corrected and filtered tags
-                val hsInput = secondaryReader
-                    .map { vdjcAlignments ->
-                        if (noCorrect) return@map vdjcAlignments
-                        val newTags = vdjcAlignments.tagCount.singletonTuple.asArray()
-                        var cn = correctionResult
-                        for (i in targetTagIndices) {
-                            val current = (newTags[i] as SequenceAndQualityTagValue).data.sequence
-                            cn = cn!!.nextLevel[current]
-                            if (cn == null) {
-                                mitoolReport!!.filteredRecords = mitoolReport.filteredRecords + 1
-                                return@map vdjcAlignments.setTagCount(null) // will be filtered right before hash sorter
-                            }
-                            newTags[i] = SequenceAndQualityTagValue(cn.correctValue)
-                        }
-                        vdjcAlignments.setTagCount(TagCount(TagTuple(*newTags)))
-                    }
-                    .filter { vdjcAlignments -> vdjcAlignments.tagCount != null }
 
                 // Running initial hash sorter
                 var sorted = CountingOutputPort(
-                    hsInput.hashSort(targetTagIndices[targetTagIndices.size - 1])
+                    corrected.hashSort(targetTagIndices[targetTagIndices.size - 1])
                 )
+                corrected.close()
 
                 // Sorting by other tags
-                for (tagIdxIdx in targetTagIndices.size - 2 downTo 0) {
+                for (tIdxIdx in targetTagIndices.size - 2 downTo 0) {
                     SmartProgressReporter.startProgressReport(
-                        "Sorting alignments by " + tagNames[tagIdxIdx],
-                        SmartProgressReporter.extractProgress(sorted, mainReader.numberOfAlignments)
+                        "Sorting alignments by " + tagNames[tIdxIdx],
+                        SmartProgressReporter.extractProgress(sorted, numberOfAlignments)
                     )
-                    sorted = CountingOutputPort(sorted.hashSort(targetTagIndices[tagIdxIdx]))
+                    sorted = CountingOutputPort(sorted.hashSort(targetTagIndices[tIdxIdx]))
                 }
                 SmartProgressReporter.startProgressReport(
                     "Writing result",
-                    SmartProgressReporter.extractProgress(sorted, mainReader.numberOfAlignments)
+                    SmartProgressReporter.extractProgress(sorted, numberOfAlignments)
                 )
 
                 // Initializing and writing results to the output file
@@ -337,7 +346,7 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
                     MiXCRVersionInfo.get().shortestVersionString,
                     mitoolReport
                 )
-                writer.writeFooter(mainReader.reports(), null /*correctAndSortTagsReport*/) //fixme
+                writer.writeFooter(mainReader.reports(), null /*correctAndSortTagsReport*/) // fixme
             }
         }
         correctAndSortTagsReport.writeReport(ReportHelper.STDOUT)
