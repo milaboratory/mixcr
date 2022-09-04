@@ -28,7 +28,6 @@ import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
-import com.milaboratory.mixcr.util.Defaults.default3
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
@@ -141,13 +140,14 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
         optionValue: T?,
         presetExtractor2: TagCorrectorParameters.() -> T?,
         defaultValue: T
-    ): T = default3(
-        optionValue,
-        this,
-        LibraryStructurePreset::tagCorrectionParameters,
-        presetExtractor2,
-        defaultValue
-    )
+    ): T = TODO()
+    // default3(
+    //     optionValue,
+    //     this,
+    //     LibraryStructurePreset::tagCorrectionParameters,
+    //     presetExtractor2,
+    //     defaultValue
+    // )
 
     private fun LibraryStructurePreset?.calculateParameters(): TagCorrectorParameters = TagCorrectorParameters(
         defaultHelper(
@@ -196,7 +196,7 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
         val correctAndSortTagsReport: CorrectAndSortTagsReport
         val mitoolReport: CorrectionReport?
         VDJCAlignmentsReader(`in`).use { mainReader ->
-            val preset = mainReader.info.tagPreset?.let { getPresetByName(it) }
+            val preset = mainReader.info.preset.let { getPresetByName(it) }
             val tagNames = mutableListOf<String>()
             val indicesBuilder = TIntArrayList()
             for (ti in mainReader.tagsInfo.indices) {

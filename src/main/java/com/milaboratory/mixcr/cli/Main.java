@@ -161,7 +161,7 @@ public final class Main {
                 .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)
                 .addSubcommand("overlapScatterPlot", CommandOverlapScatter.class)
 
-                .addSubcommand("align", CommandAlign.class)
+                .addSubcommand("align", CommandAlign.Cmd.class)
                 .addSubcommand("assemble", CommandAssemble.class)
                 // .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)

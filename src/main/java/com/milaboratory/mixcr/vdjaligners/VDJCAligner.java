@@ -157,9 +157,9 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     }
 
     public static VDJCAligner createAligner(VDJCAlignerParameters alignerParameters,
-                                            boolean paired, boolean merge) {
+                                            boolean paired, boolean overridePairedReads) {
         return paired ?
-                merge ? new VDJCAlignerWithMerge(alignerParameters)
+                overridePairedReads ? new VDJCAlignerWithMerge(alignerParameters)
                         : new VDJCAlignerPVFirst(alignerParameters)
                 : new VDJCAlignerS(alignerParameters);
     }

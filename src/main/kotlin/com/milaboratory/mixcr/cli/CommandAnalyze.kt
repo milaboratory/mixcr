@@ -185,10 +185,9 @@ abstract class CommandAnalyze : MiXCRCommand() {
     )
     var alignParameters: List<String> = mutableListOf()
 
-    private val cmdAlign: CommandAlign by lazy {
+    private val cmdAlign: CommandAlign.Cmd by lazy {
         inheritOptionsAndValidate(mkAlign())
     }
-
 
     open fun include5UTRInRNA(): Boolean = true
 
@@ -222,7 +221,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
 
     protected abstract fun needCorrectAndSortTags(): Boolean
 
-    open fun mkAlign(): CommandAlign {
+    open fun mkAlign(): CommandAlign.Cmd {
         // align parameters
         val alignParameters = mutableListOf<String>()
 
@@ -263,7 +262,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         alignParameters += fNameForAlignments
 
         // parse parameters
-        val ap = CommandAlign()
+        val ap = CommandAlign.Cmd()
         ap.spec = spec
         CommandLine(ap).parseArgs(*alignParameters.toTypedArray())
         return ap
@@ -721,7 +720,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
 
         override fun needCorrectAndSortTags(): Boolean = false
 
-        override fun mkAlign(): CommandAlign {
+        override fun mkAlign(): CommandAlign.Cmd {
             val align = super.mkAlign()
             val alignmentParameters = align.alignerParameters
             if (alignmentParameters.vAlignerParameters.parameters.isFloatingLeftBound)

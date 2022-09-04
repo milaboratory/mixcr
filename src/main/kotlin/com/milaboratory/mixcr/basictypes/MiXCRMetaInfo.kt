@@ -31,7 +31,7 @@ import io.repseq.dto.VDJCLibraryData
 @Serializable(by = MiXCRMetaInfo.SerializerImpl::class)
 data class MiXCRMetaInfo(
     /** Set by used on align step, used to deduce defaults on all downstream steps  */
-    val tagPreset: String? = null,
+    val preset: String,
     /** Aligner parameters */
     val tagsInfo: TagsInfo = TagsInfo.NO_TAGS,
     /** Aligner parameters */
@@ -79,7 +79,7 @@ data class MiXCRMetaInfo(
 
     class SerializerImpl : BasicSerializer<MiXCRMetaInfo>() {
         override fun write(output: PrimitivO, obj: MiXCRMetaInfo) {
-            output.writeObject(obj.tagPreset)
+            output.writeObject(obj.preset)
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
             output.writeObject(obj.assemblerParameters)
@@ -88,7 +88,7 @@ data class MiXCRMetaInfo(
         }
 
         override fun read(input: PrimitivI): MiXCRMetaInfo = MiXCRMetaInfo(
-            input.readObjectOptional(),
+            input.readObjectRequired(),
             input.readObjectRequired(),
             input.readObjectRequired(),
             input.readObjectOptional(),

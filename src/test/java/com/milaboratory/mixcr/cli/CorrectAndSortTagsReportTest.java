@@ -47,18 +47,18 @@ public class CorrectAndSortTagsReportTest {
         TestUtil.assertJson(r);
     }
 
-    @Test
-    @Ignore //fixme: remove after merge from new tags branch
-    public void testNotNullReport() {
-        CorrectAndSortTagsReport r = new CorrectAndSortTagsReport(
-                new Date(),
-                "",
-                new String[0],
-                new String[0],
-                0L,
-                MiXCRVersionInfo.get().getShortestVersionString(),
-                new CorrectionReport(Collections.singletonList(new CorrectionStepReport("step1")))
-        );
-        TestUtil.assertJson(r);
-    }
+    // @Test
+    // @Ignore //fixme: remove after merge from new tags branch
+    // public void testNotNullReport() {
+    //     CorrectAndSortTagsReport r = new CorrectAndSortTagsReport(
+    //             new Date(),
+    //             "",
+    //             new String[0],
+    //             new String[0],
+    //             0L,
+    //             MiXCRVersionInfo.get().getShortestVersionString(),
+    //             new CorrectionReport(Collections.singletonList(new CorrectionStepReport("step1")))
+    //     );
+    //     TestUtil.assertJson(r);
+    // }
 }

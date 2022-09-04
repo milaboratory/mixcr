@@ -12,18 +12,18 @@
 package com.milaboratory.mixcr.util
 
 
-object Defaults {
-    fun <T> default3(optionValue: T?, presetValue: T?, defaultValue: T): T =
-        optionValue ?: (presetValue ?: defaultValue)
-
-    fun <T, P> default3(optionValue: T?, preset: P?, presetExtractor: P.() -> T?, defaultValue: T): T =
-        optionValue ?: (preset?.presetExtractor() ?: defaultValue)
-
-    fun <T, P1, P2> default3(
-        optionValue: T?,
-        preset: P1?,
-        presetExtractor1: P1.() -> P2?,
-        presetExtractor2: P2.() -> T?,
-        defaultValue: T
-    ): T = optionValue ?: (preset?.presetExtractor1()?.presetExtractor2() ?: defaultValue)
-}
+// object Defaults {
+//     fun <T> default3(optionValue: T?, presetValue: T?, defaultValue: T): T =
+//         optionValue ?: (presetValue ?: defaultValue)
+//
+//     fun <T, P> default3(optionValue: T?, preset: P?, presetExtractor: P.() -> T?, defaultValue: T): T =
+//         optionValue ?: (preset?.presetExtractor() ?: defaultValue)
+//
+//     fun <T, P1, P2> default3(
+//         optionValue: T?,
+//         preset: P1?,
+//         presetExtractor1: P1.() -> P2?,
+//         presetExtractor2: P2.() -> T?,
+//         defaultValue: T
+//     ): T = optionValue ?: (preset?.presetExtractor1()?.presetExtractor2() ?: defaultValue)
+// }

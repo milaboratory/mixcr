@@ -91,7 +91,7 @@ repositories {
 
 val milibVersion = "2.0.0-17-master"
 val repseqioVersion = "1.4.1-17-master"
-val mitoolVersion = "1.1.0-44-main"
+val mitoolVersion = "1.1.0-55-main"
 val miplotsVersion = "1.0.0-24-master"
 val jacksonBomVersion = "2.13.3"
 val redberryPipeVersion = "1.2.0-5-master"

@@ -1,0 +1,126 @@
+"align_universal":
+  align:
+    species: ""
+    trimmingQualityThreshold: 0
+    trimmingWindowSize: 6
+    chains: ALL
+    overlapPairedReads: true
+    bamDropNonVDJ: false
+    writeFailedAlignments: false
+    tagPattern: null
+    tagUnstranded: false
+    tagMaxBudget: 10
+    parameters:
+      fixSeed: true
+      libraryStructure: Unknown
+      vParameters:
+        geneFeatureToAlign: VRegionWithP
+        minSumScore: 50
+        relativeMinScore: 0.97
+        parameters:
+          type: kaligner
+          mapperKValue: 5
+          floatingLeftBound: true
+          floatingRightBound: true
+          mapperAbsoluteMinScore: 1.5
+          mapperRelativeMinScore: 0.7
+          mapperMatchScore: 1
+          mapperMismatchPenalty: -0.1
+          mapperOffsetShiftPenalty: -0.3
+          mapperMinSeedsDistance: 4
+          mapperMaxSeedsDistance: 10
+          minAlignmentLength: 15
+          maxAdjacentIndels: 2
+          alignmentStopPenalty: -1000
+          absoluteMinScore: 40
+          relativeMinScore: 0.87
+          maxHits: 7
+          scoring:
+            type: linear
+            subsMatrix: simple(match = 5, mismatch = -9)
+            gapPenalty: -12
+      dParameters:
+        geneFeatureToAlign: DRegionWithP
+        absoluteMinScore: 25
+        relativeMinScore: 0.85
+        maxHits: 3
+        scoring:
+          type: linear
+          subsMatrix: simple(match = 5, mismatch = -9)
+          gapPenalty: -12
+      jParameters:
+        geneFeatureToAlign: JRegionWithP
+        minSumScore: 40
+        relativeMinScore: 0.97
+        parameters:
+          type: kaligner
+          mapperKValue: 5
+          floatingLeftBound: true
+          floatingRightBound: false
+          mapperAbsoluteMinScore: 1.5
+          mapperRelativeMinScore: 0.75
+          mapperMatchScore: 1
+          mapperMismatchPenalty: -0.1
+          mapperOffsetShiftPenalty: -0.3
+          mapperMinSeedsDistance: 4
+          mapperMaxSeedsDistance: 10
+          minAlignmentLength: 15
+          maxAdjacentIndels: 2
+          alignmentStopPenalty: -1000
+          absoluteMinScore: 40
+          relativeMinScore: 0.87
+          maxHits: 7
+          scoring:
+            type: linear
+            subsMatrix: simple(match = 5, mismatch = -9)
+            gapPenalty: -12
+      cParameters:
+        geneFeatureToAlign: CExon1
+        minSumScore: 40
+        relativeMinScore: 0.97
+        parameters:
+          type: kaligner
+          mapperKValue: 5
+          floatingLeftBound: false
+          floatingRightBound: false
+          mapperAbsoluteMinScore: 1.5
+          mapperRelativeMinScore: 0.75
+          mapperMatchScore: 1
+          mapperMismatchPenalty: -0.1
+          mapperOffsetShiftPenalty: -0.3
+          mapperMinSeedsDistance: 4
+          mapperMaxSeedsDistance: 10
+          minAlignmentLength: 15
+          maxAdjacentIndels: 2
+          alignmentStopPenalty: -1000
+          absoluteMinScore: 40
+          relativeMinScore: 0.87
+          maxHits: 7
+          scoring:
+            type: linear
+            subsMatrix: simple(match = 5, mismatch = -9)
+            gapPenalty: -12
+      vjAlignmentOrder: VThenJ
+      includeDScore: false
+      includeCScore: false
+      mergerParameters:
+        qualityMergingAlgorithm: MaxSubtraction
+        minimalOverlap: 17
+        minimalIdentity: 0.9
+        identityType: Unweighted
+      minSumScore: 120
+      maxHits: 5
+      relativeMinVFR3CDR3Score: 0.7
+      allowPartialAlignments: false
+      allowNoCDR3PartAlignments: false
+      allowChimeras: false
+      alignmentBoundaryTolerance: 5
+      minChimeraDetectionScore: 120
+      vjOverlapWindow: 3
+      readsLayout: Opposite
+      saveOriginalReads: false
+      smartForceEdgeAlignments: true
+
+"universal":
+  align:
+    inheritFrom: align_universal
