@@ -72,10 +72,11 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<Javadoc> {
-    options {
-        this as StandardJavadocDocletOptions
-        addStringOption("Xdoclint:none", "-quiet")
-    }
+    enabled = false
+    // options {
+    //     this as StandardJavadocDocletOptions
+    //     addStringOption("Xdoclint:none", "-quiet")
+    // }
 }
 
 repositories {
