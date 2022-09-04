@@ -18,6 +18,7 @@ import com.milaboratory.cli.Preset
 import com.milaboratory.cli.PresetResolver
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.cli.CommandAlign
+import com.milaboratory.mixcr.cli.RefineTagsAndSort
 import kotlin.reflect.KProperty1
 
 object Presets {
@@ -39,9 +40,11 @@ object Presets {
     val presets get() = presetCollection.keys
 
     val align = getResolver(MiXCRPresetSet::align)
+    val refineTagsAndSort = getResolver(MiXCRPresetSet::refineTagsAndSort)
 
     private class MiXCRPresetSet(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
         @JsonProperty("align") val align: Preset<CommandAlign.Params>? = null,
+        @JsonProperty("refineTagsAndSort") val refineTagsAndSort: Preset<RefineTagsAndSort.Params>? = null,
     ) : AbstractPresetSet<MiXCRPresetSet>
 }

@@ -276,7 +276,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
     var correctAndSortTagsParameters: List<String> = mutableListOf()
 
     /** Build parameters for assemble partial  */
-    private fun mkCorrectAndSortTags(input: String, output: String): CommandCorrectAndSortTags {
+    private fun mkCorrectAndSortTags(input: String, output: String): RefineTagsAndSort.Cmd {
         val correctAndSortTagsParameters = mutableListOf<String>()
 
         // adding report options
@@ -291,7 +291,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         correctAndSortTagsParameters += output
 
         // parse parameters
-        val ap = CommandCorrectAndSortTags()
+        val ap = RefineTagsAndSort.Cmd()
         CommandLine(ap).parseArgs(*correctAndSortTagsParameters.toTypedArray())
         return inheritOptionsAndValidate(ap)
     }

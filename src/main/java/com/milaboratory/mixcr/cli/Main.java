@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
-import static com.milaboratory.mixcr.cli.CommandCorrectAndSortTags.CORRECT_AND_SORT_TAGS_COMMAND_NAME;
 
 public final class Main {
 
@@ -161,12 +160,13 @@ public final class Main {
                 .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)
                 .addSubcommand("overlapScatterPlot", CommandOverlapScatter.class)
 
-                .addSubcommand("align", CommandAlign.Cmd.class)
+                .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.Cmd.class)
+
+                .addSubcommand(RefineTagsAndSort.COMMAND_NAME, RefineTagsAndSort.Cmd.class)
+
                 .addSubcommand("assemble", CommandAssemble.class)
                 // .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
-
-                .addSubcommand(CORRECT_AND_SORT_TAGS_COMMAND_NAME, CommandCorrectAndSortTags.class)
 
                 .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
                 .addSubcommand("extend", CommandExtend.class)

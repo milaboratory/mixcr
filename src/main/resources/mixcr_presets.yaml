@@ -121,6 +121,18 @@
       saveOriginalReads: false
       smartForceEdgeAlignments: true
 
+"refineTags_universal":
+  refineTags:
+    runCorrection: true
+    parameters:
+      correctionPower: 1E-3
+      backgroundSubstitutionRate: 1E-3
+      backgroundIndelRate: 1E-5
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalError: 3
+
 "universal":
   align:
     inheritFrom: align_universal
