@@ -46,6 +46,8 @@ class SHMTreesWriter(
             // Writing version information
             o.writeUTF(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile))
 
+            //TODO replace with MiXCRMetaInfo
+
             // Writing analysis meta-information
             o.writeObject(assemblerParameters)
             o.writeObject(alignerParameters)

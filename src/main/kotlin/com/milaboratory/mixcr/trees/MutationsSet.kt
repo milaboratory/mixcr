@@ -9,6 +9,8 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
+@file:Suppress("LocalVariableName")
+
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.mutations.Mutations
@@ -21,6 +23,7 @@ import com.milaboratory.primitivio.Util
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readMap
 import com.milaboratory.primitivio.readObjectRequired
+import io.repseq.core.GeneFeature
 
 /**
  * Describe mutations of node from the root of the tree.
@@ -46,17 +49,24 @@ data class MutationsSet private constructor(
             Util.writeMap(obj.mutations.J.mutationsOutsideOfCDR3, output)
         }
 
-        override fun read(input: PrimitivI): MutationsSet = MutationsSet(
-            VGeneMutations(
-                input.readMap(),
-                input.readObjectRequired()
-            ),
-            input.readObjectRequired(),
-            JGeneMutations(
-                input.readObjectRequired(),
-                input.readMap(),
+        override fun read(input: PrimitivI): MutationsSet {
+            val VMutations = input.readMap<GeneFeature, Mutations<NucleotideSequence>>()
+            val VPartInCDR3 = input.readObjectRequired<PartInCDR3>()
+            val NDNMutations = input.readObjectRequired<NDNMutations>()
+            val JPartInCDR3 = input.readObjectRequired<PartInCDR3>()
+            val JMutations = input.readMap<GeneFeature, Mutations<NucleotideSequence>>()
+            return MutationsSet(
+                VGeneMutations(
+                    VMutations,
+                    VPartInCDR3
+                ),
+                NDNMutations,
+                JGeneMutations(
+                    JPartInCDR3,
+                    JMutations,
+                )
             )
-        )
+        }
     }
 }
 
@@ -71,8 +81,11 @@ data class NDNMutations(
             output.writeObject(obj.mutations)
         }
 
-        override fun read(input: PrimitivI): NDNMutations = NDNMutations(
-            input.readObjectRequired()
-        )
+        override fun read(input: PrimitivI): NDNMutations {
+            val mutations = input.readObjectRequired<Mutations<NucleotideSequence>>()
+            return NDNMutations(
+                mutations
+            )
+        }
     }
 }

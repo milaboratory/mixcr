@@ -32,10 +32,15 @@ class CloneOrFoundAncestor(
             output.writeObject(obj.mutationsSet)
         }
 
-        override fun read(input: PrimitivI): CloneOrFoundAncestor = CloneOrFoundAncestor(
-            input.readInt(),
-            input.readList(),
-            input.readObjectRequired()
-        )
+        override fun read(input: PrimitivI): CloneOrFoundAncestor {
+            val id = input.readInt()
+            val clones = input.readList<CloneWithDatasetId>()
+            val mutationsSet = input.readObjectRequired<MutationsSet>()
+            return CloneOrFoundAncestor(
+                id,
+                clones,
+                mutationsSet
+            )
+        }
     }
 }
