@@ -17,7 +17,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 interface AllelesSearcher {
     fun search(clones: List<CloneDescription>): List<Result>
 
-    class Result(
+    data class Result(
         val allele: Mutations<NucleotideSequence>
     )
 }

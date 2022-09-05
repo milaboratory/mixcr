@@ -158,7 +158,10 @@ class TIgGERAllelesSearcher(
 
         val xPoints = (0 until parameters.windowSizeForRegression)
             .map { i -> i + mutationCountWithMaxClonesCount }
-            .filter { x -> countByMutationsCountWithTheMutation[x] != 0 }
+            .filter { x ->
+                val pointValue = countByMutationsCountWithTheMutation[x]
+                pointValue != null && pointValue != 0
+            }
         if (parameters.windowSizeForRegression - xPoints.size > parameters.allowedSkippedPointsInRegression) {
             return false
         }

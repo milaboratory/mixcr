@@ -315,7 +315,7 @@ class AllelesBuilder(
             }
             else -> throw UnsupportedOperationException()
         }
-        meta["alleleMutationsReliableGeneFeatures"] =
+        meta[metaKeyForAlleleMutationsReliableGeneFeatures] =
             knownFeatures.features.map { GeneFeature.encode(it) }.toSortedSet()
         meta["alleleVariantOf"] = sortedSetOf(gene.name)
         return meta
@@ -334,10 +334,13 @@ class AllelesBuilder(
         val knownCDR3RangeLength: Int,
         val mappedReferencePoints: ReferencePoints
     ) {
-
         override fun toString(): String = "Allele{" +
                 "id=" + gene.name +
                 ", mutations=" + mutations +
                 '}'
+    }
+
+    companion object {
+        const val metaKeyForAlleleMutationsReliableGeneFeatures = "alleleMutationsReliableGeneFeatures"
     }
 }

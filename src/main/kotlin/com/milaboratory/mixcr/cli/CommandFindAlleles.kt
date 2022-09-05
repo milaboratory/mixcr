@@ -22,6 +22,7 @@ import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AllelesBuilder
+import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
@@ -68,6 +69,7 @@ import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
@@ -270,10 +272,6 @@ class CommandFindAlleles : MiXCRCommand() {
         }
     }
 
-    private fun <T> MutableMap<T, Int>.increment(key: T) {
-        merge(key, 1) { old, _ -> old + 1 }
-    }
-
     private fun printAllelesMutationsOutput(
         resultLibrary: VDJCLibrary,
         allelesStatistics: Map<String, Int>,
@@ -287,8 +285,8 @@ class CommandFindAlleles : MiXCRCommand() {
                 "regions" to { gene ->
                     gene.data.baseSequence.regions?.joinToString { it.toString() }
                 },
-                "alleleMutationsReliableRanges" to { gene ->
-                    gene.data.meta["alleleMutationsReliableRanges"]
+                metaKeyForAlleleMutationsReliableGeneFeatures to { gene ->
+                    gene.data.meta[metaKeyForAlleleMutationsReliableGeneFeatures]
                 },
                 "mutations" to { gene ->
                     gene.data.baseSequence.mutations?.encode() ?: ""
@@ -410,15 +408,16 @@ private class CloneRebuild(
         alignerParameters.featuresToAlignMap
     )
 
-    //TODO move this logic to contig command
     /**
-     * Every clone will be assembled by assemblingFeatures.
      * For every clone will be added hits aligned to found alleles.
+     * If there is no zero allele, initial hit will be deleted from a clone.
+     * Only top hits will be saved (VJCClonalAlignerParameters#relativeMinScore param)
      */
-    fun rebuildClones(input: OutputPort<Clone>): List<Clone> =
-        input
+    fun rebuildClones(input: OutputPort<Clone>): List<Clone> {
+        val errorsCount: MutableMap<VDJCGeneId, Int> = ConcurrentHashMap()
+        val result = input
             .mapInParallelOrdered(threads) { clone ->
-                cloneFactory.create(
+                val result = cloneFactory.create(
                     clone.id,
                     clone.count,
                     calculateScoresWithAddedAlleles(clone),
@@ -426,8 +425,20 @@ private class CloneRebuild(
                     clone.targets,
                     clone.group
                 )
+                for (gt in VJ_REFERENCE) {
+                    val bestHit = result.getBestHit(gt)
+                    if (bestHit.score <= 0.0) {
+                        errorsCount.increment(bestHit.gene.id)
+                    }
+                }
+                result
             }
             .toList()
+        errorsCount.forEach { (geneId, count) ->
+            println("WARN: for $geneId found $count clones that get negative score after realigning")
+        }
+        return result
+    }
 
     private fun calculateScoresWithAddedAlleles(clone: Clone): EnumMap<GeneType, List<GeneAndScore>> {
         val originalGeneScores = EnumMap<GeneType, List<GeneAndScore>>(GeneType::class.java)
@@ -456,8 +467,13 @@ private class CloneRebuild(
                 }
             }
             val maxScore = allGeneAndScores.maxOf { it.score }
-            val scoreThreshold = maxScore * cloneFactory.parameters.getVJCParameters(gt).relativeMinScore
-            originalGeneScores[gt] = allGeneAndScores.filter { it.score >= scoreThreshold }
+            if (maxScore <= 0) {
+                //in case of clone that is too different with found allele
+                originalGeneScores[gt] = allGeneAndScores
+            } else {
+                val scoreThreshold = maxScore * cloneFactory.parameters.getVJCParameters(gt).relativeMinScore
+                originalGeneScores[gt] = allGeneAndScores.filter { it.score >= scoreThreshold }
+            }
         }
         return originalGeneScores
     }
@@ -504,4 +520,8 @@ private class CloneRebuild(
             }
         return scoreDelta
     }
+}
+
+private fun <T> MutableMap<T, Int>.increment(key: T) {
+    merge(key, 1) { old, _ -> old + 1 }
 }
