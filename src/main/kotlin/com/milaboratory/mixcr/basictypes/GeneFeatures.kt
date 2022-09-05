@@ -32,6 +32,21 @@ class GeneFeatures(
 
     init {
         check(features.isNotEmpty())
+        for (feature in features) {
+            check(!feature.isComposite) {
+                "Composite features must be represented as separate features: $feature"
+            }
+        }
+        for (i in (1 until features.size)) {
+            require(features[i - 1] < features[i]) {
+                features.map { GeneFeature.encode(it) } + " are not ordered"
+            }
+        }
+        for (i in (1 until features.size)) {
+            require(GeneFeature.intersection(features[i - 1], features[i]) == null) {
+                "${features[i - 1]} and ${features[i]} are intersecting"
+            }
+        }
     }
 
     fun intersection(other: GeneFeature): GeneFeatures? {
