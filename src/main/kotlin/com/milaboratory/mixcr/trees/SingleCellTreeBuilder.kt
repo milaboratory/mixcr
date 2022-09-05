@@ -294,10 +294,14 @@ class ChainPairKeyWithCellBarcode(
             output.writeObject(obj.cellBarcode)
         }
 
-        override fun read(input: PrimitivI): ChainPairKeyWithCellBarcode = ChainPairKeyWithCellBarcode(
-            input.readObjectRequired(),
-            input.readObjectRequired()
-        )
+        override fun read(input: PrimitivI): ChainPairKeyWithCellBarcode {
+            val chainPairKey = input.readObjectRequired<ChainPairKey>()
+            val cellBarcode = input.readObjectRequired<CellBarcodeWithDatasetId>()
+            return ChainPairKeyWithCellBarcode(
+                chainPairKey,
+                cellBarcode
+            )
+        }
     }
 }
 
@@ -312,10 +316,14 @@ data class ChainPairKey(
             output.writeObject(obj.light)
         }
 
-        override fun read(input: PrimitivI): ChainPairKey = ChainPairKey(
-            input.readObjectRequired(),
-            input.readObjectRequired()
-        )
+        override fun read(input: PrimitivI): ChainPairKey {
+            val heavy = input.readObjectRequired<VJBase>()
+            val light = input.readObjectRequired<VJBase>()
+            return ChainPairKey(
+                heavy,
+                light
+            )
+        }
     }
 }
 
@@ -339,10 +347,14 @@ class ChainPair(
             output.writeObject(obj.light)
         }
 
-        override fun read(input: PrimitivI): ChainPair = ChainPair(
-            input.readObjectRequired(),
-            input.readObjectRequired()
-        )
+        override fun read(input: PrimitivI): ChainPair {
+            val heavy = input.readObjectRequired<CloneWithDatasetId>()
+            val light = input.readObjectRequired<CloneWithDatasetId>()
+            return ChainPair(
+                heavy,
+                light
+            )
+        }
     }
 }
 
@@ -360,11 +372,16 @@ class CellGroup(
             output.writeObject(obj.cellBarcode)
         }
 
-        override fun read(input: PrimitivI): CellGroup = CellGroup(
-            input.readList(),
-            input.readList(),
-            input.readObjectRequired()
-        )
+        override fun read(input: PrimitivI): CellGroup {
+            val heavy = input.readList<Clone>()
+            val light = input.readList<Clone>()
+            val cellBarcode = input.readObjectRequired<CellBarcodeWithDatasetId>()
+            return CellGroup(
+                heavy,
+                light,
+                cellBarcode
+            )
+        }
     }
 }
 
@@ -382,11 +399,16 @@ class CloneAndCellTag(
             output.writeInt(obj.tagCount)
         }
 
-        override fun read(input: PrimitivI): CloneAndCellTag = CloneAndCellTag(
-            input.readObjectRequired(),
-            input.readObjectRequired(),
-            input.readInt()
-        )
+        override fun read(input: PrimitivI): CloneAndCellTag {
+            val clone = input.readObjectRequired<Clone>()
+            val cellBarcode = input.readObjectRequired<CellBarcodeWithDatasetId>()
+            val tagCount = input.readInt()
+            return CloneAndCellTag(
+                clone,
+                cellBarcode,
+                tagCount
+            )
+        }
     }
 }
 
@@ -401,10 +423,14 @@ class GroupOfCells(
             output.writeCollection(obj.cellBarcodes)
         }
 
-        override fun read(input: PrimitivI): GroupOfCells = GroupOfCells(
-            input.readObjectRequired(),
-            input.readList()
-        )
+        override fun read(input: PrimitivI): GroupOfCells {
+            val chainPairKey = input.readObjectRequired<ChainPairKey>()
+            val cellBarcodes = input.readList<CellBarcodeWithDatasetId>()
+            return GroupOfCells(
+                chainPairKey,
+                cellBarcodes
+            )
+        }
     }
 }
 
@@ -425,9 +451,13 @@ data class CellBarcodeWithDatasetId(
             output.writeInt(obj.datasetId)
         }
 
-        override fun read(input: PrimitivI): CellBarcodeWithDatasetId = CellBarcodeWithDatasetId(
-            input.readObjectRequired(),
-            input.readInt()
-        )
+        override fun read(input: PrimitivI): CellBarcodeWithDatasetId {
+            val cellBarcode = input.readObjectRequired<NucleotideSequence>()
+            val datasetId = input.readInt()
+            return CellBarcodeWithDatasetId(
+                cellBarcode,
+                datasetId
+            )
+        }
     }
 }

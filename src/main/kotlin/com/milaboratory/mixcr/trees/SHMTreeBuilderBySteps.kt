@@ -702,7 +702,7 @@ internal class SHMTreeBuilderBySteps(
     }
 
     @Serializable(by = Cluster.SerializerImpl::class)
-    class Cluster(
+    private class Cluster(
         val clones: List<CloneWrapper>
     ) {
         class SerializerImpl : BasicSerializer<Cluster>() {
@@ -710,7 +710,10 @@ internal class SHMTreeBuilderBySteps(
                 output.writeCollection(obj.clones)
             }
 
-            override fun read(input: PrimitivI): Cluster = Cluster(input.readList())
+            override fun read(input: PrimitivI): Cluster {
+                val clones = input.readList<CloneWrapper>()
+                return Cluster(clones)
+            }
         }
     }
 }

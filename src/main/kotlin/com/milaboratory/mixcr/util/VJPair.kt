@@ -9,13 +9,18 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
+@file:Suppress("LocalVariableName")
+
 package com.milaboratory.mixcr.util
 
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 
-data class VJPair<T>(
+data class VJPair<T : Any>(
     val V: T,
     val J: T
 ) {
@@ -25,10 +30,21 @@ data class VJPair<T>(
         else -> throw IllegalArgumentException()
     }
 
-    fun <R> map(function: (T) -> R): VJPair<R> = VJPair(
+    fun <R : Any> map(function: (T) -> R): VJPair<R> = VJPair(
         V = function(V),
         J = function(J),
     )
 
     override fun toString(): String = "(V=$V, J=$J)"
+}
+
+fun <T : Any> PrimitivO.writePair(pair: VJPair<T>) {
+    writeObject(pair.V)
+    writeObject(pair.J)
+}
+
+inline fun <reified T : Any> PrimitivI.readPair(): VJPair<T> {
+    val V = readObjectRequired<T>()
+    val J = readObjectRequired<T>()
+    return VJPair(V, J)
 }

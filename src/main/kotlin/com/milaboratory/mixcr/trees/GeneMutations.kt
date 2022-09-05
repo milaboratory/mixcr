@@ -100,9 +100,13 @@ data class PartInCDR3(
             output.writeObject(obj.mutations)
         }
 
-        override fun read(input: PrimitivI): PartInCDR3 = PartInCDR3(
-            input.readObjectRequired(),
-            input.readObjectRequired()
-        )
+        override fun read(input: PrimitivI): PartInCDR3 {
+            val range = input.readObjectRequired<Range>()
+            val mutations = input.readObjectRequired<Mutations<NucleotideSequence>>()
+            return PartInCDR3(
+                range,
+                mutations
+            )
+        }
     }
 }

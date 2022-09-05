@@ -58,9 +58,11 @@ fun PrimitivO.writeCollection(collection: Collection<*>) {
 }
 
 inline fun <reified T : Any, C : MutableCollection<T>> PrimitivI.readCollection(supplier: (size: Int) -> C): C {
-    var size = this.readInt()
+    val size = this.readInt()
     val list = supplier(size)
-    while (--size >= 0) list.add(this.readObjectRequired())
+    repeat(size) {
+        list.add(this.readObjectRequired())
+    }
     return list
 }
 

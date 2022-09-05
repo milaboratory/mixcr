@@ -73,9 +73,7 @@ class GeneFeatures(
         return true
     }
 
-    override fun hashCode(): Int {
-        return features.contentHashCode()
-    }
+    override fun hashCode(): Int = features.contentHashCode()
 
     override fun toString(): String = encode()
 
@@ -85,8 +83,10 @@ class GeneFeatures(
             output.writeArray(obj.features)
         }
 
-        override fun read(input: PrimitivI): GeneFeatures =
-            GeneFeatures(input.readArray())
+        override fun read(input: PrimitivI): GeneFeatures {
+            val features = input.readArray<GeneFeature>()
+            return GeneFeatures(features)
+        }
 
         override fun isReference(): Boolean = true
     }
