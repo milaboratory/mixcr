@@ -90,7 +90,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
 
     override fun getInputFiles(): List<String> = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = if (out == null) emptyList() else listOf(out!!)
+    override fun getOutputFiles(): List<String> = listOfNotNull(out)
 
     open fun mkFilter(): Filter<T> {
         val chains = Chains.parse(chains)

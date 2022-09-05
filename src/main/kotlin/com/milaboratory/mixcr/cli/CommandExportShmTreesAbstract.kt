@@ -25,11 +25,7 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommand() {
     )
     lateinit var `in`: Path
 
-    abstract var out: Path
-
     override fun getInputFiles(): List<String> = listOf(`in`.toString())
-
-    override fun getOutputFiles(): List<String> = listOf(out.toString())
 
     override fun validate() {
         super.validate()

@@ -30,7 +30,7 @@ import kotlin.io.path.createDirectories
 )
 class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     @Parameters(index = "1", paramLabel = "plots.pdf")
-    override lateinit var out: Path
+    lateinit var out: Path
 
     @Option(
         names = ["--metadata", "-m"],
@@ -129,6 +129,8 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         description = ["Do not highlight alignments with color"]
     )
     var noAlignmentFill: Boolean = false
+
+    override fun getOutputFiles(): List<String> = listOf(out.toString())
 
     override fun validate() {
         super.validate()

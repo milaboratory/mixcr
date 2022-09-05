@@ -33,15 +33,17 @@ import kotlin.io.path.createDirectories
 class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     @Parameters(
         index = "1",
+        arity = "0..1",
         paramLabel = "trees.tsv",
-        hideParamSyntax = true,
-        description = ["Path to output table"]
+        description = ["Path to output table. Print in stdout if omitted."]
     )
-    override lateinit var out: Path
+    val out: Path? = null
+
+    override fun getOutputFiles(): List<String> = listOfNotNull(out?.toString())
 
     override fun run0() {
-        out.toAbsolutePath().parent.createDirectories()
-        InfoWriter<SHMTreeForPostanalysis>(out.toFile()).use { output ->
+        out?.toAbsolutePath()?.parent?.createDirectories()
+        InfoWriter<SHMTreeForPostanalysis>(out?.toFile()).use { output ->
             SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
                 output.attachInfoProviders(
                     SHMTreeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)

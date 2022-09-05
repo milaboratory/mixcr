@@ -103,15 +103,14 @@ abstract class FieldExtractorsFactory<T : Any> {
     }
 
     private fun hasField(name: String): Boolean =
-        fields.any { field -> name.equals(field.cmdArgName, ignoreCase = true) }
-
+        fields.any { field -> name == field.cmdArgName }
 
     fun extract(
         cmd: FieldCommandArgs,
         header: VDJCFileHeaderData,
         mode: OutputMode
     ): List<FieldExtractor<T>> {
-        val field = fields.firstOrNull { f -> cmd.field.equals(f.cmdArgName, ignoreCase = true) }
+        val field = fields.firstOrNull { f -> cmd.field == f.cmdArgName }
         field ?: throw IllegalArgumentException("illegal field: " + cmd.field)
         return when (field.nArguments) {
             0 -> {

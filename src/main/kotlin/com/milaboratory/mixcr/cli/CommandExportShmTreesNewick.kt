@@ -36,7 +36,9 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
         hideParamSyntax = true,
         description = ["output directory to write newick files"]
     )
-    override lateinit var out: Path
+    lateinit var out: Path
+
+    override fun getOutputFiles(): List<String> = listOf(out.toString())
 
     override fun run0() {
         out.createDirectories()
