@@ -51,9 +51,6 @@ class MutationsDescription private constructor(
     fullLengthPartsAA: MutationsDescription.() -> Parts<AminoAcidSequence>,
 ) {
 
-    val NDN: NucleotideSequence
-        get() = NDNMutations.mutate(baseNDN)
-
     constructor(
         VParts: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
         VSequence1: NucleotideSequence,

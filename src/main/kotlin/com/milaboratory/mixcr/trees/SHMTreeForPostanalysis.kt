@@ -56,23 +56,19 @@ data class SHMTreeForPostanalysis(
         id: Int,
         parentId: Int?,
         meta: Meta,
+        root: MutationsDescription,
         mostRecentCommonAncestor: MutationsDescription,
         main: MutationsDescription,
         parent: MutationsDescription?,
-        distanceFromRoot: Double,
-        distanceFromMostRecentCommonAncestor: Double?,
-        distanceFromParent: Double?,
         val clones: List<CloneWithDatasetId>
     ) : BaseNode(
         id = id,
         parentId = parentId,
         meta = meta,
+        root = root,
         mostRecentCommonAncestor = mostRecentCommonAncestor,
         main = main,
         parent = parent,
-        distanceFromRoot = distanceFromRoot,
-        distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
-        distanceFromParent = distanceFromParent
     ) {
         fun split(): Collection<SplittedNode> = when {
             clones.isEmpty() -> listOf(withoutClone())
@@ -84,11 +80,9 @@ data class SHMTreeForPostanalysis(
             parentId = parentId,
             meta = meta,
             main = main,
+            root = root,
             mostRecentCommonAncestor = mostRecentCommonAncestor,
             parent = parent,
-            distanceFromRoot = distanceFromRoot,
-            distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
-            distanceFromParent = distanceFromParent,
             clone = clone
         )
 
@@ -97,11 +91,9 @@ data class SHMTreeForPostanalysis(
             parentId = parentId,
             meta = meta,
             main = main,
+            root = root,
             mostRecentCommonAncestor = mostRecentCommonAncestor,
             parent = parent,
-            distanceFromRoot = distanceFromRoot,
-            distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
-            distanceFromParent = distanceFromParent,
             clone = null
         )
     }
@@ -110,23 +102,19 @@ data class SHMTreeForPostanalysis(
         id: Int,
         parentId: Int?,
         meta: Meta,
+        root: MutationsDescription,
         mostRecentCommonAncestor: MutationsDescription,
         main: MutationsDescription,
         parent: MutationsDescription?,
-        distanceFromRoot: Double,
-        distanceFromMostRecentCommonAncestor: Double?,
-        distanceFromParent: Double?,
         val clone: CloneWithDatasetId?
     ) : BaseNode(
         id = id,
         parentId = parentId,
+        root = root,
         meta = meta,
         mostRecentCommonAncestor = mostRecentCommonAncestor,
         main = main,
         parent = parent,
-        distanceFromRoot = distanceFromRoot,
-        distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
-        distanceFromParent = distanceFromParent
     )
 
     sealed class BaseNode(
@@ -134,21 +122,28 @@ data class SHMTreeForPostanalysis(
         val parentId: Int?,
         protected val meta: Meta,
         protected val mostRecentCommonAncestor: MutationsDescription,
+        protected val root: MutationsDescription,
         protected val main: MutationsDescription,
         protected val parent: MutationsDescription?,
-        protected val distanceFromRoot: Double,
-        protected val distanceFromMostRecentCommonAncestor: Double?,
-        val distanceFromParent: Double?,
     ) {
         fun distanceFrom(base: Base): Double? = when (base) {
-            Base.germline -> distanceFromRoot
-            Base.mrca -> distanceFromMostRecentCommonAncestor
-            Base.parent -> distanceFromParent
+            Base.germline -> main.distanceFrom(root)
+            Base.mrca -> when (parent) {
+                null -> null
+                else -> main.distanceFrom(mostRecentCommonAncestor)
+            }
+            Base.parent -> parent?.let { main.distanceFrom(parent) }
         }
 
-        fun mutationsDescription() = main
+        fun mutationsFromGermline(): MutationsDescription = main
+        fun mutationsFromGermlineTo(base: Base?): MutationsDescription? = when (base) {
+            Base.germline -> root
+            Base.mrca -> mostRecentCommonAncestor
+            Base.parent -> parent
+            null -> main
+        }
 
-        fun mutationsDescription(baseOn: Base): MutationsDescription? = when (baseOn) {
+        fun mutationsFrom(baseOn: Base): MutationsDescription? = when (baseOn) {
             Base.germline -> main
             Base.mrca -> mostRecentCommonAncestor.differenceWith(main)
             Base.parent -> parent?.differenceWith(main)
@@ -191,7 +186,7 @@ fun SHMTreeResult.forPostanalysis(
     )
 
     return SHMTreeForPostanalysis(
-        Tree(mappedRoot),
+        Tree(mappedRoot.first),
         meta,
         root,
         mrca
@@ -203,32 +198,19 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
     parent: Tree.Node<CloneOrFoundAncestor>?,
     root: MutationsDescription,
     mrca: MutationsDescription
-): Tree.Node<SHMTreeForPostanalysis.NodeWithClones> {
-    val distanceFromRoot: Double
-    val distanceFromMostRecentCommonAncestor: Double?
-    val distanceFromParent: Double?
+): Pair<Tree.Node<SHMTreeForPostanalysis.NodeWithClones>, Double?> {
     val main = content.mutationsSet.asMutationsDescription(meta)
     val mappedParent = parent?.content?.mutationsSet?.asMutationsDescription(meta)
-    if (parent == null) {
-        distanceFromRoot = 0.0
-        distanceFromMostRecentCommonAncestor = null
-        distanceFromParent = null
-    } else {
-        distanceFromRoot = root.distanceFrom(main)
-        distanceFromMostRecentCommonAncestor = mrca.distanceFrom(main)
-        distanceFromParent = mappedParent!!.distanceFrom(main)
-    }
+    val distanceFromParent = mappedParent?.let { main.distanceFrom(it) }
     val result = Tree.Node(
         SHMTreeForPostanalysis.NodeWithClones(
             content.id,
             parent?.content?.id,
             meta,
             main = main,
+            root = root,
             mostRecentCommonAncestor = mrca,
             parent = mappedParent,
-            distanceFromRoot = distanceFromRoot,
-            distanceFromMostRecentCommonAncestor = distanceFromMostRecentCommonAncestor,
-            distanceFromParent = distanceFromParent,
             clones = links.filter { it.distance == 0.0 }
                 .flatMap { nodeLink ->
                     nodeLink.node.content.clones.map { (clone, datasetId) ->
@@ -245,10 +227,10 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
         .filter { it.distance != 0.0 }
         .forEach {
             require(it.node.content.clones.isEmpty())
-            val mappedChild = it.node.map(meta, parent = this, root = root, mrca = mrca)
-            result.addChild(mappedChild, mappedChild.content.distanceFromParent!!)
+            val (mappedChild, fromParent) = it.node.map(meta, parent = this, root = root, mrca = mrca)
+            result.addChild(mappedChild, fromParent!!)
         }
-    return result
+    return result to distanceFromParent
 }
 
 private fun MutationsSet.asMutationsDescription(meta: SHMTreeForPostanalysis.Meta): MutationsDescription =

@@ -20,6 +20,7 @@ import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -38,6 +39,12 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         description = ["Path to output table. Print in stdout if omitted."]
     )
     val out: Path? = null
+
+    @Option(
+        description = ["Exclude nodes that was reconstructed by algorithm"],
+        names = ["-onlyObserved"],
+    )
+    var onlyObserved: Boolean = false
 
     override fun getOutputFiles(): List<String> = listOfNotNull(out?.toString())
 
@@ -59,6 +66,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
                     shmTreeForPostanalysis.tree.allNodes()
                         .asSequence()
+                        .filter { !onlyObserved || it.node.isLeaf() }
                         .flatMap { it.node.content.split() }
                         .forEach { node ->
                             output.put(Wrapper(shmTreeForPostanalysis, node))
