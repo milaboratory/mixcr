@@ -148,7 +148,7 @@ class AllelesBuilder(
                 withMutationsInCDR3.allele,
                 bestHit.alignedFeature,
                 knownCDR3RangeLength,
-                mappedReferencePoints
+                mappedReferencePoints.applyMutations(withMutationsInCDR3.allele)
             )
         }
     }
@@ -281,22 +281,22 @@ class AllelesBuilder(
             allele.gene.partitioning.getRanges(allele.alignedFeature),
             allele.mutations
         ),
-        generateGeneName(allele),
+        allele.generateGeneName(),
         allele.gene.data.geneType,
         allele.gene.data.isFunctional,
         allele.gene.data.chains,
-        metaForGeneratedGene(allele),
-        recalculatedAnchorPoints(allele)
+        allele.metaForGeneratedGene(),
+        allele.recalculatedAnchorPoints()
     )
 
-    private fun generateGeneName(allele: Allele): String =
-        allele.gene.name + "-M" + allele.mutations.size() + "-" + allele.mutations.hashCode()
+    private fun Allele.generateGeneName(): String =
+        gene.name + "-M" + mutations.size() + "-" + mutations.hashCode()
 
-    private fun metaForGeneratedGene(allele: Allele): SortedMap<String, SortedSet<String>> {
-        val meta: SortedMap<String, SortedSet<String>> = TreeMap(allele.gene.data.meta)
-        val knownFeatures = when (allele.gene.geneType) {
+    private fun Allele.metaForGeneratedGene(): SortedMap<String, SortedSet<String>> {
+        val meta: SortedMap<String, SortedSet<String>> = TreeMap(gene.data.meta)
+        val knownFeatures = when (gene.geneType) {
             Variable -> {
-                val toAdd = GeneFeature(CDR3Begin, 0, allele.knownCDR3RangeLength)
+                val toAdd = GeneFeature(CDR3Begin, 0, knownCDR3RangeLength)
                 val intersection = allClonesCutBy.intersection(GeneFeature(UTR5Begin, CDR3Begin))
                 if (intersection != null) {
                     intersection + toAdd
@@ -305,7 +305,7 @@ class AllelesBuilder(
                 }
             }
             Joining -> {
-                val toAdd = GeneFeatures(GeneFeature(CDR3End, -allele.knownCDR3RangeLength, 0))
+                val toAdd = GeneFeatures(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
                 val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
                 if (intersection != null) {
                     toAdd + intersection
@@ -317,14 +317,14 @@ class AllelesBuilder(
         }
         meta["alleleMutationsReliableGeneFeatures"] =
             knownFeatures.features.map { GeneFeature.encode(it) }.toSortedSet()
-        meta["alleleVariantOf"] = sortedSetOf(allele.gene.name)
+        meta["alleleVariantOf"] = sortedSetOf(gene.name)
         return meta
     }
 
-    private fun recalculatedAnchorPoints(allele: Allele): TreeMap<ReferencePoint, Long> {
-        return (0 until allele.mappedReferencePoints.pointsCount()).asSequence()
-            .map { index -> allele.mappedReferencePoints.referencePointFromIndex(index) }
-            .associateByTo(TreeMap(), { it }, { allele.mappedReferencePoints.getPosition(it).toLong() })
+    private fun Allele.recalculatedAnchorPoints(): SortedMap<ReferencePoint, Long> {
+        return (0 until mappedReferencePoints.pointsCount()).asSequence()
+            .map { index -> mappedReferencePoints.referencePointFromIndex(index) }
+            .associateByTo(TreeMap(), { it }, { mappedReferencePoints.getPosition(it).toLong() })
     }
 
     private class Allele(
