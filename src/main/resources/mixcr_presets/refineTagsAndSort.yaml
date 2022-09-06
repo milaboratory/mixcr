@@ -1,5 +1,5 @@
 "refineTags_universal":
-  refineTags:
+  refineTagsAndSort:
     runCorrection: true
     parameters:
       correctionPower: 1E-3
@@ -8,4 +8,4 @@
       minQuality: 12
       maxSubstitutions: 2
       maxIndels: 2
-      maxTotalError: 3
+      maxTotalErrors: 3

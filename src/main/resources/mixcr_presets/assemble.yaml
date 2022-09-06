@@ -1,5 +1,29 @@
 "assemble_universal":
   assemble:
+    consensusAssemblerParameters:
+      assembler:
+        aAssemblerParameters:
+          bandWidth: 4
+          scoring:
+            type: linear
+            alphabet: nucleotide
+            subsMatrix: simple(match = 5, mismatch = -4)
+            gapPenalty: -14
+          minAlignmentScore: 40
+          maxNormalizedAlignmentPenalty: 0.15
+          trimMinimalSumQuality: 0
+          trimReferenceRegion: false
+          maxQuality: 45
+        maxIterations: 6
+        minAltSeedQualityScore: 11
+        minAltSeedNormalizedPenalty: 0.35
+        altSeedPenaltyTolerance: 0.3
+        minRecordSharePerConsensus: 0.2
+        minRecordsPerConsensus: 1
+        minRecursiveRecordShare: 0.4
+        minQualityScore: 0
+        maxConsensuses: 3
+      minTagSuffixShare: 0
     cloneAssemblerParameters:
       assemblingFeatures:
         - CDR3
@@ -22,13 +46,11 @@
           specificMutationProbability: 0.001
       cloneFactoryParameters:
         vParameters:
-          maxAlignmentWidth:
           maxAlignmentWidthLinear: 5
           maxAlignmentWidthAffine: 500
           relativeMinScore:
           scoring:
         jParameters:
-          maxAlignmentWidth:
           maxAlignmentWidthLinear: 5
           maxAlignmentWidthAffine: 500
           relativeMinScore:
@@ -39,7 +61,6 @@
           maxHits:
           scoring:
         cParameters:
-          maxAlignmentWidth:
           maxAlignmentWidthLinear: 5
           maxAlignmentWidthAffine: 500
           relativeMinScore:

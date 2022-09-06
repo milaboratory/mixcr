@@ -44,6 +44,8 @@ object Presets {
         map
     }
 
+    val allPresetNames = presetCollection.keys
+
     private val globalResolver = { name: String ->
         presetCollection[name] ?: throw IllegalArgumentException("No preset with name \"$name\"")
     }
