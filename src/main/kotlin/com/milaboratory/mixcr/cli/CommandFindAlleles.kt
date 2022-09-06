@@ -37,9 +37,12 @@ import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.mixcr.util.asSequence
+import com.milaboratory.mixcr.util.geneName
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
+import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapInParallelOrdered
+import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.toList
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
@@ -85,55 +88,23 @@ import kotlin.io.path.nameWithoutExtension
 )
 class CommandFindAlleles : MiXCRCommand() {
     @Parameters(
-        arity = "2..*",
-        paramLabel = "input_file.clns [input_file2.clns ....] output_template.clns",
-        hideParamSyntax = true,
-        description = [
-            "output_template may contain {file_name} and {file_dir_path},",
-            "outputs for 'input_file.clns input_file2.clns /output/folder/{file_name}_with_alleles.clns' will be /output/folder/input_file_with_alleles.clns and /output/folder/input_file2_with_alleles.clns,",
-            "outputs for '/some/folder1/input_file.clns /some/folder2/input_file2.clns {file_dir_path}/{file_name}_with_alleles.clns' will be /seme/folder1/input_file_with_alleles.clns and /some/folder2/input_file2_with_alleles.clns",
-            "Resulted outputs must be uniq"
-        ]
+        arity = "1..*",
+        paramLabel = "input_file.clns [input_file2.clns ...]",
+        description = ["Input files for allele search"]
     )
-    lateinit var inOut: List<Path>
+    lateinit var `in`: List<Path>
 
     @Option(
-        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
-        names = ["--use-system-temp"]
+        description = [
+            "Output template may contain {file_name} and {file_dir_path},",
+            "outputs for '-o /output/folder/{file_name}_with_alleles.clns input_file.clns input_file2.clns' will be /output/folder/input_file_with_alleles.clns and /output/folder/input_file2_with_alleles.clns,",
+            "outputs for '-o {file_dir_path}/{file_name}_with_alleles.clns /some/folder1/input_file.clns /some/folder2/input_file2.clns' will be /seme/folder1/input_file_with_alleles.clns and /some/folder2/input_file2_with_alleles.clns",
+            "Resulted outputs must be uniq"
+        ],
+        names = ["--output-template", "-o"],
+        paramLabel = "<template.clns>"
     )
-    var useSystemTemp = false
-
-    private val outputClnsFiles: List<Path> by lazy {
-        val template = inOut.last().toString()
-        if (!template.endsWith(".clns")) {
-            throwValidationExceptionKotlin("Wrong template: command produces only clns $template")
-        }
-        val clnsFiles = inOut.dropLast(1)
-            .map { it.toAbsolutePath() }
-            .map { path ->
-                template
-                    .replace(Regex("\\{file_name}"), path.nameWithoutExtension)
-                    .replace(Regex("\\{file_dir_path}"), path.parent.toString())
-            }
-            .map { Paths.get(it) }
-            .toList()
-        if (clnsFiles.distinct().count() < clnsFiles.size) {
-            throwValidationExceptionKotlin("Output clns files are not uniq: $clnsFiles")
-        }
-        clnsFiles
-    }
-
-    public override fun getInputFiles(): List<String> = inOut.dropLast(1).map { it.toString() }
-
-    public override fun getOutputFiles(): List<String> = (outputClnsFiles + listOfNotNull(libraryOutput))
-        .map { it.toString() }
-
-    @Option(description = ["Processing threads"], names = ["-t", "--threads"])
-    var threads = Runtime.getRuntime().availableProcessors()
-        set(value) {
-            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
-            field = value
-        }
+    var outputTemplate: String? = null
 
     @Option(
         description = ["File to write library with found alleles."],
@@ -157,11 +128,51 @@ class CommandFindAlleles : MiXCRCommand() {
     )
     lateinit var findAllelesParametersName: String
 
+    @Option(
+        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
+        names = ["--use-system-temp"]
+    )
+    var useSystemTemp = false
+
+    @Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    var threads = Runtime.getRuntime().availableProcessors()
+        set(value) {
+            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+            field = value
+        }
+
     @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
     var overrides: Map<String, String> = mutableMapOf()
 
+    private val outputClnsFiles: List<Path> by lazy {
+        val template = outputTemplate ?: return@lazy emptyList()
+        if (!template.endsWith(".clns")) {
+            throwValidationExceptionKotlin("Wrong template: command produces only clns $template")
+        }
+        val clnsFiles = `in`
+            .map { it.toAbsolutePath() }
+            .map { path ->
+                template
+                    .replace(Regex("\\{file_name}"), path.nameWithoutExtension)
+                    .replace(Regex("\\{file_dir_path}"), path.parent.toString())
+            }
+            .map { Paths.get(it) }
+            .toList()
+        if (clnsFiles.distinct().count() < clnsFiles.size) {
+            throwValidationExceptionKotlin("Output clns files are not uniq: $clnsFiles")
+        }
+        clnsFiles
+    }
+
+    public override fun getInputFiles(): List<String> = `in`.map { it.toString() }
+
+    public override fun getOutputFiles(): List<String> =
+        (outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput))
+            .map { it.toString() }
+
     private val tempDest: TempFileDest by lazy {
-        val path = outputClnsFiles.first().toAbsolutePath().parent
+        val path = listOfNotNull(outputClnsFiles.firstOrNull(), libraryOutput, allelesMutationsOutput)
+            .first().toAbsolutePath().parent
         if (!useSystemTemp) path.createDirectories()
         TempFileManager.smartTempDestination(path, "", useSystemTemp)
     }
@@ -187,6 +198,9 @@ class CommandFindAlleles : MiXCRCommand() {
             if (!allelesMutationsOutput.extension.endsWith("csv")) {
                 throwValidationExceptionKotlin("--export-alleles-mutations must be csv: $allelesMutationsOutput")
             }
+        }
+        if (listOfNotNull(outputTemplate, libraryOutput, allelesMutationsOutput).isEmpty()) {
+            throwValidationExceptionKotlin("--output-template, --export-library or --export-alleles-mutations must be set")
         }
     }
 
@@ -237,7 +251,7 @@ class CommandFindAlleles : MiXCRCommand() {
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
         }
-        val allelesStatistics = mutableMapOf<String, Int>()
+        val allelesStatistics: MutableMap<String, Int> = ConcurrentHashMap()
         val cloneRebuild = CloneRebuild(
             resultLibrary,
             allelesMapping,
@@ -248,20 +262,23 @@ class CommandFindAlleles : MiXCRCommand() {
         )
         cloneReaders.forEachIndexed { i, cloneReader ->
             cloneReader.readClones().use { port ->
-                port.withProgress(
+                val withRecalculatedScores = port.withProgress(
                     cloneReader.numberOfClones().toLong(),
                     progressAndStage,
-                    "Realigning ${inputFiles[i]}"
+                    "Recalculating scores ${inputFiles[i]}"
                 ) { clones ->
-                    val mapperClones = cloneRebuild.rebuildClones(clones)
-                    mapperClones.forEach { clone ->
-                        for (geneType in VJ_REFERENCE) {
-                            allelesStatistics.increment(clone.getBestHit(geneType).gene.name)
-                            allelesStatistics.increment(clone.getBestHit(geneType).gene.geneName)
-                        }
+                    cloneRebuild.recalculateScores(clones, allelesStatistics)
+                }
+                if (outputTemplate != null) {
+                    withRecalculatedScores.port.withProgress(
+                        cloneReader.numberOfClones().toLong(),
+                        progressAndStage,
+                        "Realigning ${inputFiles[i]}"
+                    ) { clonesWithScores ->
+                        val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
+                        outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
+                        outputClnsFiles[i].toFile().writeMappedClones(mapperClones, resultLibrary, cloneReader)
                     }
-                    outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
-                    outputClnsFiles[i].toFile().writeMappedClones(mapperClones, resultLibrary, cloneReader)
                 }
             }
         }
@@ -409,35 +426,52 @@ private class CloneRebuild(
     )
 
     /**
-     * For every clone will be added hits aligned to found alleles.
-     * If there is no zero allele, initial hit will be deleted from a clone.
-     * Only top hits will be saved (VJCClonalAlignerParameters#relativeMinScore param)
+     * Realign clones with new scores
      */
-    fun rebuildClones(input: OutputPort<Clone>): List<Clone> {
-        val errorsCount: MutableMap<VDJCGeneId, Int> = ConcurrentHashMap()
-        val result = input
-            .mapInParallelOrdered(threads) { clone ->
-                val result = cloneFactory.create(
+    fun rebuildClones(withRecalculatedScores: OutputPort<Pair<Clone, EnumMap<GeneType, List<GeneAndScore>>>>): List<Clone> =
+        withRecalculatedScores
+            .mapInParallel(threads) { (clone, recalculateScores) ->
+                cloneFactory.create(
                     clone.id,
                     clone.count,
-                    calculateScoresWithAddedAlleles(clone),
+                    recalculateScores,
                     clone.tagCount,
                     clone.targets,
                     clone.group
                 )
-                for (gt in VJ_REFERENCE) {
-                    val bestHit = result.getBestHit(gt)
+            }
+            .asSequence()
+            .sortedBy { it.id }
+            .toList()
+
+    /**
+     * For every clone will be added hits aligned to found alleles.
+     * If there is no zero allele, initial hit will be deleted from a clone.
+     * Only top hits will be saved (VJCClonalAlignerParameters#relativeMinScore param)
+     */
+    fun recalculateScores(
+        input: OutputPort<Clone>,
+        allelesStatistics: MutableMap<String, Int>
+    ): List<Pair<Clone, EnumMap<GeneType, List<GeneAndScore>>>> {
+        val errorsCount: MutableMap<VDJCGeneId, Int> = ConcurrentHashMap()
+        val withRecalculatedScores = input
+            .mapInParallel(threads) { clone ->
+                val recalculateScores = calculateScoresWithAddedAlleles(clone)
+                for (geneType in VJ_REFERENCE) {
+                    val bestHit = recalculateScores[geneType]!!.maxByOrNull { it.score }!!
+                    allelesStatistics.increment(bestHit.geneId.name)
+                    allelesStatistics.increment(bestHit.geneId.geneName)
                     if (bestHit.score <= 0.0) {
-                        errorsCount.increment(bestHit.gene.id)
+                        errorsCount.increment(bestHit.geneId)
                     }
                 }
-                result
+                clone to recalculateScores
             }
             .toList()
         errorsCount.forEach { (geneId, count) ->
             println("WARN: for $geneId found $count clones that get negative score after realigning")
         }
-        return result
+        return withRecalculatedScores
     }
 
     private fun calculateScoresWithAddedAlleles(clone: Clone): EnumMap<GeneType, List<GeneAndScore>> {

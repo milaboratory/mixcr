@@ -145,6 +145,12 @@ fun <T : Any> OutputPort<T>.limit(limit: Long): OutputPortCloseable<T> = object 
 fun <T : Any> OutputPort<T>.forEach(action: (element: T) -> Unit): Unit =
     CUtils.it(this).forEach(action)
 
+fun <T : Any> OutputPort<T>.onEach(action: (element: T) -> Unit): OutputPort<T> =
+    map {
+        action(it)
+        it
+    }
+
 fun <T : Any> OutputPort<T>.forEachInParallel(threads: Int, action: (element: T) -> Unit): Unit =
     CUtils.processAllInParallel(this, action, threads)
 

@@ -28,11 +28,11 @@ import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.GroupingCriteria
+import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.groupBy
-import com.milaboratory.primitivio.mapInParallelOrdered
-import com.milaboratory.primitivio.toList
+import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
@@ -94,10 +94,12 @@ class AllelesBuilder(
                     "Searching for ${geneType.letter} alleles",
                     countPerElement = { it.size.toLong() }
                 ) { clustersWithTheSameV ->
-                    clustersWithTheSameV.mapInParallelOrdered(threads) { cluster ->
+                    clustersWithTheSameV.mapInParallel(threads) { cluster ->
                         val geneId = cluster[0].getBestHit(geneType).gene.name
                         geneId to findAlleles(cluster, geneType).toGeneData()
                     }
+                        .asSequence()
+                        .sortedBy { it.first }
                         .toList()
                 }
         }
