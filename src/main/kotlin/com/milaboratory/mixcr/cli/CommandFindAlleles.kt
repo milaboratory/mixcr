@@ -171,10 +171,9 @@ class CommandFindAlleles : MiXCRCommand() {
             .map { it.toString() }
 
     private val tempDest: TempFileDest by lazy {
-        val path = listOfNotNull(outputClnsFiles.firstOrNull(), libraryOutput, allelesMutationsOutput)
-            .first().toAbsolutePath().parent
-        if (!useSystemTemp) path.createDirectories()
-        TempFileManager.smartTempDestination(path, "", useSystemTemp)
+        val path = listOfNotNull(outputClnsFiles.firstOrNull(), libraryOutput, allelesMutationsOutput).first()
+        if (!useSystemTemp) path.toAbsolutePath().parent.createDirectories()
+        TempFileManager.smartTempDestination(path, ".find_alleles", useSystemTemp)
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {

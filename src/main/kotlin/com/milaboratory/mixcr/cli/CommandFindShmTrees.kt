@@ -201,9 +201,8 @@ class CommandFindShmTrees : MiXCRCommand() {
         get() = report?.fileName?.toString() ?: "${outputTreesPath.nameWithoutExtension}.report"
 
     private val tempDest: TempFileDest by lazy {
-        val path = outputTreesPath.toAbsolutePath().parent
-        if (!useSystemTemp) path.createDirectories()
-        TempFileManager.smartTempDestination(path, "", useSystemTemp)
+        if (!useSystemTemp) outputTreesPath.toAbsolutePath().parent.createDirectories()
+        TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", useSystemTemp)
     }
 
     override fun run0() {
