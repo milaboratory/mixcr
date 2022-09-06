@@ -162,13 +162,15 @@ public final class Main {
 
                 .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.Cmd.class)
 
-                .addSubcommand(RefineTagsAndSort.COMMAND_NAME, RefineTagsAndSort.Cmd.class)
+                .addSubcommand(CommandRefineTagsAndSort.COMMAND_NAME, CommandRefineTagsAndSort.Cmd.class)
+
+                .addSubcommand(CommandAssemblePartial.COMMAND_NAME, CommandAssemblePartial.Cmd.class)
 
                 .addSubcommand("assemble", CommandAssemble.class)
                 // .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
 
-                .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
+
                 .addSubcommand("extend", CommandExtend.class)
 
                 .addSubcommand("bam2fastq", CommandBAM2fastq.class)

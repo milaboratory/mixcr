@@ -18,13 +18,29 @@ import com.milaboratory.cli.Preset
 import com.milaboratory.cli.PresetResolver
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.cli.CommandAlign
-import com.milaboratory.mixcr.cli.RefineTagsAndSort
+import com.milaboratory.mixcr.cli.CommandAssemblePartial
+import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import kotlin.reflect.KProperty1
 
 object Presets {
-    private val presetCollection: Map<String, MiXCRPresetSet> =
-        object {}.javaClass.getResourceAsStream("/mixcr_presets.yaml")!!
-            .use { stream -> K_YAML_OM.readValue(stream) }
+    private val files = listOf(
+        "align.yaml",
+        "assemblePartial.yaml",
+        "pipelines.yaml",
+        "refineTagsAndSort.yaml"
+    )
+    private val presetCollection: Map<String, MiXCRPresetSet> = run {
+        val map = mutableMapOf<String, MiXCRPresetSet>()
+        files.flatMap { file ->
+            Presets.javaClass.getResourceAsStream("/mixcr_presets/$file")!!
+                .use { stream -> K_YAML_OM.readValue<Map<String, MiXCRPresetSet>>(stream) }
+                .toList()
+        }.forEach { (k, v) ->
+            if (map.put(k, v) != null)
+                throw RuntimeException("Conflicting preset names in different preset files.")
+        }
+        map
+    }
 
     private val globalResolver = { name: String ->
         presetCollection[name] ?: throw IllegalArgumentException("No preset with name \"$name\"")
@@ -41,10 +57,12 @@ object Presets {
 
     val align = getResolver(MiXCRPresetSet::align)
     val refineTagsAndSort = getResolver(MiXCRPresetSet::refineTagsAndSort)
+    val assemblePartial = getResolver(MiXCRPresetSet::assemblePartial)
 
     private class MiXCRPresetSet(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
         @JsonProperty("align") val align: Preset<CommandAlign.Params>? = null,
-        @JsonProperty("refineTagsAndSort") val refineTagsAndSort: Preset<RefineTagsAndSort.Params>? = null,
+        @JsonProperty("refineTagsAndSort") val refineTagsAndSort: Preset<CommandRefineTagsAndSort.Params>? = null,
+        @JsonProperty("assemblePartial") val assemblePartial: Preset<CommandAssemblePartial.Params>? = null,
     ) : AbstractPresetSet<MiXCRPresetSet>
 }

@@ -75,7 +75,6 @@ object CommandAlign {
     data class Params(
         @JsonProperty("species") val species: String = "",
         @JsonProperty("libraryName") val libraryName: String = "default",
-        @JsonMerge @JsonProperty("parameters") val parameters: VDJCAlignerParameters,
         @JsonProperty("trimmingQualityThreshold") val trimmingQualityThreshold: Byte,
         @JsonProperty("trimmingWindowSize") val trimmingWindowSize: Byte,
         @JsonProperty("chains") val chains: String = "ALL",
@@ -85,6 +84,7 @@ object CommandAlign {
         @JsonProperty("tagPattern") val tagPattern: String? = null,
         @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
         @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
+        @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
     )
 
     abstract class CmdBase : MiXCRCommand(), PresetAware<Params> {

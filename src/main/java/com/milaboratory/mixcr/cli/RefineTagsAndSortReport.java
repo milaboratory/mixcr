@@ -42,7 +42,7 @@ public class RefineTagsAndSortReport extends MiXCRCommandReportWrapper {
 
     @Override
     public String command() {
-        return RefineTagsAndSort.COMMAND_NAME;
+        return CommandRefineTagsAndSort.COMMAND_NAME;
     }
 
     @Override

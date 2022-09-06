@@ -43,7 +43,7 @@ import org.apache.commons.io.FileUtils
 import picocli.CommandLine.*
 import java.util.*
 
-object RefineTagsAndSort {
+object CommandRefineTagsAndSort {
     const val COMMAND_NAME = "refineTagsAndSort"
 
     data class Params(
