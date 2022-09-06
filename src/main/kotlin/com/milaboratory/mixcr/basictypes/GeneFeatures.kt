@@ -32,19 +32,9 @@ class GeneFeatures(
 
     init {
         check(features.isNotEmpty())
-        for (feature in features) {
-            check(!feature.isComposite) {
-                "Composite features must be represented as separate features: $feature"
-            }
-        }
         for (i in (1 until features.size)) {
-            require(features[i - 1] < features[i]) {
+            require(features[i - 1].lastPoint <= features[i].firstPoint) {
                 features.map { GeneFeature.encode(it) } + " are not ordered"
-            }
-        }
-        for (i in (1 until features.size)) {
-            require(GeneFeature.intersection(features[i - 1], features[i]) == null) {
-                "${features[i - 1]} and ${features[i]} are intersecting"
             }
         }
     }
@@ -55,14 +45,16 @@ class GeneFeatures(
         return GeneFeatures(result.toTypedArray())
     }
 
-    operator fun plus(toAdd: GeneFeature): GeneFeatures =
-        if (features.last().lastPoint == toAdd.firstPoint) {
+    operator fun plus(toAdd: GeneFeature): GeneFeatures {
+        val lastFeature = features.last()
+        return if (lastFeature.firstPoint < lastFeature.lastPoint && lastFeature.lastPoint == toAdd.firstPoint) {
             GeneFeatures(features.clone().also {
                 it[features.size - 1] = features.last().append(toAdd)
             })
         } else {
             GeneFeatures(features + toAdd)
         }
+    }
 
     operator fun plus(toAdd: GeneFeatures): GeneFeatures =
         if (features.last().lastPoint == toAdd.features.first().firstPoint) {

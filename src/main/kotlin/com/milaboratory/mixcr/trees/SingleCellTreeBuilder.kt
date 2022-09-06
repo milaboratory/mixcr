@@ -218,7 +218,7 @@ class SingleCellTreeBuilder(
                         .comparing(
                             { it.chainPairKey },
                             Comparator
-                                .comparing<ChainPairKey, VJBase>({ it.heavy }, VJBase.comparator)
+                                .comparing({ (heavy, _): ChainPairKey -> heavy }, VJBase.comparator)
                                 .thenComparing({ it.light }, VJBase.comparator)
                         )
                 }
@@ -415,7 +415,7 @@ data class CellBarcodeWithDatasetId(
 ) {
     companion object {
         val comparator: Comparator<CellBarcodeWithDatasetId> = Comparator
-            .comparing<CellBarcodeWithDatasetId, NucleotideSequence> { it.cellBarcode }
+            .comparing { (cellBarcode, _): CellBarcodeWithDatasetId -> cellBarcode }
             .thenComparingInt { it.datasetId }
     }
 
