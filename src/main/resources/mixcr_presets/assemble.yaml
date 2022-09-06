@@ -1,0 +1,50 @@
+"assemble_universal":
+  assemble:
+    cloneAssemblerParameters:
+      assemblingFeatures:
+        - CDR3
+      minimalQuality: 0
+      minimalClonalSequenceLength: 12
+      qualityAggregationType: Max
+      separateByV: false
+      separateByJ: false
+      separateByC: false
+      maximalPreClusteringRatio: 1
+      preClusteringScoreFilteringRatio: 2
+      preClusteringCountFilteringRatio: 2
+      cloneClusteringParameters:
+        searchDepth: 2
+        allowedMutationsInNRegions: 1
+        searchParameters: twoMismatchesOrIndels
+        minimalTagSetOverlap: -1
+        clusteringFilter:
+          type: relativeConcentration
+          specificMutationProbability: 0.001
+      cloneFactoryParameters:
+        vParameters:
+          maxAlignmentWidth:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore:
+          scoring:
+        jParameters:
+          maxAlignmentWidth:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore:
+          scoring:
+        dParameters:
+          absoluteMinScore:
+          relativeMinScore:
+          maxHits:
+          scoring:
+        cParameters:
+          maxAlignmentWidth:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore:
+          scoring:
+      addReadsCountOnClustering: false
+      badQualityThreshold: 20
+      maxBadPointsPercent: 0.7
+      mappingThreshold: 2of5

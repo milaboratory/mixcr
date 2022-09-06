@@ -126,7 +126,7 @@ public class CloneAssemblerReport extends MiXCRCommandReport {
 
     @Override
     public String command() {
-        return CommandAssemble.ASSEMBLE_COMMAND_NAME;
+        return CommandAssemble.COMMAND_NAME;
     }
 
     @Override

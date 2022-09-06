@@ -166,7 +166,7 @@ public final class Main {
 
                 .addSubcommand(CommandAssemblePartial.COMMAND_NAME, CommandAssemblePartial.Cmd.class)
 
-                .addSubcommand("assemble", CommandAssemble.class)
+                .addSubcommand(CommandAssemble.COMMAND_NAME, CommandAssemble.Cmd.class)
                 // .addSubcommand("groupCells", CommandGroupCells.class)
                 .addSubcommand("assembleContigs", CommandAssembleContigs.class)
 

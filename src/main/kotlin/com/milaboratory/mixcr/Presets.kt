@@ -18,6 +18,7 @@ import com.milaboratory.cli.Preset
 import com.milaboratory.cli.PresetResolver
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.cli.CommandAlign
+import com.milaboratory.mixcr.cli.CommandAssemble
 import com.milaboratory.mixcr.cli.CommandAssemblePartial
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import kotlin.reflect.KProperty1
@@ -26,6 +27,7 @@ object Presets {
     private val files = listOf(
         "align.yaml",
         "assemblePartial.yaml",
+        "assemble.yaml",
         "pipelines.yaml",
         "refineTagsAndSort.yaml"
     )
@@ -58,11 +60,13 @@ object Presets {
     val align = getResolver(MiXCRPresetSet::align)
     val refineTagsAndSort = getResolver(MiXCRPresetSet::refineTagsAndSort)
     val assemblePartial = getResolver(MiXCRPresetSet::assemblePartial)
+    val assemble = getResolver(MiXCRPresetSet::assemble)
 
     private class MiXCRPresetSet(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
         @JsonProperty("align") val align: Preset<CommandAlign.Params>? = null,
         @JsonProperty("refineTagsAndSort") val refineTagsAndSort: Preset<CommandRefineTagsAndSort.Params>? = null,
         @JsonProperty("assemblePartial") val assemblePartial: Preset<CommandAssemblePartial.Params>? = null,
+        @JsonProperty("assemble") val assemble: Preset<CommandAssemble.Params>? = null,
     ) : AbstractPresetSet<MiXCRPresetSet>
 }

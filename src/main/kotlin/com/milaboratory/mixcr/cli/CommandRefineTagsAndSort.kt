@@ -143,10 +143,10 @@ object CommandRefineTagsAndSort {
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["alignments.vdjca"], index = "0")
-        lateinit var `in`: String
+        lateinit var inputFile: String
 
         @Parameters(description = ["alignments.corrected.vdjca"], index = "1")
-        lateinit var out: String
+        lateinit var outputFile: String
 
         @Option(
             description = ["Use system temp folder for temporary files."],
@@ -166,18 +166,18 @@ object CommandRefineTagsAndSort {
         )
         var useLocalTemp = false
 
+        private val tempDest by lazy {
+            TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp)
+        }
+
         @Option(description = ["Memory budget"], names = ["--memory-budget"])
         var memoryBudget = 4 * FileUtils.ONE_GB
-
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
         var reportFile: String? = null
-        override fun getInputFiles(): List<String> = listOf(`in`)
 
-        override fun getOutputFiles(): List<String> = listOf(out)
+        override fun getInputFiles(): List<String> = listOf(inputFile)
 
-        private val tempDest by lazy {
-            TempFileManager.smartTempDestination(out, "", !useLocalTemp)
-        }
+        override fun getOutputFiles(): List<String> = listOf(outputFile)
 
         override fun run0() {
             val startTimeMillis = System.currentTimeMillis()
@@ -186,7 +186,7 @@ object CommandRefineTagsAndSort {
 
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: CorrectionReport?
-            VDJCAlignmentsReader(`in`).use { mainReader ->
+            VDJCAlignmentsReader(inputFile).use { mainReader ->
                 cmdParams = presetParser.parse(mainReader.info.preset)
                 val tagNames = mutableListOf<String>()
                 val indicesBuilder = TIntArrayList()
@@ -272,7 +272,7 @@ object CommandRefineTagsAndSort {
                     }
                 }
 
-                VDJCAlignmentsWriter(out).use { writer ->
+                VDJCAlignmentsWriter(outputFile).use { writer ->
                     val alPioState = PrimitivIOStateBuilder()
                     IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.parameters)
 
@@ -333,7 +333,7 @@ object CommandRefineTagsAndSort {
                     }
                     refineTagsAndSortReport = RefineTagsAndSortReport(
                         Date(),
-                        commandLineArguments, arrayOf(`in`), arrayOf(out),
+                        commandLineArguments, arrayOf(inputFile), arrayOf(outputFile),
                         System.currentTimeMillis() - startTimeMillis,
                         MiXCRVersionInfo.get().shortestVersionString,
                         mitoolReport

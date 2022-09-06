@@ -213,6 +213,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
             val pref = when {
                 Files.isDirectory(Paths.get(jsonReport!!)) ->
                     jsonReport + (if (jsonReport!!.endsWith(File.separator)) "" else File.separator)
+
                 else -> "$jsonReport."
             }
             options += "$pref$step.jsonl"
@@ -245,6 +246,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         alignParameters += when (startingMaterial) {
             _StartingMaterial.rna -> "-OvParameters.geneFeatureToAlign=" +
                     if (include5UTRInRNA()) "VTranscriptWithP" else "VTranscriptWithout5UTRWithP"
+
             _StartingMaterial.dna -> "-OvParameters.geneFeatureToAlign=VGeneWithP"
         }
 
@@ -361,12 +363,12 @@ abstract class CommandAnalyze : MiXCRCommand() {
     var assembleParameters: List<String> = mutableListOf()
 
     /** Build parameters for assemble  */
-    private fun getAssemble(input: String, output: String): CommandAssemble {
+    private fun getAssemble(input: String, output: String): CommandAssemble.Cmd {
         return inheritOptionsAndValidate(mkAssemble(input, output))
     }
 
     /** Build parameters for assemble  */
-    open fun mkAssemble(input: String, output: String): CommandAssemble {
+    open fun mkAssemble(input: String, output: String): CommandAssemble.Cmd {
         val assembleParameters = mutableListOf<String>()
 
         // adding report options
@@ -386,10 +388,8 @@ abstract class CommandAnalyze : MiXCRCommand() {
         assembleParameters += output
 
         // parse parameters
-        val ap = CommandAssemble()
+        val ap = CommandAssemble.Cmd()
         CommandLine(ap).parseArgs(*assembleParameters.toTypedArray())
-        ap.ensureParametersInitialized()
-        ap.cloneAssemblerParameters.updateFrom(mkAlign().alignerParameters)
         return ap
     }
 
@@ -737,15 +737,18 @@ abstract class CommandAnalyze : MiXCRCommand() {
             "-OseparateByJ=true"
         )
 
-        override fun mkAssemble(input: String, output: String): CommandAssemble {
+        override fun mkAssemble(input: String, output: String): CommandAssemble.Cmd {
             val assemble = super.mkAssemble(input, output)
-            val cloneAssemblyParameters = assemble.cloneAssemblerParameters
-            if (!Arrays.equals(cloneAssemblyParameters.assemblingFeatures, arrayOf(GeneFeature.CDR3)))
-                throwValidationExceptionKotlin(
-                    "'shotgun' pipeline can only use CDR3 as assembling feature. " +
-                            "See --contig-assembly and --impute-germline-on-export options if you want to " +
-                            "cover wider part of the receptor sequence."
-                )
+
+            // FIXME poslavsky ?
+            // val cloneAssemblyParameters = assemble.cloneAssemblerParameters
+            // if (!Arrays.equals(cloneAssemblyParameters.assemblingFeatures, arrayOf(GeneFeature.CDR3)))
+            //     throwValidationExceptionKotlin(
+            //         "'shotgun' pipeline can only use CDR3 as assembling feature. " +
+            //                 "See --contig-assembly and --impute-germline-on-export options if you want to " +
+            //                 "cover wider part of the receptor sequence."
+            //     )
+
             return assemble
         }
     }
