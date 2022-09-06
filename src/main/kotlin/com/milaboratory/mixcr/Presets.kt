@@ -17,10 +17,7 @@ import com.milaboratory.cli.AbstractPresetSet
 import com.milaboratory.cli.Preset
 import com.milaboratory.cli.PresetResolver
 import com.milaboratory.mitool.helpers.K_YAML_OM
-import com.milaboratory.mixcr.cli.CommandAlign
-import com.milaboratory.mixcr.cli.CommandAssemble
-import com.milaboratory.mixcr.cli.CommandAssemblePartial
-import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
+import com.milaboratory.mixcr.cli.*
 import kotlin.reflect.KProperty1
 
 object Presets {
@@ -63,6 +60,7 @@ object Presets {
     val refineTagsAndSort = getResolver(MiXCRPresetSet::refineTagsAndSort)
     val assemblePartial = getResolver(MiXCRPresetSet::assemblePartial)
     val assemble = getResolver(MiXCRPresetSet::assemble)
+    val assembleContigs = getResolver(MiXCRPresetSet::assembleContigs)
 
     private class MiXCRPresetSet(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
@@ -70,5 +68,6 @@ object Presets {
         @JsonProperty("refineTagsAndSort") val refineTagsAndSort: Preset<CommandRefineTagsAndSort.Params>? = null,
         @JsonProperty("assemblePartial") val assemblePartial: Preset<CommandAssemblePartial.Params>? = null,
         @JsonProperty("assemble") val assemble: Preset<CommandAssemble.Params>? = null,
+        @JsonProperty("assembleContigs") val assembleContigs: Preset<CommandAssembleContigs.Params>? = null,
     ) : AbstractPresetSet<MiXCRPresetSet>
 }

@@ -168,8 +168,7 @@ public final class Main {
 
                 .addSubcommand(CommandAssemble.COMMAND_NAME, CommandAssemble.Cmd.class)
                 // .addSubcommand("groupCells", CommandGroupCells.class)
-                .addSubcommand("assembleContigs", CommandAssembleContigs.class)
-
+                .addSubcommand(CommandAssembleContigs.COMMAND_NAME, CommandAssembleContigs.Cmd.class)
 
                 .addSubcommand("extend", CommandExtend.class)
 

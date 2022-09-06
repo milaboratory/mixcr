@@ -401,7 +401,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
     var assembleContigParameters: List<String> = mutableListOf()
 
     /** Build parameters for assemble  */
-    private fun mkAssembleContigs(input: String, output: String): CommandAssembleContigs {
+    private fun mkAssembleContigs(input: String, output: String): CommandAssembleContigs.Cmd {
         val assembleContigParameters = mutableListOf<String>()
 
         // adding report options
@@ -417,7 +417,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         assembleContigParameters += output
 
         // parse parameters
-        val ap = CommandAssembleContigs()
+        val ap = CommandAssembleContigs.Cmd()
         CommandLine(ap).parseArgs(*assembleContigParameters.toTypedArray())
         return inheritOptionsAndValidate(ap)
     }

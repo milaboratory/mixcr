@@ -210,7 +210,7 @@ object CommandAlign {
                 Params::tagMaxBudget setIfNotNull tagMaxBudget
 
                 if (saveReads)
-                    Params::parameters.dUpdater {
+                    Params::parameters.updateBy {
                         it.setSaveOriginalReads(true)
                     }
             }

@@ -17,31 +17,16 @@ import cc.redberry.pipe.OutputPort
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.trees.*
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
-import com.milaboratory.mixcr.trees.CloneWithDatasetId
-import com.milaboratory.mixcr.trees.MutationsUtils
-import com.milaboratory.mixcr.trees.SHMTreeBuilder
-import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
-import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
-import com.milaboratory.mixcr.trees.SHMTreeResult
-import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
-import com.milaboratory.mixcr.trees.ScoringSet
-import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.util.JsonOverrider
-import com.milaboratory.util.ProgressAndStage
-import com.milaboratory.util.ReportUtil
-import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.*
 import io.repseq.core.VDJCLibraryRegistry
 import org.apache.commons.io.FilenameUtils
 import picocli.CommandLine
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -218,7 +203,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             "All input files must be assembled with the same alleles"
         }
         require(cloneReaders.all { it.info.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
+            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${CommandAssembleContigs.BY_FEATURE_OPTION_NAME} option"
         }
         require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must not be cut by the same geneFeature"
@@ -256,6 +241,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
                 is SHMTreeBuilderParameters.SingleCell.NoOP ->
                     warn("Single cell tags will not be used but it's possible on this data")
+
                 is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
                     shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads) {
                         writeResults(it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
@@ -331,7 +317,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             anyCloneReader.alignerParameters,
             clnsFileNames,
             usedGenes,
-            //TODO summarize tagsInfo
+            // TODO summarize tagsInfo
             anyCloneReader.tagsInfo,
             usedGenes.map { it.parentLibrary }.distinct()
         )

@@ -1,0 +1,21 @@
+"assembleContigs_universal":
+  assembleContigs:
+    cutByFeature: null
+    ignoreTags: false
+    parameters:
+      branchingMinimalQualityShare: 0.1
+      branchingMinimalSumQuality: 60
+      decisiveBranchingSumQualityThreshold: 120
+      outputMinimalQualityShare: 0.75
+      outputMinimalSumQuality: 0
+      alignedSequenceEdgeDelta: 3
+      minimalMeanNormalizedQuality: 5
+      alignmentEdgeRegionSize: 7
+      minimalNonEdgePointsFraction: 0.25
+      subCloningRegions:
+      trimmingParameters:
+        averageQualityThreshold: 10
+        windowSize: 8
+      minimalContigLength: 20
+      alignedRegionsOnly: false
+      postFiltering: NoFiltering
