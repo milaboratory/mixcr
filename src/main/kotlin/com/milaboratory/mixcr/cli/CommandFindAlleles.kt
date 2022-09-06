@@ -536,9 +536,9 @@ private class CloneRebuild(
                             alleleMutations.mutate(alignment.sequence1),
                             clone.getTarget(index).sequence,
                             seq1RangeAfterAlleleMutations.lower,
-                            seq1RangeAfterAlleleMutations.upper,
+                            seq1RangeAfterAlleleMutations.length(),
                             alignment.sequence2Range.lower,
-                            alignment.sequence2Range.upper,
+                            alignment.sequence2Range.length(),
                         ).score
                     }
                     else -> AlignmentUtils.calculateScore(
