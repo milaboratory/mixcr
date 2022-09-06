@@ -18,17 +18,22 @@ import com.milaboratory.cli.CmdParameterOverrideOps
 import com.milaboratory.cli.PresetAware
 import com.milaboratory.cli.PresetParser
 import com.milaboratory.mixcr.Presets
-import com.milaboratory.mixcr.assembler.*
+import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
+import com.milaboratory.mixcr.assembler.CloneAssembler
+import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
+import com.milaboratory.mixcr.assembler.CloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.util.*
+import com.milaboratory.util.ArraysUtils
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.*
 import java.util.*
 
@@ -100,7 +105,7 @@ object CommandAssemble {
             names = ["--use-system-temp"],
             hidden = true
         )
-        fun useSystemTemp() {
+        fun useSystemTemp(value: Boolean) {
             warn(
                 "--use-system-temp is deprecated, it is now enabled by default, use --use-local-temp to invert the " +
                         "behaviour and place temporary files in the same folder as the output file."
@@ -109,7 +114,7 @@ object CommandAssemble {
 
         @Option(
             description = ["Store temp files in the same folder as output file."],
-            names = ["--use-system-temp"]
+            names = ["--use-local-temp"]
         )
         var useLocalTemp = false
 

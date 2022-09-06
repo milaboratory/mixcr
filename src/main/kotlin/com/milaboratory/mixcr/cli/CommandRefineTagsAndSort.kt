@@ -153,7 +153,7 @@ object CommandRefineTagsAndSort {
             names = ["--use-system-temp"],
             hidden = true
         )
-        fun useSystemTemp() {
+        fun useSystemTemp(value: Boolean) {
             warn(
                 "--use-system-temp is deprecated, it is now enabled by default, use --use-local-temp to invert the " +
                         "behaviour and place temporary files in the same folder as the output file."
@@ -162,7 +162,7 @@ object CommandRefineTagsAndSort {
 
         @Option(
             description = ["Store temp files in the same folder as output file."],
-            names = ["--use-system-temp"]
+            names = ["--use-local-temp"]
         )
         var useLocalTemp = false
 

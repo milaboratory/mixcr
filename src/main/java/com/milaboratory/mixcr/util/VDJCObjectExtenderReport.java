@@ -79,7 +79,7 @@ public class VDJCObjectExtenderReport extends MiXCRCommandReport {
 
     @Override
     public String command() {
-        return CommandExtend.EXTEND_COMMAND_NAME;
+        return CommandExtend.COMMAND_NAME;
     }
 
     @Override

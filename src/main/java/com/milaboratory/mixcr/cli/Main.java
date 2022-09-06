@@ -153,24 +153,21 @@ public final class Main {
                 .addSubcommand("help", CommandLine.HelpCommand.class)
                 .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
 
+                // Core command sequence
+                .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.Cmd.class)
+                .addSubcommand(CommandRefineTagsAndSort.COMMAND_NAME, CommandRefineTagsAndSort.Cmd.class)
+                .addSubcommand(CommandAssemblePartial.COMMAND_NAME, CommandAssemblePartial.Cmd.class)
+                .addSubcommand(CommandExtend.COMMAND_NAME, CommandExtend.Cmd.class)
+                .addSubcommand(CommandAssemble.COMMAND_NAME, CommandAssemble.Cmd.class)
+                // .addSubcommand("groupCells", CommandGroupCells.class)
+                .addSubcommand(CommandAssembleContigs.COMMAND_NAME, CommandAssembleContigs.Cmd.class)
+
                 .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
                 .addSubcommand("downsample", CommandDownsample.class)
                 .addSubcommand("exportPlots", CommandPaExportPlots.CommandExportPlotsMain.class)
                 .addSubcommand("exportTables", CommandPaExportTables.class)
                 .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)
                 .addSubcommand("overlapScatterPlot", CommandOverlapScatter.class)
-
-                .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.Cmd.class)
-
-                .addSubcommand(CommandRefineTagsAndSort.COMMAND_NAME, CommandRefineTagsAndSort.Cmd.class)
-
-                .addSubcommand(CommandAssemblePartial.COMMAND_NAME, CommandAssemblePartial.Cmd.class)
-
-                .addSubcommand(CommandAssemble.COMMAND_NAME, CommandAssemble.Cmd.class)
-                // .addSubcommand("groupCells", CommandGroupCells.class)
-                .addSubcommand(CommandAssembleContigs.COMMAND_NAME, CommandAssembleContigs.Cmd.class)
-
-                .addSubcommand("extend", CommandExtend.class)
 
                 .addSubcommand("bam2fastq", CommandBAM2fastq.class)
 

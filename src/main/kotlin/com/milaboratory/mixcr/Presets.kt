@@ -61,12 +61,14 @@ object Presets {
     val assemblePartial = getResolver(MiXCRPresetSet::assemblePartial)
     val assemble = getResolver(MiXCRPresetSet::assemble)
     val assembleContigs = getResolver(MiXCRPresetSet::assembleContigs)
+    val extend = getResolver(MiXCRPresetSet::extend)
 
     private class MiXCRPresetSet(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
         @JsonProperty("align") val align: Preset<CommandAlign.Params>? = null,
         @JsonProperty("refineTagsAndSort") val refineTagsAndSort: Preset<CommandRefineTagsAndSort.Params>? = null,
         @JsonProperty("assemblePartial") val assemblePartial: Preset<CommandAssemblePartial.Params>? = null,
+        @JsonProperty("extend") val extend: Preset<CommandExtend.Params>? = null,
         @JsonProperty("assemble") val assemble: Preset<CommandAssemble.Params>? = null,
         @JsonProperty("assembleContigs") val assembleContigs: Preset<CommandAssembleContigs.Params>? = null,
     ) : AbstractPresetSet<MiXCRPresetSet>

@@ -290,7 +290,7 @@ object CommandAlign {
         @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
 
-        val cmdParams by lazy { presetParser.parse(presetName) }
+        private val cmdParams by lazy { presetParser.parse(presetName) }
 
         val alignerParameters: VDJCAlignerParameters by lazy {
             val parameters = cmdParams.parameters

@@ -334,7 +334,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
     var extendAlignmentsParameters: List<String> = mutableListOf()
 
     /** Build parameters for extender  */
-    private fun mkExtend(input: String, output: String): CommandExtend {
+    private fun mkExtend(input: String, output: String): CommandExtend.Cmd {
         val extendParameters = mutableListOf<String>()
 
         // adding report options
@@ -350,7 +350,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         extendParameters += output
 
         // parse parameters
-        val ap = CommandExtend()
+        val ap = CommandExtend.Cmd()
         CommandLine(ap).parseArgs(*extendParameters.toTypedArray())
         return inheritOptionsAndValidate(ap)
     }

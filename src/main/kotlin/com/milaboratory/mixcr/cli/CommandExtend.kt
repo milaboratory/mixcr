@@ -13,14 +13,13 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
-import com.milaboratory.mixcr.basictypes.ClnsReader
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.IOUtil
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.milaboratory.cli.CmdParameterOverrideOps
+import com.milaboratory.cli.PresetAware
+import com.milaboratory.cli.PresetParser
+import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
-import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.util.VDJCObjectExtender
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.asSequence
@@ -30,151 +29,168 @@ import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.*
 import java.nio.file.Paths
 
-@CommandLine.Command(
-    name = CommandExtend.EXTEND_COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
-    description = ["Impute alignments or clones with germline sequences."]
-)
-class CommandExtend : MiXCRCommand() {
-    @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
-    lateinit var `in`: String
+object CommandExtend {
+    const val COMMAND_NAME = "extend"
 
-    @CommandLine.Parameters(description = ["extendeed.[vdjca|clns|clna]"], index = "1")
-    lateinit var out: String
-
-    @CommandLine.Option(
-        description = ["Apply procedure only to alignments with specific immunological-receptor chains."],
-        names = ["-c", "--chains"]
+    data class Params(
+        @JsonProperty("vAnchor") val vAnchor: ReferencePoint,
+        @JsonProperty("jAnchor") val jAnchor: ReferencePoint,
+        @JsonProperty("minimalVScore") val minimalVScore: Int,
+        @JsonProperty("minimalJScore") val minimalJScore: Int
     )
-    var chains = "TCR"
 
-    @CommandLine.Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-    var reportFile: String? = null
+    abstract class CmdBase : MiXCRCommand(), PresetAware<Params> {
+        @Option(description = ["V extension anchor point."], names = ["--v-anchor"])
+        private var vAnchorPoint: String? = null
 
-    @CommandLine.Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-    var jsonReport: String? = null
+        @Option(description = ["J extension anchor point."], names = ["--j-anchor"])
+        private var jAnchorPoint: String? = null
 
-    @CommandLine.Option(description = ["Quality score value to assign imputed sequences"], names = ["-q", "--quality"])
-    var extensionQuality: Byte = 30
+        @Option(description = ["Minimal V hit score to perform left extension."], names = ["--min-v-score"])
+        private var minimalVScore: Int? = null
 
-    @CommandLine.Option(description = ["Processing threads"], names = ["-t", "--threads"])
-    var threads = Runtime.getRuntime().availableProcessors()
-        set(value) {
-            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
-            field = value
-        }
+        @Option(description = ["Minimal J hit score to perform right extension."], names = ["--min-j-score"])
+        private var minimalJScore: Int? = null
 
-    @CommandLine.Option(description = ["V extension anchor point."], names = ["--v-anchor"])
-    var vAnchorPoint = "CDR3Begin"
-
-    @CommandLine.Option(description = ["J extension anchor point."], names = ["--j-anchor"])
-    var jAnchorPoint = "CDR3End"
-
-    @CommandLine.Option(description = ["Minimal V hit score to perform left extension."], names = ["--min-v-score"])
-    var minimalVScore = 100
-
-    @CommandLine.Option(
-        description = ["Minimal J hit score alignment to perform right extension."],
-        names = ["--min-j-score"]
-    )
-    var minimalJScore = 70
-
-    override fun getInputFiles(): List<String> = listOf(`in`)
-
-    override fun getOutputFiles(): List<String> = listOf(out)
-
-    override fun run0() {
-        when (IOUtil.extractFileType(Paths.get(`in`))!!) {
-            MiXCRFileType.VDJCA -> processVDJCA()
-            MiXCRFileType.CLNS -> processClns()
-            MiXCRFileType.CLNA -> throwValidationException("Operation is not supported for ClnA files.")
-        }
-    }
-
-    private fun processClns() {
-        ClnsReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
-            val cloneSet = reader.cloneSet
-            val outputPort = cloneSet.port
-            val process = processWrapper(outputPort, cloneSet.alignmentParameters)
-
-            val clones = process.output
-                .asSequence()
-                .map { clone -> clone.resetParentCloneSet() }
-                .sortedBy { it.id }
-                .toList()
-            val newCloneSet = CloneSet(clones, cloneSet.usedGenes, cloneSet.info, cloneSet.ordering)
-            ClnsWriter(out).use { writer ->
-                writer.writeCloneSet(newCloneSet)
-                val report = process.finish()
-                writer.writeFooter(reader.reports(), report)
+        override val presetParser = object : PresetParser<Params>(Presets.extend) {
+            override fun CmdParameterOverrideOps<Params>.overrideParameters() {
+                Params::vAnchor setIfNotNull vAnchorPoint?.let(ReferencePoint::parse)
+                Params::jAnchor setIfNotNull jAnchorPoint?.let(ReferencePoint::parse)
+                Params::minimalVScore setIfNotNull minimalVScore
+                Params::minimalJScore setIfNotNull minimalJScore
             }
         }
     }
 
-    private fun processVDJCA() {
-        VDJCAlignmentsReader(`in`).use { reader ->
-            VDJCAlignmentsWriter(out).use { writer ->
-                SmartProgressReporter.startProgressReport("Extending alignments", reader)
-                writer.header(reader)
-                val process = processWrapper(reader, reader.parameters)
+    @Command(
+        name = COMMAND_NAME,
+        sortOptions = true,
+        separator = " ",
+        description = ["Impute alignments or clones with germline sequences."]
+    )
+    class Cmd : CmdBase() {
+        @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+        lateinit var inputFile: String
 
-                // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
-                // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
-                // may break the alignment (gaps there are already consolidated as much as possible)
-                val gtRequiringIndelShifts = reader.parameters.geneTypesWithLinearScoring
-                process.output
-                    .asSequence()
-                    .sortedBy { it.alignmentsIndex }
-                    .forEach { alignments ->
-                        writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts))
-                    }
-                writer.setNumberOfProcessedReads(reader.numberOfReads)
-                val report = process.finish()
-                writer.writeFooter(reader.reports(), report)
-            }
-        }
-    }
+        @Parameters(description = ["extendeed.[vdjca|clns|clna]"], index = "1")
+        lateinit var outputFile: String
 
-    private fun <T : VDJCObject> processWrapper(
-        input: OutputPort<T>,
-        alignerParameters: VDJCAlignerParameters
-    ): ProcessWrapper<T> {
-        val extender = VDJCObjectExtender<T>(
-            Chains.parse(chains), extensionQuality,
-            alignerParameters.vAlignerParameters.scoring,
-            alignerParameters.jAlignerParameters.scoring,
-            minimalVScore, minimalJScore,
-            ReferencePoint.parse(vAnchorPoint),
-            ReferencePoint.parse(jAnchorPoint)
+        @Option(
+            description = ["Apply procedure only to alignments with specific immunological-receptor chains."],
+            names = ["-c", "--chains"]
         )
-        val output = ParallelProcessor(input, extender, threads)
-        extender.setStartMillis(System.currentTimeMillis())
-        extender.setInputFiles(`in`)
-        extender.setOutputFiles(out)
-        extender.commandLine = commandLineArguments
-        return ProcessWrapper(extender, output)
-    }
+        var chains = "TCR"
 
-    private inner class ProcessWrapper<T : VDJCObject>(
-        val reportBuilder: AbstractCommandReportBuilder,
-        val output: ParallelProcessor<T, T>
-    ) {
-        fun finish(): MiXCRCommandReport {
-            reportBuilder.setFinishMillis(System.currentTimeMillis())
-            val report = reportBuilder.buildReport()!!
-            // Writing report to stout
-            ReportUtil.writeReportToStdout(report)
-            if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-            if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
-            return report
+        @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
+        var reportFile: String? = null
+
+        @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
+        var jsonReport: String? = null
+
+        @Option(description = ["Quality score value to assign imputed sequences"], names = ["-q", "--quality"])
+        var extensionQuality: Byte = 30
+
+        @Option(description = ["Processing threads"], names = ["-t", "--threads"])
+        var threads = Runtime.getRuntime().availableProcessors()
+            set(value) {
+                if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+                field = value
+            }
+
+        override fun getInputFiles(): List<String> = listOf(inputFile)
+
+        override fun getOutputFiles(): List<String> = listOf(outputFile)
+
+        override fun run0() {
+            when (IOUtil.extractFileType(Paths.get(inputFile))!!) {
+                MiXCRFileType.VDJCA -> processVDJCA()
+                MiXCRFileType.CLNS -> processClns()
+                MiXCRFileType.CLNA -> throwValidationException("Operation is not supported for ClnA files.")
+            }
         }
-    }
 
-    companion object {
-        const val EXTEND_COMMAND_NAME = "extend"
+        private fun processClns() {
+            ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
+                val cloneSet = reader.cloneSet
+                val outputPort = cloneSet.port
+                val process = processWrapper(outputPort, reader.info.preset, cloneSet.alignmentParameters)
+
+                val clones = process.output
+                    .asSequence()
+                    .map { clone -> clone.resetParentCloneSet() }
+                    .sortedBy { it.id }
+                    .toList()
+                val newCloneSet = CloneSet(clones, cloneSet.usedGenes, cloneSet.info, cloneSet.ordering)
+                ClnsWriter(outputFile).use { writer ->
+                    writer.writeCloneSet(newCloneSet)
+                    val report = process.finish()
+                    writer.writeFooter(reader.reports(), report)
+                }
+            }
+        }
+
+        private fun processVDJCA() {
+            VDJCAlignmentsReader(inputFile).use { reader ->
+                VDJCAlignmentsWriter(outputFile).use { writer ->
+                    SmartProgressReporter.startProgressReport("Extending alignments", reader)
+                    writer.header(reader)
+                    val process = processWrapper(reader, reader.info.preset, reader.parameters)
+
+                    // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
+                    // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
+                    // may break the alignment (gaps there are already consolidated as much as possible)
+                    val gtRequiringIndelShifts = reader.parameters.geneTypesWithLinearScoring
+                    process.output
+                        .asSequence()
+                        .sortedBy { it.alignmentsIndex }
+                        .forEach { alignments ->
+                            writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts))
+                        }
+                    writer.setNumberOfProcessedReads(reader.numberOfReads)
+                    val report = process.finish()
+                    writer.writeFooter(reader.reports(), report)
+                }
+            }
+        }
+
+        private fun <T : VDJCObject> processWrapper(
+            input: OutputPort<T>,
+            presetName: String,
+            alignerParameters: VDJCAlignerParameters
+        ): ProcessWrapper<T> {
+            val cmdParams = presetParser.parse(presetName)
+
+            val extender = VDJCObjectExtender<T>(
+                Chains.parse(chains), extensionQuality,
+                alignerParameters.vAlignerParameters.scoring,
+                alignerParameters.jAlignerParameters.scoring,
+                cmdParams.minimalVScore, cmdParams.minimalJScore,
+                cmdParams.vAnchor, cmdParams.jAnchor
+            )
+            val output = ParallelProcessor(input, extender, threads)
+            extender.setStartMillis(System.currentTimeMillis())
+            extender.setInputFiles(inputFile)
+            extender.setOutputFiles(outputFile)
+            extender.commandLine = commandLineArguments
+            return ProcessWrapper(extender, output)
+        }
+
+        private inner class ProcessWrapper<T : VDJCObject>(
+            val reportBuilder: AbstractCommandReportBuilder,
+            val output: ParallelProcessor<T, T>
+        ) {
+            fun finish(): MiXCRCommandReport {
+                reportBuilder.setFinishMillis(System.currentTimeMillis())
+                val report = reportBuilder.buildReport()!!
+                // Writing report to stout
+                ReportUtil.writeReportToStdout(report)
+                if (reportFile != null) ReportUtil.appendReport(reportFile, report)
+                if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+                return report
+            }
+        }
     }
 }
