@@ -239,9 +239,9 @@ abstract class CommandAnalyze : MiXCRCommand() {
         // adding report options
         addReportOptions("align", alignParameters)
         alignParameters += when {
-            alignPreset != null -> "-p $alignPreset"
-            chains.intersects(Chains.TCR) -> "-p rna-seq"
-            else -> "-p kAligner2"
+            alignPreset != null -> "-p ${alignPreset}_4.0"
+            chains.intersects(Chains.TCR) -> "-p rna-seq_4.0"
+            else -> "-p kAligner2_4.0"
         }
         alignParameters += when (startingMaterial) {
             _StartingMaterial.rna -> "-OvParameters.geneFeatureToAlign=" +
@@ -374,7 +374,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
         // adding report options
         addReportOptions("assemble", assembleParameters)
         if (contigAssembly) assembleParameters += "--write-alignments"
-        inheritThreads(assembleParameters, this.assembleParameters)
+        // inheritThreads(assembleParameters, this.assembleParameters)
 
         // pipeline specific parameters
         assembleParameters += pipelineSpecificAssembleParameters()

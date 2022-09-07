@@ -1,4 +1,4 @@
-"align_universal_4.0":
+"align_default_4.0":
   align:
     species: ""
     trimmingQualityThreshold: 0
@@ -121,7 +121,7 @@
       saveOriginalReads: false
       smartForceEdgeAlignments: true
 
-"align_rna_seq_4.0":
+"align_rna-seq_4.0":
   align:
     species: ""
     trimmingQualityThreshold: 0

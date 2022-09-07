@@ -23,10 +23,12 @@ import kotlin.reflect.KProperty1
 object Presets {
     private val files = listOf(
         "align.yaml",
-        "assemblePartial.yaml",
         "assemble.yaml",
+        "assembleContigs.yaml",
+        "assemblePartial.yaml",
+        "extend.yaml",
         "pipelines.yaml",
-        "refineTagsAndSort.yaml"
+        "refineTagsAndSort.yaml",
     )
     private val presetCollection: Map<String, MiXCRPresetSet> = run {
         val map = mutableMapOf<String, MiXCRPresetSet>()

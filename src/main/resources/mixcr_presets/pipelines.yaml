@@ -1,15 +1,3 @@
-"default_4.0":
-  align:
-    inheritFrom: align_universal_4.0
-  assemblePartial:
-    inheritFrom: assemblePartial_universal
-  extend:
-    inheritFrom: extend_universal
-  assemble:
-    inheritFrom: assemble_universal
-  assembleContigs:
-    inheritFrom: assembleContigs_universal
-
 "_universal":
   assemblePartial:
     inheritFrom: assemblePartial_universal
@@ -19,3 +7,18 @@
     inheritFrom: assemble_universal
   assembleContigs:
     inheritFrom: assembleContigs_universal
+
+"default_4.0":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_default_4.0
+
+"rna-seq_4.0":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+"kAligner2_4.0":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_kAligner2_4.0
