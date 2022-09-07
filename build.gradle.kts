@@ -119,7 +119,7 @@ dependencies {
     implementation("commons-io:commons-io:2.11.0")
     implementation("org.lz4:lz4-java:1.8.0")
     implementation("net.sf.trove4j:trove4j:3.0.3")
-    implementation("info.picocli:picocli:4.1.1")
+    implementation("info.picocli:picocli:4.6.3")
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.itextpdf:itext7-core:7.2.1")
     implementation("com.itextpdf:layout:7.2.1")

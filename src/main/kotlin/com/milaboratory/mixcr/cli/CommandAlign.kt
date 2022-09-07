@@ -35,7 +35,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
-import com.milaboratory.mitool.helpers.dUpdater
 import com.milaboratory.mitool.helpers.expandPathNPattern
 import com.milaboratory.mitool.pattern.search.*
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
@@ -232,7 +231,9 @@ object CommandAlign {
         @Option(
             description = ["Analysis preset. Sets all significant parameters of this and all downstream analysis steps. " +
                     "This is a required parameter. It is very important to carefully select the most appropriate preset " +
-                    "for the data you analyse."], names = ["-p", "--preset"]
+                    "for the data you analyse."],
+            names = ["-p", "--preset"],
+            required = true,
         )
         lateinit var presetName: String
 
