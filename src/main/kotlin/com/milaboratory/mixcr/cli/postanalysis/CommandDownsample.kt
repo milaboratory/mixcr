@@ -98,9 +98,8 @@ class CommandDownsample : MiXCRCommand() {
         ensureOutputPathExists()
         for (i in results.indices) {
             ClnsWriter(output(`in`[i]).toFile()).use { clnsWriter ->
-                val result = datasets[i]
-                val downsampled = result.mkElementsPort().toList()
-                clnsWriter.writeHeader(result.info, result.ordering(), result.usedGenes, downsampled.size)
+                val downsampled = results[i].mkElementsPort().toList()
+                clnsWriter.writeHeader(datasets[i].info, datasets[i].ordering(), datasets[i].usedGenes, downsampled.size)
                 downsampled.port.drainToAndClose(clnsWriter.cloneWriter())
                 clnsWriter.writeFooter(emptyList(), null)
             }
