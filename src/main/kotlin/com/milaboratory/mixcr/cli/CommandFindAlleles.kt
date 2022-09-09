@@ -351,7 +351,7 @@ class CommandFindAlleles : MiXCRCommand() {
         cloneReaders: List<CloneReader>,
         usedGenes: Map<String, VDJCGeneData>
     ): VDJCLibrary {
-        val originalLibrary = anyClone(cloneReaders).getBestHit(Variable).gene.parentLibrary
+        val originalLibrary = cloneReaders.first().usedGenes.first().parentLibrary
         val resultLibrary = VDJCLibrary(
             VDJCLibraryData(originalLibrary.data, ArrayList(usedGenes.values)),
             originalLibrary.name + "_with_found_alleles",

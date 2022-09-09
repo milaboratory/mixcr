@@ -11,19 +11,51 @@
  */
 package com.milaboratory.mixcr.alleles
 
+import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.util.asSequence
 
 data class CloneDescription(
     /**
-     * Mutations of clone without CDR3
+     * Mutations of clone without CDR3.
      */
     val mutations: Mutations<NucleotideSequence>,
+    /**
+     * Mutations groups of clone without CDR3.
+     */
     val clusterIdentity: ClusterIdentity
 ) {
+    val mutationGroups: LinkedHashSet<MutationGroup> = mutations.asMutationGroups()
+
+    private fun Mutations<NucleotideSequence>.asMutationGroups(): java.util.LinkedHashSet<MutationGroup> {
+        var lastPosition = -1
+        val mutationGroups = mutableListOf<MutableList<Int>>()
+        asSequence()
+            .forEach { mutation ->
+                if (lastPosition != Mutation.getPosition(mutation)) {
+                    mutationGroups.add(mutableListOf())
+                }
+                lastPosition = Mutation.getPosition(mutation)
+                mutationGroups.last() += mutation
+            }
+        val result = mutationGroups.map { CloneDescription.MutationGroup(it) }
+        return java.util.LinkedHashSet(result)
+    }
+
 
     data class ClusterIdentity(
         private val CDR3Length: Int,
         private val complimentaryGeneName: String
     )
+
+    /**
+     * Mutations of clone with the same position.
+     * Grouping ensures that insertions in one position will be viewed as one mutation.
+     */
+    data class MutationGroup(
+        val mutations: List<Int>
+    ) {
+        override fun toString(): String = Mutations(NucleotideSequence.ALPHABET, *mutations.toIntArray()).encode()
+    }
 }

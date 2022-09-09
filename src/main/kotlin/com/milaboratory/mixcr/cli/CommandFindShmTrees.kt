@@ -46,6 +46,7 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
+import kotlin.io.path.pathString
 
 
 @Command(
@@ -161,7 +162,7 @@ class CommandFindShmTrees : MiXCRCommand() {
     override fun validate() {
         super.validate()
         if (report == null && buildFrom == null) {
-            warn("NOTE: report file is not specified, using $reportFileName to write report.")
+            warn("NOTE: report file is not specified, using $reportFile to write report.")
         }
         if (!outputTreesPath.extension.endsWith(shmFileExtension)) {
             throwValidationExceptionKotlin("Output file should have extension $shmFileExtension. Given $outputTreesPath")
@@ -197,8 +198,8 @@ class CommandFindShmTrees : MiXCRCommand() {
         }
     }
 
-    private val reportFileName: String
-        get() = report?.fileName?.toString() ?: "${outputTreesPath.nameWithoutExtension}.report"
+    private val reportFile: Path
+        get() = report ?: outputTreesPath.parent.resolve(outputTreesPath.nameWithoutExtension + ".report")
 
     private val tempDest: TempFileDest by lazy {
         if (!useSystemTemp) outputTreesPath.toAbsolutePath().parent.createDirectories()
@@ -283,7 +284,7 @@ class CommandFindShmTrees : MiXCRCommand() {
         }
         println("============= Report ==============")
         ReportUtil.writeReportToStdout(report)
-        ReportUtil.writeJsonReport(reportFileName, report)
+        ReportUtil.writeJsonReport(reportFile.pathString, report)
     }
 
     private fun readUserInput(userInputFile: File): Map<CloneWithDatasetId.ID, Int> {
