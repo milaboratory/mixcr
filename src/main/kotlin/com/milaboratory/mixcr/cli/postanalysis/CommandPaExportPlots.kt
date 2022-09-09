@@ -24,6 +24,9 @@ import picocli.CommandLine
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.Path
+import kotlin.io.path.extension
+import kotlin.io.path.nameWithoutExtension
 
 @CommandLine.Command(name = "exportPlots", separator = " ", description = ["Export postanalysis plots."])
 abstract class CommandPaExportPlots : CommandPaExport() {
@@ -92,9 +95,10 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     }
 
     private fun plotDestStr(group: IsolationGroup): String {
-        val ext = out.takeLast(4)
-        val withoutExt = out.dropLast(4)
-        return withoutExt + group.extension() + ext
+        val out = Path(out)
+        val ext = out.extension
+        val withoutExt = out.nameWithoutExtension
+        return "$withoutExt.${group.extension()}.$ext"
     }
 
     private fun plotDestPath(group: IsolationGroup): Path = Paths.get(plotDestStr(group))

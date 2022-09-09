@@ -59,7 +59,7 @@ class CommandPaOverlap : CommandPa() {
         if (factoryBy.isEmpty()) {
             OverlapUtil.overlap(
                 samples,
-                IncludeChains(group.chains.chains),
+                IncludeChains(group.chains, false),
                 OverlapUtil.parseCriteria(overlapCriteria).ordering()
             )
         } else {
@@ -91,7 +91,7 @@ class CommandPaOverlap : CommandPa() {
                 val reader = CloneReaderMerger(value.map {
                     OverlapUtil.mkCheckedReader(
                         Paths.get(it),
-                        IncludeChains(group.chains.chains),
+                        IncludeChains(group.chains, false),
                         concurrencyLimiter
                     )
                 })

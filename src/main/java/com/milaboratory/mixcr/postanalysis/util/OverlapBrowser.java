@@ -22,23 +22,22 @@ import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ProgressAndStage;
 import io.repseq.core.Chains;
-import io.repseq.core.Chains.NamedChains;
 import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class OverlapBrowser implements CanReportProgressAndStage {
-    final List<NamedChains> chains;
     final boolean onlyProductive;
 
-    public OverlapBrowser(List<NamedChains> chains, boolean onlyProductive) {
-        this.chains = chains;
+    public OverlapBrowser(boolean onlyProductive) {
         this.onlyProductive = onlyProductive;
     }
 
@@ -60,8 +59,9 @@ public class OverlapBrowser implements CanReportProgressAndStage {
     }
 
 
-    public Map<NamedChains, double[]> computeCounts(List<String> samples) {
-        Map<NamedChains, double[]> counts = new HashMap<>();
+    /** Compute counts for each chain in each sample */
+    public Map<Chains, double[]> computeCountsByChain(List<String> samples) {
+        Map<Chains, double[]> counts = new HashMap<>();
         AtomicInteger sampleIndex = new AtomicInteger(0);
         pas.setStage("Calculating dataset counts");
         pas.delegate(new CanReportProgress() {
@@ -78,13 +78,10 @@ public class OverlapBrowser implements CanReportProgressAndStage {
         for (int i = 0; i < samples.size(); i++) {
             try (CloneReader reader = CloneSetIO.mkReader(Paths.get(samples.get(i)), VDJCLibraryRegistry.getDefault())) {
                 for (Clone cl : CUtils.it(reader.readClones())) {
-                    if (!isProductive(cl))
+                    if (!includeClone(cl))
                         continue;
-                    for (NamedChains ch : chains) {
-                        if (!hasChains(cl, ch))
-                            continue;
-                        counts.computeIfAbsent(ch, __ -> new double[samples.size()])[i] += cl.getCount();
-                    }
+                    Chains chains = cl.commonTopChains();
+                    counts.computeIfAbsent(chains, __ -> new double[samples.size()])[i] += cl.getCount();
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -94,9 +91,8 @@ public class OverlapBrowser implements CanReportProgressAndStage {
         return counts;
     }
 
-    public OutputPort<Map<NamedChains, OverlapGroup<Clone>>>
-    overlap(Map<NamedChains, double[]> counts,
-            OutputPortWithProgress<OverlapGroup<Clone>> port) {
+    public OutputPort<Map<Chains, OverlapGroup<Clone>>> overlap(Map<Chains, double[]> counts,
+                                                                OutputPortWithProgress<OverlapGroup<Clone>> port) {
         pas.setStage("Calculating overlap");
         pas.delegate(port);
         return () -> {
@@ -105,8 +101,8 @@ public class OverlapBrowser implements CanReportProgressAndStage {
                 if (row == null)
                     return null;
 
-                Map<NamedChains, OverlapGroup<Clone>> map = new HashMap<>();
-                for (NamedChains ch : chains) {
+                Map<Chains, OverlapGroup<Clone>> map = new HashMap<>();
+                for (Chains ch : counts.keySet()) {
                     OverlapGroup<Clone> forChain = forChains(row, ch);
                     if (forChain == null)
                         continue;
@@ -117,12 +113,10 @@ public class OverlapBrowser implements CanReportProgressAndStage {
                     if (forChain == null)
                         continue;
 
-                    if (counts != null) {
-                        double[] cs = counts.get(ch);
-                        for (int i = 0; i < forChain.size(); i++)
-                            for (Clone cl : forChain.getBySample(i))
-                                cl.overrideFraction(cl.getCount() / cs[i]);
-                    }
+                    double[] cs = counts.get(ch);
+                    for (int i = 0; i < forChain.size(); i++)
+                        for (Clone cl : forChain.getBySample(i))
+                            cl.overrideFraction(cl.getCount() / cs[i]);
 
                     map.put(ch, forChain);
                 }
@@ -138,47 +132,36 @@ public class OverlapBrowser implements CanReportProgressAndStage {
             boolean empty = true;
             for (List<Clone> l : row) {
                 l.removeIf(c -> !criteria.test(c));
-                if (!l.isEmpty())
-                    empty = false;
+                if (!l.isEmpty()) empty = false;
             }
-            if (empty)
-                return null;
-            else
-                return row;
+            if (empty) return null;
+            else return row;
         } else {
             boolean empty = true;
             List<List<Clone>> r = new ArrayList<>();
             for (List<Clone> l : row) {
                 List<Clone> f = l.stream().filter(criteria).collect(Collectors.toList());
                 r.add(f);
-                if (!f.isEmpty())
-                    empty = false;
+                if (!f.isEmpty()) empty = false;
             }
-            if (empty)
-                return null;
-            else
-                return new OverlapGroup<>(r);
+            if (empty) return null;
+            else return new OverlapGroup<>(r);
         }
     }
 
-    private static boolean isProductive(Clone c) {
-        return !c.isOutOfFrameOrAbsent(GeneFeature.CDR3) && !c.containsStopsOrAbsent(GeneFeature.CDR3);
+    private boolean includeClone(Clone c) {
+        return !onlyProductive || !(c.isOutOfFrameOrAbsent(GeneFeature.CDR3) || c.containsStopsOrAbsent(GeneFeature.CDR3));
     }
 
-    private static boolean hasChains(Clone c, NamedChains chains) {
-        return chains == Chains.ALL_NAMED || Arrays.stream(GeneType.VJC_REFERENCE).anyMatch(gt -> {
-            Chains clChains = c.getAllChains(gt);
-            if (clChains == null)
-                return false;
-            return clChains.intersects(chains.chains);
-        });
+    private static boolean chainsMatch(Clone c, Chains chains) {
+        return c.commonTopChains().equals(chains);
     }
 
-    private static OverlapGroup<Clone> forChains(OverlapGroup<Clone> row, NamedChains chains) {
-        return chains == Chains.ALL_NAMED ? row : filter(row, c -> hasChains(c, chains), false);
+    private static OverlapGroup<Clone> forChains(OverlapGroup<Clone> row, Chains chains) {
+        return chains == null ? row : filter(row, c -> chainsMatch(c, chains), false);
     }
 
     private OverlapGroup<Clone> filterProductive(OverlapGroup<Clone> row, boolean inPlace) {
-        return onlyProductive ? filter(row, OverlapBrowser::isProductive, inPlace) : row;
+        return onlyProductive ? filter(row, this::includeClone, inPlace) : row;
     }
 }

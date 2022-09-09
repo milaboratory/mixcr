@@ -13,12 +13,9 @@ package com.milaboratory.mixcr.cli.qc
 
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.*
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAlign
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
-import io.repseq.core.Chains
 import picocli.CommandLine
 import java.nio.file.Paths
 
@@ -37,13 +34,6 @@ class CommandExportQcChainUsage : CommandExportQc() {
     var alignChainUsage = false
 
     @CommandLine.Option(
-        names = ["--chains"],
-        description = ["Specify which chains to export. Possible values: TRAD, TRB, TRG, IGH, IGK, IGL."],
-        split = ","
-    )
-    var chains: List<String>? = null
-
-    @CommandLine.Option(
         names = ["--hide-non-functional"],
         description = ["Hide fractions of non-functional CDR3s (out-of-frames and containing stops)"]
     )
@@ -60,7 +50,6 @@ class CommandExportQcChainUsage : CommandExportQc() {
             throwExecutionExceptionKotlin("Input files should have the same file type, got ${fileTypes.distinct()}")
         }
         val fileType = fileTypes.first()
-        val chains = chains?.map { Chains.getNamedChains(it) } ?: Chains.DEFAULT_EXPORT_CHAINS_LIST
         val hw = sizeParameters!!
         val plot = when (fileType) {
             CLNA, CLNS -> when {
@@ -68,14 +57,12 @@ class CommandExportQcChainUsage : CommandExportQc() {
                     files,
                     !absoluteValues,
                     !hideNonFunctional,
-                    chains,
                     hw
                 )
                 else -> chainUsageAssemble(
                     files,
                     !absoluteValues,
                     !hideNonFunctional,
-                    chains,
                     hw
                 )
             }
@@ -83,7 +70,6 @@ class CommandExportQcChainUsage : CommandExportQc() {
                 files,
                 !absoluteValues,
                 !hideNonFunctional,
-                chains,
                 hw
             )
         }

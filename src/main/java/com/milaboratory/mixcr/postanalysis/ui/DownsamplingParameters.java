@@ -66,7 +66,7 @@ public final class DownsamplingParameters {
         if (chains == null)
             return preproc;
         else
-            return preproc.filterFirst(weightFunction, new ElementPredicate.IncludeChains(chains));
+            return preproc.filterFirst(weightFunction, new ElementPredicate.IncludeChains(chains, false));
     }
 
     /**

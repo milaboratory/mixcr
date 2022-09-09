@@ -19,11 +19,7 @@ import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
 import cc.redberry.pipe.blocks.Merger
 import cc.redberry.pipe.blocks.ParallelProcessor
-import cc.redberry.pipe.util.Chunk
-import cc.redberry.pipe.util.FlatteningOutputPort
-import cc.redberry.pipe.util.Indexer
-import cc.redberry.pipe.util.OrderedOutputPort
-import cc.redberry.pipe.util.TBranchOutputPort
+import cc.redberry.pipe.util.*
 import cc.redberry.primitives.Filter
 import com.milaboratory.primitivio.blocks.PrimitivIBlocks
 import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil
@@ -31,6 +27,7 @@ import com.milaboratory.primitivio.blocks.PrimitivOBlocks
 import com.milaboratory.util.TempFileDest
 import net.jpountz.lz4.LZ4Compressor
 import java.util.concurrent.ThreadLocalRandom
+import java.util.function.Predicate
 
 inline fun <reified T : Any> PrimitivI.readObjectOptional(): T? = readObject(T::class.java)
 
@@ -125,6 +122,7 @@ fun <T : Any, R : Any> OutputPort<T>.flatMap(function: (element: T) -> Iterable<
 fun <T : Any> OutputPort<T>.filter(test: Filter<T>): OutputPortCloseable<T> =
     FilteringPort(this, test)
 
+fun <T : Any> Predicate<T>.asFilter(): Filter<T> = Filter { this.test(it) }
 fun <T : Any> OutputPort<T>.limit(limit: Long): OutputPortCloseable<T> = object : OutputPortCloseable<T> {
     private var count = 0L
 

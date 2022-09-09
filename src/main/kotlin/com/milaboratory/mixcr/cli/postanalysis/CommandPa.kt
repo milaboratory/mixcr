@@ -13,8 +13,10 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
 import io.repseq.core.Chains
@@ -22,8 +24,8 @@ import picocli.CommandLine
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 import java.util.stream.Collectors
+import kotlin.io.path.Path
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readLines
@@ -55,8 +57,13 @@ abstract class CommandPa : MiXCRCommand() {
     )
     lateinit var defaultWeightFunction: String
 
-    @CommandLine.Option(description = ["Filter specified chains"], names = ["--chains"])
-    var chains = "ALL"
+    @CommandLine.Option(
+        description = ["Limit analysis to specific chains (e.g. TRA or IGH) (fractions will be recalculated). " +
+                "Possible values (multiple values allowed): TRA, TRD, TRAD (for human), TRG, IGH, IGK, IGL"],
+        names = ["--chains"],
+        split = ","
+    )
+    var chains: Set<String>? = null
 
     @CommandLine.Option(description = [CommonDescriptions.METADATA], names = ["--metadata"], paramLabel = "metadata")
     var metadataFile: String? = null
@@ -223,18 +230,25 @@ abstract class CommandPa : MiXCRCommand() {
             .map { (key, value) -> SamplesGroup(value, key) }
     }
 
+    private val chainsToProcess by lazy {
+        val availableChains = ChainsUtil.allChainsFromClnx(inputFiles.map { Path(it) })
+        println("The following chains present in the data: $availableChains")
+        if (chains == null)
+            availableChains
+        else
+            availableChains.intersect(ChainsFilter.parseChainsList(this.chains))
+    }
+
     override fun run0() {
-        val chains = Chains.parse(chains)
         val chainsColumn = chainsColumn()
         val results: List<PaResultByGroup> = groupSamples().flatMap { group ->
-            val chainsToExport = when {
-                chainsColumn != null ->
-                    listOf(Chains.getNamedChains(group.group[chainsColumn].toString().uppercase(Locale.getDefault())))
-                else -> Chains.DEFAULT_EXPORT_CHAINS_LIST
+            val chainsForGroup = when {
+                chainsColumn != null -> setOf(Chains.parse(group.group[chainsColumn].toString()))
+                else -> chainsToProcess
             }
-            chainsToExport
-                .filter { chains.intersects(it.chains) }
-                .map { run0(IsolationGroup(it, group.group), group.samples) }
+            chainsForGroup.map {
+                run0(IsolationGroup(it, group.group), group.samples)
+            }
         }
         val result = PaResult(metadata, isolationGroups, results)
         Files.createDirectories(outputPath().parent)
