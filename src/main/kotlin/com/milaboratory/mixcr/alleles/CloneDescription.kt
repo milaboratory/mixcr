@@ -28,19 +28,23 @@ data class CloneDescription(
 ) {
     val mutationGroups: LinkedHashSet<MutationGroup> = mutations.asMutationGroups()
 
-    private fun Mutations<NucleotideSequence>.asMutationGroups(): java.util.LinkedHashSet<MutationGroup> {
+    private fun Mutations<NucleotideSequence>.asMutationGroups(): LinkedHashSet<MutationGroup> {
         var lastPosition = -1
+        var lastWasDeletion = false
         val mutationGroups = mutableListOf<MutableList<Int>>()
         asSequence()
             .forEach { mutation ->
-                if (lastPosition != Mutation.getPosition(mutation)) {
+                val subsequentDeletion = lastWasDeletion && Mutation.isDeletion(mutation) &&
+                        Mutation.getPosition(mutation) == lastPosition + 1
+                if (!subsequentDeletion && lastPosition != Mutation.getPosition(mutation)) {
                     mutationGroups.add(mutableListOf())
                 }
                 lastPosition = Mutation.getPosition(mutation)
+                lastWasDeletion = Mutation.isDeletion(mutation)
                 mutationGroups.last() += mutation
             }
-        val result = mutationGroups.map { CloneDescription.MutationGroup(it) }
-        return java.util.LinkedHashSet(result)
+        val result = mutationGroups.map { MutationGroup(it) }
+        return LinkedHashSet(result)
     }
 
 

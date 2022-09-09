@@ -195,7 +195,7 @@ class AllelesBuilder(
         val CDR3OfNaiveClones = naiveClones.map { it.getFeature(CDR3).sequence to it }.toMutableList()
         val minCDR3Size = CDR3OfNaiveClones.minOf { it.first.size() }
         // char by shift from CDR3 border.
-        val foundLettersInCDR3 = mutableListOf<Pair<Int, Byte>>()
+        val foundLettersInCDR3 = mutableListOf<Byte>()
         for (i in 0 until minCDR3Size) {
             val lettersInPosition = CDR3OfNaiveClones
                 .map { (CDR3, clone) ->
@@ -217,14 +217,14 @@ class AllelesBuilder(
                 .flatMap { it.map { (_, clone) -> clone } }
                 .toSet()
             CDR3OfNaiveClones.removeIf { (_, clone) -> clone in clonesToExclude }
-            foundLettersInCDR3 += i to mostFrequent
+            foundLettersInCDR3 += mostFrequent
         }
         if (foundLettersInCDR3.isEmpty()) return this to 0
         val bestHit = clones.first().getBestHit(geneType)
         val partitioning = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
         val foundMutations = mutableListOf<Int>()
         var lastKnownShift = 0
-        for ((i, letter) in foundLettersInCDR3) {
+        for ((i, letter) in foundLettersInCDR3.withIndex()) {
             val position = when (geneType) {
                 Variable -> {
                     val CDR3BeginPosition = partitioning.getPosition(CDR3Begin)
@@ -235,7 +235,7 @@ class AllelesBuilder(
                     }
                     shiftedPosition
                 }
-                else -> {
+                Joining -> {
                     val CDR3EndPosition = partitioning.getPosition(CDR3End)
                     val shifterPosition = CDR3EndPosition - i - 1
                     if (shifterPosition < partitioning.getPosition(JBegin)) {
@@ -244,6 +244,7 @@ class AllelesBuilder(
                     }
                     shifterPosition
                 }
+                else -> throw UnsupportedOperationException()
             }
             lastKnownShift = i
             val letterInGermline = sequence1[position]
