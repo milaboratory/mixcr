@@ -11,14 +11,15 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class ChainUsageStatsRecord @JsonCreator constructor(
-    @field:JsonProperty("total") val total: Long,
-    @field:JsonProperty("nonFunctional") val nonFunctional: Long,
-    @field:JsonProperty("isOOF") val isOOF: Long,
-    @field:JsonProperty("hasStops") val hasStops: Long
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+data class ChainUsageStatsRecord(
+    @JsonProperty("total") val total: Long,
+    @JsonProperty("nonFunctional") val nonFunctional: Long,
+    @JsonProperty("isOOF") val isOOF: Long,
+    @JsonProperty("hasStops") val hasStops: Long
 ) {
     init {
         assert(isOOF + hasStops == nonFunctional)

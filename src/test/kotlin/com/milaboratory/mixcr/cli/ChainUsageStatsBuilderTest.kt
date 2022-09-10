@@ -11,20 +11,33 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.ReportHelper
 import io.repseq.core.Chains
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 
 class ChainUsageStatsBuilderTest {
+    @Before
+    fun before() {
+        GlobalObjectMappers.addModifier {
+            it.registerModule(kotlinModule())
+
+        }
+    }
+
     @Test
     fun serializationTest() {
         val stats = ChainUsageStatsBuilder()
         stats.total.addAndGet(2)
         stats.total.incrementAndGet()
         stats.chimeras.incrementAndGet()
+
         stats.getRecordBuilder(Chains.TRB)!!.total.incrementAndGet()
+        stats.getRecordBuilder(Chains.TRB)!!.oof.incrementAndGet()
+        stats.getRecordBuilder(Chains.TRB)!!.nf.incrementAndGet()
         stats.getRecordBuilder(Chains.TRA)!!.total.incrementAndGet()
         val expected = stats.buildReport()
         expected.writeReport(ReportHelper(System.out, true))

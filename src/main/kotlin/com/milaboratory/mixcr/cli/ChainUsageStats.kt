@@ -11,22 +11,28 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.milaboratory.util.ReportHelper
 import io.repseq.core.Chains
 
-data class ChainUsageStats @JsonCreator constructor(
-    @field:JsonProperty("chimeras") val chimeras: Long,
-    @field:JsonProperty("total") val total: Long,
-    @field:JsonProperty("chains") val chains: Map<Chains, ChainUsageStatsRecord>
+@JsonAutoDetect
+data class ChainUsageStats(
+    @JsonProperty("chimeras") val chimeras: Long,
+    @JsonProperty("total") val total: Long,
+    @JsonProperty("chains")
+    @JsonSerialize(keyUsing = Chains.ChainsKeySerializer::class)
+    @JsonDeserialize(keyUsing = Chains.ChainsKeyDeserializer::class)
+    val chains: Map<Chains, ChainUsageStatsRecord>
 ) : MiXCRReport {
     override fun writeReport(helper: ReportHelper) {
         val total = total
         for ((key, value) in chains) {
-            helper.writePercentAndAbsoluteField(key.toString() + " chains", value.total, total)
+            helper.writePercentAndAbsoluteField("$key chains", value.total, total)
             helper.writePercentAndAbsoluteField(
-                key.toString() + " non-functional",
+                "$key non-functional",
                 value.nonFunctional, value.total
             )
         }
