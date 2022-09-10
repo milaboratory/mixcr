@@ -1,3 +1,7 @@
+#
+# Meta presets ("abstract")
+#
+
 "_universal":
   assemblePartial:
     inheritFrom: assemblePartial_universal
@@ -7,6 +11,10 @@
     inheritFrom: assemble_universal
   assembleContigs:
     inheritFrom: assembleContigs_universal
+
+#
+# Legacy presets from 4.0 parameter sets
+#
 
 "default_4.0":
   inheritFrom: _universal
@@ -20,5 +28,27 @@
 
 "kAligner2_4.0":
   inheritFrom: _universal
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+#
+# Amplicon presets
+#
+
+"tcr_amplicon":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+"bcr_amplicon":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
   align:
     inheritFrom: align_kaligner2_4.0

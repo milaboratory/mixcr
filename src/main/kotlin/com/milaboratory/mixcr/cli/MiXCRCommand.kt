@@ -15,18 +15,24 @@ import com.milaboratory.cli.*
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import kotlin.reflect.KProperty1
 
-abstract class MiXCRCommand : ACommand("mixcr") {
-    fun throwValidationExceptionKotlin(message: String, printHelp: Boolean): Nothing {
+interface MiXCRCommandI {
+    fun throwValidationExceptionKotlin(message: String, printHelp: Boolean): Nothing
+    fun throwValidationExceptionKotlin(message: String): Nothing
+    fun throwExecutionExceptionKotlin(message: String): Nothing
+}
+
+abstract class MiXCRCommand : ACommand("mixcr"), MiXCRCommandI {
+    override fun throwValidationExceptionKotlin(message: String, printHelp: Boolean): Nothing {
         super.throwValidationException(message, printHelp)
         error(message)
     }
 
-    fun throwValidationExceptionKotlin(message: String): Nothing {
+    override fun throwValidationExceptionKotlin(message: String): Nothing {
         super.throwValidationException(message)
         error(message)
     }
 
-    fun throwExecutionExceptionKotlin(message: String): Nothing {
+    override fun throwExecutionExceptionKotlin(message: String): Nothing {
         super.throwExecutionException(message)
         error(message)
     }
@@ -41,9 +47,9 @@ class MiXCRParamsBundleMixIn(val priority: Int, val mutation: POverride<MiXCRPar
 
 @POverridesBuilderDsl
 interface MixInBuilderOps : POverridesBuilderOps<MiXCRParamsBundle> {
-    var priority: Int
+    fun setPriority(priority: Int)
 
-    fun downTheFlag(flagName: String) = MiXCRParamsBundle::flags.updateBy { it - flagName }
+    fun dropFlag(flagName: String) = MiXCRParamsBundle::flags.updateBy { it - flagName }
 }
 
 typealias MixInBuilderFunc = MixInBuilderOps.() -> Unit
@@ -63,11 +69,9 @@ abstract class MiXCRMixInCollector : MiXCRMixInSet {
                 overrides += override
             }
 
-            override var priority: Int
-                get() = priorityValue
-                set(value) {
-                    priorityValue = value
-                }
+            override fun setPriority(priority: Int) {
+                priorityValue = priority
+            }
         }
         builderTarget.action()
         mixins += MiXCRParamsBundleMixIn(priorityValue) { overrides.fold(it) { acc, o -> o.apply(acc) } }

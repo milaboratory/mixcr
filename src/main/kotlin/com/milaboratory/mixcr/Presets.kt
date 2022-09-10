@@ -24,7 +24,7 @@ import kotlin.reflect.KProperty1
 
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
 data class MiXCRParamsBundle(
-    @JsonProperty("flags") val flags: Map<String, String>,
+    @JsonProperty("flags") val flags: Set<String>,
     @JsonProperty("align") val align: CommandAlign.Params?,
     @JsonProperty("refineTagsAndSort") val refineTagsAndSort: CommandRefineTagsAndSort.Params?,
     @JsonProperty("assemblePartial") val assemblePartial: CommandAssemblePartial.Params?,
@@ -32,6 +32,28 @@ data class MiXCRParamsBundle(
     @JsonProperty("assemble") val assemble: CommandAssemble.Params?,
     @JsonProperty("assembleContigs") val assembleContigs: CommandAssembleContigs.Params?
 )
+
+object Flags {
+    const val MaterialType = "materialType"
+    const val LeftAlignmentMode = "leftSideAmplificationPrimer"
+    const val RightAlignmentMode = "rightSideAmplificationPrimer"
+
+    val flagMessages = mapOf(
+        MaterialType to
+                "This preset requires to specify material type, \n" +
+                "please use one of the following mixins: +dna, +rna",
+        LeftAlignmentMode to
+                "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
+                "please use one of the following mixins: \n" +
+                "+floatingLeftAlignmentBoundary [optional_anchor_point]\n" +
+                "+rigidLeftAlignmentBoundary [optional_anchor_point]",
+        RightAlignmentMode to
+                "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
+                "please use one of the following mixins: \n" +
+                "+floatingRightAlignmentBoundary [optional_anchor_point]\n" +
+                "+rigidRightAlignmentBoundary [optional_anchor_point]",
+    )
+}
 
 object Presets {
     private val files = listOf(
@@ -82,7 +104,7 @@ object Presets {
 
     private class MiXCRParamsBundleRaw(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
-        @JsonProperty("flags") val flags: Map<String, String>?,
+        @JsonProperty("flags") val flags: Set<String>?,
         @JsonProperty("align") val align: RawParams<CommandAlign.Params>? = null,
         @JsonProperty("refineTagsAndSort") val refineTagsAndSort: RawParams<CommandRefineTagsAndSort.Params>? = null,
         @JsonProperty("assemblePartial") val assemblePartial: RawParams<CommandAssemblePartial.Params>? = null,
@@ -92,7 +114,7 @@ object Presets {
     ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw>
 
     fun resolveParamsBundle(presetName: String) = MiXCRParamsBundle(
-        flags = presetCollection[presetName]!!.flags ?: emptyMap(),
+        flags = presetCollection[presetName]!!.flags ?: emptySet(),
         align = align(presetName),
         refineTagsAndSort = refineTagsAndSort(presetName),
         assemblePartial = assemblePartial(presetName),
