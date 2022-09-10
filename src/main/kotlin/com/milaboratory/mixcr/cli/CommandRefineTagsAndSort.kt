@@ -15,15 +15,13 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.CountingOutputPort
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.milaboratory.cli.CmdParameterOverrideOps
-import com.milaboratory.cli.PresetAware
-import com.milaboratory.cli.PresetParser
+import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.pattern.SequenceSetCollection.loadSequenceSetByAddress
 import com.milaboratory.mitool.refinement.CorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
@@ -55,7 +53,7 @@ object CommandRefineTagsAndSort {
         @JsonMerge @JsonProperty("parameters") val parameters: TagCorrectorParameters
     )
 
-    abstract class CmdBase : MiXCRCommand(), PresetAware<Params> {
+    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(
             description = ["Don't correct barcodes, only sort alignments by tags"],
             names = ["--dont-correct"]
@@ -115,8 +113,8 @@ object CommandRefineTagsAndSort {
         )
         private var whitelists: Map<String, String> = mutableMapOf()
 
-        override val presetParser = object : PresetParser<Params>(Presets.refineTagsAndSort) {
-            override fun CmdParameterOverrideOps<Params>.overrideParameters() {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::refineTagsAndSort) {
+            override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::whitelists setIfNotEmpty whitelists
 
                 Params::runCorrection resetIfTrue dontCorrect
@@ -187,7 +185,7 @@ object CommandRefineTagsAndSort {
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: CorrectionReport?
             VDJCAlignmentsReader(inputFile).use { mainReader ->
-                cmdParams = presetParser.parse(mainReader.info.preset)
+                cmdParams = paramsResolver.parse(mainReader.info.paramsBundle).second
                 val tagNames = mutableListOf<String>()
                 val indicesBuilder = TIntArrayList()
                 for (ti in mainReader.tagsInfo.indices) {

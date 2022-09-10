@@ -11,7 +11,9 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.cli.ACommand
+import com.milaboratory.cli.*
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import kotlin.reflect.KProperty1
 
 abstract class MiXCRCommand : ACommand("mixcr") {
     fun throwValidationExceptionKotlin(message: String, printHelp: Boolean): Nothing {
@@ -28,4 +30,53 @@ abstract class MiXCRCommand : ACommand("mixcr") {
         super.throwExecutionException(message)
         error(message)
     }
+}
+
+abstract class MiXCRParamsResolver<P : Any>(paramsProperty: KProperty1<MiXCRParamsBundle, P?>) :
+    ParamsResolver<MiXCRParamsBundle, P>(paramsProperty)
+
+abstract class MiXCRPresetAwareCommand<P : Any> : MiXCRCommand(), PresetAware<MiXCRParamsBundle, P>
+
+class MiXCRParamsBundleMixIn(val priority: Int, val mutation: POverride<MiXCRParamsBundle>)
+
+@POverridesBuilderDsl
+interface MixInBuilderOps : POverridesBuilderOps<MiXCRParamsBundle> {
+    var priority: Int
+
+    fun downTheFlag(flagName: String) = MiXCRParamsBundle::flags.updateBy { it - flagName }
+}
+
+typealias MixInBuilderFunc = MixInBuilderOps.() -> Unit
+
+interface MiXCRMixInSet {
+    fun mixIn(action: MixInBuilderFunc)
+}
+
+abstract class MiXCRMixInCollector : MiXCRMixInSet {
+    private val mixins = mutableListOf<MiXCRParamsBundleMixIn>()
+
+    override fun mixIn(action: MixInBuilderFunc) {
+        val overrides = mutableListOf<POverride<MiXCRParamsBundle>>()
+        var priorityValue = 0
+        val builderTarget = object : POverridesBuilderOpsAbstract<MiXCRParamsBundle>(), MixInBuilderOps {
+            override fun addOverride(override: POverride<MiXCRParamsBundle>) {
+                overrides += override
+            }
+
+            override var priority: Int
+                get() = priorityValue
+                set(value) {
+                    priorityValue = value
+                }
+        }
+        builderTarget.action()
+        mixins += MiXCRParamsBundleMixIn(priorityValue) { overrides.fold(it) { acc, o -> o.apply(acc) } }
+    }
+
+    val bundleOverride
+        get() = POverride<MiXCRParamsBundle> { bundle ->
+            val mixinsCopy = ArrayList(mixins)
+            mixinsCopy.sortBy { -it.priority }
+            mixinsCopy.fold(bundle) { b, m -> m.mutation.apply(b) }
+        }
 }

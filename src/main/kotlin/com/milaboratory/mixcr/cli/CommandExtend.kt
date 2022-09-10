@@ -14,10 +14,8 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.milaboratory.cli.CmdParameterOverrideOps
-import com.milaboratory.cli.PresetAware
-import com.milaboratory.cli.PresetParser
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
 import com.milaboratory.mixcr.util.VDJCObjectExtender
@@ -42,7 +40,7 @@ object CommandExtend {
         @JsonProperty("minimalJScore") val minimalJScore: Int
     )
 
-    abstract class CmdBase : MiXCRCommand(), PresetAware<Params> {
+    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(description = ["V extension anchor point."], names = ["--v-anchor"])
         private var vAnchorPoint: String? = null
 
@@ -55,8 +53,8 @@ object CommandExtend {
         @Option(description = ["Minimal J hit score to perform right extension."], names = ["--min-j-score"])
         private var minimalJScore: Int? = null
 
-        override val presetParser = object : PresetParser<Params>(Presets.extend) {
-            override fun CmdParameterOverrideOps<Params>.overrideParameters() {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::extend) {
+            override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::vAnchor setIfNotNull vAnchorPoint?.let(ReferencePoint::parse)
                 Params::jAnchor setIfNotNull jAnchorPoint?.let(ReferencePoint::parse)
                 Params::minimalVScore setIfNotNull minimalVScore
@@ -116,7 +114,7 @@ object CommandExtend {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val cloneSet = reader.cloneSet
                 val outputPort = cloneSet.port
-                val process = processWrapper(outputPort, reader.info.preset, cloneSet.alignmentParameters)
+                val process = processWrapper(outputPort, reader.info.paramsBundle, cloneSet.alignmentParameters)
 
                 val clones = process.output
                     .asSequence()
@@ -137,7 +135,7 @@ object CommandExtend {
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     SmartProgressReporter.startProgressReport("Extending alignments", reader)
                     writer.header(reader)
-                    val process = processWrapper(reader, reader.info.preset, reader.parameters)
+                    val process = processWrapper(reader, reader.info.paramsBundle, reader.parameters)
 
                     // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
                     // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
@@ -158,10 +156,10 @@ object CommandExtend {
 
         private fun <T : VDJCObject> processWrapper(
             input: OutputPort<T>,
-            presetName: String,
+            paramsBundle: MiXCRParamsBundle,
             alignerParameters: VDJCAlignerParameters
         ): ProcessWrapper<T> {
-            val cmdParams = presetParser.parse(presetName)
+            val (_, cmdParams) = paramsResolver.parse(paramsBundle)
 
             val extender = VDJCObjectExtender<T>(
                 Chains.parse(chains), extensionQuality,

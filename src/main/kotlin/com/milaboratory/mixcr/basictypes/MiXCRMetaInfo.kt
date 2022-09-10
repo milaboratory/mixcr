@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.basictypes
 
 import com.milaboratory.mitool.pattern.search.BasicSerializer
+import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -31,7 +32,7 @@ import io.repseq.dto.VDJCLibraryData
 @Serializable(by = MiXCRMetaInfo.SerializerImpl::class)
 data class MiXCRMetaInfo(
     /** Set by used on align step, used to deduce defaults on all downstream steps  */
-    val preset: String,
+    val paramsBundle: MiXCRParamsBundle,
     /** Aligner parameters */
     val tagsInfo: TagsInfo = TagsInfo.NO_TAGS,
     /** Aligner parameters */
@@ -79,7 +80,7 @@ data class MiXCRMetaInfo(
 
     class SerializerImpl : BasicSerializer<MiXCRMetaInfo>() {
         override fun write(output: PrimitivO, obj: MiXCRMetaInfo) {
-            output.writeObject(obj.preset)
+            output.writeObject(obj.paramsBundle)
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
             output.writeObject(obj.assemblerParameters)

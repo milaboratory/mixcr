@@ -16,10 +16,8 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.CUtils
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.milaboratory.cli.CmdParameterOverrideOps
-import com.milaboratory.cli.PresetAware
-import com.milaboratory.cli.PresetParser
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
@@ -54,7 +52,7 @@ object CommandAssembleContigs {
         @JsonProperty("parameters") @JsonMerge val parameters: FullSeqAssemblerParameters
     )
 
-    abstract class CmdBase : MiXCRCommand(), PresetAware<Params> {
+    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(description = ["Ignore tags (UMIs, cell-barcodes)"], names = ["--ignore-tags"])
         private var ignoreTags = false
 
@@ -69,8 +67,8 @@ object CommandAssembleContigs {
         @Option(names = ["-O"], description = ["Overrides for the assembler parameters."])
         private var overrides: Map<String, String> = mutableMapOf()
 
-        override val presetParser = object : PresetParser<Params>(Presets.assembleContigs) {
-            override fun CmdParameterOverrideOps<Params>.overrideParameters() {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assembleContigs) {
+            override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 cutByFeatureParam
                     ?.takeIf { it.isNotBlank() }
                     ?.also {
@@ -91,7 +89,7 @@ object CommandAssembleContigs {
                 Params::parameters jsonOverrideWith overrides
             }
 
-            override fun validate(params: Params) {
+            override fun validateParams(params: Params) {
                 if (params.parameters.postFiltering != FullSeqAssemblerParameters.PostFiltering.NoFiltering) {
                     if (params.parameters.assemblingRegions != null) {
                         throwValidationExceptionKotlin("assemblingRegion must be set if postFiltering is not NoFiltering")
@@ -147,7 +145,7 @@ object CommandAssembleContigs {
             val reports: List<MiXCRCommandReport>
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-                cmdParams = presetParser.parse(reader.info.preset)
+                cmdParams = paramsResolver.parse(reader.info.paramsBundle).second
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."

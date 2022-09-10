@@ -20,9 +20,7 @@ import cc.redberry.pipe.util.StatusReporter
 import cc.redberry.pipe.util.StatusReporter.StatusProvider
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.milaboratory.cli.CmdParameterOverrideOps
-import com.milaboratory.cli.PresetAware
-import com.milaboratory.cli.PresetParser
+import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.io.CompressionType
 import com.milaboratory.core.io.sequence.*
 import com.milaboratory.core.io.sequence.fasta.FastaReader
@@ -39,6 +37,7 @@ import com.milaboratory.mitool.helpers.expandPathNPattern
 import com.milaboratory.mitool.pattern.search.*
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
 import com.milaboratory.mitool.report.ParseReport
+import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.Presets
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.*
@@ -86,7 +85,7 @@ object CommandAlign {
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
     )
 
-    abstract class CmdBase : MiXCRCommand(), PresetAware<Params> {
+    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"], required = true)
         private lateinit var species: String
 
@@ -181,8 +180,15 @@ object CommandAlign {
         )
         private var saveReads = false
 
-        override val presetParser = object : PresetParser<Params>(Presets.align) {
-            override fun CmdParameterOverrideOps<Params>.overrideParameters() {
+        @ArgGroup(validate = false, heading = "Analysis mix-ins")
+        var mixins: AllMiXCRMixIns? = null
+
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::align) {
+            override fun POverridesBuilderOps<MiXCRParamsBundle>.bundleOverrides() {
+                mixins?.bundleOverride?.let { addOverride(it) }
+            }
+
+            override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::species setIfNotNull species
 
                 if (overrides.isNotEmpty()) {
@@ -214,7 +220,7 @@ object CommandAlign {
                     }
             }
 
-            override fun validate(params: Params) {
+            override fun validateParams(params: Params) {
                 if (params.species.isEmpty())
                     throwValidationExceptionKotlin("Species not set, please use -s / --species option to specified it.")
             }
@@ -224,7 +230,6 @@ object CommandAlign {
     @Command(
         name = COMMAND_NAME,
         sortOptions = false,
-        separator = " ",
         description = ["Builds alignments with V,D,J and C genes for input sequencing reads."]
     )
     class Cmd : CmdBase() {
@@ -236,6 +241,12 @@ object CommandAlign {
             required = true,
         )
         lateinit var presetName: String
+
+        @Option(
+            description = ["Don't embed preset into the output file"],
+            names = ["--dont-embed-preset"]
+        )
+        var dontEmbedPreset = false
 
         @Parameters(
             arity = "2..3",
@@ -291,7 +302,11 @@ object CommandAlign {
         @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
 
-        private val cmdParams by lazy { presetParser.parse(presetName) }
+        private val bpPair by lazy { paramsResolver.parse(Presets.resolveParamsBundle(presetName)) }
+
+        private val bundle by lazy { bpPair.first }
+
+        private val cmdParams by lazy { bpPair.second }
 
         val alignerParameters: VDJCAlignerParameters by lazy {
             val parameters = cmdParams.parameters
@@ -530,7 +545,7 @@ object CommandAlign {
                     notAlignedWriter(pairedPayload).use { notAlignedWriter: SequenceWriter<SequenceRead>? ->
                         writer?.header(
                             MiXCRMetaInfo(
-                                presetName,
+                                bundle,
                                 if (tagSearchPlan != null) TagsInfo(
                                     0,
                                     *tagSearchPlan.tagInfos.toTypedArray()

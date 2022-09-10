@@ -1,12 +1,13 @@
 package com.milaboratory.mixcr
 
-import org.junit.Assert.*
+import com.milaboratory.mitool.helpers.K_OM
+import com.milaboratory.test.TestUtil.assertJson
 import org.junit.Test
 
-class PresetsTest{
+class PresetsTest {
     @Test
     fun test1() {
         for (presetName in Presets.allPresetNames)
-            println(presetName)
+            assertJson(K_OM, Presets.resolveParamsBundle(presetName), true)
     }
 }

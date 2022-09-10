@@ -13,18 +13,17 @@ package com.milaboratory.mixcr.cli
 
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.milaboratory.cli.CmdParameterOverrideOps
-import com.milaboratory.cli.PresetAware
-import com.milaboratory.cli.PresetParser
+import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.group
 import com.milaboratory.mitool.helpers.map
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.cli.CommonDescriptions.*
+import com.milaboratory.mixcr.cli.CommonDescriptions.JSON_REPORT
+import com.milaboratory.mixcr.cli.CommonDescriptions.REPORT
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters
 import com.milaboratory.primitivio.forEach
@@ -42,7 +41,7 @@ object CommandAssemblePartial {
         @JsonProperty("parameters") @JsonMerge val parameters: PartialAlignmentsAssemblerParameters
     )
 
-    abstract class CmdBase : MiXCRCommand(), PresetAware<Params> {
+    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(
             description = ["Write only overlapped sequences (needed for testing)."],
             names = ["-o", "--overlapped-only"]
@@ -64,8 +63,8 @@ object CommandAssemblePartial {
         @Option(names = ["-O"], description = ["Overrides default parameter values."])
         private var overrides: Map<String, String> = mutableMapOf()
 
-        override val presetParser = object : PresetParser<Params>(Presets.assemblePartial) {
-            override fun CmdParameterOverrideOps<Params>.overrideParameters() {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemblePartial) {
+            override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::overlappedOnly setIfTrue overlappedOnly
                 Params::dropPartial setIfTrue dropPartial
                 Params::cellLevel setIfTrue cellLevel
@@ -102,7 +101,7 @@ object CommandAssemblePartial {
             val beginTimestamp = System.currentTimeMillis()
             val cmdParams: Params
             VDJCAlignmentsReader(inputFile).use { reader1 ->
-                cmdParams = presetParser.parse(reader1.info.preset)
+                cmdParams = paramsResolver.parse(reader1.info.paramsBundle).second
                 VDJCAlignmentsReader(inputFile).use { reader2 ->
                     VDJCAlignmentsWriter(outputFile).use { writer ->
                         val groupingDepth =

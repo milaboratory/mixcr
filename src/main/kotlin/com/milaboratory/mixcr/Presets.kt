@@ -13,12 +13,25 @@ package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.cli.AbstractPresetSet
-import com.milaboratory.cli.Preset
-import com.milaboratory.cli.PresetResolver
+import com.milaboratory.cli.AbstractPresetBundleRaw
+import com.milaboratory.cli.RawParams
+import com.milaboratory.cli.Resolver
+import com.milaboratory.mitool.helpers.KObjectMapperProvider
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.cli.*
+import com.milaboratory.primitivio.annotations.Serializable
 import kotlin.reflect.KProperty1
+
+@Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
+data class MiXCRParamsBundle(
+    @JsonProperty("flags") val flags: Map<String, String>,
+    @JsonProperty("align") val align: CommandAlign.Params?,
+    @JsonProperty("refineTagsAndSort") val refineTagsAndSort: CommandRefineTagsAndSort.Params?,
+    @JsonProperty("assemblePartial") val assemblePartial: CommandAssemblePartial.Params?,
+    @JsonProperty("extend") val extend: CommandExtend.Params?,
+    @JsonProperty("assemble") val assemble: CommandAssemble.Params?,
+    @JsonProperty("assembleContigs") val assembleContigs: CommandAssembleContigs.Params?
+)
 
 object Presets {
     private val files = listOf(
@@ -30,11 +43,11 @@ object Presets {
         "pipelines.yaml",
         "refineTagsAndSort.yaml",
     )
-    private val presetCollection: Map<String, MiXCRPresetSet> = run {
-        val map = mutableMapOf<String, MiXCRPresetSet>()
+    private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
+        val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
         files.flatMap { file ->
             Presets.javaClass.getResourceAsStream("/mixcr_presets/$file")!!
-                .use { stream -> K_YAML_OM.readValue<Map<String, MiXCRPresetSet>>(stream) }
+                .use { stream -> K_YAML_OM.readValue<Map<String, MiXCRParamsBundleRaw>>(stream) }
                 .toList()
         }.forEach { (k, v) ->
             if (map.put(k, v) != null)
@@ -49,29 +62,42 @@ object Presets {
         presetCollection[name] ?: throw IllegalArgumentException("No preset with name \"$name\"")
     }
 
-    private fun <T : Any> getResolver(prop: KProperty1<MiXCRPresetSet, Preset<T>?>): PresetResolver<T> =
-        object : PresetResolver<T>() {
-            override fun invoke(name: String): T {
-                return globalResolver(name).resolve(name, prop, globalResolver, this)
+    private fun <T : Any> getResolver(prop: KProperty1<MiXCRParamsBundleRaw, RawParams<T>?>): Resolver<T> =
+        object : Resolver<T>() {
+            override fun invoke(name: String): T? {
+                return globalResolver(name).resolve(name, prop, globalResolver, nonNullResolver)
             }
+
+            override fun nullErrorMessage(name: String) = "No value for ${prop.name} in $name"
         }
 
     val presets get() = presetCollection.keys
 
-    val align = getResolver(MiXCRPresetSet::align)
-    val refineTagsAndSort = getResolver(MiXCRPresetSet::refineTagsAndSort)
-    val assemblePartial = getResolver(MiXCRPresetSet::assemblePartial)
-    val assemble = getResolver(MiXCRPresetSet::assemble)
-    val assembleContigs = getResolver(MiXCRPresetSet::assembleContigs)
-    val extend = getResolver(MiXCRPresetSet::extend)
+    private val align = getResolver(MiXCRParamsBundleRaw::align)
+    private val refineTagsAndSort = getResolver(MiXCRParamsBundleRaw::refineTagsAndSort)
+    private val assemblePartial = getResolver(MiXCRParamsBundleRaw::assemblePartial)
+    private val assemble = getResolver(MiXCRParamsBundleRaw::assemble)
+    private val assembleContigs = getResolver(MiXCRParamsBundleRaw::assembleContigs)
+    private val extend = getResolver(MiXCRParamsBundleRaw::extend)
 
-    private class MiXCRPresetSet(
+    private class MiXCRParamsBundleRaw(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
-        @JsonProperty("align") val align: Preset<CommandAlign.Params>? = null,
-        @JsonProperty("refineTagsAndSort") val refineTagsAndSort: Preset<CommandRefineTagsAndSort.Params>? = null,
-        @JsonProperty("assemblePartial") val assemblePartial: Preset<CommandAssemblePartial.Params>? = null,
-        @JsonProperty("extend") val extend: Preset<CommandExtend.Params>? = null,
-        @JsonProperty("assemble") val assemble: Preset<CommandAssemble.Params>? = null,
-        @JsonProperty("assembleContigs") val assembleContigs: Preset<CommandAssembleContigs.Params>? = null,
-    ) : AbstractPresetSet<MiXCRPresetSet>
+        @JsonProperty("flags") val flags: Map<String, String>?,
+        @JsonProperty("align") val align: RawParams<CommandAlign.Params>? = null,
+        @JsonProperty("refineTagsAndSort") val refineTagsAndSort: RawParams<CommandRefineTagsAndSort.Params>? = null,
+        @JsonProperty("assemblePartial") val assemblePartial: RawParams<CommandAssemblePartial.Params>? = null,
+        @JsonProperty("extend") val extend: RawParams<CommandExtend.Params>? = null,
+        @JsonProperty("assemble") val assemble: RawParams<CommandAssemble.Params>? = null,
+        @JsonProperty("assembleContigs") val assembleContigs: RawParams<CommandAssembleContigs.Params>? = null,
+    ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw>
+
+    fun resolveParamsBundle(presetName: String) = MiXCRParamsBundle(
+        flags = presetCollection[presetName]!!.flags ?: emptyMap(),
+        align = align(presetName),
+        refineTagsAndSort = refineTagsAndSort(presetName),
+        assemblePartial = assemblePartial(presetName),
+        extend = extend(presetName),
+        assemble = assemble(presetName),
+        assembleContigs = assembleContigs(presetName)
+    )
 }

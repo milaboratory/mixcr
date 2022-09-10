@@ -14,10 +14,8 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.util.StatusReporter
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.milaboratory.cli.CmdParameterOverrideOps
-import com.milaboratory.cli.PresetAware
-import com.milaboratory.cli.PresetParser
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
 import com.milaboratory.mixcr.assembler.CloneAssembler
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
@@ -48,7 +46,7 @@ object CommandAssemble {
         @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters
     )
 
-    abstract class CmdBase : MiXCRCommand(), PresetAware<Params> {
+    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(
             description = ["If this option is specified, output file will be written in \"Clones & " +
                     "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
@@ -77,8 +75,8 @@ object CommandAssemble {
         @Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
         private val consensusAssemblerOverrides: Map<String, String> = mutableMapOf()
 
-        override val presetParser = object : PresetParser<Params>(Presets.assemble) {
-            override fun CmdParameterOverrideOps<Params>.overrideParameters() {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemble) {
+            override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::clnaOutput setIfTrue isClnaOutput
                 Params::cellLevel setIfTrue cellLevel
                 Params::sortBySequence setIfTrue sortBySequence
@@ -151,7 +149,7 @@ object CommandAssemble {
             VDJCAlignmentsReader(inputFile).use { alignmentsReader ->
                 val inputInfo = alignmentsReader.info
 
-                cmdParam = presetParser.parse(inputInfo.preset)
+                cmdParam = paramsResolver.parse(inputInfo.paramsBundle).second
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if (outputFile.lowercase(Locale.getDefault())
