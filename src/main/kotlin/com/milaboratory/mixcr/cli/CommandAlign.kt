@@ -86,8 +86,8 @@ object CommandAlign {
     )
 
     abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
-        @Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"], required = true)
-        private lateinit var species: String
+        @Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"])
+        private var species: String? = null
 
         @Option(
             description = ["V/D/J/C gene library"],
@@ -503,14 +503,19 @@ object CommandAlign {
             var numberOfExcludedNFGenes = 0
             var numberOfExcludedFGenes = 0
             for (gene in vdjcLibrary.getGenes(Chains.parse(cmdParams.chains))) {
+                alignerParameters.getFeatureToAlign(gene.geneType) ?: continue
+
                 val featureSequence = alignerParameters.extractFeatureToAlign(gene)
 
-                // exclusionReason is null ==> gene is not excluded
                 var exclusionReason: String? = null
                 if (featureSequence == null) exclusionReason =
-                    "absent " + encode(alignerParameters.getFeatureToAlign(gene.geneType)) else if (featureSequence.containsWildcards()) exclusionReason =
+                    "absent " + encode(alignerParameters.getFeatureToAlign(gene.geneType))
+                else if (featureSequence.containsWildcards()) exclusionReason =
                     "wildcard symbols in " + encode(alignerParameters.getFeatureToAlign(gene.geneType))
-                if (exclusionReason == null) aligner.addGene(gene) // If there are no reasons to exclude the gene, adding it to aligner
+
+                // exclusionReason is null ==> gene is not excluded
+                if (exclusionReason == null)
+                    aligner.addGene(gene) // If there are no reasons to exclude the gene, adding it to aligner
                 else {
                     if (gene.isFunctional) {
                         ++numberOfExcludedFGenes

@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.*
+import com.milaboratory.mixcr.Flags
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import kotlin.reflect.KProperty1
 
@@ -39,7 +40,19 @@ abstract class MiXCRCommand : ACommand("mixcr"), MiXCRCommandI {
 }
 
 abstract class MiXCRParamsResolver<P : Any>(paramsProperty: KProperty1<MiXCRParamsBundle, P?>) :
-    ParamsResolver<MiXCRParamsBundle, P>(paramsProperty)
+    ParamsResolver<MiXCRParamsBundle, P>(paramsProperty) {
+    override fun validateBundle(bundle: MiXCRParamsBundle) {
+        if (bundle.flags.isNotEmpty()) {
+            println("Preset errors: ")
+            bundle.flags.forEach { flag ->
+                println()
+                println("- " + Flags.flagMessages[flag]!!.replace("\n", "\n  "))
+            }
+            println()
+            throw RuntimeException() // TODO need exceptions without attachment to the command object !
+        }
+    }
+}
 
 abstract class MiXCRPresetAwareCommand<P : Any> : MiXCRCommand(), PresetAware<MiXCRParamsBundle, P>
 
