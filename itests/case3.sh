@@ -19,3 +19,5 @@ mixcr align --preset bcr_amplicon --verbose \
   +floatingLeftAlignmentBoundary \
   +floatingRightAlignmentBoundary J \
   test_R1.fastq test_R2.fastq case3.vdjca
+mixcr assemble -a case3.vdjca case3.clna
+mixcr assembleContigs case3.clna case3.clns

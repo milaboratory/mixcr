@@ -55,11 +55,22 @@ public final class CloneFactoryParameters implements HasRelativeMinScore, java.i
         return gt == GeneType.Diversity ? dParameters : vdcParameters.get(gt);
     }
 
+    private void removeParameters(GeneType gt) {
+        if (gt == GeneType.Diversity)
+            dParameters = null;
+        else
+            vdcParameters.remove(gt);
+    }
+
     public void update(VDJCAlignerParameters alignerParameters) {
         for (GeneType gt : GeneType.VDJC_REFERENCE) {
             ClonalUpdatableParameters up = uParameters(gt);
-            if (up != null)
-                up.updateFrom(alignerParameters.getGeneAlignerParameters(gt));
+            if (up != null) {
+                if (alignerParameters.getGeneAlignerParameters(gt) == null)
+                    removeParameters(gt);
+                else
+                    up.updateFrom(alignerParameters.getGeneAlignerParameters(gt));
+            }
         }
     }
 
