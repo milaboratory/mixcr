@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.cli.AbstractPresetBundleRaw
@@ -30,28 +31,37 @@ data class MiXCRParamsBundle(
     @JsonProperty("assemblePartial") val assemblePartial: CommandAssemblePartial.Params?,
     @JsonProperty("extend") val extend: CommandExtend.Params?,
     @JsonProperty("assemble") val assemble: CommandAssemble.Params?,
-    @JsonProperty("assembleContigs") val assembleContigs: CommandAssembleContigs.Params?
+    @JsonProperty("assembleContigs") val assembleContigs: CommandAssembleContigs.Params?,
+    @JsonIgnore val exportPreset: Unit = Unit
 )
 
 object Flags {
+    // const val Species = "species"
+
     const val MaterialType = "materialType"
     const val LeftAlignmentMode = "leftSideAmplificationPrimer"
     const val RightAlignmentMode = "rightSideAmplificationPrimer"
 
+    const val TagPattern = "tagPattern"
+
     val flagMessages = mapOf(
         MaterialType to
                 "This preset requires to specify material type, \n" +
-                "please use one of the following mixins: +dna, +rna",
+                "please use one of the following mix-ins: +dna, +rna",
         LeftAlignmentMode to
                 "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
-                "please use one of the following mixins: \n" +
+                "please use one of the following mix-ins: \n" +
                 "+floatingLeftAlignmentBoundary [optional_anchor_point]\n" +
                 "+rigidLeftAlignmentBoundary [optional_anchor_point]",
         RightAlignmentMode to
                 "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
-                "please use one of the following mixins: \n" +
+                "please use one of the following mix-ins: \n" +
                 "+floatingRightAlignmentBoundary [optional_anchor_point]\n" +
                 "+rigidRightAlignmentBoundary [optional_anchor_point]",
+
+        TagPattern to
+                "This preset requires to specify tag pattern, \n" +
+                "please use +tagPattern mix-in to set it."
     )
 }
 

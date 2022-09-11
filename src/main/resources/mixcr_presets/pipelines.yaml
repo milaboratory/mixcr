@@ -5,6 +5,8 @@
 "_universal":
   assemblePartial:
     inheritFrom: assemblePartial_universal
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort_universal
   extend:
     inheritFrom: extend_universal
   assemble:
@@ -52,3 +54,70 @@
     - rightSideAmplificationPrimer
   align:
     inheritFrom: align_kaligner2_4.0
+
+#
+# UMI amplicon pipelines
+#
+
+"tcr_amplicon_umi":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+    - tagPattern
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+"bcr_amplicon_umi":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+    - tagPattern
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+#
+# Single-cell pipelines
+#
+
+"10x_vdj_bcr":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_kaligner2_4.0
+    overrides:
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+      parameters:
+        allowPartialAlignments: true
+        allowNoCDR3PartAlignments: true
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort_universal
+    overrides:
+      parameters:
+        postFilter:
+          type: "filter_and"
+          operands:
+            - type: "filter_groups"
+              groupingKeys:
+                - "CELL"
+                - "UMI"
+              predicates:
+                - metrics:
+                    - type: "group_metric_sum_weight"
+                  operator:
+                    type: "group_operator_otsu1"
+                    logX: true
+                    logY: false
+            - type: "filter_groups"
+              groupingKeys:
+                - "CELL"
+              predicates:
+                - metrics:
+                    - type: "group_metric_nunique"
+                      keys:
+                        - "UMI"
+                  operator:
+                    type: "group_operator_range"
+                    lower: 1.0

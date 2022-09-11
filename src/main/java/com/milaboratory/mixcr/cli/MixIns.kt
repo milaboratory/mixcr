@@ -24,7 +24,22 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.ReferencePoint
 import picocli.CommandLine.Option
 
-interface AlignMiXCRMixIns : MiXCRMixInSet {
+interface AlignTagMiXCRMixIns : MiXCRMixInSet {
+    //
+    // Base tag-related settings
+    //
+
+    @Option(names = ["+tagPattern"])
+    fun tagPattern(pattern: String) =
+        mixIn {
+            setPriority(50)
+            MiXCRParamsBundle::align.update {
+                CommandAlign.Params::tagPattern setTo pattern
+            }
+        }
+}
+
+interface AlignMiXCRMixIns : MiXCRMixInSet, AlignTagMiXCRMixIns {
     //
     // Base settings
     //
