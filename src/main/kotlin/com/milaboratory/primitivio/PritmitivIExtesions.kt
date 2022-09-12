@@ -64,7 +64,7 @@ inline fun <reified T : Any, C : MutableCollection<T>> PrimitivI.readCollection(
     return list
 }
 
-fun PrimitivO.writeMap(array: Map<*, *>) = Util.writeMap(array, this)
+fun PrimitivO.writeMap(map: Map<*, *>) = Util.writeMap(map, this)
 
 fun <T : Any> PrimitivO.writeArray(array: Array<T>) {
     this.writeInt(array.size)

@@ -18,18 +18,18 @@ import com.milaboratory.util.ReportHelper;
 
 import java.util.Date;
 
-public abstract class MiXCRCommandReportWrapper extends MiXCRCommandReport {
+public abstract class MiXCRCommandReportWrapper extends AbstractMiXCRCommandReport {
     @JsonCreator
     public MiXCRCommandReportWrapper(@JsonProperty("date") Date date,
                                      @JsonProperty("commandLine") String commandLine,
                                      @JsonProperty("inputFiles") String[] inputFiles,
                                      @JsonProperty("outputFiles") String[] outputFiles,
-                                     @JsonProperty("executionTimeMillis") long executionTimeMillis,
+                                     @JsonProperty("executionTimeMillis") Long executionTimeMillis,
                                      @JsonProperty("version") String version) {
         super(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version);
     }
 
-    abstract Report innerReport();
+    protected abstract Report innerReport();
 
     @Override
     public void writeReport(ReportHelper helper) {

@@ -129,10 +129,10 @@ class CommandFindAlleles : MiXCRCommand() {
     lateinit var findAllelesParametersName: String
 
     @Option(
-        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
-        names = ["--use-system-temp"]
+        description = ["Put temporary files in the same folder as the output files."],
+        names = ["--use-local-temp"]
     )
-    var useSystemTemp = false
+    var useLocalTemp = false
 
     @Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
@@ -172,8 +172,8 @@ class CommandFindAlleles : MiXCRCommand() {
 
     private val tempDest: TempFileDest by lazy {
         val path = listOfNotNull(outputClnsFiles.firstOrNull(), libraryOutput, allelesMutationsOutput).first()
-        if (!useSystemTemp) path.toAbsolutePath().parent.createDirectories()
-        TempFileManager.smartTempDestination(path, ".find_alleles", useSystemTemp)
+        if (useLocalTemp) path.toAbsolutePath().parent.createDirectories()
+        TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp)
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
@@ -212,10 +212,6 @@ class CommandFindAlleles : MiXCRCommand() {
         ensureParametersInitialized()
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val cloneReaders = inputFiles.map { CloneSetIO.mkReader(Paths.get(it), libraryRegistry) }
-        require(cloneReaders.isNotEmpty()) { "there is no files to process" }
-        require(cloneReaders.map { it.assemblerParameters }.distinct().count() == 1) {
-            "input files must have the same assembler parameters"
-        }
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
@@ -223,7 +219,7 @@ class CommandFindAlleles : MiXCRCommand() {
             "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
         }
         require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
-            "Input files must not be cut by the same geneFeature"
+            "Input files must be cut by the same geneFeature"
         }
         val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
 
@@ -251,15 +247,15 @@ class CommandFindAlleles : MiXCRCommand() {
             geneDatum.map { resultLibrary[it.name].id }
         }
         val allelesStatistics: MutableMap<String, Int> = ConcurrentHashMap()
-        val cloneRebuild = CloneRebuild(
-            resultLibrary,
-            allelesMapping,
-            allFullyCoveredBy,
-            threads,
-            cloneReaders.first().assemblerParameters,
-            cloneReaders.first().alignerParameters
-        )
         cloneReaders.forEachIndexed { i, cloneReader ->
+            val cloneRebuild = CloneRebuild(
+                resultLibrary,
+                allelesMapping,
+                allFullyCoveredBy,
+                threads,
+                cloneReader.assemblerParameters,
+                cloneReader.alignerParameters
+            )
             cloneReader.readClones().use { port ->
                 val withRecalculatedScores = port.withProgress(
                     cloneReader.numberOfClones().toLong(),
@@ -400,9 +396,6 @@ class CommandFindAlleles : MiXCRCommand() {
         }
         return usedGenes
     }
-
-    private fun anyClone(cloneReaders: List<CloneReader>): Clone =
-        cloneReaders[0].readClones().use { it.take() }
 
     companion object {
         const val FIND_ALLELES_COMMAND_NAME = "findAlleles"

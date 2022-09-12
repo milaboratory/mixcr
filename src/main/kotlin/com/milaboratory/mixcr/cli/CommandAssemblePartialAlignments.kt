@@ -98,12 +98,11 @@ class CommandAssemblePartialAlignments : MiXCRCommand() {
                         reader1.usedGenes, !dropPartial, overlappedOnly
                     ) { alignment: VDJCAlignments -> writer.write(alignment) }
 
-                    @Suppress("UnnecessaryVariable")
                     val reportBuilder = assembler
-                    reportBuilder.setStartMillis(beginTimestamp)
-                    reportBuilder.setInputFiles(`in`)
-                    reportBuilder.setOutputFiles(out)
-                    reportBuilder.commandLine = commandLineArguments
+                        .setCommandLine(commandLineArguments)
+                        .setStartMillis(beginTimestamp)
+                        .setInputFiles(`in`)
+                        .setOutputFiles(out)
                     if (reader1.tagsInfo != null && !reader1.tagsInfo.hasNoTags()) {
                         SmartProgressReporter.startProgressReport("Running assemble partial", reader1)
 

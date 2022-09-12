@@ -36,6 +36,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -113,9 +114,6 @@ class CommandFindShmTrees : MiXCRCommand() {
     )
     var minCountForClone: Int? = null
 
-    @Option(names = ["-rp", "--report-pdf"], description = ["Pdf report file path"])
-    var reportPdf: Path? = null
-
     @Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
     var debugDir: Path? = null
 
@@ -139,10 +137,10 @@ class CommandFindShmTrees : MiXCRCommand() {
     var buildFrom: Path? = null
 
     @Option(
-        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
-        names = ["--use-system-temp"]
+        description = ["Put temporary files in the same folder as the output files."],
+        names = ["--use-local-temp"]
     )
-    var useSystemTemp = false
+    var useLocalTemp = false
 
     private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
         var result: SHMTreeBuilderParameters = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
@@ -189,9 +187,6 @@ class CommandFindShmTrees : MiXCRCommand() {
             if (report != null) {
                 println("WARN: argument --report will not be used with --build-from")
             }
-            if (reportPdf != null) {
-                println("WARN: argument --report-pdf will not be used with --build-from")
-            }
             if (debugDir != null) {
                 println("WARN: argument --debug will not be used with --build-from")
             }
@@ -202,22 +197,32 @@ class CommandFindShmTrees : MiXCRCommand() {
         get() = report ?: outputTreesPath.parent.resolve(outputTreesPath.nameWithoutExtension + ".report")
 
     private val tempDest: TempFileDest by lazy {
-        if (!useSystemTemp) outputTreesPath.toAbsolutePath().parent.createDirectories()
-        TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", useSystemTemp)
+        if (useLocalTemp) outputTreesPath.toAbsolutePath().parent.createDirectories()
+        TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", !useLocalTemp)
     }
 
     override fun run0() {
+        val reportBuilder = BuildSHMTreeReport.Builder()
+            .setCommandLine(commandLineArguments)
+            .setInputFiles(inputFiles)
+            .setOutputFiles(outputFiles)
+            .setStartMillis(System.currentTimeMillis())
+
         ensureParametersInitialized()
         val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
         val cloneReaders = clnsFileNames.map { path ->
             CloneSetIO.mkReader(path, vdjcLibraryRegistry)
         }
         require(cloneReaders.isNotEmpty()) { "there is no files to process" }
-        require(cloneReaders.map { it.assemblerParameters }.distinct().count() == 1) {
-            "input files must have the same assembler parameters"
-        }
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
+        }
+        for (geneType in GeneType.VJ_REFERENCE) {
+            require(cloneReaders
+                .map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
+                .distinct().count() == 1) {
+                "input files must have the same $geneType scoring"
+            }
         }
         require(cloneReaders.all { it.info.foundAlleles != null }) {
             "Input files must be processed by ${CommandFindAlleles.FIND_ALLELES_COMMAND_NAME}"
@@ -229,18 +234,16 @@ class CommandFindShmTrees : MiXCRCommand() {
             "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
         }
         require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
-            "Input files must not be cut by the same geneFeature"
+            "Input files must be cut by the same geneFeature"
         }
-
         require(cloneReaders.map { it.info.tagsInfo }.distinct().count() == 1) {
             "Input files with different tags are not supported yet"
         }
         val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
-        val assemblerParameters = cloneReaders.first().assemblerParameters
         val scoringSet = ScoringSet(
-            assemblerParameters.cloneFactoryParameters.vParameters.scoring,
+            cloneReaders.first().assemblerParameters.cloneFactoryParameters.vParameters.scoring,
             MutationsUtils.NDNScoring(),
-            assemblerParameters.cloneFactoryParameters.jParameters.scoring
+            cloneReaders.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
         )
         val shmTreeBuilderOrchestrator = SHMTreeBuilderOrchestrator(
             shmTreeBuilderParameters,
@@ -256,7 +259,7 @@ class CommandFindShmTrees : MiXCRCommand() {
         )
         buildFrom?.let { buildFrom ->
             val result = shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom.toFile()), threads)
-            writeResults(result, cloneReaders, scoringSet, generateGlobalTreeIds = false)
+            writeResults(reportBuilder, result, cloneReaders, scoringSet, generateGlobalTreeIds = false)
             return
         }
         val allDatasetsHasCellTags = cloneReaders.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
@@ -266,7 +269,7 @@ class CommandFindShmTrees : MiXCRCommand() {
                     warn("Single cell tags will not be used but it's possible on this data")
                 is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
                     shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads) {
-                        writeResults(it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
+                        writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
                     }
                     return
                 }
@@ -274,15 +277,11 @@ class CommandFindShmTrees : MiXCRCommand() {
         }
         val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
         SmartProgressReporter.startProgressReport(progressAndStage)
-        val report = shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, threads) {
-            writeResults(it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
+        shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads) {
+            writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
         }
         progressAndStage.finish()
-        reportPdf?.let { reportPdf ->
-            reportPdf.toAbsolutePath().parent.createDirectories()
-            report.writePdfReport(reportPdf)
-        }
-        println("============= Report ==============")
+        val report = reportBuilder.buildReport()
         ReportUtil.writeReportToStdout(report)
         ReportUtil.writeJsonReport(reportFile.pathString, report)
     }
@@ -303,6 +302,7 @@ class CommandFindShmTrees : MiXCRCommand() {
     }
 
     private fun writeResults(
+        reportBuilder: BuildSHMTreeReport.Builder,
         result: OutputPort<TreeWithMetaBuilder>,
         cloneReaders: List<CloneReader>,
         scoringSet: ScoringSet,
@@ -330,20 +330,27 @@ class CommandFindShmTrees : MiXCRCommand() {
                 )
             }
             writer.put(null)
+
+            reportBuilder.setFinishMillis(System.currentTimeMillis())
+            shmTreesWriter.writeFooter(
+                cloneReaders.mapIndexed { i, cloneReader -> clnsFileNames[i].toString() to cloneReader.reports() }
+                    .toMap(),
+                reportBuilder.buildReport()
+            )
         }
     }
 
     private fun SHMTreesWriter.writeHeader(cloneReaders: List<CloneReader>) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
-        val anyCloneReader = cloneReaders.first()
+        val metaInfos = cloneReaders.map { it.info }
+        require(metaInfos.map { it.alignerParameters }.distinct().size == 1) {
+            "alignerParameters must be the same"
+        }
         writeHeader(
-            anyCloneReader.assemblerParameters,
-            anyCloneReader.alignerParameters,
+            metaInfos,
+            metaInfos.first().alignerParameters,
             clnsFileNames.map { it.toString() },
-            usedGenes,
-            //TODO summarize tagsInfo
-            anyCloneReader.tagsInfo,
-            usedGenes.map { it.parentLibrary }.distinct()
+            usedGenes
         )
     }
 

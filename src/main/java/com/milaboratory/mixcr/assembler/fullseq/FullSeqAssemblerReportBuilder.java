@@ -29,7 +29,7 @@ import java.util.stream.IntStream;
 /**
  *
  */
-public class FullSeqAssemblerReportBuilder extends AbstractCommandReportBuilder {
+public class FullSeqAssemblerReportBuilder extends AbstractCommandReportBuilder<FullSeqAssemblerReportBuilder> {
     private final AtomicInteger assemblePrematureTerminationCount = new AtomicInteger(0);
     private final AtomicInteger initialCloneCount = new AtomicInteger(0);
     private final AtomicInteger finalCloneCount = new AtomicInteger(0);
@@ -137,6 +137,11 @@ public class FullSeqAssemblerReportBuilder extends AbstractCommandReportBuilder 
         for (int i = 0; i < csSeq.size(); i++)
             count += numberOfWildcards(csSeq.getSequence(i));
         return count;
+    }
+
+    @Override
+    protected FullSeqAssemblerReportBuilder that() {
+        return this;
     }
 
     @Override

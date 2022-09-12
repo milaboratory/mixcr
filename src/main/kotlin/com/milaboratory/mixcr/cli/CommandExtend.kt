@@ -152,15 +152,16 @@ class CommandExtend : MiXCRCommand() {
             ReferencePoint.parse(jAnchorPoint)
         )
         val output = ParallelProcessor(input, extender, threads)
-        extender.setStartMillis(System.currentTimeMillis())
-        extender.setInputFiles(`in`)
-        extender.setOutputFiles(out)
-        extender.commandLine = commandLineArguments
+        extender
+            .setStartMillis(System.currentTimeMillis())
+            .setCommandLine(commandLineArguments)
+            .setInputFiles(`in`)
+            .setOutputFiles(out)
         return ProcessWrapper(extender, output)
     }
 
     private inner class ProcessWrapper<T : VDJCObject>(
-        val reportBuilder: AbstractCommandReportBuilder,
+        val reportBuilder: AbstractCommandReportBuilder<*>,
         val output: ParallelProcessor<T, T>
     ) {
         fun finish(): MiXCRCommandReport {
