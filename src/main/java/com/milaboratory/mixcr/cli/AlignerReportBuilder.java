@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
-public final class AlignerReportBuilder extends AbstractCommandReportBuilder implements VDJCAlignerEventListener {
+public final class AlignerReportBuilder extends AbstractCommandReportBuilder<AlignerReportBuilder> implements VDJCAlignerEventListener {
     private final ChainUsageStatsBuilder chainUsageBuilder = new ChainUsageStatsBuilder();
     private final AtomicLongArray fails = new AtomicLongArray(VDJCAlignmentFailCause.values().length);
     private final AtomicLong successfullyAligned = new AtomicLong(0);
@@ -155,6 +155,11 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder imp
             realignedWithForcedNonFloatingRightBoundInLeftRead.incrementAndGet();
         if (forceRightEdgeInLeft)
             realignedWithForcedNonFloatingLeftBoundInRightRead.incrementAndGet();
+    }
+
+    @Override
+    protected AlignerReportBuilder that() {
+        return this;
     }
 
     @Override

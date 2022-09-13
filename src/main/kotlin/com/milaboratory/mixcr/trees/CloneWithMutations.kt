@@ -68,8 +68,9 @@ private fun CloneWrapper.getMutationsWithoutCDR3(
 ): Map<GeneFeature, Mutations<NucleotideSequence>> {
     val hit = getHit(geneType)
     val partitioning = getPartitioning(geneType)
+    val features = assemblingFeatures.intersection(hit.alignedFeature)?.features ?: emptyArray()
     return hit.alignments.flatMap { alignment ->
-        (assemblingFeatures.intersection(hit.alignedFeature)?.features ?: emptyArray())
+        features
             .map { it.withoutCDR3Part() }
             .map { geneFeature ->
                 val range = partitioning.getRange(geneFeature)

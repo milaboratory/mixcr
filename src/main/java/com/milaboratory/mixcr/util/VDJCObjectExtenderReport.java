@@ -13,13 +13,13 @@ package com.milaboratory.mixcr.util;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport;
 import com.milaboratory.mixcr.cli.CommandExtend;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.util.ReportHelper;
 
 import java.util.Date;
 
-public class VDJCObjectExtenderReport extends MiXCRCommandReport {
+public class VDJCObjectExtenderReport extends AbstractMiXCRCommandReport {
     @JsonProperty("totalProcessed")
     public final long totalProcessed;
 

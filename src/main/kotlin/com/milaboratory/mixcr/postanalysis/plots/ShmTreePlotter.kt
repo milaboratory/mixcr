@@ -18,9 +18,15 @@ import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.color.Palettes
-import com.milaboratory.miplots.dendro.*
+import com.milaboratory.miplots.dendro.GGDendroPlot
+import com.milaboratory.miplots.dendro.Node
+import com.milaboratory.miplots.dendro.plusAssign
+import com.milaboratory.miplots.dendro.withAlignmentLayer
+import com.milaboratory.miplots.dendro.withLabels
+import com.milaboratory.miplots.dendro.withTextLayer
 import com.milaboratory.miplots.stat.util.TestMethod
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithClones
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.Tree
@@ -210,7 +216,7 @@ class ShmTreePlotter(
             nodeMetadata[DefaultMeta.Abundance] = ln(cloneWrapper.clone.count)
 
             if (alignment != null) {
-                val mutationsDescription = node.content.mutationsDescription()
+                val mutationsDescription = node.content.mutationsFromGermline()
                 val alignmentForFeature: Alignment<*>? = when {
                     alignment.isAA -> mutationsDescription.aaAlignment(alignment.gf)
                     else -> mutationsDescription.nAlignment(alignment.gf)
@@ -230,7 +236,7 @@ class ShmTreePlotter(
             node.links.map {
                 toGGNode(
                     it.node,
-                    it.node.content.distanceFromParent?.toDouble() ?: 0.0
+                    it.node.content.distanceFrom(Base.parent) ?: 0.0
                 )
             },
             metadata = nodeMetadata.toMap()
@@ -260,7 +266,7 @@ class ShmTreePlotter(
         val data = leafs
             .flatMap {
                 it.node.content.clones.map { c ->
-                    val height = it.node.content.distanceFrom(SHMTreeForPostanalysis.Base.germline) ?: 0.0
+                    val height = it.node.content.distanceFrom(Base.germline) ?: 0.0
                     val metaValue = metadata?.get(c.datasetId)?.get(stat.metadataColumn)
                     metadataRanks[stat.metadataColumn]!![metaValue]!! to height
                 }

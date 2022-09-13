@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.assembler.fullseq;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport;
 import com.milaboratory.mixcr.cli.CommandAssembleContigs;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.util.ReportHelper;
 
 import java.util.Date;
@@ -22,7 +22,7 @@ import java.util.Date;
 /**
  *
  */
-public class FullSeqAssemblerReport extends MiXCRCommandReport {
+public class FullSeqAssemblerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("clonesWithAmbiguousLetters")
     public final long clonesWithAmbiguousLetters;
 

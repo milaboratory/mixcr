@@ -36,7 +36,7 @@ public class RefineTagsAndSortReport extends MiXCRCommandReportWrapper {
     }
 
     @Override
-    Report innerReport() {
+    protected Report innerReport() {
         return correctionReport;
     }
 

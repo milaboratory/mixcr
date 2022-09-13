@@ -436,7 +436,7 @@ object VDJCObjectFieldExtractors {
             "Export position of specified reference point inside reference sequences (clonal sequence / read sequence).",
             FieldWithParameters.CommandArg(
                 "<reference_point>",
-                { ReferencePoint.parse(it) },
+                { _, arg -> ReferencePoint.parse(arg) },
                 { "Position in reference of " },
                 { "positionInReferenceOf" }
             )
@@ -449,7 +449,7 @@ object VDJCObjectFieldExtractors {
             "Export position of specified reference point inside target sequences (clonal sequence / read sequence).",
             FieldWithParameters.CommandArg(
                 "<reference_point>",
-                { ReferencePoint.parse(it) },
+                { _, arg -> ReferencePoint.parse(arg) },
                 { "Position of " },
                 { "positionOf" }
             )
@@ -845,7 +845,7 @@ private fun tagParameter(
     sPrefix: String
 ) = FieldWithParameters.CommandArg(
     "<tag_name>",
-    { tagName -> tagName to tagsInfo.indexOf(tagName) },
+    { header, tagName -> tagName to header.tagsInfo.indexOf(tagName) },
     { (tagName, _) -> hPrefix + tagName },
     { (tagName, _) -> sPrefix + tagName }
 )
@@ -855,14 +855,14 @@ private fun geneFeatureParam(
     sPrefix: String
 ): FieldWithParameters.CommandArg<GeneFeature> = FieldWithParameters.CommandArg(
     "<gene_feature>",
-    { GeneFeature.parse(it) },
+    { _, arg -> GeneFeature.parse(arg) },
     { hPrefix + GeneFeature.encode(it) },
     { sPrefix + GeneFeature.encode(it) }
 )
 
 private fun relativeGeneFeatureParam(): FieldWithParameters.CommandArg<GeneFeature> = FieldWithParameters.CommandArg(
     "<relative_to_gene_feature>",
-    { GeneFeature.parse(it) },
+    { _, arg -> GeneFeature.parse(arg) },
     { "relative to " + GeneFeature.encode(it) },
     { "Relative" + GeneFeature.encode(it) }
 )

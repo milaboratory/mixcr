@@ -26,12 +26,9 @@ import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.nio.file.Path
-import kotlin.io.path.readLines
 
 @Command(
     name = CommandFilterAlignments.COMMAND_NAME,
@@ -74,30 +71,19 @@ class CommandFilterAlignments : MiXCRCommand() {
             field = value
         }
 
-    @ArgGroup(exclusive = true, multiplicity = "0..1")
-    var idsOptions: IdsFilterOptions? = null
-
-    class IdsFilterOptions {
-        @Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"], required = true)
-        var ids: List<Long>? = null
-
-        @Option(
-            description = ["File with read ids to export. Every id on separate line"],
-            names = ["--read-ids-file"],
-            required = true
-        )
-        var fileWithIds: Path? = null
-    }
+    @Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"], hidden = true)
+    var ids: List<Long>? = null
+        set(value) {
+            println("-i, --read-ids deprecated, use `mixcr slice -i ... alignments.vdjca alignments.filtered.vdjca` instead")
+            field = value
+        }
 
     override fun getInputFiles(): List<String> = listOf(`in`)
 
     override fun getOutputFiles(): List<String> = listOf(out)
 
     private val readIds: TLongHashSet?
-        get() {
-            if (idsOptions == null) return null
-            return TLongHashSet(idsOptions?.ids ?: idsOptions?.fileWithIds!!.readLines().map { it.toLong() })
-        }
+        get() = ids?.let { TLongHashSet(it) }
 
     private val inputReader: VDJCAlignmentsReader
         get() = VDJCAlignmentsReader(`in`)

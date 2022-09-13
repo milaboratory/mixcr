@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Stanislav Poslavsky
  */
 public final class VDJCObjectExtender<T extends VDJCObject>
-        extends AbstractCommandReportBuilder
+        extends AbstractCommandReportBuilder<VDJCObjectExtender<T>>
         implements Processor<T, T> {
     final Chains chains;
     final byte extensionQuality;
@@ -371,6 +371,11 @@ public final class VDJCObjectExtender<T extends VDJCObject>
 
     public double getMeanJExtensionLength() {
         return 1.0 * jExtensionLength.get() / jExtended.get();
+    }
+
+    @Override
+    protected VDJCObjectExtender<T> that() {
+        return this;
     }
 
     @Override

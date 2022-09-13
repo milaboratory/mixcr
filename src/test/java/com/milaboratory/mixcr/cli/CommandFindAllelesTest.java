@@ -45,9 +45,9 @@ public class CommandFindAllelesTest {
     public void outputsWrittenToCommonDirectory() {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                "-o", "/output/folder/{file_name}_with_alleles.clns",
                 file1.toString(),
-                file2.toString(),
-                "/output/folder/{file_name}_with_alleles.clns"
+                file2.toString()
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         assertEquals(
@@ -63,9 +63,9 @@ public class CommandFindAllelesTest {
     public void outputsWrittenToOriginalDirectory() {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                "-o", "{file_dir_path}/{file_name}_with_alleles.clns",
                 file1.toString(),
-                file2.toString(),
-                "{file_dir_path}/{file_name}_with_alleles.clns"
+                file2.toString()
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         assertTrue(command.getOutputFiles().get(0), command.getOutputFiles().get(0).endsWith("/folder1/file1_with_alleles.clns"));
@@ -77,9 +77,9 @@ public class CommandFindAllelesTest {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
                 "--export-library", "/output/folder/library.json",
+                "-o", "/output/folder/{file_name}_with_alleles.clns",
                 file1.toString(),
-                file2.toString(),
-                "/output/folder/{file_name}_with_alleles.clns"
+                file2.toString()
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         assertEquals(
@@ -97,9 +97,9 @@ public class CommandFindAllelesTest {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
                 "--export-library", "/output/folder/library.txt",
+                "-o", "/output/folder/{file_name}_with_alleles.clns",
                 file1.toString(),
-                file2.toString(),
-                "/output/folder/{file_name}_with_alleles.clns"
+                file2.toString()
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         try {
@@ -114,9 +114,9 @@ public class CommandFindAllelesTest {
     public void outputsMustBeUniq() {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                "-o", "/output/folder/{file_name}.clns",
                 file1.toString(),
-                file3.toString(),
-                "/output/folder/{file_name}.clns"
+                file3.toString()
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         try {
@@ -131,9 +131,9 @@ public class CommandFindAllelesTest {
     public void templateMustBeClns() {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                "-o", "/output/folder/{file_name}.clna",
                 file1.toString(),
-                file2.toString(),
-                "/output/folder/{file_name}.clna"
+                file2.toString()
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         try {

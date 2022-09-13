@@ -20,6 +20,8 @@ import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
+import java.nio.file.Path
+import kotlin.io.path.createDirectories
 
 @Command(
     name = CommandExportShmTreesTable.COMMAND_NAME,
@@ -28,13 +30,21 @@ import picocli.CommandLine.Parameters
     description = ["Export SHMTree as a table with a row for every table"]
 )
 class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
-    @Parameters(index = "1", description = ["trees.tsv"])
-    override lateinit var out: String
+    @Parameters(
+        index = "1",
+        arity = "0..1",
+        paramLabel = "trees.tsv",
+        description = ["Path to output table. Print in stdout if omitted."]
+    )
+    val out: Path? = null
+
+    override fun getOutputFiles(): List<String> = listOfNotNull(out?.toString())
 
     override fun run0() {
+        out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
             InfoWriter.create(
-                outputFiles.first(),
+                out,
                 SHMTreeFieldsExtractorsFactory,
                 spec.commandLine().parseResult,
                 reader
@@ -54,7 +64,6 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
 
     companion object {
         const val COMMAND_NAME = "exportShmTrees"
-
 
         @JvmStatic
         fun mkCommandSpec(): CommandLine.Model.CommandSpec {

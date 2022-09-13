@@ -18,7 +18,7 @@ import com.milaboratory.util.ReportHelper;
 
 import java.util.Date;
 
-public class CloneAssemblerReport extends MiXCRCommandReport {
+public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("preCloneAssemblerReport")
     public final PreCloneAssemblerReport preCloneAssemblerReport;
 

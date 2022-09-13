@@ -13,19 +13,22 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.primitives.Filter
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
 import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.FieldExtractor
 import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
@@ -45,19 +48,20 @@ import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Stream
 
 @CommandLine.Command(separator = " ")
 abstract class CommandExport<T : VDJCObject> private constructor(
-    private val fieldExtractorsFactory: FieldExtractorsFactory<T>
+    protected val fieldExtractorsFactory: FieldExtractorsFactory<T>
 ) : MiXCRCommand() {
     @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
     lateinit var `in`: String
 
     @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
-    var out: String? = null
+    var out: Path? = null
 
     @Option(
         description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
@@ -92,7 +96,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
 
     override fun getInputFiles(): List<String> = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = if (out == null) emptyList() else listOf(out!!)
+    override fun getOutputFiles(): List<String> = listOfNotNull(out).map { it.toString() }
 
     open fun mkFilter(): Filter<T> {
         val chains = Chains.parse(chains)
@@ -105,21 +109,6 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         }
     }
 
-    override fun run0() {
-        assert(spec != null)
-        run1(fieldExtractorsFactory) { header: VDJCFileHeaderData ->
-            fieldExtractorsFactory.createExtractors(
-                header,
-                spec.commandLine().parseResult
-            )
-        }
-    }
-
-    abstract fun run1(
-        fieldExtractorsFactory: FieldExtractorsFactory<T>,
-        fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<T>>
-    )
-
     @CommandLine.Command(
         name = "exportAlignments",
         separator = " ",
@@ -127,10 +116,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         description = ["Export V/D/J/C alignments into tab delimited file."]
     )
     class CommandExportAlignments : CommandExport<VDJCAlignments>(VDJCAlignmentsFieldsExtractorsFactory) {
-        override fun run1(
-            fieldExtractorsFactory: FieldExtractorsFactory<VDJCAlignments>,
-            fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<VDJCAlignments>>
-        ) {
+        override fun run0() {
             openAlignmentsPort(`in`).use { readerAndHeader ->
                 InfoWriter.create(
                     out,
@@ -188,10 +174,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
 
         override fun mkFilter(): Filter<Clone> = super.mkFilter().and(CFilter(filterOutOfFrames, filterStops))
 
-        override fun run1(
-            fieldExtractorsFactory: FieldExtractorsFactory<Clone>,
-            fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<Clone>>
-        ) {
+        override fun run0() {
             val initialSet = CloneSetIO.read(`in`, VDJCLibraryRegistry.getDefault())
             InfoWriter.create(out, fieldExtractorsFactory, spec.commandLine().parseResult, initialSet).use { writer ->
                 val set = CloneSet.transform(initialSet, mkFilter())
@@ -327,12 +310,12 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
 
         @JvmStatic
         fun openAlignmentsPort(`in`: String): AlignmentsAndHeader =
-            when (IOUtil.extractFileType(Paths.get(`in`))!!) {
-                MiXCRFileType.VDJCA -> {
+            when (IOUtil.extractFileType(Paths.get(`in`))) {
+                VDJCA -> {
                     val vdjcaReader = VDJCAlignmentsReader(`in`, VDJCLibraryRegistry.getDefault())
                     AlignmentsAndHeader(vdjcaReader, vdjcaReader)
                 }
-                MiXCRFileType.CLNA -> {
+                CLNA -> {
                     val clnaReader = ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4))
                     val source = clnaReader.readAllAlignments()
                     val port = object : OutputPortCloseable<VDJCAlignments> {
@@ -345,7 +328,8 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
                     }
                     AlignmentsAndHeader(port, clnaReader)
                 }
-                MiXCRFileType.CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $`in`")
-            }
+                CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $`in`")
+                SHMT -> throw RuntimeException("Can't export alignments from *.shmt file: $`in`")
+            }.exhaustive
     }
 }

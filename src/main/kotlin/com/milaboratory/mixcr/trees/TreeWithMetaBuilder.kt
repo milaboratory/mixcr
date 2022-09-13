@@ -157,9 +157,12 @@ class TreeWithMetaBuilder(
                         .toSet()
                 //for every VJ pair (already without allele variants) choose best score
                 return filteredByAlleles
-                    .maxByOrNull {
-                        chooses[it]!!.VHitScore + chooses[it]!!.JHitScore
-                    }!!
+                    .maxWithOrNull(Comparator
+                        .comparing { VJBase: VJBase ->
+                            chooses[VJBase]!!.VHitScore + chooses[VJBase]!!.JHitScore
+                        }
+                        .thenComparing({ it }, VJBase.comparator)
+                    )!!
             }
         }
     }
@@ -167,7 +170,10 @@ class TreeWithMetaBuilder(
     internal class MetricDecisionInfo(val metric: Double) : DecisionInfo {
         companion object {
             fun makeDecision(chooses: Map<VJBase, MetricDecisionInfo>): VJBase = chooses.entries
-                .minByOrNull { (_, value): Map.Entry<VJBase, MetricDecisionInfo> -> value.metric }!!
+                .minWithOrNull(Comparator
+                    .comparing { (_, value): Map.Entry<VJBase, MetricDecisionInfo> -> value.metric }
+                    .thenComparing({ (key, _) -> key }, VJBase.comparator.reversed())
+                )!!
                 .key
 
         }

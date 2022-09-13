@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class CloneAssemblerReportBuilder
-        extends AbstractCommandReportBuilder
+        extends AbstractCommandReportBuilder<CloneAssemblerReportBuilder>
         implements CloneAssemblerListener, ClonalSequenceExtractionListener {
     private final ChainUsageStatsBuilder clonalChainUsage = new ChainUsageStatsBuilder();
     private PreCloneAssemblerReportBuilder preCloneAssemblerReportBuilder;
@@ -132,6 +132,11 @@ public final class CloneAssemblerReportBuilder
 
     public long getReadsInClonesBeforeClustering() {
         return lowQualityRescued.get() + coreReads.get();
+    }
+
+    @Override
+    protected CloneAssemblerReportBuilder that() {
+        return this;
     }
 
     @Override

@@ -20,7 +20,8 @@ import io.repseq.core.GeneFeature
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.nio.file.Paths
+import java.nio.file.Path
+import kotlin.io.path.createDirectories
 
 @Command(
     sortOptions = false,
@@ -28,14 +29,14 @@ import java.nio.file.Paths
     description = ["Visualize SHM tree and save in PDF format"]
 )
 class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
-    @Parameters(index = "1", description = ["plots.pdf"])
-    override lateinit var out: String
+    @Parameters(index = "1", paramLabel = "plots.pdf")
+    lateinit var out: Path
 
     @Option(
         names = ["--metadata", "-m"],
         description = ["Path to metadata file"]
     )
-    var metadata: String? = null
+    var metadata: Path? = null
 
     @Option(
         names = ["--filter-min-nodes"],
@@ -129,6 +130,8 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     )
     var noAlignmentFill: Boolean = false
 
+    override fun getOutputFiles(): List<String> = listOf(out.toString())
+
     override fun validate() {
         super.validate()
         if (!out.endsWith(".pdf"))
@@ -167,8 +170,8 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     override fun run0() {
         val plots = ShmTreePlotter(
-            Paths.get(`in`).toAbsolutePath(),
-            metadata?.let { Paths.get(it).toAbsolutePath() },
+            `in`.toAbsolutePath(),
+            metadata?.toAbsolutePath(),
             filter = filter,
             limit = limit,
             nodeColor = nodeColor,
@@ -178,8 +181,9 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
             alignment = alignment
         ).plots
 
+        `in`.toAbsolutePath().parent.createDirectories()
         writePDF(
-            Paths.get(`in`).toAbsolutePath(),
+            `in`.toAbsolutePath(),
             plots
         )
     }

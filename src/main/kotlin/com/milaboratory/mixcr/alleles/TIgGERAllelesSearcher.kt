@@ -11,11 +11,13 @@
  */
 package com.milaboratory.mixcr.alleles
 
+import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
+import com.milaboratory.core.mutations.MutationsBuilder
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
@@ -30,14 +32,14 @@ class TIgGERAllelesSearcher(
     private val parameters: FindAllelesParameters
 ) : AllelesSearcher {
     override fun search(clones: List<CloneDescription>): List<AllelesSearcher.Result> {
-        val mutations = clones.flatMap { it.mutations.asSequence() }.distinct()
+        val mutations = clones.flatMap { it.mutationGroups }.distinct()
             //other mutations definitely are not allele mutations
             .filter { mutation ->
                 clones
-                    .filter { mutation in it.mutations.asSequence() }
+                    .filter { mutation in it.mutationGroups }
                     .diversity() > parameters.minDiversityForMutation
             }
-        val countByMutationsCount = clones.groupingBy { it.mutations.size() }.eachCount()
+        val countByMutationsCount = clones.groupingBy { it.mutationGroups.size }.eachCount()
 
         val possibleAlleleMutations = mutations.filter { mutation ->
             isItCandidateToAlleleMutation(clones, mutation, countByMutationsCount)
@@ -62,7 +64,19 @@ class TIgGERAllelesSearcher(
             }
             val boundary = ceil(clones.size * parameters.portionOfClonesToSearchCommonMutationsInAnAllele).toInt()
             val mutationsThatExistsInAlmostAllClones = clones
-                .flatMap { allele.invert().combineWith(it.mutations).asSequence() }
+                .flatMap { clone ->
+                    val alleleHasIndels = allele.asSequence().any { Mutation.isInDel(it) }
+                    val mutationsFromAllele = if (alleleHasIndels) {
+                        Aligner.alignGlobal(
+                            scoring,
+                            allele.mutate(sequence1),
+                            clone.mutations.mutate(sequence1)
+                        ).absoluteMutations
+                    } else {
+                        allele.invert().combineWith(clone.mutations)
+                    }
+                    mutationsFromAllele.asSequence()
+                }
                 .groupingBy { it }.eachCount()
                 .filterValues { it >= boundary }
                 .keys.asSequence()
@@ -109,17 +123,30 @@ class TIgGERAllelesSearcher(
     ): Map<Mutations<NucleotideSequence>, List<CloneDescription>> {
         val alleleClones = alleles.associateWith { mutableListOf<CloneDescription>() }
         clones.forEach { clone ->
-            val alignedOn = alleles.maxWithOrNull(
-                Comparator.comparingInt<Mutations<NucleotideSequence>> { allele ->
-                    AlignmentUtils.calculateScore(
-                        sequence1,
-                        allele.invert().combineWith(clone.mutations),
-                        scoring
-                    )
+            val alignedOn = alleles
+                .map { allele ->
+                    val alleleHasIndels = allele.asSequence().any { Mutation.isInDel(it) }
+                    val score = if (alleleHasIndels) {
+                        Aligner.alignGlobal(
+                            scoring,
+                            allele.mutate(sequence1),
+                            clone.mutations.mutate(sequence1)
+                        ).score.toDouble()
+                    } else {
+                        AlignmentUtils.calculateScore(
+                            sequence1,
+                            allele.invert().combineWith(clone.mutations),
+                            scoring
+                        ).toDouble()
+                    }
+                    allele to score
                 }
-                    //prefer to align on not zero allele
-                    .then(Comparator.comparingInt { allele -> if (allele == EMPTY_NUCLEOTIDE_MUTATIONS) 0 else 1 })
-            )!!
+                .maxWithOrNull(
+                    Comparator.comparingDouble { (_, score): Pair<Mutations<NucleotideSequence>, Double> -> score }
+                        //prefer to align on not zero allele
+                        .then(Comparator.comparingInt { (allele, _) -> if (allele == EMPTY_NUCLEOTIDE_MUTATIONS) 0 else 1 })
+                )!!
+                .first
             alleleClones.getValue(alignedOn) += clone
         }
         return alleleClones
@@ -140,16 +167,12 @@ class TIgGERAllelesSearcher(
      */
     private fun isItCandidateToAlleleMutation(
         clones: List<CloneDescription>,
-        mutation: Int,
+        mutation: CloneDescription.MutationGroup,
         countByMutationsCount: Map<Int, Int>
     ): Boolean {
-        val countByMutationsCountWithTheMutation =
-            clones
-                .filter { clone ->
-                    //TODO try to replace with binary search
-                    clone.mutations.asSequence().any { it == mutation }
-                }
-                .groupingBy { it.mutations.size() }.eachCount()
+        val countByMutationsCountWithTheMutation = clones
+            .filter { clone -> mutation in clone.mutationGroups }
+            .groupingBy { it.mutationGroups.size }.eachCount()
         val mutationCountWithMaxClonesCount = countByMutationsCountWithTheMutation.entries
             .maxByOrNull { it.value }!!
             .key
@@ -158,7 +181,10 @@ class TIgGERAllelesSearcher(
 
         val xPoints = (0 until parameters.windowSizeForRegression)
             .map { i -> i + mutationCountWithMaxClonesCount }
-            .filter { x -> countByMutationsCountWithTheMutation[x] != 0 }
+            .filter { x ->
+                val pointValue = countByMutationsCountWithTheMutation[x]
+                pointValue != null && pointValue != 0
+            }
         if (parameters.windowSizeForRegression - xPoints.size > parameters.allowedSkippedPointsInRegression) {
             return false
         }
@@ -187,14 +213,13 @@ class TIgGERAllelesSearcher(
     }
 
     private fun chooseAndGroupMutationsByAlleles(
-        mutations: Set<Int>, clones: List<CloneDescription>
+        mutations: Set<CloneDescription.MutationGroup>, clones: List<CloneDescription>
     ): Collection<Mutations<NucleotideSequence>> {
         //count diversity of coexisted variants of candidates and filter by minDiversityForAllele
         val mutationSubsetsWithDiversity = clones.map { clone ->
             //subsetOfAlleleMutations may be empty (zero allele)
-            val subsetOfAlleleMutations = clone.mutations.asSequence()
+            val subsetOfAlleleMutations = clone.mutationGroups
                 .filter { it in mutations }
-                .asMutations(NucleotideSequence.ALPHABET)
             subsetOfAlleleMutations to clone
         }
             .groupBy({ it.first }) { it.second }
@@ -210,6 +235,13 @@ class TIgGERAllelesSearcher(
                 mutationSubsetsWithDiversity
                     .filterValues { it >= boundary }
                     .keys
+                    .map { mutationGroups ->
+                        val builder = MutationsBuilder(NucleotideSequence.ALPHABET)
+                        mutationGroups.forEach {
+                            builder.append(it.mutations.toIntArray())
+                        }
+                        builder.createAndDestroy()
+                    }
             }
         }
     }
