@@ -177,7 +177,7 @@ object CommandExtend {
         }
 
         private inner class ProcessWrapper<T : VDJCObject>(
-            val reportBuilder: AbstractCommandReportBuilder,
+            val reportBuilder: VDJCObjectExtender<T>,
             val output: ParallelProcessor<T, T>
         ) {
             fun finish(): MiXCRCommandReport {

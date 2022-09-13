@@ -170,6 +170,7 @@ object CommandRefineTagsAndSort {
 
         @Option(description = ["Memory budget"], names = ["--memory-budget"])
         var memoryBudget = 4 * FileUtils.ONE_GB
+
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
         var reportFile: String? = null
 
@@ -185,6 +186,7 @@ object CommandRefineTagsAndSort {
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: TagCorrectionReport?
             VDJCAlignmentsReader(inputFile).use { mainReader ->
+                require(!mainReader.tagsInfo.hasNoTags()) { "input file has no tags" }
                 cmdParams = paramsResolver.parse(mainReader.info.paramsBundle).second
                 val tagNames = mutableListOf<String>()
                 val indicesBuilder = TIntArrayList()
