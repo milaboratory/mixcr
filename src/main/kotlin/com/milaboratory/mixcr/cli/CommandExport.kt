@@ -43,6 +43,8 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Stream
@@ -51,24 +53,24 @@ import java.util.stream.Stream
 abstract class CommandExport<T : VDJCObject> private constructor(
     private val fieldExtractorsFactory: FieldExtractorsFactory<T>
 ) : MiXCRCommand() {
-    @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+    @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
     lateinit var `in`: String
 
-    @CommandLine.Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
+    @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
     var out: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
         names = ["-c", "--chains"]
     )
     var chains = "ALL"
 
-    @CommandLine.Option(description = ["List available export fields"], names = ["-lf", "--list-fields"], hidden = true)
+    @Option(description = ["List available export fields"], names = ["-lf", "--list-fields"], hidden = true)
     fun setListFields(@Suppress("UNUSED_PARAMETER") b: Boolean) {
         throwExecutionExceptionKotlin("-lf / --list-fields is removed in version 3.0: use help <exportCommand> for help")
     }
 
-    @CommandLine.Option(
+    @Option(
         description = ["Output short versions of column headers which facilitates analysis with Pandas, R/DataFrames or other data tables processing library."],
         names = ["-s", "--no-spaces"],
         hidden = true
@@ -81,7 +83,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         )
     }
 
-    @CommandLine.Option(description = ["Output only first N records"], names = ["-n", "--limit"])
+    @Option(description = ["Output only first N records"], names = ["-n", "--limit"])
     var limit = Long.MAX_VALUE
         set(value) {
             if (value <= 0) throwExecutionExceptionKotlin("--limit must be positive")
@@ -105,7 +107,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
 
     override fun run0() {
         assert(spec != null)
-        run1 { header: VDJCFileHeaderData ->
+        run1(fieldExtractorsFactory) { header: VDJCFileHeaderData ->
             fieldExtractorsFactory.createExtractors(
                 header,
                 spec.commandLine().parseResult
@@ -113,7 +115,10 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         }
     }
 
-    abstract fun run1(fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<T>>)
+    abstract fun run1(
+        fieldExtractorsFactory: FieldExtractorsFactory<T>,
+        fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<T>>
+    )
 
     @CommandLine.Command(
         name = "exportAlignments",
@@ -122,20 +127,21 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         description = ["Export V/D/J/C alignments into tab delimited file."]
     )
     class CommandExportAlignments : CommandExport<VDJCAlignments>(VDJCAlignmentsFieldsExtractorsFactory) {
-        override fun run1(fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<VDJCAlignments>>) {
+        override fun run1(
+            fieldExtractorsFactory: FieldExtractorsFactory<VDJCAlignments>,
+            fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<VDJCAlignments>>
+        ) {
             openAlignmentsPort(`in`).use { readerAndHeader ->
-                InfoWriter<VDJCAlignments>(out).use { writer ->
+                InfoWriter.create(
+                    out,
+                    fieldExtractorsFactory,
+                    spec.commandLine().parseResult,
+                    readerAndHeader.header
+                ).use { writer ->
                     val reader = readerAndHeader.port
-                    val exporters = fieldsSupplier(readerAndHeader.header)
                     if (reader is CanReportProgress) {
-                        SmartProgressReporter.startProgressReport(
-                            "Exporting alignments",
-                            reader as CanReportProgress,
-                            System.err
-                        )
+                        SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err)
                     }
-                    writer.attachInfoProviders(exporters)
-                    writer.ensureHeader()
                     val filter = mkFilter()
                     reader
                         .filter(filter)
@@ -153,42 +159,42 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         description = ["Export assembled clones into tab delimited file."]
     )
     class CommandExportClones : CommandExport<Clone>(CloneFieldsExtractorsFactory) {
-        @CommandLine.Option(
+        @Option(
             description = ["Exclude clones with out-of-frame clone sequences (fractions will be recalculated)"],
             names = ["-o", "--filter-out-of-frames"]
         )
         var filterOutOfFrames = false
 
-        @CommandLine.Option(
+        @Option(
             description = ["Exclude sequences containing stop codons (fractions will be recalculated)"],
             names = ["-t", "--filter-stops"]
         )
         var filterStops = false
 
-        @CommandLine.Option(
+        @Option(
             description = ["Filter clones by minimal clone fraction"],
             names = ["-q", "--minimal-clone-fraction"]
         )
         var minFraction = 0f
 
-        @CommandLine.Option(
+        @Option(
             description = ["Filter clones by minimal clone read count"],
             names = ["-m", "--minimal-clone-count"]
         )
         var minCount: Long = 0
 
-        @CommandLine.Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
+        @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         var splitByTag: String? = null
 
         override fun mkFilter(): Filter<Clone> = super.mkFilter().and(CFilter(filterOutOfFrames, filterStops))
 
-        override fun run1(fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<Clone>>) {
-            InfoWriter<Clone>(out).use { writer ->
-                val initialSet = CloneSetIO.read(`in`, VDJCLibraryRegistry.getDefault())
+        override fun run1(
+            fieldExtractorsFactory: FieldExtractorsFactory<Clone>,
+            fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<Clone>>
+        ) {
+            val initialSet = CloneSetIO.read(`in`, VDJCLibraryRegistry.getDefault())
+            InfoWriter.create(out, fieldExtractorsFactory, spec.commandLine().parseResult, initialSet).use { writer ->
                 val set = CloneSet.transform(initialSet, mkFilter())
-                val exporters = fieldsSupplier(initialSet)
-                writer.attachInfoProviders(exporters)
-                writer.ensureHeader()
                 for (i in 0 until set.size()) {
                     if (set[i].fraction < minFraction ||
                         set[i].count < minCount

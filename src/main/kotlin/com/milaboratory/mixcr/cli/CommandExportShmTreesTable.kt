@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
-import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
@@ -33,13 +32,13 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     override lateinit var out: String
 
     override fun run0() {
-        InfoWriter<SHMTreeForPostanalysis>(outputFiles.first()).use { output ->
-            SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
-                output.attachInfoProviders(
-                    SHMTreeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)
-                )
-                output.ensureHeader()
-
+        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+            InfoWriter.create(
+                outputFiles.first(),
+                SHMTreeFieldsExtractorsFactory,
+                spec.commandLine().parseResult,
+                reader
+            ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     output.put(
                         shmTree.forPostanalysis(

@@ -32,13 +32,13 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     override lateinit var out: String
 
     override fun run0() {
-        InfoWriter<SplittedTreeNodeFieldsExtractorsFactory.Wrapper>(out).use { output ->
-            SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
-                val fieldExtractors =
-                    SplittedTreeNodeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)
-                output.attachInfoProviders(fieldExtractors)
-                output.ensureHeader()
-
+        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+            InfoWriter.create(
+                out,
+                SplittedTreeNodeFieldsExtractorsFactory,
+                spec.commandLine().parseResult,
+                reader
+            ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     val shmTreeForPostanalysis = shmTree.forPostanalysis(
                         reader.fileNames,
