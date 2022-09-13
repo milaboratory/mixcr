@@ -9,75 +9,64 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.export;
+package com.milaboratory.mixcr.export
 
-import cc.redberry.pipe.InputPort;
-import org.apache.commons.io.output.CloseShieldOutputStream;
+import cc.redberry.pipe.InputPort
+import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import org.apache.commons.io.output.CloseShieldOutputStream
+import picocli.CommandLine
+import java.io.BufferedOutputStream
+import java.io.Closeable
+import java.io.OutputStream
+import java.nio.file.Files
+import java.nio.file.Paths
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+class InfoWriter<T : Any> private constructor(
+    private val fieldExtractors: List<FieldExtractor<T>>,
+    private val outputStream: OutputStream
+) : InputPort<T>, AutoCloseable {
 
-public final class InfoWriter<T> implements InputPort<T>, AutoCloseable {
-    final ArrayList<FieldExtractor<? super T>> fieldExtractors = new ArrayList<>();
-    final OutputStream outputStream;
-    boolean initialized;
-
-    public InfoWriter(String file) throws FileNotFoundException {
-        this(file == null ? new CloseShieldOutputStream(System.out) :
-                new BufferedOutputStream(new FileOutputStream(new File(file)), 65536));
-    }
-
-    public void attachInfoProvider(FieldExtractor<? super T> provider) {
-        fieldExtractors.add(provider);
-    }
-
-    public void attachInfoProviders(List<FieldExtractor<? super T>> providers) {
-        fieldExtractors.addAll(providers);
-    }
-
-    public InfoWriter(OutputStream outputStream) {
-        this.outputStream = outputStream;
-    }
-
-    public void ensureHeader() {
-        if (!initialized) {
-            try {
-                for (int i = 0; i < fieldExtractors.size(); ++i) {
-                    outputStream.write(fieldExtractors.get(i).getHeader().getBytes());
-                    if (i == fieldExtractors.size() - 1)
-                        break;
-                    outputStream.write('\t');
-                }
-                outputStream.write('\n');
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            initialized = true;
+    private fun printHeader() {
+        for (i in fieldExtractors.indices) {
+            outputStream.write(fieldExtractors[i].header.toByteArray())
+            if (i == fieldExtractors.size - 1) break
+            outputStream.write('\t'.code)
         }
+        outputStream.write('\n'.code)
     }
 
-    @Override
-    public void put(T t) {
-        ensureHeader();
-        try {
-            for (int i = 0; i < fieldExtractors.size(); ++i) {
-                outputStream.write(fieldExtractors.get(i).extractValue(t).getBytes());
-                if (i == fieldExtractors.size() - 1)
-                    break;
-                outputStream.write('\t');
-            }
-            outputStream.write('\n');
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    override fun put(t: T) {
+        for (i in fieldExtractors.indices) {
+            outputStream.write(fieldExtractors[i].extractValue(t).toByteArray())
+            if (i == fieldExtractors.size - 1) break
+            outputStream.write('\t'.code)
         }
+        outputStream.write('\n'.code)
     }
 
-    @Override
-    public void close() throws IOException {
-        outputStream.close();
-        for (FieldExtractor<? super T> fe : fieldExtractors)
-            if (fe instanceof Closeable)
-                ((Closeable) fe).close();
+    override fun close() {
+        outputStream.close()
+        for (fe in fieldExtractors) if (fe is Closeable) (fe as Closeable).close()
+    }
+
+    companion object {
+        fun <T : Any> create(
+            file: String?,
+            extractorsFactory: FieldExtractorsFactory<T>,
+            cmdParseResult: CommandLine.ParseResult,
+            header: VDJCFileHeaderData
+        ): InfoWriter<T> {
+            val outputStream = when {
+                file != null -> BufferedOutputStream(Files.newOutputStream(Paths.get(file)), 65536)
+                else -> CloseShieldOutputStream.wrap(System.out)
+            }
+            val fieldExtractors = extractorsFactory.createExtractors(header, cmdParseResult)
+            val result = InfoWriter(fieldExtractors, outputStream)
+            val noHeaders = cmdParseResult.matchedOption("--no-headers")?.getValue<Boolean>() == true
+            if (!noHeaders) {
+                result.printHeader()
+            }
+            return result
+        }
     }
 }

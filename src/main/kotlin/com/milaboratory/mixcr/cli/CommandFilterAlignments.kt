@@ -26,58 +26,78 @@ import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import picocli.CommandLine
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
+import kotlin.io.path.readLines
 
-@CommandLine.Command(
-    name = CommandFilterAlignments.FILTER_ALIGNMENTS_COMMAND_NAME,
+@Command(
+    name = CommandFilterAlignments.COMMAND_NAME,
     sortOptions = true,
     separator = " ",
     description = ["Filter alignments."]
 )
 class CommandFilterAlignments : MiXCRCommand() {
-    @CommandLine.Parameters(description = ["alignments.vdjca"], index = "0")
+    @Parameters(description = ["alignments.vdjca"], index = "0")
     lateinit var `in`: String
 
-    @CommandLine.Parameters(description = ["alignments.filtered.vdjca"], index = "1")
+    @Parameters(description = ["alignments.filtered.vdjca"], index = "1")
     lateinit var out: String
 
-    @CommandLine.Option(
+    @Option(
         description = ["Specifies immunological protein chain gene for an alignment. If many, " +
                 "separated by ','. Available genes: IGH, IGL, IGK, TRA, TRB, TRG, TRD."], names = ["-c", "--chains"]
     )
     var chains = "ALL"
 
-    @CommandLine.Option(
+    @Option(
         description = ["Include only those alignments that contain specified feature."],
         names = ["-g", "--contains-feature"]
     )
     var containsFeature: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Include only those alignments which CDR3 equals to a specified sequence."],
         names = ["-e", "--cdr3-equals"]
     )
     var cdr3Equals: String? = null
 
-    @CommandLine.Option(description = ["Output only chimeric alignments."], names = ["-x", "--chimeras-only"])
+    @Option(description = ["Output only chimeric alignments."], names = ["-x", "--chimeras-only"])
     var chimerasOnly = false
 
-    @CommandLine.Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
+    @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
     var limit: Long = 0
         set(value) {
             if (value <= 0) throwValidationException("-n / --limit must be positive.")
             field = value
         }
 
-    @CommandLine.Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"])
-    var ids: List<Long> = mutableListOf()
+    @ArgGroup(exclusive = true, multiplicity = "0..1")
+    var idsOptions: IdsFilterOptions? = null
+
+    class IdsFilterOptions {
+        @Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"], required = true)
+        var ids: List<Long>? = null
+
+        @Option(
+            description = ["File with read ids to export. Every id on separate line"],
+            names = ["--read-ids-file"],
+            required = true
+        )
+        var fileWithIds: Path? = null
+    }
 
     override fun getInputFiles(): List<String> = listOf(`in`)
 
     override fun getOutputFiles(): List<String> = listOf(out)
 
     private val readIds: TLongHashSet?
-        get() = if (ids.isEmpty()) null else TLongHashSet(ids)
+        get() {
+            if (idsOptions == null) return null
+            return TLongHashSet(idsOptions?.ids ?: idsOptions?.fileWithIds!!.readLines().map { it.toLong() })
+        }
 
     private val inputReader: VDJCAlignmentsReader
         get() = VDJCAlignmentsReader(`in`)
@@ -91,10 +111,12 @@ class CommandFilterAlignments : MiXCRCommand() {
     private fun getCdr3Equals(): NucleotideSequence? =
         if (cdr3Equals == null) null else NucleotideSequence(cdr3Equals)
 
-    private val filter: AlignmentsFilter = AlignmentsFilter(
-        containFeature, getCdr3Equals(), Chains.parse(chains),
-        readIds, chimerasOnly
-    )
+    private val filter: AlignmentsFilter by lazy {
+        AlignmentsFilter(
+            containFeature, getCdr3Equals(), Chains.parse(chains),
+            readIds, chimerasOnly
+        )
+    }
 
     override fun run0() {
         inputReader.use { reader ->
@@ -152,6 +174,6 @@ class CommandFilterAlignments : MiXCRCommand() {
     }
 
     companion object {
-        const val FILTER_ALIGNMENTS_COMMAND_NAME = "filterAlignments"
+        const val COMMAND_NAME = "filterAlignments"
     }
 }

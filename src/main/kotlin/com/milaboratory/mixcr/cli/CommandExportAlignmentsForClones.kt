@@ -22,7 +22,7 @@ import picocli.CommandLine
  *
  */
 @CommandLine.Command(
-    name = CommandExportAlignmentsForClones.EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME,
+    name = CommandExportAlignmentsForClones.COMMAND_NAME,
     sortOptions = true,
     separator = " ",
     description = ["Export alignments for particular clones from \"clones & alignments\" (*.clna) file."]
@@ -70,6 +70,6 @@ class CommandExportAlignmentsForClones : MiXCRCommand() {
     }
 
     companion object {
-        const val EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME = "exportAlignmentsForClones"
+        const val COMMAND_NAME = "exportAlignmentsForClones"
     }
 }
