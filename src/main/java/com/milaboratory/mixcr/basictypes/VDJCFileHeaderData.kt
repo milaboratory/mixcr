@@ -9,10 +9,10 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.basictypes
 
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 
-public interface VDJCFileHeaderData {
-    TagsInfo getTagsInfo();
+interface VDJCFileHeaderData {
+    val tagsInfo: TagsInfo
 }

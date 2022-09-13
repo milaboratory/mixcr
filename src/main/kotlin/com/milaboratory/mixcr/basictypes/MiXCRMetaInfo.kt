@@ -34,7 +34,7 @@ data class MiXCRMetaInfo(
     /** Set by used on align step, used to deduce defaults on all downstream steps  */
     val paramsBundle: MiXCRParamsBundle,
     /** Aligner parameters */
-    val tagsInfo: TagsInfo = TagsInfo.NO_TAGS,
+    override val tagsInfo: TagsInfo = TagsInfo.NO_TAGS,
     /** Aligner parameters */
     val alignerParameters: VDJCAlignerParameters,
     /** Clone assembler parameters  */
@@ -43,7 +43,7 @@ data class MiXCRMetaInfo(
     val foundAlleles: FoundAlleles?,
     /** If all clones cut by the same feature and cover this feature fully */
     val allFullyCoveredBy: GeneFeatures?
-) {
+): VDJCFileHeaderData {
     fun withTagInfo(tagsInfo: TagsInfo): MiXCRMetaInfo =
         copy(tagsInfo = tagsInfo)
 

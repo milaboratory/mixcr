@@ -52,6 +52,19 @@ class InfoWriter<T : Any> private constructor(
     companion object {
         fun <T : Any> create(
             file: Path?,
+            fieldExtractors: List<FieldExtractor<T>>
+        ): InfoWriter<T> {
+            val outputStream = when {
+                file != null -> BufferedOutputStream(Files.newOutputStream(file), 65536)
+                else -> CloseShieldOutputStream.wrap(System.out)
+            }
+            val result = InfoWriter(fieldExtractors, outputStream)
+            result.printHeader()
+            return result
+        }
+
+        fun <T : Any> create(
+            file: Path?,
             extractorsFactory: FieldExtractorsFactory<T>,
             cmdParseResult: CommandLine.ParseResult,
             header: VDJCFileHeaderData

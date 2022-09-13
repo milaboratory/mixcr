@@ -12,19 +12,12 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
+import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.util.GlobalObjectMappers
 
-object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignments>() {
+object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactoryNew<VDJCAlignments>() {
     override fun allAvailableFields(): List<Field<VDJCAlignments>> =
         VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) + vdjcAlignmentsFields()
-
-    override val defaultPreset: String = "full"
-
-    override val presets: Map<String, List<FieldCommandArgs>> = buildMap {
-        this["min"] = VDJCObjectFieldExtractors.presets["min"]!!
-        this["full"] = VDJCObjectFieldExtractors.presets["full"]!!
-        this["fullImputed"] = VDJCObjectFieldExtractors.presets["fullImputed"]!!
-    }
 
     private fun vdjcAlignmentsFields(): List<Field<VDJCAlignments>> = buildList {
         this += FieldParameterless(
@@ -66,9 +59,9 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
             val reads = vdjcAlignments.originalReads
                 ?: throw IllegalArgumentException(
                     """
-    Error for option '-descrR1':
-    No description available for read: either re-run align action with -OsaveOriginalReads=true option or don't use '-descrR1' in exportAlignments
-    """.trimIndent()
+                    Error for option '-descrR1':
+                    No description available for read: either re-run align action with -OsaveOriginalReads=true option or don't use '-descrR1' in exportAlignments
+                    """.trimIndent()
                 )
             reads[0].getRead(0).description
         }
@@ -83,16 +76,16 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
             val reads = vdjcAlignments.originalReads
                 ?: throw IllegalArgumentException(
                     """
-    Error for option '-descrR1':
-    No description available for read: either re-run align action with -OsaveOriginalReads=true option or don't use '-descrR1' in exportAlignments
-    """.trimIndent()
+                    Error for option '-descrR1':
+                    No description available for read: either re-run align action with -OsaveOriginalReads=true option or don't use '-descrR1' in exportAlignments
+                    """.trimIndent()
                 )
             val read = reads[0]
             require(read.numberOfReads() >= 2) {
                 """
-     Error for option '-descrR2':
-     No description available for second read: your input data was single-end
-     """.trimIndent()
+                Error for option '-descrR2':
+                No description available for second read: your input data was single-end
+                """.trimIndent()
             }
             read.getRead(1).description
         }
@@ -107,9 +100,9 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
             val reads = vdjcAlignments.originalReads
                 ?: throw IllegalArgumentException(
                     """
-    Error for option '-descrR1':
-    No description available for read: either re-run align action with -OsaveOriginalReads option or don't use '-descrR1' in exportAlignments
-    """.trimIndent()
+                    Error for option '-descrR1':
+                    No description available for read: either re-run align action with -OsaveOriginalReads option or don't use '-descrR1' in exportAlignments
+                    """.trimIndent()
                 )
             val sb = StringBuilder()
             var i = 0
@@ -132,9 +125,9 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
             val reads = vdjcAlignments.originalReads
                 ?: throw IllegalArgumentException(
                     """
-    Error for option '-descrR1':
-    No description available for read: either re-run align action with -OsaveOriginalReads option or don't use '-descrR1' in exportAlignments
-    """.trimIndent()
+                    Error for option '-descrR1':
+                    No description available for read: either re-run align action with -OsaveOriginalReads option or don't use '-descrR1' in exportAlignments
+                    """.trimIndent()
                 )
             val sb = StringBuilder()
             var i = 0
@@ -142,9 +135,9 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
                 val read = reads[i]
                 require(read.numberOfReads() >= 2) {
                     """
-     Error for option '-descrsR2':
-     No description available for second read: your input data was single-end
-     """.trimIndent()
+                    Error for option '-descrsR2':
+                    No description available for second read: your input data was single-end
+                    """.trimIndent()
                 }
                 sb.append(read.getRead(1).description)
                 if (i == reads.size - 1) break

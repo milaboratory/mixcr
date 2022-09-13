@@ -32,6 +32,8 @@ data class MiXCRParamsBundle(
     @JsonProperty("extend") val extend: CommandExtend.Params?,
     @JsonProperty("assemble") val assemble: CommandAssemble.Params?,
     @JsonProperty("assembleContigs") val assembleContigs: CommandAssembleContigs.Params?,
+    @JsonProperty("exportAlignments") val exportAlignments: CommandExport.Params?,
+    @JsonProperty("exportClones") val exportClones: CommandExport.Params?,
     @JsonIgnore val exportPreset: Unit = Unit
 )
 
@@ -74,6 +76,7 @@ object Presets {
         "extend.yaml",
         "pipelines.yaml",
         "refineTagsAndSort.yaml",
+        "export.yaml",
     )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
         val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
@@ -111,6 +114,8 @@ object Presets {
     private val assemble = getResolver(MiXCRParamsBundleRaw::assemble)
     private val assembleContigs = getResolver(MiXCRParamsBundleRaw::assembleContigs)
     private val extend = getResolver(MiXCRParamsBundleRaw::extend)
+    private val exportAlignments = getResolver(MiXCRParamsBundleRaw::exportAlignments)
+    private val exportClones = getResolver(MiXCRParamsBundleRaw::exportClones)
 
     private class MiXCRParamsBundleRaw(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
@@ -121,6 +126,8 @@ object Presets {
         @JsonProperty("extend") val extend: RawParams<CommandExtend.Params>? = null,
         @JsonProperty("assemble") val assemble: RawParams<CommandAssemble.Params>? = null,
         @JsonProperty("assembleContigs") val assembleContigs: RawParams<CommandAssembleContigs.Params>? = null,
+        @JsonProperty("exportAlignments") val exportAlignments: RawParams<CommandExport.Params>?,
+        @JsonProperty("exportClones") val exportClones: RawParams<CommandExport.Params>?,
     ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw>
 
     fun resolveParamsBundle(presetName: String) = MiXCRParamsBundle(
@@ -130,6 +137,8 @@ object Presets {
         assemblePartial = assemblePartial(presetName),
         extend = extend(presetName),
         assemble = assemble(presetName),
-        assembleContigs = assembleContigs(presetName)
+        assembleContigs = assembleContigs(presetName),
+        exportAlignments = exportAlignments(presetName),
+        exportClones = exportClones(presetName),
     )
 }

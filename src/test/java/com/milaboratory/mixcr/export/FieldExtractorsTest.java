@@ -218,16 +218,16 @@ public class FieldExtractorsTest {
     //    System.out.println(Util.printTwoColumns(description[0], description[1], 15, 40, 10, "\n"));
     //}
 
-    @Ignore
-    @Test
-    public void testName() throws Exception {
-        try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsVDJCAlignments.rst")) {
-            out.write(printDocumentation(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE).getBytes());
-        }
-        try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsClone.rst")) {
-            out.write(printDocumentation(CloneFieldsExtractorsFactory.INSTANCE).getBytes());
-        }
-    }
+    // @Ignore
+    // @Test
+    // public void testName() throws Exception {
+    //     try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsVDJCAlignments.rst")) {
+    //         out.write(printDocumentation(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE).getBytes());
+    //     }
+    //     try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsClone.rst")) {
+    //         out.write(printDocumentation(CloneFieldsExtractorsFactory.INSTANCE).getBytes());
+    //     }
+    // }
 
     private static ArrayList<String>[] getDescription(Field<?>[] fields) {
         @SuppressWarnings("unchecked")

@@ -13,30 +13,17 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.primitives.Filter
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.exhaustive
-import com.milaboratory.mixcr.basictypes.ClnAReader
-import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
-import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
-import com.milaboratory.mixcr.basictypes.VDJCObject
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.*
 import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.FieldExtractorsFactory
-import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.*
 import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.mixcr.util.and
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.limit
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
@@ -45,62 +32,44 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
+import picocli.CommandLine.Model.CommandSpec
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Stream
+import kotlin.reflect.KProperty1
 
-@CommandLine.Command(separator = " ")
-abstract class CommandExport<T : VDJCObject> private constructor(
-    protected val fieldExtractorsFactory: FieldExtractorsFactory<T>
-) : MiXCRCommand() {
-    @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
-    lateinit var `in`: String
+object CommandExport {
 
-    @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
-    var out: Path? = null
-
-    @Option(
-        description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
-        names = ["-c", "--chains"]
+    data class Params(
+        @JsonProperty("splitByTags") val splitByTags: String?,
+        @JsonProperty("filterOutOfFrames") val filterOutOfFrames: Boolean,
+        @JsonProperty("filterStops") val filterStops: Boolean,
+        @JsonProperty("chains") val chains: String,
+        @JsonProperty("fields") val fields: List<ExportFieldDescription>,
     )
-    var chains = "ALL"
 
-    @Option(description = ["List available export fields"], names = ["-lf", "--list-fields"], hidden = true)
-    fun setListFields(@Suppress("UNUSED_PARAMETER") b: Boolean) {
-        throwExecutionExceptionKotlin("-lf / --list-fields is removed in version 3.0: use help <exportCommand> for help")
+    private interface ManualSpec {
+        fun addOptionsToSpec(spec: CommandSpec)
+        var spec: CommandSpec
     }
 
-    @Option(
-        description = ["Output short versions of column headers which facilitates analysis with Pandas, R/DataFrames or other data tables processing library."],
-        names = ["-s", "--no-spaces"],
-        hidden = true
-    )
-    fun setNoSpaces(@Suppress("UNUSED_PARAMETER") b: Boolean) {
-        warn(
-            """"-s" / "--no-spaces" option is deprecated.
-Scripting friendly output format now used by default.
-Use "-v" / "--with-spaces" to switch back to human readable format.""".trimIndent()
-        )
-    }
-
-    @Option(description = ["Output only first N records"], names = ["-n", "--limit"])
-    var limit = Long.MAX_VALUE
-        set(value) {
-            if (value <= 0) throwExecutionExceptionKotlin("--limit must be positive")
-            field = value
-        }
-
-    override fun getInputFiles(): List<String> = listOf(`in`)
-
-    override fun getOutputFiles(): List<String> = listOfNotNull(out).map { it.toString() }
-
-    open fun mkFilter(): Filter<T> {
-        val chains = Chains.parse(chains)
+    fun <T : VDJCObject> mkFilter(params: Params): Filter<T> {
+        // FIXME !! the following is very bad
+        val chains = Chains.parse(params.chains)
         return Filter { vdjcObject: T ->
+            if (params.filterOutOfFrames) {
+                if (vdjcObject.isOutOfFrameOrAbsent(GeneFeature.CDR3)) return@Filter false
+            }
+            if (params.filterStops) {
+                if (vdjcObject is Clone)
+                    for (assemblingFeature in vdjcObject.parentCloneSet.assemblingFeatures) {
+                        if (vdjcObject.containsStopsOrAbsent(assemblingFeature)) return@Filter false
+                    }
+                else
+                    if (vdjcObject.containsStopsOrAbsent(GeneFeature.CDR3)) return@Filter false
+            }
             for (gt in GeneType.VJC_REFERENCE) {
                 val bestHit = vdjcObject.getBestHit(gt)
                 if (bestHit != null && chains.intersects(bestHit.gene.chains)) return@Filter true
@@ -109,87 +78,144 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         }
     }
 
-    @CommandLine.Command(
+    abstract class CmdBase<T : VDJCObject>(
+        protected val fieldExtractorsFactory: FieldExtractorsFactoryNew<T>,
+        paramsProperty: KProperty1<MiXCRParamsBundle, Params?>,
+    ) : MiXCRPresetAwareCommand<Params>(), ManualSpec {
+        @Option(
+            description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
+            names = ["-c", "--chains"]
+        )
+        private var chains: String? = null
+
+        @Option(
+            description = ["Exclude clones with out-of-frame clone sequences (fractions will be recalculated)"],
+            names = ["-o", "--filter-out-of-frames"]
+        )
+        private var filterOutOfFrames = false
+
+        @Option(
+            description = ["Exclude sequences containing stop codons (fractions will be recalculated)"],
+            names = ["-t", "--filter-stops"]
+        )
+        private var filterStops = false
+
+        // FIXME implement for alignments
+        @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
+        private var splitByTag: String? = null
+
+        override fun addOptionsToSpec(spec: CommandSpec) {
+            fieldExtractorsFactory.addOptionsToSpec(spec)
+        }
+
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(paramsProperty) {
+            override fun POverridesBuilderOps<Params>.paramsOverrides() {
+                Params::chains setIfNotNull chains
+                Params::filterOutOfFrames setIfTrue filterOutOfFrames
+                Params::filterStops setIfTrue filterStops
+                Params::splitByTags setIfNotNull splitByTag
+                Params::fields setIfNotEmpty fieldExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
+            }
+        }
+
+        @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+        lateinit var inputFile: String
+
+        @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
+        var outputFile: Path? = null
+
+        // @Option(description = ["Output only first N records"], names = ["-n", "--limit"])
+        // var limit = Long.MAX_VALUE
+        //     set(value) {
+        //         if (value <= 0) throwExecutionExceptionKotlin("--limit must be positive")
+        //         field = value
+        //     }
+
+        override fun getInputFiles(): List<String> = listOf(inputFile)
+
+        override fun getOutputFiles(): List<String> = listOfNotNull(outputFile).map { it.toString() }
+
+        override var spec: CommandSpec
+            get() = this@CmdBase.spec
+            set(value) {
+                this@CmdBase.spec = value
+            }
+    }
+
+    private fun <T : ManualSpec> mkCommandSpec(export: T): CommandSpec {
+        val spec = CommandSpec.forAnnotatedObject(export)
+        export.spec = spec // inject spec manually
+        export.addOptionsToSpec(spec)
+        return spec
+    }
+
+    /**
+     * Creates command spec for given type VDJAlignments
+     */
+    @JvmStatic
+    fun mkAlignmentsSpec(): CommandSpec = mkCommandSpec(CommandExportAlignments())
+
+    /**
+     * Creates command spec for given type VDJAlignments
+     */
+    @JvmStatic
+    fun mkClonesSpec(): CommandSpec = mkCommandSpec(CommandExportClones())
+
+    @Command(
         name = "exportAlignments",
         separator = " ",
         sortOptions = false,
         description = ["Export V/D/J/C alignments into tab delimited file."]
     )
-    class CommandExportAlignments : CommandExport<VDJCAlignments>(VDJCAlignmentsFieldsExtractorsFactory) {
+    class CommandExportAlignments : CmdBase<VDJCAlignments>(
+        VDJCAlignmentsFieldsExtractorsFactory,
+        MiXCRParamsBundle::exportAlignments,
+    ) {
         override fun run0() {
-            openAlignmentsPort(`in`).use { readerAndHeader ->
+            openAlignmentsPort(inputFile).use { data ->
+                val info = data.info
+                val (_, params) = paramsResolver.parse(info.paramsBundle)
+
                 InfoWriter.create(
-                    out,
-                    fieldExtractorsFactory,
-                    spec.commandLine().parseResult,
-                    readerAndHeader.header
+                    outputFile,
+                    fieldExtractorsFactory.createExtractors(params.fields, info, OutputMode.ScriptingFriendly)
                 ).use { writer ->
-                    val reader = readerAndHeader.port
+                    val reader = data.port
                     if (reader is CanReportProgress) {
                         SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err)
                     }
-                    val filter = mkFilter()
+                    val filter = mkFilter<VDJCAlignments>(params)
                     reader
                         .filter(filter)
-                        .limit(limit)
                         .forEach { writer.put(it) }
                 }
             }
         }
     }
 
-    @CommandLine.Command(
+    @Command(
         name = "exportClones",
         separator = " ",
         sortOptions = false,
         description = ["Export assembled clones into tab delimited file."]
     )
-    class CommandExportClones : CommandExport<Clone>(CloneFieldsExtractorsFactory) {
-        @Option(
-            description = ["Exclude clones with out-of-frame clone sequences (fractions will be recalculated)"],
-            names = ["-o", "--filter-out-of-frames"]
-        )
-        var filterOutOfFrames = false
-
-        @Option(
-            description = ["Exclude sequences containing stop codons (fractions will be recalculated)"],
-            names = ["-t", "--filter-stops"]
-        )
-        var filterStops = false
-
-        @Option(
-            description = ["Filter clones by minimal clone fraction"],
-            names = ["-q", "--minimal-clone-fraction"]
-        )
-        var minFraction = 0f
-
-        @Option(
-            description = ["Filter clones by minimal clone read count"],
-            names = ["-m", "--minimal-clone-count"]
-        )
-        var minCount: Long = 0
-
-        @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
-        var splitByTag: String? = null
-
-        override fun mkFilter(): Filter<Clone> = super.mkFilter().and(CFilter(filterOutOfFrames, filterStops))
-
+    class CommandExportClones : CmdBase<Clone>(
+        CloneFieldsExtractorsFactory,
+        MiXCRParamsBundle::exportAlignments,
+    ) {
         override fun run0() {
-            val initialSet = CloneSetIO.read(`in`, VDJCLibraryRegistry.getDefault())
-            InfoWriter.create(out, fieldExtractorsFactory, spec.commandLine().parseResult, initialSet).use { writer ->
-                val set = CloneSet.transform(initialSet, mkFilter())
-                for (i in 0 until set.size()) {
-                    if (set[i].fraction < minFraction ||
-                        set[i].count < minCount
-                    ) {
-                        limit = i.toLong()
-                        break
-                    }
-                }
+            val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
+            val info = initialSet.info
+            val (_, params) = paramsResolver.parse(info.paramsBundle)
+            InfoWriter.create(
+                outputFile,
+                fieldExtractorsFactory.createExtractors(params.fields, info, OutputMode.ScriptingFriendly)
+            ).use { writer ->
+                val set = CloneSet.transform(initialSet, mkFilter(params))
                 val tagsInfo = set.tagsInfo
                 val exportClones = ExportClones(
-                    set, writer, limit,
-                    if (splitByTag == null) 0 else tagsInfo.indexOf(splitByTag) + 1
+                    set, writer, Long.MAX_VALUE,
+                    if (params.splitByTags == null) 0 else tagsInfo.indexOf(params.splitByTags) + 1
                 )
                 SmartProgressReporter.startProgressReport(exportClones, System.err)
                 exportClones.run()
@@ -209,31 +235,6 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
                         "Filtered $count of $initialCount reads ($percentageCDI%)."
                     )
                 }
-            }
-        }
-
-        class CFilter(val filterOutOfFrames: Boolean, val filterStopCodons: Boolean) : Filter<Clone> {
-            override fun accept(clone: Clone): Boolean {
-                if (filterOutOfFrames) {
-                    if (clone.isOutOfFrameOrAbsent(GeneFeature.CDR3)) return false
-                }
-                if (filterStopCodons) {
-                    for (assemblingFeature in clone.parentCloneSet.assemblingFeatures) {
-                        if (clone.containsStopsOrAbsent(assemblingFeature)) return false
-                    }
-                }
-                return true
-            }
-
-            override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (other !is CFilter) return false
-                return filterOutOfFrames == other.filterOutOfFrames &&
-                        filterStopCodons == other.filterStopCodons
-            }
-
-            override fun hashCode(): Int {
-                return Objects.hash(filterOutOfFrames, filterStopCodons)
             }
         }
 
@@ -281,55 +282,35 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         }
     }
 
-    class AlignmentsAndHeader(
-        val port: OutputPortCloseable<VDJCAlignments>, val header: VDJCFileHeaderData
-    ) : AutoCloseable by port
+    data class AlignmentsAndMetaInfo(
+        val port: OutputPortCloseable<VDJCAlignments>,
+        val closeable: AutoCloseable,
+        val info: MiXCRMetaInfo
+    ) : AutoCloseable by closeable
 
-    companion object {
-        /**
-         * Creates command spec for given type (Clone / VDJAlignments)
-         */
-        private fun <T : VDJCObject> mkCommandSpec(export: CommandExport<T>): CommandLine.Model.CommandSpec {
-            val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(export)
-            export.spec = spec // inject spec manually
-            export.fieldExtractorsFactory.addOptionsToSpec(spec, true)
-            return spec
-        }
+    @JvmStatic
+    fun openAlignmentsPort(inputFile: String): AlignmentsAndMetaInfo =
+        when (IOUtil.extractFileType(Paths.get(inputFile))) {
+            VDJCA -> {
+                val vdjcaReader = VDJCAlignmentsReader(inputFile, VDJCLibraryRegistry.getDefault())
+                AlignmentsAndMetaInfo(vdjcaReader, vdjcaReader, vdjcaReader.info)
+            }
 
-        /**
-         * Creates command spec for given type VDJAlignments
-         */
-        @JvmStatic
-        fun mkAlignmentsSpec(): CommandLine.Model.CommandSpec = mkCommandSpec(CommandExportAlignments())
-
-        /**
-         * Creates command spec for given type VDJAlignments
-         */
-        @JvmStatic
-        fun mkClonesSpec(): CommandLine.Model.CommandSpec = mkCommandSpec(CommandExportClones())
-
-        @JvmStatic
-        fun openAlignmentsPort(`in`: String): AlignmentsAndHeader =
-            when (IOUtil.extractFileType(Paths.get(`in`))) {
-                VDJCA -> {
-                    val vdjcaReader = VDJCAlignmentsReader(`in`, VDJCLibraryRegistry.getDefault())
-                    AlignmentsAndHeader(vdjcaReader, vdjcaReader)
-                }
-                CLNA -> {
-                    val clnaReader = ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4))
-                    val source = clnaReader.readAllAlignments()
-                    val port = object : OutputPortCloseable<VDJCAlignments> {
-                        override fun close() {
-                            source.close()
-                            clnaReader.close()
-                        }
-
-                        override fun take(): VDJCAlignments? = source.take()
+            CLNA -> {
+                val clnaReader = ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4))
+                val source = clnaReader.readAllAlignments()
+                val port = object : OutputPortCloseable<VDJCAlignments> {
+                    override fun close() {
+                        source.close()
+                        clnaReader.close()
                     }
-                    AlignmentsAndHeader(port, clnaReader)
+
+                    override fun take(): VDJCAlignments? = source.take()
                 }
-                CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $`in`")
-                SHMT -> throw RuntimeException("Can't export alignments from *.shmt file: $`in`")
-            }.exhaustive
-    }
+                AlignmentsAndMetaInfo(port, clnaReader, clnaReader.info)
+            }
+
+            CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $inputFile")
+            SHMT -> throw RuntimeException("Can't export alignments from *.shmt file: $inputFile")
+        }.exhaustive
 }

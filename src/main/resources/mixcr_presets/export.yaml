@@ -1,0 +1,141 @@
+"export_base":
+  exportClones:
+    chains: ALL
+    fields:
+      - field: "-cloneId"
+        args: [ ]
+      - field: "-count"
+        args: [ ]
+      - field: "-fraction"
+        args: [ ]
+      - field: "-targetSequences"
+        args: [ ]
+      - field: "-targetQualities"
+        args: [ ]
+      - field: "-vHitsWithScore"
+        args: [ ]
+      - field: "-dHitsWithScore"
+        args: [ ]
+      - field: "-jHitsWithScore"
+        args: [ ]
+      - field: "-cHitsWithScore"
+        args: [ ]
+      - field: "-vAlignments"
+        args: [ ]
+      - field: "-dAlignments"
+        args: [ ]
+      - field: "-jAlignments"
+        args: [ ]
+      - field: "-cAlignments"
+        args: [ ]
+      - field: "-nFeature"
+        args: [ "FR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR1" ]
+      - field: "-nFeature"
+        args: [ "CDR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR1" ]
+      - field: "-nFeature"
+        args: [ "FR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR2" ]
+      - field: "-nFeature"
+        args: [ "CDR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR2" ]
+      - field: "-nFeature"
+        args: [ "FR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR3" ]
+      - field: "-nFeature"
+        args: [ "CDR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR3" ]
+      - field: "-nFeature"
+        args: [ "FR4" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR4" ]
+      - field: "-aaFeature"
+        args: [ "FR1" ]
+      - field: "-aaFeature"
+        args: [ "CDR1" ]
+      - field: "-aaFeature"
+        args: [ "FR2" ]
+      - field: "-aaFeature"
+        args: [ "CDR2" ]
+      - field: "-aaFeature"
+        args: [ "FR3" ]
+      - field: "-aaFeature"
+        args: [ "CDR3" ]
+      - field: "-aaFeature"
+        args: [ "FR4" ]
+      - field: "-defaultAnchorPoints"
+        args: [ ]
+  exportAlignments:
+    chains: ALL
+    fields:
+      - field: "-targetSequences"
+        args: [ ]
+      - field: "-targetQualities"
+        args: [ ]
+      - field: "-vHitsWithScore"
+        args: [ ]
+      - field: "-dHitsWithScore"
+        args: [ ]
+      - field: "-jHitsWithScore"
+        args: [ ]
+      - field: "-cHitsWithScore"
+        args: [ ]
+      - field: "-vAlignments"
+        args: [ ]
+      - field: "-dAlignments"
+        args: [ ]
+      - field: "-jAlignments"
+        args: [ ]
+      - field: "-cAlignments"
+        args: [ ]
+      - field: "-nFeature"
+        args: [ "FR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR1" ]
+      - field: "-nFeature"
+        args: [ "CDR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR1" ]
+      - field: "-nFeature"
+        args: [ "FR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR2" ]
+      - field: "-nFeature"
+        args: [ "CDR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR2" ]
+      - field: "-nFeature"
+        args: [ "FR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR3" ]
+      - field: "-nFeature"
+        args: [ "CDR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR3" ]
+      - field: "-nFeature"
+        args: [ "FR4" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR4" ]
+      - field: "-aaFeature"
+        args: [ "FR1" ]
+      - field: "-aaFeature"
+        args: [ "CDR1" ]
+      - field: "-aaFeature"
+        args: [ "FR2" ]
+      - field: "-aaFeature"
+        args: [ "CDR2" ]
+      - field: "-aaFeature"
+        args: [ "FR3" ]
+      - field: "-aaFeature"
+        args: [ "CDR3" ]
+      - field: "-aaFeature"
+        args: [ "FR4" ]
+      - field: "-defaultAnchorPoints"
+        args: [ ]

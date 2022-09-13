@@ -37,13 +37,11 @@ class SHMTreesReader(
     val metaInfo: List<MiXCRMetaInfo>
     val userGenes: List<VDJCGene>
     private val reports: List<MiXCRCommandReport>
-    private val tagsInfo: TagsInfo
+    override val tagsInfo: TagsInfo
     val versionInfo: String
     private val treesPosition: Long
 
     override fun reports(): List<MiXCRCommandReport> = reports
-
-    override fun getTagsInfo(): TagsInfo = tagsInfo
 
     constructor(input: Path, libraryRegistry: VDJCLibraryRegistry) : this(
         PrimitivIHybrid(input, 3),
@@ -79,7 +77,7 @@ class SHMTreesReader(
             metaInfo = i.readList()
             fileNames = i.readList()
 
-            //TODO resolve different tags info for different source files
+            // TODO resolve different tags info for different source files
             check(metaInfo.map { it.tagsInfo }.distinct().size == 1)
             tagsInfo = metaInfo.first().tagsInfo
 

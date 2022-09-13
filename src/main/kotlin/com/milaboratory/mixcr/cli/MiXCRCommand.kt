@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.cli.*
 import com.milaboratory.mixcr.Flags
 import com.milaboratory.mixcr.MiXCRParamsBundle
+import picocli.CommandLine.Model.CommandSpec
 import kotlin.reflect.KProperty1
 
 interface MiXCRCommandI {
