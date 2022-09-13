@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
-import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
@@ -43,13 +42,13 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
 
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
-        InfoWriter<SHMTreeForPostanalysis>(out?.toFile()).use { output ->
-            SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
-                output.attachInfoProviders(
-                    SHMTreeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)
-                )
-                output.ensureHeader()
-
+        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+            InfoWriter.create(
+                out,
+                SHMTreeFieldsExtractorsFactory,
+                spec.commandLine().parseResult,
+                reader
+            ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     output.put(
                         shmTree.forPostanalysis(
@@ -65,7 +64,6 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
 
     companion object {
         const val COMMAND_NAME = "exportShmTrees"
-
 
         @JvmStatic
         fun mkCommandSpec(): CommandLine.Model.CommandSpec {

@@ -26,11 +26,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNS;
+
 /**
  *
  */
 public final class ClnsWriter implements AutoCloseable {
-    static final String MAGIC_V13 = "MiXCR.CLNS.V13";
+    static final String MAGIC_V13 = MAGIC_CLNS + ".V13";
     static final String MAGIC = MAGIC_V13;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);

@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPortCloseable
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.basictypes.ReportsFooterData
@@ -21,6 +22,7 @@ import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.readList
+import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCLibraryId
 import io.repseq.core.VDJCLibraryRegistry
 import java.nio.file.Path
@@ -32,9 +34,11 @@ class SHMTreesReader(
 ) : AutoCloseable by input, VDJCFileHeaderData, ReportsFooterData {
     val fileNames: List<String>
     val alignerParameters: VDJCAlignerParameters
+    val metaInfo: List<MiXCRMetaInfo>
+    val userGenes: List<VDJCGene>
     private val reports: List<MiXCRCommandReport>
     private val tagsInfo: TagsInfo
-    private val versionInfo: String
+    val versionInfo: String
     private val treesPosition: Long
 
     override fun reports(): List<MiXCRCommandReport> = reports
@@ -51,12 +55,13 @@ class SHMTreesReader(
             val magicBytes = ByteArray(SHMTreesWriter.MAGIC_LENGTH)
             i.readFully(magicBytes)
             when (val magicString = String(magicBytes)) {
+                SHMTreesWriter.OLD_MAGIC_V1 -> {}
                 SHMTreesWriter.MAGIC -> {}
                 else -> throw RuntimeException(
                     "Unsupported file format; .shmt file of version " + magicString +
                             " while you are running MiXCR " + SHMTreesWriter.MAGIC
                 )
-            }
+            }.exhaustive
         }
 
         val reportsStartPosition: Long
@@ -71,7 +76,7 @@ class SHMTreesReader(
 
         input.beginPrimitivI(true).use { i ->
             versionInfo = i.readUTF()
-            val metaInfo = i.readList<MiXCRMetaInfo>()
+            metaInfo = i.readList()
             fileNames = i.readList()
 
             //TODO resolve different tags info for different source files
@@ -90,7 +95,7 @@ class SHMTreesReader(
                 if (!alreadyRegistered)
                     libraryRegistry.registerLibrary(null, name, libraryData)
             }
-            IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry)
+            userGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry)
         }
 
         input.beginRandomAccessPrimitivI(reportsStartPosition).use { pi ->

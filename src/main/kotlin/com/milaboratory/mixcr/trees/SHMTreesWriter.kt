@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.trees
 import cc.redberry.pipe.InputPort
 import com.milaboratory.cli.AppVersionInfo
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_SHMT
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
@@ -65,6 +66,14 @@ class SHMTreesWriter(
         this.footer = wrappedReports + listOfNotNull(report)
     }
 
+    /**
+     * Write reports chain
+     */
+    fun writeFooter(reports: List<MiXCRCommandReport>, report: MiXCRCommandReport?) {
+        check(this.footer == null) { "Footer already written" }
+        this.footer = reports + listOfNotNull(report)
+    }
+
     override fun close() {
         checkNotNull(footer) { "Footer not written" }
         // position of reports
@@ -82,7 +91,8 @@ class SHMTreesWriter(
     }
 
     companion object {
-        private const val MAGIC_V1 = "MiXCR.TREE.V01"
+        const val OLD_MAGIC_V1 = "MiXCR.TREE.V01"
+        private const val MAGIC_V1 = "$MAGIC_SHMT.V01"
         const val MAGIC = MAGIC_V1
         const val MAGIC_LENGTH = 14
         val MAGIC_BYTES = MAGIC.toByteArray(StandardCharsets.US_ASCII)

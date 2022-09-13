@@ -50,13 +50,13 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
-        InfoWriter<Wrapper>(out?.toFile()).use { output ->
-            SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
-                val fieldExtractors =
-                    SplittedTreeNodeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)
-                output.attachInfoProviders(fieldExtractors)
-                output.ensureHeader()
-
+        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+            InfoWriter.create(
+                out,
+                SplittedTreeNodeFieldsExtractorsFactory,
+                spec.commandLine().parseResult,
+                reader
+            ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     val shmTreeForPostanalysis = shmTree.forPostanalysis(
                         reader.fileNames,

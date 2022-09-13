@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsReader
@@ -19,6 +20,7 @@ import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.util.ArraysUtils
@@ -56,7 +58,7 @@ class CommandSortClones : MiXCRCommand() {
     override fun getOutputFiles(): List<String> = listOf(out)
 
     override fun run0() {
-        when (IOUtil.extractFileType(Paths.get(`in`))!!) {
+        when (IOUtil.extractFileType(Paths.get(`in`))) {
             CLNS -> ClnsReader(Paths.get(`in`), VDJCLibraryRegistry.getDefault()).use { reader ->
                 ClnsWriter(out).use { writer ->
                     val assemblingFeatures =
@@ -89,7 +91,8 @@ class CommandSortClones : MiXCRCommand() {
                 }
             }
             VDJCA -> throwValidationExceptionKotlin("File type is not supported by this command")
-        }
+            SHMT -> throwValidationExceptionKotlin("File type is not supported by this command")
+        }.exhaustive
     }
 
     private fun sortGeneFeaturesContainingCDR3First(geneFeatures: Array<GeneFeature>): Array<GeneFeature> {

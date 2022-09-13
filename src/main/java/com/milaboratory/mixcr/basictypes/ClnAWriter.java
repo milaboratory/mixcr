@@ -43,6 +43,7 @@ import java.util.concurrent.ForkJoinPool;
 
 import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdComparator;
 import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdHash;
+import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNA;
 
 /**
  * Writer for CLNA file format.
@@ -53,7 +54,7 @@ import static com.milaboratory.mixcr.basictypes.FieldCollection.VDJCACloneIdHash
 public final class ClnAWriter implements
         AutoCloseable,
         CanReportProgressAndStage {
-    static final String MAGIC_V7 = "MiXCR.CLNA.V08";
+    static final String MAGIC_V7 = MAGIC_CLNA + ".V08";
     static final String MAGIC = MAGIC_V7;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
     /** Number of bytes in footer with meta information */

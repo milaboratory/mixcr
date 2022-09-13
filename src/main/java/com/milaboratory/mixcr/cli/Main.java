@@ -186,11 +186,11 @@ public final class Main {
                 .addSubcommand("exportAirr", CommandExportAirr.class)
 
                 .addSubcommand("exportReadsForClones", CommandExportReadsForClones.class)
-                .addSubcommand(CommandExportAlignmentsForClones.EXPORT_ALIGNMENTS_FOR_CLONES_COMMAND_NAME, CommandExportAlignmentsForClones.class)
+                .addSubcommand(CommandExportAlignmentsForClones.COMMAND_NAME, CommandExportAlignmentsForClones.class)
                 .addSubcommand("exportReads", CommandExportReads.class)
 
                 .addSubcommand("mergeAlignments", CommandMergeAlignments.class)
-                .addSubcommand("filterAlignments", CommandFilterAlignments.class)
+                .addSubcommand(CommandFilterAlignments.COMMAND_NAME, CommandFilterAlignments.class)
                 .addSubcommand("sortAlignments", CommandSortAlignments.class)
                 .addSubcommand("sortClones", CommandSortClones.class)
 

@@ -14,6 +14,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagType
@@ -273,7 +274,7 @@ class CommandFindShmTrees : MiXCRCommand() {
                     }
                     return
                 }
-            }
+            }.exhaustive
         }
         val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
         SmartProgressReporter.startProgressReport(progressAndStage)
