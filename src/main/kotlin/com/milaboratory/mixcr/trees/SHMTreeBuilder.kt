@@ -344,7 +344,7 @@ class SHMTreeBuilder(
                 mutations.mutationsInCDR3.J.rangeInParent.length()
         val NDNPenalties = scoringSet.NDN.penalties(mutations.knownNDN)
         val NDNLength = mutations.knownNDN.rangeInParent.length()
-        return (NDNPenalties * parameters.NDNScoreMultiplier + VPenalties + JPenalties) /
+        return (NDNPenalties * parameters.multiplierForNDSScore + VPenalties + JPenalties) /
                 (NDNLength + VLength + JLength).toDouble()
     }
 

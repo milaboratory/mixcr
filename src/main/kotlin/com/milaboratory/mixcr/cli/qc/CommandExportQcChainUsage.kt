@@ -15,6 +15,7 @@ import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAlign
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
@@ -55,7 +56,7 @@ class CommandExportQcChainUsage : CommandExportQc() {
 
     override fun run0() {
         val files = inputFiles.map { Paths.get(it) }
-        val fileTypes = files.map { IOUtil.extractFileType(it)!! }
+        val fileTypes = files.map { IOUtil.extractFileType(it) }
         if (fileTypes.distinct().size != 1) {
             throwExecutionExceptionKotlin("Input files should have the same file type, got ${fileTypes.distinct()}")
         }
@@ -86,6 +87,7 @@ class CommandExportQcChainUsage : CommandExportQc() {
                 chains,
                 hw
             )
+            SHMT -> throw UnsupportedOperationException("Command don't support .shmt files")
         }
         writeFile(Paths.get(outputFiles[0]), plot)
     }

@@ -537,11 +537,14 @@ class CommandAlign : MiXCRCommand() {
             "No J genes to align. Aborting execution. See warnings for more info " +
                     "(turn on verbose warnings by adding --verbose option)."
         )
-        reportBuilder.setStartMillis(beginTimestamp)
-        reportBuilder.setInputFiles(inputFiles)
-        reportBuilder.setOutputFiles(outputFiles)
-        reportBuilder.commandLine = commandLineArguments
-        if (tagSearchPlan != null) reportBuilder.tagReportBuilder = tagSearchPlan.report
+        reportBuilder
+            .setStartMillis(beginTimestamp)
+            .setCommandLine(commandLineArguments)
+            .setInputFiles(inputFiles)
+            .setOutputFiles(outputFiles)
+        if (tagSearchPlan != null) {
+            reportBuilder.tagReportBuilder = tagSearchPlan.report
+        }
 
         // Attaching report to aligner
         aligner.setEventsListener(reportBuilder)

@@ -16,7 +16,18 @@ assert() {
 set -e
 
 mixcr align -s hs -OvParameters.geneFeatureToAlign=VGeneWithP -OsaveOriginalReads=true test_R1.fastq test_R2.fastq case15.vdjca
-mixcr filterAlignments --read-ids-file <(mixcr exportAlignments case15.vdjca --no-headers -readId -vHit | grep 'TRBV24-1' | awk '{print $1}') case15.vdjca case15.filtered.vdjca
+mixcr assemble case15.vdjca case15.clns
+mixcr assemble -a case15.vdjca case15.clna
+
+mixcr slice --ids-file <(mixcr exportAlignments case15.vdjca --no-headers -readId -vHit | grep 'TRBV24-1' | awk '{print $1}') case15.vdjca case15.filtered.vdjca
+mixcr slice --ids-file <(mixcr exportClones case15.clns --no-headers -cloneId -vHit | grep 'TRBV24-1' | awk '{print $1}') case15.clns case15.filtered.clns
+mixcr slice --ids-file <(mixcr exportClones case15.clna --no-headers -cloneId -vHit | grep 'TRBV24-1' | awk '{print $1}') case15.clna case15.filtered.clna
 
 assert "mixcr exportAlignments case15.vdjca --no-headers -vHit | sort | uniq | wc -l" "28"
 assert "mixcr exportAlignments case15.filtered.vdjca --no-headers -vHit | sort | uniq | wc -l" "1"
+
+assert "mixcr exportClones case15.clns --no-headers -vHit | sort | uniq | wc -l" "11"
+assert "mixcr exportClones case15.filtered.clns --no-headers -vHit | sort | uniq | wc -l" "1"
+
+assert "mixcr exportClones case15.clna --no-headers -vHit | sort | uniq | wc -l" "11"
+assert "mixcr exportClones case15.filtered.clna --no-headers -vHit | sort | uniq | wc -l" "1"

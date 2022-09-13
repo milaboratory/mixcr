@@ -30,15 +30,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_VDJC;
+
 public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPosition {
     public static final int DEFAULT_ENCODER_THREADS = 3;
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
-    static final String MAGIC_V17 = "MiXCR.VDJC.V18";
+    static final String MAGIC_V17 = MAGIC_VDJC + ".V18";
     static final String MAGIC = MAGIC_V17;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 
-    /** Number of bytes in footer with meta information */
+    /**
+     * Number of bytes in footer with meta information
+     */
     static final int FOOTER_LENGTH = 8 + 8 + 8 + IOUtil.END_MAGIC_LENGTH;
 
     private final boolean highCompression;

@@ -9,15 +9,12 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.alleles
+package com.milaboratory.mixcr.util
 
-import com.milaboratory.core.mutations.Mutations
-import com.milaboratory.core.sequence.NucleotideSequence
+import io.repseq.core.VDJCGeneId
 
-interface AllelesSearcher {
-    fun search(clones: List<CloneDescription>): List<Result>
-
-    data class Result(
-        val allele: Mutations<NucleotideSequence>
-    )
-}
+val VDJCGeneId.geneName: String
+    get() {
+        val i: Int = name.lastIndexOf('*')
+        return if (i < 0) name else name.substring(0, i)
+    }

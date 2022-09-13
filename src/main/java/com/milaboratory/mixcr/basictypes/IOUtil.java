@@ -14,10 +14,12 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.cli.MiXCRCommandReport;
+import com.milaboratory.mixcr.trees.SHMTreesReader;
 import com.milaboratory.primitivio.HasPrimitivIOState;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import io.repseq.core.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -38,6 +40,8 @@ public class IOUtil {
     public static final String MAGIC_VDJC = "MiXCR.VDJC";
     public static final String MAGIC_CLNS = "MiXCR.CLNS";
     public static final String MAGIC_CLNA = "MiXCR.CLNA";
+
+    public static final String MAGIC_SHMT = "MiXCR.SHMT";
     public static final String END_MAGIC = "#MiXCR.File.End#";
     private static final byte[] END_MAGIC_BYTES = END_MAGIC.getBytes(StandardCharsets.US_ASCII);
     public static final int END_MAGIC_LENGTH = END_MAGIC_BYTES.length;
@@ -166,9 +170,10 @@ public class IOUtil {
     }
 
     public enum MiXCRFileType {
-        CLNA, CLNS, VDJCA
+        CLNA, CLNS, VDJCA, SHMT
     }
 
+    @NotNull
     public static MiXCRFileType extractFileType(Path path) {
         try {
             if (!Files.isRegularFile(path))
@@ -197,6 +202,8 @@ public class IOUtil {
                         return MiXCRFileType.CLNA;
                     case MAGIC_CLNS:
                         return MiXCRFileType.CLNS;
+                    case MAGIC_SHMT:
+                        return MiXCRFileType.SHMT;
                     default:
                         throw new IllegalArgumentException("Unknown file type: " + path);
                 }
@@ -225,6 +232,10 @@ public class IOUtil {
                     return reader.reports();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+                }
+            case SHMT:
+                try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
+                    return reader.reports();
                 }
             default:
                 throw new RuntimeException();

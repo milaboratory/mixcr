@@ -16,8 +16,9 @@ import com.milaboratory.util.ReportBuilder;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Objects;
 
-public abstract class AbstractCommandReportBuilder implements ReportBuilder {
+public abstract class AbstractCommandReportBuilder<T extends AbstractCommandReportBuilder<T>> implements ReportBuilder {
     private final Date date = new Date();
     private String commandLine;
     private String[] inputFiles, outputFiles;
@@ -28,18 +29,19 @@ public abstract class AbstractCommandReportBuilder implements ReportBuilder {
     }
 
     public String getCommandLine() {
-        return commandLine;
+        return Objects.requireNonNull(commandLine);
     }
 
     public String[] getInputFiles() {
-        return inputFiles;
+        return Objects.requireNonNull(inputFiles);
     }
 
     public String[] getOutputFiles() {
-        return outputFiles;
+        return Objects.requireNonNull(outputFiles);
     }
 
     public long getExecutionTimeMillis() {
+        if (startMillis == 0L || finishMillis == 0L) throw new IllegalStateException();
         return finishMillis - startMillis;
     }
 
@@ -47,33 +49,42 @@ public abstract class AbstractCommandReportBuilder implements ReportBuilder {
         return MiXCRVersionInfo.get().getShortestVersionString();
     }
 
-    public void setCommandLine(String commandLine) {
+    public T setCommandLine(String commandLine) {
         this.commandLine = commandLine;
+        return that();
     }
 
-    public void setInputFiles(String... inputFiles) {
+    public T setInputFiles(String... inputFiles) {
         this.inputFiles = inputFiles;
+        return that();
     }
 
-    public void setInputFiles(Collection<String> inputFiles) {
+    public T setInputFiles(Collection<String> inputFiles) {
         this.inputFiles = inputFiles.toArray(new String[0]);
+        return that();
     }
 
-    public void setOutputFiles(String... outputFiles) {
+    public T setOutputFiles(String... outputFiles) {
         this.outputFiles = outputFiles;
+        return that();
     }
 
-    public void setOutputFiles(Collection<String> outputFiles) {
+    public T setOutputFiles(Collection<String> outputFiles) {
         this.outputFiles = outputFiles.toArray(new String[0]);
+        return that();
     }
 
-    public void setStartMillis(long startMillis) {
+    public T setStartMillis(long startMillis) {
         this.startMillis = startMillis;
+        return that();
     }
 
-    public void setFinishMillis(long finishMillis) {
+    public T setFinishMillis(long finishMillis) {
         this.finishMillis = finishMillis;
+        return that();
     }
+
+    protected abstract T that();
 
     @Override
     public abstract MiXCRCommandReport buildReport();

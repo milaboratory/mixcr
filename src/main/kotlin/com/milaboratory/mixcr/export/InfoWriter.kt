@@ -19,7 +19,7 @@ import java.io.BufferedOutputStream
 import java.io.Closeable
 import java.io.OutputStream
 import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.Path
 
 class InfoWriter<T : Any> private constructor(
     private val fieldExtractors: List<FieldExtractor<T>>,
@@ -51,13 +51,13 @@ class InfoWriter<T : Any> private constructor(
 
     companion object {
         fun <T : Any> create(
-            file: String?,
+            file: Path?,
             extractorsFactory: FieldExtractorsFactory<T>,
             cmdParseResult: CommandLine.ParseResult,
             header: VDJCFileHeaderData
         ): InfoWriter<T> {
             val outputStream = when {
-                file != null -> BufferedOutputStream(Files.newOutputStream(Paths.get(file)), 65536)
+                file != null -> BufferedOutputStream(Files.newOutputStream(file), 65536)
                 else -> CloseShieldOutputStream.wrap(System.out)
             }
             val fieldExtractors = extractorsFactory.createExtractors(header, cmdParseResult)

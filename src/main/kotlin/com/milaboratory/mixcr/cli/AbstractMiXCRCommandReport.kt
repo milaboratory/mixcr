@@ -9,15 +9,17 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.alleles
+package com.milaboratory.mixcr.cli
 
-import com.milaboratory.core.mutations.Mutations
-import com.milaboratory.core.sequence.NucleotideSequence
+import java.util.*
 
-interface AllelesSearcher {
-    fun search(clones: List<CloneDescription>): List<Result>
-
-    data class Result(
-        val allele: Mutations<NucleotideSequence>
-    )
+abstract class AbstractMiXCRCommandReport(
+    override val date: Date?,
+    override val commandLine: String,
+    override val inputFiles: Array<String>,
+    override val outputFiles: Array<String>,
+    override val executionTimeMillis: Long?,
+    override val version: String
+) : MiXCRCommandReport {
+    override fun toString(): String = asString()
 }

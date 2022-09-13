@@ -202,6 +202,9 @@ class CommandCorrectAndSortTags : MiXCRCommand() {
         val correctAndSortTagsReport: CorrectAndSortTagsReport
         val mitoolReport: CorrectionReport?
         VDJCAlignmentsReader(`in`).use { mainReader ->
+            require(!mainReader.tagsInfo.hasNoTags()) {
+                "input file has no tags"
+            }
             val preset = mainReader.info.tagPreset?.let { getPresetByName(it) }
             val tagNames = mutableListOf<String>()
             val indicesBuilder = TIntArrayList()

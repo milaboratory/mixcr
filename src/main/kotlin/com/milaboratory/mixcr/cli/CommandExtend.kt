@@ -13,11 +13,15 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCObject
@@ -40,10 +44,10 @@ import java.nio.file.Paths
     description = ["Impute alignments or clones with germline sequences."]
 )
 class CommandExtend : MiXCRCommand() {
-    @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+    @CommandLine.Parameters(description = ["data.[vdjca|clns]"], index = "0")
     lateinit var `in`: String
 
-    @CommandLine.Parameters(description = ["extendeed.[vdjca|clns|clna]"], index = "1")
+    @CommandLine.Parameters(description = ["extendeed.[vdjca|clns]"], index = "1")
     lateinit var out: String
 
     @CommandLine.Option(
@@ -88,11 +92,12 @@ class CommandExtend : MiXCRCommand() {
     override fun getOutputFiles(): List<String> = listOf(out)
 
     override fun run0() {
-        when (IOUtil.extractFileType(Paths.get(`in`))!!) {
-            MiXCRFileType.VDJCA -> processVDJCA()
-            MiXCRFileType.CLNS -> processClns()
-            MiXCRFileType.CLNA -> throwValidationException("Operation is not supported for ClnA files.")
-        }
+        when (IOUtil.extractFileType(Paths.get(`in`))) {
+            VDJCA -> processVDJCA()
+            CLNS -> processClns()
+            CLNA -> throwValidationExceptionKotlin("Operation is not supported for ClnA files.")
+            SHMT -> throwValidationExceptionKotlin("Operation is not supported for shmt files.")
+        }.exhaustive
     }
 
     private fun processClns() {
@@ -152,15 +157,16 @@ class CommandExtend : MiXCRCommand() {
             ReferencePoint.parse(jAnchorPoint)
         )
         val output = ParallelProcessor(input, extender, threads)
-        extender.setStartMillis(System.currentTimeMillis())
-        extender.setInputFiles(`in`)
-        extender.setOutputFiles(out)
-        extender.commandLine = commandLineArguments
+        extender
+            .setStartMillis(System.currentTimeMillis())
+            .setCommandLine(commandLineArguments)
+            .setInputFiles(`in`)
+            .setOutputFiles(out)
         return ProcessWrapper(extender, output)
     }
 
     private inner class ProcessWrapper<T : VDJCObject>(
-        val reportBuilder: AbstractCommandReportBuilder,
+        val reportBuilder: AbstractCommandReportBuilder<*>,
         val output: ParallelProcessor<T, T>
     ) {
         fun finish(): MiXCRCommandReport {

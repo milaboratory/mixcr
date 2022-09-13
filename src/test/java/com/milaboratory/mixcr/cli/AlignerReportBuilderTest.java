@@ -14,13 +14,47 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class AlignerReportBuilderTest {
 
     @Test
-    public void test1() throws Exception {
-        AlignerReportBuilder rep = new AlignerReportBuilder();
+    public void testIsSerializable() throws Exception {
+        AlignerReport rep = reportBuilder().buildReport();
         assertNotNull(GlobalObjectMappers.getPretty().writeValueAsString(rep));
+    }
+
+    @Test
+    public void testNotSerializeDate() throws Exception {
+        AlignerReport rep = reportBuilder().buildReport();
+        String asJson = GlobalObjectMappers.getPretty().writeValueAsString(rep);
+        assertNull(GlobalObjectMappers.getPretty().readValue(asJson, AlignerReport.class).getDate());
+    }
+
+    @Test
+    public void testSerializeInputFiles() throws Exception {
+        AlignerReport rep = reportBuilder()
+                .setInputFiles("file1")
+                .buildReport();
+        String asJson = GlobalObjectMappers.getPretty().writeValueAsString(rep);
+        assertArrayEquals(new String[]{"file1"}, GlobalObjectMappers.getPretty().readValue(asJson, AlignerReport.class).getInputFiles());
+    }
+
+    @Test
+    public void testSerializeCommandLine() throws Exception {
+        AlignerReport rep = reportBuilder()
+                .setCommandLine("cmd args")
+                .buildReport();
+        String asJson = GlobalObjectMappers.getPretty().writeValueAsString(rep);
+        assertEquals("cmd args", GlobalObjectMappers.getPretty().readValue(asJson, AlignerReport.class).getCommandLine());
+    }
+
+    private AlignerReportBuilder reportBuilder() {
+        return new AlignerReportBuilder()
+                .setCommandLine("from test")
+                .setStartMillis(System.currentTimeMillis())
+                .setFinishMillis(System.currentTimeMillis())
+                .setInputFiles()
+                .setOutputFiles();
     }
 }

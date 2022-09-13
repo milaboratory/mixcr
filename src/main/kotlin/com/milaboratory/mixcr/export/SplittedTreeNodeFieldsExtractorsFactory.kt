@@ -20,7 +20,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
             FieldCommandArgs("-treeId"),
             FieldCommandArgs("-nodeId"),
             FieldCommandArgs("-parentId"),
-            FieldCommandArgs("-distance germline"),
+            FieldCommandArgs("-distance", "germline"),
             FieldCommandArgs("-cloneId"),
             FieldCommandArgs("-fileName"),
             FieldCommandArgs("-count"),
@@ -28,14 +28,15 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
             FieldCommandArgs("-dHit"),
             FieldCommandArgs("-jHit"),
             FieldCommandArgs("-cHit"),
-            FieldCommandArgs("-nFeature", "CDR3")
+            FieldCommandArgs("-nFeature", "CDR3", "node")
         )
 
         this["full"] = listOf(
             FieldCommandArgs("-treeId"),
             FieldCommandArgs("-nodeId"),
+            FieldCommandArgs("-isObserved"),
             FieldCommandArgs("-parentId"),
-            FieldCommandArgs("-distance germline"),
+            FieldCommandArgs("-distance", "germline"),
             FieldCommandArgs("-cloneId"),
             FieldCommandArgs("-fileName"),
             FieldCommandArgs("-count"),
@@ -49,27 +50,20 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
             FieldCommandArgs("-dAlignments"),
             FieldCommandArgs("-jAlignments"),
             FieldCommandArgs("-cAlignments"),
-            FieldCommandArgs("-nFeature", "FR1"),
-            FieldCommandArgs("-minFeatureQuality", "FR1"),
-            FieldCommandArgs("-nFeature", "CDR1"),
-            FieldCommandArgs("-minFeatureQuality", "CDR1"),
-            FieldCommandArgs("-nFeature", "FR2"),
-            FieldCommandArgs("-minFeatureQuality", "FR2"),
-            FieldCommandArgs("-nFeature", "CDR2"),
-            FieldCommandArgs("-minFeatureQuality", "CDR2"),
-            FieldCommandArgs("-nFeature", "FR3"),
-            FieldCommandArgs("-minFeatureQuality", "FR3"),
-            FieldCommandArgs("-nFeature", "CDR3"),
-            FieldCommandArgs("-minFeatureQuality", "CDR3"),
-            FieldCommandArgs("-nFeature", "FR4"),
-            FieldCommandArgs("-minFeatureQuality", "FR4"),
-            FieldCommandArgs("-aaFeature", "FR1"),
-            FieldCommandArgs("-aaFeature", "CDR1"),
-            FieldCommandArgs("-aaFeature", "FR2"),
-            FieldCommandArgs("-aaFeature", "CDR2"),
-            FieldCommandArgs("-aaFeature", "FR3"),
-            FieldCommandArgs("-aaFeature", "CDR3"),
-            FieldCommandArgs("-aaFeature", "FR4"),
+            FieldCommandArgs("-nFeature", "FR1", "node"),
+            FieldCommandArgs("-aaFeature", "CDR1", "node"),
+            FieldCommandArgs("-nFeature", "CDR1", "node"),
+            FieldCommandArgs("-aaFeature", "FR1", "node"),
+            FieldCommandArgs("-nFeature", "FR2", "node"),
+            FieldCommandArgs("-aaFeature", "FR2", "node"),
+            FieldCommandArgs("-nFeature", "CDR2", "node"),
+            FieldCommandArgs("-aaFeature", "CDR2", "node"),
+            FieldCommandArgs("-nFeature", "FR3", "node"),
+            FieldCommandArgs("-aaFeature", "FR3", "node"),
+            FieldCommandArgs("-nFeature", "CDR3", "node"),
+            FieldCommandArgs("-aaFeature", "CDR3", "node"),
+            FieldCommandArgs("-nFeature", "FR4", "node"),
+            FieldCommandArgs("-aaFeature", "FR4", "node"),
             FieldCommandArgs("-defaultAnchorPoints")
         )
     }
@@ -77,8 +71,8 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
     override val defaultPreset: String = "full"
 
     override fun allAvailableFields(): List<Field<Wrapper>> = buildList {
-        this += SHMTreeFieldsExtractorsFactory.fields.map { it.fromProperty { tree } }
-        this += SHMTreeNodeFieldsExtractor.nodeFields().map { it.fromProperty { node } }
+        this += SHMTreeFieldsExtractorsFactory.treeFields(false).map { it.fromProperty { tree } }
+        this += SHMTreeNodeFieldsExtractor.nodeFields(true).map { it.fromProperty { node } }
         this += (VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = true) + CloneFieldsExtractorsFactory.cloneFields())
             .map { field ->
                 field.fromProperty(headerMapper = { "$it (only for nodes with clones)" }) { node.clone?.clone }
