@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.pattern.SequenceSetCollection.loadSequenceSetByAddress
-import com.milaboratory.mitool.refinement.CorrectionReport
+import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
 import com.milaboratory.mixcr.MiXCRParamsBundle
@@ -183,7 +183,7 @@ object CommandRefineTagsAndSort {
             val cmdParams: Params
 
             val refineTagsAndSortReport: RefineTagsAndSortReport
-            val mitoolReport: CorrectionReport?
+            val mitoolReport: TagCorrectionReport?
             VDJCAlignmentsReader(inputFile).use { mainReader ->
                 cmdParams = paramsResolver.parse(mainReader.info.paramsBundle).second
                 val tagNames = mutableListOf<String>()

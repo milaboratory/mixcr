@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mitool.refinement.CorrectionReport;
+import com.milaboratory.mitool.refinement.TagCorrectionReport;
 import com.milaboratory.util.Report;
 
 import java.util.Date;
@@ -21,7 +21,7 @@ import java.util.Objects;
 
 public class RefineTagsAndSortReport extends MiXCRCommandReportWrapper {
     @JsonProperty("correctionReport")
-    public final CorrectionReport correctionReport;
+    public final TagCorrectionReport correctionReport;
 
     @JsonCreator
     public RefineTagsAndSortReport(@JsonProperty("date") Date date,
@@ -30,7 +30,7 @@ public class RefineTagsAndSortReport extends MiXCRCommandReportWrapper {
                                    @JsonProperty("outputFiles") String[] outputFiles,
                                    @JsonProperty("executionTimeMillis") long executionTimeMillis,
                                    @JsonProperty("version") String version,
-                                   @JsonProperty("correctionReport") CorrectionReport correctionReport) {
+                                   @JsonProperty("correctionReport") TagCorrectionReport correctionReport) {
         super(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version);
         this.correctionReport = correctionReport;
     }

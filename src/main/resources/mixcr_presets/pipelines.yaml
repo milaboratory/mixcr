@@ -83,7 +83,7 @@
 # Single-cell pipelines
 #
 
-"10x_vdj_bcr":
+"_10x_vdj":
   inheritFrom: _universal
   align:
     inheritFrom: align_kaligner2_4.0
@@ -95,6 +95,8 @@
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort_universal
     overrides:
+      whitelists:
+        CELL: builtin:737K-august-2016
       parameters:
         postFilter:
           type: "filter_and"
@@ -121,3 +123,13 @@
                   operator:
                     type: "group_operator_range"
                     lower: 1.0
+
+"10x_vdj_bcr":
+  inheritFrom: _10x_vdj
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+"10x_vdj_tcr":
+  inheritFrom: _10x_vdj
+  align:
+    inheritFrom: align_rna-seq_4.0
