@@ -69,10 +69,14 @@ data class MiXCRMetaInfo(
                 output.writeObject(obj.libraryData)
             }
 
-            override fun read(input: PrimitivI): FoundAlleles = FoundAlleles(
-                input.readObjectRequired(),
-                input.readObjectRequired()
-            )
+            override fun read(input: PrimitivI): FoundAlleles {
+                val libraryName = input.readObjectRequired<String>()
+                val libraryData = input.readObjectRequired<VDJCLibraryData>()
+                return FoundAlleles(
+                    libraryName,
+                    libraryData
+                )
+            }
 
             override fun isReference(): Boolean = true
         }
@@ -88,13 +92,21 @@ data class MiXCRMetaInfo(
             output.writeObject(obj.allFullyCoveredBy)
         }
 
-        override fun read(input: PrimitivI): MiXCRMetaInfo = MiXCRMetaInfo(
-            input.readObjectRequired(),
-            input.readObjectRequired(),
-            input.readObjectRequired(),
-            input.readObjectOptional(),
-            input.readObjectOptional(),
-            input.readObjectOptional()
-        )
+        override fun read(input: PrimitivI): MiXCRMetaInfo {
+            val paramsBundle = input.readObjectRequired<MiXCRParamsBundle>()
+            val tagsInfo = input.readObjectRequired<TagsInfo>()
+            val alignerParameters = input.readObjectRequired<VDJCAlignerParameters>()
+            val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
+            val foundAlleles = input.readObjectOptional<FoundAlleles>()
+            val allFullyCoveredBy = input.readObjectOptional<GeneFeatures>()
+            return MiXCRMetaInfo(
+                paramsBundle,
+                tagsInfo,
+                alignerParameters,
+                assemblerParameters,
+                foundAlleles,
+                allFullyCoveredBy
+            )
+        }
     }
 }

@@ -266,10 +266,15 @@ class CloneFromUserInput(
             output.writeInt(obj.treeId)
         }
 
-        override fun read(input: PrimitivI): CloneFromUserInput = CloneFromUserInput(
-            input.readObjectRequired(),
-            input.readInt(),
-            input.readInt()
-        )
+        override fun read(input: PrimitivI): CloneFromUserInput {
+            val clone = input.readObjectRequired<Clone>()
+            val datasetId = input.readInt()
+            val treeId = input.readInt()
+            return CloneFromUserInput(
+                clone,
+                datasetId,
+                treeId
+            )
+        }
     }
 }
