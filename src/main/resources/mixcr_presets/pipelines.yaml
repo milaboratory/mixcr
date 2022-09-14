@@ -3,6 +3,8 @@
 #
 
 "_universal":
+  exportAlignments:
+    inheritFrom: export_base
   assemblePartial:
     inheritFrom: assemblePartial_universal
   refineTagsAndSort:
@@ -13,6 +15,8 @@
     inheritFrom: assemble_universal
   assembleContigs:
     inheritFrom: assembleContigs_universal
+  exportClones:
+    inheritFrom: export_base
 
 #
 # Legacy presets from 4.0 parameter sets

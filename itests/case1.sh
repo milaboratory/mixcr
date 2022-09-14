@@ -12,6 +12,6 @@ mixcr exportAlignments case1.vdjca case1.vdjca.txt
 mixcr exportAirr --imgt-gaps case1.vdjca case1.vdjca.imgt.airr.tsv
 mixcr exportAirr case1.vdjca case1.vdjca.airr.tsv
 mixcr assemble case1.vdjca case1.clns
-mixcr exportAlignments case1.clns case1.clns.txt
+mixcr exportClones case1.clns case1.clns.txt
 mixcr exportAirr --imgt-gaps case1.clns case1.clns.imgt.airr.tsv
 mixcr exportAirr case1.clns case1.clns.airr.tsv
