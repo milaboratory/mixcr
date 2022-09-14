@@ -27,7 +27,7 @@ import picocli.CommandLine
     separator = " ",
     description = ["Export original reads from vdjca file."]
 )
-class CommandExportReads : MiXCRCommand() {
+class CommandExportReads : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]"], arity = "1..3")
     var inOut: List<String> = mutableListOf()
 

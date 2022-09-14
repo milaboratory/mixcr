@@ -35,7 +35,7 @@ import java.io.OutputStream
     separator = " ",
     description = ["Sort alignments in vdjca file by read id."]
 )
-class CommandSortAlignments : MiXCRCommand() {
+class CommandSortAlignments : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["alignments.vdjca"], index = "0")
     lateinit var `in`: String
 

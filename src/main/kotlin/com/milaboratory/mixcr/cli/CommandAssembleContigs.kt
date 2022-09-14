@@ -17,6 +17,8 @@ import cc.redberry.pipe.CUtils
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
@@ -50,7 +52,9 @@ object CommandAssembleContigs {
     data class Params(
         @JsonProperty("ignoreTags") val ignoreTags: Boolean,
         @JsonProperty("parameters") @JsonMerge val parameters: FullSeqAssemblerParameters
-    )
+    ) : MiXCRParams {
+        override val command = MiXCRCommand.assembleContigs
+    }
 
     abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(description = ["Ignore tags (UMIs, cell-barcodes)"], names = ["--ignore-tags"])
@@ -145,7 +149,7 @@ object CommandAssembleContigs {
             val reports: List<MiXCRCommandReport>
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-                cmdParams = paramsResolver.parse(reader.info.paramsBundle).second
+                cmdParams = paramsResolver.parse(reader.info.paramsSpec).second
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."

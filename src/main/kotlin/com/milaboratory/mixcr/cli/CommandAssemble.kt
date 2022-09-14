@@ -15,6 +15,8 @@ import cc.redberry.pipe.util.StatusReporter
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
 import com.milaboratory.mixcr.assembler.CloneAssembler
@@ -44,7 +46,9 @@ object CommandAssemble {
         @JsonProperty("cellLevel") val cellLevel: Boolean,
         @JsonProperty("consensusAssemblerParameters") @JsonMerge val consensusAssemblerParameters: PreCloneAssemblerParameters,
         @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters
-    )
+    ): MiXCRParams {
+        override val command = MiXCRCommand.assemble
+    }
 
     abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(
@@ -149,7 +153,7 @@ object CommandAssemble {
             VDJCAlignmentsReader(inputFile).use { alignmentsReader ->
                 val inputInfo = alignmentsReader.info
 
-                cmdParam = paramsResolver.parse(inputInfo.paramsBundle).second
+                cmdParam = paramsResolver.parse(inputInfo.paramsSpec).second
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if (outputFile.lowercase(Locale.getDefault())

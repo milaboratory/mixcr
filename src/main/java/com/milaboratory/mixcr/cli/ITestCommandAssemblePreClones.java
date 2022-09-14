@@ -40,7 +40,7 @@ import static picocli.CommandLine.*;
 @Command(name = "itestAssemblePreClones",
         separator = " ",
         hidden = true)
-public class ITestCommandAssemblePreClones extends MiXCRCommand {
+public class ITestCommandAssemblePreClones extends AbstractMiXCRCommand {
     @Parameters(arity = "4", description = "input_file output_file output_clones output_alignments")
     public List<String> files;
 

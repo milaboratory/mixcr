@@ -12,7 +12,7 @@
 
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import io.repseq.core.Chains
 import picocli.CommandLine
 import java.nio.file.Paths
@@ -20,7 +20,7 @@ import java.nio.file.Paths
 /**
  *
  */
-abstract class CommandPaExport : MiXCRCommand {
+abstract class CommandPaExport : AbstractMiXCRCommand {
     @CommandLine.Parameters(
         description = ["Input file with postanalysis results."],
         index = "0",

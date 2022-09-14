@@ -27,7 +27,7 @@ import picocli.CommandLine
     separator = " ",
     description = ["Export alignments for particular clones from \"clones & alignments\" (*.clna) file."]
 )
-class CommandExportAlignmentsForClones : MiXCRCommand() {
+class CommandExportAlignmentsForClones : AbstractMiXCRCommand() {
     @CommandLine.Parameters(index = "0", description = ["clones.clna"])
     lateinit var `in`: String
 

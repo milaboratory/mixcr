@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes
 
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -32,7 +33,7 @@ import io.repseq.dto.VDJCLibraryData
 @Serializable(by = MiXCRMetaInfo.SerializerImpl::class)
 data class MiXCRMetaInfo(
     /** Set by used on align step, used to deduce defaults on all downstream steps  */
-    val paramsBundle: MiXCRParamsBundle,
+    val paramsSpec: MiXCRParamsSpec,
     /** Aligner parameters */
     override val tagsInfo: TagsInfo = TagsInfo.NO_TAGS,
     /** Aligner parameters */
@@ -84,7 +85,7 @@ data class MiXCRMetaInfo(
 
     class SerializerImpl : BasicSerializer<MiXCRMetaInfo>() {
         override fun write(output: PrimitivO, obj: MiXCRMetaInfo) {
-            output.writeObject(obj.paramsBundle)
+            output.writeObject(obj.paramsSpec)
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
             output.writeObject(obj.assemblerParameters)
@@ -93,14 +94,14 @@ data class MiXCRMetaInfo(
         }
 
         override fun read(input: PrimitivI): MiXCRMetaInfo {
-            val paramsBundle = input.readObjectRequired<MiXCRParamsBundle>()
+            val paramsSpec = input.readObjectRequired<MiXCRParamsSpec>()
             val tagsInfo = input.readObjectRequired<TagsInfo>()
             val alignerParameters = input.readObjectRequired<VDJCAlignerParameters>()
             val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
             val foundAlleles = input.readObjectOptional<FoundAlleles>()
             val allFullyCoveredBy = input.readObjectOptional<GeneFeatures>()
             return MiXCRMetaInfo(
-                paramsBundle,
+                paramsSpec,
                 tagsInfo,
                 alignerParameters,
                 assemblerParameters,

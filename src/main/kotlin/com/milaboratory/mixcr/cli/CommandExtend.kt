@@ -15,7 +15,10 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
 import com.milaboratory.mixcr.util.VDJCObjectExtender
@@ -38,7 +41,9 @@ object CommandExtend {
         @JsonProperty("jAnchor") val jAnchor: ReferencePoint,
         @JsonProperty("minimalVScore") val minimalVScore: Int,
         @JsonProperty("minimalJScore") val minimalJScore: Int
-    )
+    ): MiXCRParams{
+        override val command = MiXCRCommand.extend
+    }
 
     abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(description = ["V extension anchor point."], names = ["--v-anchor"])
@@ -114,7 +119,7 @@ object CommandExtend {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val cloneSet = reader.cloneSet
                 val outputPort = cloneSet.port
-                val process = processWrapper(outputPort, reader.info.paramsBundle, cloneSet.alignmentParameters)
+                val process = processWrapper(outputPort, reader.info.paramsSpec, cloneSet.alignmentParameters)
 
                 val clones = process.output
                     .asSequence()
@@ -135,7 +140,7 @@ object CommandExtend {
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     SmartProgressReporter.startProgressReport("Extending alignments", reader)
                     writer.header(reader)
-                    val process = processWrapper(reader, reader.info.paramsBundle, reader.parameters)
+                    val process = processWrapper(reader, reader.info.paramsSpec, reader.parameters)
 
                     // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
                     // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
@@ -156,10 +161,10 @@ object CommandExtend {
 
         private fun <T : VDJCObject> processWrapper(
             input: OutputPort<T>,
-            paramsBundle: MiXCRParamsBundle,
+            paramsSpec: MiXCRParamsSpec,
             alignerParameters: VDJCAlignerParameters
         ): ProcessWrapper<T> {
-            val (_, cmdParams) = paramsResolver.parse(paramsBundle)
+            val (_, cmdParams) = paramsResolver.parse(paramsSpec)
 
             val extender = VDJCObjectExtender<T>(
                 Chains.parse(chains), extensionQuality,

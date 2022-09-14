@@ -40,7 +40,7 @@ import kotlin.collections.component2
     description = ["Build cloneset overlap and export into tab delimited file."],
     sortOptions = false
 )
-class CommandExportOverlap : MiXCRCommand() {
+class CommandExportOverlap : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["cloneset.{clns|clna}... output.tsv"])
     var inOut: List<String> = mutableListOf()
 

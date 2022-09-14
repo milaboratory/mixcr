@@ -35,7 +35,7 @@ import java.io.PrintStream
     separator = " ",
     description = ["Calculates the difference between two .vdjca files."]
 )
-class CommandAlignmentsDiff : MiXCRCommand() {
+class CommandAlignmentsDiff : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["input_file1"], index = "0")
     lateinit var in1: String
 

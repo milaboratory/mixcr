@@ -22,7 +22,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 
-abstract class CommandAnalyze : MiXCRCommand() {
+abstract class CommandAnalyze : AbstractMiXCRCommand() {
     interface WithNameWithDescription {
         val key: String
         val description: String
@@ -170,7 +170,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
     private val reportFile: String
         get() = report ?: fNameForReport
 
-    private fun <T : MiXCRCommand> inheritOptionsAndValidate(parameters: T): T {
+    private fun <T : AbstractMiXCRCommand> inheritOptionsAndValidate(parameters: T): T {
         if (forceOverwrite) parameters.forceOverwrite = true
         parameters.quiet = true
         parameters.validate()
@@ -430,7 +430,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
     var exportParameters: List<String> = mutableListOf()
 
     /** Build parameters for export  */
-    private fun mkExport(input: String, output: String, chains: String): CommandExport.CommandExportClones {
+    private fun mkExport(input: String, output: String, chains: String): CommandExportClones.Cmd {
         val exportParameters = mutableListOf<String>()
         exportParameters += "--force-overwrite"
         exportParameters += "--chains"
@@ -453,9 +453,9 @@ abstract class CommandAnalyze : MiXCRCommand() {
             .toTypedArray()
 
         // parse parameters
-        val cmd = CommandLine(CommandExport.mkClonesSpec())
+        val cmd = CommandLine(CommandExportClones.mkSpec())
         cmd.parseArgs(*array)
-        return inheritOptionsAndValidate(cmd.commandSpec.userObject() as CommandExport.CommandExportClones)
+        return inheritOptionsAndValidate(cmd.commandSpec.userObject() as CommandExportClones.Cmd)
     }
 
     /** number of rounds for assemblePartial  */

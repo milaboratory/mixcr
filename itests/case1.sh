@@ -5,7 +5,7 @@ set -euxo pipefail
 # +assembleClonotypesBy ShortCDR3 \
 
 mixcr align -p default_4.0 -s hs \
-            -OvParameters.geneFeatureToAlign=VGeneWithP \
+            +dna \
             -OsaveOriginalReads=true \
             test_R1.fastq test_R2.fastq case1.vdjca
 mixcr exportAlignments case1.vdjca case1.vdjca.txt

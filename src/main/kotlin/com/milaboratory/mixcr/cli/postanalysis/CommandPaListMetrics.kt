@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual.CDR3Metrics
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual.Diversity
@@ -28,7 +28,7 @@ import java.io.IOException
     separator = " ",
     description = ["List available metrics"]
 )
-class CommandPaListMetrics : MiXCRCommand() {
+class CommandPaListMetrics : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["Input file with PA results"], index = "0")
     lateinit var `in`: String
 

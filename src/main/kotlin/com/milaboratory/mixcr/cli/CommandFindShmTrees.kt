@@ -42,7 +42,7 @@ import kotlin.io.path.pathString
     separator = " ",
     description = ["Builds SHM trees."]
 )
-class CommandFindShmTrees : MiXCRCommand() {
+class CommandFindShmTrees : AbstractMiXCRCommand() {
     @Parameters(
         arity = "2..*",
         description = ["Paths to clns files that was processed by command ${CommandFindAlleles.FIND_ALLELES_COMMAND_NAME} and path to output file"],

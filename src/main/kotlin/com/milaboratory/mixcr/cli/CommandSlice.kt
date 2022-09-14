@@ -55,7 +55,7 @@ import kotlin.io.path.readLines
     separator = " ",
     description = ["Slice vdjca|clns|clna|shmt file."]
 )
-class CommandSlice : MiXCRCommand() {
+class CommandSlice : AbstractMiXCRCommand() {
     @Parameters(description = ["data.[vdjca|clns|clna|shmt]"], index = "0")
     lateinit var `in`: String
 

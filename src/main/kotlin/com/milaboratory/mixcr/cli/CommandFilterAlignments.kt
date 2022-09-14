@@ -36,7 +36,7 @@ import picocli.CommandLine.Parameters
     separator = " ",
     description = ["Filter alignments."]
 )
-class CommandFilterAlignments : MiXCRCommand() {
+class CommandFilterAlignments : AbstractMiXCRCommand() {
     @Parameters(description = ["alignments.vdjca"], index = "0")
     lateinit var `in`: String
 

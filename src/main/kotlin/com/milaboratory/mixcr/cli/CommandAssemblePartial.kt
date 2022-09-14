@@ -16,6 +16,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.group
 import com.milaboratory.mitool.helpers.map
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
@@ -39,7 +41,9 @@ object CommandAssemblePartial {
         @JsonProperty("dropPartial") val dropPartial: Boolean,
         @JsonProperty("cellLevel") val cellLevel: Boolean,
         @JsonProperty("parameters") @JsonMerge val parameters: PartialAlignmentsAssemblerParameters
-    )
+    ): MiXCRParams {
+        override val command = MiXCRCommand.assemblePartial
+    }
 
     abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(
@@ -101,7 +105,7 @@ object CommandAssemblePartial {
             val beginTimestamp = System.currentTimeMillis()
             val cmdParams: Params
             VDJCAlignmentsReader(inputFile).use { reader1 ->
-                cmdParams = paramsResolver.parse(reader1.info.paramsBundle).second
+                cmdParams = paramsResolver.parse(reader1.info.paramsSpec).second
                 VDJCAlignmentsReader(inputFile).use { reader2 ->
                     VDJCAlignmentsWriter(outputFile).use { writer ->
                         val groupingDepth =

@@ -15,7 +15,7 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.MiXCRParamsSpec
 import picocli.CommandLine.*
 import java.io.File
 
@@ -46,7 +46,10 @@ object CommandExportPreset {
         var mixins: AllMiXCRMixIns? = null
 
         override fun run0() {
-            val (bundle, _) = paramsResolver.parse(Presets.resolveParamsBundle(presetName), printParameters = false)
+            val (bundle, _) = paramsResolver.parse(
+                MiXCRParamsSpec(presetName, mixins = mixins?.mixins ?: emptyList()),
+                printParameters = false
+            )
             val of = outputFile
             if (of != null)
                 K_YAML_OM.writeValue(File(of), bundle)
@@ -56,10 +59,6 @@ object CommandExportPreset {
 
         override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
             get() = object : MiXCRParamsResolver<Unit>(MiXCRParamsBundle::exportPreset) {
-                override fun POverridesBuilderOps<MiXCRParamsBundle>.bundleOverrides() {
-                    mixins?.bundleOverride?.let { addOverride(it) }
-                }
-
                 override fun POverridesBuilderOps<Unit>.paramsOverrides() {
                 }
             }

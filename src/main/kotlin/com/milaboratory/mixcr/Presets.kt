@@ -14,14 +14,18 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.cli.AbstractPresetBundleRaw
-import com.milaboratory.cli.RawParams
-import com.milaboratory.cli.Resolver
+import com.milaboratory.cli.*
 import com.milaboratory.mitool.helpers.KObjectMapperProvider
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.cli.*
 import com.milaboratory.primitivio.annotations.Serializable
 import kotlin.reflect.KProperty1
+
+@Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
+data class MiXCRParamsSpec(
+    @JsonProperty("presetAddress") override val presetAddress: String,
+    @JsonProperty("mixins") override val mixins: List<MiXCRMixin>,
+) : ParamsBundleSpec<MiXCRParamsBundle>
 
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
 data class MiXCRParamsBundle(
@@ -32,8 +36,8 @@ data class MiXCRParamsBundle(
     @JsonProperty("extend") val extend: CommandExtend.Params?,
     @JsonProperty("assemble") val assemble: CommandAssemble.Params?,
     @JsonProperty("assembleContigs") val assembleContigs: CommandAssembleContigs.Params?,
-    @JsonProperty("exportAlignments") val exportAlignments: CommandExport.Params?,
-    @JsonProperty("exportClones") val exportClones: CommandExport.Params?,
+    @JsonProperty("exportAlignments") val exportAlignments: CommandExportAlignments.Params?,
+    @JsonProperty("exportClones") val exportClones: CommandExportClones.Params?,
     @JsonIgnore val exportPreset: Unit = Unit
 )
 
@@ -119,6 +123,7 @@ object Presets {
 
     private class MiXCRParamsBundleRaw(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
+        @JsonProperty("mixins") val mixins: List<MiXCRMixin>?,
         @JsonProperty("flags") val flags: Set<String>?,
         @JsonProperty("align") val align: RawParams<CommandAlign.Params>? = null,
         @JsonProperty("refineTagsAndSort") val refineTagsAndSort: RawParams<CommandRefineTagsAndSort.Params>? = null,
@@ -126,19 +131,24 @@ object Presets {
         @JsonProperty("extend") val extend: RawParams<CommandExtend.Params>? = null,
         @JsonProperty("assemble") val assemble: RawParams<CommandAssemble.Params>? = null,
         @JsonProperty("assembleContigs") val assembleContigs: RawParams<CommandAssembleContigs.Params>? = null,
-        @JsonProperty("exportAlignments") val exportAlignments: RawParams<CommandExport.Params>?,
-        @JsonProperty("exportClones") val exportClones: RawParams<CommandExport.Params>?,
+        @JsonProperty("exportAlignments") val exportAlignments: RawParams<CommandExportAlignments.Params>?,
+        @JsonProperty("exportClones") val exportClones: RawParams<CommandExportClones.Params>?,
     ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw>
 
-    fun resolveParamsBundle(presetName: String) = MiXCRParamsBundle(
-        flags = presetCollection[presetName]!!.flags ?: emptySet(),
-        align = align(presetName),
-        refineTagsAndSort = refineTagsAndSort(presetName),
-        assemblePartial = assemblePartial(presetName),
-        extend = extend(presetName),
-        assemble = assemble(presetName),
-        assembleContigs = assembleContigs(presetName),
-        exportAlignments = exportAlignments(presetName),
-        exportClones = exportClones(presetName),
-    )
+    fun resolveParamsBundle(presetName: String): MiXCRParamsBundle {
+        val raw = presetCollection[presetName]
+        val bundle = MiXCRParamsBundle(
+            flags = raw!!.flags ?: emptySet(),
+            align = align(presetName),
+            refineTagsAndSort = refineTagsAndSort(presetName),
+            assemblePartial = assemblePartial(presetName),
+            extend = extend(presetName),
+            assemble = assemble(presetName),
+            assembleContigs = assembleContigs(presetName),
+            exportAlignments = exportAlignments(presetName),
+            exportClones = exportClones(presetName),
+        )
+        val mixins = raw.mixins ?: emptyList()
+        return mixins.apply(bundle)
+    }
 }

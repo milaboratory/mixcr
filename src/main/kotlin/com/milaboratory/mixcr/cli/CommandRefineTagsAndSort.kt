@@ -187,7 +187,7 @@ object CommandRefineTagsAndSort {
             val mitoolReport: TagCorrectionReport?
             VDJCAlignmentsReader(inputFile).use { mainReader ->
                 require(!mainReader.tagsInfo.hasNoTags()) { "input file has no tags" }
-                cmdParams = paramsResolver.parse(mainReader.info.paramsBundle).second
+                cmdParams = paramsResolver.parse(mainReader.info.paramsSpec).second
                 val tagNames = mutableListOf<String>()
                 val indicesBuilder = TIntArrayList()
                 for (ti in mainReader.tagsInfo.indices) {

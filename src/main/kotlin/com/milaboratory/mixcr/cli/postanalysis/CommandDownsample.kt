@@ -14,7 +14,7 @@ package com.milaboratory.mixcr.cli.postanalysis
 import com.milaboratory.mitool.helpers.drainToAndClose
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
@@ -30,7 +30,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 @CommandLine.Command(name = "downsample", separator = " ", description = ["Downsample clonesets."])
-class CommandDownsample : MiXCRCommand() {
+class CommandDownsample : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["cloneset.{clns|clna}..."], arity = "1..*")
     lateinit var `in`: List<String>
 

@@ -11,20 +11,20 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.primitives.Filter
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mitool.exhaustive
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.basictypes.*
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.*
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.export.*
-import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.util.CanReportProgress
+import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.ExportFieldDescription
+import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
@@ -33,55 +33,41 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.*
-import picocli.CommandLine.Model.CommandSpec
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Stream
-import kotlin.reflect.KProperty1
 
-object CommandExport {
-
+object CommandExportClones {
     data class Params(
         @JsonProperty("splitByTags") val splitByTags: String?,
         @JsonProperty("filterOutOfFrames") val filterOutOfFrames: Boolean,
         @JsonProperty("filterStops") val filterStops: Boolean,
         @JsonProperty("chains") val chains: String,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
-    )
-
-    private interface ManualSpec {
-        fun addOptionsToSpec(spec: CommandSpec)
-        var spec: CommandSpec
+    ) : MiXCRParams {
+        override val command get() = MiXCRCommand.exportClones
     }
 
-    fun <T : VDJCObject> mkFilter(params: Params): Filter<T> {
-        // FIXME !! the following is very bad
-        val chains = Chains.parse(params.chains)
-        return Filter { vdjcObject: T ->
-            if (params.filterOutOfFrames) {
-                if (vdjcObject.isOutOfFrameOrAbsent(GeneFeature.CDR3)) return@Filter false
-            }
-            if (params.filterStops) {
-                if (vdjcObject is Clone)
-                    for (assemblingFeature in vdjcObject.parentCloneSet.assemblingFeatures) {
-                        if (vdjcObject.containsStopsOrAbsent(assemblingFeature)) return@Filter false
-                    }
-                else
-                    if (vdjcObject.containsStopsOrAbsent(GeneFeature.CDR3)) return@Filter false
-            }
+    fun Params.mkFilter(): Filter<Clone> {
+        val chains = Chains.parse(chains)
+        return Filter {
+            if (filterOutOfFrames)
+                if (it.isOutOfFrameOrAbsent(GeneFeature.CDR3)) return@Filter false
+
+            if (filterStops)
+                for (assemblingFeature in it.parentCloneSet.assemblingFeatures)
+                    if (it.containsStopsOrAbsent(assemblingFeature)) return@Filter false
+
             for (gt in GeneType.VJC_REFERENCE) {
-                val bestHit = vdjcObject.getBestHit(gt)
+                val bestHit = it.getBestHit(gt)
                 if (bestHit != null && chains.intersects(bestHit.gene.chains)) return@Filter true
             }
+
             false
         }
     }
 
-    abstract class CmdBase<T : VDJCObject>(
-        protected val fieldExtractorsFactory: FieldExtractorsFactoryNew<T>,
-        paramsProperty: KProperty1<MiXCRParamsBundle, Params?>,
-    ) : MiXCRPresetAwareCommand<Params>(), ManualSpec {
+    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(
             description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
             names = ["-c", "--chains"]
@@ -100,95 +86,16 @@ object CommandExport {
         )
         private var filterStops = false
 
-        // FIXME implement for alignments
         @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         private var splitByTag: String? = null
 
-        override fun addOptionsToSpec(spec: CommandSpec) {
-            fieldExtractorsFactory.addOptionsToSpec(spec)
-        }
-
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(paramsProperty) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::filterOutOfFrames setIfTrue filterOutOfFrames
                 Params::filterStops setIfTrue filterStops
                 Params::splitByTags setIfNotNull splitByTag
-                Params::fields setIfNotEmpty fieldExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
-            }
-        }
-
-        @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
-        lateinit var inputFile: String
-
-        @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
-        var outputFile: Path? = null
-
-        // @Option(description = ["Output only first N records"], names = ["-n", "--limit"])
-        // var limit = Long.MAX_VALUE
-        //     set(value) {
-        //         if (value <= 0) throwExecutionExceptionKotlin("--limit must be positive")
-        //         field = value
-        //     }
-
-        override fun getInputFiles(): List<String> = listOf(inputFile)
-
-        override fun getOutputFiles(): List<String> = listOfNotNull(outputFile).map { it.toString() }
-
-        override var spec: CommandSpec
-            get() = this@CmdBase.spec
-            set(value) {
-                this@CmdBase.spec = value
-            }
-    }
-
-    private fun <T : ManualSpec> mkCommandSpec(export: T): CommandSpec {
-        val spec = CommandSpec.forAnnotatedObject(export)
-        export.spec = spec // inject spec manually
-        export.addOptionsToSpec(spec)
-        return spec
-    }
-
-    /**
-     * Creates command spec for given type VDJAlignments
-     */
-    @JvmStatic
-    fun mkAlignmentsSpec(): CommandSpec = mkCommandSpec(CommandExportAlignments())
-
-    /**
-     * Creates command spec for given type VDJAlignments
-     */
-    @JvmStatic
-    fun mkClonesSpec(): CommandSpec = mkCommandSpec(CommandExportClones())
-
-    @Command(
-        name = "exportAlignments",
-        separator = " ",
-        sortOptions = false,
-        description = ["Export V/D/J/C alignments into tab delimited file."]
-    )
-    class CommandExportAlignments : CmdBase<VDJCAlignments>(
-        VDJCAlignmentsFieldsExtractorsFactory,
-        MiXCRParamsBundle::exportAlignments,
-    ) {
-        override fun run0() {
-            openAlignmentsPort(inputFile).use { data ->
-                val info = data.info
-                val (_, params) = paramsResolver.parse(info.paramsBundle)
-
-                InfoWriter.create(
-                    outputFile,
-                    fieldExtractorsFactory.createExtractors(params.fields, info, OutputMode.ScriptingFriendly)
-                ).use { writer ->
-                    val reader = data.port
-                    if (reader is CanReportProgress) {
-                        SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err)
-                    }
-                    val filter = mkFilter<VDJCAlignments>(params)
-                    reader
-                        .filter(filter)
-                        .forEach { writer.put(it) }
-                }
+                Params::fields setIfNotEmpty CloneFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
             }
         }
     }
@@ -199,19 +106,26 @@ object CommandExport {
         sortOptions = false,
         description = ["Export assembled clones into tab delimited file."]
     )
-    class CommandExportClones : CmdBase<Clone>(
-        CloneFieldsExtractorsFactory,
-        MiXCRParamsBundle::exportAlignments,
-    ) {
+    class Cmd : CmdBase() {
+        @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+        lateinit var inputFile: String
+
+        @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
+        var outputFile: Path? = null
+
+        override fun getInputFiles(): List<String> = listOf(inputFile)
+
+        override fun getOutputFiles(): List<String> = listOfNotNull(outputFile).map { it.toString() }
+
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val info = initialSet.info
-            val (_, params) = paramsResolver.parse(info.paramsBundle)
+            val (_, params) = paramsResolver.parse(info.paramsSpec)
             InfoWriter.create(
                 outputFile,
-                fieldExtractorsFactory.createExtractors(params.fields, info, OutputMode.ScriptingFriendly)
+                CloneFieldsExtractorsFactory.createExtractors(params.fields, info, OutputMode.ScriptingFriendly)
             ).use { writer ->
-                val set = CloneSet.transform(initialSet, mkFilter(params))
+                val set = CloneSet.transform(initialSet, params.mkFilter())
                 val tagsInfo = set.tagsInfo
                 val exportClones = ExportClones(
                     set, writer, Long.MAX_VALUE,
@@ -278,39 +192,15 @@ object CommandExport {
                     current = currentLocal
                 }
             }
-
         }
     }
 
-    data class AlignmentsAndMetaInfo(
-        val port: OutputPortCloseable<VDJCAlignments>,
-        val closeable: AutoCloseable,
-        val info: MiXCRMetaInfo
-    ) : AutoCloseable by closeable
-
     @JvmStatic
-    fun openAlignmentsPort(inputFile: String): AlignmentsAndMetaInfo =
-        when (IOUtil.extractFileType(Paths.get(inputFile))) {
-            VDJCA -> {
-                val vdjcaReader = VDJCAlignmentsReader(inputFile, VDJCLibraryRegistry.getDefault())
-                AlignmentsAndMetaInfo(vdjcaReader, vdjcaReader, vdjcaReader.info)
-            }
-
-            CLNA -> {
-                val clnaReader = ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4))
-                val source = clnaReader.readAllAlignments()
-                val port = object : OutputPortCloseable<VDJCAlignments> {
-                    override fun close() {
-                        source.close()
-                        clnaReader.close()
-                    }
-
-                    override fun take(): VDJCAlignments? = source.take()
-                }
-                AlignmentsAndMetaInfo(port, clnaReader, clnaReader.info)
-            }
-
-            CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $inputFile")
-            SHMT -> throw RuntimeException("Can't export alignments from *.shmt file: $inputFile")
-        }.exhaustive
+    fun mkSpec(): Model.CommandSpec {
+        val cmd = Cmd()
+        val spec = Model.CommandSpec.forAnnotatedObject(cmd)
+        cmd.spec = spec // inject spec manually
+        CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
+        return spec
+    }
 }

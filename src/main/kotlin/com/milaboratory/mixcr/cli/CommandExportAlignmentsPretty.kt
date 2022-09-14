@@ -36,7 +36,7 @@ import java.util.*
     separator = " ",
     description = ["Export verbose information about alignments."]
 )
-class CommandExportAlignmentsPretty : MiXCRCommand() {
+class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
     @CommandLine.Parameters(index = "0", description = ["alignments.vdjca"])
     lateinit var `in`: String
 
@@ -155,7 +155,7 @@ class CommandExportAlignmentsPretty : MiXCRCommand() {
         val filter = mkFilter()
         var total: Long = 0
         var filtered: Long = 0
-        CommandExport.openAlignmentsPort(`in`).use { readerAndHeader ->
+        CommandExportAlignments.openAlignmentsPort(`in`).use { readerAndHeader ->
             (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it), 32768)) } ?: System.out).use { output ->
                 val reader = readerAndHeader.port
                 val countBefore = limitBefore ?: Int.MAX_VALUE

@@ -86,7 +86,7 @@ import kotlin.io.path.nameWithoutExtension
     separator = " ",
     description = ["Find allele variants in clnx."]
 )
-class CommandFindAlleles : MiXCRCommand() {
+class CommandFindAlleles : AbstractMiXCRCommand() {
     @Parameters(
         arity = "1..*",
         paramLabel = "input_file.clns [input_file2.clns ...]",

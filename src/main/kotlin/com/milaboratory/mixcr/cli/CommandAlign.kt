@@ -37,8 +37,10 @@ import com.milaboratory.mitool.helpers.expandPathNPattern
 import com.milaboratory.mitool.pattern.search.*
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
 import com.milaboratory.mitool.report.ParseReport
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.*
@@ -83,7 +85,9 @@ object CommandAlign {
         @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
         @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
-    )
+    ) : MiXCRParams {
+        override val command get() = MiXCRCommand.align
+    }
 
     abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"])
@@ -180,14 +184,7 @@ object CommandAlign {
         )
         private var saveReads = false
 
-        @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        var mixins: AllMiXCRMixIns? = null
-
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::align) {
-            override fun POverridesBuilderOps<MiXCRParamsBundle>.bundleOverrides() {
-                mixins?.bundleOverride?.let { addOverride(it) }
-            }
-
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::species setIfNotNull species
 
@@ -241,6 +238,9 @@ object CommandAlign {
             required = true,
         )
         lateinit var presetName: String
+
+        @ArgGroup(validate = false, heading = "Analysis mix-ins")
+        var mixins: AllMiXCRMixIns? = null
 
         @Option(
             description = ["Don't embed preset into the output file"],
@@ -302,7 +302,9 @@ object CommandAlign {
         @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
 
-        private val bpPair by lazy { paramsResolver.parse(Presets.resolveParamsBundle(presetName)) }
+        private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins?.mixins ?: emptyList()) }
+
+        private val bpPair by lazy { paramsResolver.parse(paramsSpec) }
 
         private val bundle by lazy { bpPair.first }
 
@@ -550,7 +552,7 @@ object CommandAlign {
                     notAlignedWriter(pairedPayload).use { notAlignedWriter: SequenceWriter<SequenceRead>? ->
                         writer?.header(
                             MiXCRMetaInfo(
-                                bundle,
+                                paramsSpec,
                                 if (tagSearchPlan != null) TagsInfo(
                                     0,
                                     *tagSearchPlan.tagInfos.toTypedArray()

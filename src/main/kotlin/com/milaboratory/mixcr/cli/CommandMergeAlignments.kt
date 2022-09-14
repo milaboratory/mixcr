@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicLong
     separator = " ",
     description = ["Merge several *.vdjca files with alignments into a single alignments file."]
 )
-class CommandMergeAlignments : MiXCRCommand() {
+class CommandMergeAlignments : AbstractMiXCRCommand() {
     @CommandLine.Parameters(
         description = ["[input_file1.vdjca [input_file2.vdjca ....]] output_file.vdjca"],
         arity = "2..*"
