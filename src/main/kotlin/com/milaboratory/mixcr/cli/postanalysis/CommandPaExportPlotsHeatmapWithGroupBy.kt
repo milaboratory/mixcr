@@ -11,9 +11,12 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import picocli.CommandLine
+import picocli.CommandLine.Option
 
 abstract class CommandPaExportPlotsHeatmapWithGroupBy : CommandPaExportPlotsHeatmap() {
-    @CommandLine.Option(description = ["Group heatmaps by specific metadata properties."], names = ["--group-by"])
+    @Option(
+        description = ["Group heatmaps by specific metadata properties."],
+        names = ["--group-by"]
+    )
     var groupBy: List<String>? = null
 }

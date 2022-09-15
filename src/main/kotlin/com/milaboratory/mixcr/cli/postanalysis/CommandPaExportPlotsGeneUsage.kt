@@ -16,77 +16,123 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.postanalysis.plots.ColorKey
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.dataFrame
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.plot
+import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.plotBarPlot
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 import java.util.stream.Collectors
 
 abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGroupBy() {
     abstract fun group(): String
 
-    @CommandLine.Option(description = ["Don't add samples dendrogram."], names = ["--no-samples-dendro"])
+    @Option(
+        description = ["Don't add samples dendrogram on heatmap."],
+        names = ["--no-samples-dendro"]
+    )
     var noSamplesDendro = false
 
-    @CommandLine.Option(description = ["Don't add genes dendrogram."], names = ["--no-genes-dendro"])
+    @Option(
+        description = ["Don't add genes dendrogram on heatmap."],
+        names = ["--no-genes-dendro"]
+    )
     var noGenesDendro = false
 
-    @CommandLine.Option(description = ["Add color key layer."], names = ["--color-key"])
+    @Option(
+        description = ["Add color key layer to heatmap."],
+        names = ["--color-key"]
+    )
     var colorKey: List<String> = mutableListOf()
+
+    @Option(
+        description = ["Export bar plot instead of heatmap."],
+        names = ["--bar-plot"]
+    )
+    var barPlot = false
+
+    @Option(
+        description = ["Facet barplot."],
+        names = ["--facet-by"]
+    )
+    var facetBy: String? = null
 
     override fun run(result: PaResultByGroup) {
         val ch = result.schema.getGroup<Clone>(group())
-        val df = dataFrame(result.result.forGroup(ch), metadataDf)
-            .filterByMetadata()
+        val df = dataFrame(result.result.forGroup(ch), metadataDf).filterByMetadata()
         if (df.rowsCount() == 0) return
-        val plot = plot(
-            df,
-            HeatmapParameters(
-                !noSamplesDendro,
-                !noGenesDendro,
-                colorKey.stream().map { it: String? ->
-                    ColorKey(
-                        it!!, Position.Bottom
-                    )
-                }.collect(Collectors.toList()),
-                groupBy,
-                hLabelsSize,
-                vLabelsSize,
-                false,
-                parsePallete(),
-                width,
-                height
+
+        val plot = if (barPlot)
+            plotBarPlot(df, facetBy)
+        else
+            plot(
+                df,
+                HeatmapParameters(
+                    !noSamplesDendro,
+                    !noGenesDendro,
+                    colorKey.stream().map {
+                        ColorKey(
+                            it!!, Position.Bottom
+                        )
+                    }.collect(Collectors.toList()),
+                    groupBy,
+                    hLabelsSize,
+                    vLabelsSize,
+                    false,
+                    parsePallete(),
+                    width,
+                    height
+                )
             )
-        )
         writePlots(result.group, plot)
     }
 
-    @CommandLine.Command(
+    @Command(
         name = "vUsage",
         sortOptions = false,
         separator = " ",
-        description = ["Export V gene usage heatmap"]
+        description = ["Export V gene usage"]
     )
-    class ExportVUsage : CommandPaExportPlotsGeneUsage() {
+    class VUsage : CommandPaExportPlotsGeneUsage() {
         override fun group(): String = PostanalysisParametersIndividual.VUsage
     }
 
-    @CommandLine.Command(
+    @Command(
         name = "jUsage",
         sortOptions = false,
         separator = " ",
-        description = ["Export J gene usage heatmap"]
+        description = ["Export J gene usage"]
     )
-    class ExportJUsage : CommandPaExportPlotsGeneUsage() {
+    class JUsage : CommandPaExportPlotsGeneUsage() {
         override fun group(): String = PostanalysisParametersIndividual.JUsage
     }
 
-    @CommandLine.Command(
+    @Command(
+        name = "vFamilyUsage",
+        sortOptions = false,
+        separator = " ",
+        description = ["Export V gene family usage"]
+    )
+    class VFamilyUsage : CommandPaExportPlotsGeneUsage() {
+        override fun group(): String = PostanalysisParametersIndividual.VFamilyUsage
+    }
+
+    @Command(
+        name = "jFamilyUsage",
+        sortOptions = false,
+        separator = " ",
+        description = ["Export J gene family usage"]
+    )
+    class JFamilyUsage : CommandPaExportPlotsGeneUsage() {
+        override fun group(): String = PostanalysisParametersIndividual.JFamilyUsage
+    }
+
+    @Command(
         name = "isotypeUsage",
         sortOptions = false,
         separator = " ",
         description = ["Export isotype usage heatmap"]
     )
-    class ExportIsotypeUsage : CommandPaExportPlotsGeneUsage() {
+    class IsotypeUsage : CommandPaExportPlotsGeneUsage() {
         override fun group(): String = PostanalysisParametersIndividual.IsotypeUsage
     }
 }
