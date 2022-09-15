@@ -34,8 +34,8 @@ class CommandDownsample : MiXCRCommand() {
     @CommandLine.Parameters(description = ["cloneset.{clns|clna}..."], arity = "1..*")
     lateinit var `in`: List<String>
 
-    @CommandLine.Option(description = ["Filter specific chains"], names = ["-c", "--chains"], required = true)
-    var chains = "ALL"
+    @CommandLine.Option(description = ["Specify chains"], names = ["-c", "--chains"], required = true)
+    var chains : String? = null
 
     @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
@@ -92,7 +92,7 @@ class CommandDownsample : MiXCRCommand() {
         val datasets = `in`.map { file -> ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault()) }
         val preprocessor = DownsamplingParameters
             .parse(downsampling, CommandPa.extractTagsInfo(inputFiles), false, onlyProductive)
-            .getPreprocessor(Chains.getByName(chains))
+            .getPreprocessor(Chains.parse(chains))
             .newInstance()
         val results = SetPreprocessor.processDatasets(preprocessor, datasets)
         ensureOutputPathExists()

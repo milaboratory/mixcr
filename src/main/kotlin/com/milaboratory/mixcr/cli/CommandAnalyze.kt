@@ -553,7 +553,7 @@ abstract class CommandAnalyze : MiXCRCommand() {
                     mkExport(fileWithClones, fNameForExportClones(chain), chain).run()
                 }
             } else {
-                for (chain in arrayOf("ALL", "TRA", "TRB", "TRG", "TRD", "IGH", "IGK", "IGL")) {
+                for (chain in arrayOf("TRA", "TRB", "TRG", "TRD", "IGH", "IGK", "IGL")) {
                     mkExport(fileWithClones, fNameForExportClones(chain), chain).run()
                 }
             }

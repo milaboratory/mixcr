@@ -13,24 +13,14 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.primitives.Filter
-import com.milaboratory.mixcr.basictypes.ClnAReader
-import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
-import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
-import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.FieldExtractor
-import com.milaboratory.mixcr.export.FieldExtractorsFactory
-import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.*
+import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.mixcr.util.and
+import com.milaboratory.primitivio.asFilter
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.limit
@@ -38,9 +28,7 @@ import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
-import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
-import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import java.nio.file.Paths
@@ -58,10 +46,12 @@ abstract class CommandExport<T : VDJCObject> private constructor(
     var out: String? = null
 
     @CommandLine.Option(
-        description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
-        names = ["-c", "--chains"]
+        description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated). " +
+                "Possible values (multiple values allowed): TRA, TRD, TRAD (for human), TRG, IGH, IGK, IGL"],
+        names = ["-c", "--chains"],
+        split = ","
     )
-    var chains = "ALL"
+    var chains: Set<String>? = null
 
     @CommandLine.Option(description = ["List available export fields"], names = ["-lf", "--list-fields"], hidden = true)
     fun setListFields(@Suppress("UNUSED_PARAMETER") b: Boolean) {
@@ -93,15 +83,12 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
     override fun getOutputFiles(): List<String> = if (out == null) emptyList() else listOf(out!!)
 
     open fun mkFilter(): Filter<T> {
-        val chains = Chains.parse(chains)
-        return Filter { vdjcObject: T ->
-            for (gt in GeneType.VJC_REFERENCE) {
-                val bestHit = vdjcObject.getBestHit(gt)
-                if (bestHit != null && chains.intersects(bestHit.gene.chains)) return@Filter true
-            }
-            false
-        }
+        if (chains == null)
+            return Filter { true }
+
+        return ChainsFilter.parseFilter<T>(chains).asFilter()
     }
+
 
     override fun run0() {
         assert(spec != null)

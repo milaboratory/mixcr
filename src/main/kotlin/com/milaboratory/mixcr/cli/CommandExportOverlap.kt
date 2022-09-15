@@ -18,11 +18,11 @@ import com.milaboratory.mixcr.export.FieldExtractor
 import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
+import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.util.OverlapBrowser
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
-import io.repseq.core.Chains.NamedChains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
@@ -44,8 +44,8 @@ class CommandExportOverlap : MiXCRCommand() {
     @CommandLine.Parameters(description = ["cloneset.{clns|clna}... output.tsv"])
     var inOut: List<String> = mutableListOf()
 
-    @CommandLine.Option(description = ["Chains to export"], names = ["--chains"])
-    var chains: List<String>? = null
+    @CommandLine.Option(description = ["Chains to export"], names = ["--chains"], split = ",")
+    var chains: Set<String>? = null
 
     @CommandLine.Option(
         description = ["Filter out-of-frame sequences and clonotypes with stop-codons"],
@@ -60,20 +60,19 @@ class CommandExportOverlap : MiXCRCommand() {
 
     override fun getOutputFiles(): List<String> = listOf(inOut.last())
 
-    private fun getOut(chains: NamedChains): Path {
+    private fun getOut(chains: Chains): Path {
         val out = Paths.get(inOut.last()).toAbsolutePath()
-        if (chains == Chains.ALL_NAMED) return out
         var fName = out.fileName.toString()
         fName = when {
-            fName.endsWith(".tsv") -> "${fName.replace("tsv", "")}${chains.name}.tsv"
-            else -> "${fName}_${chains.name}"
+            fName.endsWith(".tsv") -> "${fName.replace("tsv", "")}${chains}.tsv"
+            else -> "${fName}_${chains}"
         }
         return out.parent.resolve(fName)
     }
 
     override fun run0() {
         val samples = inputFiles
-        val chains = chains?.map { name -> Chains.getNamedChains(name) } ?: listOf(Chains.ALL_NAMED)
+        val chains = this.chains?.let { ChainsFilter.parseChainsList(this.chains) }
         val criteria = OverlapUtil.parseCriteria(overlapCriteria)
         val extractors = mutableListOf<OverlapFieldExtractor>()
         extractors += ExtractorUnique(
@@ -116,19 +115,23 @@ class CommandExportOverlap : MiXCRCommand() {
                     }
             }
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
-        val writers = chains.associateWith { chain ->
+
+        val overlapBrowser = OverlapBrowser(onlyProductive)
+        SmartProgressReporter.startProgressReport(overlapBrowser)
+
+        val countsByChain = overlapBrowser.computeCountsByChain(samples)
+        val chainsToWrite = chains?.intersect(countsByChain.keys) ?: countsByChain.keys
+        val writers = chainsToWrite.associateWith { chain ->
             val writer = InfoWriter(getOut(chain), samples, extractors)
             writer.writeHeader()
             writer
         }
-        val overlapBrowser = OverlapBrowser(chains, onlyProductive)
-        SmartProgressReporter.startProgressReport(overlapBrowser)
-        val counts = overlapBrowser.computeCounts(samples)
+
         val overlap = OverlapUtil.overlap(samples, { true }, criteria.ordering())
         overlap.mkElementsPort().use { port ->
-            overlapBrowser.overlap(counts, port).forEach { row ->
-                for ((namedChains, cloneOverlapGroup) in row) {
-                    writers[namedChains]!!.writeRow(cloneOverlapGroup)
+            overlapBrowser.overlap(countsByChain, port).forEach { row ->
+                for ((chains, cloneOverlapGroup) in row) {
+                    writers[chains]!!.writeRow(cloneOverlapGroup)
                 }
             }
         }
