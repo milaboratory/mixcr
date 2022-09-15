@@ -1,6 +1,5 @@
 "assembleContigs_universal":
   assembleContigs:
-    cutByFeature: null
     ignoreTags: false
     parameters:
       branchingMinimalQualityShare: 0.1

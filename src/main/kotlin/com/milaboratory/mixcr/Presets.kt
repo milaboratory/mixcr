@@ -30,6 +30,7 @@ data class MiXCRParamsSpec(
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
 data class MiXCRParamsBundle(
     @JsonProperty("flags") val flags: Set<String>,
+    @JsonProperty("pipeline") val pipeline: MiXCRPipeline?,
     @JsonProperty("align") val align: CommandAlign.Params?,
     @JsonProperty("refineTagsAndSort") val refineTagsAndSort: CommandRefineTagsAndSort.Params?,
     @JsonProperty("assemblePartial") val assemblePartial: CommandAssemblePartial.Params?,
@@ -73,12 +74,13 @@ object Flags {
 
 object Presets {
     private val files = listOf(
+        "pipeline.yaml",
         "align.yaml",
         "assemble.yaml",
         "assembleContigs.yaml",
         "assemblePartial.yaml",
         "extend.yaml",
-        "pipelines.yaml",
+        "bundles.yaml",
         "refineTagsAndSort.yaml",
         "export.yaml",
     )
@@ -112,6 +114,7 @@ object Presets {
 
     val presets get() = presetCollection.keys
 
+    private val pipeline = getResolver(MiXCRParamsBundleRaw::pipeline)
     private val align = getResolver(MiXCRParamsBundleRaw::align)
     private val refineTagsAndSort = getResolver(MiXCRParamsBundleRaw::refineTagsAndSort)
     private val assemblePartial = getResolver(MiXCRParamsBundleRaw::assemblePartial)
@@ -125,6 +128,7 @@ object Presets {
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
         @JsonProperty("mixins") val mixins: List<MiXCRMixin>?,
         @JsonProperty("flags") val flags: Set<String>?,
+        @JsonProperty("pipeline") val pipeline: RawParams<MiXCRPipeline>?,
         @JsonProperty("align") val align: RawParams<CommandAlign.Params>? = null,
         @JsonProperty("refineTagsAndSort") val refineTagsAndSort: RawParams<CommandRefineTagsAndSort.Params>? = null,
         @JsonProperty("assemblePartial") val assemblePartial: RawParams<CommandAssemblePartial.Params>? = null,
@@ -139,6 +143,7 @@ object Presets {
         val raw = presetCollection[presetName]
         val bundle = MiXCRParamsBundle(
             flags = raw!!.flags ?: emptySet(),
+            pipeline = pipeline(presetName),
             align = align(presetName),
             refineTagsAndSort = refineTagsAndSort(presetName),
             assemblePartial = assemblePartial(presetName),

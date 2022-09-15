@@ -3,6 +3,8 @@
 #
 
 "_universal":
+  pipeline:
+    inheritFrom: pipeline_base
   exportAlignments:
     inheritFrom: export_base
   assemblePartial:
