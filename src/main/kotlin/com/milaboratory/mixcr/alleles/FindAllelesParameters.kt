@@ -30,38 +30,7 @@ data class FindAllelesParameters(
      * Use only productive clonotypes (no OOF, no stops).
      */
     val productiveOnly: Boolean,
-    /**
-     * Window size that will be used for build regression of mutations frequency vs count of mutations
-     */
-    val windowSizeForRegression: Int,
-    /**
-     * Maximum absent points in a window to build regression
-     */
-    val allowedSkippedPointsInRegression: Int,
-    /**
-     * Alleles filtered that min and max diversity of result are bound by this ratio
-     */
-    val minDiversityRatioBetweenAlleles: Double,
-    /**
-     * Min diversity of mutation for it may be considered as a candidate for allele mutation
-     */
-    val minDiversityForMutation: Int,
-    /**
-     * Filter allele candidates with diversity less than this parameter
-     */
-    val minDiversityForAllele: Int,
-    /**
-     * Mutations will be considered as a candidate for allele mutation if p-value of t-test of mutation frequency regression will be more than this parameter
-     */
-    val minPValueForRegression: Double,
-    /**
-     * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter
-     */
-    val minYIntersect: Double,
-    /**
-     * After an allele is found, it will be enriched with mutations that exists in this portion of clones that aligned on the allele.
-     */
-    val portionOfClonesToSearchCommonMutationsInAnAllele: Double,
+    val searchAlleleParameter: TigGERAlleleSearchParameters,
     val searchMutationsInCDR3: SearchMutationsInCDR3Params
 ) {
     @JsonAutoDetect(
@@ -82,6 +51,54 @@ data class FindAllelesParameters(
          * Letter must be represented by not less than `minDiversity` diversity of complimentary gene
          */
         val minDiversity: Int,
+    )
+
+    @JsonAutoDetect(
+        fieldVisibility = ANY,
+        isGetterVisibility = NONE,
+        getterVisibility = NONE
+    )
+    data class TigGERAlleleSearchParameters(
+        /**
+         * Window size that will be used for build regression of mutations frequency vs count of mutations
+         */
+        val windowSizeForRegression: Int,
+        /**
+         * Maximum absent points in a window to build regression
+         */
+        val allowedSkippedPointsInRegression: Int,
+        /**
+         * Alleles filtered that min and max diversity of result are bound by this ratio
+         */
+        val minDiversityRatioBetweenAlleles: Double,
+        /**
+         * Min diversity of mutation for it may be considered as a candidate for allele mutation
+         */
+        val minDiversityForMutation: Int,
+        /**
+         * Filter allele candidates with diversity less than this parameter
+         */
+        val minDiversityForAllele: Int,
+        /**
+         * Mutations will be considered as a candidate for allele mutation if p-value of t-test of mutation frequency regression will be more than this parameter
+         */
+        val minPValueForRegression: Double,
+        /**
+         * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter and slope exists
+         */
+        val minYIntersectForHeterozygous: Double,
+        /**
+         * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter and no slope
+         */
+        val minYIntersectForHomozygous: Double,
+        /**
+         * Max slope for test that mutation is a part of homozygous allele
+         */
+        val maxRegressionSlopeForHomozygous: Double,
+        /**
+         * After an allele is found, it will be enriched with mutations that exists in this portion of clones that aligned on the allele.
+         */
+        val portionOfClonesToSearchCommonMutationsInAnAllele: Double
     )
 
     companion object {

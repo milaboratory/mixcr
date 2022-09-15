@@ -13,38 +13,21 @@
 
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPort
-import com.milaboratory.core.Range
-import com.milaboratory.core.alignment.Aligner
-import com.milaboratory.core.alignment.Alignment
-import com.milaboratory.core.alignment.AlignmentScoring
-import com.milaboratory.core.alignment.AlignmentUtils
-import com.milaboratory.core.mutations.Mutation
-import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableRanges
+import com.milaboratory.mixcr.alleles.CloneRebuild
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
-import com.milaboratory.mixcr.assembler.CloneFactory
+import com.milaboratory.mixcr.alleles.OverallAllelesStatistics
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.GeneAndScore
-import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
-import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSV
-import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.mixcr.util.geneName
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.port
-import com.milaboratory.primitivio.toList
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
@@ -52,15 +35,11 @@ import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import io.repseq.core.GeneType
-import io.repseq.core.GeneType.Constant
-import io.repseq.core.GeneType.Diversity
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VDJC_REFERENCE
 import io.repseq.core.GeneType.VJ_REFERENCE
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
-import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
@@ -72,8 +51,6 @@ import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
@@ -247,7 +224,7 @@ class CommandFindAlleles : MiXCRCommand() {
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
         }
-        val allelesStatistics: MutableMap<String, Int> = ConcurrentHashMap()
+        val overallAllelesStatistics = OverallAllelesStatistics()
         cloneReaders.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
                 resultLibrary,
@@ -263,7 +240,7 @@ class CommandFindAlleles : MiXCRCommand() {
                     progressAndStage,
                     "Recalculating scores ${inputFiles[i]}"
                 ) { clones ->
-                    cloneRebuild.recalculateScores(clones, allelesStatistics)
+                    cloneRebuild.recalculateScores(clones, overallAllelesStatistics)
                 }
                 if (outputTemplate != null) {
                     withRecalculatedScores.port.withProgress(
@@ -281,13 +258,13 @@ class CommandFindAlleles : MiXCRCommand() {
         progressAndStage.finish()
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             allelesMutationsOutput.toAbsolutePath().parent.createDirectories()
-            printAllelesMutationsOutput(resultLibrary, allelesStatistics, allelesMutationsOutput.toFile())
+            printAllelesMutationsOutput(resultLibrary, overallAllelesStatistics, allelesMutationsOutput.toFile())
         }
     }
 
     private fun printAllelesMutationsOutput(
         resultLibrary: VDJCLibrary,
-        allelesStatistics: Map<String, Int>,
+        allelesStatistics: OverallAllelesStatistics,
         allelesMutationsOutput: File
     ) {
         PrintStream(allelesMutationsOutput).use { output ->
@@ -304,11 +281,17 @@ class CommandFindAlleles : MiXCRCommand() {
                 "mutations" to { gene ->
                     gene.data.baseSequence.mutations?.encode() ?: ""
                 },
+                "naivesCount" to { gene ->
+                    allelesStatistics.stats(gene.id).naives.get()
+                },
+                "diversity" to { gene ->
+                    allelesStatistics.stats(gene.id).diversity.size
+                },
                 "count" to { gene ->
-                    allelesStatistics[gene.name]
+                    allelesStatistics.stats(gene.id).count.get()
                 },
                 "totalCount" to { gene ->
-                    allelesStatistics[gene.geneName]
+                    allelesStatistics.baseGeneCount(gene.id)
                 }
             )
             val genes = resultLibrary.genes
@@ -401,154 +384,4 @@ class CommandFindAlleles : MiXCRCommand() {
     companion object {
         const val FIND_ALLELES_COMMAND_NAME = "findAlleles"
     }
-}
-
-private class CloneRebuild(
-    private val resultLibrary: VDJCLibrary,
-    private val allelesMapping: Map<String, List<VDJCGeneId>>,
-    assemblingFeatures: GeneFeatures,
-    private val threads: Int,
-    assemblerParameters: CloneAssemblerParameters,
-    alignerParameters: VDJCAlignerParameters
-) {
-    private val cloneFactory = CloneFactory(
-        assemblerParameters.cloneFactoryParameters,
-        assemblingFeatures.features,
-        resultLibrary.genes,
-        alignerParameters.featuresToAlignMap
-    )
-
-    /**
-     * Realign clones with new scores
-     */
-    fun rebuildClones(withRecalculatedScores: OutputPort<Pair<Clone, EnumMap<GeneType, List<GeneAndScore>>>>): List<Clone> =
-        withRecalculatedScores
-            .mapInParallel(threads) { (clone, recalculateScores) ->
-                cloneFactory.create(
-                    clone.id,
-                    clone.count,
-                    recalculateScores,
-                    clone.tagCount,
-                    clone.targets,
-                    clone.group
-                )
-            }
-            .asSequence()
-            .sortedBy { it.id }
-            .toList()
-
-    /**
-     * For every clone will be added hits aligned to found alleles.
-     * If there is no zero allele, initial hit will be deleted from a clone.
-     * Only top hits will be saved (VJCClonalAlignerParameters#relativeMinScore param)
-     */
-    fun recalculateScores(
-        input: OutputPort<Clone>,
-        allelesStatistics: MutableMap<String, Int>
-    ): List<Pair<Clone, EnumMap<GeneType, List<GeneAndScore>>>> {
-        val errorsCount: MutableMap<VDJCGeneId, Int> = ConcurrentHashMap()
-        val withRecalculatedScores = input
-            .mapInParallel(threads) { clone ->
-                val recalculateScores = calculateScoresWithAddedAlleles(clone)
-                for (geneType in VJ_REFERENCE) {
-                    val bestHit = recalculateScores[geneType]!!.maxByOrNull { it.score }!!
-                    allelesStatistics.increment(bestHit.geneId.name)
-                    allelesStatistics.increment(bestHit.geneId.geneName)
-                    if (bestHit.score <= 0.0) {
-                        errorsCount.increment(bestHit.geneId)
-                    }
-                }
-                clone to recalculateScores
-            }
-            .toList()
-        errorsCount.forEach { (geneId, count) ->
-            println("WARN: for $geneId found $count clones that get negative score after realigning")
-        }
-        return withRecalculatedScores
-    }
-
-    private fun calculateScoresWithAddedAlleles(clone: Clone): EnumMap<GeneType, List<GeneAndScore>> {
-        val originalGeneScores = EnumMap<GeneType, List<GeneAndScore>>(GeneType::class.java)
-        //copy D and C
-        for (gt in arrayOf(Diversity, Constant)) {
-            originalGeneScores[gt] = clone.getHits(gt).map { hit ->
-                val mappedGeneId = VDJCGeneId(resultLibrary.libraryId, hit.gene.name)
-                GeneAndScore(mappedGeneId, hit.score)
-            }
-        }
-        //add hits with alleles and add delta score
-        for (gt in VJ_REFERENCE) {
-            val allGeneAndScores = clone.getHits(gt).flatMap { hit ->
-                allelesMapping[hit.gene.name]!!.map { foundAlleleId ->
-                    if (foundAlleleId.name != hit.gene.name) {
-                        val scoreDelta = scoreDelta(
-                            clone,
-                            resultLibrary[foundAlleleId.name],
-                            cloneFactory.parameters.getVJCParameters(gt).scoring,
-                            hit.alignments
-                        )
-                        GeneAndScore(foundAlleleId, hit.score + scoreDelta)
-                    } else {
-                        GeneAndScore(foundAlleleId, hit.score)
-                    }
-                }
-            }
-            val maxScore = allGeneAndScores.maxOf { it.score }
-            if (maxScore <= 0) {
-                //in case of clone that is too different with found allele
-                originalGeneScores[gt] = allGeneAndScores
-            } else {
-                val scoreThreshold = maxScore * cloneFactory.parameters.getVJCParameters(gt).relativeMinScore
-                originalGeneScores[gt] = allGeneAndScores.filter { it.score >= scoreThreshold }
-            }
-        }
-        return originalGeneScores
-    }
-
-    private fun scoreDelta(
-        clone: Clone,
-        foundAllele: VDJCGene,
-        scoring: AlignmentScoring<NucleotideSequence>,
-        alignments: Array<Alignment<NucleotideSequence>?>
-    ): Float {
-        //recalculate score for every alignment based on found allele
-        val alleleMutations = foundAllele.data.baseSequence.mutations ?: return 0.0f
-        val alleleHasIndels = alleleMutations.asSequence().any { Mutation.isInDel(it) }
-        var scoreDelta = 0.0f
-        alignments
-            .filterNotNull()
-            .forEachIndexed { index, alignment ->
-                val recalculatedScore = when {
-                    //in case of indels invert().combineWith(alleleMutations).invert() may work incorrect
-                    alleleHasIndels -> {
-                        val seq1RangeAfterAlleleMutations = Range(
-                            positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.sequence1Range.lower)),
-                            positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.sequence1Range.upper))
-                        )
-                        Aligner.alignGlobal(
-                            scoring,
-                            alleleMutations.mutate(alignment.sequence1),
-                            clone.getTarget(index).sequence,
-                            seq1RangeAfterAlleleMutations.lower,
-                            seq1RangeAfterAlleleMutations.length(),
-                            alignment.sequence2Range.lower,
-                            alignment.sequence2Range.length(),
-                        ).score
-                    }
-                    else -> AlignmentUtils.calculateScore(
-                        alleleMutations.mutate(alignment.sequence1),
-                        alignment.sequence1Range,
-                        alignment.absoluteMutations.invert().combineWith(alleleMutations).invert()
-                            .extractAbsoluteMutationsForRange(alignment.sequence1Range),
-                        scoring
-                    ).toFloat()
-                }
-                scoreDelta += recalculatedScore - alignment.score
-            }
-        return scoreDelta
-    }
-}
-
-private fun <T> MutableMap<T, Int>.increment(key: T) {
-    merge(key, 1) { old, _ -> old + 1 }
 }

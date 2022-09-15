@@ -23,13 +23,14 @@ import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import org.apache.commons.math3.stat.inference.TTest
 import org.apache.commons.math3.stat.regression.SimpleRegression
+import kotlin.math.absoluteValue
 import kotlin.math.ceil
 
 
 class TIgGERAllelesSearcher(
     private val scoring: AlignmentScoring<NucleotideSequence>,
     private val sequence1: NucleotideSequence,
-    private val parameters: FindAllelesParameters
+    private val parameters: FindAllelesParameters.TigGERAlleleSearchParameters
 ) : AllelesSearcher {
     override fun search(clones: List<CloneDescription>): List<AllelesSearcher.Result> {
         val mutations = clones.flatMap { it.mutationGroups }.distinct()
@@ -94,9 +95,12 @@ class TIgGERAllelesSearcher(
     ): Collection<Mutations<NucleotideSequence>> = when {
         foundAlleles.isEmpty() -> listOf(EMPTY_NUCLEOTIDE_MUTATIONS)
         EMPTY_NUCLEOTIDE_MUTATIONS in foundAlleles -> foundAlleles
+        clones.filter { it.mutations == EMPTY_NUCLEOTIDE_MUTATIONS }
+            .diversity() < parameters.minDiversityForMutation -> foundAlleles
         //check if there are enough clones that more close to zero allele
         else -> {
-            val alleleDiversities = alignClonesOnAlleles(clones, foundAlleles + EMPTY_NUCLEOTIDE_MUTATIONS)
+            val clonesByAlleles = alignClonesOnAlleles(clones, foundAlleles + EMPTY_NUCLEOTIDE_MUTATIONS)
+            val alleleDiversities = clonesByAlleles
                 .mapValues { it.value.diversity() }
             val diversityOfZeroAllele = alleleDiversities[EMPTY_NUCLEOTIDE_MUTATIONS]!!
             val minDiversityOfNotZeroAllele =
@@ -209,7 +213,11 @@ class TIgGERAllelesSearcher(
 
         val pValue = TTest().tTest(estimate, y)
 
-        return pValue >= parameters.minPValueForRegression && a >= parameters.minYIntersect
+        val isHomozygousAlleleMutation =
+            regression.intercept > parameters.minYIntersectForHomozygous && b.absoluteValue < parameters.maxRegressionSlopeForHomozygous
+        val isHeterozygousAlleleMutation =
+            pValue >= parameters.minPValueForRegression && regression.intercept >= parameters.minYIntersectForHeterozygous
+        return isHomozygousAlleleMutation || isHeterozygousAlleleMutation
     }
 
     private fun chooseAndGroupMutationsByAlleles(

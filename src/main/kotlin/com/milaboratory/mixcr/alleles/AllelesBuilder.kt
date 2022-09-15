@@ -134,7 +134,7 @@ class AllelesBuilder(
         val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
             scoring[geneType],
             sequence1,
-            parameters
+            parameters.searchAlleleParameter
         )
 
         val foundAlleles = allelesSearcher.search(cloneDescriptors)
