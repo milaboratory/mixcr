@@ -240,7 +240,7 @@ object CommandAlign {
         lateinit var presetName: String
 
         @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        var mixins: AllMiXCRMixIns? = null
+        var mixins: AllMiXCRMixins? = null
 
         @Option(
             description = ["Don't embed preset into the output file"],

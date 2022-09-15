@@ -11,7 +11,11 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class ExportFieldDescription(
-    val field: String,
-    val args: List<String>,
+    @JsonProperty("field") val field: String,
+    @JsonProperty("args") @JsonInclude(NON_EMPTY) val args: List<String> = emptyList(),
 )

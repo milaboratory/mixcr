@@ -54,7 +54,7 @@ abstract class MiXCRParamsResolver<P : Any>(paramsProperty: KProperty1<MiXCRPara
 
 abstract class MiXCRPresetAwareCommand<P : Any> : AbstractMiXCRCommand(), PresetAware<MiXCRParamsBundle, P>
 
-abstract class MiXCRMixInCollector : MiXCRMixInSet {
+abstract class MiXCRMixinCollector : MiXCRMixinSet {
     private val _mixins = mutableListOf<MiXCRMixin>()
 
     override fun mixIn(mixin: MiXCRMixin) {

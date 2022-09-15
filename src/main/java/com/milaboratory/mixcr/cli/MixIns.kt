@@ -18,11 +18,11 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.ReferencePoint
 import picocli.CommandLine.Option
 
-interface MiXCRMixInSet {
+interface MiXCRMixinSet {
     fun mixIn(mixin: MiXCRMixin)
 }
 
-interface AlignTagMiXCRMixIns : MiXCRMixInSet {
+interface TagMiXCRMixins : MiXCRMixinSet {
     //
     // Base tag-related settings
     //
@@ -32,7 +32,7 @@ interface AlignTagMiXCRMixIns : MiXCRMixInSet {
         mixIn(SetTagPattern(pattern))
 }
 
-interface AlignMiXCRMixIns : MiXCRMixInSet, AlignTagMiXCRMixIns {
+interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
     //
     // Base settings
     //
@@ -47,11 +47,11 @@ interface AlignMiXCRMixIns : MiXCRMixInSet, AlignTagMiXCRMixIns {
 
     @Option(names = ["+dna"], arity = "0")
     fun dna(f: Boolean) =
-        mixIn(MixinDNA)
+        mixIn(MaterialTypeDNA)
 
     @Option(names = ["+rna"], arity = "0")
     fun rna(f: Boolean) =
-        mixIn(MixinRNA)
+        mixIn(MaterialTypeRNA)
 
     //
     // Alignment boundaries
@@ -109,10 +109,10 @@ interface AlignMiXCRMixIns : MiXCRMixInSet, AlignTagMiXCRMixIns {
         )
 }
 
-interface AssembleMiXCRMixIns : MiXCRMixInSet {
+interface AssembleMiXCRMixIns : MiXCRMixinSet {
     @Option(names = ["+assembleClonotypesBy"])
     fun assembleClonotypesBy(gf: String) =
         mixIn(SetClonotypeAssemblingFeatures(GeneFeatures.parse(gf)))
 }
 
-class AllMiXCRMixIns : MiXCRMixInCollector(), AlignMiXCRMixIns, AssembleMiXCRMixIns
+class AllMiXCRMixins : MiXCRMixinCollector(), AlignMiXCRMixins, AssembleMiXCRMixIns

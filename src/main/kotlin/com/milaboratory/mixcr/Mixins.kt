@@ -13,6 +13,7 @@ package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.milaboratory.cli.*
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.GeneFeatures
@@ -28,7 +29,7 @@ import io.repseq.core.ReferencePoint
 sealed interface MiXCRMixin : Mixin<MiXCRParamsBundle>
 
 @POverridesBuilderDsl
-interface MixInBuilderOps : POverridesBuilderOps<MiXCRParamsBundle> {
+interface MixinBuilderOps : POverridesBuilderOps<MiXCRParamsBundle> {
     fun dropFlag(flagName: String) = MiXCRParamsBundle::flags.updateBy { it - flagName }
 }
 
@@ -36,30 +37,30 @@ interface MixInBuilderOps : POverridesBuilderOps<MiXCRParamsBundle> {
 // Generic helper methods
 //
 
-private fun MixInBuilderOps.modifyAlignmentParams(action: VDJCAlignerParameters.() -> Unit) =
+private fun MixinBuilderOps.modifyAlignmentParams(action: VDJCAlignerParameters.() -> Unit) =
     MiXCRParamsBundle::align.update {
         CommandAlign.Params::parameters.applyAfterClone(VDJCAlignerParameters::clone) {
             action()
         }
     }
 
-private fun MixInBuilderOps.modifyGeneAlignmentParams(gt: GeneType, action: KGeneAlignmentParameters.() -> Unit) =
+private fun MixinBuilderOps.modifyGeneAlignmentParams(gt: GeneType, action: KGeneAlignmentParameters.() -> Unit) =
     modifyAlignmentParams {
         val p = getVJCGeneAlignerParameters(gt)
         p.action()
     }
 
-sealed class MiXCRMixInBase(
+sealed class MiXCRMixinBase(
     @JsonIgnore override val priority: Int,
     @JsonIgnore private val flags: List<String>
 ) : MiXCRMixin {
     constructor(priority: Int, vararg flags: String) : this(priority, flags.asList())
 
-    abstract fun MixInBuilderOps.action()
+    abstract fun MixinBuilderOps.action()
 
     override fun apply(target: MiXCRParamsBundle): MiXCRParamsBundle {
         val overrides = mutableListOf<POverride<MiXCRParamsBundle>>()
-        val builderTarget = object : POverridesBuilderOpsAbstract<MiXCRParamsBundle>(), MixInBuilderOps {
+        val builderTarget = object : POverridesBuilderOpsAbstract<MiXCRParamsBundle>(), MixinBuilderOps {
             override fun addOverride(override: POverride<MiXCRParamsBundle>) {
                 overrides += override
             }
@@ -72,20 +73,26 @@ sealed class MiXCRMixInBase(
     }
 }
 
+// ==========================
+//           Mixins
+// ==========================
+
 //
 // Generic
 //
 
-data class SetSpecies(val species: String) : MiXCRMixInBase(50) {
-    override fun MixInBuilderOps.action() {
+@JsonTypeName("SetSpecies")
+data class SetSpecies(val species: String) : MiXCRMixinBase(50) {
+    override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::align.update {
             CommandAlign.Params::species setTo species
         }
     }
 }
 
-data class SetClonotypeAssemblingFeatures(val features: GeneFeatures) : MiXCRMixInBase(50) {
-    override fun MixInBuilderOps.action() {
+@JsonTypeName("SetClonotypeAssemblingFeatures")
+data class SetClonotypeAssemblingFeatures(val features: GeneFeatures) : MiXCRMixinBase(50) {
+    override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::assemble.update {
             CommandAssemble.Params::cloneAssemblerParameters.applyAfterClone(CloneAssemblerParameters::clone) {
                 assemblingFeatures = features.features
@@ -98,8 +105,9 @@ data class SetClonotypeAssemblingFeatures(val features: GeneFeatures) : MiXCRMix
 // Material Type
 //
 
-object MixinDNA : MiXCRMixInBase(20, Flags.MaterialType) {
-    override fun MixInBuilderOps.action() =
+@JsonTypeName("MaterialTypeDNA")
+object MaterialTypeDNA : MiXCRMixinBase(20, Flags.MaterialType) {
+    override fun MixinBuilderOps.action() =
         modifyAlignmentParams {
             // Aligning V gene with intron sequence
             vAlignerParameters.geneFeatureToAlign = GeneFeature.VGeneWithP
@@ -114,8 +122,9 @@ object MixinDNA : MiXCRMixInBase(20, Flags.MaterialType) {
         }
 }
 
-object MixinRNA : MiXCRMixInBase(20, Flags.MaterialType) {
-    override fun MixInBuilderOps.action() =
+@JsonTypeName("MaterialTypeRNA")
+object MaterialTypeRNA : MiXCRMixinBase(20, Flags.MaterialType) {
+    override fun MixinBuilderOps.action() =
         modifyGeneAlignmentParams(GeneType.Variable) {
             // V gene without intron sequence, including 5'UTR sequence
             geneFeatureToAlign = GeneFeature.VTranscriptWithP
@@ -126,23 +135,25 @@ object MixinRNA : MiXCRMixInBase(20, Flags.MaterialType) {
 // Left Boundary
 //
 
+@JsonTypeName("LeftAlignmentBoundaryNoPoint")
 data class LeftAlignmentBoundaryNoPoint(val floating: Boolean) :
-    MiXCRMixInBase(10, Flags.LeftAlignmentMode) {
-    override fun MixInBuilderOps.action() =
+    MiXCRMixinBase(10, Flags.LeftAlignmentMode) {
+    override fun MixinBuilderOps.action() =
         modifyGeneAlignmentParams(GeneType.Variable) {
             parameters.isFloatingLeftBound = floating
         }
 }
 
+@JsonTypeName("LeftAlignmentBoundaryWithPoint")
 data class LeftAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: ReferencePoint) :
-    MiXCRMixInBase(10, Flags.LeftAlignmentMode) {
+    MiXCRMixinBase(10, Flags.LeftAlignmentMode) {
     init {
         // Checking parameters
         if (refPoint.geneType != GeneType.Variable)
             throw RuntimeException("$refPoint is not inside the V gene")
     }
 
-    override fun MixInBuilderOps.action() =
+    override fun MixinBuilderOps.action() =
         modifyGeneAlignmentParams(GeneType.Variable) {
             if (!geneFeatureToAlign.contains(refPoint))
                 throw RuntimeException("Can't apply mixin because $geneFeatureToAlign does not contain $refPoint")
@@ -155,9 +166,10 @@ data class LeftAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: R
 // Right Boundary
 //
 
+@JsonTypeName("RightAlignmentBoundaryNoPoint")
 data class RightAlignmentBoundaryNoPoint(val floating: Boolean, val geneType: GeneType?) :
-    MiXCRMixInBase(10, Flags.RightAlignmentMode) {
-    override fun MixInBuilderOps.action() =
+    MiXCRMixinBase(10, Flags.RightAlignmentMode) {
+    override fun MixinBuilderOps.action() =
         when (geneType) {
             null -> {
                 if (floating)
@@ -195,9 +207,10 @@ data class RightAlignmentBoundaryNoPoint(val floating: Boolean, val geneType: Ge
         }
 }
 
+@JsonTypeName("RightAlignmentBoundaryWithPoint")
 data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: ReferencePoint) :
-    MiXCRMixInBase(10, Flags.RightAlignmentMode) {
-    override fun MixInBuilderOps.action() =
+    MiXCRMixinBase(10, Flags.RightAlignmentMode) {
+    override fun MixinBuilderOps.action() =
         when (refPoint.geneType) {
             GeneType.Joining ->
                 modifyAlignmentParams {
@@ -251,8 +264,9 @@ data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: 
 // Tags
 //
 
-data class SetTagPattern(val tagPattern: String) : MiXCRMixInBase(50, Flags.TagPattern) {
-    override fun MixInBuilderOps.action() {
+@JsonTypeName("SetTagPattern")
+data class SetTagPattern(val tagPattern: String) : MiXCRMixinBase(50, Flags.TagPattern) {
+    override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::align.update {
             CommandAlign.Params::tagPattern setTo tagPattern
         }

@@ -43,7 +43,7 @@ object CommandExportPreset {
         override fun getOutputFiles() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
 
         @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        var mixins: AllMiXCRMixIns? = null
+        var mixins: AllMiXCRMixins? = null
 
         override fun run0() {
             val (bundle, _) = paramsResolver.parse(
