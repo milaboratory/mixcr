@@ -57,6 +57,7 @@ import io.repseq.core.VDJCGeneId
 import java.io.PrintStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Supplier
+import kotlin.math.max
 import kotlin.math.min
 
 private val groupingCriteria: GroupingCriteria<CloneWrapper> = object : GroupingCriteria<CloneWrapper> {
@@ -143,8 +144,8 @@ internal class SHMTreeBuilderBySteps(
                 tempDest.addSuffix("tree.builder.grouping.by.the.same.VJ.CDR3Length"),
                 stateBuilder,
                 blockSize = 100,
-                concurrencyToRead = threads / 2,
-                concurrencyToWrite = threads / 2
+                concurrencyToRead = max(1, threads / 2),
+                concurrencyToWrite = max(1, threads / 2)
             ) { clustersCache ->
                 val cloneWrappersCount = clustersCache().count().toLong()
 
@@ -614,7 +615,7 @@ internal class SHMTreeBuilderBySteps(
     ): StepResult = StepResult(
         decisions,
         trees.map { it.snapshot() },
-        trees.flatMap { tree: TreeWithMetaBuilder ->
+        trees.flatMap { tree ->
             tree.allNodes()
                 .asSequence()
                 .filter { it.node.content is Reconstructed }
@@ -702,7 +703,7 @@ internal class SHMTreeBuilderBySteps(
     }
 
     @Serializable(by = Cluster.SerializerImpl::class)
-    class Cluster(
+    private class Cluster(
         val clones: List<CloneWrapper>
     ) {
         class SerializerImpl : BasicSerializer<Cluster>() {
@@ -710,7 +711,10 @@ internal class SHMTreeBuilderBySteps(
                 output.writeCollection(obj.clones)
             }
 
-            override fun read(input: PrimitivI): Cluster = Cluster(input.readList())
+            override fun read(input: PrimitivI): Cluster {
+                val clones = input.readList<CloneWrapper>()
+                return Cluster(clones)
+            }
         }
     }
 }

@@ -32,6 +32,11 @@ class GeneFeatures(
 
     init {
         check(features.isNotEmpty())
+        for (i in (1 until features.size)) {
+            require(features[i - 1].lastPoint <= features[i].firstPoint) {
+                features.map { GeneFeature.encode(it) } + " are not ordered"
+            }
+        }
     }
 
     fun intersection(other: GeneFeature): GeneFeatures? {
@@ -40,14 +45,16 @@ class GeneFeatures(
         return GeneFeatures(result.toTypedArray())
     }
 
-    operator fun plus(toAdd: GeneFeature): GeneFeatures =
-        if (features.last().lastPoint == toAdd.firstPoint) {
+    operator fun plus(toAdd: GeneFeature): GeneFeatures {
+        val lastFeature = features.last()
+        return if (lastFeature.firstPoint < lastFeature.lastPoint && lastFeature.lastPoint == toAdd.firstPoint) {
             GeneFeatures(features.clone().also {
                 it[features.size - 1] = features.last().append(toAdd)
             })
         } else {
             GeneFeatures(features + toAdd)
         }
+    }
 
     operator fun plus(toAdd: GeneFeatures): GeneFeatures =
         if (features.last().lastPoint == toAdd.features.first().firstPoint) {
@@ -73,9 +80,7 @@ class GeneFeatures(
         return true
     }
 
-    override fun hashCode(): Int {
-        return features.contentHashCode()
-    }
+    override fun hashCode(): Int = features.contentHashCode()
 
     override fun toString(): String = encode()
 
@@ -85,8 +90,10 @@ class GeneFeatures(
             output.writeArray(obj.features)
         }
 
-        override fun read(input: PrimitivI): GeneFeatures =
-            GeneFeatures(input.readArray())
+        override fun read(input: PrimitivI): GeneFeatures {
+            val features = input.readArray<GeneFeature>()
+            return GeneFeatures(features)
+        }
 
         override fun isReference(): Boolean = true
     }

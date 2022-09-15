@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.qc
 
 import cc.redberry.pipe.CUtils
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.SequenceHistory.Merge
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
@@ -186,8 +187,7 @@ object Coverage {
             for (i in predefinedRefPoints.indices) {
                 val refPoint = predefinedRefPoints[i]
 
-                val side = partitioning.getRelativeSide(refPoint)
-                @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
+                val side = partitioning.getRelativeSide(refPoint)!!
                 when (side) {
                     RelativePointSide.Unknown -> ++refPointStats[i].unmatched
                     RelativePointSide.Left -> ++refPointStats[i].toTheLeft
@@ -210,10 +210,10 @@ object Coverage {
                                 }
                                 else ->
                                     ++refPointStats[i].positionUknown
-                            }
+                            }.exhaustive
                         }
                     }
-                }
+                }.exhaustive
             }
             al.getBestHit(Variable)?.getAlignment(iTarget)?.let {
                 vEdge.addPosition(pCorrected(it.sequence2Range.from))

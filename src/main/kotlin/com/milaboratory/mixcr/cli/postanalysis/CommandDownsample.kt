@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mitool.helpers.drainToNoClose
+import com.milaboratory.mitool.helpers.drainToAndClose
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.MiXCRCommand
@@ -98,10 +98,9 @@ class CommandDownsample : MiXCRCommand() {
         ensureOutputPathExists()
         for (i in results.indices) {
             ClnsWriter(output(`in`[i]).toFile()).use { clnsWriter ->
-                val result = datasets[i]
-                val downsampled = result.mkElementsPort().toList()
-                clnsWriter.writeHeader(result.info, result.ordering(), result.usedGenes, downsampled.size)
-                downsampled.port.drainToNoClose(clnsWriter.cloneWriter())
+                val downsampled = results[i].mkElementsPort().toList()
+                clnsWriter.writeHeader(datasets[i].info, datasets[i].ordering(), datasets[i].usedGenes, downsampled.size)
+                downsampled.port.drainToAndClose(clnsWriter.cloneWriter())
                 clnsWriter.writeFooter(emptyList(), null)
             }
         }

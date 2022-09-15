@@ -9,15 +9,8 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.alleles
+package com.milaboratory.mixcr.export
 
-import com.milaboratory.core.mutations.Mutations
-import com.milaboratory.core.sequence.NucleotideSequence
-
-interface AllelesSearcher {
-    fun search(clones: List<CloneDescription>): List<Result>
-
-    data class Result(
-        val allele: Mutations<NucleotideSequence>
-    )
+enum class OutputMode {
+    HumanFriendly, ScriptingFriendly
 }

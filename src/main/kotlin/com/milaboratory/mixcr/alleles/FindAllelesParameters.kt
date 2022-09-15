@@ -11,71 +11,77 @@
  */
 package com.milaboratory.mixcr.alleles
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
 import com.milaboratory.mixcr.util.ParametersPresets
-import com.milaboratory.primitivio.annotations.Serializable
 
-/**
- *
- */
-@Serializable(asJson = true)
-data class FindAllelesParameters @JsonCreator constructor(
+@JsonAutoDetect(
+    fieldVisibility = ANY,
+    isGetterVisibility = NONE,
+    getterVisibility = NONE
+)
+data class FindAllelesParameters(
     /**
      * Use only clones with count more than parameter
      */
-    @param:JsonProperty("useClonesWithCountMoreThen") val useClonesWithCountMoreThen: Int,
+    val useClonesWithCountMoreThen: Int,
     /**
      * Use only productive clonotypes (no OOF, no stops).
      */
-    @param:JsonProperty("productiveOnly") val productiveOnly: Boolean,
+    val productiveOnly: Boolean,
     /**
      * Window size that will be used for build regression of mutations frequency vs count of mutations
      */
-    @param:JsonProperty("windowSizeForRegression") val windowSizeForRegression: Int,
+    val windowSizeForRegression: Int,
     /**
      * Maximum absent points in a window to build regression
      */
-    @param:JsonProperty("allowedSkippedPointsInRegression") val allowedSkippedPointsInRegression: Int,
+    val allowedSkippedPointsInRegression: Int,
     /**
      * Alleles filtered that min and max diversity of result are bound by this ratio
      */
-    @param:JsonProperty("minDiversityRatioBetweenAlleles") val minDiversityRatioBetweenAlleles: Double,
+    val minDiversityRatioBetweenAlleles: Double,
     /**
      * Min diversity of mutation for it may be considered as a candidate for allele mutation
      */
-    @param:JsonProperty("minDiversityForMutation") val minDiversityForMutation: Int,
+    val minDiversityForMutation: Int,
     /**
      * Filter allele candidates with diversity less than this parameter
      */
-    @param:JsonProperty("minDiversityForAllele") val minDiversityForAllele: Int,
+    val minDiversityForAllele: Int,
     /**
      * Mutations will be considered as a candidate for allele mutation if p-value of t-test of mutation frequency regression will be more than this parameter
      */
-    @param:JsonProperty("minPValueForRegression") val minPValueForRegression: Double,
+    val minPValueForRegression: Double,
     /**
      * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter
      */
-    @param:JsonProperty("minYIntersect") val minYIntersect: Double,
+    val minYIntersect: Double,
     /**
      * After an allele is found, it will be enriched with mutations that exists in this portion of clones that aligned on the allele.
      */
-    @param:JsonProperty("portionOfClonesToSearchCommonMutationsInAnAllele") val portionOfClonesToSearchCommonMutationsInAnAllele: Double,
-    @param:JsonProperty("searchMutationsInCDR3") val searchMutationsInCDR3: SearchMutationsInCDR3Params
+    val portionOfClonesToSearchCommonMutationsInAnAllele: Double,
+    val searchMutationsInCDR3: SearchMutationsInCDR3Params
 ) {
-    class SearchMutationsInCDR3Params @JsonCreator constructor(
+    @JsonAutoDetect(
+        fieldVisibility = ANY,
+        isGetterVisibility = NONE,
+        getterVisibility = NONE
+    )
+    data class SearchMutationsInCDR3Params(
         /**
          * Letter must be represented in not less than `minClonesCount` clones
          */
-        @param:JsonProperty("minClonesCount") val minClonesCount: Int,
+        val minClonesCount: Int,
         /**
          * Portion of clones from group that must have the same letter
          */
-        @param:JsonProperty("minPartOfTheSameLetter") val minPartOfTheSameLetter: Double,
+        val minPartOfTheSameLetter: Double,
         /**
          * Letter must be represented by not less than `minDiversity` diversity of complimentary gene
          */
-        @param:JsonProperty("minDiversity") val minDiversity: Int,
+        val minDiversity: Int,
     )
 
     companion object {

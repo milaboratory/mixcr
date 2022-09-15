@@ -11,16 +11,19 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.trees.SHMTreesReader
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
-import java.nio.file.Paths
+import java.nio.file.Path
 
 @CommandLine.Command(
     name = "versionInfo",
@@ -29,26 +32,27 @@ import java.nio.file.Paths
 )
 class CommandVersionInfo : MiXCRCommand() {
     @CommandLine.Parameters(description = ["input_file"])
-    lateinit var inputFile: String
+    lateinit var inputFile: Path
 
-    override fun getInputFiles(): List<String> = listOf(inputFile)
+    override fun getInputFiles(): List<String> = listOf(inputFile.toString())
 
     override fun getOutputFiles(): List<String> = emptyList()
 
     override fun run0() {
-        when (IOUtil.extractFileType(Paths.get(inputFile))) {
+        when (IOUtil.extractFileType(inputFile)) {
             VDJCA -> VDJCAlignmentsReader(inputFile).use { reader ->
                 reader.ensureInitialized()
                 println("MagicBytes = " + reader.magic)
                 println(reader.versionInfo)
             }
             CLNS -> {
-                val cs = CloneSetIO.read(inputFile)
+                val cs = CloneSetIO.read(inputFile.toFile())
                 println(cs.versionInfo)
             }
             CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
                 .use { reader -> println(reader.versionInfo) }
-            else -> throwValidationExceptionKotlin("Wrong file type.")
-        }
+            SHMT -> SHMTreesReader(inputFile, VDJCLibraryRegistry.getDefault())
+                .use { reader -> println(reader.versionInfo) }
+        }.exhaustive
     }
 }

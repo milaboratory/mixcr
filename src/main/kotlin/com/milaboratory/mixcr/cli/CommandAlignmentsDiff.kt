@@ -12,12 +12,16 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.CUtils
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI.DummyWriter
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader
-import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus
+import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus.AlignmentPresentOnlyInFirst
+import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus.AlignmentPresentOnlyInSecond
+import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus.AlignmentsAreDifferent
+import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus.AlignmentsAreSame
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.GeneFeature
@@ -123,24 +127,25 @@ class CommandAlignmentsDiff : MiXCRCommand() {
             feature, hitsCompareLevel
         )
         for (diff in CUtils.it(diffReader)) {
+            @Suppress("IMPLICIT_CAST_TO_ANY")
             when (diff.status!!) {
-                DiffStatus.AlignmentsAreSame -> ++same
-                DiffStatus.AlignmentPresentOnlyInFirst -> {
+                AlignmentsAreSame -> ++same
+                AlignmentPresentOnlyInFirst -> {
                     ++onlyIn1
                     input1.only.write(diff.first)
                 }
-                DiffStatus.AlignmentPresentOnlyInSecond -> {
+                AlignmentPresentOnlyInSecond -> {
                     ++onlyIn2
                     input2.only.write(diff.second)
                 }
-                DiffStatus.AlignmentsAreDifferent -> {
+                AlignmentsAreDifferent -> {
                     ++justDiff
                     input1.diff.write(diff.first)
                     input2.diff.write(diff.second)
                     if (diff.reason.diffGeneFeature) ++diffFeature
                     for ((key, value) in diff.reason.diffHits) if (value) ++diffHits[key.ordinal]
                 }
-            }
+            }.exhaustive
         }
         input1.only.setNumberOfProcessedReads(onlyIn1)
         input2.only.setNumberOfProcessedReads(onlyIn2)

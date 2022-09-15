@@ -19,7 +19,7 @@ import com.milaboratory.util.ReportHelper;
 import java.util.Date;
 import java.util.Map;
 
-public final class AlignerReport extends MiXCRCommandReport {
+public final class AlignerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("trimmingReport")
     public final ReadTrimmerReport trimmingReport;
 

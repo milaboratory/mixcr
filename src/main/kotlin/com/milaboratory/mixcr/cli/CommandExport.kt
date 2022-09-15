@@ -13,8 +13,10 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.primitives.Filter
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.*
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.export.*
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
@@ -31,19 +33,21 @@ import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
+import picocli.CommandLine.Option
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Stream
 
 @CommandLine.Command(separator = " ")
 abstract class CommandExport<T : VDJCObject> private constructor(
-    private val fieldExtractorsFactory: FieldExtractorsFactory<T>
+    protected val fieldExtractorsFactory: FieldExtractorsFactory<T>
 ) : MiXCRCommand() {
     @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
     lateinit var `in`: String
 
     @CommandLine.Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
-    var out: String? = null
+    var out: Path? = null
 
     @CommandLine.Option(
         description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated). " +
@@ -80,7 +84,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
 
     override fun getInputFiles(): List<String> = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = if (out == null) emptyList() else listOf(out!!)
+    override fun getOutputFiles(): List<String> = listOfNotNull(out).map { it.toString() }
 
     open fun mkFilter(): Filter<T> {
         if (chains == null)
@@ -89,19 +93,6 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         return ChainsFilter.parseFilter<T>(chains).asFilter()
     }
 
-
-    override fun run0() {
-        assert(spec != null)
-        run1 { header: VDJCFileHeaderData ->
-            fieldExtractorsFactory.createExtractors(
-                header,
-                spec.commandLine().parseResult
-            )
-        }
-    }
-
-    abstract fun run1(fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<T>>)
-
     @CommandLine.Command(
         name = "exportAlignments",
         separator = " ",
@@ -109,20 +100,18 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         description = ["Export V/D/J/C alignments into tab delimited file."]
     )
     class CommandExportAlignments : CommandExport<VDJCAlignments>(VDJCAlignmentsFieldsExtractorsFactory) {
-        override fun run1(fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<VDJCAlignments>>) {
+        override fun run0() {
             openAlignmentsPort(`in`).use { readerAndHeader ->
-                InfoWriter<VDJCAlignments>(out).use { writer ->
+                InfoWriter.create(
+                    out,
+                    fieldExtractorsFactory,
+                    spec.commandLine().parseResult,
+                    readerAndHeader.header
+                ).use { writer ->
                     val reader = readerAndHeader.port
-                    val exporters = fieldsSupplier(readerAndHeader.header)
                     if (reader is CanReportProgress) {
-                        SmartProgressReporter.startProgressReport(
-                            "Exporting alignments",
-                            reader as CanReportProgress,
-                            System.err
-                        )
+                        SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err)
                     }
-                    writer.attachInfoProviders(exporters)
-                    writer.ensureHeader()
                     val filter = mkFilter()
                     reader
                         .filter(filter)
@@ -140,42 +129,39 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         description = ["Export assembled clones into tab delimited file."]
     )
     class CommandExportClones : CommandExport<Clone>(CloneFieldsExtractorsFactory) {
-        @CommandLine.Option(
+        @Option(
             description = ["Exclude clones with out-of-frame clone sequences (fractions will be recalculated)"],
             names = ["-o", "--filter-out-of-frames"]
         )
         var filterOutOfFrames = false
 
-        @CommandLine.Option(
+        @Option(
             description = ["Exclude sequences containing stop codons (fractions will be recalculated)"],
             names = ["-t", "--filter-stops"]
         )
         var filterStops = false
 
-        @CommandLine.Option(
+        @Option(
             description = ["Filter clones by minimal clone fraction"],
             names = ["-q", "--minimal-clone-fraction"]
         )
         var minFraction = 0f
 
-        @CommandLine.Option(
+        @Option(
             description = ["Filter clones by minimal clone read count"],
             names = ["-m", "--minimal-clone-count"]
         )
         var minCount: Long = 0
 
-        @CommandLine.Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
+        @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         var splitByTag: String? = null
 
         override fun mkFilter(): Filter<Clone> = super.mkFilter().and(CFilter(filterOutOfFrames, filterStops))
 
-        override fun run1(fieldsSupplier: (VDJCFileHeaderData) -> List<FieldExtractor<Clone>>) {
-            InfoWriter<Clone>(out).use { writer ->
-                val initialSet = CloneSetIO.read(`in`, VDJCLibraryRegistry.getDefault())
+        override fun run0() {
+            val initialSet = CloneSetIO.read(`in`, VDJCLibraryRegistry.getDefault())
+            InfoWriter.create(out, fieldExtractorsFactory, spec.commandLine().parseResult, initialSet).use { writer ->
                 val set = CloneSet.transform(initialSet, mkFilter())
-                val exporters = fieldsSupplier(initialSet)
-                writer.attachInfoProviders(exporters)
-                writer.ensureHeader()
                 for (i in 0 until set.size()) {
                     if (set[i].fraction < minFraction ||
                         set[i].count < minCount
@@ -308,12 +294,12 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
 
         @JvmStatic
         fun openAlignmentsPort(`in`: String): AlignmentsAndHeader =
-            when (IOUtil.extractFileType(Paths.get(`in`))!!) {
-                MiXCRFileType.VDJCA -> {
+            when (IOUtil.extractFileType(Paths.get(`in`))) {
+                VDJCA -> {
                     val vdjcaReader = VDJCAlignmentsReader(`in`, VDJCLibraryRegistry.getDefault())
                     AlignmentsAndHeader(vdjcaReader, vdjcaReader)
                 }
-                MiXCRFileType.CLNA -> {
+                CLNA -> {
                     val clnaReader = ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4))
                     val source = clnaReader.readAllAlignments()
                     val port = object : OutputPortCloseable<VDJCAlignments> {
@@ -326,7 +312,8 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
                     }
                     AlignmentsAndHeader(port, clnaReader)
                 }
-                MiXCRFileType.CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $`in`")
-            }
+                CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $`in`")
+                SHMT -> throw RuntimeException("Can't export alignments from *.shmt file: $`in`")
+            }.exhaustive
     }
 }

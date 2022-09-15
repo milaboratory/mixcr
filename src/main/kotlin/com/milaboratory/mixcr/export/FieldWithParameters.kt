@@ -43,13 +43,13 @@ abstract class FieldWithParameters<T : Any, P>(
 
     class CommandArg<T>(
         val meta: String,
-        val decode: VDJCFileHeaderData.(String) -> T,
+        val decodeAndValidate: AbstractField<*>.(VDJCFileHeaderData, String) -> T,
         val hPrefix: (T) -> String,
         val sPrefix: (T) -> String
     )
 
     companion object {
-        operator fun <T : Any, P1 : Any> invoke(
+        operator fun <T : Any, P1> invoke(
             priority: Int,
             command: String,
             description: String,
@@ -60,7 +60,7 @@ abstract class FieldWithParameters<T : Any, P>(
             override val metaVars: String = parameter1.meta
 
             override fun getParameters(headerData: VDJCFileHeaderData, args: Array<String>): P1 {
-                val arg1 = parameter1.decode(headerData, args.first())
+                val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
                 validateArgs(arg1)
                 return arg1
             }
@@ -75,7 +75,7 @@ abstract class FieldWithParameters<T : Any, P>(
                 }
         }
 
-        operator fun <T : Any, P1 : Any, P2 : Any> invoke(
+        operator fun <T : Any, P1, P2> invoke(
             priority: Int,
             command: String,
             description: String,
@@ -87,8 +87,8 @@ abstract class FieldWithParameters<T : Any, P>(
             override val metaVars: String = parameter1.meta + " " + parameter2.meta
 
             override fun getParameters(headerData: VDJCFileHeaderData, args: Array<String>): Pair<P1, P2> {
-                val arg1 = parameter1.decode(headerData, args[0])
-                val arg2 = parameter2.decode(headerData, args[1])
+                val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
+                val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
                 validateArgs(arg1, arg2)
                 return arg1 to arg2
             }
@@ -103,7 +103,7 @@ abstract class FieldWithParameters<T : Any, P>(
                 }
         }
 
-        operator fun <T : Any, P1 : Any, P2 : Any, P3 : Any> invoke(
+        operator fun <T : Any, P1, P2, P3> invoke(
             priority: Int,
             command: String,
             description: String,
@@ -116,9 +116,9 @@ abstract class FieldWithParameters<T : Any, P>(
             override val metaVars: String = parameter1.meta + " " + parameter2.meta + " " + parameter3.meta
 
             override fun getParameters(headerData: VDJCFileHeaderData, args: Array<String>): Triple<P1, P2, P3> {
-                val arg1 = parameter1.decode(headerData, args[0])
-                val arg2 = parameter2.decode(headerData, args[1])
-                val arg3 = parameter3.decode(headerData, args[2])
+                val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
+                val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
+                val arg3 = parameter3.decodeAndValidate(this, headerData, args[2])
                 validateArgs(arg1, arg2, arg3)
                 return Triple(arg1, arg2, arg3)
             }

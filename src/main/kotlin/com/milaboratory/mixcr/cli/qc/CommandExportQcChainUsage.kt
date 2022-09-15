@@ -72,6 +72,7 @@ class CommandExportQcChainUsage : CommandExportQc() {
                 !hideNonFunctional,
                 hw
             )
+            SHMT -> throw IllegalArgumentException("Can't export chain usage from .shmt file")
         }
         writeFile(Paths.get(outputFiles[0]), plot)
     }

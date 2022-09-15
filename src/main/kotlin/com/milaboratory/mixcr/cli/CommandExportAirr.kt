@@ -14,10 +14,15 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.util.CountLimitingOutputPort
 import cc.redberry.pipe.util.CountingOutputPort
+import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.export.AirrColumns
@@ -194,7 +199,7 @@ class CommandExportAirr : MiXCRCommand() {
         val cPort: CountingOutputPort<out VDJCObject>
         var progressReporter: CanReportProgress? = null
         when (fileType) {
-            MiXCRFileType.CLNA -> {
+            CLNA -> {
                 extractors = cloneExtractors()
                 val clnaReader = ClnAReader(inPath, libraryRegistry, 4)
                 cPort = CountingOutputPort(clnaReader.readClones())
@@ -202,7 +207,7 @@ class CommandExportAirr : MiXCRCommand() {
                 closeable = clnaReader
                 progressReporter = SmartProgressReporter.extractProgress(cPort, clnaReader.numberOfClones().toLong())
             }
-            MiXCRFileType.CLNS -> {
+            CLNS -> {
                 extractors = cloneExtractors()
                 val clnsReader = ClnsReader(inPath, libraryRegistry)
 
@@ -218,14 +223,15 @@ class CommandExportAirr : MiXCRCommand() {
                 closeable = clnsReader
                 progressReporter = SmartProgressReporter.extractProgress(cPort, maxCount.toLong())
             }
-            MiXCRFileType.VDJCA -> {
+            VDJCA -> {
                 extractors = alignmentsExtractors()
                 val alignmentsReader = VDJCAlignmentsReader(inPath, libraryRegistry)
                 port = alignmentsReader
                 closeable = alignmentsReader
                 progressReporter = alignmentsReader
             }
-        }
+            SHMT -> throw UnsupportedOperationException(".shmt file unsupported")
+        }.exhaustive
         if (limit != null) {
             val clop = CountLimitingOutputPort(port, limit!!.toLong())
             port = clop

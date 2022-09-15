@@ -36,11 +36,16 @@ class SHMTreeResult(
             output.writeInt(obj.treeId)
         }
 
-        override fun read(input: PrimitivI): SHMTreeResult = SHMTreeResult(
-            TreeSerializer.readTree(input),
-            input.readObjectRequired(),
-            input.readInt()
-        )
+        override fun read(input: PrimitivI): SHMTreeResult {
+            val tree = TreeSerializer.readTree<CloneOrFoundAncestor>(input)
+            val rootInfo = input.readObjectRequired<RootInfo>()
+            val treeId = input.readInt()
+            return SHMTreeResult(
+                tree,
+                rootInfo,
+                treeId
+            )
+        }
     }
 }
 

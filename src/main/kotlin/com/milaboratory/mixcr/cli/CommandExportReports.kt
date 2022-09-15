@@ -11,19 +11,12 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.basictypes.ClnAReader
-import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
-import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
-import java.nio.file.Paths
+import java.nio.file.Path
 
 @CommandLine.Command(
     name = CommandExportReports.EXPORT_REPORTS_COMMAND_NAME,
@@ -32,7 +25,7 @@ import java.nio.file.Paths
 )
 class CommandExportReports : MiXCRCommand() {
     @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
-    lateinit var `in`: String
+    lateinit var `in`: Path
 
     @CommandLine.Parameters(description = ["report.[txt|jsonl]"], index = "1", arity = "0..1")
     var out: String? = null
@@ -40,16 +33,12 @@ class CommandExportReports : MiXCRCommand() {
     @CommandLine.Option(names = ["--json"], description = ["Export as json lines"])
     var json = false
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override fun getInputFiles(): List<String> = listOf(`in`.toString())
 
     override fun getOutputFiles(): List<String> = listOfNotNull(out)
 
     override fun run0() {
-        val reports = when (IOUtil.extractFileType(Paths.get(`in`))!!) {
-            VDJCA -> VDJCAlignmentsReader(`in`, VDJCLibraryRegistry.getDefault()).use { it.reports() }
-            CLNS -> ClnsReader(`in`, VDJCLibraryRegistry.getDefault()).use { it.reports() }
-            CLNA -> ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), 1).use { it.reports() }
-        }
+        val reports = IOUtil.extractReports(`in`)
         if (json) {
             if (out != null) {
                 for (report in reports) {

@@ -77,7 +77,11 @@ public final class RunMiXCR {
             assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
                     false, align.usedGenes, align.parameters.alignerParameters);
 
-            CloneAssemblerReportBuilder report = new CloneAssemblerReportBuilder();
+            CloneAssemblerReportBuilder report = new CloneAssemblerReportBuilder()
+                    .setCommandLine("from test")
+                    .setStartMillis(System.currentTimeMillis())
+                    .setInputFiles()
+                    .setOutputFiles();
             assembler.setListener(report);
             report.setTotalReads(align.totalNumberOfReads);
 
@@ -116,6 +120,7 @@ public final class RunMiXCR {
                     null,
                     null
             ));
+            report.setFinishMillis(System.currentTimeMillis());
             return new AssembleResult(align, cloneSet, report.buildReport(), assembler);
         } finally {
             if (close)
@@ -209,7 +214,11 @@ public final class RunMiXCR {
                 aligner.addGene(gene);
             }
 
-        AlignerReportBuilder reportBuilder = new AlignerReportBuilder();
+        AlignerReportBuilder reportBuilder = new AlignerReportBuilder()
+                .setCommandLine("from test")
+                .setStartMillis(System.currentTimeMillis())
+                .setInputFiles()
+                .setOutputFiles();
         aligner.setEventsListener(reportBuilder);
 
         try (SequenceReaderCloseable<? extends SequenceRead> reader = parameters.getReader()) {
@@ -228,6 +237,7 @@ public final class RunMiXCR {
                     als.add(t.alignment);
                 }
             }
+            reportBuilder.setFinishMillis(System.currentTimeMillis());
             return new AlignResult(parameters, reader.getNumberOfReads(), reportBuilder.buildReport(), als, genes, null, aligner);
         }
     }

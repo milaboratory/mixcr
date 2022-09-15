@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReport;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport;
+import com.milaboratory.mixcr.trees.SHMTreeSourceFileReport;
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport;
 import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.Report;
@@ -31,7 +32,9 @@ import com.milaboratory.util.Report;
         @JsonSubTypes.Type(value = ReadTrimmerReport.class, name = "readTrimmerReport"),
         @JsonSubTypes.Type(value = TagReport.class, name = "tagReport"),
         @JsonSubTypes.Type(value = VDJCObjectExtenderReport.class, name = "extenderReport"),
-        @JsonSubTypes.Type(value = CorrectAndSortTagsReport.class, name = "correctAndSortTagsReport")
+        @JsonSubTypes.Type(value = CorrectAndSortTagsReport.class, name = "correctAndSortTagsReport"),
+        @JsonSubTypes.Type(value = SHMTreeSourceFileReport.class, name = "SHMTreeSourceFileReport"),
+        @JsonSubTypes.Type(value = BuildSHMTreeReport.class, name = "buildSHMTreeReport")
 })
 @Serializable(asJson = true)
 public interface MiXCRReport extends Report {}

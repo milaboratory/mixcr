@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.export.OutputMode.*
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
 import picocli.CommandLine
@@ -43,7 +44,7 @@ abstract class FieldExtractorsFactory<T : Any> {
         cmdParseResult: CommandLine.ParseResult
     ): List<FieldExtractor<T>> {
         val humanReadable = cmdParseResult.matchedOption("--with-spaces")?.getValue<Boolean>() ?: false
-        val oMode = if (humanReadable) OutputMode.HumanFriendly else OutputMode.ScriptingFriendly
+        val oMode = if (humanReadable) HumanFriendly else ScriptingFriendly
 
         var fields = parseSpec(cmdParseResult)
 
@@ -77,12 +78,27 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .paramLabel("<presetFile>")
                     .build()
             )
-            spec.addOption(
-                CommandLine.Model.OptionSpec
-                    .builder("-v", "--with-spaces")
-                    .description("Output column headers with spaces.")
-                    .required(false)
-                    .type(Boolean::class.java)
+            spec.addArgGroup(
+                CommandLine.Model.ArgGroupSpec
+                    .builder()
+                    .addArg(
+                        CommandLine.Model.OptionSpec
+                            .builder("-v", "--with-spaces")
+                            .description("Output column headers with spaces.")
+                            .required(true)
+                            .type(Boolean::class.java)
+                            .build()
+                    )
+                    .addArg(
+                        CommandLine.Model.OptionSpec
+                            .builder("--no-headers")
+                            .description("Don't print column names")
+                            .required(true)
+                            .type(Boolean::class.java)
+                            .build()
+                    )
+                    .exclusive(true)
+                    .multiplicity("0..1")
                     .build()
             )
         }
@@ -103,15 +119,14 @@ abstract class FieldExtractorsFactory<T : Any> {
     }
 
     private fun hasField(name: String): Boolean =
-        fields.any { field -> name.equals(field.cmdArgName, ignoreCase = true) }
-
+        fields.any { field -> name == field.cmdArgName }
 
     fun extract(
         cmd: FieldCommandArgs,
         header: VDJCFileHeaderData,
         mode: OutputMode
     ): List<FieldExtractor<T>> {
-        val field = fields.firstOrNull { f -> cmd.field.equals(f.cmdArgName, ignoreCase = true) }
+        val field = fields.firstOrNull { f -> cmd.field == f.cmdArgName }
         field ?: throw IllegalArgumentException("illegal field: " + cmd.field)
         return when (field.nArguments) {
             0 -> {

@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder {
+public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<PartialAlignmentsAssembler> {
     final TLongObjectHashMap<List<KMerInfo>> kToIndexLeft = new TLongObjectHashMap<>();
     final TLongHashSet alreadyMergedIds = new TLongHashSet();
     final TLongHashSet notInLeftIndexIds = new TLongHashSet();
@@ -571,6 +571,11 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder {
 
         leftParts.incrementAndGet();
         return true;
+    }
+
+    @Override
+    protected PartialAlignmentsAssembler that() {
+        return this;
     }
 
     @Override

@@ -13,13 +13,17 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wrapper
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.nio.file.Path
+import kotlin.io.path.createDirectories
 
 @Command(
     name = CommandExportShmTreesTableWithNodes.COMMAND_NAME,
@@ -28,17 +32,31 @@ import picocli.CommandLine.Parameters
     description = ["Export SHMTree as a table with a row for every node"]
 )
 class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
-    @Parameters(index = "1", description = ["trees.tsv"])
-    override lateinit var out: String
+    @Parameters(
+        index = "1",
+        arity = "0..1",
+        paramLabel = "trees.tsv",
+        description = ["Path to output table. Print in stdout if omitted."]
+    )
+    val out: Path? = null
+
+    @Option(
+        description = ["Exclude nodes that was reconstructed by algorithm"],
+        names = ["-onlyObserved"],
+    )
+    var onlyObserved: Boolean = false
+
+    override fun getOutputFiles(): List<String> = listOfNotNull(out?.toString())
 
     override fun run0() {
-        InfoWriter<SplittedTreeNodeFieldsExtractorsFactory.Wrapper>(out).use { output ->
-            SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
-                val fieldExtractors =
-                    SplittedTreeNodeFieldsExtractorsFactory.createExtractors(reader, spec.commandLine().parseResult)
-                output.attachInfoProviders(fieldExtractors)
-                output.ensureHeader()
-
+        out?.toAbsolutePath()?.parent?.createDirectories()
+        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+            InfoWriter.create(
+                out,
+                SplittedTreeNodeFieldsExtractorsFactory,
+                spec.commandLine().parseResult,
+                reader
+            ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     val shmTreeForPostanalysis = shmTree.forPostanalysis(
                         reader.fileNames,
@@ -48,9 +66,10 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
                     shmTreeForPostanalysis.tree.allNodes()
                         .asSequence()
+                        .filter { !onlyObserved || it.node.isLeaf() }
                         .flatMap { it.node.content.split() }
                         .forEach { node ->
-                            output.put(SplittedTreeNodeFieldsExtractorsFactory.Wrapper(shmTreeForPostanalysis, node))
+                            output.put(Wrapper(shmTreeForPostanalysis, node))
                         }
                 }
             }

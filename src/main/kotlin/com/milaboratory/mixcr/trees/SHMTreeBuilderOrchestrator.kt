@@ -110,9 +110,10 @@ class SHMTreeBuilderOrchestrator(
 
     fun buildTreesBySteps(
         progressAndStage: ProgressAndStage,
+        reportBuilder: BuildSHMTreeReport.Builder,
         threads: Int,
         resultWriter: (OutputPort<TreeWithMetaBuilder>) -> Unit
-    ): BuildSHMTreeReport {
+    ) {
         val treeBuilder = SHMTreeBuilderBySteps(
             parameters.steps,
             scoringSet,
@@ -137,15 +138,13 @@ class SHMTreeBuilderOrchestrator(
             )
         }
 
-        val report = BuildSHMTreeReport()
         debugs.forEachIndexed { i, debug ->
-            report.addStatsForStep(
+            reportBuilder.addStatsForStep(
                 parameters.steps[i],
                 debug,
                 if (i == 0) null else debugs[i - 1]
             )
         }
-        return report
     }
 
     //TODO auto close through lambda
@@ -266,10 +265,15 @@ class CloneFromUserInput(
             output.writeInt(obj.treeId)
         }
 
-        override fun read(input: PrimitivI): CloneFromUserInput = CloneFromUserInput(
-            input.readObjectRequired(),
-            input.readInt(),
-            input.readInt()
-        )
+        override fun read(input: PrimitivI): CloneFromUserInput {
+            val clone = input.readObjectRequired<Clone>()
+            val datasetId = input.readInt()
+            val treeId = input.readInt()
+            return CloneFromUserInput(
+                clone,
+                datasetId,
+                treeId
+            )
+        }
     }
 }

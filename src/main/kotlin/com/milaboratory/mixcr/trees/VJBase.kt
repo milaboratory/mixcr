@@ -9,6 +9,8 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
+@file:Suppress("LocalVariableName")
+
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.mitool.pattern.search.BasicSerializer
@@ -36,8 +38,8 @@ data class VJBase(
 
 
     companion object {
-        val comparator: Comparator<VJBase> = Comparator.comparing<VJBase, VDJCGeneId> { it.geneIds.V }
-            .thenComparing<VDJCGeneId> { it.geneIds.J }
+        val comparator: Comparator<VJBase> = Comparator.comparing { VJBase: VJBase -> VJBase.geneIds.V }
+            .thenComparing { VJBase: VJBase -> VJBase.geneIds.J }
             .thenComparingInt { it.CDR3length }
     }
 
@@ -48,11 +50,16 @@ data class VJBase(
             output.writeInt(obj.CDR3length)
         }
 
-        override fun read(input: PrimitivI): VJBase = VJBase(
-            input.readObjectRequired(),
-            input.readObjectRequired(),
-            input.readInt()
-        )
+        override fun read(input: PrimitivI): VJBase {
+            val VGeneId = input.readObjectRequired<VDJCGeneId>()
+            val JGeneId = input.readObjectRequired<VDJCGeneId>()
+            val CDR3length = input.readInt()
+            return VJBase(
+                VGeneId,
+                JGeneId,
+                CDR3length
+            )
+        }
     }
 
     override fun toString(): String = "VJBase(V=${geneIds.V.name}, J=${geneIds.J.name}, CDR3length=$CDR3length)"

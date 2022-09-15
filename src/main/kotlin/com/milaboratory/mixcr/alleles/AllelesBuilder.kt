@@ -28,11 +28,11 @@ import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.GroupingCriteria
+import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.groupBy
-import com.milaboratory.primitivio.mapInParallelOrdered
-import com.milaboratory.primitivio.toList
+import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
@@ -94,10 +94,12 @@ class AllelesBuilder(
                     "Searching for ${geneType.letter} alleles",
                     countPerElement = { it.size.toLong() }
                 ) { clustersWithTheSameV ->
-                    clustersWithTheSameV.mapInParallelOrdered(threads) { cluster ->
+                    clustersWithTheSameV.mapInParallel(threads) { cluster ->
                         val geneId = cluster[0].getBestHit(geneType).gene.name
                         geneId to findAlleles(cluster, geneType).toGeneData()
                     }
+                        .asSequence()
+                        .sortedBy { it.first }
                         .toList()
                 }
         }
@@ -148,7 +150,7 @@ class AllelesBuilder(
                 withMutationsInCDR3.allele,
                 bestHit.alignedFeature,
                 knownCDR3RangeLength,
-                mappedReferencePoints
+                mappedReferencePoints.applyMutations(withMutationsInCDR3.allele)
             )
         }
     }
@@ -193,7 +195,7 @@ class AllelesBuilder(
         val CDR3OfNaiveClones = naiveClones.map { it.getFeature(CDR3).sequence to it }.toMutableList()
         val minCDR3Size = CDR3OfNaiveClones.minOf { it.first.size() }
         // char by shift from CDR3 border.
-        val foundLettersInCDR3 = mutableListOf<Pair<Int, Byte>>()
+        val foundLettersInCDR3 = mutableListOf<Byte>()
         for (i in 0 until minCDR3Size) {
             val lettersInPosition = CDR3OfNaiveClones
                 .map { (CDR3, clone) ->
@@ -215,14 +217,14 @@ class AllelesBuilder(
                 .flatMap { it.map { (_, clone) -> clone } }
                 .toSet()
             CDR3OfNaiveClones.removeIf { (_, clone) -> clone in clonesToExclude }
-            foundLettersInCDR3 += i to mostFrequent
+            foundLettersInCDR3 += mostFrequent
         }
         if (foundLettersInCDR3.isEmpty()) return this to 0
         val bestHit = clones.first().getBestHit(geneType)
         val partitioning = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
         val foundMutations = mutableListOf<Int>()
         var lastKnownShift = 0
-        for ((i, letter) in foundLettersInCDR3) {
+        for ((i, letter) in foundLettersInCDR3.withIndex()) {
             val position = when (geneType) {
                 Variable -> {
                     val CDR3BeginPosition = partitioning.getPosition(CDR3Begin)
@@ -233,7 +235,7 @@ class AllelesBuilder(
                     }
                     shiftedPosition
                 }
-                else -> {
+                Joining -> {
                     val CDR3EndPosition = partitioning.getPosition(CDR3End)
                     val shifterPosition = CDR3EndPosition - i - 1
                     if (shifterPosition < partitioning.getPosition(JBegin)) {
@@ -242,6 +244,7 @@ class AllelesBuilder(
                     }
                     shifterPosition
                 }
+                else -> throw UnsupportedOperationException()
             }
             lastKnownShift = i
             val letterInGermline = sequence1[position]
@@ -281,22 +284,22 @@ class AllelesBuilder(
             allele.gene.partitioning.getRanges(allele.alignedFeature),
             allele.mutations
         ),
-        generateGeneName(allele),
+        allele.generateGeneName(),
         allele.gene.data.geneType,
         allele.gene.data.isFunctional,
         allele.gene.data.chains,
-        metaForGeneratedGene(allele),
-        recalculatedAnchorPoints(allele)
+        allele.metaForGeneratedGene(),
+        allele.recalculatedAnchorPoints()
     )
 
-    private fun generateGeneName(allele: Allele): String =
-        allele.gene.name + "-M" + allele.mutations.size() + "-" + allele.mutations.hashCode()
+    private fun Allele.generateGeneName(): String =
+        gene.name + "-M" + mutations.size() + "-" + mutations.hashCode()
 
-    private fun metaForGeneratedGene(allele: Allele): SortedMap<String, SortedSet<String>> {
-        val meta: SortedMap<String, SortedSet<String>> = TreeMap(allele.gene.data.meta)
-        val knownFeatures = when (allele.gene.geneType) {
+    private fun Allele.metaForGeneratedGene(): SortedMap<String, SortedSet<String>> {
+        val meta: SortedMap<String, SortedSet<String>> = TreeMap(gene.data.meta)
+        val knownFeatures = when (gene.geneType) {
             Variable -> {
-                val toAdd = GeneFeature(CDR3Begin, 0, allele.knownCDR3RangeLength)
+                val toAdd = GeneFeature(CDR3Begin, 0, knownCDR3RangeLength)
                 val intersection = allClonesCutBy.intersection(GeneFeature(UTR5Begin, CDR3Begin))
                 if (intersection != null) {
                     intersection + toAdd
@@ -305,7 +308,7 @@ class AllelesBuilder(
                 }
             }
             Joining -> {
-                val toAdd = GeneFeatures(GeneFeature(CDR3End, -allele.knownCDR3RangeLength, 0))
+                val toAdd = GeneFeatures(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
                 val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
                 if (intersection != null) {
                     toAdd + intersection
@@ -315,16 +318,16 @@ class AllelesBuilder(
             }
             else -> throw UnsupportedOperationException()
         }
-        meta["alleleMutationsReliableGeneFeatures"] =
+        meta[metaKeyForAlleleMutationsReliableGeneFeatures] =
             knownFeatures.features.map { GeneFeature.encode(it) }.toSortedSet()
-        meta["alleleVariantOf"] = sortedSetOf(allele.gene.name)
+        meta["alleleVariantOf"] = sortedSetOf(gene.name)
         return meta
     }
 
-    private fun recalculatedAnchorPoints(allele: Allele): TreeMap<ReferencePoint, Long> {
-        return (0 until allele.mappedReferencePoints.pointsCount()).asSequence()
-            .map { index -> allele.mappedReferencePoints.referencePointFromIndex(index) }
-            .associateByTo(TreeMap(), { it }, { allele.mappedReferencePoints.getPosition(it).toLong() })
+    private fun Allele.recalculatedAnchorPoints(): SortedMap<ReferencePoint, Long> {
+        return (0 until mappedReferencePoints.pointsCount()).asSequence()
+            .map { index -> mappedReferencePoints.referencePointFromIndex(index) }
+            .associateByTo(TreeMap(), { it }, { mappedReferencePoints.getPosition(it).toLong() })
     }
 
     private class Allele(
@@ -334,10 +337,13 @@ class AllelesBuilder(
         val knownCDR3RangeLength: Int,
         val mappedReferencePoints: ReferencePoints
     ) {
-
         override fun toString(): String = "Allele{" +
                 "id=" + gene.name +
                 ", mutations=" + mutations +
                 '}'
+    }
+
+    companion object {
+        const val metaKeyForAlleleMutationsReliableGeneFeatures = "alleleMutationsReliableGeneFeatures"
     }
 }
