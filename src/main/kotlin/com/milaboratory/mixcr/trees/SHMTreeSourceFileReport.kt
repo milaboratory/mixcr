@@ -11,15 +11,19 @@
  */
 package com.milaboratory.mixcr.trees
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.util.ReportHelper
 
-class SHMTreeSourceFileReport @JsonCreator constructor(
-    @param:JsonProperty("fileName")
+@JsonAutoDetect(
+    fieldVisibility = ANY,
+    isGetterVisibility = NONE,
+    getterVisibility = NONE
+)
+data class SHMTreeSourceFileReport(
     val fileName: String,
-    @param:JsonProperty("report")
     val report: MiXCRCommandReport
 ) : MiXCRCommandReport by report {
     override fun writeReport(helper: ReportHelper) {

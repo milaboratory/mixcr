@@ -11,30 +11,17 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.util.FormatUtils
 import com.milaboratory.util.ReportHelper
 import java.io.ByteArrayOutputStream
 import java.util.*
 
 interface MiXCRCommandReport : MiXCRReport {
-    @get:JsonIgnore
     val date: Date?
-
-    @get:JsonProperty("commandLine")
     val commandLine: String
-
-    @get:JsonProperty("inputFiles")
     val inputFiles: Array<String>
-
-    @get:JsonProperty("outputFiles")
     val outputFiles: Array<String>
-
-    @get:JsonIgnore
     val executionTimeMillis: Long?
-
-    @get:JsonProperty("version")
     val version: String
 
     fun command(): String

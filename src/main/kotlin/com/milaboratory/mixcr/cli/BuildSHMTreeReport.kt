@@ -37,14 +37,14 @@ import kotlin.math.log2
     getterVisibility = NONE
 )
 class BuildSHMTreeReport(
-    override val date: Date?,
-    override val commandLine: String,
-    override val inputFiles: Array<String>,
-    override val outputFiles: Array<String>,
-    override val executionTimeMillis: Long?,
-    override val version: String,
+    date: Date?,
+    commandLine: String,
+    inputFiles: Array<String>,
+    outputFiles: Array<String>,
+    executionTimeMillis: Long?,
+    version: String,
     val stepResults: List<StepResult>
-) : MiXCRCommandReport {
+) : AbstractMiXCRCommandReport(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version) {
     override fun command(): String = CommandFindShmTrees.COMMAND_NAME
 
     override fun toString(): String = asString()

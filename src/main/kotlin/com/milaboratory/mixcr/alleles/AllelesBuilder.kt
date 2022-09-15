@@ -149,7 +149,7 @@ class AllelesBuilder(
                 bestHit.gene,
                 withMutationsInCDR3.allele,
                 bestHit.alignedFeature,
-                knownCDR3RangeLength,
+                calculateKnownFeatures(bestHit.gene.geneType, knownCDR3RangeLength),
                 mappedReferencePoints.applyMutations(withMutationsInCDR3.allele)
             )
         }
@@ -297,31 +297,37 @@ class AllelesBuilder(
 
     private fun Allele.metaForGeneratedGene(): SortedMap<String, SortedSet<String>> {
         val meta: SortedMap<String, SortedSet<String>> = TreeMap(gene.data.meta)
-        val knownFeatures = when (gene.geneType) {
-            Variable -> {
-                val toAdd = GeneFeature(CDR3Begin, 0, knownCDR3RangeLength)
-                val intersection = allClonesCutBy.intersection(GeneFeature(UTR5Begin, CDR3Begin))
-                if (intersection != null) {
-                    intersection + toAdd
-                } else {
-                    GeneFeatures(toAdd)
-                }
-            }
-            Joining -> {
-                val toAdd = GeneFeatures(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
-                val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
-                if (intersection != null) {
-                    toAdd + intersection
-                } else {
-                    toAdd
-                }
-            }
-            else -> throw UnsupportedOperationException()
-        }
         meta[metaKeyForAlleleMutationsReliableGeneFeatures] =
             knownFeatures.features.map { GeneFeature.encode(it) }.toSortedSet()
+        meta[metaKeyForAlleleMutationsReliableRanges] =
+            knownFeatures.features
+                .flatMap { gene.partitioning.getRanges(it).asSequence() }
+                .map { it.toString() }
+                .toSortedSet()
         meta["alleleVariantOf"] = sortedSetOf(gene.name)
         return meta
+    }
+
+    private fun calculateKnownFeatures(geneType: GeneType, knownCDR3RangeLength: Int) = when (geneType) {
+        Variable -> {
+            val toAdd = GeneFeature(CDR3Begin, 0, knownCDR3RangeLength)
+            val intersection = allClonesCutBy.intersection(GeneFeature(UTR5Begin, CDR3Begin))
+            if (intersection != null) {
+                intersection + toAdd
+            } else {
+                GeneFeatures(toAdd)
+            }
+        }
+        Joining -> {
+            val toAdd = GeneFeatures(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
+            val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
+            if (intersection != null) {
+                toAdd + intersection
+            } else {
+                toAdd
+            }
+        }
+        else -> throw UnsupportedOperationException()
     }
 
     private fun Allele.recalculatedAnchorPoints(): SortedMap<ReferencePoint, Long> {
@@ -334,7 +340,7 @@ class AllelesBuilder(
         val gene: VDJCGene,
         val mutations: Mutations<NucleotideSequence>,
         val alignedFeature: GeneFeature,
-        val knownCDR3RangeLength: Int,
+        val knownFeatures: GeneFeatures,
         val mappedReferencePoints: ReferencePoints
     ) {
         override fun toString(): String = "Allele{" +
@@ -345,5 +351,6 @@ class AllelesBuilder(
 
     companion object {
         const val metaKeyForAlleleMutationsReliableGeneFeatures = "alleleMutationsReliableGeneFeatures"
+        const val metaKeyForAlleleMutationsReliableRanges = "alleleMutationsReliableRanges"
     }
 }

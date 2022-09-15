@@ -23,6 +23,7 @@ import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
+import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableRanges
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
@@ -241,7 +242,7 @@ class CommandFindAlleles : MiXCRCommand() {
         val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)
         libraryOutput?.let { libraryOutput ->
             libraryOutput.toAbsolutePath().parent.createDirectories()
-            GlobalObjectMappers.getOneLine().writeValue(libraryOutput.toFile(), resultLibrary.data)
+            GlobalObjectMappers.getOneLine().writeValue(libraryOutput.toFile(), arrayOf(resultLibrary.data))
         }
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
@@ -295,7 +296,7 @@ class CommandFindAlleles : MiXCRCommand() {
                 "geneName" to { it.geneName },
                 "type" to { it.geneType },
                 "regions" to { gene ->
-                    gene.data.baseSequence.regions?.joinToString { it.toString() }
+                    gene.data.meta[metaKeyForAlleleMutationsReliableRanges]
                 },
                 metaKeyForAlleleMutationsReliableGeneFeatures to { gene ->
                     gene.data.meta[metaKeyForAlleleMutationsReliableGeneFeatures]
