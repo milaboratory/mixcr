@@ -272,7 +272,7 @@ class CommandFindAlleles : MiXCRCommand() {
                 "alleleName" to { it.name },
                 "geneName" to { it.geneName },
                 "type" to { it.geneType },
-                "regions" to { gene ->
+                metaKeyForAlleleMutationsReliableRanges to { gene ->
                     gene.data.meta[metaKeyForAlleleMutationsReliableRanges]
                 },
                 metaKeyForAlleleMutationsReliableGeneFeatures to { gene ->
@@ -284,7 +284,7 @@ class CommandFindAlleles : MiXCRCommand() {
                 "naivesCount" to { gene ->
                     allelesStatistics.stats(gene.id).naives.get()
                 },
-                "diversity" to { gene ->
+                "lowerDiversityBound" to { gene ->
                     allelesStatistics.stats(gene.id).diversity.size
                 },
                 "count" to { gene ->

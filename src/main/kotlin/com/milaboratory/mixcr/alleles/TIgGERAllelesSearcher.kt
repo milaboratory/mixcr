@@ -24,7 +24,7 @@ import com.milaboratory.mixcr.util.asSequence
 import org.apache.commons.math3.stat.inference.TTest
 import org.apache.commons.math3.stat.regression.SimpleRegression
 import kotlin.math.absoluteValue
-import kotlin.math.ceil
+import kotlin.math.floor
 
 
 class TIgGERAllelesSearcher(
@@ -63,7 +63,7 @@ class TIgGERAllelesSearcher(
             if (clones.diversity() < parameters.minDiversityForMutation) {
                 return@map allele
             }
-            val boundary = ceil(clones.size * parameters.portionOfClonesToSearchCommonMutationsInAnAllele).toInt()
+            val boundary = floor(clones.size * parameters.portionOfClonesToSearchCommonMutationsInAnAllele).toInt()
             val mutationsThatExistsInAlmostAllClones = clones
                 .flatMap { clone ->
                     val alleleHasIndels = allele.asSequence().any { Mutation.isInDel(it) }
@@ -213,10 +213,11 @@ class TIgGERAllelesSearcher(
 
         val pValue = TTest().tTest(estimate, y)
 
+        val intercept = a + b * (xPoints[0] - 1)
         val isHomozygousAlleleMutation =
-            regression.intercept > parameters.minYIntersectForHomozygous && b.absoluteValue < parameters.maxRegressionSlopeForHomozygous
+            intercept > parameters.minYInterceptForHomozygous && b.absoluteValue < parameters.maxRegressionSlopeForHomozygous
         val isHeterozygousAlleleMutation =
-            pValue >= parameters.minPValueForRegression && regression.intercept >= parameters.minYIntersectForHeterozygous
+            pValue >= parameters.minPValueForRegression && intercept >= parameters.minYInterceptForHeterozygous
         return isHomozygousAlleleMutation || isHeterozygousAlleleMutation
     }
 

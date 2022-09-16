@@ -9,9 +9,9 @@
       "minDiversityForMutation": 3,
       "minDiversityForAllele": 5,
       "minPValueForRegression": 0.95,
-      "minYIntersectForHeterozygous": 0.125,
-      "portionOfClonesToSearchCommonMutationsInAnAllele": 0.99,
-      "minYIntersectForHomozygous": 0.9,
+      "minYInterceptForHeterozygous": 0.2,
+      "portionOfClonesToSearchCommonMutationsInAnAllele": 0.95,
+      "minYInterceptForHomozygous": 0.9,
       "maxRegressionSlopeForHomozygous": "0.05"
     },
     "searchMutationsInCDR3": {

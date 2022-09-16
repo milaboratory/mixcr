@@ -86,11 +86,11 @@ data class FindAllelesParameters(
         /**
          * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter and slope exists
          */
-        val minYIntersectForHeterozygous: Double,
+        val minYInterceptForHeterozygous: Double,
         /**
          * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter and no slope
          */
-        val minYIntersectForHomozygous: Double,
+        val minYInterceptForHomozygous: Double,
         /**
          * Max slope for test that mutation is a part of homozygous allele
          */
