@@ -67,7 +67,7 @@ object CommandAssemblePartial {
         @Option(names = ["-O"], description = ["Overrides default parameter values."])
         private var overrides: Map<String, String> = mutableMapOf()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemblePartial) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::assemblePartial) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::overlappedOnly setIfTrue overlappedOnly
                 Params::dropPartial setIfTrue dropPartial
@@ -105,7 +105,7 @@ object CommandAssemblePartial {
             val beginTimestamp = System.currentTimeMillis()
             val cmdParams: Params
             VDJCAlignmentsReader(inputFile).use { reader1 ->
-                cmdParams = paramsResolver.parse(reader1.info.paramsSpec).second
+                cmdParams = paramsResolver.resolve(reader1.info.paramsSpec).second
                 VDJCAlignmentsReader(inputFile).use { reader2 ->
                     VDJCAlignmentsWriter(outputFile).use { writer ->
                         val groupingDepth =

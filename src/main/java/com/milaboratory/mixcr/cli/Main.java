@@ -151,7 +151,7 @@ public final class Main {
         CommandLine cmd = new CommandLine(new CommandMain())
                 .setCommandName(command)
                 .addSubcommand("help", CommandLine.HelpCommand.class)
-                .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
+                .addSubcommand(CommandAnalyze.COMMAND_NAME, CommandAnalyze.Cmd.class)
 
                 // Core command sequence
                 .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.Cmd.class)
@@ -212,10 +212,10 @@ public final class Main {
                 .addSubcommand(CommandExportPreset.COMMAND_NAME, CommandExportPreset.Cmd.class);
 
 
-        cmd.getSubcommands()
-                .get("analyze")
-                .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
-                .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+        // cmd.getSubcommands()
+        //         .get("analyze")
+        //         .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
+        //         .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
 
         cmd.getSubcommands()
                 .get("postanalysis")

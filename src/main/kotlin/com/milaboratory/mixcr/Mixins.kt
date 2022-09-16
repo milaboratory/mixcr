@@ -26,7 +26,10 @@ import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-sealed interface MiXCRMixin : Mixin<MiXCRParamsBundle>
+sealed interface MiXCRMixin : Mixin<MiXCRParamsBundle> {
+    /** Returns command line arguments for this mixin */
+    val cmdArgs: List<String>
+}
 
 @POverridesBuilderDsl
 interface MixinBuilderOps : POverridesBuilderOps<MiXCRParamsBundle> {
@@ -88,6 +91,12 @@ data class SetSpecies(val species: String) : MiXCRMixinBase(50) {
             CommandAlign.Params::species setTo species
         }
     }
+
+    override val cmdArgs get() = listOf(CMD_OPTION, species)
+
+    companion object {
+        const val CMD_OPTION = "+species"
+    }
 }
 
 @JsonTypeName("SetClonotypeAssemblingFeatures")
@@ -98,6 +107,12 @@ data class SetClonotypeAssemblingFeatures(val features: GeneFeatures) : MiXCRMix
                 assemblingFeatures = features.features
             }
         }
+    }
+
+    override val cmdArgs get() = listOf(CMD_OPTION, features.encode())
+
+    companion object {
+        const val CMD_OPTION = "+assembleClonotypesBy"
     }
 }
 
@@ -120,6 +135,10 @@ object MaterialTypeDNA : MiXCRMixinBase(20, Flags.MaterialType) {
             // to achieve expected results
             setGeneAlignerParameters(GeneType.Constant, null)
         }
+
+    override val cmdArgs get() = listOf(CMD_OPTION)
+
+    const val CMD_OPTION = "+dna"
 }
 
 @JsonTypeName("MaterialTypeRNA")
@@ -129,11 +148,22 @@ object MaterialTypeRNA : MiXCRMixinBase(20, Flags.MaterialType) {
             // V gene without intron sequence, including 5'UTR sequence
             geneFeatureToAlign = GeneFeature.VTranscriptWithP
         }
+
+    override val cmdArgs get() = listOf(CMD_OPTION)
+
+    const val CMD_OPTION = "+rna"
 }
 
 //
 // Left Boundary
 //
+
+object AlignmentBoundaryMixinConstants {
+    const val LEFT_FLOATING_CMD_OPTION = "+floatingLeftAlignmentBoundary"
+    const val LEFT_RIGID_CMD_OPTION = "+rigidLeftAlignmentBoundary"
+    const val RIGHT_FLOATING_CMD_OPTION = "+floatingRightAlignmentBoundary"
+    const val RIGHT_RIGID_CMD_OPTION = "+rigidRightAlignmentBoundary"
+}
 
 @JsonTypeName("LeftAlignmentBoundaryNoPoint")
 data class LeftAlignmentBoundaryNoPoint(val floating: Boolean) :
@@ -142,6 +172,14 @@ data class LeftAlignmentBoundaryNoPoint(val floating: Boolean) :
         modifyGeneAlignmentParams(GeneType.Variable) {
             parameters.isFloatingLeftBound = floating
         }
+
+    override val cmdArgs
+        get() = listOf(
+            if (floating)
+                AlignmentBoundaryMixinConstants.LEFT_FLOATING_CMD_OPTION
+            else
+                AlignmentBoundaryMixinConstants.LEFT_RIGID_CMD_OPTION
+        )
 }
 
 @JsonTypeName("LeftAlignmentBoundaryWithPoint")
@@ -160,6 +198,15 @@ data class LeftAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: R
             geneFeatureToAlign = geneFeatureToAlign.splitBy(refPoint).right
             parameters.isFloatingLeftBound = floating
         }
+
+    override val cmdArgs
+        get() = listOf(
+            if (floating)
+                AlignmentBoundaryMixinConstants.LEFT_FLOATING_CMD_OPTION
+            else
+                AlignmentBoundaryMixinConstants.LEFT_RIGID_CMD_OPTION,
+            refPoint.toString()
+        )
 }
 
 //
@@ -205,6 +252,17 @@ data class RightAlignmentBoundaryNoPoint(val floating: Boolean, val geneType: Ge
 
             else -> throw IllegalArgumentException()
         }
+
+    override val cmdArgs
+        get() = listOf(
+            if (floating)
+                AlignmentBoundaryMixinConstants.RIGHT_FLOATING_CMD_OPTION
+            else
+                AlignmentBoundaryMixinConstants.RIGHT_RIGID_CMD_OPTION,
+        ) + if (geneType != null)
+            listOf(geneType.letter.toString())
+        else
+            emptyList()
 }
 
 @JsonTypeName("RightAlignmentBoundaryWithPoint")
@@ -258,6 +316,15 @@ data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: 
 
             else -> throw RuntimeException("$refPoint is not inside the J or C gene")
         }
+
+    override val cmdArgs
+        get() = listOf(
+            if (floating)
+                AlignmentBoundaryMixinConstants.RIGHT_FLOATING_CMD_OPTION
+            else
+                AlignmentBoundaryMixinConstants.RIGHT_RIGID_CMD_OPTION,
+            refPoint.toString()
+        )
 }
 
 //
@@ -270,5 +337,67 @@ data class SetTagPattern(val tagPattern: String) : MiXCRMixinBase(50, Flags.TagP
         MiXCRParamsBundle::align.update {
             CommandAlign.Params::tagPattern setTo tagPattern
         }
+    }
+
+    override val cmdArgs get() = listOf(CMD_OPTION, tagPattern)
+
+    companion object {
+        const val CMD_OPTION = "+tagPattern"
+    }
+}
+
+//
+// Tags
+//
+
+@JsonTypeName("AddPipelineStep")
+data class AddPipelineStep(val step: String) : MiXCRMixinBase(10) {
+    private val command = MiXCRCommand.fromString(step)
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::pipeline.updateBy {
+            val newValue = ArrayList(it)
+            newValue += command
+            newValue.sort()
+            newValue
+        }
+
+        if (command == MiXCRCommand.assembleContigs)
+            MiXCRParamsBundle::assemble.update {
+                CommandAssemble.Params::clnaOutput setTo true
+            }
+    }
+
+    override val cmdArgs get() = listOf(CMD_OPTION, step)
+
+    companion object {
+        const val CMD_OPTION = "+addStep"
+    }
+}
+
+@JsonTypeName("RemovePipelineStep")
+data class RemovePipelineStep(val step: String) : MiXCRMixinBase(10) {
+    private val command = MiXCRCommand.fromString(step)
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::pipeline.updateBy {
+            val idx = it.indexOf(command)
+            if (idx == -1)
+                it
+            else {
+                val newValue = ArrayList(it)
+                newValue.removeAt(idx)
+                newValue
+            }
+        }
+
+        if (command == MiXCRCommand.assembleContigs)
+            MiXCRParamsBundle::assemble.update {
+                CommandAssemble.Params::clnaOutput setTo false
+            }
+    }
+
+    override val cmdArgs get() = listOf(CMD_OPTION, step)
+
+    companion object {
+        const val CMD_OPTION = "+removeStep"
     }
 }

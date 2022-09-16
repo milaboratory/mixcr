@@ -113,7 +113,7 @@ object CommandRefineTagsAndSort {
         )
         private var whitelists: Map<String, String> = mutableMapOf()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::refineTagsAndSort) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::refineTagsAndSort) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::whitelists setIfNotEmpty whitelists
 
@@ -187,7 +187,7 @@ object CommandRefineTagsAndSort {
             val mitoolReport: TagCorrectionReport?
             VDJCAlignmentsReader(inputFile).use { mainReader ->
                 require(!mainReader.tagsInfo.hasNoTags()) { "input file has no tags" }
-                cmdParams = paramsResolver.parse(mainReader.info.paramsSpec).second
+                cmdParams = paramsResolver.resolve(mainReader.info.paramsSpec).second
                 val tagNames = mutableListOf<String>()
                 val indicesBuilder = TIntArrayList()
                 for (ti in mainReader.tagsInfo.indices) {

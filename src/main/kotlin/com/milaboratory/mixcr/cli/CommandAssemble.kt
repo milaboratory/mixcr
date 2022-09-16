@@ -79,7 +79,7 @@ object CommandAssemble {
         @Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
         private val consensusAssemblerOverrides: Map<String, String> = mutableMapOf()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemble) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::assemble) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::clnaOutput setIfTrue isClnaOutput
                 Params::cellLevel setIfTrue cellLevel
@@ -153,7 +153,7 @@ object CommandAssemble {
             VDJCAlignmentsReader(inputFile).use { alignmentsReader ->
                 val inputInfo = alignmentsReader.info
 
-                cmdParam = paramsResolver.parse(inputInfo.paramsSpec).second
+                cmdParam = paramsResolver.resolve(inputInfo.paramsSpec).second
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if (outputFile.lowercase(Locale.getDefault())

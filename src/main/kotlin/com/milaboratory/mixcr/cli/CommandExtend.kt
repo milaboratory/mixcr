@@ -58,7 +58,7 @@ object CommandExtend {
         @Option(description = ["Minimal J hit score to perform right extension."], names = ["--min-j-score"])
         private var minimalJScore: Int? = null
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::extend) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::extend) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::vAnchor setIfNotNull vAnchorPoint?.let(ReferencePoint::parse)
                 Params::jAnchor setIfNotNull jAnchorPoint?.let(ReferencePoint::parse)
@@ -164,7 +164,7 @@ object CommandExtend {
             paramsSpec: MiXCRParamsSpec,
             alignerParameters: VDJCAlignerParameters
         ): ProcessWrapper<T> {
-            val (_, cmdParams) = paramsResolver.parse(paramsSpec)
+            val (_, cmdParams) = paramsResolver.resolve(paramsSpec)
 
             val extender = VDJCObjectExtender<T>(
                 Chains.parse(chains), extensionQuality,

@@ -46,7 +46,7 @@ object CommandExportPreset {
         var mixins: AllMiXCRMixins? = null
 
         override fun run0() {
-            val (bundle, _) = paramsResolver.parse(
+            val (bundle, _) = paramsResolver.resolve(
                 MiXCRParamsSpec(presetName, mixins = mixins?.mixins ?: emptyList()),
                 printParameters = false
             )
@@ -58,7 +58,7 @@ object CommandExportPreset {
         }
 
         override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
-            get() = object : MiXCRParamsResolver<Unit>(MiXCRParamsBundle::exportPreset) {
+            get() = object : MiXCRParamsResolver<Unit>(this, MiXCRParamsBundle::exportPreset) {
                 override fun POverridesBuilderOps<Unit>.paramsOverrides() {
                 }
             }

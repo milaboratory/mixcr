@@ -37,7 +37,10 @@ abstract class AbstractMiXCRCommand : ACommand("mixcr") {
     }
 }
 
-abstract class MiXCRParamsResolver<P : Any>(paramsProperty: KProperty1<MiXCRParamsBundle, P?>) :
+abstract class MiXCRParamsResolver<P : Any>(
+    private val cmd: AbstractMiXCRCommand,
+    paramsProperty: KProperty1<MiXCRParamsBundle, P?>
+) :
     ParamsResolver<MiXCRParamsBundle, P>(Presets::resolveParamsBundle, paramsProperty) {
     override fun validateBundle(bundle: MiXCRParamsBundle) {
         if (bundle.flags.isNotEmpty()) {
@@ -47,7 +50,8 @@ abstract class MiXCRParamsResolver<P : Any>(paramsProperty: KProperty1<MiXCRPara
                 println("- " + Flags.flagMessages[flag]!!.replace("\n", "\n  "))
             }
             println()
-            throw RuntimeException() // TODO need exceptions without attachment to the command object !
+
+            cmd.throwExecutionExceptionKotlin("Error validating preset bundle.");
         }
     }
 }

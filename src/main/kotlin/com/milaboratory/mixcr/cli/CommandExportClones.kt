@@ -89,7 +89,7 @@ object CommandExportClones {
         @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         private var splitByTag: String? = null
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::filterOutOfFrames setIfTrue filterOutOfFrames
@@ -120,7 +120,7 @@ object CommandExportClones {
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val info = initialSet.info
-            val (_, params) = paramsResolver.parse(info.paramsSpec)
+            val (_, params) = paramsResolver.resolve(info.paramsSpec)
             InfoWriter.create(
                 outputFile,
                 CloneFieldsExtractorsFactory.createExtractors(params.fields, info, OutputMode.ScriptingFriendly)

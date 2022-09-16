@@ -22,12 +22,26 @@ interface MiXCRMixinSet {
     fun mixIn(mixin: MiXCRMixin)
 }
 
+interface PipelineMiXCRMixins : MiXCRMixinSet {
+    //
+    // Pipeline manipulation mixins
+    //
+
+    @Option(names = [AddPipelineStep.CMD_OPTION])
+    fun addPipelineStep(step: String) =
+        mixIn(AddPipelineStep(step))
+
+    @Option(names = [RemovePipelineStep.CMD_OPTION])
+    fun removePipelineStep(step: String) =
+        mixIn(RemovePipelineStep(step))
+}
+
 interface TagMiXCRMixins : MiXCRMixinSet {
     //
     // Base tag-related settings
     //
 
-    @Option(names = ["+tagPattern"])
+    @Option(names = [SetTagPattern.CMD_OPTION])
     fun tagPattern(pattern: String) =
         mixIn(SetTagPattern(pattern))
 }
@@ -37,7 +51,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
     // Base settings
     //
 
-    @Option(names = ["+species"])
+    @Option(names = [SetSpecies.CMD_OPTION])
     fun species(species: String) =
         mixIn(SetSpecies(species))
 
@@ -45,11 +59,11 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
     // Material type
     //
 
-    @Option(names = ["+dna"], arity = "0")
+    @Option(names = [MaterialTypeDNA.CMD_OPTION], arity = "0")
     fun dna(f: Boolean) =
         mixIn(MaterialTypeDNA)
 
-    @Option(names = ["+rna"], arity = "0")
+    @Option(names = [MaterialTypeRNA.CMD_OPTION], arity = "0")
     fun rna(f: Boolean) =
         mixIn(MaterialTypeRNA)
 
@@ -57,7 +71,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
     // Alignment boundaries
     //
 
-    @Option(names = ["+floatingLeftAlignmentBoundary"], arity = "0..1")
+    @Option(names = [AlignmentBoundaryMixinConstants.LEFT_FLOATING_CMD_OPTION], arity = "0..1")
     fun floatingLeftAlignmentBoundary(arg: String?) =
         mixIn(
             if (arg.isNullOrBlank())
@@ -66,7 +80,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
                 LeftAlignmentBoundaryWithPoint(true, ReferencePoint.parse(arg))
         )
 
-    @Option(names = ["+rigidLeftAlignmentBoundary"], arity = "0..1")
+    @Option(names = [AlignmentBoundaryMixinConstants.LEFT_RIGID_CMD_OPTION], arity = "0..1")
     fun rigidLeftAlignmentBoundary(arg: String?) =
         mixIn(
             if (arg.isNullOrBlank())
@@ -75,7 +89,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
                 LeftAlignmentBoundaryWithPoint(false, ReferencePoint.parse(arg))
         )
 
-    @Option(names = ["+floatingRightAlignmentBoundary"], arity = "1")
+    @Option(names = [AlignmentBoundaryMixinConstants.RIGHT_FLOATING_CMD_OPTION], arity = "1")
     fun floatingRightAlignmentBoundary(arg: String) =
         mixIn(
             when {
@@ -90,7 +104,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
             }
         )
 
-    @Option(names = ["+rigidRightAlignmentBoundary"], arity = "0..1")
+    @Option(names = [AlignmentBoundaryMixinConstants.RIGHT_RIGID_CMD_OPTION], arity = "0..1")
     fun rigidRightAlignmentBoundary(arg: String?) =
         mixIn(
             when {
@@ -110,9 +124,9 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
 }
 
 interface AssembleMiXCRMixIns : MiXCRMixinSet {
-    @Option(names = ["+assembleClonotypesBy"])
+    @Option(names = [SetClonotypeAssemblingFeatures.CMD_OPTION])
     fun assembleClonotypesBy(gf: String) =
         mixIn(SetClonotypeAssemblingFeatures(GeneFeatures.parse(gf)))
 }
 
-class AllMiXCRMixins : MiXCRMixinCollector(), AlignMiXCRMixins, AssembleMiXCRMixIns
+class AllMiXCRMixins : MiXCRMixinCollector(), PipelineMiXCRMixins, AlignMiXCRMixins, AssembleMiXCRMixIns

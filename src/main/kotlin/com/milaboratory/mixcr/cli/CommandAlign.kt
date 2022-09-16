@@ -184,7 +184,7 @@ object CommandAlign {
         )
         private var saveReads = false
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::align) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::align) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::species setIfNotNull species
 
@@ -304,7 +304,7 @@ object CommandAlign {
 
         private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins?.mixins ?: emptyList()) }
 
-        private val bpPair by lazy { paramsResolver.parse(paramsSpec) }
+        private val bpPair by lazy { paramsResolver.resolve(paramsSpec) }
 
         private val bundle by lazy { bpPair.first }
 

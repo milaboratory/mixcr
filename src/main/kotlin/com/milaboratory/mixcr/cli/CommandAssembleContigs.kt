@@ -71,7 +71,7 @@ object CommandAssembleContigs {
         @Option(names = ["-O"], description = ["Overrides for the assembler parameters."])
         private var overrides: Map<String, String> = mutableMapOf()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assembleContigs) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::assembleContigs) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 cutByFeatureParam
                     ?.takeIf { it.isNotBlank() }
@@ -149,7 +149,7 @@ object CommandAssembleContigs {
             val reports: List<MiXCRCommandReport>
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-                cmdParams = paramsResolver.parse(reader.info.paramsSpec).second
+                cmdParams = paramsResolver.resolve(reader.info.paramsSpec).second
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."

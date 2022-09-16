@@ -62,7 +62,7 @@ object CommandExportAlignments {
         )
         private var chains: String? = null
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportAlignments) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::exportAlignments) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::fields setIfNotEmpty VDJCAlignmentsFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
@@ -90,7 +90,7 @@ object CommandExportAlignments {
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->
                 val info = data.info
-                val (_, params) = paramsResolver.parse(info.paramsSpec)
+                val (_, params) = paramsResolver.resolve(info.paramsSpec)
 
                 InfoWriter.create(
                     outputFile,

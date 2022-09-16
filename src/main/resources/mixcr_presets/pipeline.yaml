@@ -1,15 +1,5 @@
 "pipeline_base":
   pipeline:
-
-    - command: align
-      outputSuffix: .vdjca
-      reportSuffix: .align.report
-      jsonReportSuffix: .align.json
-
-    - command: assemble
-      outputSuffix: .clns
-      reportSuffix: .assemble.report
-      jsonReportSuffix: .assemble.json
-
-    - command: exportClones
-      outputSuffix: .txt
+    - align
+    - assemble
+    - exportClones
