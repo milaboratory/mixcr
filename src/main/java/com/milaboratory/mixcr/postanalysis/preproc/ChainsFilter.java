@@ -25,8 +25,8 @@ import java.util.function.Predicate;
 
 public class ChainsFilter<T extends VDJCObject> implements Predicate<T> {
     @JsonProperty("chains")
-    @JsonSerialize(using = Chains.ChainsSerializer.class)
-    @JsonDeserialize(using = Chains.ChainsDeserializer.class)
+    @JsonSerialize(contentUsing = Chains.ChainsSerializer.class)
+    @JsonDeserialize(contentUsing = Chains.ChainsDeserializer.class)
     public final Set<Chains> chains;
     @JsonProperty("allowChimeras")
     public final boolean allowChimeras;

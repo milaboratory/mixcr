@@ -25,12 +25,14 @@ import com.milaboratory.mixcr.postanalysis.additive.AAProperties;
 import com.milaboratory.mixcr.postanalysis.additive.AdditiveCharacteristics;
 import com.milaboratory.mixcr.postanalysis.additive.KeyFunctions;
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityCharacteristic;
-import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorByReadsFactory;
 import com.milaboratory.mixcr.postanalysis.downsampling.DownsampleValueChooser;
+import com.milaboratory.mixcr.postanalysis.downsampling.DownsamplingPreprocessorByReadsFactory;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapCharacteristic;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapIntegrationTest;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil;
+import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate;
+import com.milaboratory.mixcr.postanalysis.preproc.FilterPreprocessor;
 import com.milaboratory.mixcr.postanalysis.preproc.NoPreprocessing;
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeCharacteristic;
@@ -38,6 +40,7 @@ import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKey;
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.LambdaSemaphore;
+import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -114,7 +117,11 @@ public class PostanalysisSchemaIntegrationTest {
         ));
         groups.add(new CharacteristicGroup<>(
                 "jUsage",
-                Arrays.asList(AdditiveCharacteristics.segmentUsage(GeneType.Joining)),
+                Arrays.asList(AdditiveCharacteristics.segmentUsage(
+                        new FilterPreprocessor.Factory<>(Collections.singletonList(
+                                new ElementPredicate.IncludeChains(Chains.IG, true)),
+                                WeightFunctions.Default()),
+                        GeneType.Joining)),
                 Arrays.asList(new GroupSummary.Simple<>())
         ));
         groups.add(new CharacteristicGroup<>(
@@ -171,7 +178,7 @@ public class PostanalysisSchemaIntegrationTest {
         OutputTable table = result.getTable(individualPA.getGroup("vjUsage")).getOutputs().get(GroupSummary.key);
 
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        table.writeCSV(new PrintStream(bs), "sample","\t");
+        table.writeCSV(new PrintStream(bs), "sample", "\t");
         bs.close();
         Assert.assertTrue(bs.toString().split("\n").length > 500);
 //        table.writeCSV(System.out, "\t");
