@@ -28,14 +28,16 @@ import com.milaboratory.util.LambdaSemaphore
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.StringUtil
 import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 import java.nio.file.Paths
 
-@CommandLine.Command(name = "overlap", sortOptions = false, separator = " ", description = ["Overlap analysis"])
+@Command(name = "overlap", sortOptions = false, separator = " ", description = ["Overlap analysis"])
 class CommandPaOverlap : CommandPa() {
-    @CommandLine.Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
+    @Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
     var overlapCriteria = "CDR3|AA|V|J"
 
-    @CommandLine.Option(
+    @Option(
         description = ["Aggregate samples in groups by specified metadata columns"],
         names = ["--factor-by"],
         split = ","

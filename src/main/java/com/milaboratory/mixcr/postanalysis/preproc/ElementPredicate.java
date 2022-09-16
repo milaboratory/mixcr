@@ -116,7 +116,9 @@ public interface ElementPredicate<T> extends Predicate<T> {
     }
 
     final class IncludeChains extends ChainsFilter<Clone> implements ElementPredicate<Clone> {
-        public IncludeChains(Set<Chains> chains, boolean allowChimeras) {
+        @JsonCreator
+        public IncludeChains(@JsonProperty("chains") Set<Chains> chains,
+                             @JsonProperty("allowChimeras") boolean allowChimeras) {
             super(chains, allowChimeras);
         }
 

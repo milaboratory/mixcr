@@ -21,6 +21,8 @@ import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
 import io.repseq.core.Chains
 import picocli.CommandLine
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -34,30 +36,30 @@ import kotlin.io.path.readLines
  *
  */
 abstract class CommandPa : MiXCRCommand() {
-    @CommandLine.Parameters(description = ["cloneset.{clns|clna}... result.json.gz|result.json"], arity = "2..*")
+    @Parameters(description = ["cloneset.{clns|clna}... result.json.gz|result.json"], arity = "2..*")
     var inOut: List<String> = mutableListOf()
 
-    @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
 
-    @CommandLine.Option(description = [CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS], names = ["--drop-outliers"])
+    @Option(description = [CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS], names = ["--drop-outliers"])
     var dropOutliers = false
 
-    @CommandLine.Option(
+    @Option(
         description = [CommonDescriptions.DOWNSAMPLING],
         names = ["--default-downsampling"],
         required = true
     )
     lateinit var defaultDownsampling: String
 
-    @CommandLine.Option(
+    @Option(
         description = [CommonDescriptions.WEIGHT_FUNCTION],
         names = ["--default-weight-function"],
         required = true
     )
     lateinit var defaultWeightFunction: String
 
-    @CommandLine.Option(
+    @Option(
         description = ["Limit analysis to specific chains (e.g. TRA or IGH) (fractions will be recalculated). " +
                 "Possible values (multiple values allowed): TRA, TRD, TRAD (for human), TRG, IGH, IGK, IGL"],
         names = ["--chains"],
@@ -65,22 +67,22 @@ abstract class CommandPa : MiXCRCommand() {
     )
     var chains: Set<String>? = null
 
-    @CommandLine.Option(description = [CommonDescriptions.METADATA], names = ["--metadata"], paramLabel = "metadata")
+    @Option(description = [CommonDescriptions.METADATA], names = ["--metadata"], paramLabel = "metadata")
     var metadataFile: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Metadata categories used to isolate samples into separate groups"],
         names = ["--group"]
     )
     var isolationGroups: List<String> = mutableListOf()
 
-    @CommandLine.Option(description = ["Tabular results output path (path/table.tsv)."], names = ["--tables"])
+    @Option(description = ["Tabular results output path (path/table.tsv)."], names = ["--tables"])
     var tablesOut: String? = null
 
-    @CommandLine.Option(description = ["Preprocessor summary output path."], names = ["--preproc-tables"])
+    @Option(description = ["Preprocessor summary output path."], names = ["--preproc-tables"])
     var preprocOut: String? = null
 
-    @CommandLine.Option(names = ["-O"], description = ["Overrides default postanalysis settings"])
+    @Option(names = ["-O"], description = ["Overrides default postanalysis settings"])
     var overrides: Map<String, String> = mutableMapOf()
 
     override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)

@@ -27,6 +27,12 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
     abstract fun group(): String
 
     @Option(
+        description = ["Show gene family usage instead."],
+        names = ["--family-usage"]
+    )
+    var familyUsage: Boolean = false
+
+    @Option(
         description = ["Don't add samples dendrogram on heatmap."],
         names = ["--no-samples-dendro"]
     )
@@ -93,7 +99,11 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
         description = ["Export V gene usage"]
     )
     class VUsage : CommandPaExportPlotsGeneUsage() {
-        override fun group(): String = PostanalysisParametersIndividual.VUsage
+        override fun group(): String =
+            if (familyUsage)
+                PostanalysisParametersIndividual.VFamilyUsage
+            else
+                PostanalysisParametersIndividual.VUsage
     }
 
     @Command(
@@ -103,27 +113,11 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
         description = ["Export J gene usage"]
     )
     class JUsage : CommandPaExportPlotsGeneUsage() {
-        override fun group(): String = PostanalysisParametersIndividual.JUsage
-    }
-
-    @Command(
-        name = "vFamilyUsage",
-        sortOptions = false,
-        separator = " ",
-        description = ["Export V gene family usage"]
-    )
-    class VFamilyUsage : CommandPaExportPlotsGeneUsage() {
-        override fun group(): String = PostanalysisParametersIndividual.VFamilyUsage
-    }
-
-    @Command(
-        name = "jFamilyUsage",
-        sortOptions = false,
-        separator = " ",
-        description = ["Export J gene family usage"]
-    )
-    class JFamilyUsage : CommandPaExportPlotsGeneUsage() {
-        override fun group(): String = PostanalysisParametersIndividual.JFamilyUsage
+        override fun group(): String =
+            if (familyUsage)
+                PostanalysisParametersIndividual.JFamilyUsage
+            else
+                PostanalysisParametersIndividual.JUsage
     }
 
     @Command(

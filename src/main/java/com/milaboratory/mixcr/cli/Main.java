@@ -227,11 +227,8 @@ public final class Main {
                 .addSubcommand("diversity", CommandSpec.forAnnotatedObject(CommandPaExportPlotsBasicStatistics.ExportDiversity.class))
                 .addSubcommand("vUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.VUsage.class))
                 .addSubcommand("jUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.JUsage.class))
-                .addSubcommand("vFamilyUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.VFamilyUsage.class))
-                .addSubcommand("jFamilyUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.JFamilyUsage.class))
                 .addSubcommand("isotypeUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.IsotypeUsage.class))
-                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJSegmentUsage.VJUsage.class))
-                .addSubcommand("vjFamilyUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJSegmentUsage.VJFamilyUsage.class))
+                .addSubcommand("vjUsage", CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJUsage.class))
                 .addSubcommand("overlap", CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap.class))
 
                 .addSubcommand("shmTrees", CommandSpec.forAnnotatedObject(CommandExportShmTreesPlots.class));

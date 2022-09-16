@@ -19,7 +19,20 @@ import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
-abstract class CommandPaExportPlotsVJSegmentUsage : CommandPaExportPlotsHeatmap() {
+@Command(
+    name = "vjUsage",
+    sortOptions = false,
+    separator = " ",
+    description = ["Export V-J usage heatmap"],
+    hidden = true
+)
+class CommandPaExportPlotsVJUsage : CommandPaExportPlotsHeatmap() {
+    @Option(
+        description = ["Show gene family usage instead."],
+        names = ["--family-usage"]
+    )
+    var familyUsage: Boolean = false
+
     @Option(
         description = ["Don't add V genes dendrogram"],
         names = ["--no-v-dendro"]
@@ -32,10 +45,12 @@ abstract class CommandPaExportPlotsVJSegmentUsage : CommandPaExportPlotsHeatmap(
     )
     var noJDendro = false
 
-    abstract fun group(): String
-
     override fun run(result: PaResultByGroup) {
-        val ch = result.schema.getGroup<Clone>(group())
+        val group = if (familyUsage)
+            PostanalysisParametersIndividual.VJFamilyUsage
+        else
+            PostanalysisParametersIndividual.VJUsage
+        val ch = result.schema.getGroup<Clone>(group)
         val df = dataFrame(result.result.forGroup(ch), metadataDf).filterByMetadata()
         if (df.rowsCount() == 0) return
         val plots = plots(
@@ -53,27 +68,5 @@ abstract class CommandPaExportPlotsVJSegmentUsage : CommandPaExportPlotsHeatmap(
             )
         )
         writePlots(result.group, plots)
-    }
-
-    @Command(
-        name = "vjUsage",
-        sortOptions = false,
-        separator = " ",
-        description = ["Export V-J usage heatmap"],
-        hidden = true
-    )
-    class VJUsage : CommandPaExportPlotsVJSegmentUsage() {
-        override fun group() = PostanalysisParametersIndividual.VJUsage
-    }
-
-    @Command(
-        name = "vjFamilyUsage",
-        sortOptions = false,
-        separator = " ",
-        description = ["Export V-J family usage heatmap"],
-        hidden = true
-    )
-    class VJFamilyUsage : CommandPaExportPlotsVJSegmentUsage() {
-        override fun group() = PostanalysisParametersIndividual.VJFamilyUsage
     }
 }

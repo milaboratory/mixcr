@@ -13,6 +13,8 @@ package com.milaboratory.mixcr.postanalysis.preproc;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import io.repseq.core.Chains;
 
@@ -23,6 +25,8 @@ import java.util.function.Predicate;
 
 public class ChainsFilter<T extends VDJCObject> implements Predicate<T> {
     @JsonProperty("chains")
+    @JsonSerialize(using = Chains.ChainsSerializer.class)
+    @JsonDeserialize(using = Chains.ChainsDeserializer.class)
     public final Set<Chains> chains;
     @JsonProperty("allowChimeras")
     public final boolean allowChimeras;
