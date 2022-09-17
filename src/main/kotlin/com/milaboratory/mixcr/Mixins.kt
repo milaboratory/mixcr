@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.milaboratory.cli.*
@@ -32,8 +33,8 @@ sealed interface MiXCRMixin : Mixin<MiXCRParamsBundle>, Comparable<MiXCRMixin> {
     /** Returns command line arguments for this mixin */
     val cmdArgs: List<String>
 
-    /** Mixins with higher priority goes first */
-    override fun compareTo(other: MiXCRMixin) = other.priority.compareTo(priority)
+    /** Mixins with higher importance are executed later in the modification chain */
+    override fun compareTo(other: MiXCRMixin) = importance.compareTo(other.importance)
 }
 
 @POverridesBuilderDsl
@@ -59,7 +60,7 @@ private fun MixinBuilderOps.modifyGeneAlignmentParams(gt: GeneType, action: KGen
     }
 
 sealed class MiXCRMixinBase(
-    @JsonIgnore override val priority: Int,
+    @JsonIgnore override val importance: Int,
     @JsonIgnore private val flags: List<String>
 ) : MiXCRMixin {
     constructor(priority: Int, vararg flags: String) : this(priority, flags.asList())
@@ -90,7 +91,9 @@ sealed class MiXCRMixinBase(
 //
 
 @JsonTypeName("SetSpecies")
-data class SetSpecies(val species: String) : MiXCRMixinBase(50) {
+data class SetSpecies(
+    @JsonProperty("species") val species: String
+) : MiXCRMixinBase(50) {
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::align.update {
             CommandAlign.Params::species setTo species
@@ -105,7 +108,9 @@ data class SetSpecies(val species: String) : MiXCRMixinBase(50) {
 }
 
 @JsonTypeName("SetClonotypeAssemblingFeatures")
-data class SetClonotypeAssemblingFeatures(val features: GeneFeatures) : MiXCRMixinBase(50) {
+data class SetClonotypeAssemblingFeatures(
+    @JsonProperty("features") val features: GeneFeatures
+) : MiXCRMixinBase(50) {
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::assemble.update {
             CommandAssemble.Params::cloneAssemblerParameters.applyAfterClone(CloneAssemblerParameters::clone) {
@@ -171,7 +176,9 @@ object AlignmentBoundaryMixinConstants {
 }
 
 @JsonTypeName("LeftAlignmentBoundaryNoPoint")
-data class LeftAlignmentBoundaryNoPoint(val floating: Boolean) :
+data class LeftAlignmentBoundaryNoPoint(
+    @JsonProperty("floating") val floating: Boolean
+) :
     MiXCRMixinBase(10, Flags.LeftAlignmentMode) {
     override fun MixinBuilderOps.action() =
         modifyGeneAlignmentParams(GeneType.Variable) {
@@ -188,19 +195,22 @@ data class LeftAlignmentBoundaryNoPoint(val floating: Boolean) :
 }
 
 @JsonTypeName("LeftAlignmentBoundaryWithPoint")
-data class LeftAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: ReferencePoint) :
+data class LeftAlignmentBoundaryWithPoint(
+    @JsonProperty("floating") val floating: Boolean,
+    @JsonProperty("anchorPoint") val anchorPoint: ReferencePoint
+) :
     MiXCRMixinBase(10, Flags.LeftAlignmentMode) {
     init {
         // Checking parameters
-        if (refPoint.geneType != GeneType.Variable)
-            throw RuntimeException("$refPoint is not inside the V gene")
+        if (anchorPoint.geneType != GeneType.Variable)
+            throw RuntimeException("$anchorPoint is not inside the V gene")
     }
 
     override fun MixinBuilderOps.action() =
         modifyGeneAlignmentParams(GeneType.Variable) {
-            if (!geneFeatureToAlign.contains(refPoint))
-                throw RuntimeException("Can't apply mixin because $geneFeatureToAlign does not contain $refPoint")
-            geneFeatureToAlign = geneFeatureToAlign.splitBy(refPoint).right
+            if (!geneFeatureToAlign.contains(anchorPoint))
+                throw RuntimeException("Can't apply mixin because $geneFeatureToAlign does not contain $anchorPoint")
+            geneFeatureToAlign = geneFeatureToAlign.splitBy(anchorPoint).right
             parameters.isFloatingLeftBound = floating
         }
 
@@ -210,7 +220,7 @@ data class LeftAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: R
                 AlignmentBoundaryMixinConstants.LEFT_FLOATING_CMD_OPTION
             else
                 AlignmentBoundaryMixinConstants.LEFT_RIGID_CMD_OPTION,
-            refPoint.toString()
+            anchorPoint.toString()
         )
 }
 
@@ -219,7 +229,10 @@ data class LeftAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: R
 //
 
 @JsonTypeName("RightAlignmentBoundaryNoPoint")
-data class RightAlignmentBoundaryNoPoint(val floating: Boolean, val geneType: GeneType?) :
+data class RightAlignmentBoundaryNoPoint(
+    @JsonProperty("floating") val floating: Boolean,
+    @JsonProperty("geneType") val geneType: GeneType?
+) :
     MiXCRMixinBase(10, Flags.RightAlignmentMode) {
     override fun MixinBuilderOps.action() =
         when (geneType) {
@@ -271,15 +284,18 @@ data class RightAlignmentBoundaryNoPoint(val floating: Boolean, val geneType: Ge
 }
 
 @JsonTypeName("RightAlignmentBoundaryWithPoint")
-data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: ReferencePoint) :
+data class RightAlignmentBoundaryWithPoint(
+    @JsonProperty("floating") val floating: Boolean,
+    @JsonProperty("anchorPoint") val anchorPoint: ReferencePoint
+) :
     MiXCRMixinBase(10, Flags.RightAlignmentMode) {
     override fun MixinBuilderOps.action() =
-        when (refPoint.geneType) {
+        when (anchorPoint.geneType) {
             GeneType.Joining ->
                 modifyAlignmentParams {
                     // Checking mixin assumptions
                     if (jAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.FR4End &&
-                        !jAlignerParameters.geneFeatureToAlign.contains(refPoint)
+                        !jAlignerParameters.geneFeatureToAlign.contains(anchorPoint)
                     )
                         throw RuntimeException(
                             "Incompatible J gene alignment feature for the mix-in: " +
@@ -287,7 +303,8 @@ data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: 
                         )
 
                     // Adjusting feature to align
-                    jAlignerParameters.geneFeatureToAlign = jAlignerParameters.geneFeatureToAlign.setLastPoint(refPoint)
+                    jAlignerParameters.geneFeatureToAlign =
+                        jAlignerParameters.geneFeatureToAlign.setLastPoint(anchorPoint)
                     // Setting alignment mode
                     jAlignerParameters.parameters.isFloatingRightBound = floating
                     // And turn off C gene alignment as alignment should terminate somewhere in J gene
@@ -298,7 +315,7 @@ data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: 
                 modifyAlignmentParams {
                     // Checking mixin assumptions
                     if (cAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.CExon1End &&
-                        !cAlignerParameters.geneFeatureToAlign.contains(refPoint)
+                        !cAlignerParameters.geneFeatureToAlign.contains(anchorPoint)
                     )
                         throw RuntimeException(
                             "Incompatible C gene alignment feature for the mix-in: " +
@@ -314,12 +331,13 @@ data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: 
                     jAlignerParameters.parameters.isFloatingRightBound = false
 
                     // Adjusting feature to align
-                    cAlignerParameters.geneFeatureToAlign = cAlignerParameters.geneFeatureToAlign.setLastPoint(refPoint)
+                    cAlignerParameters.geneFeatureToAlign =
+                        cAlignerParameters.geneFeatureToAlign.setLastPoint(anchorPoint)
                     // Setting alignment mode
                     cAlignerParameters.parameters.isFloatingRightBound = floating
                 }
 
-            else -> throw RuntimeException("$refPoint is not inside the J or C gene")
+            else -> throw RuntimeException("$anchorPoint is not inside the J or C gene")
         }
 
     override val cmdArgs
@@ -328,7 +346,7 @@ data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: 
                 AlignmentBoundaryMixinConstants.RIGHT_FLOATING_CMD_OPTION
             else
                 AlignmentBoundaryMixinConstants.RIGHT_RIGID_CMD_OPTION,
-            refPoint.toString()
+            anchorPoint.toString()
         )
 }
 
@@ -337,7 +355,9 @@ data class RightAlignmentBoundaryWithPoint(val floating: Boolean, val refPoint: 
 //
 
 @JsonTypeName("SetTagPattern")
-data class SetTagPattern(val tagPattern: String) : MiXCRMixinBase(50, Flags.TagPattern) {
+data class SetTagPattern(
+    @JsonProperty("tagPattern") val tagPattern: String
+) : MiXCRMixinBase(50, Flags.TagPattern) {
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::align.update {
             CommandAlign.Params::tagPattern setTo tagPattern
@@ -357,8 +377,8 @@ data class SetTagPattern(val tagPattern: String) : MiXCRMixinBase(50, Flags.TagP
 
 @JsonTypeName("SetSplitClonesBy")
 data class SetSplitClonesBy(
-    val geneType: GeneType,
-    val value: Boolean
+    @JsonProperty("geneType") val geneType: GeneType,
+    @JsonProperty("value") val value: Boolean
 ) : MiXCRMixinBase(10) {
     init {
         if (geneType != GeneType.Variable && geneType != GeneType.Joining && geneType != GeneType.Constant)
@@ -391,7 +411,10 @@ data class SetSplitClonesBy(
 //
 
 @JsonTypeName("AddPipelineStep")
-data class AddPipelineStep(val step: String) : MiXCRMixinBase(10) {
+data class AddPipelineStep(
+    @JsonProperty("step") val step: String
+) : MiXCRMixinBase(10) {
+    @JsonIgnore
     private val command = MiXCRCommand.fromString(step)
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::pipeline.updateBy {
@@ -415,7 +438,10 @@ data class AddPipelineStep(val step: String) : MiXCRMixinBase(10) {
 }
 
 @JsonTypeName("RemovePipelineStep")
-data class RemovePipelineStep(val step: String) : MiXCRMixinBase(10) {
+data class RemovePipelineStep(
+    @JsonProperty("step") val step: String
+) : MiXCRMixinBase(10) {
+    @JsonIgnore
     private val command = MiXCRCommand.fromString(step)
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::pipeline.updateBy {
@@ -498,4 +524,24 @@ object DontImputeGermlineOnExport : MiXCRMixinBase(11) {
     }
 
     const val CMD_OPTION = "+dontImputeGermlineOnExport"
+}
+
+//
+// Generic mixin
+//
+
+@JsonTypeName("GenericMixin")
+data class GenericMixin(
+    @JsonProperty("fieldAddress") val fieldAddress: String,
+    @JsonProperty("newValue") val newValue: String,
+) : MiXCRMixinBase(100) {
+    override val cmdArgs get() = listOf(CMD_OPTION, "${fieldAddress}=${newValue}")
+
+    override fun MixinBuilderOps.action() {
+        jsonOverrideWith(mapOf(fieldAddress to newValue))
+    }
+
+    companion object {
+        const val CMD_OPTION = "+M"
+    }
 }

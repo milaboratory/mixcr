@@ -20,10 +20,7 @@ import picocli.CommandLine
 import picocli.CommandLine.*
 import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
+import kotlin.io.path.*
 
 object CommandAnalyze {
     const val COMMAND_NAME = "analyze"
@@ -53,6 +50,12 @@ object CommandAnalyze {
 
         @ArgGroup(validate = false, heading = "Analysis mix-ins")
         private var mixins: AllMiXCRMixins? = null
+
+        // @Option(
+        //     description = ["Delete all output files of the command if they already exist."],
+        //     names = ["-f", "--force-overwrite"]
+        // )
+        // private var deleteOutputs: Boolean = false
 
         @Option(
             description = ["Dry run. Print commands that would have been executed and exit."],
@@ -145,6 +148,22 @@ object CommandAnalyze {
                 // Printing commands that would have been executed
                 plan.forEach { pe -> println(pe) }
             } else {
+                // Cleanup output files before executing the plan, if requested by the user
+                if (forceOverwrite) {
+                    var removedOne = false
+                    plan.flatMap { it.output }.forEach {
+                        val op = Path(it)
+                        if (op.exists()) {
+                            if (!removedOne) {
+                                println("Cleanup:")
+                                removedOne = true
+                            }
+                            println("  - removing: $it")
+                            op.deleteExisting()
+                        }
+                    }
+                }
+
                 // Executing the plan
                 for (executionStep in plan) {
                     println("====================")

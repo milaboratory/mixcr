@@ -124,7 +124,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
         )
 }
 
-interface AssembleMiXCRMixIns : MiXCRMixinSet {
+interface AssembleMiXCRMixins : MiXCRMixinSet {
     @Option(names = [SetClonotypeAssemblingFeatures.CMD_OPTION])
     fun assembleClonotypesBy(gf: String) =
         mixIn(SetClonotypeAssemblingFeatures(GeneFeatures.parse(gf)))
@@ -138,7 +138,7 @@ interface AssembleMiXCRMixIns : MiXCRMixinSet {
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), false)) }
 }
 
-interface ExportMiXCRMixIns : MiXCRMixinSet {
+interface ExportMiXCRMixins : MiXCRMixinSet {
     @Option(names = [ImputeGermlineOnExport.CMD_OPTION], negatable = false, arity = "0")
     fun imputeGermlineOnExport(ignored: Boolean) =
         mixIn(ImputeGermlineOnExport)
@@ -148,6 +148,19 @@ interface ExportMiXCRMixIns : MiXCRMixinSet {
         mixIn(DontImputeGermlineOnExport)
 }
 
+interface GenericMiXCRMixins : MiXCRMixinSet {
+    @Option(names = [GenericMixin.CMD_OPTION])
+    fun genericMixin(fieldAndOverrides: Map<String, String>) {
+        fieldAndOverrides.forEach { (field, override) ->
+            // val split = fieldAndOverride.split('=', limit = 2)
+            // if (split.size != 2)
+            //     throw IllegalArgumentException("Wrong format for the override.")
+            // mixIn(GenericMixin(split[0], split[1]))
+            mixIn(GenericMixin(field, override))
+        }
+    }
+}
+
 class AllMiXCRMixins : MiXCRMixinCollector(), PipelineMiXCRMixins,
-    AlignMiXCRMixins, AssembleMiXCRMixIns,
-    ExportMiXCRMixIns
+    AlignMiXCRMixins, AssembleMiXCRMixins,
+    ExportMiXCRMixins, GenericMiXCRMixins

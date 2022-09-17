@@ -251,7 +251,6 @@ public final class Main {
         ExceptionHandler<?> exHandler = new ExceptionHandler<>();
         exHandler.andExit(1);
         CommandLine cmd = mkCmd();
-        // cmd.setNegatableOptionTransformer(new CommandLine.RegexTransformer.Builder().build());
         try {
             cmd.parseArgs(args);
         } catch (ParameterException ex) {
