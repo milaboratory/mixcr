@@ -26,9 +26,12 @@ import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-sealed interface MiXCRMixin : Mixin<MiXCRParamsBundle> {
+sealed interface MiXCRMixin : Mixin<MiXCRParamsBundle>, Comparable<MiXCRMixin> {
     /** Returns command line arguments for this mixin */
     val cmdArgs: List<String>
+
+    /** Mixins with higher priority goes first */
+    override fun compareTo(other: MiXCRMixin) = other.priority.compareTo(priority)
 }
 
 @POverridesBuilderDsl

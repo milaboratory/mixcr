@@ -32,6 +32,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
 
     abstract fun extractFromBundle(bundle: MiXCRParamsBundle): P?
 
+    abstract fun createCommand(): AbstractMiXCRCommand
+
     fun outputName(prefix: String, bundle: MiXCRParamsBundle, round: Int) =
         outputName(
             prefix,
@@ -72,6 +74,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
             "${prefix.dotIfNotBlank()}align.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.align
+
+        override fun createCommand() = CommandAlign.Cmd()
     }
 
     object exportAlignments : MiXCRCommand<CommandExportAlignments.Params>() {
@@ -86,6 +90,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun jsonReportName(prefix: String, params: CommandExportAlignments.Params, round: Int) = null
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.exportAlignments
+
+        override fun createCommand() = CommandExportAlignments.Cmd()
     }
 
     object extend : MiXCRCommand<CommandExtend.Params>() {
@@ -103,6 +109,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
             "${prefix.dotIfNotBlank()}extend.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.extend
+
+        override fun createCommand() = CommandExtend.Cmd()
     }
 
     object assemblePartial : MiXCRCommand<CommandAssemblePartial.Params>() {
@@ -121,6 +129,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
             "${prefix.dotIfNotBlank()}assemblePartial.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.assemblePartial
+
+        override fun createCommand() = CommandAssemblePartial.Cmd()
     }
 
     object assemble : MiXCRCommand<CommandAssemble.Params>() {
@@ -138,6 +148,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
             "${prefix.dotIfNotBlank()}assemble.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.assemble
+
+        override fun createCommand() = CommandAssemble.Cmd()
     }
 
     object assembleContigs : MiXCRCommand<CommandAssembleContigs.Params>() {
@@ -155,6 +167,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
             "${prefix.dotIfNotBlank()}assembleContigs.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.assembleContigs
+
+        override fun createCommand() = CommandAssembleContigs.Cmd()
     }
 
     object exportClones : MiXCRCommand<CommandExportClones.Params>() {
@@ -169,6 +183,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun jsonReportName(prefix: String, params: CommandExportClones.Params, round: Int) = null
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.exportClones
+
+        override fun createCommand() = CommandExportClones.Cmd()
     }
 
     companion object {

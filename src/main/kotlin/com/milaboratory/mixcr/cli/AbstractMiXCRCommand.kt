@@ -65,7 +65,7 @@ abstract class MiXCRMixinCollector : MiXCRMixinSet {
         _mixins += mixin
     }
 
-    val mixins: List<MiXCRMixin> get() = _mixins
+    val mixins: List<MiXCRMixin> get() = _mixins.sorted()
 
     // val bundleOverride
     //     get() = POverride<MiXCRParamsBundle> { bundle ->
