@@ -25,7 +25,9 @@ import kotlin.reflect.KProperty1
 data class MiXCRParamsSpec(
     @JsonProperty("presetAddress") override val presetAddress: String,
     @JsonProperty("mixins") override val mixins: List<MiXCRMixin>,
-) : ParamsBundleSpec<MiXCRParamsBundle>
+) : ParamsBundleSpec<MiXCRParamsBundle> {
+    constructor(presetAddress: String, vararg mixins: MiXCRMixin) : this(presetAddress, listOf(*mixins))
+}
 
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
 data class MiXCRParamsBundle(

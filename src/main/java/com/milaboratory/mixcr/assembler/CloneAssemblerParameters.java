@@ -22,6 +22,7 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -236,6 +237,23 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
 
     public CloneAssemblerParameters setSeparateByC(boolean separateByC) {
         this.separateByC = separateByC;
+        return this;
+    }
+
+    public CloneAssemblerParameters setSeparateBy(GeneType gt, boolean value) {
+        switch (Objects.requireNonNull(gt)) {
+            case Variable:
+                separateByV = value;
+                break;
+            case Joining:
+                separateByJ = value;
+                break;
+            case Constant:
+                separateByC = value;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
         return this;
     }
 

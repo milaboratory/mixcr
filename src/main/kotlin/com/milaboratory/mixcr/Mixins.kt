@@ -19,6 +19,8 @@ import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.CommandAlign
 import com.milaboratory.mixcr.cli.CommandAssemble
+import com.milaboratory.mixcr.cli.CommandExportAlignments
+import com.milaboratory.mixcr.cli.CommandExportClones
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.GeneFeature
@@ -350,6 +352,41 @@ data class SetTagPattern(val tagPattern: String) : MiXCRMixinBase(50, Flags.TagP
 }
 
 //
+// Assemble
+//
+
+@JsonTypeName("SetSplitClonesBy")
+data class SetSplitClonesBy(
+    val geneType: GeneType,
+    val value: Boolean
+) : MiXCRMixinBase(10) {
+    init {
+        if (geneType != GeneType.Variable && geneType != GeneType.Joining && geneType != GeneType.Constant)
+            throw IllegalArgumentException("Clone splitting supported only for V, J and C genes.")
+    }
+
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::assemble.update {
+            CommandAssemble.Params::cloneAssemblerParameters
+                .applyAfterClone(CloneAssemblerParameters::clone) {
+                    setSeparateBy(geneType, value)
+                }
+        }
+    }
+
+    override val cmdArgs
+        get() = listOf(
+            if (value) CMD_OPTION_TRUE else CMD_OPTION_FALSE,
+            geneType.letter.toString()
+        )
+
+    companion object {
+        const val CMD_OPTION_TRUE = "+splitClonesBy"
+        const val CMD_OPTION_FALSE = "+dontSplitClonesBy"
+    }
+}
+
+//
 // Tags
 //
 
@@ -403,4 +440,62 @@ data class RemovePipelineStep(val step: String) : MiXCRMixinBase(10) {
     companion object {
         const val CMD_OPTION = "+removeStep"
     }
+}
+
+//
+// Export
+//
+
+private fun imputeFieldTransform(field: String) =
+    when (field) {
+        "-nFeature" -> "-nFeatureImputed"
+        "-aaFeature" -> "-aaFeatureImputed"
+        else -> field
+    }
+
+private fun dontImputeFieldTransform(field: String) =
+    when (field) {
+        "-nFeatureImputed" -> "-nFeature"
+        "-aaFeatureImputed" -> "-aaFeature"
+        else -> field
+    }
+
+@JsonTypeName("ImputeGermlineOnExport")
+object ImputeGermlineOnExport : MiXCRMixinBase(10) {
+    override val cmdArgs get() = listOf(CMD_OPTION)
+
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::exportAlignments.update {
+            CommandExportAlignments.Params::fields.updateBy { fields ->
+                fields.map { fd -> fd.copy(field = imputeFieldTransform(fd.field)) }
+            }
+        }
+        MiXCRParamsBundle::exportClones.update {
+            CommandExportClones.Params::fields.updateBy { fields ->
+                fields.map { fd -> fd.copy(field = imputeFieldTransform(fd.field)) }
+            }
+        }
+    }
+
+    const val CMD_OPTION = "+imputeGermlineOnExport"
+}
+
+@JsonTypeName("DontImputeGermlineOnExport")
+object DontImputeGermlineOnExport : MiXCRMixinBase(11) {
+    override val cmdArgs get() = listOf(CMD_OPTION)
+
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::exportAlignments.update {
+            CommandExportAlignments.Params::fields.updateBy { fields ->
+                fields.map { fd -> fd.copy(field = dontImputeFieldTransform(fd.field)) }
+            }
+        }
+        MiXCRParamsBundle::exportClones.update {
+            CommandExportClones.Params::fields.updateBy { fields ->
+                fields.map { fd -> fd.copy(field = dontImputeFieldTransform(fd.field)) }
+            }
+        }
+    }
+
+    const val CMD_OPTION = "+dontImputeGermlineOnExport"
 }

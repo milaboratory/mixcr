@@ -15,6 +15,7 @@ import cc.redberry.pipe.Processor;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.mixcr.MiXCRParamsSpec;
 import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -51,7 +52,7 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     }
 
     public MiXCRMetaInfo getBaseMetaInfo() {
-        return new MiXCRMetaInfo(null, TagsInfo.NO_TAGS, parameters, null, null, null);
+        return new MiXCRMetaInfo(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS, parameters, null, null, null);
     }
 
     private static <R extends SequenceRead> long hash(R input) {

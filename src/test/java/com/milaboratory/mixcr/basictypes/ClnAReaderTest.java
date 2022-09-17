@@ -16,6 +16,7 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
+import com.milaboratory.mixcr.MiXCRParamsSpec;
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParametersPresets;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
@@ -81,7 +82,7 @@ public class ClnAReaderTest {
                 .collect(Collectors.toList());
         CloneSet newCloneSet = new CloneSet(
                 modifyClones.apply(newClones), align.usedGenes,
-                new MiXCRMetaInfo(null, TagsInfo.NO_TAGS,
+                new MiXCRMetaInfo(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
@@ -126,7 +127,7 @@ public class ClnAReaderTest {
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
-                new MiXCRMetaInfo(null, TagsInfo.NO_TAGS,
+                new MiXCRMetaInfo(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));

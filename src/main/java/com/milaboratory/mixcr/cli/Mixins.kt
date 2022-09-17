@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.basictypes.GeneFeatures
+import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.ReferencePoint
@@ -127,6 +128,26 @@ interface AssembleMiXCRMixIns : MiXCRMixinSet {
     @Option(names = [SetClonotypeAssemblingFeatures.CMD_OPTION])
     fun assembleClonotypesBy(gf: String) =
         mixIn(SetClonotypeAssemblingFeatures(GeneFeatures.parse(gf)))
+
+    @Option(names = [SetSplitClonesBy.CMD_OPTION_TRUE])
+    fun splitClonesBy(geneTypes: List<String>) =
+        geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), true)) }
+
+    @Option(names = [SetSplitClonesBy.CMD_OPTION_FALSE], arity = "0")
+    fun dontSplitClonesBy(geneTypes: List<String>) =
+        geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), false)) }
 }
 
-class AllMiXCRMixins : MiXCRMixinCollector(), PipelineMiXCRMixins, AlignMiXCRMixins, AssembleMiXCRMixIns
+interface ExportMiXCRMixIns : MiXCRMixinSet {
+    @Option(names = [ImputeGermlineOnExport.CMD_OPTION], negatable = false, arity = "0")
+    fun imputeGermlineOnExport(ignored: Boolean) =
+        mixIn(ImputeGermlineOnExport)
+
+    @Option(names = [DontImputeGermlineOnExport.CMD_OPTION], negatable = false, arity = "0")
+    fun dontImputeGermlineOnExport(ignored: Boolean) =
+        mixIn(DontImputeGermlineOnExport)
+}
+
+class AllMiXCRMixins : MiXCRMixinCollector(), PipelineMiXCRMixins,
+    AlignMiXCRMixins, AssembleMiXCRMixIns,
+    ExportMiXCRMixIns

@@ -25,6 +25,7 @@ import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.MiXCRParamsSpec;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
@@ -113,7 +114,7 @@ public final class RunMiXCR {
             assemblerRunner.run();
 
             CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(
-                    null,
+                    new MiXCRParamsSpec("default_4.0"),
                     align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                     align.parameters.alignerParameters,
                     align.parameters.cloneAssemblerParameters,
@@ -183,7 +184,7 @@ public final class RunMiXCR {
                 Arrays.asList(clones),
                 align.usedGenes,
                 new MiXCRMetaInfo(
-                        null,
+                        new MiXCRParamsSpec("default_4.0"),
                         align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters,
                         align.parameters.cloneAssemblerParameters,
@@ -314,7 +315,7 @@ public final class RunMiXCR {
                 alignmentsFile = getTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
                     MiXCRMetaInfo info = new MiXCRMetaInfo(
-                            null,
+                            new MiXCRParamsSpec("default_4.0"),
                             tagsInfo != null ? tagsInfo : TagsInfo.NO_TAGS,
                             aligner.getParameters(),
                             null,

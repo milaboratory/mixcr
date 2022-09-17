@@ -21,6 +21,7 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import com.milaboratory.mixcr.MiXCRParamsSpec;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
@@ -106,12 +107,16 @@ public class CloneAssemblerRunnerTest {
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));
 
         CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
-                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures(), __ -> {}),
+                PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures(), __ -> {
+                }),
                 new CloneAssembler(assemblerParameters, true, aligner.getUsedGenes(), alignerParameters));
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(null, TagsInfo.NO_TAGS, alignerParameters, null, null, null));
+        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(
+                new MiXCRParamsSpec("default_4.0"),
+                TagsInfo.NO_TAGS, alignerParameters,
+                null, null, null));
 
         File tmpClnsFile = TempFileManager.getTempFile();
 
