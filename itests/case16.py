@@ -265,7 +265,7 @@ def overlap_pipeline(files_list, intersect_type):
 
 INDIVIDUAL_METRICS = ['jUsage', 'vjUsage', 'vUsage', 'diversity', 'cdr3metrics']
 OVERLAP_METRICS = ['RelativeDiversity', 'Pearson', 'F1Index', 'F2Index', 'JaccardIndex', 'SharedClonotypes']
-ASSERTION_ERRORS = False
+ASSERTION_ERRORS = []
 
 
 def mixcr_tables_format(table):
@@ -300,11 +300,11 @@ def compare_tables(analysis='individual', metric=None, downsampling=None, criter
                     print(f'{metric} test passed')
                 except AssertionError as e:
                     print(f'{metric} test failed')
-                    ASSERTION_ERRORS = True
+                    ASSERTION_ERRORS.append(f'{metric} test failed')
                     print(e)
             else:
                 print(f'File for {metric} not found')
-                ASSERTION_ERRORS = True
+                ASSERTION_ERRORS.append(f'File for {metric} not found')
     elif analysis == 'overlap':
         if metric is None:
             metrics = OVERLAP_METRICS
@@ -336,11 +336,11 @@ def compare_tables(analysis='individual', metric=None, downsampling=None, criter
                     print(f'{metric} test passed')
                 except AssertionError as e:
                     print(f'{metric} test failed')
-                    ASSERTION_ERRORS = True
+                    ASSERTION_ERRORS.append(f'{metric} test failed')
                     print(e)
             else:
                 print(f'File for {metric} not found')
-                ASSERTION_ERRORS = True
+                ASSERTION_ERRORS.append(f'File for {metric} not found')
 
 
 def mixcr_align(fastq_file):
@@ -421,7 +421,7 @@ def test_case1():
                     mixcr_exportClones(files.split('.clns')[0], txt_file = name)
         except FileNotFoundError as e:
             print('Downsample doesnt work properly')
-            ASSERTION_ERRORS = True
+            ASSERTION_ERRORS.append('Downsample doesnt work properly')
         individual_pipeline(ds)
         postanalys_individual(ds)
         compare_tables(analysis='individual', downsampling=ds)
@@ -448,7 +448,9 @@ if __name__ == '__main__':
     pipeline()
     test_case1()
     test_case2()
-    if not ASSERTION_ERRORS:
+    if len(ASSERTION_ERRORS) > 0:
+        for err in ASSERTION_ERRORS:
+            print(f'ERROR: ${err}')
         raise SystemExit('Some tests were not passed')
     else:
         print('All tests passed')
