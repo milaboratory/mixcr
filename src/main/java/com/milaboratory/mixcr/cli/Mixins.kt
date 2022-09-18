@@ -129,6 +129,14 @@ interface AssembleMiXCRMixins : MiXCRMixinSet {
     fun assembleClonotypesBy(gf: String) =
         mixIn(SetClonotypeAssemblingFeatures(GeneFeatures.parse(gf)))
 
+    @Option(names = [KeepNonCDR3Alignments.CMD_OPTION], negatable = false, arity = "0")
+    fun keepNonCDR3Alignments(ignored: Boolean) =
+        mixIn(KeepNonCDR3Alignments)
+
+    @Option(names = [DropNonCDR3Alignments.CMD_OPTION], negatable = false, arity = "0")
+    fun dropNonCDR3Alignments(ignored: Boolean) =
+        mixIn(DropNonCDR3Alignments)
+
     @Option(names = [SetSplitClonesBy.CMD_OPTION_TRUE])
     fun splitClonesBy(geneTypes: List<String>) =
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), true)) }

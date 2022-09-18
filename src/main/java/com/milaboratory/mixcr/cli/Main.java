@@ -171,9 +171,9 @@ public final class Main {
 
                 .addSubcommand("bam2fastq", CommandBAM2fastq.class)
 
-                .addSubcommand("exportAlignments", CommandExportAlignments.mkSpec())
+                .addSubcommand(CommandExportAlignments.COMMAND_NAME, CommandExportAlignments.mkSpec())
                 .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty.class)
-                .addSubcommand("exportClones", CommandExportClones.mkSpec())
+                .addSubcommand(CommandExportClones.COMMAND_NAME, CommandExportClones.mkSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
                 .addSubcommand("exportReports", CommandExportReports.class)

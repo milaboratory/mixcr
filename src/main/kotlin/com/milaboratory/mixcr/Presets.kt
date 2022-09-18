@@ -19,6 +19,8 @@ import com.milaboratory.mitool.helpers.KObjectMapperProvider
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.cli.*
 import com.milaboratory.primitivio.annotations.Serializable
+import kotlin.io.path.Path
+import kotlin.io.path.exists
 import kotlin.reflect.KProperty1
 
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
@@ -75,6 +77,18 @@ object Flags {
 }
 
 object Presets {
+    private val localPresetSearchPath = listOf(
+        Path(System.getProperty("user.home"), ".mixcr", "presets"),
+        Path(".")
+    ).filter {
+        try {
+            it.exists()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     private val files = listOf(
         "pipeline.yaml",
         "align.yaml",
@@ -101,14 +115,25 @@ object Presets {
 
     val allPresetNames = presetCollection.keys
 
-    private val globalResolver = { name: String ->
-        presetCollection[name] ?: throw IllegalArgumentException("No preset with name \"$name\"")
+    private fun rawResolve(name: String): MiXCRParamsBundleRaw {
+        if (name.startsWith("local:")) {
+            val lName = name.removePrefix("local:")
+            localPresetSearchPath.forEach { folder ->
+                listOf(".yaml", ".yml").forEach { ext ->
+                    val presetPath = folder.resolve(lName + ext)
+                    if (presetPath.exists())
+                        return K_YAML_OM.readValue(presetPath.toFile())
+                }
+            }
+            throw IllegalArgumentException("Can't find local preset with name \"$name\"")
+        } else
+            return presetCollection[name] ?: throw IllegalArgumentException("No preset with name \"$name\"")
     }
 
     private fun <T : Any> getResolver(prop: KProperty1<MiXCRParamsBundleRaw, RawParams<T>?>): Resolver<T> =
         object : Resolver<T>() {
             override fun invoke(name: String): T? {
-                return globalResolver(name).resolve(name, prop, globalResolver, nonNullResolver)
+                return rawResolve(name).resolve(name, prop, ::rawResolve, nonNullResolver)
             }
 
             override fun nullErrorMessage(name: String) = "No value for ${prop.name} in $name"
@@ -142,7 +167,7 @@ object Presets {
     ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw>
 
     fun resolveParamsBundle(presetName: String): MiXCRParamsBundle {
-        val raw = presetCollection[presetName]
+        val raw = rawResolve(presetName)
         val bundle = MiXCRParamsBundle(
             flags = raw!!.flags ?: emptySet(),
             pipeline = pipeline(presetName),

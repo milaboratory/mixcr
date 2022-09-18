@@ -38,6 +38,8 @@ import java.util.*
 import java.util.stream.Stream
 
 object CommandExportClones {
+    const val COMMAND_NAME = "exportClones"
+
     data class Params(
         @JsonProperty("splitByTags") val splitByTags: String?,
         @JsonProperty("filterOutOfFrames") val filterOutOfFrames: Boolean,
@@ -101,7 +103,7 @@ object CommandExportClones {
     }
 
     @Command(
-        name = "exportClones",
+        name = COMMAND_NAME,
         separator = " ",
         sortOptions = false,
         description = ["Export assembled clones into tab delimited file."]

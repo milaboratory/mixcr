@@ -107,22 +107,19 @@ data class SetSpecies(
     }
 }
 
-@JsonTypeName("SetClonotypeAssemblingFeatures")
-data class SetClonotypeAssemblingFeatures(
-    @JsonProperty("features") val features: GeneFeatures
-) : MiXCRMixinBase(50) {
+@JsonTypeName("GenericMixin")
+data class GenericMixin(
+    @JsonProperty("fieldAddress") val fieldAddress: String,
+    @JsonProperty("newValue") val newValue: String,
+) : MiXCRMixinBase(100) {
+    override val cmdArgs get() = listOf(CMD_OPTION, "${fieldAddress}=${newValue}")
+
     override fun MixinBuilderOps.action() {
-        MiXCRParamsBundle::assemble.update {
-            CommandAssemble.Params::cloneAssemblerParameters.applyAfterClone(CloneAssemblerParameters::clone) {
-                assemblingFeatures = features.features
-            }
-        }
+        jsonOverrideWith(mapOf(fieldAddress to newValue))
     }
 
-    override val cmdArgs get() = listOf(CMD_OPTION, features.encode())
-
     companion object {
-        const val CMD_OPTION = "+assembleClonotypesBy"
+        const val CMD_OPTION = "+M"
     }
 }
 
@@ -162,6 +159,36 @@ object MaterialTypeRNA : MiXCRMixinBase(20, Flags.MaterialType) {
     override val cmdArgs get() = listOf(CMD_OPTION)
 
     const val CMD_OPTION = "+rna"
+}
+
+//
+// Align
+//
+
+object KeepNonCDR3Alignments : MiXCRMixinBase(10) {
+    override val cmdArgs get() = listOf(CMD_OPTION)
+
+    override fun MixinBuilderOps.action() {
+        modifyAlignmentParams {
+            allowPartialAlignments = true
+            allowNoCDR3PartAlignments = true
+        }
+    }
+
+    const val CMD_OPTION = "+keepNonCDR3Alignments"
+}
+
+object DropNonCDR3Alignments : MiXCRMixinBase(10) {
+    override val cmdArgs get() = listOf(CMD_OPTION)
+
+    override fun MixinBuilderOps.action() {
+        modifyAlignmentParams {
+            allowPartialAlignments = false
+            allowNoCDR3PartAlignments = false
+        }
+    }
+
+    const val CMD_OPTION = "+dropNonCDR3Alignments"
 }
 
 //
@@ -375,6 +402,25 @@ data class SetTagPattern(
 // Assemble
 //
 
+@JsonTypeName("SetClonotypeAssemblingFeatures")
+data class SetClonotypeAssemblingFeatures(
+    @JsonProperty("features") val features: GeneFeatures
+) : MiXCRMixinBase(50) {
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::assemble.update {
+            CommandAssemble.Params::cloneAssemblerParameters.applyAfterClone(CloneAssemblerParameters::clone) {
+                assemblingFeatures = features.features
+            }
+        }
+    }
+
+    override val cmdArgs get() = listOf(CMD_OPTION, features.encode())
+
+    companion object {
+        const val CMD_OPTION = "+assembleClonotypesBy"
+    }
+}
+
 @JsonTypeName("SetSplitClonesBy")
 data class SetSplitClonesBy(
     @JsonProperty("geneType") val geneType: GeneType,
@@ -524,24 +570,4 @@ object DontImputeGermlineOnExport : MiXCRMixinBase(11) {
     }
 
     const val CMD_OPTION = "+dontImputeGermlineOnExport"
-}
-
-//
-// Generic mixin
-//
-
-@JsonTypeName("GenericMixin")
-data class GenericMixin(
-    @JsonProperty("fieldAddress") val fieldAddress: String,
-    @JsonProperty("newValue") val newValue: String,
-) : MiXCRMixinBase(100) {
-    override val cmdArgs get() = listOf(CMD_OPTION, "${fieldAddress}=${newValue}")
-
-    override fun MixinBuilderOps.action() {
-        jsonOverrideWith(mapOf(fieldAddress to newValue))
-    }
-
-    companion object {
-        const val CMD_OPTION = "+M"
-    }
 }

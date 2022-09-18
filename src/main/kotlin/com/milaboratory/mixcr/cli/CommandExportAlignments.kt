@@ -37,6 +37,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 object CommandExportAlignments {
+    const val COMMAND_NAME = "exportAlignments"
+
     data class Params(
         @JsonProperty("chains") val chains: String,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
@@ -71,7 +73,7 @@ object CommandExportAlignments {
     }
 
     @Command(
-        name = "exportAlignments",
+        name = COMMAND_NAME,
         separator = " ",
         sortOptions = false,
         description = ["Export V/D/J/C alignments into tab delimited file."]

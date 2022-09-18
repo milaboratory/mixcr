@@ -9,6 +9,8 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
+@file:Suppress("ClassName")
+
 package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.annotation.JsonValue
@@ -61,7 +63,7 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
 
     object align : MiXCRCommand<CommandAlign.Params>() {
         @get:JsonValue
-        override val command get() = "align"
+        override val command get() = CommandAlign.COMMAND_NAME
         override val order get() = 0
 
         override fun outputName(prefix: String, params: CommandAlign.Params, round: Int) =
@@ -78,10 +80,29 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandAlign.Cmd()
     }
 
+    object refineTagsAndSort : MiXCRCommand<CommandRefineTagsAndSort.Params>() {
+        @get:JsonValue
+        override val command get() = CommandRefineTagsAndSort.COMMAND_NAME
+        override val order get() = 1
+
+        override fun outputName(prefix: String, params: CommandRefineTagsAndSort.Params, round: Int) =
+            "${prefix.ifBlank { "alignments" }}.refined.vdjca"
+
+        override fun reportName(prefix: String, params: CommandRefineTagsAndSort.Params, round: Int) =
+            "${prefix.dotIfNotBlank()}refine.report.txt"
+
+        override fun jsonReportName(prefix: String, params: CommandRefineTagsAndSort.Params, round: Int) =
+            "${prefix.dotIfNotBlank()}refine.report.json"
+
+        override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.refineTagsAndSort
+
+        override fun createCommand() = CommandRefineTagsAndSort.Cmd()
+    }
+
     object exportAlignments : MiXCRCommand<CommandExportAlignments.Params>() {
         @get:JsonValue
-        override val command get() = "exportAlignments"
-        override val order get() = 1
+        override val command get() = CommandExportAlignments.COMMAND_NAME
+        override val order get() = 2
 
         override fun outputName(prefix: String, params: CommandExportAlignments.Params, round: Int) =
             "${prefix.dotIfNotBlank()}alignments.tsv"
@@ -96,8 +117,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
 
     object extend : MiXCRCommand<CommandExtend.Params>() {
         @get:JsonValue
-        override val command get() = "extend"
-        override val order get() = 2
+        override val command get() = CommandExtend.COMMAND_NAME
+        override val order get() = 3
 
         override fun outputName(prefix: String, params: CommandExtend.Params, round: Int) =
             "${prefix.ifBlank { "alignments" }}.extended.vdjca"
@@ -115,8 +136,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
 
     object assemblePartial : MiXCRCommand<CommandAssemblePartial.Params>() {
         @get:JsonValue
-        override val command get() = "assemblePartial"
-        override val order get() = 3
+        override val command get() = CommandAssemblePartial.COMMAND_NAME
+        override val order get() = 4
         override val allowMultipleRounds: Boolean get() = true
 
         override fun outputName(prefix: String, params: CommandAssemblePartial.Params, round: Int) =
@@ -135,8 +156,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
 
     object assemble : MiXCRCommand<CommandAssemble.Params>() {
         @get:JsonValue
-        override val command get() = "assemble"
-        override val order get() = 4
+        override val command get() = CommandAssemble.COMMAND_NAME
+        override val order get() = 5
 
         override fun outputName(prefix: String, params: CommandAssemble.Params, round: Int) =
             prefix.ifBlank { "clones" } + (if (params.clnaOutput) ".clna" else ".clns")
@@ -154,8 +175,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
 
     object assembleContigs : MiXCRCommand<CommandAssembleContigs.Params>() {
         @get:JsonValue
-        override val command get() = "assembleContigs"
-        override val order get() = 5
+        override val command get() = CommandAssembleContigs.COMMAND_NAME
+        override val order get() = 6
 
         override fun outputName(prefix: String, params: CommandAssembleContigs.Params, round: Int) =
             "${prefix.ifBlank { "clones" }}.contigs.clns"
@@ -173,8 +194,8 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
 
     object exportClones : MiXCRCommand<CommandExportClones.Params>() {
         @get:JsonValue
-        override val command get() = "exportClones"
-        override val order get() = 6
+        override val command get() = CommandExportClones.COMMAND_NAME
+        override val order get() = 7
 
         override fun outputName(prefix: String, params: CommandExportClones.Params, round: Int) =
             "${prefix.dotIfNotBlank()}clones.tsv"
@@ -192,13 +213,14 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
 
         fun fromStringOrNull(str: String): MiXCRCommand<*>? =
             when (str) {
-                "align" -> align
-                "exportAlignments" -> exportAlignments
-                "extend" -> extend
-                "assemblePartial" -> assemblePartial
-                "assemble" -> assemble
-                "assembleContigs" -> assembleContigs
-                "exportClones" -> exportClones
+                align.command -> align
+                refineTagsAndSort.command -> refineTagsAndSort
+                exportAlignments.command -> exportAlignments
+                extend.command -> extend
+                assemblePartial.command -> assemblePartial
+                assemble.command -> assemble
+                assembleContigs.command -> assembleContigs
+                exportClones.command -> exportClones
                 else -> null
             }
 

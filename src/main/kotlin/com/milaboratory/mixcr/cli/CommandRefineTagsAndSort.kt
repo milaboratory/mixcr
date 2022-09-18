@@ -21,6 +21,8 @@ import com.milaboratory.mitool.pattern.SequenceSetCollection.loadSequenceSetByAd
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
@@ -51,7 +53,9 @@ object CommandRefineTagsAndSort {
         @JsonProperty("runCorrection") val runCorrection: Boolean = true,
         /** Correction parameters */
         @JsonMerge @JsonProperty("parameters") val parameters: TagCorrectorParameters
-    )
+    ) : MiXCRParams {
+        override val command get() = MiXCRCommand.refineTagsAndSort
+    }
 
     abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
         @Option(

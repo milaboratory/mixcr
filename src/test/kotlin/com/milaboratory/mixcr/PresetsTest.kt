@@ -15,6 +15,7 @@ class PresetsTest {
     fun test1() {
         for (presetName in Presets.allPresetNames) {
             val bundle = Presets.resolveParamsBundle(presetName)
+            println(presetName)
             assertJson(K_OM, bundle, true)
             bundle.flags.forEach {
                 Assert.assertTrue("Flag = $it", Flags.flagMessages.containsKey(it))
