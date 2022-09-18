@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.sequence.ShortSequenceSet
+import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.pattern.SequenceSetCollection.loadSequenceSetByAddress
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
@@ -189,6 +190,7 @@ object CommandRefineTagsAndSort {
 
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: TagCorrectionReport?
+            var thresholds: Map<CriticalThresholdKey, Double> = emptyMap()
             VDJCAlignmentsReader(inputFile).use { mainReader ->
                 val header = mainReader.header
                 require(!header.tagsInfo.hasNoTags()) { "input file has no tags" }
@@ -253,6 +255,7 @@ object CommandRefineTagsAndSort {
 
                         // Available after calculation finishes
                         mitoolReport = corrector.report
+                        thresholds = corrector.criticalThresholds
 
                         // Creating another alignment stream from the same container file to apply correction
                         val secondaryReader = mainReader.readAlignments()
@@ -343,7 +346,11 @@ object CommandRefineTagsAndSort {
                         MiXCRVersionInfo.get().shortestVersionString,
                         mitoolReport
                     )
-                    writer.setFooter(mainReader.footer/*.addReport(correctAndSortTagsReport)*/) // fixme
+                    writer.setFooter(
+                        mainReader.footer
+                            .withThresholds(thresholds)
+                        /*.addReport(correctAndSortTagsReport)*/ // fixme
+                    )
                 }
             }
             refineTagsAndSortReport.writeReport(ReportHelper.STDOUT)

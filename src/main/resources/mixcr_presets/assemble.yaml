@@ -1,5 +1,8 @@
 "assemble_universal":
   assemble:
+    sortBySequence: false
+    clnaOutput: false
+    cellLevel: false
     consensusAssemblerParameters:
       assembler:
         aAssemblerParameters:
@@ -69,3 +72,4 @@
       badQualityThreshold: 20
       maxBadPointsPercent: 0.7
       mappingThreshold: 2of5
+    inferMinRecordsPerConsensus: true

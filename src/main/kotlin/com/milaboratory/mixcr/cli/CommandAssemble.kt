@@ -15,6 +15,7 @@ import cc.redberry.pipe.util.StatusReporter
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mitool.data.MinGroupsPerGroup
 import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
@@ -45,7 +46,10 @@ object CommandAssemble {
         @JsonProperty("clnaOutput") val clnaOutput: Boolean,
         @JsonProperty("cellLevel") val cellLevel: Boolean,
         @JsonProperty("consensusAssemblerParameters") @JsonMerge val consensusAssemblerParameters: PreCloneAssemblerParameters,
-        @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters
+        @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters,
+        /** Try automatically infer threshold value for the minimal number of records per consensus from the
+         * filtering metadata of tag-refinement step */
+        @JsonProperty("inferMinRecordsPerConsensus") val inferMinRecordsPerConsensus: Boolean,
     ) : MiXCRParams {
         override val command = MiXCRCommand.assemble
     }
@@ -152,9 +156,32 @@ object CommandAssemble {
             val cmdParam: Params
             VDJCAlignmentsReader(inputFile).use { alignmentsReader ->
                 val inputHeader = alignmentsReader.header
-                val inputFootere = alignmentsReader.footer
+                val inputFooter = alignmentsReader.footer
 
-                cmdParam = paramsResolver.resolve(inputHeader.paramsSpec).second
+                cmdParam = paramsResolver.resolve(inputHeader.paramsSpec) { cp ->
+                    if (!cp.inferMinRecordsPerConsensus)
+                        return@resolve cp
+
+                    val groupingLevel = if (cp.cellLevel) TagType.Cell else TagType.Molecule
+                    val groupingTags = (0 until inputHeader.tagsInfo.getDepthFor(groupingLevel))
+                        .map { i -> inputHeader.tagsInfo[i].name }
+
+                    val threshold = inputFooter.thresholds[MinGroupsPerGroup(groupingTags, null)]
+                    if (threshold == null) {
+                        println(
+                            "No data to automatically infer minRecordsPerConsensus. Using default value: " +
+                                    cp.consensusAssemblerParameters.assembler.minRecordsPerConsensus
+                        )
+                        cp
+                    } else {
+                        println("Value for minRecordsPerConsensus automatically inferred and set to ${threshold.toInt()}")
+                        threshold.toInt()
+                        cp.copy(
+                            consensusAssemblerParameters = cp.consensusAssemblerParameters
+                                .mapAssembler { it.withMinRecordsPerConsensus(threshold.toInt()) }
+                        )
+                    }
+                }.second
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if (outputFile.lowercase(Locale.getDefault())
@@ -206,9 +233,10 @@ object CommandAssemble {
                         ) {
                             val preClonesFile = tempDest.resolvePath("preclones.pc")
 
+                            val groupingLevel = if (cmdParam.cellLevel) TagType.Cell else TagType.Molecule
                             val assemblerRunner = PreCloneAssemblerRunner(
                                 alignmentsReader,
-                                if (cmdParam.cellLevel) TagType.Cell else TagType.Molecule,
+                                groupingLevel,
                                 cloneAssemblerParameters.assemblingFeatures,
                                 cmdParam.consensusAssemblerParameters, preClonesFile,
                                 tempDest.addSuffix("pc.tmp")
@@ -251,7 +279,7 @@ object CommandAssemble {
                     val cloneSet = CloneSet.reorder(
                         assemblerRunner.getCloneSet(
                             inputHeader.withAssemblerParameters(cloneAssemblerParameters),
-                            inputFootere
+                            inputFooter
                         ),
                         ordering
                     )
@@ -260,7 +288,6 @@ object CommandAssemble {
                     reportBuilder.onClonesetFinished(cloneSet)
                     assert(cloneSet.clones.size == reportBuilder.cloneCount)
                     reportBuilder.setTotalReads(alignmentsReader.numberOfReads)
-
 
                     // Writing results
                     var report: CloneAssemblerReport
