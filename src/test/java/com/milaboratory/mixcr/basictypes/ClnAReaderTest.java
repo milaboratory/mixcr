@@ -36,6 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
 import static com.milaboratory.util.TempFileManager.smartTempDestination;
 import static org.junit.Assert.assertEquals;
 
@@ -82,16 +83,18 @@ public class ClnAReaderTest {
                 .collect(Collectors.toList());
         CloneSet newCloneSet = new CloneSet(
                 modifyClones.apply(newClones), align.usedGenes,
-                new MiXCRMetaInfo(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS,
+                new MiXCRHeader(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
-                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
+                emptyFooter(),
+                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())
+        );
         writer.writeClones(newCloneSet);
 
         OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
         CountingOutputPort<VDJCAlignments> alsc = new CountingOutputPort<>(als);
         writer.collateAlignments(alsc, align.alignments.size());
-        writer.writeFooter(Collections.emptyList(), null);
+        writer.setFooter(emptyFooter());
         writer.writeAlignmentsAndIndex();
         writer.close();
 
@@ -127,12 +130,13 @@ public class ClnAReaderTest {
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
-                new MiXCRMetaInfo(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS,
+                new MiXCRHeader(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
+                emptyFooter(),
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
-        writer.writeFooter(Collections.emptyList(), null);
+        writer.setFooter(emptyFooter());
         writer.writeAlignmentsAndIndex();
         writer.close();
 

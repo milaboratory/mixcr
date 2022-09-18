@@ -16,34 +16,18 @@ import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mitool.helpers.filter
 import com.milaboratory.mitool.helpers.it
 import com.milaboratory.mitool.helpers.map
-import com.milaboratory.mixcr.basictypes.ClnAReader
-import com.milaboratory.mixcr.basictypes.ClnAWriter
-import com.milaboratory.mixcr.basictypes.ClnsReader
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
-import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
+import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.*
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.toList
 import com.milaboratory.util.TempFileManager
 import gnu.trove.map.hash.TIntIntHashMap
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.ArgGroup
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicLong
@@ -106,12 +90,12 @@ class CommandSlice : AbstractMiXCRCommand() {
         val set = TLongHashSet(ids)
         VDJCAlignmentsReader(`in`).use { reader ->
             VDJCAlignmentsWriter(out).use { writer ->
-                writer.header(reader)
+                writer.inheritHeaderAndFooterFrom(reader)
                 for (alignments in reader.it) {
                     if (set.removeAll(alignments.readIds)) writer.write(alignments)
                     if (set.isEmpty) break
                 }
-                writer.writeFooter(reader.reports(), null)
+                writer.setFooter(reader.footer)
             }
         }
     }
@@ -139,14 +123,15 @@ class CommandSlice : AbstractMiXCRCommand() {
                         .readAlignmentsOfClone(cloneId)
                         .map { it.withCloneIndex(i.toLong()) }
                 }
-                val newCloneSet = CloneSet(clones, cloneSet.usedGenes, cloneSet.info, cloneSet.ordering)
+                val newCloneSet =
+                    CloneSet(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer, cloneSet.ordering)
                 val idGen = AtomicLong()
                 val allAlignmentsPort = allAlignmentsList
                     .flatten()
                     .map { it.setAlignmentsIndex(idGen.getAndIncrement()) }
                 writer.writeClones(newCloneSet)
                 writer.collateAlignments(allAlignmentsPort, newNumberOfAlignments)
-                writer.writeFooter(reader.reports(), null)
+                writer.setFooter(reader.footer)
                 writer.writeAlignmentsAndIndex()
             }
         }
@@ -156,7 +141,7 @@ class CommandSlice : AbstractMiXCRCommand() {
         ClnsReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
             ClnsWriter(out).use { writer ->
                 // Getting full clone set
-                val cloneSet = CloneSet(reader.readClones().toList(), reader.usedGenes, reader.info, reader.ordering())
+                val cloneSet = reader.cloneSet
 
                 // Creating new cloneset
                 val clones = mutableListOf<Clone>()
@@ -165,9 +150,9 @@ class CommandSlice : AbstractMiXCRCommand() {
                     val clone = cloneSet[cloneId]
                     clones.add(clone.setId(i).resetParentCloneSet())
                 }
-                val newCloneSet = CloneSet(clones, cloneSet.usedGenes, cloneSet.info, cloneSet.ordering)
+                val newCloneSet =
+                    CloneSet(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer, cloneSet.ordering)
                 writer.writeCloneSet(newCloneSet)
-                writer.writeFooter(reader.reports(), null)
             }
         }
     }
@@ -175,14 +160,14 @@ class CommandSlice : AbstractMiXCRCommand() {
     private fun sliceShmt() {
         SHMTreesReader(Paths.get(`in`), VDJCLibraryRegistry.getDefault()).use { reader ->
             SHMTreesWriter(out).use { writer ->
-                writer.writeHeader(reader.metaInfo, reader.alignerParameters, reader.fileNames, reader.userGenes)
+                writer.writeHeader(reader.originHeaders, reader.header, reader.fileNames, reader.userGenes)
 
                 val treesWriter = writer.treesWriter()
                 reader.readTrees()
                     .filter { it.treeId.toLong() in ids }
                     .forEach { treesWriter.put(it) }
 
-                writer.writeFooter(reader.reports(), null)
+                writer.setFooter(reader.footer)
             }
         }
     }

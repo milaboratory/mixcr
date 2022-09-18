@@ -27,9 +27,10 @@ import java.util.*;
 /**
  * Created by poslavsky on 10/07/14.
  */
-public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasFeatureToAlign {
+public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatureToAlign {
     String versionInfo;
-    final MiXCRMetaInfo info;
+    final MiXCRHeader header;
+    final MiXCRFooter footer;
     final VDJCSProperties.CloneOrdering ordering;
     final List<VDJCGene> usedGenes;
     final List<Clone> clones;
@@ -37,7 +38,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
     final TagCount totalTagCounts;
 
     public CloneSet(List<Clone> clones, Collection<VDJCGene> usedGenes,
-                    MiXCRMetaInfo info,
+                    MiXCRHeader header, MiXCRFooter footer,
                     VDJCSProperties.CloneOrdering ordering) {
         ArrayList<Clone> list = new ArrayList<>(clones);
         list.sort(ordering.comparator());
@@ -50,7 +51,8 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
             tagCountAggregator.add(clone.tagCount);
         }
         this.totalTagCounts = tagCountAggregator.createAndDestroy();
-        this.info = info;
+        this.header = header;
+        this.footer = footer;
         this.ordering = ordering;
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(usedGenes));
         this.totalCount = totalCount;
@@ -78,7 +80,8 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
                 }
         }
         this.totalTagCounts = tagCountAggregator.createAndDestroy();
-        this.info = null;
+        this.header = null;
+        this.footer = null;
         this.ordering = new VDJCSProperties.CloneOrdering();
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(genes.values()));
         this.totalCount = totalCount;
@@ -96,25 +99,46 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
         return clones.size();
     }
 
-    public MiXCRMetaInfo getInfo() {
-        return info;
-    }
-
-    public GeneFeature[] getAssemblingFeatures() {
-        return info.getAssemblerParameters().getAssemblingFeatures();
-    }
-
-    public CloneAssemblerParameters getAssemblerParameters() {
-        return info.getAssemblerParameters();
-    }
-
-    public VDJCAlignerParameters getAlignmentParameters() {
-        return info.getAlignerParameters();
+    public boolean isHeaderAvailable(){
+        return header != null;
     }
 
     @Override
+    public MiXCRHeader getHeader() {
+        return Objects.requireNonNull(header);
+    }
+
+    public boolean isFooterAvailable(){
+        return footer != null;
+    }
+
+    @Override
+    public MiXCRFooter getFooter() {
+        return Objects.requireNonNull(footer);
+    }
+
+    public CloneSet withHeader(MiXCRHeader header) {
+        return new CloneSet(clones, usedGenes, header, footer, ordering);
+    }
+
+    public CloneSet withFooter(MiXCRFooter footer) {
+        return new CloneSet(clones, usedGenes, header, footer, ordering);
+    }
+
+    public GeneFeature[] getAssemblingFeatures() {
+        return header.getAssemblerParameters().getAssemblingFeatures();
+    }
+
+    public CloneAssemblerParameters getAssemblerParameters() {
+        return header.getAssemblerParameters();
+    }
+
+    public VDJCAlignerParameters getAlignmentParameters() {
+        return header.getAlignerParameters();
+    }
+
     public TagsInfo getTagsInfo() {
-        return info.getTagsInfo();
+        return header.getTagsInfo();
     }
 
     public VDJCSProperties.CloneOrdering getOrdering() {
@@ -127,7 +151,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
 
     @Override
     public GeneFeature getFeatureToAlign(GeneType geneType) {
-        return info.getAlignerParameters().getFeatureToAlign(geneType);
+        return header.getAlignerParameters().getFeatureToAlign(geneType);
     }
 
     public double getTotalCount() {
@@ -155,7 +179,7 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
         newClones.sort(newOrdering.comparator());
         for (Clone nc : newClones)
             nc.parent = null;
-        return new CloneSet(newClones, in.usedGenes, in.info, newOrdering);
+        return new CloneSet(newClones, in.usedGenes, in.header, in.footer, newOrdering);
     }
 
     /**
@@ -170,6 +194,6 @@ public final class CloneSet implements Iterable<Clone>, VDJCFileHeaderData, HasF
                 newClones.add(c);
             }
         }
-        return new CloneSet(newClones, in.usedGenes, in.info, in.ordering);
+        return new CloneSet(newClones, in.usedGenes, in.header, in.footer, in.ordering);
     }
 }

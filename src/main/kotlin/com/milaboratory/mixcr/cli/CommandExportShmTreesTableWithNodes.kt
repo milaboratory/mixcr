@@ -19,9 +19,7 @@ import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
@@ -55,7 +53,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                 out,
                 SplittedTreeNodeFieldsExtractorsFactory,
                 spec.commandLine().parseResult,
-                reader
+                reader.header
             ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     val shmTreeForPostanalysis = shmTree.forPostanalysis(

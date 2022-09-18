@@ -68,7 +68,7 @@ class CommandSortClones : AbstractMiXCRCommand() {
                         Variable, Joining
                     )
                     writer.writeCloneSet(CloneSet.reorder(reader.cloneSet, ordering))
-                    writer.writeFooter(reader.reports(), null)
+                    writer.setFooter(reader.footer)
                 }
             }
             CLNA -> ClnAReader(
@@ -86,7 +86,7 @@ class CommandSortClones : AbstractMiXCRCommand() {
                     )
                     writer.writeClones(CloneSet.reorder(reader.readCloneSet(), ordering))
                     writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments())
-                    writer.writeFooter(reader.reports(), null)
+                    writer.setFooter(reader.footer)
                     writer.writeAlignmentsAndIndex()
                 }
             }

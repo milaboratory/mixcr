@@ -97,7 +97,7 @@ public class ITestCommandAssemblePreClones extends AbstractMiXCRCommand {
             TagTuple prevTagKey = null;
             for (VDJCAlignments al : CUtils.it(alignmentsReader.readAlignments())) {
                 cdr3Hash += Objects.hashCode(al.getFeature(GeneFeature.CDR3));
-                TagTuple tagKey = al.getTagCount().asKeyPrefixOrError(alignmentsReader.getTagsInfo().getSortingLevel());
+                TagTuple tagKey = al.getTagCount().asKeyPrefixOrError(alignmentsReader.getHeader().getTagsInfo().getSortingLevel());
                 if (!tagKey.equals(prevTagKey)) {
                     if (!tagTuples.add(tagKey))
                         throwExecutionException("broken sorting: " + tagKey);

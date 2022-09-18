@@ -19,15 +19,17 @@ import io.repseq.core.VDJCGene
  */
 interface VDJCAlignmentsWriterI : AutoCloseable {
     fun setNumberOfProcessedReads(numberOfProcessedReads: Long)
-    fun header(reader: VDJCAlignmentsReader?)
-    fun header(info: MiXCRMetaInfo?, genes: List<VDJCGene?>?)
+    fun inheritHeaderAndFooterFrom(reader: VDJCAlignmentsReader)
+    fun writeHeader(info: MiXCRHeader, genes: List<VDJCGene>)
+    fun setFooter(footer: MiXCRFooter)
     fun write(alignment: VDJCAlignments?)
 
     object DummyWriter : VDJCAlignmentsWriterI {
         override fun setNumberOfProcessedReads(numberOfProcessedReads: Long) {}
-        override fun header(reader: VDJCAlignmentsReader?) {}
-        override fun header(info: MiXCRMetaInfo?, genes: List<VDJCGene?>?) {}
+        override fun inheritHeaderAndFooterFrom(reader: VDJCAlignmentsReader) {}
+        override fun writeHeader(info: MiXCRHeader, genes: List<VDJCGene>) {}
         override fun write(alignment: VDJCAlignments?) {}
+        override fun setFooter(footer: MiXCRFooter) {}
         override fun close() {}
     }
 }

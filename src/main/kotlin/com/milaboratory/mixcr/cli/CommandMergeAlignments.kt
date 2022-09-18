@@ -45,12 +45,11 @@ class CommandMergeAlignments : AbstractMiXCRCommand() {
             VDJCAlignmentsWriter(outputFiles[0]).use { writer ->
                 SmartProgressReporter.startProgressReport("Merging", reader)
                 // FIXME shouldn't be something changed in the header ?
-                writer.header(reader.currentInnerReader)
+                writer.inheritHeaderAndFooterFrom(reader.currentInnerReader)
                 reader.forEach { record ->
                     writer.write(record)
                 }
                 writer.setNumberOfProcessedReads(reader.readIdOffset.get())
-                writer.writeFooter(emptyList(), null)
             }
         }
     }
@@ -84,7 +83,10 @@ class CommandMergeAlignments : AbstractMiXCRCommand() {
             val idToCreate = fileId.getAndIncrement()
             return when {
                 idToCreate >= files.size -> null
-                else -> VDJCAlignmentsReader(files[idToCreate], registry)
+                else -> VDJCAlignmentsReader(
+                    files[idToCreate],
+                    registry
+                )
             }
         }
 

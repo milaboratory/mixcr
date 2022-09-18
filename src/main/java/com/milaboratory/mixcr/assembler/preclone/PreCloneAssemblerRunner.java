@@ -51,7 +51,7 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
                                    TempFileDest tempDest) {
         this.alignments = alignments;
 
-        TagsInfo tagsInfo = alignments.getTagsInfo();
+        TagsInfo tagsInfo = alignments.getHeader().getTagsInfo();
         int depth = tagsInfo.getDepthFor(groupingLevel);
         if (tagsInfo.getSortingLevel() < depth)
             throw new IllegalArgumentException("Input file has insufficient sorting level");

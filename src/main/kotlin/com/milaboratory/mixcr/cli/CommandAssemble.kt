@@ -46,7 +46,7 @@ object CommandAssemble {
         @JsonProperty("cellLevel") val cellLevel: Boolean,
         @JsonProperty("consensusAssemblerParameters") @JsonMerge val consensusAssemblerParameters: PreCloneAssemblerParameters,
         @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters
-    ): MiXCRParams {
+    ) : MiXCRParams {
         override val command = MiXCRCommand.assemble
     }
 
@@ -151,9 +151,10 @@ object CommandAssemble {
 
             val cmdParam: Params
             VDJCAlignmentsReader(inputFile).use { alignmentsReader ->
-                val inputInfo = alignmentsReader.info
+                val inputHeader = alignmentsReader.header
+                val inputFootere = alignmentsReader.footer
 
-                cmdParam = paramsResolver.resolve(inputInfo.paramsSpec).second
+                cmdParam = paramsResolver.resolve(inputHeader.paramsSpec).second
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if (outputFile.lowercase(Locale.getDefault())
@@ -167,7 +168,8 @@ object CommandAssemble {
                 )
 
                 // set aligner parameters
-                val cloneAssemblerParameters = cmdParam.cloneAssemblerParameters.updateFrom(inputInfo.alignerParameters)
+                val cloneAssemblerParameters =
+                    cmdParam.cloneAssemblerParameters.updateFrom(inputHeader.alignerParameters)
 
                 // deducing ordering
                 val ordering = if (cmdParam.sortBySequence) {
@@ -189,7 +191,7 @@ object CommandAssemble {
                     cloneAssemblerParameters,
                     cmdParam.clnaOutput,
                     alignmentsReader.usedGenes,
-                    inputInfo.alignerParameters.featuresToAlignMap
+                    inputHeader.alignerParameters.featuresToAlignMap
                 ).use { assembler ->
                     // Creating event listener to collect run statistics
                     reportBuilder.setStartMillis(beginTimestamp)
@@ -199,8 +201,8 @@ object CommandAssemble {
                     assembler.setListener(reportBuilder)
                     val preClones: PreCloneReader =
                         if (
-                            inputInfo.tagsInfo.hasTagsWithType(TagType.Cell) ||
-                            inputInfo.tagsInfo.hasTagsWithType(TagType.Molecule)
+                            inputHeader.tagsInfo.hasTagsWithType(TagType.Cell) ||
+                            inputHeader.tagsInfo.hasTagsWithType(TagType.Molecule)
                         ) {
                             val preClonesFile = tempDest.resolvePath("preclones.pc")
 
@@ -247,7 +249,10 @@ object CommandAssemble {
 
                     // Getting results
                     val cloneSet = CloneSet.reorder(
-                        assemblerRunner.getCloneSet(inputInfo.withAssemblerParameters(cloneAssemblerParameters)),
+                        assemblerRunner.getCloneSet(
+                            inputHeader.withAssemblerParameters(cloneAssemblerParameters),
+                            inputFootere
+                        ),
                         ordering
                     )
 
@@ -261,7 +266,6 @@ object CommandAssemble {
                     var report: CloneAssemblerReport
                     if (cmdParam.clnaOutput) {
                         ClnAWriter(outputFile, tempDest, highCompression).use { writer ->
-
                             // writer will supply current stage and completion percent to the progress reporter
                             SmartProgressReporter.startProgressReport(writer)
                             // Writing clone block
@@ -270,7 +274,7 @@ object CommandAssemble {
                                 .use { merged -> writer.collateAlignments(merged, assembler.alignmentsCount) }
                             reportBuilder.setFinishMillis(System.currentTimeMillis())
                             report = reportBuilder.buildReport()
-                            writer.writeFooter(alignmentsReader.reports(), report)
+                            writer.setFooter(alignmentsReader.footer.addReport(report))
                             writer.writeAlignmentsAndIndex()
                         }
                     } else {
@@ -278,7 +282,7 @@ object CommandAssemble {
                             writer.writeCloneSet(cloneSet)
                             reportBuilder.setFinishMillis(System.currentTimeMillis())
                             report = reportBuilder.buildReport()
-                            writer.writeFooter(alignmentsReader.reports(), report)
+                            writer.setFooter(alignmentsReader.footer.addReport(report))
                         }
                     }
 

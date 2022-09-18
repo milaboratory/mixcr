@@ -17,7 +17,7 @@ import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.mixcr.MiXCRParamsSpec;
 import com.milaboratory.mixcr.basictypes.HasGene;
-import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo;
+import com.milaboratory.mixcr.basictypes.MiXCRHeader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.HashFunctions;
@@ -51,8 +51,8 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         this.usedGenes = usedGenes;
     }
 
-    public MiXCRMetaInfo getBaseMetaInfo() {
-        return new MiXCRMetaInfo(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS, parameters, null, null, null);
+    public MiXCRHeader getBaseMetaInfo() {
+        return new MiXCRHeader(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS, parameters, null, null, null);
     }
 
     private static <R extends SequenceRead> long hash(R input) {

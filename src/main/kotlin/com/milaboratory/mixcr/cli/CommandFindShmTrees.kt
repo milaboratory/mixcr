@@ -17,6 +17,8 @@ import cc.redberry.pipe.OutputPort
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
+import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.trees.*
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
@@ -210,22 +212,22 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
                 "input files must have the same $geneType scoring"
             }
         }
-        require(cloneReaders.all { it.info.foundAlleles != null }) {
+        require(cloneReaders.all { it.header.foundAlleles != null }) {
             "Input files must be processed by ${CommandFindAlleles.FIND_ALLELES_COMMAND_NAME}"
         }
-        require(cloneReaders.map { it.info.foundAlleles }.distinct().count() == 1) {
+        require(cloneReaders.map { it.header.foundAlleles }.distinct().count() == 1) {
             "All input files must be assembled with the same alleles"
         }
-        require(cloneReaders.all { it.info.allFullyCoveredBy != null }) {
+        require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${CommandAssembleContigs.BY_FEATURE_OPTION_NAME} option"
         }
-        require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
+        require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
         }
-        require(cloneReaders.map { it.info.tagsInfo }.distinct().count() == 1) {
+        require(cloneReaders.map { it.header.tagsInfo }.distinct().count() == 1) {
             "Input files with different tags are not supported yet"
         }
-        val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
+        val allFullyCoveredBy = cloneReaders.first().header.allFullyCoveredBy!!
         val scoringSet = ScoringSet(
             cloneReaders.first().assemblerParameters.cloneFactoryParameters.vParameters.scoring,
             MutationsUtils.NDNScoring(),
@@ -319,23 +321,25 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
             writer.put(null)
 
             reportBuilder.setFinishMillis(System.currentTimeMillis())
-            shmTreesWriter.writeFooter(
-                cloneReaders.mapIndexed { i, cloneReader -> clnsFileNames[i].toString() to cloneReader.reports() }
-                    .toMap(),
-                reportBuilder.buildReport()
+            shmTreesWriter.setFooter(
+                cloneReaders.foldIndexed(MiXCRFooterMerger()) { i, m, f ->
+                    m.addReportsFromInput(i, clnsFileNames[i].toString(), f.footer)
+                }
+                    .addReport(reportBuilder.buildReport())
+                    .build()
             )
         }
     }
 
     private fun SHMTreesWriter.writeHeader(cloneReaders: List<CloneReader>) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
-        val metaInfos = cloneReaders.map { it.info }
-        require(metaInfos.map { it.alignerParameters }.distinct().size == 1) {
+        val headers = cloneReaders.map { it.header }
+        require(headers.map { it.alignerParameters }.distinct().size == 1) {
             "alignerParameters must be the same"
         }
         writeHeader(
-            metaInfos,
-            metaInfos.first().alignerParameters,
+            headers,
+            headers.fold(MiXCRHeaderMerger()) { m, h -> m.add(h) }.build(),
             clnsFileNames.map { it.toString() },
             usedGenes
         )

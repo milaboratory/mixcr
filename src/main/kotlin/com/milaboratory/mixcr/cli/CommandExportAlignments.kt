@@ -117,15 +117,18 @@ object CommandExportAlignments {
     data class AlignmentsAndMetaInfo(
         val port: OutputPortCloseable<VDJCAlignments>,
         val closeable: AutoCloseable,
-        val info: MiXCRMetaInfo
+        val info: MiXCRHeader
     ) : AutoCloseable by closeable
 
     @JvmStatic
     fun openAlignmentsPort(inputFile: String): AlignmentsAndMetaInfo =
         when (IOUtil.extractFileType(Paths.get(inputFile))) {
             IOUtil.MiXCRFileType.VDJCA -> {
-                val vdjcaReader = VDJCAlignmentsReader(inputFile, VDJCLibraryRegistry.getDefault())
-                AlignmentsAndMetaInfo(vdjcaReader, vdjcaReader, vdjcaReader.info)
+                val vdjcaReader = VDJCAlignmentsReader(
+                    inputFile,
+                    VDJCLibraryRegistry.getDefault()
+                )
+                AlignmentsAndMetaInfo(vdjcaReader, vdjcaReader, vdjcaReader.header)
             }
 
             IOUtil.MiXCRFileType.CLNA -> {
@@ -139,7 +142,7 @@ object CommandExportAlignments {
 
                     override fun take(): VDJCAlignments? = source.take()
                 }
-                AlignmentsAndMetaInfo(port, clnaReader, clnaReader.info)
+                AlignmentsAndMetaInfo(port, clnaReader, clnaReader.header)
             }
 
             IOUtil.MiXCRFileType.CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $inputFile")

@@ -13,13 +13,11 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mitool.exhaustive
+import com.milaboratory.mitool.pattern.search.readObject
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
-import com.milaboratory.mixcr.basictypes.ReportsFooterData
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.cli.MiXCRCommandReport
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
+import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
+import com.milaboratory.mixcr.basictypes.MiXCRFooter
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.readList
 import io.repseq.core.VDJCGene
@@ -31,17 +29,14 @@ import java.util.*
 class SHMTreesReader(
     private val input: PrimitivIHybrid,
     val libraryRegistry: VDJCLibraryRegistry
-) : AutoCloseable by input, VDJCFileHeaderData, ReportsFooterData {
+) : AutoCloseable by input, MiXCRFileInfo {
     val fileNames: List<String>
-    val alignerParameters: VDJCAlignerParameters
-    val metaInfo: List<MiXCRMetaInfo>
+    val originHeaders: List<MiXCRHeader>
+    override val header: MiXCRHeader
     val userGenes: List<VDJCGene>
-    private val reports: List<MiXCRCommandReport>
-    override val tagsInfo: TagsInfo
+    override val footer: MiXCRFooter
     val versionInfo: String
     private val treesPosition: Long
-
-    override fun reports(): List<MiXCRCommandReport> = reports
 
     constructor(input: Path, libraryRegistry: VDJCLibraryRegistry) : this(
         PrimitivIHybrid(input, 3),
@@ -53,7 +48,6 @@ class SHMTreesReader(
             val magicBytes = ByteArray(SHMTreesWriter.MAGIC_LENGTH)
             i.readFully(magicBytes)
             when (val magicString = String(magicBytes)) {
-                SHMTreesWriter.OLD_MAGIC_V1 -> {}
                 SHMTreesWriter.MAGIC -> {}
                 else -> throw RuntimeException(
                     "Unsupported file format; .shmt file of version " + magicString +
@@ -71,20 +65,13 @@ class SHMTreesReader(
             if (!Arrays.equals(IOUtil.getEndMagicBytes(), endMagic)) throw RuntimeException("Corrupted file.")
         }
 
-
         input.beginPrimitivI(true).use { i ->
             versionInfo = i.readUTF()
-            metaInfo = i.readList()
+            originHeaders = i.readList()
+            header = i.readObject()
             fileNames = i.readList()
 
-            // TODO resolve different tags info for different source files
-            check(metaInfo.map { it.tagsInfo }.distinct().size == 1)
-            tagsInfo = metaInfo.first().tagsInfo
-
-            check(metaInfo.map { it.alignerParameters }.distinct().size == 1)
-            alignerParameters = metaInfo.first().alignerParameters
-
-            val libraries = metaInfo.mapNotNull { it.foundAlleles }
+            val libraries = originHeaders.mapNotNull { it.foundAlleles }
             libraries.forEach { (name, libraryData) ->
                 val alreadyRegistered = libraryRegistry.loadedLibraries.stream()
                     .anyMatch {
@@ -93,15 +80,18 @@ class SHMTreesReader(
                 if (!alreadyRegistered)
                     libraryRegistry.registerLibrary(null, name, libraryData)
             }
-            userGenes = IOUtil.stdVDJCPrimitivIStateInit(i, alignerParameters, libraryRegistry)
+
+            userGenes = IOUtil.stdVDJCPrimitivIStateInit(i, header.alignerParameters, libraryRegistry)
         }
 
         input.beginRandomAccessPrimitivI(reportsStartPosition).use { pi ->
-            reports = pi.readList()
+            footer = pi.readObject<MiXCRFooter>()
         }
 
         treesPosition = input.position
     }
+
+    val alignerParameters get() = header.alignerParameters
 
     fun readTrees(): OutputPortCloseable<SHMTreeResult> =
         input.beginRandomAccessPrimitivIBlocks(SHMTreeResult::class.java, treesPosition)

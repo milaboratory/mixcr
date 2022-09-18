@@ -54,7 +54,10 @@ class CommandSortAlignments : AbstractMiXCRCommand() {
                 VDJCAlignmentsSerializer(reader)
             ) { sorted ->
                 VDJCAlignmentsWriter(out).use { writer ->
-                    writer.header(reader.info.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) }, reader.usedGenes)
+                    writer.writeHeader(
+                        reader.header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) },
+                        reader.usedGenes
+                    )
                     val counter = CountingOutputPort(sorted)
                     SmartProgressReporter.startProgressReport(
                         "Writing sorted alignments",
@@ -64,7 +67,7 @@ class CommandSortAlignments : AbstractMiXCRCommand() {
                         writer.write(res)
                     }
                     writer.setNumberOfProcessedReads(reader.numberOfReads)
-                    writer.writeFooter(reader.reports(), null)
+                    writer.setFooter(reader.footer)
                 }
             }
         }

@@ -111,7 +111,7 @@ class CommandExportOverlap : AbstractMiXCRCommand() {
             CloneSetIO.mkReader(Paths.get(samples[0]), VDJCLibraryRegistry.getDefault()).use { cReader ->
                 CloneFieldsExtractorsFactory.createExtractors(
                     CloneFieldsExtractorsFactory
-                        .parsePicocli(spec.commandLine().parseResult), cReader.info, OutputMode.ScriptingFriendly
+                        .parsePicocli(spec.commandLine().parseResult), cReader.header, OutputMode.ScriptingFriendly
                 )
             }
         extractors += fieldExtractors.map { ExtractorPerSample(it) }

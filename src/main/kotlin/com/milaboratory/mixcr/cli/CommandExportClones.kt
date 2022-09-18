@@ -121,7 +121,7 @@ object CommandExportClones {
 
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
-            val info = initialSet.info
+            val info = initialSet.header
             val (_, params) = paramsResolver.resolve(info.paramsSpec)
             InfoWriter.create(
                 outputFile,

@@ -14,8 +14,6 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
-import com.milaboratory.mixcr.cli.MiXCRReport;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
 import com.milaboratory.util.CanReportProgress;
@@ -63,8 +61,9 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
 
     // Read form file header
 
-    final MiXCRMetaInfo info;
+    final MiXCRHeader header;
     final VDJCSProperties.CloneOrdering ordering;
+    final MiXCRFooter footer;
 
     final List<VDJCGene> usedGenes;
 
@@ -75,8 +74,6 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
     final String versionInfo;
 
     private final long reportsStartPosition;
-
-    private final List<MiXCRCommandReport> reports;
 
     public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
         this(path, libraryRegistry, new LambdaSemaphore(concurrency));
@@ -147,10 +144,10 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
             }
 
             this.versionInfo = pi.readUTF();
-            this.info = Objects.requireNonNull(pi.readObject(MiXCRMetaInfo.class));
+            this.header = Objects.requireNonNull(pi.readObject(MiXCRHeader.class));
             this.ordering = pi.readObject(VDJCSProperties.CloneOrdering.class);
 
-            MiXCRMetaInfo.FoundAlleles foundAlleles = info.getFoundAlleles();
+            MiXCRHeader.FoundAlleles foundAlleles = header.getFoundAlleles();
             if (foundAlleles != null) {
                 VDJCLibraryId foundAllelesLibraryId = foundAlleles.getLibraryIdWithoutChecksum();
                 boolean alreadyRegistered = libraryRegistry.getLoadedLibraries()
@@ -161,16 +158,12 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
                 }
             }
 
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.info.getAlignerParameters(), libraryRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.header.getAlignerParameters(), libraryRegistry);
         }
 
         // read reports from footer
         try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(reportsStartPosition)) {
-            int nReports = pi.readInt();
-            reports = new ArrayList<>();
-            for (int i = 0; i < nReports; i++) {
-                reports.add((MiXCRCommandReport) pi.readObject(MiXCRReport.class));
-            }
+            footer = pi.readObject(MiXCRFooter.class);
         }
     }
 
@@ -179,8 +172,8 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
     }
 
     @Override
-    public MiXCRMetaInfo getInfo() {
-        return info;
+    public MiXCRHeader getHeader() {
+        return header;
     }
 
     /**
@@ -192,7 +185,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
     }
 
     public GeneFeature[] getAssemblingFeatures() {
-        return info.getAssemblerParameters().getAssemblingFeatures();
+        return header.getAssemblerParameters().getAssemblingFeatures();
     }
 
     /**
@@ -233,8 +226,8 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
     }
 
     @Override
-    public List<MiXCRCommandReport> reports() {
-        return reports;
+    public MiXCRFooter getFooter() {
+        return footer;
     }
 
     /**
@@ -250,7 +243,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
                 clones.add(reader.take());
         }
 
-        return new CloneSet(clones, usedGenes, info, ordering);
+        return new CloneSet(clones, usedGenes, header, footer, ordering);
     }
 
     /**
@@ -308,7 +301,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
 
         CloneAlignmentsPort() {
             this.clones = input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
-            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, usedGenes, info, ordering);
+            this.fakeCloneSet = new CloneSet(Collections.EMPTY_LIST, usedGenes, header, footer, ordering);
         }
 
         @Override

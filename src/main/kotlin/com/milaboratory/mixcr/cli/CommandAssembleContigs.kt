@@ -144,12 +144,12 @@ object CommandAssembleContigs {
             val reportBuilder = FullSeqAssemblerReportBuilder()
             var totalClonesCount = 0
             val genes: List<VDJCGene>
-            val inputInfo: MiXCRMetaInfo
+            val header: MiXCRHeader
             val ordering: CloneOrdering
-            val reports: List<MiXCRCommandReport>
+            val footer: MiXCRFooter
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-                cmdParams = paramsResolver.resolve(reader.info.paramsSpec).second
+                cmdParams = paramsResolver.resolve(reader.header.paramsSpec).second
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."
@@ -171,7 +171,7 @@ object CommandAssembleContigs {
                 PrimitivO(BufferedOutputStream(FileOutputStream(outputFile))).use { tmpOut ->
                     debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it))) }
                         .use { debugReport ->
-                            reports = reader.reports()
+                            footer = reader.footer
                             ordering = reader.ordering()
                             val cloneFactory = CloneFactory(
                                 reader.assemblerParameters.cloneFactoryParameters,
@@ -179,10 +179,10 @@ object CommandAssembleContigs {
                                 reader.usedGenes,
                                 reader.alignerParameters.featuresToAlignMap
                             )
-                            inputInfo = reader.info
+                            header = reader.header
                             genes = reader.usedGenes
 
-                            IOUtil.registerGeneReferences(tmpOut, genes, inputInfo.alignerParameters)
+                            IOUtil.registerGeneReferences(tmpOut, genes, header.alignerParameters)
                             val cloneAlignmentsPort = reader.clonesAndAlignments()
                             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort)
                             val parallelProcessor = cloneAlignmentsPort.mapInParallelOrdered(
@@ -276,7 +276,7 @@ object CommandAssembleContigs {
                                     // Performing contig assembly
                                     val fullSeqAssembler = FullSeqAssembler(
                                         cloneFactory, cmdParams.parameters,
-                                        clone, inputInfo.alignerParameters,
+                                        clone, header.alignerParameters,
                                         bestGenes[Variable], bestGenes[Joining]
                                     )
                                     fullSeqAssembler.report = reportBuilder
@@ -320,23 +320,23 @@ object CommandAssembleContigs {
             var cloneId = 0
             val clones = arrayOfNulls<Clone>(totalClonesCount)
             PrimitivI(BufferedInputStream(FileInputStream(outputFile))).use { tmpIn ->
-                IOUtil.registerGeneReferences(tmpIn, genes, inputInfo.alignerParameters)
+                IOUtil.registerGeneReferences(tmpIn, genes, header.alignerParameters)
                 var i = 0
                 PipeDataInputReader(Clone::class.java, tmpIn, totalClonesCount.toLong()).forEach { clone ->
                     clones[i++] = clone.setId(cloneId++)
                 }
             }
-            val resultInfo = if (
+            val resultHeader = if (
                 cmdParams.parameters.assemblingRegions != null &&
                 cmdParams.parameters.subCloningRegions == cmdParams.parameters.assemblingRegions &&
                 cmdParams.parameters.postFiltering == OnlyFullyDefined
             ) {
-                inputInfo.copy(allFullyCoveredBy = cmdParams.parameters.assemblingRegions)
+                header.copy(allFullyCoveredBy = cmdParams.parameters.assemblingRegions)
             } else {
-                inputInfo
+                header
             }
 
-            val cloneSet = CloneSet(listOf(*clones), genes, resultInfo, ordering)
+            val cloneSet = CloneSet(listOf(*clones), genes, resultHeader, footer, ordering)
             ClnsWriter(outputFile).use { writer ->
                 writer.writeCloneSet(cloneSet)
                 reportBuilder.setStartMillis(beginTimestamp)
@@ -349,7 +349,7 @@ object CommandAssembleContigs {
                 ReportUtil.writeReportToStdout(report)
                 if (reportFile != null) ReportUtil.appendReport(reportFile, report)
                 if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
-                writer.writeFooter(reports, report)
+                writer.setFooter(footer.addReport(report))
             }
         }
     }

@@ -118,10 +118,10 @@ class CommandAlignmentsDiff : AbstractMiXCRCommand() {
         var diffFeature: Long = 0
         var justDiff: Long = 0
         val diffHits = LongArray(GeneType.NUMBER_OF_TYPES)
-        input1.only.header(input1.reader)
-        input1.diff.header(input1.reader)
-        input2.only.header(input2.reader)
-        input2.diff.header(input2.reader)
+        input1.only.inheritHeaderAndFooterFrom(input1.reader)
+        input1.diff.inheritHeaderAndFooterFrom(input1.reader)
+        input2.only.inheritHeaderAndFooterFrom(input2.reader)
+        input2.diff.inheritHeaderAndFooterFrom(input2.reader)
         val diffReader = VDJCAlignmentsDifferenceReader(
             input1.reader, input2.reader,
             feature, hitsCompareLevel

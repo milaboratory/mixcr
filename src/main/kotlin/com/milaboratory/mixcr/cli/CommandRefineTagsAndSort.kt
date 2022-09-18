@@ -190,12 +190,13 @@ object CommandRefineTagsAndSort {
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: TagCorrectionReport?
             VDJCAlignmentsReader(inputFile).use { mainReader ->
-                require(!mainReader.tagsInfo.hasNoTags()) { "input file has no tags" }
-                cmdParams = paramsResolver.resolve(mainReader.info.paramsSpec).second
+                val header = mainReader.header
+                require(!header.tagsInfo.hasNoTags()) { "input file has no tags" }
+                cmdParams = paramsResolver.resolve(header.paramsSpec).second
                 val tagNames = mutableListOf<String>()
                 val indicesBuilder = TIntArrayList()
-                for (ti in mainReader.tagsInfo.indices) {
-                    val tag = mainReader.tagsInfo[ti]
+                for (ti in header.tagsInfo.indices) {
+                    val tag = header.tagsInfo[ti]
                     assert(ti == tag.index) /* just in case */
                     if (tag.valueType == TagValueType.SequenceAndQuality) indicesBuilder.add(ti)
                     tagNames += tag.name
@@ -327,8 +328,8 @@ object CommandRefineTagsAndSort {
                     )
 
                     // Initializing and writing results to the output file
-                    writer.header(
-                        mainReader.info.updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) },
+                    writer.writeHeader(
+                        header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) },
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)
@@ -342,7 +343,7 @@ object CommandRefineTagsAndSort {
                         MiXCRVersionInfo.get().shortestVersionString,
                         mitoolReport
                     )
-                    writer.writeFooter(mainReader.reports(), null /*correctAndSortTagsReport*/) // fixme
+                    writer.setFooter(mainReader.footer/*.addReport(correctAndSortTagsReport)*/) // fixme
                 }
             }
             refineTagsAndSortReport.writeReport(ReportHelper.STDOUT)

@@ -21,6 +21,7 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -162,8 +163,8 @@ public final class OverlapUtil {
             }
 
             @Override
-            public MiXCRMetaInfo getInfo() {
-                return inner.getInfo();
+            public MiXCRHeader getHeader() {
+                return inner.getHeader();
             }
 
             @Override
@@ -177,8 +178,8 @@ public final class OverlapUtil {
             }
 
             @Override
-            public List<MiXCRCommandReport> reports() {
-                return inner.reports();
+            public MiXCRFooter getFooter() {
+                return inner.getFooter();
             }
         };
     }

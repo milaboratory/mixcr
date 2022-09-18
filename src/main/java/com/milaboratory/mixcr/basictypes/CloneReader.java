@@ -19,7 +19,7 @@ import io.repseq.core.VDJCGene;
 
 import java.util.List;
 
-public interface CloneReader extends VDJCFileHeaderData, ReportsFooterData, AutoCloseable {
+public interface CloneReader extends MiXCRFileInfo, AutoCloseable {
     /**
      * Sequence of properties the stream is sorted by.
      *
@@ -33,17 +33,15 @@ public interface CloneReader extends VDJCFileHeaderData, ReportsFooterData, Auto
 
     List<VDJCGene> getUsedGenes();
 
-    MiXCRMetaInfo getInfo();
-
     default TagsInfo getTagsInfo() {
-        return getInfo().getTagsInfo();
+        return getHeader().getTagsInfo();
     }
 
     default VDJCAlignerParameters getAlignerParameters() {
-        return getInfo().getAlignerParameters();
+        return getHeader().getAlignerParameters();
     }
 
     default CloneAssemblerParameters getAssemblerParameters() {
-        return getInfo().getAssemblerParameters();
+        return getHeader().getAssemblerParameters();
     }
 }

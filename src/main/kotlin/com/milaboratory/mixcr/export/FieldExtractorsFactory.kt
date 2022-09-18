@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.export.OutputMode.*
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
@@ -59,7 +59,7 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
     /** Creates field extractors from field descriptions */
     fun createExtractors(
         fields: List<ExportFieldDescription>,
-        header: VDJCFileHeaderData,
+        header: MiXCRHeader,
         mode: OutputMode
     ): List<FieldExtractor<T>> =
         fields.map { fieldDescr ->
@@ -130,7 +130,7 @@ abstract class FieldExtractorsFactory<T : Any> {
     protected abstract fun allAvailableFields(): List<Field<T>>
 
     fun createExtractors(
-        header: VDJCFileHeaderData,
+        header: MiXCRHeader,
         cmdParseResult: CommandLine.ParseResult
     ): List<FieldExtractor<T>> {
         val humanReadable = cmdParseResult.matchedOption("--with-spaces")?.getValue<Boolean>() ?: false
@@ -213,7 +213,7 @@ abstract class FieldExtractorsFactory<T : Any> {
 
     fun extract(
         cmd: FieldCommandArgs,
-        header: VDJCFileHeaderData,
+        header: MiXCRHeader,
         mode: OutputMode
     ): List<FieldExtractor<T>> {
         val field = fields.firstOrNull { f -> cmd.field == f.cmdArgName }

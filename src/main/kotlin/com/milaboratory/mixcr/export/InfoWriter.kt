@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import cc.redberry.pipe.InputPort
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import org.apache.commons.io.output.CloseShieldOutputStream
 import picocli.CommandLine
 import java.io.BufferedOutputStream
@@ -67,7 +67,7 @@ class InfoWriter<T : Any> private constructor(
             file: Path?,
             extractorsFactory: FieldExtractorsFactory<T>,
             cmdParseResult: CommandLine.ParseResult,
-            header: VDJCFileHeaderData
+            header: MiXCRHeader
         ): InfoWriter<T> {
             val outputStream = when {
                 file != null -> BufferedOutputStream(Files.newOutputStream(file), 65536)

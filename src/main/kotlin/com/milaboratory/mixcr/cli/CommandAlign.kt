@@ -550,8 +550,8 @@ object CommandAlign {
             createReader().use { reader ->
                 alignedWriter(outputFile).use { writer ->
                     notAlignedWriter(pairedPayload).use { notAlignedWriter: SequenceWriter<SequenceRead>? ->
-                        writer?.header(
-                            MiXCRMetaInfo(
+                        writer?.writeHeader(
+                            MiXCRHeader(
                                 paramsSpec,
                                 if (tagSearchPlan != null) TagsInfo(
                                     0,
@@ -689,7 +689,7 @@ object CommandAlign {
                         writer?.setNumberOfProcessedReads(reader.numberOfReads)
                         reportBuilder.setFinishMillis(System.currentTimeMillis())
                         val report = reportBuilder.buildReport()
-                        writer?.writeFooter(listOf(report), null)
+                        writer?.setFooter(MiXCRFooter(listOf(report)))
 
                         // Writing report to stout
                         ReportUtil.writeReportToStdout(report)

@@ -346,13 +346,13 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     }
 
-    public CloneSet getCloneSet(MiXCRMetaInfo info) {
+    public CloneSet getCloneSet(MiXCRHeader header, MiXCRFooter footer) {
         return new CloneSet(
                 Arrays.asList(realClones),
                 usedGenes.values(),
-                info
-                        .withAssemblerParameters(parameters)
+                header.withAssemblerParameters(parameters)
                         .withAllClonesCutBy(parameters.assemblingFeatures),
+                footer,
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())
         );
     }

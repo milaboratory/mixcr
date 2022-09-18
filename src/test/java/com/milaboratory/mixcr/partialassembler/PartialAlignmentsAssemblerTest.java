@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
 import static io.repseq.core.GeneFeature.*;
 import static io.repseq.core.GeneType.*;
 
@@ -239,7 +240,7 @@ public class PartialAlignmentsAssemblerTest {
                     inputAlignments.usedGenes, true, false, writer::write);
 
             try (final VDJCAlignmentsReader reader = inputAlignments.resultReader()) {
-                writer.header(reader);
+                writer.inheritHeaderAndFooterFrom(reader);
                 assembler.buildLeftPartsIndex(reader);
             }
             try (final VDJCAlignmentsReader reader = inputAlignments.resultReader()) {
@@ -247,7 +248,7 @@ public class PartialAlignmentsAssemblerTest {
             }
             //assembler.writeReport(new ReportHelper(System.out));
             //System.out.println("\n");
-            writer.writeFooter(Collections.emptyList(), null);
+            writer.setFooter(emptyFooter());
         }
 
         VDJCAlignmentsReader readResult = new VDJCAlignmentsReader(overlappedAlignments);

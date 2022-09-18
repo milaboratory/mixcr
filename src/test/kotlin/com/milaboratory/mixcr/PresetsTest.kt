@@ -1,7 +1,7 @@
 package com.milaboratory.mixcr
 
 import com.milaboratory.mitool.helpers.K_OM
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.OutputMode
@@ -27,14 +27,17 @@ class PresetsTest {
     fun testExport2() {
         for (presetName in Presets.allPresetNames) {
             val bundle = Presets.resolveParamsBundle(presetName)
+            if (bundle.align == null)
+                continue
+            val header = MiXCRHeader(
+                MiXCRParamsSpec(presetName), TagsInfo.NO_TAGS, bundle.align!!.parameters,
+                null, null, null
+            )
             bundle.exportAlignments?.let { al ->
                 println(
                     VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
                         al.fields,
-                        object : VDJCFileHeaderData {
-                            override val tagsInfo: TagsInfo
-                                get() = TODO()
-                        },
+                        header,
                         OutputMode.ScriptingFriendly
                     ).size
                 )
@@ -43,10 +46,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields,
-                        object : VDJCFileHeaderData {
-                            override val tagsInfo: TagsInfo
-                                get() = TODO("Not yet implemented")
-                        },
+                        header,
                         OutputMode.ScriptingFriendly
                     ).size
                 )

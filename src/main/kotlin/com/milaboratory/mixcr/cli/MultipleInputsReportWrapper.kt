@@ -9,22 +9,19 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.trees
+package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.util.ReportHelper
 
-class SHMTreeSourceFileReport @JsonCreator constructor(
-    @param:JsonProperty("fileName")
-    val fileName: String,
-    @param:JsonProperty("report")
-    val report: MiXCRCommandReport
+data class MultipleInputsReportWrapper(
+    @JsonProperty("inputIndex") val inputIndex: Int,
+    @JsonProperty("inputName") val inputName: String,
+    @JsonProperty("report") val report: MiXCRCommandReport
 ) : MiXCRCommandReport by report {
     override fun writeReport(helper: ReportHelper) {
-        helper.writeNotNullField("fileName", fileName)
-        report.writeReport(helper)
+        helper.println("Report for input #${inputIndex} (${inputName})")
+        report.writeReport(helper.indentedHelper())
     }
 
     override fun toString(): String = asString()

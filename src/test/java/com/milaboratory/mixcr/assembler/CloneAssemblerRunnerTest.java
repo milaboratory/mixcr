@@ -25,6 +25,7 @@ import com.milaboratory.mixcr.MiXCRParamsSpec;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.vdjaligners.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.SmartProgressReporter;
@@ -36,8 +37,9 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Objects;
+
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
 
 public class CloneAssemblerRunnerTest {
     @Test
@@ -77,13 +79,13 @@ public class CloneAssemblerRunnerTest {
         //write alignments to byte array
         File vdjcaFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
-            writer.header(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
+            writer.writeHeader(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
             for (Object read : CUtils.it(reader)) {
                 VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
                 if (result.alignment != null)
                     writer.write(result.alignment);
             }
-            writer.writeFooter(Collections.emptyList(), null);
+            writer.setFooter(MiXCRTestUtils.emptyFooter());
         }
 
         AlignmentsProvider alignmentsProvider = new VDJCAlignmentsReader(vdjcaFile);
@@ -113,16 +115,17 @@ public class CloneAssemblerRunnerTest {
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(
-                new MiXCRParamsSpec("default_4.0"),
-                TagsInfo.NO_TAGS, alignerParameters,
-                null, null, null));
+        CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRHeader(
+                        new MiXCRParamsSpec("default_4.0"),
+                        TagsInfo.NO_TAGS, alignerParameters,
+                        null, null, null),
+                emptyFooter());
 
         File tmpClnsFile = TempFileManager.getTempFile();
 
         try (ClnsWriter writer = new ClnsWriter(tmpClnsFile)) {
             writer.writeCloneSet(cloneSet);
-            writer.writeFooter(Collections.emptyList(), null);
+            writer.setFooter(emptyFooter());
         }
 
         CloneSet cloneSetDeserialized = CloneSetIO.read(tmpClnsFile);

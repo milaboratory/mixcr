@@ -225,7 +225,8 @@ class CommandExportAirr : AbstractMiXCRCommand() {
             }
             VDJCA -> {
                 extractors = alignmentsExtractors()
-                val alignmentsReader = VDJCAlignmentsReader(inPath, libraryRegistry)
+                val alignmentsReader =
+                    VDJCAlignmentsReader(inPath, libraryRegistry)
                 port = alignmentsReader
                 closeable = alignmentsReader
                 progressReporter = alignmentsReader

@@ -25,6 +25,7 @@ import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mitool.data.CriticalThresholdCollection;
 import com.milaboratory.mixcr.MiXCRParamsSpec;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
@@ -113,14 +114,14 @@ public final class RunMiXCR {
 
             assemblerRunner.run();
 
-            CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRMetaInfo(
+            CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRHeader(
                     new MiXCRParamsSpec("default_4.0"),
                     align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                     align.parameters.alignerParameters,
                     align.parameters.cloneAssemblerParameters,
                     null,
                     null
-            ));
+            ), new MiXCRFooter(Collections.emptyList(), new CriticalThresholdCollection()));
             report.setFinishMillis(System.currentTimeMillis());
             return new AssembleResult(align, cloneSet, report.buildReport(), assembler);
         } finally {
@@ -183,7 +184,7 @@ public final class RunMiXCR {
         CloneSet cloneSet = new CloneSet(
                 Arrays.asList(clones),
                 align.usedGenes,
-                new MiXCRMetaInfo(
+                new MiXCRHeader(
                         new MiXCRParamsSpec("default_4.0"),
                         align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters,
@@ -191,6 +192,7 @@ public final class RunMiXCR {
                         null,
                         null
                 ),
+                new MiXCRFooter(Collections.emptyList(), new CriticalThresholdCollection()),
                 VDJCSProperties.CO_BY_COUNT
         );
 
@@ -280,7 +282,8 @@ public final class RunMiXCR {
                             cloneAssembler.getAssembledReadsPort())) {
                         writer.collateAlignments(merged, cloneAssembler.getAlignmentsCount());
                     }
-                    writer.writeFooter(Collections.singletonList(alignResult.report), report);
+                    writer.setFooter(new MiXCRFooter(Arrays.asList(alignResult.report, report),
+                            new CriticalThresholdCollection()));
                     writer.writeAlignmentsAndIndex();
                 }
             }
@@ -314,7 +317,7 @@ public final class RunMiXCR {
             if (alignmentsFile == null) {
                 alignmentsFile = getTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
-                    MiXCRMetaInfo info = new MiXCRMetaInfo(
+                    MiXCRHeader info = new MiXCRHeader(
                             new MiXCRParamsSpec("default_4.0"),
                             tagsInfo != null ? tagsInfo : TagsInfo.NO_TAGS,
                             aligner.getParameters(),
@@ -322,11 +325,11 @@ public final class RunMiXCR {
                             null,
                             null
                     );
-                    writer.header(info, usedGenes);
+                    writer.writeHeader(info, usedGenes);
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);
-                    writer.writeFooter(Collections.emptyList(), report);
+                    writer.setFooter(new MiXCRFooter(Arrays.asList(report), new CriticalThresholdCollection()));
                 }
             }
             return new VDJCAlignmentsReader(alignmentsFile);

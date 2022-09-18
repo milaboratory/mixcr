@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mitool.helpers.drainToAndClose
 import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
+import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
@@ -99,9 +99,14 @@ class CommandDownsample : AbstractMiXCRCommand() {
         for (i in results.indices) {
             ClnsWriter(output(`in`[i]).toFile()).use { clnsWriter ->
                 val downsampled = results[i].mkElementsPort().toList()
-                clnsWriter.writeHeader(datasets[i].info, datasets[i].ordering(), datasets[i].usedGenes, downsampled.size)
+                clnsWriter.writeHeader(
+                    datasets[i].header,
+                    datasets[i].ordering(),
+                    datasets[i].usedGenes,
+                    downsampled.size
+                )
                 downsampled.port.drainToAndClose(clnsWriter.cloneWriter())
-                clnsWriter.writeFooter(emptyList(), null)
+                clnsWriter.setFooter(datasets[i].footer)
             }
         }
         val summaryStat = preprocessor.stat

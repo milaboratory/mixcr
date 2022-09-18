@@ -41,7 +41,7 @@ object CommandAssemblePartial {
         @JsonProperty("dropPartial") val dropPartial: Boolean,
         @JsonProperty("cellLevel") val cellLevel: Boolean,
         @JsonProperty("parameters") @JsonMerge val parameters: PartialAlignmentsAssemblerParameters
-    ): MiXCRParams {
+    ) : MiXCRParams {
         override val command = MiXCRCommand.assemblePartial
     }
 
@@ -105,13 +105,13 @@ object CommandAssemblePartial {
             val beginTimestamp = System.currentTimeMillis()
             val cmdParams: Params
             VDJCAlignmentsReader(inputFile).use { reader1 ->
-                cmdParams = paramsResolver.resolve(reader1.info.paramsSpec).second
+                cmdParams = paramsResolver.resolve(reader1.header.paramsSpec).second
                 VDJCAlignmentsReader(inputFile).use { reader2 ->
                     VDJCAlignmentsWriter(outputFile).use { writer ->
                         val groupingDepth =
-                            reader1.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
-                        writer.header(
-                            reader1.info // output data will be grouped only up to a groupingDepth
+                            reader1.header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
+                        writer.writeHeader(
+                            reader1.header // output data will be grouped only up to a groupingDepth
                                 .updateTagInfo { ti -> ti.setSorted(groupingDepth) },
                             reader1.usedGenes
                         )
@@ -126,7 +126,7 @@ object CommandAssemblePartial {
                         reportBuilder.setInputFiles(inputFile)
                         reportBuilder.setOutputFiles(outputFile)
                         reportBuilder.commandLine = commandLineArguments
-                        if (reader1.tagsInfo != null && !reader1.tagsInfo.hasNoTags()) {
+                        if (!reader1.header.tagsInfo.hasNoTags()) {
                             SmartProgressReporter.startProgressReport("Running assemble partial", reader1)
 
                             // This processor strips all non-key information from the
@@ -166,7 +166,7 @@ object CommandAssemblePartial {
                         if (reportFile != null) ReportUtil.appendReport(reportFile, report)
                         if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
                         writer.setNumberOfProcessedReads(reader1.numberOfReads - assembler.overlapped.get())
-                        writer.writeFooter(reader1.reports(), report)
+                        writer.setFooter(reader1.footer.addReport(report))
                     }
                 }
             }

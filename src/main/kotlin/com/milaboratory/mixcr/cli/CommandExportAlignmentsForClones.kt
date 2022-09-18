@@ -46,7 +46,7 @@ class CommandExportAlignmentsForClones : AbstractMiXCRCommand() {
     override fun run0() {
         ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             VDJCAlignmentsWriter(out).use { writer ->
-                writer.header(clna.info, clna.usedGenes)
+                writer.writeHeader(clna.header, clna.usedGenes)
                 var count: Long = 0
                 if (cloneIds.isEmpty()) {
                     clna.readAllAlignments().forEach { al ->
@@ -64,7 +64,7 @@ class CommandExportAlignmentsForClones : AbstractMiXCRCommand() {
                     }
                 }
                 writer.setNumberOfProcessedReads(count)
-                writer.writeFooter(clna.reports(), null)
+                writer.setFooter(clna.footer)
             }
         }
     }
