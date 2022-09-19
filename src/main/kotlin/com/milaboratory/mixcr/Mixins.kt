@@ -11,10 +11,7 @@
  */
 package com.milaboratory.mixcr
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonTypeName
+import com.fasterxml.jackson.annotation.*
 import com.milaboratory.cli.*
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.GeneFeatures
@@ -22,6 +19,10 @@ import com.milaboratory.mixcr.cli.CommandAlign
 import com.milaboratory.mixcr.cli.CommandAssemble
 import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.ExportFieldDescription
+import com.milaboratory.mixcr.export.FieldExtractorsFactoryNew
+import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.GeneFeature
@@ -165,6 +166,7 @@ object MaterialTypeRNA : MiXCRMixinBase(20, Flags.MaterialType) {
 // Align
 //
 
+@JsonTypeName("KeepNonCDR3Alignments")
 object KeepNonCDR3Alignments : MiXCRMixinBase(10) {
     override val cmdArgs get() = listOf(CMD_OPTION)
 
@@ -178,6 +180,7 @@ object KeepNonCDR3Alignments : MiXCRMixinBase(10) {
     const val CMD_OPTION = "+keepNonCDR3Alignments"
 }
 
+@JsonTypeName("DropNonCDR3Alignments")
 object DropNonCDR3Alignments : MiXCRMixinBase(10) {
     override val cmdArgs get() = listOf(CMD_OPTION)
 
@@ -189,6 +192,24 @@ object DropNonCDR3Alignments : MiXCRMixinBase(10) {
     }
 
     const val CMD_OPTION = "+dropNonCDR3Alignments"
+}
+
+@JsonTypeName("InputLimit")
+data class LimitInput(
+    @JsonProperty("number") val number: Long
+) : MiXCRMixinBase(10) {
+    override val cmdArgs: List<String>
+        get() = listOf(CMD_OPTION, number.toString())
+
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::align.update {
+            CommandAlign.Params::limit setTo number
+        }
+    }
+
+    companion object {
+        const val CMD_OPTION = "+limitInput"
+    }
 }
 
 //
@@ -532,42 +553,114 @@ private fun dontImputeFieldTransform(field: String) =
         else -> field
     }
 
+sealed class MiXCRExportMixinBase(
+    importance: Int,
+    @JsonIgnore private val applyToAlignments: Boolean,
+    @JsonIgnore private val applyToClones: Boolean,
+) : MiXCRMixinBase(importance) {
+    protected abstract fun modifyFields(fields: List<ExportFieldDescription>): List<ExportFieldDescription>
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::exportAlignments.update { CommandExportAlignments.Params::fields.updateBy(::modifyFields) }
+        MiXCRParamsBundle::exportClones.update { CommandExportClones.Params::fields.updateBy(::modifyFields) }
+    }
+
+}
+
 @JsonTypeName("ImputeGermlineOnExport")
-object ImputeGermlineOnExport : MiXCRMixinBase(10) {
+object ImputeGermlineOnExport : MiXCRExportMixinBase(10, true, true) {
     override val cmdArgs get() = listOf(CMD_OPTION)
 
-    override fun MixinBuilderOps.action() {
-        MiXCRParamsBundle::exportAlignments.update {
-            CommandExportAlignments.Params::fields.updateBy { fields ->
-                fields.map { fd -> fd.copy(field = imputeFieldTransform(fd.field)) }
-            }
-        }
-        MiXCRParamsBundle::exportClones.update {
-            CommandExportClones.Params::fields.updateBy { fields ->
-                fields.map { fd -> fd.copy(field = imputeFieldTransform(fd.field)) }
-            }
-        }
-    }
+    override fun modifyFields(fields: List<ExportFieldDescription>) =
+        fields.map { fd -> fd.copy(field = imputeFieldTransform(fd.field)) }
 
     const val CMD_OPTION = "+imputeGermlineOnExport"
 }
 
 @JsonTypeName("DontImputeGermlineOnExport")
-object DontImputeGermlineOnExport : MiXCRMixinBase(11) {
+object DontImputeGermlineOnExport : MiXCRExportMixinBase(10, true, true) {
     override val cmdArgs get() = listOf(CMD_OPTION)
 
-    override fun MixinBuilderOps.action() {
-        MiXCRParamsBundle::exportAlignments.update {
-            CommandExportAlignments.Params::fields.updateBy { fields ->
-                fields.map { fd -> fd.copy(field = dontImputeFieldTransform(fd.field)) }
-            }
-        }
-        MiXCRParamsBundle::exportClones.update {
-            CommandExportClones.Params::fields.updateBy { fields ->
-                fields.map { fd -> fd.copy(field = dontImputeFieldTransform(fd.field)) }
-            }
+    override fun modifyFields(fields: List<ExportFieldDescription>) =
+        fields.map { fd -> fd.copy(field = dontImputeFieldTransform(fd.field)) }
+
+    const val CMD_OPTION = "+dontImputeGermlineOnExport"
+}
+
+sealed class AddExportField(
+    clones: Boolean,
+    @JsonIgnore private val insertIndex: Int,
+    @JsonIgnore private val field: String,
+    @JsonIgnore private val args: List<String>
+) : MiXCRExportMixinBase(10, !clones, clones) {
+    @get:JsonIgnore
+    val fieldDescr get() = ExportFieldDescription(field, args)
+
+    private fun checkFor(exf: FieldExtractorsFactoryNew<*>) {
+        val nArgsExpected = exf.getNArgsForField(field)
+        check(args.size == nArgsExpected) {
+            "Unexpected number of arguments for field $field. Expected $nArgsExpected but found ${args.size} " +
+                    "(${args.joinToString(", ")})"
         }
     }
 
-    const val CMD_OPTION = "+dontImputeGermlineOnExport"
+    init {
+        if (clones)
+            checkFor(CloneFieldsExtractorsFactory)
+        else
+            checkFor(VDJCAlignmentsFieldsExtractorsFactory)
+    }
+
+    override fun modifyFields(fields: List<ExportFieldDescription>) = run {
+        val idx = if (insertIndex >= 0)
+            insertIndex
+        else
+            fields.size + insertIndex + 1
+        fields.take(idx) + listOf(fieldDescr) + fields.drop(idx)
+    }
+}
+
+@JsonTypeName("AddExportAlignmentsField")
+data class AddExportAlignmentsField(
+    @JsonProperty("insertIndex") val insertIndex: Int,
+    @JsonProperty("field") val field: String,
+    @JsonProperty("args") @JsonInclude(JsonInclude.Include.NON_EMPTY) val args: List<String> = emptyList(),
+) : AddExportField(false, insertIndex, field, args) {
+    override val cmdArgs
+        get() =
+            listOf(
+                (when (insertIndex) {
+                    0 -> CMD_OPTION_PREPEND_PREFIX
+                    -1 -> CMD_OPTION_APPEND_PREFIX
+                    else -> throw IllegalArgumentException()
+                }) + args.size,
+                field
+            ) + args
+
+    companion object {
+        const val CMD_OPTION_PREPEND_PREFIX = "+prependExportAlignmentsField"
+        const val CMD_OPTION_APPEND_PREFIX = "+appendExportAlignmentsField"
+    }
+}
+
+@JsonTypeName("AddExportClonesField")
+data class AddExportClonesField(
+    @JsonProperty("insertIndex") val insertIndex: Int,
+    @JsonProperty("field") val field: String,
+    @JsonProperty("args") @JsonInclude(JsonInclude.Include.NON_EMPTY) val args: List<String> = emptyList(),
+) : AddExportField(true, insertIndex, field, args) {
+    override val cmdArgs
+        get() =
+            listOf(
+                (when (insertIndex) {
+                    0 -> CMD_OPTION_PREPEND_PREFIX
+                    -1 -> CMD_OPTION_APPEND_PREFIX
+                    else -> throw IllegalArgumentException()
+                }) + args.size,
+                field
+            ) + args
+
+    companion object {
+        const val CMD_OPTION_PREPEND_PREFIX = "+prependExportClonesField"
+        const val CMD_OPTION_APPEND_PREFIX = "+appendExportClonesField"
+    }
 }

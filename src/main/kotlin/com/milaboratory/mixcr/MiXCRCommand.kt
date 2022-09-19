@@ -91,8 +91,10 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun reportName(prefix: String, params: CommandRefineTagsAndSort.Params, round: Int) =
             "${prefix.dotIfNotBlank()}refine.report.txt"
 
-        override fun jsonReportName(prefix: String, params: CommandRefineTagsAndSort.Params, round: Int) =
-            "${prefix.dotIfNotBlank()}refine.report.json"
+        override fun jsonReportName(prefix: String, params: CommandRefineTagsAndSort.Params, round: Int) = null
+
+        // override fun jsonReportName(prefix: String, params: CommandRefineTagsAndSort.Params, round: Int) =
+        //     "${prefix.dotIfNotBlank()}refine.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.refineTagsAndSort
 

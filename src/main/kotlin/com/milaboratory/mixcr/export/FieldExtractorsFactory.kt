@@ -21,7 +21,7 @@ import java.io.FileReader
 import java.util.*
 
 abstract class FieldExtractorsFactoryNew<T : Any> {
-    public val fields: Array<Field<T>> by lazy {
+    val fields: Array<Field<T>> by lazy {
         val initialized = allAvailableFields()
         check(initialized.map { it.priority }.distinct().size == initialized.size) {
             initialized.groupBy { it.priority }.values
@@ -36,6 +36,9 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
     private val fieldsMap by lazy {
         fields.associateBy { it.cmdArgName.lowercase() }
     }
+
+    fun getNArgsForField(fieldName: String) =
+        (fieldsMap[fieldName.lowercase()] ?: throw IllegalArgumentException("No such field: $fieldName")).nArguments
 
     protected abstract fun allAvailableFields(): List<Field<T>>
 

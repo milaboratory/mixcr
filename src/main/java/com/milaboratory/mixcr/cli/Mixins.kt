@@ -56,6 +56,10 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
     fun species(species: String) =
         mixIn(SetSpecies(species))
 
+    @Option(names = [LimitInput.CMD_OPTION])
+    fun limitInput(number: Long) =
+        mixIn(LimitInput(number))
+
     //
     // Material type
     //
@@ -147,23 +151,65 @@ interface AssembleMiXCRMixins : MiXCRMixinSet {
 }
 
 interface ExportMiXCRMixins : MiXCRMixinSet {
-    @Option(names = [ImputeGermlineOnExport.CMD_OPTION], negatable = false, arity = "0")
+    @Option(names = [ImputeGermlineOnExport.CMD_OPTION], arity = "0")
     fun imputeGermlineOnExport(ignored: Boolean) =
         mixIn(ImputeGermlineOnExport)
 
-    @Option(names = [DontImputeGermlineOnExport.CMD_OPTION], negatable = false, arity = "0")
+    @Option(names = [DontImputeGermlineOnExport.CMD_OPTION], arity = "0")
     fun dontImputeGermlineOnExport(ignored: Boolean) =
         mixIn(DontImputeGermlineOnExport)
+
+    private fun addExportClonesField(data: List<String>, prepend: Boolean, args: Int) {
+        if (data.isEmpty())
+            return
+        val sublist = data.takeLast(args + 1)
+        mixIn(AddExportClonesField(if (prepend) 0 else -1, sublist[0], sublist.drop(1)))
+    }
+
+    private fun addExportAlignmentsField(data: List<String>, prepend: Boolean, args: Int) {
+        if (data.isEmpty())
+            return
+        val sublist = data.takeLast(args + 1)
+        mixIn(AddExportAlignmentsField(if (prepend) 0 else -1, sublist[0], sublist.drop(1)))
+    }
+
+    @Option(names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "0"], arity = "1")
+    fun prependExportClonesField0(data: List<String>) =
+        addExportClonesField(data, true, 0)
+
+    @Option(names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "1"], arity = "2")
+    fun prependExportClonesField1(data: List<String>) =
+        addExportClonesField(data, true, 1)
+
+    @Option(names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "2"], arity = "3")
+    fun prependExportClonesField2(data: List<String>) =
+        addExportClonesField(data, true, 2)
+
+    @Option(names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "3"], arity = "4")
+    fun prependExportClonesField3(data: List<String>) =
+        addExportClonesField(data, true, 3)
+
+    @Option(names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "0"], arity = "1")
+    fun appendExportClonesField0(data: List<String>) =
+        addExportClonesField(data, false, 0)
+
+    @Option(names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "1"], arity = "2")
+    fun appendExportClonesField1(data: List<String>) =
+        addExportClonesField(data, false, 1)
+
+    @Option(names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "2"], arity = "3")
+    fun appendExportClonesField2(data: List<String>) =
+        addExportClonesField(data, false, 2)
+
+    @Option(names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "3"], arity = "4")
+    fun appendExportClonesField3(data: List<String>) =
+        addExportClonesField(data, false, 3)
 }
 
 interface GenericMiXCRMixins : MiXCRMixinSet {
     @Option(names = [GenericMixin.CMD_OPTION])
     fun genericMixin(fieldAndOverrides: Map<String, String>) {
         fieldAndOverrides.forEach { (field, override) ->
-            // val split = fieldAndOverride.split('=', limit = 2)
-            // if (split.size != 2)
-            //     throw IllegalArgumentException("Wrong format for the override.")
-            // mixIn(GenericMixin(split[0], split[1]))
             mixIn(GenericMixin(field, override))
         }
     }

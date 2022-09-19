@@ -84,6 +84,7 @@ object CommandAlign {
         @JsonProperty("tagPattern") val tagPattern: String? = null,
         @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
         @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
+        @JsonProperty("limit") val limit: Long? = null,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
     ) : MiXCRParams {
         override val command get() = MiXCRCommand.align
@@ -184,6 +185,9 @@ object CommandAlign {
         )
         private var saveReads = false
 
+        @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
+        private var limit: Long? = null
+
         override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::align) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::species setIfNotNull species
@@ -215,6 +219,8 @@ object CommandAlign {
                     Params::parameters.updateBy {
                         it.setSaveOriginalReads(true)
                     }
+
+                Params::limit setIfNotNull limit
             }
 
             override fun validateParams(params: Params) {
@@ -285,13 +291,7 @@ object CommandAlign {
             names = ["--high-compression"]
         )
         var highCompression = false
-        var limit: Long = 0
 
-        @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
-        fun setLimit(limit: Int) {
-            if (limit <= 0) throwValidationExceptionKotlin("ERROR: -n / --limit must be positive", false)
-            this.limit = limit.toLong()
-        }
 
         @Option(description = ["Pipe not aligned R1 reads into separate file."], names = ["--not-aligned-R1"])
         var failedReadsR1: String? = null
@@ -565,7 +565,7 @@ object CommandAlign {
                             aligner.usedGenes
                         )
                         val sReads: OutputPort<out SequenceRead> = when {
-                            limit != 0L -> CountLimitingOutputPort(reader, limit)
+                            cmdParams.limit != null -> CountLimitingOutputPort(reader, cmdParams.limit!!)
                             else -> reader
                         }
 
