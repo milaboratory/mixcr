@@ -26,27 +26,7 @@ data class CloneDescription(
      */
     val clusterIdentity: ClusterIdentity
 ) {
-    val mutationGroups: LinkedHashSet<MutationGroup> = mutations.asMutationGroups()
-
-    private fun Mutations<NucleotideSequence>.asMutationGroups(): LinkedHashSet<MutationGroup> {
-        var lastPosition = -1
-        var lastWasDeletion = false
-        val mutationGroups = mutableListOf<MutableList<Int>>()
-        asSequence()
-            .forEach { mutation ->
-                val subsequentDeletion = lastWasDeletion && Mutation.isDeletion(mutation) &&
-                        Mutation.getPosition(mutation) == lastPosition + 1
-                if (!subsequentDeletion && lastPosition != Mutation.getPosition(mutation)) {
-                    mutationGroups.add(mutableListOf())
-                }
-                lastPosition = Mutation.getPosition(mutation)
-                lastWasDeletion = Mutation.isDeletion(mutation)
-                mutationGroups.last() += mutation
-            }
-        val result = mutationGroups.map { MutationGroup(it) }
-        return LinkedHashSet(result)
-    }
-
+    val mutationGroups: LinkedHashSet<MutationGroup> = MutationGroup.groupMutationsByPositions(mutations)
 
     data class ClusterIdentity(
         private val CDR3Length: Int,
@@ -61,5 +41,26 @@ data class CloneDescription(
         val mutations: List<Int>
     ) {
         override fun toString(): String = Mutations(NucleotideSequence.ALPHABET, *mutations.toIntArray()).encode()
+
+        companion object {
+            fun groupMutationsByPositions(mutations: Mutations<NucleotideSequence>): LinkedHashSet<MutationGroup> {
+                var lastPosition = -1
+                var lastWasDeletion = false
+                val mutationGroups = mutableListOf<MutableList<Int>>()
+                mutations.asSequence()
+                    .forEach { mutation ->
+                        val subsequentDeletion = lastWasDeletion && Mutation.isDeletion(mutation) &&
+                                Mutation.getPosition(mutation) == lastPosition + 1
+                        if (!subsequentDeletion && lastPosition != Mutation.getPosition(mutation)) {
+                            mutationGroups.add(mutableListOf())
+                        }
+                        lastPosition = Mutation.getPosition(mutation)
+                        lastWasDeletion = Mutation.isDeletion(mutation)
+                        mutationGroups.last() += mutation
+                    }
+                val result = mutationGroups.map { MutationGroup(it) }
+                return LinkedHashSet(result)
+            }
+        }
     }
 }

@@ -85,11 +85,12 @@ class TIgGERAllelesSearcher(
                     ).absoluteMutations
                     else -> allele.invert().combineWith(clone.mutations)
                 }
-                mutationsFromAllele.asSequence()
+                CloneDescription.MutationGroup.groupMutationsByPositions(mutationsFromAllele)
             }
             .groupingBy { it }.eachCount()
             .filterValues { it >= boundary }
             .keys.asSequence()
+            .flatMap { it.mutations }
             .sortedBy { Mutation.getPosition(it) }
             .asMutations(NucleotideSequence.ALPHABET)
     }
