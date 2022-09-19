@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReport;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport;
+import com.milaboratory.mixcr.trees.BuildSHMTreeReport;
 import com.milaboratory.mixcr.trees.SHMTreeSourceFileReport;
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport;
 import com.milaboratory.primitivio.annotations.Serializable;

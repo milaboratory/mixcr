@@ -49,7 +49,11 @@ class TIgGERAllelesSearcher(
         val foundAlleles = chooseAndGroupMutationsByAlleles(possibleAlleleMutations.toSet(), clones)
         val withZeroAllele = addZeroAlleleIfNeeded(foundAlleles, clones)
         val enriched = enrichAllelesWithMutationsThatExistsInAlmostAllClones(withZeroAllele, clones)
-        return enriched.map { AllelesSearcher.Result(it) }
+        val filteredByNaiveCount = enriched
+            .filter { allele -> clones.count { it.mutations == allele } >= parameters.minCountOfNaiveClonesToAddAllele }
+        return filteredByNaiveCount
+            .ifEmpty { listOf(EMPTY_NUCLEOTIDE_MUTATIONS) }
+            .map { AllelesSearcher.Result(it) }
     }
 
     /**
@@ -60,31 +64,35 @@ class TIgGERAllelesSearcher(
         clones: List<CloneDescription>
     ) = alignClonesOnAlleles(clones, alleles)
         .map { (allele, clones) ->
-            if (clones.diversity() < parameters.minDiversityForMutation) {
-                return@map allele
-            }
-            val boundary = floor(clones.size * parameters.portionOfClonesToSearchCommonMutationsInAnAllele).toInt()
-            val mutationsThatExistsInAlmostAllClones = clones
-                .flatMap { clone ->
-                    val alleleHasIndels = allele.asSequence().any { Mutation.isInDel(it) }
-                    val mutationsFromAllele = if (alleleHasIndels) {
-                        Aligner.alignGlobal(
-                            scoring,
-                            allele.mutate(sequence1),
-                            clone.mutations.mutate(sequence1)
-                        ).absoluteMutations
-                    } else {
-                        allele.invert().combineWith(clone.mutations)
-                    }
-                    mutationsFromAllele.asSequence()
-                }
-                .groupingBy { it }.eachCount()
-                .filterValues { it >= boundary }
-                .keys.asSequence()
-                .sortedBy { Mutation.getPosition(it) }
-                .asMutations(NucleotideSequence.ALPHABET)
-            allele.combineWith(mutationsThatExistsInAlmostAllClones)
+            allele.combineWith(mutationsThatExistsInAlmostAllClones(clones, allele))
         }
+
+    private fun mutationsThatExistsInAlmostAllClones(
+        clones: List<CloneDescription>,
+        allele: Mutations<NucleotideSequence>
+    ): Mutations<NucleotideSequence> {
+        if (clones.diversity() < parameters.minDiversityForMutation) return EMPTY_NUCLEOTIDE_MUTATIONS
+        val boundary = floor(clones.size * parameters.portionOfClonesToSearchCommonMutationsInAnAllele).toInt()
+        return clones
+            .flatMap { clone ->
+                val alleleHasIndels = allele.asSequence().any { Mutation.isInDel(it) }
+                val mutationsFromAllele = when {
+                    allele == EMPTY_NUCLEOTIDE_MUTATIONS -> clone.mutations
+                    alleleHasIndels -> Aligner.alignGlobal(
+                        scoring,
+                        allele.mutate(sequence1),
+                        clone.mutations.mutate(sequence1)
+                    ).absoluteMutations
+                    else -> allele.invert().combineWith(clone.mutations)
+                }
+                mutationsFromAllele.asSequence()
+            }
+            .groupingBy { it }.eachCount()
+            .filterValues { it >= boundary }
+            .keys.asSequence()
+            .sortedBy { Mutation.getPosition(it) }
+            .asMutations(NucleotideSequence.ALPHABET)
+    }
 
     /**
      * If there are no zero allele in candidates, test if it there
@@ -95,8 +103,6 @@ class TIgGERAllelesSearcher(
     ): Collection<Mutations<NucleotideSequence>> = when {
         foundAlleles.isEmpty() -> listOf(EMPTY_NUCLEOTIDE_MUTATIONS)
         EMPTY_NUCLEOTIDE_MUTATIONS in foundAlleles -> foundAlleles
-        clones.filter { it.mutations == EMPTY_NUCLEOTIDE_MUTATIONS }
-            .diversity() < parameters.minDiversityForMutation -> foundAlleles
         //check if there are enough clones that more close to zero allele
         else -> {
             val clonesByAlleles = alignClonesOnAlleles(clones, foundAlleles + EMPTY_NUCLEOTIDE_MUTATIONS)

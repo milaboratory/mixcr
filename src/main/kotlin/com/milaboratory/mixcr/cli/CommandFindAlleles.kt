@@ -18,6 +18,7 @@ import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleM
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableRanges
 import com.milaboratory.mixcr.alleles.CloneRebuild
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
+import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.alleles.OverallAllelesStatistics
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.Clone
@@ -32,6 +33,7 @@ import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
+import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
@@ -59,7 +61,7 @@ import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
 @Command(
-    name = CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+    name = CommandFindAlleles.COMMAND_NAME,
     sortOptions = false,
     separator = " ",
     description = ["Find allele variants in clnx."]
@@ -122,6 +124,12 @@ class CommandFindAlleles : MiXCRCommand() {
     @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
     var overrides: Map<String, String> = mutableMapOf()
 
+    @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
+    var reportFile: String? = null
+
+    @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
+    var jsonReport: String? = null
+
     private val outputClnsFiles: List<Path> by lazy {
         val template = outputTemplate ?: return@lazy emptyList()
         if (!template.endsWith(".clns")) {
@@ -144,12 +152,12 @@ class CommandFindAlleles : MiXCRCommand() {
 
     public override fun getInputFiles(): List<String> = `in`.map { it.toString() }
 
-    public override fun getOutputFiles(): List<String> =
-        (outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput))
-            .map { it.toString() }
+    public override fun getOutputFiles(): List<String> = outputPaths.map { it.toString() }
+
+    private val outputPaths get() = outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput)
 
     private val tempDest: TempFileDest by lazy {
-        val path = listOfNotNull(outputClnsFiles.firstOrNull(), libraryOutput, allelesMutationsOutput).first()
+        val path = outputPaths.first()
         if (useLocalTemp) path.toAbsolutePath().parent.createDirectories()
         TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp)
     }
@@ -187,6 +195,11 @@ class CommandFindAlleles : MiXCRCommand() {
 
     //TODO report
     override fun run0() {
+        val reportBuilder = FindAllelesReport.Builder()
+            .setCommandLine(commandLineArguments)
+            .setInputFiles(inputFiles)
+            .setOutputFiles(outputFiles)
+            .setStartMillis(System.currentTimeMillis())
         ensureParametersInitialized()
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val cloneReaders = inputFiles.map { CloneSetIO.mkReader(Paths.get(it), libraryRegistry) }
@@ -210,8 +223,8 @@ class CommandFindAlleles : MiXCRCommand() {
 
         val progressAndStage = ProgressAndStage("Grouping by the same V gene", 0.0)
         SmartProgressReporter.startProgressReport(progressAndStage)
-        val VAlleles = allelesBuilder.searchForAlleles(Variable, progressAndStage, threads)
-        val JAlleles = allelesBuilder.searchForAlleles(Joining, progressAndStage, threads)
+        val VAlleles = allelesBuilder.searchForAlleles(Variable, progressAndStage, reportBuilder, threads)
+        val JAlleles = allelesBuilder.searchForAlleles(Joining, progressAndStage, reportBuilder, threads)
 
         val alleles = (VAlleles + JAlleles).toMap(mutableMapOf())
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
@@ -225,6 +238,7 @@ class CommandFindAlleles : MiXCRCommand() {
             geneDatum.map { resultLibrary[it.name].id }
         }
         val overallAllelesStatistics = OverallAllelesStatistics()
+        val writerCloseCallbacks = mutableListOf<(MiXCRCommandReport) -> Unit>()
         cloneReaders.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
                 resultLibrary,
@@ -240,7 +254,7 @@ class CommandFindAlleles : MiXCRCommand() {
                     progressAndStage,
                     "Recalculating scores ${inputFiles[i]}"
                 ) { clones ->
-                    cloneRebuild.recalculateScores(clones, overallAllelesStatistics)
+                    cloneRebuild.recalculateScores(clones, overallAllelesStatistics, reportBuilder)
                 }
                 if (outputTemplate != null) {
                     withRecalculatedScores.port.withProgress(
@@ -250,16 +264,27 @@ class CommandFindAlleles : MiXCRCommand() {
                     ) { clonesWithScores ->
                         val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
                         outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
-                        outputClnsFiles[i].toFile().writeMappedClones(mapperClones, resultLibrary, cloneReader)
+                        val callback = outputClnsFiles[i].toFile()
+                            .writeMappedClones(mapperClones, resultLibrary, cloneReader)
+                        writerCloseCallbacks += callback
                     }
                 }
             }
+        }
+
+        reportBuilder.setFinishMillis(System.currentTimeMillis())
+        val report = reportBuilder.buildReport()
+        writerCloseCallbacks.forEach {
+            it(report)
         }
         progressAndStage.finish()
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             allelesMutationsOutput.toAbsolutePath().parent.createDirectories()
             printAllelesMutationsOutput(resultLibrary, overallAllelesStatistics, allelesMutationsOutput.toFile())
         }
+        ReportUtil.writeReportToStdout(report)
+        if (reportFile != null) ReportUtil.appendReport(reportFile, report)
+        if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
     }
 
     private fun printAllelesMutationsOutput(
@@ -282,16 +307,30 @@ class CommandFindAlleles : MiXCRCommand() {
                     gene.data.baseSequence.mutations?.encode() ?: ""
                 },
                 "naivesCount" to { gene ->
-                    allelesStatistics.stats(gene.id).naives.get()
+                    allelesStatistics.stats(gene.id).naives.sum()
                 },
                 "lowerDiversityBound" to { gene ->
-                    allelesStatistics.stats(gene.id).diversity.size
+                    allelesStatistics.stats(gene.id).diversity()
                 },
                 "count" to { gene ->
-                    allelesStatistics.stats(gene.id).count.get()
+                    allelesStatistics.stats(gene.id).count()
                 },
                 "totalCount" to { gene ->
                     allelesStatistics.baseGeneCount(gene.id)
+                },
+                "filteredOut" to { gene ->
+                    allelesStatistics.stats(gene.id).filteredOut.sum()
+                },
+                "scoreNotChanged" to { gene ->
+                    allelesStatistics.stats(gene.id).scoreNotChanged.sum()
+                },
+                "negativeScoreChange" to { gene ->
+                    allelesStatistics.stats(gene.id).withNegativeScoreChange.sum()
+                },
+                "scoreDelta" to { gene ->
+                    val summaryStatistics = allelesStatistics.stats(gene.id).scoreDelta
+                    if (summaryStatistics.n == 0L) "" else
+                        GlobalObjectMappers.toOneLine(MiXCRCommandReport.Stats.from(summaryStatistics))
                 }
             )
             val genes = resultLibrary.genes
@@ -306,7 +345,7 @@ class CommandFindAlleles : MiXCRCommand() {
         clones: List<Clone>,
         resultLibrary: VDJCLibrary,
         cloneReader: CloneReader
-    ) {
+    ): (MiXCRCommandReport) -> Unit {
         toPath().toAbsolutePath().parent.toFile().mkdirs()
         val cloneSet = CloneSet(
             clones,
@@ -319,10 +358,11 @@ class CommandFindAlleles : MiXCRCommand() {
             ),
             cloneReader.ordering()
         )
-        ClnsWriter(this).use { clnsWriter ->
-            clnsWriter.writeCloneSet(cloneSet)
-            //TODO make and write search alleles report
-            clnsWriter.writeFooter(cloneReader.reports(), null)
+        val clnsWriter = ClnsWriter(this)
+        clnsWriter.writeCloneSet(cloneSet)
+        return { report ->
+            clnsWriter.writeFooter(cloneReader.reports(), report)
+            clnsWriter.close()
         }
     }
 
@@ -382,6 +422,6 @@ class CommandFindAlleles : MiXCRCommand() {
     }
 
     companion object {
-        const val FIND_ALLELES_COMMAND_NAME = "findAlleles"
+        const val COMMAND_NAME = "findAlleles"
     }
 }

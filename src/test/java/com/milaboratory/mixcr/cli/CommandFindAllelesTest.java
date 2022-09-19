@@ -44,7 +44,7 @@ public class CommandFindAllelesTest {
     @Test
     public void outputsWrittenToCommonDirectory() {
         CommandLine.ParseResult p = Main.parseArgs(
-                CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                CommandFindAlleles.COMMAND_NAME,
                 "-o", "/output/folder/{file_name}_with_alleles.clns",
                 file1.toString(),
                 file2.toString()
@@ -62,7 +62,7 @@ public class CommandFindAllelesTest {
     @Test
     public void outputsWrittenToOriginalDirectory() {
         CommandLine.ParseResult p = Main.parseArgs(
-                CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                CommandFindAlleles.COMMAND_NAME,
                 "-o", "{file_dir_path}/{file_name}_with_alleles.clns",
                 file1.toString(),
                 file2.toString()
@@ -75,7 +75,7 @@ public class CommandFindAllelesTest {
     @Test
     public void includeLibraryIntoOutputs() {
         CommandLine.ParseResult p = Main.parseArgs(
-                CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                CommandFindAlleles.COMMAND_NAME,
                 "--export-library", "/output/folder/library.json",
                 "-o", "/output/folder/{file_name}_with_alleles.clns",
                 file1.toString(),
@@ -95,7 +95,7 @@ public class CommandFindAllelesTest {
     @Test
     public void libraryMustBeJson() {
         CommandLine.ParseResult p = Main.parseArgs(
-                CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                CommandFindAlleles.COMMAND_NAME,
                 "--export-library", "/output/folder/library.txt",
                 "-o", "/output/folder/{file_name}_with_alleles.clns",
                 file1.toString(),
@@ -113,7 +113,7 @@ public class CommandFindAllelesTest {
     @Test
     public void outputsMustBeUniq() {
         CommandLine.ParseResult p = Main.parseArgs(
-                CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                CommandFindAlleles.COMMAND_NAME,
                 "-o", "/output/folder/{file_name}.clns",
                 file1.toString(),
                 file3.toString()
@@ -130,7 +130,7 @@ public class CommandFindAllelesTest {
     @Test
     public void templateMustBeClns() {
         CommandLine.ParseResult p = Main.parseArgs(
-                CommandFindAlleles.FIND_ALLELES_COMMAND_NAME,
+                CommandFindAlleles.COMMAND_NAME,
                 "-o", "/output/folder/{file_name}.clna",
                 file1.toString(),
                 file2.toString()

@@ -71,6 +71,7 @@ class AllelesBuilder(
     fun searchForAlleles(
         geneType: GeneType,
         progress: ProgressAndStage,
+        reportBuilder: FindAllelesReport.Builder,
         threads: Int
     ): List<Pair<String, List<VDJCGeneData>>> {
         val totalClonesCount = datasets.sumOf { it.numberOfClones() }.toLong()
@@ -98,7 +99,7 @@ class AllelesBuilder(
                 ) { clustersWithTheSameV ->
                     clustersWithTheSameV.mapInParallel(threads) { cluster ->
                         val geneId = cluster[0].getBestHit(geneType).gene.name
-                        geneId to findAlleles(cluster, geneType).sortedBy { it.name }
+                        geneId to findAlleles(cluster, geneType, reportBuilder).sortedBy { it.name }
                     }
                         .asSequence()
                         .sortedBy { it.first }
@@ -120,7 +121,11 @@ class AllelesBuilder(
         }
         .use(function)
 
-    private fun findAlleles(clusterByTheSameGene: List<Clone>, geneType: GeneType): List<VDJCGeneData> {
+    private fun findAlleles(
+        clusterByTheSameGene: List<Clone>,
+        geneType: GeneType,
+        reportBuilder: FindAllelesReport.Builder
+    ): List<VDJCGeneData> {
         require(clusterByTheSameGene.isNotEmpty())
         val bestHit = clusterByTheSameGene[0].getBestHit(geneType)
 
@@ -140,6 +145,9 @@ class AllelesBuilder(
         )
 
         val foundAlleles = allelesSearcher.search(cloneDescriptors)
+
+        reportBuilder.foundAlleles(foundAlleles.count { it.allele != EMPTY_NUCLEOTIDE_MUTATIONS })
+        reportBuilder.zygote(foundAlleles.size)
 
         return foundAlleles.map { foundAllele ->
             val naiveClones = clusterByTheSameGene.asSequence()

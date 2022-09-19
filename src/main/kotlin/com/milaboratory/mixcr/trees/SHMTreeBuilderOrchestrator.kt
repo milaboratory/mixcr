@@ -21,7 +21,6 @@ import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.cli.BuildSHMTreeReport
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO

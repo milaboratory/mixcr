@@ -18,6 +18,7 @@ import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.CloneWithDatasetId
 import com.milaboratory.mixcr.trees.MutationsUtils
@@ -47,8 +48,6 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.extension
-import kotlin.io.path.nameWithoutExtension
-import kotlin.io.path.pathString
 
 
 @Command(
@@ -60,7 +59,7 @@ import kotlin.io.path.pathString
 class CommandFindShmTrees : MiXCRCommand() {
     @Parameters(
         arity = "2..*",
-        description = ["Paths to clns files that was processed by command ${CommandFindAlleles.FIND_ALLELES_COMMAND_NAME} and path to output file"],
+        description = ["Paths to clns files that was processed by command ${CommandFindAlleles.COMMAND_NAME} and path to output file"],
         paramLabel = "input_file.clns [input_file2.clns ....] output_file.$shmFileExtension",
         hideParamSyntax = true
     )
@@ -94,18 +93,21 @@ class CommandFindShmTrees : MiXCRCommand() {
     )
     lateinit var shmTreeBuilderParametersName: String
 
-    @Option(names = ["-r", "--report"], description = ["Report file path"])
-    var report: Path? = null
+    @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
+    var reportFile: String? = null
 
-    @Option(description = ["List of VGene names to filter clones"], names = ["-v", "--v-gene-names"])
+    @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
+    var jsonReport: String? = null
+
+    @Option(description = ["List of VGene names to filter clones"], names = ["--v-gene-names"])
     var VGenesToFilter: Set<String> = mutableSetOf()
 
-    @Option(description = ["List of JGene names to filter clones"], names = ["-j", "--j-gene-names"])
+    @Option(description = ["List of JGene names to filter clones"], names = ["--j-gene-names"])
     var JGenesToFilter: Set<String> = mutableSetOf()
 
     @Option(
         description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
-        names = ["-cdr3", "--cdr3-lengths"]
+        names = ["--cdr3-lengths"]
     )
     var CDR3LengthToFilter: Set<Int> = mutableSetOf()
 
@@ -160,9 +162,6 @@ class CommandFindShmTrees : MiXCRCommand() {
 
     override fun validate() {
         super.validate()
-        if (report == null && buildFrom == null) {
-            warn("NOTE: report file is not specified, using $reportFile to write report.")
-        }
         if (!outputTreesPath.extension.endsWith(shmFileExtension)) {
             throwValidationExceptionKotlin("Output file should have extension $shmFileExtension. Given $outputTreesPath")
         }
@@ -185,17 +184,11 @@ class CommandFindShmTrees : MiXCRCommand() {
             if (minCountForClone != null) {
                 throwValidationExceptionKotlin("--min-count must be empty if --build-from is specified")
             }
-            if (report != null) {
-                println("WARN: argument --report will not be used with --build-from")
-            }
             if (debugDir != null) {
                 println("WARN: argument --debug will not be used with --build-from")
             }
         }
     }
-
-    private val reportFile: Path
-        get() = report ?: outputTreesPath.parent.resolve(outputTreesPath.nameWithoutExtension + ".report")
 
     private val tempDest: TempFileDest by lazy {
         if (useLocalTemp) outputTreesPath.toAbsolutePath().parent.createDirectories()
@@ -226,7 +219,7 @@ class CommandFindShmTrees : MiXCRCommand() {
             }
         }
         require(cloneReaders.all { it.info.foundAlleles != null }) {
-            "Input files must be processed by ${CommandFindAlleles.FIND_ALLELES_COMMAND_NAME}"
+            "Input files must be processed by ${CommandFindAlleles.COMMAND_NAME}"
         }
         require(cloneReaders.map { it.info.foundAlleles }.distinct().count() == 1) {
             "All input files must be assembled with the same alleles"
@@ -284,7 +277,8 @@ class CommandFindShmTrees : MiXCRCommand() {
         progressAndStage.finish()
         val report = reportBuilder.buildReport()
         ReportUtil.writeReportToStdout(report)
-        ReportUtil.writeJsonReport(reportFile.pathString, report)
+        if (reportFile != null) ReportUtil.appendReport(reportFile, report)
+        if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
     }
 
     private fun readUserInput(userInputFile: File): Map<CloneWithDatasetId.ID, Int> {

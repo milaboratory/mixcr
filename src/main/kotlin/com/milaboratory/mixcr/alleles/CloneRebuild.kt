@@ -24,13 +24,14 @@ import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.basictypes.GeneFeatures
+import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.toList
-import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Diversity
@@ -88,27 +89,81 @@ class CloneRebuild(
      */
     fun recalculateScores(
         input: OutputPort<Clone>,
-        overallAllelesStatistics: OverallAllelesStatistics
+        overallAllelesStatistics: OverallAllelesStatistics,
+        reportBuilder: FindAllelesReport.Builder
     ): List<Pair<Clone, EnumMap<GeneType, List<GeneAndScore>>>> {
         val errorsCount: MutableMap<VDJCGeneId, LongAdder> = ConcurrentHashMap()
         val withRecalculatedScores = input
             .mapInParallel(threads) { clone ->
-                val (recalculateScores, mutations) = calculateScoresWithAddedAlleles(clone)
-                for (geneType in VJ_REFERENCE) {
-                    val bestHit = recalculateScores[geneType]!!.maxByOrNull { it.score }!!
-                    val stats = overallAllelesStatistics.stats(bestHit.geneId)
-                    val complementaryGeneId =
-                        recalculateScores[complimentaryGeneType(geneType)]!!.maxByOrNull { it.score }!!.geneId
-                    stats.diversity += complementaryGeneId to clone.ntLengthOf(GeneFeature.CDR3)
-                    if (mutations[bestHit.geneId.name] == 0) {
-                        stats.naives.incrementAndGet()
-                    }
-                    stats.count.incrementAndGet()
-                    overallAllelesStatistics.registerBaseGene(bestHit.geneId)
-                    if (bestHit.score <= 0.0) {
-                        errorsCount.computeIfAbsent(bestHit.geneId) { LongAdder() }.increment()
+                val recalculateScores = EnumMap<GeneType, List<GeneAndScore>>(GeneType::class.java)
+                //copy D and C
+                for (gt in arrayOf(Diversity, Constant)) {
+                    recalculateScores[gt] = clone.getHits(gt).map { hit ->
+                        val mappedGeneId = VDJCGeneId(resultLibrary.libraryId, hit.gene.name)
+                        GeneAndScore(mappedGeneId, hit.score)
                     }
                 }
+                for (geneType in VJ_REFERENCE) {
+                    val changes: MutableMap<VDJCGeneId, AlignmentsChange> = mutableMapOf()
+
+                    for (hit in clone.getHits(geneType)) {
+                        for (foundAlleleId in allelesMapping[hit.gene.name]!!) {
+                            changes[foundAlleleId] = when {
+                                foundAlleleId.name != hit.gene.name -> {
+                                    val (scoreDelta, recalculatedMutationsCount) = scoreDelta(
+                                        clone,
+                                        resultLibrary[foundAlleleId.name],
+                                        cloneFactory.parameters.getVJCParameters(geneType).scoring,
+                                        hit.alignments
+                                    )
+                                    AlignmentsChange(
+                                        hit,
+                                        scoreDelta,
+                                        recalculatedMutationsCount
+                                    )
+                                }
+                                else -> AlignmentsChange(hit)
+                            }
+                        }
+                    }
+                    val maxScore = changes.values.maxOf { it.newScore }
+                    val scoreThreshold = when {
+                        maxScore <= 0 -> {
+                            //in case of clone that is too different with found allele
+                            errorsCount.computeIfAbsent(clone.getBestHit(geneType).gene.id) { LongAdder() }.increment()
+                            changes.values.minOf { it.newScore }
+                        }
+                        else -> maxScore * cloneFactory.parameters.getVJCParameters(geneType).relativeMinScore
+                    }
+                    recalculateScores[geneType] = changes
+                        .filter { it.value.newScore >= scoreThreshold }
+                        .map { (alleleGeneId, alignmentsChange) ->
+                            GeneAndScore(alleleGeneId, alignmentsChange.newScore)
+                        }
+
+                    val bestAlleleId = changes.entries.maxByOrNull { it.value.newScore }!!.key
+                    overallAllelesStatistics.registerBaseGene(changes[bestAlleleId]!!.originalHit.gene.id)
+
+                    for ((alleleId, alignmentsChange) in changes) {
+                        val stats = overallAllelesStatistics.stats(alleleId)
+                        if (alleleId == bestAlleleId) {
+                            val complementaryGeneId = clone.getBestHit(complimentaryGeneType(geneType)).gene.id
+                            stats.register(clone.ntLengthOf(CDR3), complementaryGeneId)
+                            if (alignmentsChange.mutationsCount == 0) {
+                                stats.naives.increment()
+                            }
+                            stats.scoreDelta(alignmentsChange.scoreDelta)
+                        }
+                        if (alignmentsChange.newScore < scoreThreshold) {
+                            stats.filteredOut.increment()
+                        }
+                    }
+                }
+                var scoreDelta = 0.0F
+                for (geneType in VJ_REFERENCE) {
+                    scoreDelta += recalculateScores[geneType]!!.maxOf { it.score } - clone.getBestHit(geneType).score
+                }
+                reportBuilder.scoreDelta(scoreDelta)
                 clone to recalculateScores
             }
             .toList()
@@ -116,51 +171,6 @@ class CloneRebuild(
             println("WARN: for $geneId found $count clones that get negative score after realigning")
         }
         return withRecalculatedScores
-    }
-
-    private fun calculateScoresWithAddedAlleles(
-        clone: Clone
-    ): Pair<EnumMap<GeneType, List<GeneAndScore>>, Map<String, Int>> {
-        val originalGeneScores = EnumMap<GeneType, List<GeneAndScore>>(GeneType::class.java)
-        val mutationsCount = mutableMapOf<String, Int>()
-        //copy D and C
-        for (gt in arrayOf(Diversity, Constant)) {
-            originalGeneScores[gt] = clone.getHits(gt).map { hit ->
-                val mappedGeneId = VDJCGeneId(resultLibrary.libraryId, hit.gene.name)
-                GeneAndScore(mappedGeneId, hit.score)
-            }
-        }
-        //add hits with alleles and add delta score
-        for (gt in VJ_REFERENCE) {
-            val allGeneAndScores = clone.getHits(gt).flatMap { hit ->
-                allelesMapping[hit.gene.name]!!.map { foundAlleleId ->
-                    if (foundAlleleId.name != hit.gene.name) {
-                        val (scoreDelta, recalculatedMutationsCount) = scoreDelta(
-                            clone,
-                            resultLibrary[foundAlleleId.name],
-                            cloneFactory.parameters.getVJCParameters(gt).scoring,
-                            hit.alignments
-                        )
-                        mutationsCount[foundAlleleId.name] = recalculatedMutationsCount
-                        GeneAndScore(foundAlleleId, hit.score + scoreDelta)
-                    } else {
-                        mutationsCount[foundAlleleId.name] = hit.alignments
-                            .filterNotNull()
-                            .sumOf { it.absoluteMutations.size() }
-                        GeneAndScore(foundAlleleId, hit.score)
-                    }
-                }
-            }
-            val maxScore = allGeneAndScores.maxOf { it.score }
-            if (maxScore <= 0) {
-                //in case of clone that is too different with found allele
-                originalGeneScores[gt] = allGeneAndScores
-            } else {
-                val scoreThreshold = maxScore * cloneFactory.parameters.getVJCParameters(gt).relativeMinScore
-                originalGeneScores[gt] = allGeneAndScores.filter { it.score >= scoreThreshold }
-            }
-        }
-        return originalGeneScores to mutationsCount
     }
 
     /**
@@ -221,6 +231,14 @@ class CloneRebuild(
                 scoreDelta += recalculatedScore - alignment.score
             }
         return scoreDelta to mutationsCount
+    }
+
+    private data class AlignmentsChange(
+        val originalHit: VDJCHit,
+        val scoreDelta: Float = 0.0F,
+        val mutationsCount: Int = 0
+    ) {
+        val newScore: Float get() = originalHit.score + scoreDelta
     }
 }
 

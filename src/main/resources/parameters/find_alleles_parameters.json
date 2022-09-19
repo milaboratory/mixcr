@@ -12,7 +12,8 @@
       "minYInterceptForHeterozygous": 0.2,
       "portionOfClonesToSearchCommonMutationsInAnAllele": 0.95,
       "minYInterceptForHomozygous": 0.9,
-      "maxRegressionSlopeForHomozygous": "0.05"
+      "maxRegressionSlopeForHomozygous": "0.05",
+      "minCountOfNaiveClonesToAddAllele": 3
     },
     "searchMutationsInCDR3": {
       "minClonesCount": 5,

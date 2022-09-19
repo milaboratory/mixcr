@@ -2,7 +2,6 @@ package com.milaboratory.mixcr.trees
 
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.mixcr.cli.BuildSHMTreeReport
 import com.milaboratory.util.GlobalObjectMappers
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.instanceOf

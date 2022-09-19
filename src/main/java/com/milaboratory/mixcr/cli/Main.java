@@ -208,7 +208,7 @@ public final class Main {
                 .addSubcommand(CommandExportShmTreesTableWithNodes.COMMAND_NAME, CommandExportShmTreesTableWithNodes.mkCommandSpec())
                 .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
                 .addSubcommand(CommandExportShmTreesNewick.COMMAND_NAME, CommandExportShmTreesNewick.class)
-                .addSubcommand(CommandFindAlleles.FIND_ALLELES_COMMAND_NAME, CommandFindAlleles.class);
+                .addSubcommand(CommandFindAlleles.COMMAND_NAME, CommandFindAlleles.class);
 
         cmd.getSubcommands()
                 .get("analyze")

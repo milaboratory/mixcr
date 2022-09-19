@@ -13,8 +13,9 @@ package com.milaboratory.mixcr.alleles
 
 import com.milaboratory.mixcr.util.geneName
 import io.repseq.core.VDJCGeneId
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics
+import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.LongAdder
 
 class OverallAllelesStatistics {
@@ -30,8 +31,30 @@ class OverallAllelesStatistics {
         alleles.computeIfAbsent(geneId) { AlleleStatistics() }
 
     class AlleleStatistics {
-        val naives = AtomicInteger(0)
-        val count = AtomicInteger(0)
-        val diversity: MutableSet<Pair<VDJCGeneId, Int>> = ConcurrentHashMap.newKeySet()
+        val filteredOut = LongAdder()
+        val naives = LongAdder()
+        private val count = LongAdder()
+        private val diversity: MutableSet<Pair<VDJCGeneId, Int>> = ConcurrentHashMap.newKeySet()
+        val scoreNotChanged: LongAdder = LongAdder()
+        val withNegativeScoreChange: LongAdder = LongAdder()
+        val scoreDelta: SummaryStatistics = SynchronizedSummaryStatistics()
+        fun scoreDelta(delta: Float) {
+            if (delta == 0.0F) {
+                scoreNotChanged.increment()
+            } else {
+                if (delta < 0.0F) {
+                    withNegativeScoreChange.increment()
+                }
+                scoreDelta.addValue(delta.toDouble())
+            }
+        }
+
+        fun register(CDR3Length: Int, complementaryGeneId: VDJCGeneId) {
+            count.increment()
+            diversity += complementaryGeneId to CDR3Length
+        }
+
+        fun diversity() = diversity.size
+        fun count() = count.sum()
     }
 }
