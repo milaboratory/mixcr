@@ -20,33 +20,34 @@ import com.milaboratory.util.StringUtil
 import jetbrains.letsPlot.intern.Plot
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import picocli.CommandLine
+import picocli.CommandLine.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
+import kotlin.io.path.absolute
 import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
-@CommandLine.Command(name = "exportPlots", separator = " ", description = ["Export postanalysis plots."])
+@Command(name = "exportPlots", separator = " ", description = ["Export postanalysis plots."])
 abstract class CommandPaExportPlots : CommandPaExport() {
-    @CommandLine.Option(description = [CommonDescriptions.METADATA], names = ["--metadata"])
+    @Option(description = [CommonDescriptions.METADATA], names = ["--metadata"])
     var metadata: String? = null
 
-    @CommandLine.Option(description = ["Plot width"], names = ["--width"])
+    @Option(description = ["Plot width"], names = ["--width"])
     var width = 0
 
-    @CommandLine.Option(description = ["Plot height"], names = ["--height"])
+    @Option(description = ["Plot height"], names = ["--height"])
     var height = 0
 
-    @CommandLine.Option(
+    @Option(
         description = ["Filter by metadata. Possible filters column=value, column>=value etc."],
         names = ["--filter"],
         split = ","
     )
     var filterByMetadata: List<String>? = null
 
-    @CommandLine.Parameters(description = ["Output PDF/EPS/PNG/JPEG file name"], index = "1")
+    @Parameters(description = ["Output PDF/EPS/PNG/JPEG file name"], index = "1")
     lateinit var out: String
 
     override fun getOutputFiles(): List<String> = emptyList() // output will be always overriden
@@ -95,10 +96,10 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     }
 
     private fun plotDestStr(group: IsolationGroup): String {
-        val out = Path(out)
+        val out = Path(out).absolute()
         val ext = out.extension
-        val withoutExt = out.nameWithoutExtension
-        return "$withoutExt.${group.extension()}.$ext"
+        val withoutExt = out.parent.resolve(out.nameWithoutExtension)
+        return "$withoutExt${group.extension()}.$ext"
     }
 
     private fun plotDestPath(group: IsolationGroup): Path = Paths.get(plotDestStr(group))
@@ -120,11 +121,11 @@ abstract class CommandPaExportPlots : CommandPaExport() {
         writePlots(group!!, listOf(plot))
     }
 
-    @CommandLine.Command(
+    @Command(
         name = "exportPlots",
         separator = " ",
         description = ["Export postanalysis plots."],
-        subcommands = [CommandLine.HelpCommand::class]
+        subcommands = [HelpCommand::class]
     )
     class CommandExportPlotsMain
 }

@@ -33,23 +33,23 @@ import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
-import picocli.CommandLine.Option
+import picocli.CommandLine.*
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Stream
 
-@CommandLine.Command(separator = " ")
+@Command(separator = " ")
 abstract class CommandExport<T : VDJCObject> private constructor(
     protected val fieldExtractorsFactory: FieldExtractorsFactory<T>
 ) : MiXCRCommand() {
-    @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+    @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
     lateinit var `in`: String
 
-    @CommandLine.Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
+    @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
     var out: Path? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated). " +
                 "Possible values (multiple values allowed): TRA, TRD, TRAD (for human), TRG, IGH, IGK, IGL"],
         names = ["-c", "--chains"],
@@ -57,12 +57,12 @@ abstract class CommandExport<T : VDJCObject> private constructor(
     )
     var chains: Set<String>? = null
 
-    @CommandLine.Option(description = ["List available export fields"], names = ["-lf", "--list-fields"], hidden = true)
+    @Option(description = ["List available export fields"], names = ["-lf", "--list-fields"], hidden = true)
     fun setListFields(@Suppress("UNUSED_PARAMETER") b: Boolean) {
         throwExecutionExceptionKotlin("-lf / --list-fields is removed in version 3.0: use help <exportCommand> for help")
     }
 
-    @CommandLine.Option(
+    @Option(
         description = ["Output short versions of column headers which facilitates analysis with Pandas, R/DataFrames or other data tables processing library."],
         names = ["-s", "--no-spaces"],
         hidden = true
@@ -70,12 +70,12 @@ abstract class CommandExport<T : VDJCObject> private constructor(
     fun setNoSpaces(@Suppress("UNUSED_PARAMETER") b: Boolean) {
         warn(
             """"-s" / "--no-spaces" option is deprecated.
-Scripting friendly output format now used by default.
-Use "-v" / "--with-spaces" to switch back to human readable format.""".trimIndent()
+                Scripting friendly output format now used by default.
+                Use "-v" / "--with-spaces" to switch back to human-readable format.""".trimIndent()
         )
     }
 
-    @CommandLine.Option(description = ["Output only first N records"], names = ["-n", "--limit"])
+    @Option(description = ["Output only first N records"], names = ["-n", "--limit"])
     var limit = Long.MAX_VALUE
         set(value) {
             if (value <= 0) throwExecutionExceptionKotlin("--limit must be positive")
@@ -93,7 +93,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         return ChainsFilter.parseFilter<T>(chains).asFilter()
     }
 
-    @CommandLine.Command(
+    @Command(
         name = "exportAlignments",
         separator = " ",
         sortOptions = false,
@@ -122,7 +122,7 @@ Use "-v" / "--with-spaces" to switch back to human readable format.""".trimInden
         }
     }
 
-    @CommandLine.Command(
+    @Command(
         name = "exportClones",
         separator = " ",
         sortOptions = false,

@@ -18,17 +18,20 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat.Companion.Formatted
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat.Companion.Significance
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.cli.MultipleMetricsInOneFile
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.dataFrame
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.parsePlotType
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.plots
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 import java.util.*
+import kotlin.io.path.Path
 
-abstract class CommandPaExportPlotsBasicStatistics : CommandPaExportPlots() {
-    @CommandLine.Option(
+abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, CommandPaExportPlots() {
+    @Option(
         description = ["Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +
                 "lineplot, lineplot-bindot, lineplot-jitter, " +
                 "violin, violin-bindot, barplot, barplot-stacked, scatter"],
@@ -36,70 +39,73 @@ abstract class CommandPaExportPlotsBasicStatistics : CommandPaExportPlots() {
     )
     var plotType: String? = null
 
-    @CommandLine.Option(description = ["Primary group"], names = ["-p", "--primary-group"])
+    @Option(description = ["Primary group"], names = ["-p", "--primary-group"])
     var primaryGroup: String? = null
+        get() = field?.lowercase()
 
-    @CommandLine.Option(
+    @Option(
         description = ["List of comma separated primary group values"],
         names = ["-pv", "--primary-group-values"],
         split = ","
     )
     var primaryGroupValues: List<String>? = null
 
-    @CommandLine.Option(description = ["Secondary group"], names = ["-s", "--secondary-group"])
+    @Option(description = ["Secondary group"], names = ["-s", "--secondary-group"])
     var secondaryGroup: String? = null
+        get() = field?.lowercase()
 
-    @CommandLine.Option(
+    @Option(
         description = ["List of comma separated secondary group values"],
         names = ["-sv", "--secondary-group-values"],
         split = ","
     )
     var secondaryGroupValues: List<String>? = null
 
-    @CommandLine.Option(description = ["Facet by"], names = ["--facet-by"])
+    @Option(description = ["Facet by"], names = ["--facet-by"])
     var facetBy: String? = null
+        get() = field?.lowercase()
 
-    @CommandLine.Option(description = ["Select specific metrics to export."], names = ["--metric"], split = ",")
+    @Option(description = ["Select specific metrics to export."], names = ["--metric"], split = ",")
     var metrics: List<String>? = null
 
-    @CommandLine.Option(description = ["Hide overall p-value"], names = ["--hide-overall-p-value"])
+    @Option(description = ["Hide overall p-value"], names = ["--hide-overall-p-value"])
     var hideOverallPValue = false
 
-    @CommandLine.Option(description = ["Show pairwise p-value comparisons"], names = ["--pairwise-comparisons"])
+    @Option(description = ["Show pairwise p-value comparisons"], names = ["--pairwise-comparisons"])
     var pairwiseComparisons = false
 
-    @CommandLine.Option(
+    @Option(
         description = ["Reference group. Can be \"all\" or some specific value."],
         names = ["--ref-group"],
         paramLabel = "refGroup"
     )
     var refGroupParam: String? = null
 
-    @CommandLine.Option(description = ["Hide non-significant observations"], names = ["--hide-non-significant"])
+    @Option(description = ["Hide non-significant observations"], names = ["--hide-non-significant"])
     var hideNS = false
 
-    @CommandLine.Option(description = ["Do paired analysis"], names = ["--paired"])
+    @Option(description = ["Do paired analysis"], names = ["--paired"])
     var paired = false
 
-    @CommandLine.Option(
+    @Option(
         description = ["Test method. Default is Wilcoxon. Available methods: Wilcoxon, ANOVA, TTest, KruskalWallis, KolmogorovSmirnov"],
         names = ["--method"]
     )
     var method: String = "Wilcoxon"
 
-    @CommandLine.Option(
+    @Option(
         description = ["Test method for multiple groups comparison. Default is KruskalWallis. Available methods: ANOVA, KruskalWallis, KolmogorovSmirnov"],
         names = ["--method-multiple-groups"]
     )
     var methodForMultipleGroups: String = "KruskalWallis"
 
-    @CommandLine.Option(
+    @Option(
         description = ["Method used to adjust p-values. Default is Holm. Available methods: none, BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm, Hommel"],
         names = ["--p-adjust-method"]
     )
     var pAdjustMethod: String = "Holm"
 
-    @CommandLine.Option(description = ["Show significance level instead of p-values"], names = ["--show-significance"])
+    @Option(description = ["Show significance level instead of p-values"], names = ["--show-significance"])
     var showSignificance = false
 
     abstract fun group(): String
@@ -108,12 +114,7 @@ abstract class CommandPaExportPlotsBasicStatistics : CommandPaExportPlots() {
 
     override fun validate() {
         super.validate()
-        if (!out.endsWith("pdf") && metrics.isNullOrEmpty()) {
-            val ext = out.takeLast(3).uppercase(Locale.getDefault())
-            throwValidationExceptionKotlin(
-                "For export in $ext Use --metrics option to specify only one metric to export. Or use PDF format for export."
-            )
-        }
+        validateNonPdf(Path(out), metrics)
     }
 
     override fun run(result: PaResultByGroup) {
@@ -152,7 +153,7 @@ abstract class CommandPaExportPlotsBasicStatistics : CommandPaExportPlots() {
         writePlots(result.group, plots)
     }
 
-    @CommandLine.Command(
+    @Command(
         name = "cdr3metrics",
         sortOptions = false,
         separator = " ",
@@ -173,7 +174,7 @@ abstract class CommandPaExportPlotsBasicStatistics : CommandPaExportPlots() {
         }
     }
 
-    @CommandLine.Command(
+    @Command(
         name = "diversity",
         sortOptions = false,
         separator = " ",

@@ -78,8 +78,9 @@ object ChainsUtil {
     fun Chains.toPath(pattern: String, ext: String? = null) = toPath(Path(pattern), ext)
 
     fun Chains.toPath(pattern: Path, ext: String? = null) = run {
-        val fname = pattern.toAbsolutePath().nameWithoutExtension
+        val path = pattern.toAbsolutePath()
+        val fname = path.nameWithoutExtension
         val fext = ext ?: pattern.extension
-        Path("$fname.$name.$fext")
+        path.parent.resolve(Path("$fname.$name.$fext"))
     }
 }

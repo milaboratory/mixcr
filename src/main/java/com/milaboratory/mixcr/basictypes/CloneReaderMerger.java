@@ -60,7 +60,7 @@ public class CloneReaderMerger implements CloneReader {
 
     @Override
     public MiXCRMetaInfo getInfo() {
-        throw new UnsupportedOperationException();
+        return rep.getInfo();
     }
 
     @Override

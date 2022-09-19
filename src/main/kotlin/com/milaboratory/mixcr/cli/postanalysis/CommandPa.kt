@@ -168,7 +168,7 @@ abstract class CommandPa : MiXCRCommand() {
         val content = Paths.get(metadata).toAbsolutePath().readLines()
         if (content.isEmpty()) return@lazy null
         val sep = if (metadata.endsWith(".csv")) "," else "\t"
-        val header = content.first().split(sep.toRegex()).dropLastWhile { it.isEmpty() }
+        val header = content.first().split(sep.toRegex()).dropLastWhile { it.isEmpty() }.map { it.lowercase() }
         val result = mutableMapOf<String, MutableList<String>>()
         for (iRow in 1 until content.size) {
             val row = content[iRow].split(sep.toRegex()).dropLastWhile { it.isEmpty() }

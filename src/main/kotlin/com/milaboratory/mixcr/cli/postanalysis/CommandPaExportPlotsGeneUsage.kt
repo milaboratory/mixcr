@@ -77,14 +77,14 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
                     !noGenesDendro,
                     colorKey.stream().map {
                         ColorKey(
-                            it!!, Position.Bottom
+                            it!!.lowercase(), Position.Bottom
                         )
                     }.collect(Collectors.toList()),
                     groupBy,
                     hLabelsSize,
                     vLabelsSize,
                     false,
-                    parsePallete(),
+                    parsePalette(),
                     width,
                     height
                 )

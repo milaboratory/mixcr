@@ -185,13 +185,8 @@ public class IOUtil {
 
                 byte[] beginMagic = new byte[BEGIN_MAGIC_LENGTH];
                 channel.read(ByteBuffer.wrap(beginMagic));
-                String magicFull = new String(beginMagic, StandardCharsets.US_ASCII);
                 String magicShort = new String(beginMagic, 0, BEGIN_MAGIC_LENGTH_SHORT,
                         StandardCharsets.US_ASCII);
-
-                if (!magicShort.equals(MAGIC_VDJC) && !magicShort.equals(MAGIC_CLNS)
-                        && !magicShort.equals(MAGIC_CLNA))
-                    throw new IllegalArgumentException("Unknown file type: " + path);
 
                 byte[] endMagic = new byte[END_MAGIC_LENGTH];
                 channel.read(ByteBuffer.wrap(endMagic), channel.size() - END_MAGIC_LENGTH);

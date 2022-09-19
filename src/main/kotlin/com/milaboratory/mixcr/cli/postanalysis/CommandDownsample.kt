@@ -35,7 +35,7 @@ class CommandDownsample : MiXCRCommand() {
     lateinit var `in`: List<String>
 
     @CommandLine.Option(description = ["Specify chains"], names = ["-c", "--chains"], required = true)
-    var chains : String? = null
+    var chains: String? = null
 
     @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
@@ -99,7 +99,12 @@ class CommandDownsample : MiXCRCommand() {
         for (i in results.indices) {
             ClnsWriter(output(`in`[i]).toFile()).use { clnsWriter ->
                 val downsampled = results[i].mkElementsPort().toList()
-                clnsWriter.writeHeader(datasets[i].info, datasets[i].ordering(), datasets[i].usedGenes, downsampled.size)
+                clnsWriter.writeHeader(
+                    datasets[i].info,
+                    datasets[i].ordering(),
+                    datasets[i].usedGenes,
+                    downsampled.size
+                )
                 downsampled.port.drainToAndClose(clnsWriter.cloneWriter())
                 clnsWriter.writeFooter(emptyList(), null)
             }
