@@ -121,14 +121,28 @@ object CommandExportClones {
 
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
-            val info = initialSet.header
-            val (_, params) = paramsResolver.resolve(info.paramsSpec)
+            val header = initialSet.header
+            val tagsInfo = header.tagsInfo
+            val (_, params) = paramsResolver.resolve(header.paramsSpec) { params ->
+                if (params.splitByTags == null) {
+                    val newSpitBy = params.fields
+                        .filter { it.field.equals("-tag", ignoreCase = true) }
+                        .map { it.args[0] to tagsInfo.indexOfIgnoreCase(it.args[0]) }
+                        .maxByOrNull { it.second }
+                        ?.first
+                    if (newSpitBy != null) {
+                        println("Clone splitting by $newSpitBy added automatically because -tag $newSpitBy field is present in the list.")
+                        params.copy(splitByTags = newSpitBy)
+                    } else
+                        params
+                } else
+                    params
+            }
             InfoWriter.create(
                 outputFile,
-                CloneFieldsExtractorsFactory.createExtractors(params.fields, info, OutputMode.ScriptingFriendly)
+                CloneFieldsExtractorsFactory.createExtractors(params.fields, header, OutputMode.ScriptingFriendly)
             ).use { writer ->
                 val set = CloneSet.transform(initialSet, params.mkFilter())
-                val tagsInfo = set.tagsInfo
                 val exportClones = ExportClones(
                     set, writer, Long.MAX_VALUE,
                     if (params.splitByTags == null) 0 else tagsInfo.indexOf(params.splitByTags) + 1

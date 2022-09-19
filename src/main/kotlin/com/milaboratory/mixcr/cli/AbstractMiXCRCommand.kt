@@ -14,10 +14,7 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.cli.ACommand
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
-import com.milaboratory.mixcr.Flags
-import com.milaboratory.mixcr.MiXCRMixin
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.*
 import kotlin.reflect.KProperty1
 
 abstract class AbstractMiXCRCommand : ACommand("mixcr") {
@@ -53,6 +50,11 @@ abstract class MiXCRParamsResolver<P : Any>(
 
             cmd.throwExecutionExceptionKotlin("Error validating preset bundle.");
         }
+        if (
+            bundle.pipeline?.contains(MiXCRCommand.assembleContigs) == true &&
+            bundle.assemble?.clnaOutput == false
+        )
+            cmd.throwExecutionExceptionKotlin("assembleContigs step required clnaOutput=true on assemble step")
     }
 }
 

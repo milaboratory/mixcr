@@ -83,6 +83,12 @@ object CommandAssemble {
         @Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
         private val consensusAssemblerOverrides: Map<String, String> = mutableMapOf()
 
+        @Option(
+            description = ["Turns off automatic inference of minRecordsPerConsensus parameter."],
+            names = ["--dont-infer-threshold"]
+        )
+        private var dontInferThreshold = false
+
         override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::assemble) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::clnaOutput setIfTrue isClnaOutput
@@ -90,6 +96,7 @@ object CommandAssemble {
                 Params::sortBySequence setIfTrue sortBySequence
                 Params::cloneAssemblerParameters jsonOverrideWith cloneAssemblerOverrides
                 Params::consensusAssemblerParameters jsonOverrideWith consensusAssemblerOverrides
+                Params::inferMinRecordsPerConsensus resetIfTrue dontInferThreshold
             }
         }
     }

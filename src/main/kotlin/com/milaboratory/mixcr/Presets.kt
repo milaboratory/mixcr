@@ -141,15 +141,15 @@ object Presets {
 
     val presets get() = presetCollection.keys
 
-    private val pipeline = getResolver(MiXCRParamsBundleRaw::pipeline)
-    private val align = getResolver(MiXCRParamsBundleRaw::align)
-    private val refineTagsAndSort = getResolver(MiXCRParamsBundleRaw::refineTagsAndSort)
-    private val assemblePartial = getResolver(MiXCRParamsBundleRaw::assemblePartial)
-    private val assemble = getResolver(MiXCRParamsBundleRaw::assemble)
-    private val assembleContigs = getResolver(MiXCRParamsBundleRaw::assembleContigs)
-    private val extend = getResolver(MiXCRParamsBundleRaw::extend)
-    private val exportAlignments = getResolver(MiXCRParamsBundleRaw::exportAlignments)
-    private val exportClones = getResolver(MiXCRParamsBundleRaw::exportClones)
+    internal val pipeline = getResolver(MiXCRParamsBundleRaw::pipeline)
+    internal val align = getResolver(MiXCRParamsBundleRaw::align)
+    internal val refineTagsAndSort = getResolver(MiXCRParamsBundleRaw::refineTagsAndSort)
+    internal val assemblePartial = getResolver(MiXCRParamsBundleRaw::assemblePartial)
+    internal val assemble = getResolver(MiXCRParamsBundleRaw::assemble)
+    internal val assembleContigs = getResolver(MiXCRParamsBundleRaw::assembleContigs)
+    internal val extend = getResolver(MiXCRParamsBundleRaw::extend)
+    internal val exportAlignments = getResolver(MiXCRParamsBundleRaw::exportAlignments)
+    internal val exportClones = getResolver(MiXCRParamsBundleRaw::exportClones)
 
     private class MiXCRParamsBundleRaw(
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,

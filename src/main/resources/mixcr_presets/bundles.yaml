@@ -111,15 +111,15 @@
 # Single-cell pipelines
 #
 
-"_10x_vdj":
+"10x_vdj":
   inheritFrom: _universal
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
-      parameters:
-        allowPartialAlignments: true
-        allowNoCDR3PartAlignments: true
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - assemble
+    - assembleContigs
+    - exportClones
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort_universal
     overrides:
@@ -149,15 +149,44 @@
                         - "UMI"
                   operator:
                     type: "group_operator_range"
-                    lower: 1.0
+                    lower: 2.0
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      inferMinRecordsPerConsensus: false
+      clnaOutput: true
 
 "10x_vdj_bcr":
-  inheritFrom: _10x_vdj
+  inheritFrom: 10x_vdj
+  mixins:
+    - type: KeepNonCDR3Alignments
+    - type: SetTagPattern
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+    - type: AddExportClonesField
+      insertIndex: 2
+      field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 1
+      field: -tag
+      args: [ "CELL" ]
   align:
     inheritFrom: align_kaligner2_4.0
 
 "10x_vdj_tcr":
-  inheritFrom: _10x_vdj
+  inheritFrom: 10x_vdj
+  mixins:
+    - type: KeepNonCDR3Alignments
+    - type: SetTagPattern
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+    - type: AddExportClonesField
+      insertIndex: 2
+      field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 1
+      field: -tag
+      args: [ "CELL" ]
   align:
     inheritFrom: align_rna-seq_4.0
 
@@ -200,4 +229,3 @@
               operator:
                 type: "group_operator_otsu1"
                 logX: true
-

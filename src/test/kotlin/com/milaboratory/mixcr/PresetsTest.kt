@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr
 
 import com.milaboratory.mitool.helpers.K_OM
+import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
@@ -21,6 +22,16 @@ class PresetsTest {
                 Assert.assertTrue("Flag = $it", Flags.flagMessages.containsKey(it))
             }
         }
+    }
+
+    @Test
+    fun test3() {
+        // val bundle = Presets.resolveParamsBundle("assemblePartial_universal")
+        // val bundle = Presets.resolveParamsBundle("_universal")
+        // val bundle = Presets.resolveParamsBundle("_10x_vdj")
+        val bundle = Presets.resolveParamsBundle("10x_vdj_bcr")
+        Presets.assemblePartial("10x_vdj_bcr")
+        assertJson(K_YAML_OM, bundle, true)
     }
 
     @Test

@@ -73,7 +73,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
 
     final String versionInfo;
 
-    private final long reportsStartPosition;
+    private final long footerStartPosition;
 
     public ClnAReader(Path path, VDJCLibraryRegistry libraryRegistry, int concurrency) throws IOException {
         this(path, libraryRegistry, new LambdaSemaphore(concurrency));
@@ -91,6 +91,9 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
             byte[] magicBytes = new byte[ClnAWriter.MAGIC_LENGTH];
             ii.readFully(magicBytes);
             magicString = new String(magicBytes, StandardCharsets.US_ASCII);
+            if (!magicString.equals(ClnAWriter.MAGIC))
+                throw new IllegalArgumentException("Unexpected file version of format: found " +
+                        magicString + " expected " + ClnAWriter.MAGIC);
 
             // Reading number of clones
             this.numberOfClones = ii.readInt();
@@ -99,7 +102,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
         // File ending
         long indexBegin;
         try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(-ClnAWriter.FOOTER_LENGTH)) {
-            this.reportsStartPosition = pi.readLong();
+            this.footerStartPosition = pi.readLong();
             // Reading key file offsets from last 16 bytes of the file
             this.firstClonePosition = pi.readLong();
             indexBegin = pi.readLong();
@@ -162,7 +165,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
         }
 
         // read reports from footer
-        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(reportsStartPosition)) {
+        try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(footerStartPosition)) {
             footer = pi.readObject(MiXCRFooter.class);
         }
     }

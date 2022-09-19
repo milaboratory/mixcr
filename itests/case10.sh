@@ -17,15 +17,23 @@ assert() {
 
 set -euxo pipefail
 
-mixcr align -f \
-  --preset 10x_vdj_bcr \
+mixcr analyze -f 10x_vdj_bcr \
   +species hs \
-  --report case10.align.report \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
-  case10.aligned-vdjca
+  case10
 
-mixcr refineTagsAndSort case10.aligned-vdjca case10.corrected-vdjca
+#mixcr refineTagsAndSort case10.aligned-vdjca case10.corrected-vdjca
+#
+#mixcr align -f \
+#  --preset 10x_vdj_bcr \
+#  +species hs \
+#  --report case10.align.report \
+#  single_cell_vdj_t_subset_R1.fastq.gz \
+#  single_cell_vdj_t_subset_R2.fastq.gz \
+#  case10.aligned-vdjca
+#
+#mixcr refineTagsAndSort case10.aligned-vdjca case10.corrected-vdjca
 
 #mixcr align -f \
 #  --tag-pattern '^(CELL:N{16})(UMI:N{10})\^(R2:*)' \
