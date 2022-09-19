@@ -74,7 +74,7 @@ object CommandAlign {
 
     data class Params(
         @JsonProperty("species") val species: String = "",
-        @JsonProperty("libraryName") val libraryName: String = "default",
+        @JsonProperty("libraryName") val library: String = "default",
         @JsonProperty("trimmingQualityThreshold") val trimmingQualityThreshold: Byte,
         @JsonProperty("trimmingWindowSize") val trimmingWindowSize: Byte,
         @JsonProperty("chains") val chains: String = "ALL",
@@ -99,7 +99,7 @@ object CommandAlign {
             names = ["-b", "--library"],
             paramLabel = "library"
         )
-        private var libraryName: String? = null
+        private var library: String? = null
 
         @Option(names = ["-O"], description = ["Overrides aligner parameters from the selected preset"])
         private var overrides: Map<String, String> = mutableMapOf()
@@ -202,7 +202,7 @@ object CommandAlign {
                     Params::parameters jsonOverrideWith overrides
                 }
 
-                Params::libraryName setIfNotNull libraryName
+                Params::library setIfNotNull library
                 Params::trimmingQualityThreshold setIfNotNull trimmingQualityThreshold
                 Params::trimmingWindowSize setIfNotNull trimmingWindowSize
                 Params::overlapPairedReads resetIfTrue noMerge
@@ -344,7 +344,7 @@ object CommandAlign {
         }
 
         private val vdjcLibrary: VDJCLibrary by lazy {
-            val libraryName = libraryNameEnding.matcher(cmdParams.libraryName).replaceAll("")
+            val libraryName = libraryNameEnding.matcher(cmdParams.library).replaceAll("")
             VDJCLibraryRegistry.getDefault().getLibrary(libraryName, cmdParams.species)
         }
 
@@ -451,7 +451,7 @@ object CommandAlign {
                 "Option --not-aligned-R2 is not set.",
                 false
             )
-            if (cmdParams.libraryName.contains("/") || cmdParams.libraryName.contains("\\")) {
+            if (cmdParams.library.contains("/") || cmdParams.library.contains("\\")) {
                 val libraryLocations = Paths.get(
                     System.getProperty("user.home"),
                     ".mixcr",

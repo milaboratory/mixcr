@@ -108,6 +108,23 @@ data class SetSpecies(
     }
 }
 
+@JsonTypeName("SetLibrary")
+data class SetLibrary(
+    @JsonProperty("library") val library: String
+) : MiXCRMixinBase(50) {
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::align.update {
+            CommandAlign.Params::library setTo library
+        }
+    }
+
+    override val cmdArgs get() = listOf(CMD_OPTION, library)
+
+    companion object {
+        const val CMD_OPTION = "+library"
+    }
+}
+
 @JsonTypeName("GenericMixin")
 data class GenericMixin(
     @JsonProperty("fieldAddress") val fieldAddress: String,

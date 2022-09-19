@@ -56,6 +56,10 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
     fun species(species: String) =
         mixIn(SetSpecies(species))
 
+    @Option(names = [SetLibrary.CMD_OPTION])
+    fun library(library: String) =
+        mixIn(SetLibrary(library))
+
     @Option(names = [LimitInput.CMD_OPTION])
     fun limitInput(number: Long) =
         mixIn(LimitInput(number))
