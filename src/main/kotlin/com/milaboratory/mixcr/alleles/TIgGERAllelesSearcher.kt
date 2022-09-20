@@ -71,8 +71,9 @@ class TIgGERAllelesSearcher(
         clones: List<CloneDescription>,
         allele: Mutations<NucleotideSequence>
     ): Mutations<NucleotideSequence> {
-        if (clones.diversity() < parameters.minDiversityForMutation) return EMPTY_NUCLEOTIDE_MUTATIONS
-        val boundary = floor(clones.size * parameters.portionOfClonesToSearchCommonMutationsInAnAllele).toInt()
+        val diversityOfAll = clones.diversity()
+        if (diversityOfAll < parameters.minDiversityForAllele) return EMPTY_NUCLEOTIDE_MUTATIONS
+        val boundary = floor(diversityOfAll * parameters.diversityRatioToSearchCommonMutationsInAnAllele).toInt()
         return clones
             .flatMap { clone ->
                 val alleleHasIndels = allele.asSequence().any { Mutation.isInDel(it) }
@@ -85,9 +86,10 @@ class TIgGERAllelesSearcher(
                     ).absoluteMutations
                     else -> allele.invert().combineWith(clone.mutations)
                 }
-                CloneDescription.MutationGroup.groupMutationsByPositions(mutationsFromAllele)
+                CloneDescription.MutationGroup.groupMutationsByPositions(mutationsFromAllele).map { it to clone }
             }
-            .groupingBy { it }.eachCount()
+            .groupBy({ it.first }, { it.second })
+            .mapValues { it.value.diversity() }
             .filterValues { it >= boundary }
             .keys.asSequence()
             .flatMap { it.mutations }

@@ -98,7 +98,7 @@ data class FindAllelesParameters(
         /**
          * After an allele is found, it will be enriched with mutations that exists in this portion of clones that aligned on the allele.
          */
-        val portionOfClonesToSearchCommonMutationsInAnAllele: Double,
+        val diversityRatioToSearchCommonMutationsInAnAllele: Double,
         /**
          * Min count
          */

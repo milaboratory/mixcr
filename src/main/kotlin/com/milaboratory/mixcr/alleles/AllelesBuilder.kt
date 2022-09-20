@@ -152,7 +152,9 @@ class AllelesBuilder(
         return foundAlleles.map { foundAllele ->
             val naiveClones = clusterByTheSameGene.asSequence()
                 .filter { clone -> clone.getBestHit(geneType).mutationsWithoutCDR3() == foundAllele.allele }
+                .filter { clone -> clone.getBestHit(complimentaryGeneType(geneType)).mutationsWithoutCDR3().isEmpty }
                 .toList()
+            //TODO calculate mutationsInCDR3 as separate action to get more precise filter by clone.getBestHit(complimentaryGeneType(geneType)).mutations
             val (mutationsInCDR3, knownCDR3RangeLength) = mutationsInCDR3(geneType, sequence1, naiveClones)
             buildAllele(
                 bestHit,
