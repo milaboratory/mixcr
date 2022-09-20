@@ -26,11 +26,11 @@ mixcr slice --ids-file <(mixcr exportAlignments case15.vdjca --no-header -readId
 mixcr slice --ids-file <(mixcr exportClones case15.clns --no-header -cloneId -vHit | grep 'TRBV24-1' | awk '{print $1}') case15.clns case15.filtered.clns
 mixcr slice --ids-file <(mixcr exportClones case15.clna --no-header -cloneId -vHit | grep 'TRBV24-1' | awk '{print $1}') case15.clna case15.filtered.clna
 
-#assert "mixcr exportAlignments case15.vdjca --no-header -vHit | sort | uniq | wc -l" "28"
+assert "mixcr exportAlignments case15.vdjca --no-header -vHit | sort | uniq | wc -l" "28"
 assert "mixcr exportAlignments case15.filtered.vdjca --no-header -vHit | sort | uniq | wc -l" "1"
 
-#assert "mixcr exportClones case15.clns --no-header -vHit | sort | uniq | wc -l" "11"
+assert "mixcr exportClones case15.clns --no-header -vHit | sort | uniq | wc -l" "11"
 assert "mixcr exportClones case15.filtered.clns --no-header -vHit | sort | uniq | wc -l" "1"
 
-#assert "mixcr exportClones case15.clna --no-header -vHit | sort | uniq | wc -l" "11"
+assert "mixcr exportClones case15.clna --no-header -vHit | sort | uniq | wc -l" "11"
 assert "mixcr exportClones case15.filtered.clna --no-header -vHit | sort | uniq | wc -l" "1"
