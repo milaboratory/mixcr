@@ -169,7 +169,7 @@ class CommandExportAlignmentsPretty : MiXCRCommand() {
                     .filter { filter.accept(it) }
                     .drop(skipAfter)
                     .take(countAfter)
-                    .onEach { alignments ->
+                    .forEach { alignments ->
                         ++filtered
                         if (verbose) outputVerbose(output, alignments) else outputCompact(output, alignments)
                     }
