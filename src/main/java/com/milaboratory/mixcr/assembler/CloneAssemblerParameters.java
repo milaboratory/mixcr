@@ -11,10 +11,7 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.annotations.Serializable;
@@ -52,7 +49,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     public CloneAssemblerParameters(@JsonProperty("assemblingFeatures") GeneFeature[] assemblingFeatures,
                                     @JsonProperty("minimalClonalSequenceLength") int minimalClonalSequenceLength,
                                     @JsonProperty("qualityAggregationType") QualityAggregationType qualityAggregationType,
-                                    @JsonProperty("cloneClusteringParameters") CloneClusteringParameters cloneClusteringParameters,
+                                    @JsonMerge @JsonProperty("cloneClusteringParameters") CloneClusteringParameters cloneClusteringParameters,
                                     @JsonProperty("cloneFactoryParameters") CloneFactoryParameters cloneFactoryParameters,
                                     @JsonProperty("separateByV") boolean separateByV,
                                     @JsonProperty("separateByJ") boolean separateByJ,

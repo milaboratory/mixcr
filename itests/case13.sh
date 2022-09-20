@@ -2,18 +2,14 @@
 
 set -euxo pipefail
 
-mixcr align -p kAligner2 -f \
-      --verbose -s hsa \
+mixcr align --preset test-airr-long-ig-base -f \
       -OvParameters.geneFeatureToAlign="{FR1Begin:VEnd}" \
-      -OsaveOriginalReads=true \
       long_ig_R1.fastq \
       long_ig_R2.fastq \
       case13_full.vdjca
 
-mixcr align -p kAligner2 -f \
-      --verbose -s hsa \
+mixcr align --preset test-airr-long-ig-base -f \
       -OvParameters.geneFeatureToAlign="{CDR1Begin:VEnd}" \
-      -OsaveOriginalReads=true \
       long_ig_R1.fastq \
       long_ig_R2.fastq \
       case13_cut.vdjca
@@ -22,14 +18,10 @@ mixcr exportAirr --imgt-gaps case13_full.vdjca case13_full.vdjca.imgt.airr.tsv
 mixcr exportAirr --imgt-gaps case13_cut.vdjca case13_cut.vdjca.imgt.airr.tsv
 
 mixcr assemble -a -OassemblingFeatures="{FR1Begin:FR4End}" \
-      -OmaxBadPointsPercent=0 -OseparateByC=true -OcloneClusteringParameters.searchDepth=4 \
-      -OclusteringFilter.specificMutationProbability=1E-3 \
       case13_full.vdjca \
       case13_full.clna
 
 mixcr assemble -a -OassemblingFeatures="{CDR1Begin:FR4End}" \
-      -OmaxBadPointsPercent=0 -OseparateByC=true -OcloneClusteringParameters.searchDepth=4 \
-      -OclusteringFilter.specificMutationProbability=1E-3 \
       case13_cut.vdjca \
       case13_cut.clna
 

@@ -129,3 +129,23 @@
               operator:
                 type: "group_operator_otsu1"
                 logX: true
+
+"test-airr-long-ig-base":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_kaligner2_4.0
+    overrides:
+      species: hsa
+      parameters:
+        saveOriginalReads: true
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      cloneAssemblerParameters:
+        maxBadPointsPercent: 0
+        separateByC: true
+        cloneClusteringParameters:
+          searchDepth: 4
+          clusteringFilter:
+            type: "relativeConcentration"
+            specificMutationProbability: 1E-3
