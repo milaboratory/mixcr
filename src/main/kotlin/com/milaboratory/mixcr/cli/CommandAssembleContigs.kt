@@ -21,12 +21,7 @@ import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.CloneFactory
-import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters.PostFiltering.NoFiltering
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters.PostFiltering.OnlyFullyDefined
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReportBuilder
+import com.milaboratory.mixcr.assembler.fullseq.*
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.ClnAReader.CloneAlignments
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
@@ -80,11 +75,11 @@ object CommandAssembleContigs {
                         Params::parameters.updateBy { p ->
                             if (p.subCloningRegions != null) warn("subCloningRegion already set")
                             if (p.assemblingRegions != null) warn("assemblingRegions already set")
-                            if (p.postFiltering != NoFiltering) warn("assemblingRegions already set")
+                            if (p.postFiltering != PostFiltering.NoFiltering) warn("assemblingRegions already set")
                             p.copy(
                                 subCloningRegions = cutByFeature,
                                 assemblingRegions = cutByFeature,
-                                postFiltering = OnlyFullyDefined
+                                postFiltering = PostFiltering.OnlyFullyDefined
                             )
                         }
 
@@ -94,7 +89,7 @@ object CommandAssembleContigs {
             }
 
             override fun validateParams(params: Params) {
-                if (params.parameters.postFiltering != FullSeqAssemblerParameters.PostFiltering.NoFiltering) {
+                if (params.parameters.postFiltering != PostFiltering.NoFiltering) {
                     if (params.parameters.assemblingRegions != null) {
                         throwValidationExceptionKotlin("assemblingRegion must be set if postFiltering is not NoFiltering")
                     }
@@ -329,7 +324,7 @@ object CommandAssembleContigs {
             val resultHeader = if (
                 cmdParams.parameters.assemblingRegions != null &&
                 cmdParams.parameters.subCloningRegions == cmdParams.parameters.assemblingRegions &&
-                cmdParams.parameters.postFiltering == OnlyFullyDefined
+                cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyDefined
             ) {
                 header.copy(allFullyCoveredBy = cmdParams.parameters.assemblingRegions)
             } else {

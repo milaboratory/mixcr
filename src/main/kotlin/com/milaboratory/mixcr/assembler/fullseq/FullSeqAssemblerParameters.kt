@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.assembler.fullseq
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.mixcr.basictypes.GeneFeatures
@@ -91,26 +92,9 @@ data class FullSeqAssemblerParameters @JsonCreator constructor(
      */
     @param:JsonProperty("alignedRegionsOnly") val isAlignedRegionsOnly: Boolean
 ) {
-
-    /**
-     * Used only if [.assemblingRegions] is not null.
-     */
-    enum class PostFiltering {
-        /**
-         * Don't filter output clonotypes
-         */
-        NoFiltering,
-
-        /**
-         * Only clonotypes completely covering [.assemblingRegions] will be retained.
-         */
-        OnlyFullyAssembled,
-
-        /**
-         * Only clonotypes completely covering [.assemblingRegions] and having no "N" letters will be retained.
-         */
-        OnlyFullyDefined
-    }
+    /** Returns post filtering predicate instance */
+    @get:JsonIgnore
+    val postFilter get() = postFiltering.getFilter(this)
 
     companion object {
         @JvmStatic
