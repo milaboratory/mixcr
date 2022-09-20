@@ -26,9 +26,7 @@ import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 
 @Command(
     name = CommandFilterAlignments.COMMAND_NAME,
@@ -36,7 +34,7 @@ import picocli.CommandLine.Parameters
     separator = " ",
     description = ["Filter alignments."]
 )
-class CommandFilterAlignments : MiXCRCommand() {
+class CommandFilterAlignments : AbstractMiXCRCommand() {
     @Parameters(description = ["alignments.vdjca"], index = "0")
     lateinit var `in`: String
 
@@ -116,7 +114,7 @@ class CommandFilterAlignments : MiXCRCommand() {
                     is CanReportProgress -> sReads
                     else -> throw IllegalArgumentException()
                 }
-                writer.header(reader)
+                writer.inheritHeaderAndFooterFrom(reader)
                 SmartProgressReporter.startProgressReport("Filtering", progress)
                 var total = 0
                 var passed = 0
@@ -128,7 +126,7 @@ class CommandFilterAlignments : MiXCRCommand() {
                     }
                 }
                 writer.setNumberOfProcessedReads(reader.numberOfReads)
-                writer.writeFooter(reader.reports(), null)
+                writer.setFooter(reader.footer)
                 System.out.printf("%s alignments analysed\n", total)
                 System.out.printf("%s alignments written (%.1f%%)\n", passed, 100.0 * passed / total)
             }

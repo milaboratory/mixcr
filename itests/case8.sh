@@ -17,15 +17,18 @@ assert() {
 
 set -e
 
-mixcr analyze amplicon \
-  -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present \
-  --assemble '-OseparateByC=true' --assemble '-OseparateByV=true' --assemble '-OseparateByJ=true' \
-  --impute-germline-on-export --json-report case8 \
+mixcr analyze tcr_amplicon \
+  +species hs \
+  +rna \
+  +floatingLeftAlignmentBoundary \
+  +floatingRightAlignmentBoundary C \
+  +addStep assembleContigs \
+  +splitClonesBy V +splitClonesBy J +splitClonesBy C \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case8
 
-assert "cat case8.align.jsonl | head -n 1 | jq -r .chainUsage.chains.TRAD" "198684"
-assert "cat case8.assemble.jsonl | head -n 1 | jq -r .readsInClones" "162874"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .longestContigLength" "227"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .clonesWithAmbiguousLetters" "981"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .assemblePrematureTerminationEvents" "3"
-assert "cat case8.assembleContigs.jsonl | head -n 1 | jq -r .finalCloneCount" "22559"
+assert "cat case8.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRAD.total" "237718"
+assert "cat case8.assemble.report.json | head -n 1 | jq -r .readsInClones" "199560"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "227"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "768"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .assemblePrematureTerminationEvents" "3"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25761"

@@ -2,4 +2,9 @@
 
 set -euxo pipefail
 
-mixcr analyze shotgun -f --species hs --contig-assembly --impute-germline-on-export --starting-material rna test_R1.fastq test_R2.fastq case2
+mixcr analyze tcr_shotgun \
+    +species hs \
+    +rna \
+    +addStep assembleContigs \
+    +imputeGermlineOnExport \
+    test_R1.fastq test_R2.fastq case2

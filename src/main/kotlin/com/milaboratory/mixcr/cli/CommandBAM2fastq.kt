@@ -24,7 +24,7 @@ import picocli.CommandLine
     hidden = true,
     description = ["Converts BAM/SAM file to paired/unpaired fastq files"]
 )
-class CommandBAM2fastq : MiXCRCommand() {
+class CommandBAM2fastq : AbstractMiXCRCommand() {
     @CommandLine.Option(names = ["-b", "--bam"], description = ["BAM files for conversion."], required = true)
     lateinit var bamFiles: Array<String>
 

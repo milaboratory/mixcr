@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.export.OutputMode.HumanFriendly
 import com.milaboratory.mixcr.export.OutputMode.ScriptingFriendly
 
@@ -22,13 +22,13 @@ abstract class FieldWithParameters<T : Any, P>(
     override val nArguments: Int,
     override val deprecation: String? = null
 ) : AbstractField<T>() {
-    protected abstract fun getParameters(headerData: VDJCFileHeaderData, args: Array<String>): P
+    protected abstract fun getParameters(headerData: MiXCRHeader, args: Array<String>): P
     protected abstract fun getHeader(outputMode: OutputMode, parameters: P): String
     protected abstract fun extractValue(`object`: T, parameters: P): String
 
     override fun create1(
         outputMode: OutputMode,
-        headerData: VDJCFileHeaderData,
+        headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> {
         require(args.size == nArguments) {
@@ -43,7 +43,7 @@ abstract class FieldWithParameters<T : Any, P>(
 
     class CommandArg<T>(
         val meta: String,
-        val decodeAndValidate: AbstractField<*>.(VDJCFileHeaderData, String) -> T,
+        val decodeAndValidate: AbstractField<*>.(MiXCRHeader, String) -> T,
         val hPrefix: (T) -> String,
         val sPrefix: (T) -> String
     )
@@ -59,7 +59,7 @@ abstract class FieldWithParameters<T : Any, P>(
         ): Field<T> = object : FieldWithParameters<T, P1>(priority, command, description, 1) {
             override val metaVars: String = parameter1.meta
 
-            override fun getParameters(headerData: VDJCFileHeaderData, args: Array<String>): P1 {
+            override fun getParameters(headerData: MiXCRHeader, args: Array<String>): P1 {
                 val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
                 validateArgs(arg1)
                 return arg1
@@ -86,7 +86,7 @@ abstract class FieldWithParameters<T : Any, P>(
         ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(priority, command, description, 2) {
             override val metaVars: String = parameter1.meta + " " + parameter2.meta
 
-            override fun getParameters(headerData: VDJCFileHeaderData, args: Array<String>): Pair<P1, P2> {
+            override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Pair<P1, P2> {
                 val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
                 val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
                 validateArgs(arg1, arg2)
@@ -115,7 +115,7 @@ abstract class FieldWithParameters<T : Any, P>(
         ): Field<T> = object : FieldWithParameters<T, Triple<P1, P2, P3>>(priority, command, description, 3) {
             override val metaVars: String = parameter1.meta + " " + parameter2.meta + " " + parameter3.meta
 
-            override fun getParameters(headerData: VDJCFileHeaderData, args: Array<String>): Triple<P1, P2, P3> {
+            override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Triple<P1, P2, P3> {
                 val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
                 val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
                 val arg3 = parameter3.decodeAndValidate(this, headerData, args[2])

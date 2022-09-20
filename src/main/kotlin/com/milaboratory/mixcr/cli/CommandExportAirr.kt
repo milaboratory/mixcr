@@ -62,7 +62,7 @@ import java.nio.file.Paths
     separator = " ",
     description = ["Exports a clns, clna or vdjca file to Airr formatted tsv file."]
 )
-class CommandExportAirr : MiXCRCommand() {
+class CommandExportAirr : AbstractMiXCRCommand() {
     @CommandLine.Option(
         description = ["Target id (use -1 to export from the target containing CDR3)."],
         names = ["-t", "--target"]
@@ -225,7 +225,8 @@ class CommandExportAirr : MiXCRCommand() {
             }
             VDJCA -> {
                 extractors = alignmentsExtractors()
-                val alignmentsReader = VDJCAlignmentsReader(inPath, libraryRegistry)
+                val alignmentsReader =
+                    VDJCAlignmentsReader(inPath, libraryRegistry)
                 port = alignmentsReader
                 closeable = alignmentsReader
                 progressReporter = alignmentsReader

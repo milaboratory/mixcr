@@ -11,11 +11,11 @@
  */
 package com.milaboratory.mixcr.cli.qc
 
-import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.qc.SizeParameters
 import picocli.CommandLine
 
-abstract class CommandExportQc : MiXCRCommand() {
+abstract class CommandExportQc : AbstractMiXCRCommand() {
     @CommandLine.Option(names = ["--width"], description = ["Plot width"])
     var width = -1
 

@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
-import static com.milaboratory.mixcr.cli.CommandCorrectAndSortTags.CORRECT_AND_SORT_TAGS_COMMAND_NAME;
 
 public final class Main {
 
@@ -152,7 +151,16 @@ public final class Main {
         CommandLine cmd = new CommandLine(new CommandMain())
                 .setCommandName(command)
                 .addSubcommand("help", CommandLine.HelpCommand.class)
-                .addSubcommand("analyze", CommandAnalyze.CommandAnalyzeMain.class)
+                .addSubcommand(CommandAnalyze.COMMAND_NAME, CommandAnalyze.Cmd.class)
+
+                // Core command sequence
+                .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.Cmd.class)
+                .addSubcommand(CommandRefineTagsAndSort.COMMAND_NAME, CommandRefineTagsAndSort.Cmd.class)
+                .addSubcommand(CommandAssemblePartial.COMMAND_NAME, CommandAssemblePartial.Cmd.class)
+                .addSubcommand(CommandExtend.COMMAND_NAME, CommandExtend.Cmd.class)
+                .addSubcommand(CommandAssemble.COMMAND_NAME, CommandAssemble.Cmd.class)
+                // .addSubcommand("groupCells", CommandGroupCells.class)
+                .addSubcommand(CommandAssembleContigs.COMMAND_NAME, CommandAssembleContigs.Cmd.class)
 
                 .addSubcommand("postanalysis", CommandPa.CommandPostanalysisMain.class)
                 .addSubcommand("downsample", CommandDownsample.class)
@@ -161,21 +169,11 @@ public final class Main {
                 .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary.class)
                 .addSubcommand("overlapScatterPlot", CommandOverlapScatter.class)
 
-                .addSubcommand("align", CommandAlign.class)
-                .addSubcommand("assemble", CommandAssemble.class)
-                // .addSubcommand("groupCells", CommandGroupCells.class)
-                .addSubcommand("assembleContigs", CommandAssembleContigs.class)
-
-                .addSubcommand(CORRECT_AND_SORT_TAGS_COMMAND_NAME, CommandCorrectAndSortTags.class)
-
-                .addSubcommand("assemblePartial", CommandAssemblePartialAlignments.class)
-                .addSubcommand("extend", CommandExtend.class)
-
                 .addSubcommand("bam2fastq", CommandBAM2fastq.class)
 
-                .addSubcommand("exportAlignments", CommandExport.mkAlignmentsSpec())
+                .addSubcommand(CommandExportAlignments.COMMAND_NAME, CommandExportAlignments.mkSpec())
                 .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty.class)
-                .addSubcommand("exportClones", CommandExport.mkClonesSpec())
+                .addSubcommand(CommandExportClones.COMMAND_NAME, CommandExportClones.mkSpec())
                 .addSubcommand("exportClonesPretty", CommandExportClonesPretty.class)
 
                 .addSubcommand("exportReports", CommandExportReports.class)
@@ -208,12 +206,16 @@ public final class Main {
                 .addSubcommand(CommandExportShmTreesTableWithNodes.COMMAND_NAME, CommandExportShmTreesTableWithNodes.mkCommandSpec())
                 .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
                 .addSubcommand(CommandExportShmTreesNewick.COMMAND_NAME, CommandExportShmTreesNewick.class)
-                .addSubcommand(CommandFindAlleles.FIND_ALLELES_COMMAND_NAME, CommandFindAlleles.class);
+                .addSubcommand(CommandFindAlleles.FIND_ALLELES_COMMAND_NAME, CommandFindAlleles.class)
 
-        cmd.getSubcommands()
-                .get("analyze")
-                .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
-                .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
+                // Util
+                .addSubcommand(CommandExportPreset.COMMAND_NAME, CommandExportPreset.Cmd.class);
+
+
+        // cmd.getSubcommands()
+        //         .get("analyze")
+        //         .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
+        //         .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
 
         cmd.getSubcommands()
                 .get("postanalysis")

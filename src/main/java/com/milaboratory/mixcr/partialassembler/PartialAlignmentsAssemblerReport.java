@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.partialassembler;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mixcr.cli.CommandAssemblePartial;
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport;
-import com.milaboratory.mixcr.cli.CommandAssemblePartialAlignments;
 import com.milaboratory.util.ReportHelper;
 
 import java.util.Date;
@@ -109,7 +109,7 @@ public class PartialAlignmentsAssemblerReport extends AbstractMiXCRCommandReport
 
     @Override
     public String command() {
-        return CommandAssemblePartialAlignments.ASSEMBLE_PARTIAL_COMMAND_NAME;
+        return CommandAssemblePartial.COMMAND_NAME;
     }
 
     @Override

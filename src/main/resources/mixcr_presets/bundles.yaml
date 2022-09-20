@@ -1,0 +1,241 @@
+#
+# Meta presets ("abstract")
+#
+
+"_universal":
+  pipeline:
+    inheritFrom: pipeline_base
+  exportAlignments:
+    inheritFrom: export_base
+  assemblePartial:
+    inheritFrom: assemblePartial_universal
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort_universal
+  extend:
+    inheritFrom: extend_universal
+  assemble:
+    inheritFrom: assemble_universal
+  assembleContigs:
+    inheritFrom: assembleContigs_universal
+  exportClones:
+    inheritFrom: export_base
+
+#
+# Legacy presets from 4.0 parameter sets
+#
+
+"default_4.0":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_default_4.0
+
+"rna-seq_4.0":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+"kAligner2_4.0":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+#
+# Amplicon presets
+#
+
+"tcr_amplicon":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+"bcr_amplicon":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+#
+# UMI amplicon pipelines
+#
+
+"tcr_amplicon_umi":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+    - tagPattern
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+"bcr_amplicon_umi":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+    - tagPattern
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+#
+# Shotgun
+#
+
+"tcr_shotgun":
+  inheritFrom: _universal
+  flags:
+    - materialType
+  pipeline:
+    - align
+    - extend
+    - assemblePartial
+    - assemblePartial
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align_rna-seq_4.0
+    overrides:
+      parameters:
+        allowPartialAlignments: true
+        allowNoCDR3PartAlignments: true
+
+#
+# Single-cell pipelines
+#
+
+"10x_vdj":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - assemble
+    - assembleContigs
+    - exportClones
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort_universal
+    overrides:
+      whitelists:
+        CELL: builtin:737K-august-2016
+      parameters:
+        postFilter:
+          type: "filter_and"
+          operands:
+            - type: "filter_groups"
+              groupingKeys:
+                - "CELL"
+                - "UMI"
+              predicates:
+                - metrics:
+                    - type: "group_metric_sum_weight"
+                  operator:
+                    type: "group_operator_otsu1"
+                    logX: true
+            - type: "filter_groups"
+              groupingKeys:
+                - "CELL"
+              predicates:
+                - metrics:
+                    - type: "group_metric_nunique"
+                      keys:
+                        - "UMI"
+                  operator:
+                    type: "group_operator_range"
+                    lower: 2.0
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      inferMinRecordsPerConsensus: false
+      clnaOutput: true
+
+"10x_vdj_bcr":
+  inheritFrom: 10x_vdj
+  mixins:
+    - type: KeepNonCDR3Alignments
+    - type: SetTagPattern
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+    - type: AddExportClonesField
+      insertIndex: 2
+      field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 1
+      field: -tag
+      args: [ "CELL" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+"10x_vdj_tcr":
+  inheritFrom: 10x_vdj
+  mixins:
+    - type: KeepNonCDR3Alignments
+    - type: SetTagPattern
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+    - type: AddExportClonesField
+      insertIndex: 2
+      field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 1
+      field: -tag
+      args: [ "CELL" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+#
+# UMI
+#
+
+"takara-smarter-human-bcr":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: KeepNonCDR3Alignments
+    - type: SetClonotypeAssemblingFeatures
+      features: VDJRegion
+    - type: AddExportClonesField
+      insertIndex: 2
+      field: -uniqueTagCount
+      args: [ "UMI" ]
+  align:
+    inheritFrom: align_kaligner2_4.0
+    overrides:
+      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort_universal
+    overrides:
+      parameters:
+        postFilter:
+          type: "filter_groups"
+          groupingKeys:
+            - "UMI"
+          predicates:
+            - metrics:
+                - type: "group_metric_sum_weight"
+              operator:
+                type: "group_operator_otsu1"
+                logX: true

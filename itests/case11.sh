@@ -17,34 +17,20 @@ assert() {
 
 set -eux
 
-mixcr align -f \
-    --tag-preset mikelov_et_al_2021 \
-    -p kaligner2 -s hs \
-    -OvParameters.geneFeatureToAlign=VTranscript \
-    -OvParameters.parameters.floatingLeftBound=false \
-    -OjParameters.parameters.floatingRightBound=false \
-    -OcParameters.parameters.floatingRightBound=false \
-    -OallowPartialAlignments=true \
-    -OallowNoCDR3PartAlignments=true \
-    -OsaveOriginalReads=true \
-    --report case11.align.report \
-    umi_ig_data_2_subset_R1.fastq.gz \
-    umi_ig_data_2_subset_R2.fastq.gz \
-    case11.aligned-vdjca
+mixcr analyze test-mikelov-et-al-2021-without-contigs \
+      umi_ig_data_2_subset_R1.fastq.gz \
+      umi_ig_data_2_subset_R2.fastq.gz \
+      case11-without-contigs
 
-mixcr correctAndSortTags case11.aligned-vdjca case11.corrected-vdjca
+mixcr analyze test-mikelov-et-al-2021-with-contigs \
+      umi_ig_data_2_subset_R1.fastq.gz \
+      umi_ig_data_2_subset_R2.fastq.gz \
+      case11-with-contigs
 
-mixcr itestAssemblePreClones case11.corrected-vdjca case11.corrected-vdjca.pc case11.corrected-vdjca.pc.als case11.corrected-vdjca.pc.cls
+mixcr exportClones -nFeature VDJRegion case11-with-contigs.contigs.clns case11-with-contigs.clns.txt
+mixcr exportClones -nFeature VDJRegion case11-without-contigs.clns case11-without-contigs.clns.txt
 
-mixcr assemble -f -a case11.corrected-vdjca case11.cdr3-clna
-mixcr assembleContigs -f case11.cdr3-clna case11.cdr3-clns
+sort case11-with-contigs.clns.txt > case11-with-contigs.clns.txt.s
+sort case11-without-contigs.clns.txt > case11-without-contigs.clns.txt.s
 
-mixcr assemble -f -OassemblingFeatures='VDJRegion' case11.corrected-vdjca case11.vdjregion-clns
-
-mixcr exportClones -nFeature VDJRegion case11.vdjregion-clns case11.vdjregion-clns.txt
-mixcr exportClones -nFeature VDJRegion case11.cdr3-clns case11.cdr3-clns.txt
-
-sort case11.vdjregion-clns.txt > case11.vdjregion-clns.txt.s
-sort case11.cdr3-clns.txt > case11.cdr3-clns.txt.s
-
-cmp case11.vdjregion-clns.txt.s case11.cdr3-clns.txt.s
+cmp case11-with-contigs.clns.txt.s case11-without-contigs.clns.txt.s

@@ -9,10 +9,17 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.assembler.preclone;
 
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.test.TestUtil;
+import org.junit.Test;
 
-public interface VDJCFileHeaderData {
-    TagsInfo getTagsInfo();
+import static org.junit.Assert.*;
+
+public class PreCloneAssemblerParametersTest {
+    @Test
+    public void testJson() {
+        TestUtil.assertJson(PreCloneAssemblerParameters.getDefaultParameters(false), true);
+        TestUtil.assertJson(PreCloneAssemblerParameters.getDefaultParameters(true), true);
+    }
 }

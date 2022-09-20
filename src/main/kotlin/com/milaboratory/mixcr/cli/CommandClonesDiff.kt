@@ -30,7 +30,7 @@ import java.io.PrintStream
     sortOptions = true,
     description = ["Calculates the difference between two .clns files."]
 )
-class CommandClonesDiff : MiXCRCommand() {
+class CommandClonesDiff : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["input1.clns"], index = "0")
     lateinit var in1: String
 

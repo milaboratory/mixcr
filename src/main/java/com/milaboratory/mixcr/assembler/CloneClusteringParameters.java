@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.assembler;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.tree.TreeSearchParameters;
 

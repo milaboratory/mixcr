@@ -13,24 +13,24 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.milaboratory.mitool.refinement.CorrectionReport;
+import com.milaboratory.mitool.refinement.TagCorrectionReport;
 import com.milaboratory.util.Report;
 
 import java.util.Date;
 import java.util.Objects;
 
-public class CorrectAndSortTagsReport extends MiXCRCommandReportWrapper {
+public class RefineTagsAndSortReport extends MiXCRCommandReportWrapper {
     @JsonProperty("correctionReport")
-    public final CorrectionReport correctionReport;
+    public final TagCorrectionReport correctionReport;
 
     @JsonCreator
-    public CorrectAndSortTagsReport(@JsonProperty("date") Date date,
-                                    @JsonProperty("commandLine") String commandLine,
-                                    @JsonProperty("inputFiles") String[] inputFiles,
-                                    @JsonProperty("outputFiles") String[] outputFiles,
-                                    @JsonProperty("executionTimeMillis") long executionTimeMillis,
-                                    @JsonProperty("version") String version,
-                                    @JsonProperty("correctionReport") CorrectionReport correctionReport) {
+    public RefineTagsAndSortReport(@JsonProperty("date") Date date,
+                                   @JsonProperty("commandLine") String commandLine,
+                                   @JsonProperty("inputFiles") String[] inputFiles,
+                                   @JsonProperty("outputFiles") String[] outputFiles,
+                                   @JsonProperty("executionTimeMillis") long executionTimeMillis,
+                                   @JsonProperty("version") String version,
+                                   @JsonProperty("correctionReport") TagCorrectionReport correctionReport) {
         super(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version);
         this.correctionReport = correctionReport;
     }
@@ -42,14 +42,14 @@ public class CorrectAndSortTagsReport extends MiXCRCommandReportWrapper {
 
     @Override
     public String command() {
-        return CommandCorrectAndSortTags.CORRECT_AND_SORT_TAGS_COMMAND_NAME;
+        return CommandRefineTagsAndSort.COMMAND_NAME;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CorrectAndSortTagsReport that = (CorrectAndSortTagsReport) o;
+        RefineTagsAndSortReport that = (RefineTagsAndSortReport) o;
         return Objects.equals(correctionReport, that.correctionReport);
     }
 

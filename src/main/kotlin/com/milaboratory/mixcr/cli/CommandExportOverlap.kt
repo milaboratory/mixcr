@@ -40,7 +40,7 @@ import kotlin.collections.component2
     description = ["Build cloneset overlap and export into tab delimited file."],
     sortOptions = false
 )
-class CommandExportOverlap : MiXCRCommand() {
+class CommandExportOverlap : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["cloneset.{clns|clna}... output.tsv"])
     var inOut: List<String> = mutableListOf()
 
@@ -109,11 +109,10 @@ class CommandExportOverlap : MiXCRCommand() {
         extractors += TotalFraction()
         val fieldExtractors: List<FieldExtractor<Clone>> =
             CloneSetIO.mkReader(Paths.get(samples[0]), VDJCLibraryRegistry.getDefault()).use { cReader ->
-                CloneFieldsExtractorsFactory
-                    .parseSpec(spec.commandLine().parseResult)
-                    .flatMap { cmdArgs ->
-                        CloneFieldsExtractorsFactory.extract(cmdArgs, cReader, OutputMode.ScriptingFriendly)
-                    }
+                CloneFieldsExtractorsFactory.createExtractors(
+                    CloneFieldsExtractorsFactory
+                        .parsePicocli(spec.commandLine().parseResult), cReader.header, OutputMode.ScriptingFriendly
+                )
             }
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
         val writers = chains.associateWith { chain ->
@@ -221,7 +220,7 @@ class CommandExportOverlap : MiXCRCommand() {
             val export = CommandExportOverlap()
             val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(export)
             export.spec = spec // inject spec manually
-            CloneFieldsExtractorsFactory.addOptionsToSpec(spec, false)
+            CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
             return spec
         }
     }

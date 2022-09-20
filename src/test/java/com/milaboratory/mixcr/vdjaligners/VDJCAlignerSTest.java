@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
+
 public class VDJCAlignerSTest {
     @Test
     public void testSerialization1() throws Exception {
@@ -55,7 +57,7 @@ public class VDJCAlignerSTest {
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.header(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
+                writer.writeHeader(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
                 header = writer.getPosition();
                 for (SingleRead read : CUtils.it(reader)) {
                     VDJCAlignmentResult<SingleRead> result = aligner.process(read);
@@ -64,7 +66,7 @@ public class VDJCAlignerSTest {
                         alignemntsList.add(result.alignment);
                     }
                 }
-                writer.writeFooter(Collections.emptyList(), null);
+                writer.setFooter(emptyFooter());
             }
         }
         Assert.assertTrue(alignemntsList.size() > 10);

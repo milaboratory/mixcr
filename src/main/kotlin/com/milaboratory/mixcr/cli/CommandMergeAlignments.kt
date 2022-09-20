@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicLong
     separator = " ",
     description = ["Merge several *.vdjca files with alignments into a single alignments file."]
 )
-class CommandMergeAlignments : MiXCRCommand() {
+class CommandMergeAlignments : AbstractMiXCRCommand() {
     @CommandLine.Parameters(
         description = ["[input_file1.vdjca [input_file2.vdjca ....]] output_file.vdjca"],
         arity = "2..*"
@@ -45,12 +45,11 @@ class CommandMergeAlignments : MiXCRCommand() {
             VDJCAlignmentsWriter(outputFiles[0]).use { writer ->
                 SmartProgressReporter.startProgressReport("Merging", reader)
                 // FIXME shouldn't be something changed in the header ?
-                writer.header(reader.currentInnerReader)
+                writer.inheritHeaderAndFooterFrom(reader.currentInnerReader)
                 reader.forEach { record ->
                     writer.write(record)
                 }
                 writer.setNumberOfProcessedReads(reader.readIdOffset.get())
-                writer.writeFooter(emptyList(), null)
             }
         }
     }
@@ -84,7 +83,10 @@ class CommandMergeAlignments : MiXCRCommand() {
             val idToCreate = fileId.getAndIncrement()
             return when {
                 idToCreate >= files.size -> null
-                else -> VDJCAlignmentsReader(files[idToCreate], registry)
+                else -> VDJCAlignmentsReader(
+                    files[idToCreate],
+                    registry
+                )
             }
         }
 

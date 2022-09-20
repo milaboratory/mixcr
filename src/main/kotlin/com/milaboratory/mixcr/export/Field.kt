@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 
 interface Field<in T : Any> {
     val priority: Int
@@ -20,7 +20,7 @@ interface Field<in T : Any> {
     val deprecation: String?
     val nArguments: Int
     val metaVars: String
-    fun create(outputMode: OutputMode, headerData: VDJCFileHeaderData, args: Array<String>): FieldExtractor<T>
+    fun create(outputMode: OutputMode, headerData: MiXCRHeader, args: Array<String>): FieldExtractor<T>
 }
 
 fun <T : Any, R : Any> Field<T>.fromProperty(
@@ -36,7 +36,7 @@ fun <T : Any, R : Any> Field<T>.fromProperty(
 
     override fun create(
         outputMode: OutputMode,
-        headerData: VDJCFileHeaderData,
+        headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<R> {
         val delegate = this@fromProperty.create(outputMode, headerData, args)

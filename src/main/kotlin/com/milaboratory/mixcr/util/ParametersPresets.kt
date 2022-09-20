@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.util
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.milaboratory.util.GlobalObjectMappers
+import com.milaboratory.mitool.helpers.K_OM
 
 class ParametersPresets<T : Any>(
     private val fileName: String,
@@ -20,7 +20,7 @@ class ParametersPresets<T : Any>(
 ) {
     private val knownParameters: Map<String, T> by lazy {
         val `is` = ParametersPresets::class.java.classLoader.getResourceAsStream("parameters/$fileName.json")
-        GlobalObjectMappers.getOneLine().readValue(`is`, typeRef)
+        K_OM.readValue(`is`, typeRef)
     }
 
     val availableParameterNames: Set<String>

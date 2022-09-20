@@ -12,18 +12,18 @@
 
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 
 abstract class AbstractField<T : Any> : Field<T> {
     protected abstract fun create1(
         outputMode: OutputMode,
-        headerData: VDJCFileHeaderData,
+        headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T>
 
     final override fun create(
         outputMode: OutputMode,
-        headerData: VDJCFileHeaderData,
+        headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> {
         if (deprecation != null) {

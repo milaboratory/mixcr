@@ -63,7 +63,7 @@ private val targetReferencePoints = arrayOf(
     separator = " ",
     description = ["Alignments statistics."]
 )
-class CommandAlignmentsStats : MiXCRCommand() {
+class CommandAlignmentsStats : AbstractMiXCRCommand() {
     @CommandLine.Parameters(index = "0", description = ["input_file.vdjca"])
     lateinit var `in`: String
 

@@ -112,7 +112,7 @@ public class FullSeqAssemblerReport extends AbstractMiXCRCommandReport {
 
     @Override
     public String command() {
-        return CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME;
+        return CommandAssembleContigs.COMMAND_NAME;
     }
 
     @Override
