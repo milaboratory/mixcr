@@ -170,6 +170,11 @@
       insertIndex: 1
       field: -tag
       args: [ "CELL" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
   align:
     inheritFrom: align_kaligner2_4.0
 
@@ -187,6 +192,11 @@
       insertIndex: 1
       field: -tag
       args: [ "CELL" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
   align:
     inheritFrom: align_rna-seq_4.0
 

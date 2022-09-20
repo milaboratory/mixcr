@@ -94,8 +94,8 @@ class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
     @CommandLine.Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"])
     var readIds: List<Long> = mutableListOf()
 
-    @CommandLine.Option(description = ["Alignment index"], names = ["--alignment-idx"])
-    var alignmentIdx: List<Long> = mutableListOf()
+    // @CommandLine.Option(description = ["Alignment index"], names = ["--alignment-idx"])
+    // var alignmentIdx: List<Long> = mutableListOf()
 
     @CommandLine.Option(description = ["List of clone ids to export"], names = ["--clone-ids"])
     var cloneIds: List<Long> = mutableListOf()
@@ -168,7 +168,7 @@ class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
                     .filter { filter.accept(it) }
                     .drop(skipAfter)
                     .take(countAfter)
-                    .onEach { alignments ->
+                    .forEach { alignments ->
                         ++filtered
                         if (verbose) outputVerbose(output, alignments) else outputCompact(output, alignments)
                     }

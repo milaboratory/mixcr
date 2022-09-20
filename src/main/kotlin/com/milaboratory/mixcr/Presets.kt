@@ -99,6 +99,7 @@ object Presets {
         "bundles.yaml",
         "refineTagsAndSort.yaml",
         "export.yaml",
+        "test.yaml"
     )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
         val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
