@@ -149,3 +149,8 @@
           clusteringFilter:
             type: "relativeConcentration"
             specificMutationProbability: 1E-3
+
+"test-generic":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_default_4.0

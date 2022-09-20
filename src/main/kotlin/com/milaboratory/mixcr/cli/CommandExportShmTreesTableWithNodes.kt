@@ -53,7 +53,8 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                 out,
                 SplittedTreeNodeFieldsExtractorsFactory,
                 spec.commandLine().parseResult,
-                reader.header
+                reader.header,
+                true,
             ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     val shmTreeForPostanalysis = shmTree.forPostanalysis(

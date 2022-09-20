@@ -45,6 +45,7 @@ object CommandExportClones {
         @JsonProperty("filterOutOfFrames") val filterOutOfFrames: Boolean,
         @JsonProperty("filterStops") val filterStops: Boolean,
         @JsonProperty("chains") val chains: String,
+        @JsonProperty("noHeader") val noHeader: Boolean,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
     ) : MiXCRParams {
         override val command get() = MiXCRCommand.exportClones
@@ -77,6 +78,12 @@ object CommandExportClones {
         private var chains: String? = null
 
         @Option(
+            description = ["Don't print first header line, print only data"],
+            names = ["--no-header"]
+        )
+        private var noHeader = false
+
+        @Option(
             description = ["Exclude clones with out-of-frame clone sequences (fractions will be recalculated)"],
             names = ["-o", "--filter-out-of-frames"]
         )
@@ -97,6 +104,7 @@ object CommandExportClones {
                 Params::filterOutOfFrames setIfTrue filterOutOfFrames
                 Params::filterStops setIfTrue filterStops
                 Params::splitByTags setIfNotNull splitByTag
+                Params::noHeader setIfTrue noHeader
                 Params::fields setIfNotEmpty CloneFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
             }
         }
@@ -140,7 +148,8 @@ object CommandExportClones {
             }
             InfoWriter.create(
                 outputFile,
-                CloneFieldsExtractorsFactory.createExtractors(params.fields, header, OutputMode.ScriptingFriendly)
+                CloneFieldsExtractorsFactory.createExtractors(params.fields, header, OutputMode.ScriptingFriendly),
+                !params.noHeader
             ).use { writer ->
                 val set = CloneSet.transform(initialSet, params.mkFilter())
                 val exportClones = ExportClones(

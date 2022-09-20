@@ -52,14 +52,16 @@ class InfoWriter<T : Any> private constructor(
     companion object {
         fun <T : Any> create(
             file: Path?,
-            fieldExtractors: List<FieldExtractor<T>>
+            fieldExtractors: List<FieldExtractor<T>>,
+            printHeader: Boolean
         ): InfoWriter<T> {
             val outputStream = when {
                 file != null -> BufferedOutputStream(Files.newOutputStream(file), 65536)
                 else -> CloseShieldOutputStream.wrap(System.out)
             }
             val result = InfoWriter(fieldExtractors, outputStream)
-            result.printHeader()
+            if (printHeader)
+                result.printHeader()
             return result
         }
 
@@ -67,7 +69,8 @@ class InfoWriter<T : Any> private constructor(
             file: Path?,
             extractorsFactory: FieldExtractorsFactory<T>,
             cmdParseResult: CommandLine.ParseResult,
-            header: MiXCRHeader
+            header: MiXCRHeader,
+            printHeader: Boolean
         ): InfoWriter<T> {
             val outputStream = when {
                 file != null -> BufferedOutputStream(Files.newOutputStream(file), 65536)
@@ -75,10 +78,8 @@ class InfoWriter<T : Any> private constructor(
             }
             val fieldExtractors = extractorsFactory.createExtractors(header, cmdParseResult)
             val result = InfoWriter(fieldExtractors, outputStream)
-            val noHeaders = cmdParseResult.matchedOption("--no-headers")?.getValue<Boolean>() == true
-            if (!noHeaders) {
+            if (printHeader)
                 result.printHeader()
-            }
             return result
         }
     }

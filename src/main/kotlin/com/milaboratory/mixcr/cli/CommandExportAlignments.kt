@@ -41,6 +41,7 @@ object CommandExportAlignments {
 
     data class Params(
         @JsonProperty("chains") val chains: String,
+        @JsonProperty("noHeader") val noHeader: Boolean,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
     ) : MiXCRParams {
         override val command get() = MiXCRCommand.exportAlignments
@@ -64,9 +65,16 @@ object CommandExportAlignments {
         )
         private var chains: String? = null
 
+        @Option(
+            description = ["Don't print first header line, print only data"],
+            names = ["--no-header"]
+        )
+        private var noHeader = false
+
         override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::exportAlignments) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
+                Params::noHeader setIfTrue noHeader
                 Params::fields setIfNotEmpty VDJCAlignmentsFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
             }
         }
@@ -100,7 +108,8 @@ object CommandExportAlignments {
                         params.fields,
                         info,
                         OutputMode.ScriptingFriendly
-                    )
+                    ),
+                    !params.noHeader
                 ).use { writer ->
                     val reader = data.port
                     if (reader is CanReportProgress) {

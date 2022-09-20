@@ -47,7 +47,8 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                 out,
                 SHMTreeFieldsExtractorsFactory,
                 spec.commandLine().parseResult,
-                reader.header
+                reader.header,
+                true,
             ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     output.put(
