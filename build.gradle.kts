@@ -147,18 +147,19 @@ tasks.processResources {
 }
 
 val shadowJar = tasks.withType<ShadowJar> {
-//    minimize {
-//        exclude(dependency("io.repseq:repseqio"))
-//        exclude(dependency("com.milaboratory:milib"))
-//        exclude(dependency("org.lz4:lz4-java"))
-//        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
-//
-//        exclude(dependency("log4j:log4j"))
-//        exclude(dependency("org.slf4j:slf4j-api"))
-//        exclude(dependency("commons-logging:commons-logging"))
-//        exclude(dependency("ch.qos.logback:logback-core"))
-//        exclude(dependency("ch.qos.logback:logback-classic"))
-//    }
+    minimize {
+        exclude(dependency("io.repseq:repseqio"))
+        exclude(dependency("com.milaboratory:milib"))
+        exclude(dependency("org.lz4:lz4-java"))
+        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
+
+        exclude(dependency("log4j:log4j"))
+        exclude(dependency("org.slf4j:slf4j-api"))
+        exclude(dependency("commons-logging:commons-logging"))
+        exclude(dependency("ch.qos.logback:logback-core"))
+        exclude(dependency("ch.qos.logback:logback-classic"))
+        exclude(dependency("org.jetbrains.kotlin:.*"))
+    }
 }
 
 val distributionZip by tasks.registering(Zip::class) {
