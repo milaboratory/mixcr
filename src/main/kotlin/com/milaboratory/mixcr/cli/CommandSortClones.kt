@@ -40,7 +40,7 @@ import java.nio.file.Paths
     separator = " ",
     description = ["Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows to build overlaps between clonesets."]
 )
-class CommandSortClones : MiXCRCommand() {
+class CommandSortClones : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["clones.[clns|clna]"], index = "0")
     lateinit var `in`: String
 
@@ -68,7 +68,7 @@ class CommandSortClones : MiXCRCommand() {
                         Variable, Joining
                     )
                     writer.writeCloneSet(CloneSet.reorder(reader.cloneSet, ordering))
-                    writer.writeFooter(reader.reports(), null)
+                    writer.setFooter(reader.footer)
                 }
             }
             CLNA -> ClnAReader(
@@ -86,7 +86,7 @@ class CommandSortClones : MiXCRCommand() {
                     )
                     writer.writeClones(CloneSet.reorder(reader.readCloneSet(), ordering))
                     writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments())
-                    writer.writeFooter(reader.reports(), null)
+                    writer.setFooter(reader.footer)
                     writer.writeAlignmentsAndIndex()
                 }
             }

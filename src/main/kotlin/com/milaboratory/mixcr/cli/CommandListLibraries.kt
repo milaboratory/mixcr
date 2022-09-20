@@ -21,7 +21,7 @@ import picocli.CommandLine
     separator = " ",
     description = ["List all available library by scanning all library search paths."]
 )
-class CommandListLibraries : MiXCRCommand() {
+class CommandListLibraries : AbstractMiXCRCommand() {
     override fun getInputFiles(): List<String> = emptyList()
 
     override fun getOutputFiles(): List<String> = emptyList()

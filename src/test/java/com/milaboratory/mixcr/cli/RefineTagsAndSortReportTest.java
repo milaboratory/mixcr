@@ -11,8 +11,6 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.mitool.refinement.CorrectionReport;
-import com.milaboratory.mitool.refinement.CorrectionStepReport;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.test.TestUtil;
 import com.milaboratory.util.GlobalObjectMappers;
@@ -21,12 +19,11 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.Date;
 
 import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
 
-public class CorrectAndSortTagsReportTest {
+public class RefineTagsAndSortReportTest {
     @Before
     public void before() {
         GlobalObjectMappers.addModifier(om -> om.registerModule(kotlinModule(builder -> Unit.INSTANCE)));
@@ -35,7 +32,7 @@ public class CorrectAndSortTagsReportTest {
     @Test
     @Ignore //fixme: remove after merge from new tags branch
     public void testNullReport() {
-        CorrectAndSortTagsReport r = new CorrectAndSortTagsReport(
+        RefineTagsAndSortReport r = new RefineTagsAndSortReport(
                 new Date(),
                 "",
                 new String[0],
@@ -47,18 +44,18 @@ public class CorrectAndSortTagsReportTest {
         TestUtil.assertJson(r);
     }
 
-    @Test
-    @Ignore //fixme: remove after merge from new tags branch
-    public void testNotNullReport() {
-        CorrectAndSortTagsReport r = new CorrectAndSortTagsReport(
-                new Date(),
-                "",
-                new String[0],
-                new String[0],
-                0L,
-                MiXCRVersionInfo.get().getShortestVersionString(),
-                new CorrectionReport(Collections.singletonList(new CorrectionStepReport("step1")))
-        );
-        TestUtil.assertJson(r);
-    }
+    // @Test
+    // @Ignore //fixme: remove after merge from new tags branch
+    // public void testNotNullReport() {
+    //     CorrectAndSortTagsReport r = new CorrectAndSortTagsReport(
+    //             new Date(),
+    //             "",
+    //             new String[0],
+    //             new String[0],
+    //             0L,
+    //             MiXCRVersionInfo.get().getShortestVersionString(),
+    //             new CorrectionReport(Collections.singletonList(new CorrectionStepReport("step1")))
+    //     );
+    //     TestUtil.assertJson(r);
+    // }
 }

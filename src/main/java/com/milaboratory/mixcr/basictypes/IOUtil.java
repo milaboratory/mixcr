@@ -40,8 +40,8 @@ public class IOUtil {
     public static final String MAGIC_VDJC = "MiXCR.VDJC";
     public static final String MAGIC_CLNS = "MiXCR.CLNS";
     public static final String MAGIC_CLNA = "MiXCR.CLNA";
-
     public static final String MAGIC_SHMT = "MiXCR.SHMT";
+
     public static final String END_MAGIC = "#MiXCR.File.End#";
     private static final byte[] END_MAGIC_BYTES = END_MAGIC.getBytes(StandardCharsets.US_ASCII);
     public static final int END_MAGIC_LENGTH = END_MAGIC_BYTES.length;
@@ -212,25 +212,25 @@ public class IOUtil {
         switch (extractFileType(file)) {
             case VDJCA:
                 try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
-                    return reader.reports();
+                    return reader.getFooter().getReports();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNA:
                 try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.reports();
+                    return reader.getFooter().getReports();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNS:
                 try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.reports();
+                    return reader.getFooter().getReports();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case SHMT:
                 try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
-                    return reader.reports();
+                    return reader.getFooter().getReports();
                 }
             default:
                 throw new RuntimeException();

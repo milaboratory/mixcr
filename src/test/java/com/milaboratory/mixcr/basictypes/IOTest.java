@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
+import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerS;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
@@ -61,7 +62,7 @@ public class IOTest {
 
 
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.header(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
+                writer.writeHeader(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
 
                 header = writer.getPosition();
 
@@ -75,7 +76,7 @@ public class IOTest {
                 }
 
                 writer.setNumberOfProcessedReads(numberOfReads = reader.getNumberOfReads());
-                writer.writeFooter(Collections.emptyList(), null);
+                writer.setFooter(MiXCRTestUtils.emptyFooter());
             }
         }
 

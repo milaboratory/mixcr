@@ -15,7 +15,6 @@ import cc.redberry.primitives.Filter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter
-import com.milaboratory.mixcr.cli.CommandExport.Companion.openAlignmentsPort
 import com.milaboratory.mixcr.cli.afiltering.AFilter
 import com.milaboratory.mixcr.util.and
 import com.milaboratory.primitivio.asSequence
@@ -38,7 +37,7 @@ import java.util.*
     separator = " ",
     description = ["Export verbose information about alignments."]
 )
-class CommandExportAlignmentsPretty : MiXCRCommand() {
+class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
     @Parameters(index = "0", description = ["alignments.vdjca"])
     lateinit var `in`: String
 
@@ -95,9 +94,6 @@ class CommandExportAlignmentsPretty : MiXCRCommand() {
 
     @Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"])
     var readIds: List<Long> = mutableListOf()
-
-    @Option(description = ["Alignment index"], names = ["--alignment-idx"])
-    var alignmentIdx: List<Long> = mutableListOf()
 
     @Option(description = ["List of clone ids to export"], names = ["--clone-ids"])
     var cloneIds: List<Long> = mutableListOf()
@@ -157,7 +153,7 @@ class CommandExportAlignmentsPretty : MiXCRCommand() {
         val filter = mkFilter()
         var total: Long = 0
         var filtered: Long = 0
-        openAlignmentsPort(`in`).use { readerAndHeader ->
+        CommandExportAlignments.openAlignmentsPort(`in`).use { readerAndHeader ->
             (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it), 32768)) } ?: System.out).use { output ->
                 val reader = readerAndHeader.port
                 val countBefore = limitBefore ?: Int.MAX_VALUE

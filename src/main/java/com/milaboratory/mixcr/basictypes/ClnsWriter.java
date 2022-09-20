@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.InputPort;
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid;
@@ -23,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNS;
@@ -32,8 +30,8 @@ import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNS;
  *
  */
 public final class ClnsWriter implements AutoCloseable {
-    static final String MAGIC_V13 = MAGIC_CLNS + ".V13";
-    static final String MAGIC = MAGIC_V13;
+    static final String MAGIC_V14 = MAGIC_CLNS + ".V14";
+    static final String MAGIC = MAGIC_V14;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     /**
@@ -42,6 +40,7 @@ public final class ClnsWriter implements AutoCloseable {
     static final int FOOTER_LENGTH = 8 + IOUtil.END_MAGIC_LENGTH;
 
     final PrimitivOHybrid output;
+    private MiXCRFooter footer = null;
 
     public ClnsWriter(String fileName) throws IOException {
         this(new PrimitivOHybrid(Paths.get(fileName)));
@@ -57,7 +56,7 @@ public final class ClnsWriter implements AutoCloseable {
 
     public void writeHeaderFromCloneSet(CloneSet cloneSet) {
         writeHeader(
-                cloneSet.getInfo(),
+                cloneSet.getHeader(),
                 cloneSet.getOrdering(),
                 cloneSet.getUsedGenes(),
                 cloneSet.size()
@@ -65,7 +64,7 @@ public final class ClnsWriter implements AutoCloseable {
     }
 
     public void writeHeader(
-            MiXCRMetaInfo info,
+            MiXCRHeader info,
             VDJCSProperties.CloneOrdering ordering,
             List<VDJCGene> genes,
             int numberOfClones
@@ -101,21 +100,15 @@ public final class ClnsWriter implements AutoCloseable {
         for (Clone clone : cloneSet)
             cloneIP.put(clone);
         cloneIP.put(null);
+        if (cloneSet.isFooterAvailable())
+            setFooter(cloneSet.footer);
     }
 
-    private List<MiXCRCommandReport> footer = null;
-
     /**
-     * Write reports chain
+     * Setting footer information to be written right before close
      */
-    public void writeFooter(List<MiXCRCommandReport> reports, MiXCRCommandReport report) {
-        if (footer != null)
-            throw new IllegalStateException("Footer already written");
-        this.footer = new ArrayList<>();
-        if (reports != null)
-            footer.addAll(reports);
-        if (report != null)
-            footer.add(report);
+    public void setFooter(MiXCRFooter footer) {
+        this.footer = footer;
     }
 
     @Override
@@ -127,10 +120,8 @@ public final class ClnsWriter implements AutoCloseable {
         long footerStartPosition = output.getPosition();
 
         try (PrimitivO o = output.beginPrimitivO()) {
-            o.writeInt(footer.size());
-            for (MiXCRCommandReport report : footer) {
-                o.writeObject(report);
-            }
+            // Writing footer
+            o.writeObject(footer);
 
             // Total size = 8 + END_MAGIC_LENGTH
             o.writeLong(footerStartPosition);

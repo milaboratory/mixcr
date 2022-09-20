@@ -14,10 +14,8 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.FlatteningOutputPort;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import io.repseq.core.VDJCGene;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,14 +51,15 @@ public class CloneReaderMerger implements CloneReader {
         return rep.getUsedGenes();
     }
 
+
     @Override
-    public List<MiXCRCommandReport> reports() {
-        return new ArrayList<>();
+    public MiXCRHeader getHeader() {
+        return rep.getHeader();
     }
 
     @Override
-    public MiXCRMetaInfo getInfo() {
-        return rep.getInfo();
+    public MiXCRFooter getFooter() {
+        return rep.getFooter();
     }
 
     @Override

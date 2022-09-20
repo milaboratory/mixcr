@@ -11,23 +11,21 @@
  */
 package com.milaboratory.mixcr.cli.qc
 
-import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.qc.SizeParameters
 import picocli.CommandLine
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
 
-abstract class CommandExportQc : MiXCRCommand() {
-    @Option(names = ["--width"], description = ["Plot width"])
+abstract class CommandExportQc : AbstractMiXCRCommand() {
+    @CommandLine.Option(names = ["--width"], description = ["Plot width"])
     var width = -1
 
-    @Option(names = ["--height"], description = ["Plot height"])
+    @CommandLine.Option(names = ["--height"], description = ["Plot height"])
     var height = -1
 
     val sizeParameters: SizeParameters?
         get() = if (width != -1 && height != -1) SizeParameters(width, height) else null
 
-    @Command(
+    @CommandLine.Command(
         name = "qc",
         separator = " ",
         description = ["Export QC plots."],

@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.ListIterator;
 
 import static com.milaboratory.mixcr.export.OutputMode.HumanFriendly;
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
 
 public class FieldExtractorsTest {
     @Test
@@ -61,7 +62,7 @@ public class FieldExtractorsTest {
                 Arrays.stream(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE.getFields())
                         .filter(it -> it.getCmdArgName().equals("-defaultAnchorPoints"))
                         .findFirst()
-                        .map(it -> it.create(HumanFriendly, () -> TagsInfo.NO_TAGS, new String[0]))
+                        .map(it -> it.create(HumanFriendly, dummyHeader(), new String[0]))
                         .orElseThrow(IllegalArgumentException::new);
 
         F6 goAssert = new F6() {
@@ -218,16 +219,16 @@ public class FieldExtractorsTest {
     //    System.out.println(Util.printTwoColumns(description[0], description[1], 15, 40, 10, "\n"));
     //}
 
-    @Ignore
-    @Test
-    public void testName() throws Exception {
-        try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsVDJCAlignments.rst")) {
-            out.write(printDocumentation(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE).getBytes());
-        }
-        try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsClone.rst")) {
-            out.write(printDocumentation(CloneFieldsExtractorsFactory.INSTANCE).getBytes());
-        }
-    }
+    // @Ignore
+    // @Test
+    // public void testName() throws Exception {
+    //     try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsVDJCAlignments.rst")) {
+    //         out.write(printDocumentation(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE).getBytes());
+    //     }
+    //     try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsClone.rst")) {
+    //         out.write(printDocumentation(CloneFieldsExtractorsFactory.INSTANCE).getBytes());
+    //     }
+    // }
 
     private static ArrayList<String>[] getDescription(Field<?>[] fields) {
         @SuppressWarnings("unchecked")

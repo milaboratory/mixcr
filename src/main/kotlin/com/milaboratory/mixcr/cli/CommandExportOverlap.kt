@@ -28,6 +28,7 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
+import picocli.CommandLine.*
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -35,25 +36,25 @@ import java.nio.file.Paths
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-@CommandLine.Command(
+@Command(
     separator = " ",
     description = ["Build cloneset overlap and export into tab delimited file."],
     sortOptions = false
 )
-class CommandExportOverlap : MiXCRCommand() {
-    @CommandLine.Parameters(description = ["cloneset.{clns|clna}... output.tsv"])
+class CommandExportOverlap : AbstractMiXCRCommand() {
+    @Parameters(description = ["cloneset.{clns|clna}... output.tsv"])
     var inOut: List<String> = mutableListOf()
 
-    @CommandLine.Option(description = ["Chains to export"], names = ["--chains"], split = ",")
+    @Option(description = ["Chains to export"], names = ["--chains"], split = ",")
     var chains: Set<String>? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Filter out-of-frame sequences and clonotypes with stop-codons"],
         names = ["--only-productive"]
     )
     var onlyProductive = false
 
-    @CommandLine.Option(description = ["Overlap criteria. Default CDR3|AA|V|J"], names = ["--criteria"])
+    @Option(description = ["Overlap criteria. Default CDR3|AA|V|J"], names = ["--criteria"])
     var overlapCriteria = "CDR3|AA|V|J"
 
     public override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
@@ -108,11 +109,10 @@ class CommandExportOverlap : MiXCRCommand() {
         extractors += TotalFraction()
         val fieldExtractors: List<FieldExtractor<Clone>> =
             CloneSetIO.mkReader(Paths.get(samples[0]), VDJCLibraryRegistry.getDefault()).use { cReader ->
-                CloneFieldsExtractorsFactory
-                    .parseSpec(spec.commandLine().parseResult)
-                    .flatMap { cmdArgs ->
-                        CloneFieldsExtractorsFactory.extract(cmdArgs, cReader, OutputMode.ScriptingFriendly)
-                    }
+                CloneFieldsExtractorsFactory.createExtractors(
+                    CloneFieldsExtractorsFactory
+                        .parsePicocli(spec.commandLine().parseResult), cReader.header, OutputMode.ScriptingFriendly
+                )
             }
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
 
@@ -220,11 +220,11 @@ class CommandExportOverlap : MiXCRCommand() {
 
     companion object {
         @JvmStatic
-        fun mkSpec(): CommandLine.Model.CommandSpec {
+        fun mkSpec(): Model.CommandSpec {
             val export = CommandExportOverlap()
-            val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(export)
+            val spec = Model.CommandSpec.forAnnotatedObject(export)
             export.spec = spec // inject spec manually
-            CloneFieldsExtractorsFactory.addOptionsToSpec(spec, false)
+            CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
             return spec
         }
     }

@@ -101,7 +101,7 @@ public class PreCloneAssemblerReport implements MiXCRReport {
         helper.writeField("Number of input groups", inputGroups);
         helper.writeField("Number of input alignments", inputAlignments);
         helper.writeField("Number of output pre-clonotypes", clonotypes);
-        helper.println("Number of clonotypes per group");
+        helper.print("Number of clonotypes per group:");
         helper.print(ReportKt.format(clonotypesPerGroup, "  ",
                 new StringBuilder(), new FormatSettings(0.0, Integer.MAX_VALUE, 0.05)).toString());
         helper.writePercentAndAbsoluteField("Number of core alignments", coreAlignments, inputAlignments);

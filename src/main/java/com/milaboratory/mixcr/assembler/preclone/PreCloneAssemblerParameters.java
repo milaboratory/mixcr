@@ -18,6 +18,7 @@ import com.milaboratory.mitool.consensus.AAssemblerParameters;
 import com.milaboratory.mitool.consensus.GConsensusAssemblerParameters;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 public final class PreCloneAssemblerParameters {
     /** Parameters to pre-assemble clone assembling feature sequence inside read groups having the same tags */
@@ -38,6 +39,22 @@ public final class PreCloneAssemblerParameters {
             @JsonProperty("minTagSuffixShare") float minTagSuffixShare) {
         this.assembler = Objects.requireNonNull(assembler);
         this.minTagSuffixShare = minTagSuffixShare;
+    }
+
+    public GConsensusAssemblerParameters getAssembler() {
+        return assembler;
+    }
+
+    public float getMinTagSuffixShare() {
+        return minTagSuffixShare;
+    }
+
+    public PreCloneAssemblerParameters withAssembler(GConsensusAssemblerParameters assembler) {
+        return new PreCloneAssemblerParameters(assembler, minTagSuffixShare);
+    }
+
+    public PreCloneAssemblerParameters mapAssembler(Function<GConsensusAssemblerParameters, GConsensusAssemblerParameters> assemblerMapper) {
+        return withAssembler(assemblerMapper.apply(assembler));
     }
 
     @Override

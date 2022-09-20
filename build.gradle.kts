@@ -72,10 +72,11 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<Javadoc> {
-    options {
-        this as StandardJavadocDocletOptions
-        addStringOption("Xdoclint:none", "-quiet")
-    }
+    enabled = false
+    // options {
+    //     this as StandardJavadocDocletOptions
+    //     addStringOption("Xdoclint:none", "-quiet")
+    // }
 }
 
 repositories {
@@ -90,9 +91,9 @@ repositories {
 }
 
 val milibVersion = "2.0.0-24-master"
-val repseqioVersion = "1.4.1-20-remove-named-chains"
-val mitoolVersion = "1.1.0-16-main"
+val repseqioVersion = "1.4.1-24-remove-named-chains"
 val miplotsVersion = "1.0.0-27-master"
+val mitoolVersion = "1.1.0-76-main"
 val jacksonBomVersion = "2.13.3"
 val redberryPipeVersion = "1.2.0-5-master"
 
@@ -110,7 +111,7 @@ dependencies {
     implementation("com.milaboratory:miplots:$miplotsVersion")
 
     // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
-    implementation("com.milaboratory:milm2-jvm:1.9.0")
+    implementation("com.milaboratory:milm2-jvm:2.0.0")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -118,7 +119,7 @@ dependencies {
     implementation("commons-io:commons-io:2.11.0")
     implementation("org.lz4:lz4-java:1.8.0")
     implementation("net.sf.trove4j:trove4j:3.0.3")
-    implementation("info.picocli:picocli:4.1.1")
+    implementation("info.picocli:picocli:4.6.3")
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.itextpdf:itext7-core:7.2.1")
     implementation("com.itextpdf:layout:7.2.1")
@@ -158,6 +159,7 @@ val shadowJar = tasks.withType<ShadowJar> {
 //        exclude(dependency("commons-logging:commons-logging"))
 //        exclude(dependency("ch.qos.logback:logback-core"))
 //        exclude(dependency("ch.qos.logback:logback-classic"))
+//        exclude(dependency("org.jetbrains.kotlin:.*"))
 //    }
 }
 

@@ -40,7 +40,7 @@ import static picocli.CommandLine.*;
 @Command(name = "itestAssemblePreClones",
         separator = " ",
         hidden = true)
-public class ITestCommandAssemblePreClones extends MiXCRCommand {
+public class ITestCommandAssemblePreClones extends AbstractMiXCRCommand {
     @Parameters(arity = "4", description = "input_file output_file output_clones output_alignments")
     public List<String> files;
 
@@ -97,7 +97,7 @@ public class ITestCommandAssemblePreClones extends MiXCRCommand {
             TagTuple prevTagKey = null;
             for (VDJCAlignments al : CUtils.it(alignmentsReader.readAlignments())) {
                 cdr3Hash += Objects.hashCode(al.getFeature(GeneFeature.CDR3));
-                TagTuple tagKey = al.getTagCount().asKeyPrefixOrError(alignmentsReader.getTagsInfo().getSortingLevel());
+                TagTuple tagKey = al.getTagCount().asKeyPrefixOrError(alignmentsReader.getHeader().getTagsInfo().getSortingLevel());
                 if (!tagKey.equals(prevTagKey)) {
                     if (!tagTuples.add(tagKey))
                         throwExecutionException("broken sorting: " + tagKey);

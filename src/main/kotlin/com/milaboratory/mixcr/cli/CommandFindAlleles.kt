@@ -26,47 +26,19 @@ import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleM
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.GeneAndScore
-import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
+import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.trees.MutationsUtils.positionIfNucleotideWasDeleted
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.util.geneName
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import com.milaboratory.primitivio.asSequence
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapInParallel
-import com.milaboratory.primitivio.port
-import com.milaboratory.primitivio.toList
-import com.milaboratory.primitivio.withProgress
-import com.milaboratory.util.GlobalObjectMappers
-import com.milaboratory.util.JsonOverrider
-import com.milaboratory.util.ProgressAndStage
-import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.TempFileManager
-import io.repseq.core.GeneType
-import io.repseq.core.GeneType.Constant
-import io.repseq.core.GeneType.Diversity
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.VDJC_REFERENCE
-import io.repseq.core.GeneType.VJ_REFERENCE
-import io.repseq.core.GeneType.Variable
-import io.repseq.core.VDJCGene
-import io.repseq.core.VDJCGeneId
-import io.repseq.core.VDJCLibrary
-import io.repseq.core.VDJCLibraryRegistry
+import com.milaboratory.primitivio.*
+import com.milaboratory.util.*
+import io.repseq.core.*
+import io.repseq.core.GeneType.*
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
@@ -86,7 +58,7 @@ import kotlin.io.path.nameWithoutExtension
     separator = " ",
     description = ["Find allele variants in clnx."]
 )
-class CommandFindAlleles : MiXCRCommand() {
+class CommandFindAlleles : AbstractMiXCRCommand() {
     @Parameters(
         arity = "1..*",
         paramLabel = "input_file.clns [input_file2.clns ...]",
@@ -207,7 +179,7 @@ class CommandFindAlleles : MiXCRCommand() {
         findAllelesParameters
     }
 
-    //TODO report
+    // TODO report
     override fun run0() {
         ensureParametersInitialized()
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
@@ -215,13 +187,13 @@ class CommandFindAlleles : MiXCRCommand() {
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
-        require(cloneReaders.all { it.info.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
+        require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
+            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${CommandAssembleContigs.BY_FEATURE_OPTION_NAME} option"
         }
-        require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
+        require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
         }
-        val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
+        val allFullyCoveredBy = cloneReaders.first().header.allFullyCoveredBy!!
 
         val allelesBuilder = AllelesBuilder(
             findAllelesParameters,
@@ -327,18 +299,19 @@ class CommandFindAlleles : MiXCRCommand() {
         val cloneSet = CloneSet(
             clones,
             resultLibrary.genes,
-            cloneReader.info.copy(
-                foundAlleles = MiXCRMetaInfo.FoundAlleles(
+            cloneReader.header.copy(
+                foundAlleles = MiXCRHeader.FoundAlleles(
                     resultLibrary.name,
                     resultLibrary.data
                 )
             ),
+            cloneReader.footer,
             cloneReader.ordering()
         )
         ClnsWriter(this).use { clnsWriter ->
             clnsWriter.writeCloneSet(cloneSet)
-            //TODO make and write search alleles report
-            clnsWriter.writeFooter(cloneReader.reports(), null)
+            // TODO make and write search alleles report
+            clnsWriter.setFooter(cloneReader.footer)
         }
     }
 
@@ -364,7 +337,7 @@ class CommandFindAlleles : MiXCRCommand() {
     ) {
         usedGenes.forEach { (name, geneData) ->
             if (geneData.geneType == Joining || geneData.geneType == Variable) {
-                //if gene wasn't processed in alleles search, then register it as a single allele
+                // if gene wasn't processed in alleles search, then register it as a single allele
                 if (!alleles.containsKey(name)) {
                     alleles[geneData.name] = listOf(geneData)
                 }
@@ -468,14 +441,14 @@ private class CloneRebuild(
 
     private fun calculateScoresWithAddedAlleles(clone: Clone): EnumMap<GeneType, List<GeneAndScore>> {
         val originalGeneScores = EnumMap<GeneType, List<GeneAndScore>>(GeneType::class.java)
-        //copy D and C
+        // copy D and C
         for (gt in arrayOf(Diversity, Constant)) {
             originalGeneScores[gt] = clone.getHits(gt).map { hit ->
                 val mappedGeneId = VDJCGeneId(resultLibrary.libraryId, hit.gene.name)
                 GeneAndScore(mappedGeneId, hit.score)
             }
         }
-        //add hits with alleles and add delta score
+        // add hits with alleles and add delta score
         for (gt in VJ_REFERENCE) {
             val allGeneAndScores = clone.getHits(gt).flatMap { hit ->
                 allelesMapping[hit.gene.name]!!.map { foundAlleleId ->
@@ -494,7 +467,7 @@ private class CloneRebuild(
             }
             val maxScore = allGeneAndScores.maxOf { it.score }
             if (maxScore <= 0) {
-                //in case of clone that is too different with found allele
+                // in case of clone that is too different with found allele
                 originalGeneScores[gt] = allGeneAndScores
             } else {
                 val scoreThreshold = maxScore * cloneFactory.parameters.getVJCParameters(gt).relativeMinScore
@@ -510,7 +483,7 @@ private class CloneRebuild(
         scoring: AlignmentScoring<NucleotideSequence>,
         alignments: Array<Alignment<NucleotideSequence>?>
     ): Float {
-        //recalculate score for every alignment based on found allele
+        // recalculate score for every alignment based on found allele
         val alleleMutations = foundAllele.data.baseSequence.mutations ?: return 0.0f
         val alleleHasIndels = alleleMutations.asSequence().any { Mutation.isInDel(it) }
         var scoreDelta = 0.0f
@@ -518,7 +491,7 @@ private class CloneRebuild(
             .filterNotNull()
             .forEachIndexed { index, alignment ->
                 val recalculatedScore = when {
-                    //in case of indels invert().combineWith(alleleMutations).invert() may work incorrect
+                    // in case of indels invert().combineWith(alleleMutations).invert() may work incorrect
                     alleleHasIndels -> {
                         val seq1RangeAfterAlleleMutations = Range(
                             positionIfNucleotideWasDeleted(alleleMutations.convertToSeq2Position(alignment.sequence1Range.lower)),
@@ -534,6 +507,7 @@ private class CloneRebuild(
                             alignment.sequence2Range.length(),
                         ).score
                     }
+
                     else -> AlignmentUtils.calculateScore(
                         alleleMutations.mutate(alignment.sequence1),
                         alignment.sequence1Range,

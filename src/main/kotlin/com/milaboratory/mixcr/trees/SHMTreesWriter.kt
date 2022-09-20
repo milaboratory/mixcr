@@ -15,10 +15,9 @@ import cc.redberry.pipe.InputPort
 import com.milaboratory.cli.AppVersionInfo
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_SHMT
-import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
-import com.milaboratory.mixcr.cli.MiXCRCommandReport
+import com.milaboratory.mixcr.basictypes.MiXCRFooter
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid
 import com.milaboratory.primitivio.writeCollection
 import io.repseq.core.VDJCGene
@@ -28,13 +27,13 @@ import java.nio.file.Paths
 class SHMTreesWriter(
     private val output: PrimitivOHybrid
 ) : AutoCloseable {
-    private var footer: List<MiXCRCommandReport>? = null
+    private var footer: MiXCRFooter? = null
 
     constructor(fileName: String) : this(PrimitivOHybrid(Paths.get(fileName)))
 
     fun writeHeader(
-        metaInfo: List<MiXCRMetaInfo>,
-        alignerParameters: VDJCAlignerParameters,
+        originHeaders: List<MiXCRHeader>,
+        header: MiXCRHeader,
         fileNames: List<String>,
         genes: List<VDJCGene>
     ) {
@@ -45,9 +44,10 @@ class SHMTreesWriter(
             // Writing version information
             o.writeUTF(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile))
 
-            o.writeCollection(metaInfo)
+            o.writeCollection(originHeaders)
+            o.writeObject(header)
             o.writeCollection(fileNames)
-            IOUtil.stdVDJCPrimitivOStateInit(o, genes, alignerParameters)
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, header.alignerParameters)
         }
     }
 
@@ -57,30 +57,20 @@ class SHMTreesWriter(
     fun treesWriter(): InputPort<SHMTreeResult> = output.beginPrimitivOBlocks(3, 512)
 
     /**
-     * Write reports chain
+     * Setting footer to be written on close
      */
-    fun writeFooter(sourcesReports: Map<String, List<MiXCRCommandReport>>, report: MiXCRCommandReport?) {
-        check(this.footer == null) { "Footer already written" }
-        val wrappedReports = sourcesReports
-            .flatMap { (fileName, reports) -> reports.map { SHMTreeSourceFileReport(fileName, it) } }
-        this.footer = wrappedReports + listOfNotNull(report)
-    }
-
-    /**
-     * Write reports chain
-     */
-    fun writeFooter(reports: List<MiXCRCommandReport>, report: MiXCRCommandReport?) {
-        check(this.footer == null) { "Footer already written" }
-        this.footer = reports + listOfNotNull(report)
+    fun setFooter(footer: MiXCRFooter) {
+        this.footer = footer
     }
 
     override fun close() {
-        checkNotNull(footer) { "Footer not written" }
+        checkNotNull(footer) { "Footer not set" }
+
         // position of reports
         val footerStartPosition = output.position
 
         output.beginPrimitivO().use { o ->
-            o.writeCollection(footer!!)
+            o.writeObject(footer)
             // Total size = 8 + END_MAGIC_LENGTH
             o.writeLong(footerStartPosition)
             // Writing end-magic as a file integrity sign
@@ -91,9 +81,8 @@ class SHMTreesWriter(
     }
 
     companion object {
-        const val OLD_MAGIC_V1 = "MiXCR.TREE.V01"
-        private const val MAGIC_V1 = "$MAGIC_SHMT.V01"
-        const val MAGIC = MAGIC_V1
+        private const val MAGIC_V2 = "$MAGIC_SHMT.V02"
+        const val MAGIC = MAGIC_V2
         const val MAGIC_LENGTH = 14
         val MAGIC_BYTES = MAGIC.toByteArray(StandardCharsets.US_ASCII)
 

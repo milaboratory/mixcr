@@ -96,17 +96,17 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
     }
 
     @Override
-    public MiXCRMetaInfo getInfo() {
-        return reader.getInfo();
+    public MiXCRHeader getHeader() {
+        return reader.getHeader();
+    }
+
+    @Override
+    public MiXCRFooter getFooter() {
+        return reader.getFooter();
     }
 
     @Override
     public void close() throws Exception {
         reader.close();
-    }
-
-    @Override
-    public List<MiXCRCommandReport> reports() {
-        return reader.reports();
     }
 }

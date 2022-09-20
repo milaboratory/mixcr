@@ -14,7 +14,7 @@ package com.milaboratory.mixcr.cli.qc
 import com.milaboratory.miplots.ExportType
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.miplots.writePDF
-import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.qc.Coverage.coveragePlot
 import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.mapInParallelOrdered
@@ -24,7 +24,7 @@ import picocli.CommandLine
 import java.nio.file.Paths
 
 @CommandLine.Command(name = "coverage", separator = " ", description = ["Reads coverage plots."])
-class CommandExportQcCoverage : MiXCRCommand() {
+class CommandExportQcCoverage : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["sample1.vdjca ... coverage.[pdf|eps|png|jpeg]"])
     var `in`: List<String> = mutableListOf()
 

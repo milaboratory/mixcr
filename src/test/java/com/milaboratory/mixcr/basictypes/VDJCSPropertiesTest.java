@@ -21,11 +21,11 @@ import org.junit.Test;
 public class VDJCSPropertiesTest {
     @Test
     public void serializationTest() {
-        TestUtil.assertJson(new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()));
+        TestUtil.assertJson(new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()), true);
         TestUtil.assertJson(new VDJCSProperties.CloneOrdering(
                 new VDJCSProperties.NSequence(GeneFeature.CDR3),
                 new VDJCSProperties.VDJCSegment(GeneType.Variable),
-                new VDJCSProperties.CloneCount()));
+                new VDJCSProperties.CloneCount()), true);
     }
 
     @Test

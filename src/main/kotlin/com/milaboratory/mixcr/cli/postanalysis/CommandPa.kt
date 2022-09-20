@@ -13,9 +13,9 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
@@ -35,7 +35,7 @@ import kotlin.io.path.readLines
 /**
  *
  */
-abstract class CommandPa : MiXCRCommand() {
+abstract class CommandPa : AbstractMiXCRCommand() {
     @Parameters(description = ["cloneset.{clns|clna}... result.json.gz|result.json"], arity = "2..*")
     var inOut: List<String> = mutableListOf()
 

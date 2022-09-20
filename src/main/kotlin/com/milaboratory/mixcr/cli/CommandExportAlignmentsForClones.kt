@@ -27,7 +27,7 @@ import picocli.CommandLine
     separator = " ",
     description = ["Export alignments for particular clones from \"clones & alignments\" (*.clna) file."]
 )
-class CommandExportAlignmentsForClones : MiXCRCommand() {
+class CommandExportAlignmentsForClones : AbstractMiXCRCommand() {
     @CommandLine.Parameters(index = "0", description = ["clones.clna"])
     lateinit var `in`: String
 
@@ -46,7 +46,7 @@ class CommandExportAlignmentsForClones : MiXCRCommand() {
     override fun run0() {
         ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             VDJCAlignmentsWriter(out).use { writer ->
-                writer.header(clna.info, clna.usedGenes)
+                writer.writeHeader(clna.header, clna.usedGenes)
                 var count: Long = 0
                 if (cloneIds.isEmpty()) {
                     clna.readAllAlignments().forEach { al ->
@@ -64,7 +64,7 @@ class CommandExportAlignmentsForClones : MiXCRCommand() {
                     }
                 }
                 writer.setNumberOfProcessedReads(count)
-                writer.writeFooter(clna.reports(), null)
+                writer.setFooter(clna.footer)
             }
         }
     }

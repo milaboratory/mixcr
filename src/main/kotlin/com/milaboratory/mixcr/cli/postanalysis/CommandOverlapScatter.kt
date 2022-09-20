@@ -17,7 +17,7 @@ import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.ChainsUtil.name
 import com.milaboratory.mixcr.cli.ChainsUtil.toPath
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter
@@ -33,7 +33,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.nameWithoutExtension
 
 @CommandLine.Command(name = "overlapScatterPlot", separator = " ", description = ["Plot overlap scatter-plot."])
-class CommandOverlapScatter : MiXCRCommand() {
+class CommandOverlapScatter : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["cloneset_1.{clns|clna}..."], index = "0")
     lateinit var in1: String
 

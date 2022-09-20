@@ -15,7 +15,6 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.MiXCRDebug;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
@@ -36,7 +35,6 @@ import io.repseq.core.VDJCGene;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
@@ -54,8 +52,8 @@ import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNA;
 public final class ClnAWriter implements
         AutoCloseable,
         CanReportProgressAndStage {
-    static final String MAGIC_V7 = MAGIC_CLNA + ".V08";
-    static final String MAGIC = MAGIC_V7;
+    static final String MAGIC_V9 = MAGIC_CLNA + ".V09";
+    static final String MAGIC = MAGIC_V9;
     static final int MAGIC_LENGTH = MAGIC.length(); //14
     /** Number of bytes in footer with meta information */
     static final int FOOTER_LENGTH = 8 + 8 + 8 + IOUtil.END_MAGIC_LENGTH;
@@ -75,6 +73,7 @@ public final class ClnAWriter implements
     private final boolean highCompression;
 
     private final PrimitivOHybrid output;
+
     /**
      * Counter OP used to report progress during stage 2
      */
@@ -139,7 +138,7 @@ public final class ClnAWriter implements
                         .getVersionString(AppVersionInfo.OutputType.ToFile));
 
                 // Writing header meta-info
-                o.writeObject(Objects.requireNonNull(cloneSet.info));
+                o.writeObject(Objects.requireNonNull(cloneSet.header));
                 featureToAlignProvider = cloneSet.getAlignmentParameters();
 
                 // Writing clone-set ordering
@@ -228,19 +227,14 @@ public final class ClnAWriter implements
         }
     }
 
-    private List<MiXCRCommandReport> footer = null;
+    /** To be written right before close */
+    private volatile MiXCRFooter footer;
 
     /**
-     * Write reports chain
+     * Set footer to be written right before close
      */
-    public void writeFooter(List<MiXCRCommandReport> reports, MiXCRCommandReport report) {
-        if (footer != null)
-            throw new IllegalStateException("Footer already written");
-        this.footer = new ArrayList<>();
-        if (reports != null)
-            footer.addAll(reports);
-        if (report != null)
-            footer.add(report);
+    public void setFooter(MiXCRFooter footer) {
+        this.footer = footer;
     }
 
     /**
@@ -366,10 +360,7 @@ public final class ClnAWriter implements
             long footerStartPosition = output.getPosition();
 
             try (PrimitivO o = output.beginPrimitivO()) {
-                o.writeInt(footer.size());
-                for (MiXCRCommandReport r : footer) {
-                    o.writeObject(r);
-                }
+                o.writeObject(footer);
 
                 // Position of reports
                 o.writeLong(footerStartPosition);

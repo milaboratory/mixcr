@@ -44,7 +44,8 @@ import java.util.stream.StreamSupport;
 public class FullSeqAssemblerTest {
     static final FullSeqAssemblerParameters DEFAULT_PARAMETERS =
             new FullSeqAssemblerParameters(0.1, 80, 120,
-                    3, 7, 0.25, 3.0, 0.5, 50, new GeneFeatures(GeneFeature.VDJRegion), null, FullSeqAssemblerParameters.PostFiltering.NoFiltering,
+                    3, 7, 0.25, 3.0,
+                    0.5, 50, new GeneFeatures(GeneFeature.VDJRegion), null, PostFiltering.NoFiltering.INSTANCE,
                     new QualityTrimmerParameters(20.0f, 8), 20, false);
 
     static final class MasterSequence {
@@ -211,7 +212,7 @@ public class FullSeqAssemblerTest {
             }
         }
 
-//        readsOrig = Arrays.asList(setReadId(0, readsOrig.get(12)), setReadId(1, readsOrig.get(13)));
+        //        readsOrig = Arrays.asList(setReadId(0, readsOrig.get(12)), setReadId(1, readsOrig.get(13)));
 
         int[] perm = rdg.nextPermutation(readsOrig.size(), readsOrig.size());
         List<SequenceRead> reads = new ArrayList<>();
@@ -245,16 +246,16 @@ public class FullSeqAssemblerTest {
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
-//        // TODO exception for translation
-//        for (VDJCAlignments al : align.alignments) {
-//            for (int i = 0; i < al.numberOfTargets(); i++) {
-//                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
-//                System.out.println();
-//            }
-//            System.out.println();
-//            System.out.println(" ================================================ ");
-//            System.out.println();
-//        }
+        //        // TODO exception for translation
+        //        for (VDJCAlignments al : align.alignments) {
+        //            for (int i = 0; i < al.numberOfTargets(); i++) {
+        //                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+        //                System.out.println();
+        //            }
+        //            System.out.println();
+        //            System.out.println(" ================================================ ");
+        //            System.out.println();
+        //        }
 
 
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
@@ -282,7 +283,7 @@ public class FullSeqAssemblerTest {
             System.out.println(clone.getBestHit(GeneType.Variable).getAlignment(0).getAbsoluteMutations());
             System.out.println(clone.getBestHit(GeneType.Joining).getAlignment(0).getAbsoluteMutations());
             System.out.println();
-//            ActionExportClonesPretty.outputCompact(System.out, clone);
+            //            ActionExportClonesPretty.outputCompact(System.out, clone);
         }
     }
 
@@ -319,11 +320,11 @@ public class FullSeqAssemblerTest {
         params.cloneAssemblerParameters.updateFrom(params.alignerParameters);
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
-//        for (VDJCAlignments al : align.alignments) {
-//            for (int i = 0; i < al.numberOfTargets(); i++)
-//                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
-//            System.out.println();
-//        }
+        //        for (VDJCAlignments al : align.alignments) {
+        //            for (int i = 0; i < al.numberOfTargets(); i++)
+        //                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+        //            System.out.println();
+        //        }
 
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
@@ -373,8 +374,8 @@ public class FullSeqAssemblerTest {
         params0.cloneAssemblerParameters.setAssemblingFeatures(new GeneFeature[]{GeneFeature.VDJRegion});
         Clone largeClone = RunMiXCR.assemble(RunMiXCR.align(params0)).cloneSet.get(0);
 
-//        ActionExportClonesPretty.outputCompact(System.out, largeClone);
-//        System.exit(0);
+        //        ActionExportClonesPretty.outputCompact(System.out, largeClone);
+        //        System.exit(0);
 
         Well44497b rnd = new Well44497b(1234567889L);
         int nReads = 100_000;
@@ -432,9 +433,9 @@ public class FullSeqAssemblerTest {
                 .collect(Collectors.toList());
 
         alignments.stream().filter(al ->
-                Arrays.stream(al.getBestHit(GeneType.Variable).getAlignments())
-                        .filter(Objects::nonNull)
-                        .anyMatch(a -> !a.getAbsoluteMutations().isEmpty()))
+                        Arrays.stream(al.getBestHit(GeneType.Variable).getAlignments())
+                                .filter(Objects::nonNull)
+                                .anyMatch(a -> !a.getAbsoluteMutations().isEmpty()))
                 .filter(al -> al.getBestHit(GeneType.Variable).getGene().getName().contains("3-74"))
                 .forEach(al -> {
                     for (int i = 0; i < al.numberOfTargets(); i++) {
@@ -446,7 +447,7 @@ public class FullSeqAssemblerTest {
                     System.out.println();
                 });
 
-//        System.exit(0);
+        //        System.exit(0);
         System.out.println("=> Agg");
         CloneFactory cloneFactory = new CloneFactory(align.parameters.cloneAssemblerParameters.getCloneFactoryParameters(),
                 align.parameters.cloneAssemblerParameters.getAssemblingFeatures(),

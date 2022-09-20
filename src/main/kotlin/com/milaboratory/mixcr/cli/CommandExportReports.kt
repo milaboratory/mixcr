@@ -23,7 +23,7 @@ import java.nio.file.Path
     separator = " ",
     description = ["Export MiXCR reports."]
 )
-class CommandExportReports : MiXCRCommand() {
+class CommandExportReports : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
     lateinit var `in`: Path
 
