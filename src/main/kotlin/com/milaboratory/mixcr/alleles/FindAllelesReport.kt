@@ -23,6 +23,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.LongAdder
 
@@ -38,6 +39,7 @@ class FindAllelesReport(
     outputFiles: Array<String>,
     executionTimeMillis: Long?,
     version: String,
+    private val filteredAlleleCandidates: List<AlleleCandidate>,
     private val clonesCountWithNoChangeOfScore: Long,
     private val clonesCountWithNegativeScoreChange: Long,
     private val clonesScoreDeltaStats: MiXCRCommandReport.Stats,
@@ -57,12 +59,29 @@ class FindAllelesReport(
         helper.writeField("Zygotes", zygotes)
     }
 
+    @JsonAutoDetect(
+        fieldVisibility = ANY,
+        isGetterVisibility = NONE,
+        getterVisibility = NONE
+    )
+    data class AlleleCandidate(
+        val geneName: String,
+        val mutations: String,
+        val count: Int,
+        val naiveCount: Int
+    )
+
     class Builder : AbstractCommandReportBuilder<Builder>() {
+        private val filteredAlleleCandidates: MutableList<AlleleCandidate> = CopyOnWriteArrayList()
         private val foundAlleles = AtomicInteger(0)
         private val zygotes: MutableMap<Int, LongAdder> = ConcurrentHashMap()
         private val clonesCountWithNoChangeOfScore: LongAdder = LongAdder()
         private val clonesCountWithNegativeScoreChange: LongAdder = LongAdder()
         private val clonesScoreDeltaStats: SummaryStatistics = SynchronizedSummaryStatistics()
+
+        fun filteredAllele(alleleCandidate: AlleleCandidate) {
+            filteredAlleleCandidates += alleleCandidate
+        }
 
         fun scoreDelta(delta: Float) {
             if (delta == 0.0F) {
@@ -90,6 +109,7 @@ class FindAllelesReport(
             outputFiles,
             executionTimeMillis,
             version,
+            filteredAlleleCandidates,
             clonesCountWithNoChangeOfScore.sum(),
             clonesCountWithNegativeScoreChange.sum(),
             MiXCRCommandReport.Stats.from(clonesScoreDeltaStats),

@@ -21,6 +21,7 @@ import com.milaboratory.core.mutations.MutationsBuilder
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
+import io.repseq.core.VDJCGeneId
 import org.apache.commons.math3.stat.inference.TTest
 import org.apache.commons.math3.stat.regression.SimpleRegression
 import kotlin.math.absoluteValue
@@ -28,11 +29,12 @@ import kotlin.math.floor
 
 
 class TIgGERAllelesSearcher(
+    private val reportBuilder: FindAllelesReport.Builder,
     private val scoring: AlignmentScoring<NucleotideSequence>,
     private val sequence1: NucleotideSequence,
     private val parameters: FindAllelesParameters.TigGERAlleleSearchParameters
 ) : AllelesSearcher {
-    override fun search(clones: List<CloneDescription>): List<AllelesSearcher.Result> {
+    override fun search(geneId: VDJCGeneId, clones: List<CloneDescription>): List<AllelesSearcher.Result> {
         val mutations = clones.flatMap { it.mutationGroups }.distinct()
             //other mutations definitely are not allele mutations
             .filter { mutation ->
@@ -49,9 +51,17 @@ class TIgGERAllelesSearcher(
         val foundAlleles = chooseAndGroupMutationsByAlleles(possibleAlleleMutations.toSet(), clones)
         val withZeroAllele = addZeroAlleleIfNeeded(foundAlleles, clones)
         val enriched = enrichAllelesWithMutationsThatExistsInAlmostAllClones(withZeroAllele, clones)
-        val filteredByNaiveCount = enriched
-            .filter { allele -> clones.count { it.mutations == allele } >= parameters.minCountOfNaiveClonesToAddAllele }
-        return filteredByNaiveCount
+        val (withEnoughNaives, filteredOutAlleleCandidates) = enriched
+            .partition { allele -> clones.count { it.mutations == allele } >= parameters.minCountOfNaiveClonesToAddAllele }
+        filteredOutAlleleCandidates.forEach { candidate ->
+            reportBuilder.filteredAllele(FindAllelesReport.AlleleCandidate(
+                geneId.name,
+                candidate.encode(),
+                clones.size,
+                clones.count { it.mutations == candidate }
+            ))
+        }
+        return withEnoughNaives
             .ifEmpty { listOf(EMPTY_NUCLEOTIDE_MUTATIONS) }
             .map { AllelesSearcher.Result(it) }
     }

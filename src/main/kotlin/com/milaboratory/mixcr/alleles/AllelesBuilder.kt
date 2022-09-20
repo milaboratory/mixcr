@@ -20,6 +20,7 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.helpers.get
+import com.milaboratory.mixcr.alleles.AlleleUtil.complimentaryGeneType
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.GeneFeatures
@@ -137,14 +138,16 @@ class AllelesBuilder(
                 )
             }
             .toList()
+
         val sequence1 = clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1
         val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
+            reportBuilder,
             scoring[geneType],
             sequence1,
             parameters.searchAlleleParameter
         )
 
-        val foundAlleles = allelesSearcher.search(cloneDescriptors)
+        val foundAlleles = allelesSearcher.search(bestHit.gene.id, cloneDescriptors)
 
         reportBuilder.foundAlleles(foundAlleles.count { it.allele != EMPTY_NUCLEOTIDE_MUTATIONS })
         reportBuilder.zygote(foundAlleles.size)
@@ -313,12 +316,6 @@ class AllelesBuilder(
             .sortedBy { Mutation.getPosition(it) }
             .asMutations(NucleotideSequence.ALPHABET)
         return result to lastKnownShift
-    }
-
-    private fun complimentaryGeneType(geneType: GeneType): GeneType = when (geneType) {
-        Variable -> Joining
-        Joining -> Variable
-        else -> throw IllegalArgumentException()
     }
 
     private fun metaForGeneratedGene(

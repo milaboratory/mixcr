@@ -19,6 +19,7 @@ import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.alleles.AlleleUtil.complimentaryGeneType
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.basictypes.Clone
@@ -31,13 +32,10 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.toList
-import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Diversity
-import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VJ_REFERENCE
-import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibrary
@@ -148,9 +146,9 @@ class CloneRebuild(
                         val stats = overallAllelesStatistics.stats(alleleId)
                         if (alleleId == bestAlleleId) {
                             val complementaryGeneId = clone.getBestHit(complimentaryGeneType(geneType)).gene.id
-                            stats.register(clone.ntLengthOf(CDR3), complementaryGeneId)
+                            stats.register(clone, complementaryGeneId)
                             if (alignmentsChange.mutationsCount == 0) {
-                                stats.naives.increment()
+                                stats.naive(clone)
                             }
                             stats.scoreDelta(clone, alignmentsChange.scoreDelta)
                         }
@@ -237,10 +235,4 @@ class CloneRebuild(
     ) {
         val newScore: Float get() = originalHit.score + scoreDelta
     }
-}
-
-private fun complimentaryGeneType(geneType: GeneType): GeneType = when (geneType) {
-    Variable -> Joining
-    Joining -> Variable
-    else -> throw IllegalArgumentException()
 }

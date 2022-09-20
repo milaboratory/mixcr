@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.alleles
 
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.util.geneName
+import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCGeneId
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics
@@ -34,12 +35,14 @@ class OverallAllelesStatistics(
         alleles.computeIfAbsent(geneId) { AlleleStatistics() }
 
     inner class AlleleStatistics {
-        val naives = LongAdder()
+        private val naives = LongAdder()
+        private val naivesFilteredByCount = LongAdder()
         private val count = LongAdder()
+        private val countFilteredByCount = LongAdder()
         private val diversity: MutableSet<Pair<VDJCGeneId, Int>> = ConcurrentHashMap.newKeySet()
         val scoreNotChanged: LongAdder = LongAdder()
-        val withNegativeScoreChange: LongAdder = LongAdder()
-        val withNegativeScoreChangeFilteredByCount: LongAdder = LongAdder()
+        private val withNegativeScoreChange: LongAdder = LongAdder()
+        private val withNegativeScoreChangeFilteredByCount: LongAdder = LongAdder()
         val scoreDelta: SummaryStatistics = SynchronizedSummaryStatistics()
         fun scoreDelta(clone: Clone, delta: Float) {
             if (delta == 0.0F) {
@@ -55,12 +58,35 @@ class OverallAllelesStatistics(
             }
         }
 
-        fun register(CDR3Length: Int, complementaryGeneId: VDJCGeneId) {
+        fun withNegativeScoreChange(filteredByCount: Boolean) = when {
+            filteredByCount -> withNegativeScoreChangeFilteredByCount
+            else -> withNegativeScoreChange
+        }.toLong()
+
+        fun naives(filteredByCount: Boolean) = when {
+            filteredByCount -> naivesFilteredByCount
+            else -> naives
+        }.toLong()
+
+        fun naive(clone: Clone) {
+            naives.increment()
+            if (clone.count > useClonesWithCountGreaterThen) {
+                naivesFilteredByCount.increment()
+            }
+        }
+
+        fun register(clone: Clone, complementaryGeneId: VDJCGeneId) {
             count.increment()
-            diversity += complementaryGeneId to CDR3Length
+            if (clone.count > useClonesWithCountGreaterThen) {
+                countFilteredByCount.increment()
+            }
+            diversity += complementaryGeneId to clone.ntLengthOf(GeneFeature.CDR3)
         }
 
         fun diversity() = diversity.size
-        fun count() = count.sum()
+        fun count(filteredByCount: Boolean) = when {
+            filteredByCount -> countFilteredByCount
+            else -> count
+        }.toLong()
     }
 }

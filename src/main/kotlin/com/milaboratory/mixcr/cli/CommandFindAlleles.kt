@@ -306,25 +306,31 @@ class CommandFindAlleles : MiXCRCommand() {
                     gene.data.baseSequence.mutations?.encode() ?: ""
                 },
                 "naivesCount" to { gene ->
-                    allelesStatistics.stats(gene.id).naives.sum()
+                    allelesStatistics.stats(gene.id).naives(filteredByCount = false)
                 },
                 "lowerDiversityBound" to { gene ->
                     allelesStatistics.stats(gene.id).diversity()
                 },
-                "count" to { gene ->
-                    allelesStatistics.stats(gene.id).count()
+                "clonesCount" to { gene ->
+                    allelesStatistics.stats(gene.id).count(filteredByCount = false)
                 },
-                "totalCount" to { gene ->
+                "totalClonesCountForGene" to { gene ->
                     allelesStatistics.baseGeneCount(gene.id)
                 },
                 "scoreNotChanged" to { gene ->
-                    allelesStatistics.stats(gene.id).scoreNotChanged.sum()
+                    allelesStatistics.stats(gene.id).scoreNotChanged.toLong()
                 },
                 "clonesCountWithNegativeScoreChange" to { gene ->
-                    allelesStatistics.stats(gene.id).withNegativeScoreChange.sum()
+                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = false)
+                },
+                "naivesCountWithCountGreaterThen${findAllelesParameters.useClonesWithCountGreaterThen}" to { gene ->
+                    allelesStatistics.stats(gene.id).naives(filteredByCount = true)
+                },
+                "clonesCountWithCountGreaterThen${findAllelesParameters.useClonesWithCountGreaterThen}" to { gene ->
+                    allelesStatistics.stats(gene.id).count(filteredByCount = true)
                 },
                 "clonesCountWithNegativeScoreChangeWithCountGreaterThen${findAllelesParameters.useClonesWithCountGreaterThen}" to { gene ->
-                    allelesStatistics.stats(gene.id).withNegativeScoreChangeFilteredByCount.sum()
+                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = true)
                 },
                 "scoreDelta" to { gene ->
                     val summaryStatistics = allelesStatistics.stats(gene.id).scoreDelta
