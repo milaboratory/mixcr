@@ -31,7 +31,6 @@ class OverallAllelesStatistics {
         alleles.computeIfAbsent(geneId) { AlleleStatistics() }
 
     class AlleleStatistics {
-        val filteredOut = LongAdder()
         val naives = LongAdder()
         private val count = LongAdder()
         private val diversity: MutableSet<Pair<VDJCGeneId, Int>> = ConcurrentHashMap.newKeySet()

@@ -318,13 +318,10 @@ class CommandFindAlleles : MiXCRCommand() {
                 "totalCount" to { gene ->
                     allelesStatistics.baseGeneCount(gene.id)
                 },
-                "filteredOut" to { gene ->
-                    allelesStatistics.stats(gene.id).filteredOut.sum()
-                },
                 "scoreNotChanged" to { gene ->
                     allelesStatistics.stats(gene.id).scoreNotChanged.sum()
                 },
-                "negativeScoreChange" to { gene ->
+                "clonesCountWithNegativeScoreChange" to { gene ->
                     allelesStatistics.stats(gene.id).withNegativeScoreChange.sum()
                 },
                 "scoreDelta" to { gene ->

@@ -154,9 +154,6 @@ class CloneRebuild(
                             }
                             stats.scoreDelta(alignmentsChange.scoreDelta)
                         }
-                        if (alignmentsChange.newScore < scoreThreshold) {
-                            stats.filteredOut.increment()
-                        }
                     }
                 }
                 var scoreDelta = 0.0F
