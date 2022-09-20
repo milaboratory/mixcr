@@ -94,7 +94,7 @@ val milibVersion = "2.0.0-24-master"
 val repseqioVersion = "1.4.1-20-master"
 val mitoolVersion = "1.1.0-76-main"
 val miplotsVersion = "1.0.0-24-master"
-val jacksonBomVersion = "2.13.3"
+val jacksonBomVersion = "2.13.4"
 val redberryPipeVersion = "1.2.0-5-master"
 
 dependencies {
@@ -148,19 +148,19 @@ tasks.processResources {
 }
 
 val shadowJar = tasks.withType<ShadowJar> {
-    minimize {
-        exclude(dependency("io.repseq:repseqio"))
-        exclude(dependency("com.milaboratory:milib"))
-        exclude(dependency("org.lz4:lz4-java"))
-        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
-
-        exclude(dependency("log4j:log4j"))
-        exclude(dependency("org.slf4j:slf4j-api"))
-        exclude(dependency("commons-logging:commons-logging"))
-        exclude(dependency("ch.qos.logback:logback-core"))
-        exclude(dependency("ch.qos.logback:logback-classic"))
-        exclude(dependency("org.jetbrains.kotlin:.*"))
-    }
+    // minimize {
+    //     exclude(dependency("io.repseq:repseqio"))
+    //     exclude(dependency("com.milaboratory:milib"))
+    //     exclude(dependency("org.lz4:lz4-java"))
+    //     exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
+    //
+    //     exclude(dependency("log4j:log4j"))
+    //     exclude(dependency("org.slf4j:slf4j-api"))
+    //     exclude(dependency("commons-logging:commons-logging"))
+    //     exclude(dependency("ch.qos.logback:logback-core"))
+    //     exclude(dependency("ch.qos.logback:logback-classic"))
+    //     exclude(dependency("org.jetbrains.kotlin:.*"))
+    // }
 }
 
 val distributionZip by tasks.registering(Zip::class) {
