@@ -3,6 +3,9 @@ package com.milaboratory.mixcr
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.OutputMode
@@ -40,8 +43,13 @@ class PresetsTest {
             val bundle = Presets.resolveParamsBundle(presetName)
             if (bundle.align == null)
                 continue
+            val tagsInfo = TagsInfo(
+                0,
+                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL", 0),
+                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 1),
+            )
             val header = MiXCRHeader(
-                MiXCRParamsSpec(presetName), TagsInfo.NO_TAGS, bundle.align!!.parameters,
+                MiXCRParamsSpec(presetName), tagsInfo, bundle.align!!.parameters,
                 null, null, null
             )
             bundle.exportAlignments?.let { al ->
