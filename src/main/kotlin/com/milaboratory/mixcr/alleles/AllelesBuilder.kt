@@ -117,7 +117,7 @@ class AllelesBuilder(
             !parameters.productiveOnly || (!c.containsStopsOrAbsent(CDR3) && !c.isOutOfFrameOrAbsent(CDR3))
         }
         .filter { c ->
-            c.count > parameters.useClonesWithCountMoreThen
+            c.count > parameters.useClonesWithCountGreaterThen
         }
         .use(function)
 

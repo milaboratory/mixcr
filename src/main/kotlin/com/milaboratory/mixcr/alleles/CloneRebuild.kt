@@ -152,7 +152,7 @@ class CloneRebuild(
                             if (alignmentsChange.mutationsCount == 0) {
                                 stats.naives.increment()
                             }
-                            stats.scoreDelta(alignmentsChange.scoreDelta)
+                            stats.scoreDelta(clone, alignmentsChange.scoreDelta)
                         }
                     }
                 }

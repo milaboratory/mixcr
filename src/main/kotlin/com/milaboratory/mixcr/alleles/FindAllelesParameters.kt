@@ -25,7 +25,7 @@ data class FindAllelesParameters(
     /**
      * Use only clones with count more than parameter
      */
-    val useClonesWithCountMoreThen: Int,
+    val useClonesWithCountGreaterThen: Int,
     /**
      * Use only productive clonotypes (no OOF, no stops).
      */

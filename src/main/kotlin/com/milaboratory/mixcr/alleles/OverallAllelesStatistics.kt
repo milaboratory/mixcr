@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.alleles
 
+import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.util.geneName
 import io.repseq.core.VDJCGeneId
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
@@ -18,7 +19,9 @@ import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
 
-class OverallAllelesStatistics {
+class OverallAllelesStatistics(
+    private val useClonesWithCountGreaterThen: Int
+) {
     private val genesTotalCount: MutableMap<String, LongAdder> = ConcurrentHashMap()
     private val alleles: MutableMap<VDJCGeneId, AlleleStatistics> = ConcurrentHashMap()
 
@@ -30,19 +33,23 @@ class OverallAllelesStatistics {
     fun stats(geneId: VDJCGeneId): AlleleStatistics =
         alleles.computeIfAbsent(geneId) { AlleleStatistics() }
 
-    class AlleleStatistics {
+    inner class AlleleStatistics {
         val naives = LongAdder()
         private val count = LongAdder()
         private val diversity: MutableSet<Pair<VDJCGeneId, Int>> = ConcurrentHashMap.newKeySet()
         val scoreNotChanged: LongAdder = LongAdder()
         val withNegativeScoreChange: LongAdder = LongAdder()
+        val withNegativeScoreChangeFilteredByCount: LongAdder = LongAdder()
         val scoreDelta: SummaryStatistics = SynchronizedSummaryStatistics()
-        fun scoreDelta(delta: Float) {
+        fun scoreDelta(clone: Clone, delta: Float) {
             if (delta == 0.0F) {
                 scoreNotChanged.increment()
             } else {
                 if (delta < 0.0F) {
                     withNegativeScoreChange.increment()
+                    if (clone.count > useClonesWithCountGreaterThen) {
+                        withNegativeScoreChangeFilteredByCount.increment()
+                    }
                 }
                 scoreDelta.addValue(delta.toDouble())
             }

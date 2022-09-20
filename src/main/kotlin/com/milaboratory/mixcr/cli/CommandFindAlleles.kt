@@ -193,7 +193,6 @@ class CommandFindAlleles : MiXCRCommand() {
         findAllelesParameters
     }
 
-    //TODO report
     override fun run0() {
         val reportBuilder = FindAllelesReport.Builder()
             .setCommandLine(commandLineArguments)
@@ -237,7 +236,7 @@ class CommandFindAlleles : MiXCRCommand() {
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
         }
-        val overallAllelesStatistics = OverallAllelesStatistics()
+        val overallAllelesStatistics = OverallAllelesStatistics(findAllelesParameters.useClonesWithCountGreaterThen)
         val writerCloseCallbacks = mutableListOf<(MiXCRCommandReport) -> Unit>()
         cloneReaders.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
@@ -323,6 +322,9 @@ class CommandFindAlleles : MiXCRCommand() {
                 },
                 "clonesCountWithNegativeScoreChange" to { gene ->
                     allelesStatistics.stats(gene.id).withNegativeScoreChange.sum()
+                },
+                "clonesCountWithNegativeScoreChangeWithCountGreaterThen${findAllelesParameters.useClonesWithCountGreaterThen}" to { gene ->
+                    allelesStatistics.stats(gene.id).withNegativeScoreChangeFilteredByCount.sum()
                 },
                 "scoreDelta" to { gene ->
                     val summaryStatistics = allelesStatistics.stats(gene.id).scoreDelta
