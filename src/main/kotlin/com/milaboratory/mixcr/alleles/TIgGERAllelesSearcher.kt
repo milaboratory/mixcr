@@ -52,16 +52,19 @@ class TIgGERAllelesSearcher(
         val withZeroAllele = addZeroAlleleIfNeeded(foundAlleles, clones)
         val enriched = enrichAllelesWithMutationsThatExistsInAlmostAllClones(withZeroAllele, clones)
         val (withEnoughNaives, filteredOutAlleleCandidates) = enriched
-            .partition { allele -> clones.count { it.mutations == allele } >= parameters.minCountOfNaiveClonesToAddAllele }
+            .partition { allele -> allele.naives >= parameters.minCountOfNaiveClonesToAddAllele }
         filteredOutAlleleCandidates.forEach { candidate ->
-            reportBuilder.filteredAllele(FindAllelesReport.AlleleCandidate(
-                geneId.name,
-                candidate.encode(),
-                clones.size,
-                clones.count { it.mutations == candidate }
-            ))
+            reportBuilder.filteredAllele(
+                FindAllelesReport.AlleleCandidate(
+                    geneId.name,
+                    candidate.mutations.encode(),
+                    candidate.clones.size,
+                    candidate.naives
+                )
+            )
         }
         return withEnoughNaives
+            .map { it.mutations }
             .ifEmpty { listOf(EMPTY_NUCLEOTIDE_MUTATIONS) }
             .map { AllelesSearcher.Result(it) }
     }
@@ -72,29 +75,28 @@ class TIgGERAllelesSearcher(
     private fun enrichAllelesWithMutationsThatExistsInAlmostAllClones(
         alleles: Collection<Mutations<NucleotideSequence>>,
         clones: List<CloneDescription>
-    ) = alignClonesOnAlleles(clones, alleles)
-        .map { (allele, clones) ->
-            allele.combineWith(mutationsThatExistsInAlmostAllClones(clones, allele))
+    ): List<AlleleWithClones> = alignClonesOnAlleles(clones, alleles)
+        .map { allele ->
+            allele.copy(
+                mutations = allele.mutations.combineWith(allele.mutationsThatExistsInAlmostAllClones())
+            )
         }
 
-    private fun mutationsThatExistsInAlmostAllClones(
-        clones: List<CloneDescription>,
-        allele: Mutations<NucleotideSequence>
-    ): Mutations<NucleotideSequence> {
+    private fun AlleleWithClones.mutationsThatExistsInAlmostAllClones(): Mutations<NucleotideSequence> {
         val diversityOfAll = clones.diversity()
         if (diversityOfAll < parameters.minDiversityForAllele) return EMPTY_NUCLEOTIDE_MUTATIONS
         val boundary = floor(diversityOfAll * parameters.diversityRatioToSearchCommonMutationsInAnAllele).toInt()
         return clones
             .flatMap { clone ->
-                val alleleHasIndels = allele.asSequence().any { Mutation.isInDel(it) }
+                val alleleHasIndels = mutations.asSequence().any { Mutation.isInDel(it) }
                 val mutationsFromAllele = when {
-                    allele == EMPTY_NUCLEOTIDE_MUTATIONS -> clone.mutations
+                    mutations == EMPTY_NUCLEOTIDE_MUTATIONS -> clone.mutations
                     alleleHasIndels -> Aligner.alignGlobal(
                         scoring,
-                        allele.mutate(sequence1),
+                        mutations.mutate(sequence1),
                         clone.mutations.mutate(sequence1)
                     ).absoluteMutations
-                    else -> allele.invert().combineWith(clone.mutations)
+                    else -> mutations.invert().combineWith(clone.mutations)
                 }
                 CloneDescription.MutationGroup.groupMutationsByPositions(mutationsFromAllele).map { it to clone }
             }
@@ -120,8 +122,8 @@ class TIgGERAllelesSearcher(
         else -> {
             val clonesByAlleles = alignClonesOnAlleles(clones, foundAlleles + EMPTY_NUCLEOTIDE_MUTATIONS)
             val alleleDiversities = clonesByAlleles
-                .mapValues { it.value.diversity() }
-            val diversityOfZeroAllele = alleleDiversities[EMPTY_NUCLEOTIDE_MUTATIONS]!!
+                .associate { it.mutations to it.clones.diversity() }
+            val diversityOfZeroAllele = alleleDiversities[EMPTY_NUCLEOTIDE_MUTATIONS] ?: 0
             val minDiversityOfNotZeroAllele =
                 alleleDiversities.filterKeys { it != EMPTY_NUCLEOTIDE_MUTATIONS }.values.minOrNull()!!
             when {
@@ -143,9 +145,8 @@ class TIgGERAllelesSearcher(
     private fun alignClonesOnAlleles(
         clones: List<CloneDescription>,
         alleles: Collection<Mutations<NucleotideSequence>>
-    ): Map<Mutations<NucleotideSequence>, List<CloneDescription>> {
-        val alleleClones = alleles.associateWith { mutableListOf<CloneDescription>() }
-        clones.forEach { clone ->
+    ): List<AlleleWithClones> = clones
+        .map { clone ->
             val alignedOn = alleles
                 .map { allele ->
                     val alleleHasIndels = allele.asSequence().any { Mutation.isInDel(it) }
@@ -170,10 +171,10 @@ class TIgGERAllelesSearcher(
                         .then(Comparator.comparingInt { (allele, _) -> if (allele == EMPTY_NUCLEOTIDE_MUTATIONS) 0 else 1 })
                 )!!
                 .first
-            alleleClones.getValue(alignedOn) += clone
+            alignedOn to clone
         }
-        return alleleClones
-    }
+        .groupBy({ it.first }, { it.second })
+        .map { AlleleWithClones(it.key, it.value) }
 
     /**
      * Build regression for data:
@@ -272,5 +273,12 @@ class TIgGERAllelesSearcher(
                     }
             }
         }
+    }
+
+    private data class AlleleWithClones(
+        val mutations: Mutations<NucleotideSequence>,
+        val clones: List<CloneDescription>
+    ) {
+        val naives: Int get() = clones.count { it.mutations == mutations }
     }
 }
