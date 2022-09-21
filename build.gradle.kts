@@ -94,7 +94,7 @@ val milibVersion = "2.0.0-24-master"
 val repseqioVersion = "1.4.1-24-remove-named-chains"
 val miplotsVersion = "1.0.0-27-master"
 val mitoolVersion = "1.1.0-76-main"
-val jacksonBomVersion = "2.13.3"
+val jacksonBomVersion = "2.13.4"
 val redberryPipeVersion = "1.2.0-5-master"
 
 dependencies {

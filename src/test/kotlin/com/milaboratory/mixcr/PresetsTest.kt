@@ -55,7 +55,7 @@ class PresetsTest {
             bundle.exportAlignments?.let { al ->
                 println(
                     VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
-                        al.fields.filter { !it.field.contains("tag", ignoreCase = true) },
+                        al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
                         header,
                         OutputMode.ScriptingFriendly
                     ).size
@@ -64,7 +64,7 @@ class PresetsTest {
             bundle.exportClones?.let { al ->
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
-                        al.fields.filter { !it.field.contains("tag", ignoreCase = true) },
+                        al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
                         header,
                         OutputMode.ScriptingFriendly
                     ).size
