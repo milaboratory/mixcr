@@ -19,7 +19,11 @@ import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.ClnAReader
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.VDJCAlignments
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.OutputMode
@@ -32,7 +36,10 @@ import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Model
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -100,7 +107,7 @@ object CommandExportAlignments {
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->
                 val info = data.info
-                val (_, params) = paramsResolver.resolve(info.paramsSpec)
+                val (_, params) = paramsResolver.resolve(info.paramsSpec, printParameters = outputFile != null)
 
                 InfoWriter.create(
                     outputFile,

@@ -32,7 +32,10 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Model
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.util.*
 import java.util.stream.Stream
@@ -131,7 +134,10 @@ object CommandExportClones {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val header = initialSet.header
             val tagsInfo = header.tagsInfo
-            val (_, params) = paramsResolver.resolve(header.paramsSpec) { params ->
+            val (_, params) = paramsResolver.resolve(
+                header.paramsSpec,
+                printParameters = outputFile != null
+            ) { params ->
                 if (params.splitByTags == null) {
                     val newSpitBy = params.fields
                         .filter { it.field.equals("-tag", ignoreCase = true) }

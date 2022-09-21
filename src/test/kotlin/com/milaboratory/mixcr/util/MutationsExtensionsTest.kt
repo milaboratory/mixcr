@@ -17,6 +17,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.trees.generateMutations
 import com.milaboratory.mixcr.trees.generateSequence
+import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.shouldBe
 import org.junit.Test
 import kotlin.random.Random
@@ -165,6 +166,8 @@ class MutationsExtensionsTest {
     fun `reproduce test of intersection`() {
         RandomizedTest.reproduce(
             ::testIntersection,
+            5064150615102225317L,
+            6920324828711573378L,
             7112278539570627394L,
             6313853897278610290L,
             1436838224206222452L,
@@ -242,8 +245,13 @@ class MutationsExtensionsTest {
             println(" firstResult: ${firstResult.encode(",")}")
             println("secondResult: ${secondResult.encode(",")}")
         }
-        firstResult shouldBe intersection
-        secondResult shouldBe intersection
+        if (intersection.asSequence().any { Mutation.isInsertion(it) }) {
+            //in case of subsequent insertions there are different 'right' results
+            intersection shouldBeIn arrayOf(firstResult, secondResult)
+        } else {
+            firstResult shouldBe intersection
+            secondResult shouldBe intersection
+        }
     }
 
     private fun Random.sampleOfIndexes(original: Mutations<NucleotideSequence>): List<Int> =
