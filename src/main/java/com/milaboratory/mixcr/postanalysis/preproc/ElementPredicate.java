@@ -15,9 +15,10 @@ import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.mixcr.basictypes.Clone;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
 
+import java.util.Collections;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -114,40 +115,20 @@ public interface ElementPredicate<T> extends Predicate<T> {
         }
     }
 
-    final class IncludeChains implements ElementPredicate<Clone> {
-        @JsonProperty("chains")
-        public final Chains chains;
-
+    final class IncludeChains extends ChainsFilter<Clone> implements ElementPredicate<Clone> {
         @JsonCreator
-        public IncludeChains(@JsonProperty("chains") Chains chains) {
-            this.chains = chains;
+        public IncludeChains(@JsonProperty("chains") Set<Chains> chains,
+                             @JsonProperty("allowChimeras") boolean allowChimeras) {
+            super(chains, allowChimeras);
+        }
+
+        public IncludeChains(Chains chains, boolean allowChimeras) {
+            super(Collections.singleton(chains), allowChimeras);
         }
 
         @Override
         public String id() {
-            return chains + " chains";
-        }
-
-        @Override
-        public boolean test(Clone object) {
-            for (GeneType gt : GeneType.VJC_REFERENCE)
-                if (chains.intersects(object.getTopChain(gt)))
-                    return true;
-
-            return false;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            IncludeChains that = (IncludeChains) o;
-            return Objects.equals(chains, that.chains);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(chains);
+            return toString();
         }
     }
 }

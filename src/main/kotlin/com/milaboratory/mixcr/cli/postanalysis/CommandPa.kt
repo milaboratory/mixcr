@@ -13,17 +13,21 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
+import com.milaboratory.mixcr.cli.ChainsUtil
+import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
 import io.repseq.core.Chains
 import picocli.CommandLine
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 import java.util.stream.Collectors
+import kotlin.io.path.Path
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readLines
@@ -32,48 +36,53 @@ import kotlin.io.path.readLines
  *
  */
 abstract class CommandPa : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["cloneset.{clns|clna}... result.json.gz|result.json"], arity = "2..*")
+    @Parameters(description = ["cloneset.{clns|clna}... result.json.gz|result.json"], arity = "2..*")
     var inOut: List<String> = mutableListOf()
 
-    @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
 
-    @CommandLine.Option(description = [CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS], names = ["--drop-outliers"])
+    @Option(description = [CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS], names = ["--drop-outliers"])
     var dropOutliers = false
 
-    @CommandLine.Option(
+    @Option(
         description = [CommonDescriptions.DOWNSAMPLING],
         names = ["--default-downsampling"],
         required = true
     )
     lateinit var defaultDownsampling: String
 
-    @CommandLine.Option(
+    @Option(
         description = [CommonDescriptions.WEIGHT_FUNCTION],
         names = ["--default-weight-function"],
         required = true
     )
     lateinit var defaultWeightFunction: String
 
-    @CommandLine.Option(description = ["Filter specified chains"], names = ["--chains"])
-    var chains = "ALL"
+    @Option(
+        description = ["Limit analysis to specific chains (e.g. TRA or IGH) (fractions will be recalculated). " +
+                "Possible values (multiple values allowed): TRA, TRD, TRAD (for human), TRG, IGH, IGK, IGL"],
+        names = ["--chains"],
+        split = ","
+    )
+    var chains: Set<String>? = null
 
-    @CommandLine.Option(description = [CommonDescriptions.METADATA], names = ["--metadata"], paramLabel = "metadata")
+    @Option(description = [CommonDescriptions.METADATA], names = ["--metadata"], paramLabel = "metadata")
     var metadataFile: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Metadata categories used to isolate samples into separate groups"],
         names = ["--group"]
     )
     var isolationGroups: List<String> = mutableListOf()
 
-    @CommandLine.Option(description = ["Tabular results output path (path/table.tsv)."], names = ["--tables"])
+    @Option(description = ["Tabular results output path (path/table.tsv)."], names = ["--tables"])
     var tablesOut: String? = null
 
-    @CommandLine.Option(description = ["Preprocessor summary output path."], names = ["--preproc-tables"])
+    @Option(description = ["Preprocessor summary output path."], names = ["--preproc-tables"])
     var preprocOut: String? = null
 
-    @CommandLine.Option(names = ["-O"], description = ["Overrides default postanalysis settings"])
+    @Option(names = ["-O"], description = ["Overrides default postanalysis settings"])
     var overrides: Map<String, String> = mutableMapOf()
 
     override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
@@ -159,7 +168,7 @@ abstract class CommandPa : AbstractMiXCRCommand() {
         val content = Paths.get(metadata).toAbsolutePath().readLines()
         if (content.isEmpty()) return@lazy null
         val sep = if (metadata.endsWith(".csv")) "," else "\t"
-        val header = content.first().split(sep.toRegex()).dropLastWhile { it.isEmpty() }
+        val header = content.first().split(sep.toRegex()).dropLastWhile { it.isEmpty() }.map { it.lowercase() }
         val result = mutableMapOf<String, MutableList<String>>()
         for (iRow in 1 until content.size) {
             val row = content[iRow].split(sep.toRegex()).dropLastWhile { it.isEmpty() }
@@ -223,18 +232,25 @@ abstract class CommandPa : AbstractMiXCRCommand() {
             .map { (key, value) -> SamplesGroup(value, key) }
     }
 
+    private val chainsToProcess by lazy {
+        val availableChains = ChainsUtil.allChainsFromClnx(inputFiles.map { Path(it) })
+        println("The following chains present in the data: $availableChains")
+        if (chains == null)
+            availableChains
+        else
+            availableChains.intersect(ChainsFilter.parseChainsList(this.chains))
+    }
+
     override fun run0() {
-        val chains = Chains.parse(chains)
         val chainsColumn = chainsColumn()
         val results: List<PaResultByGroup> = groupSamples().flatMap { group ->
-            val chainsToExport = when {
-                chainsColumn != null ->
-                    listOf(Chains.getNamedChains(group.group[chainsColumn].toString().uppercase(Locale.getDefault())))
-                else -> Chains.DEFAULT_EXPORT_CHAINS_LIST
+            val chainsForGroup = when {
+                chainsColumn != null -> setOf(Chains.parse(group.group[chainsColumn].toString()))
+                else -> chainsToProcess
             }
-            chainsToExport
-                .filter { chains.intersects(it.chains) }
-                .map { run0(IsolationGroup(it, group.group), group.samples) }
+            chainsForGroup.map {
+                run0(IsolationGroup(it, group.group), group.samples)
+            }
         }
         val result = PaResult(metadata, isolationGroups, results)
         Files.createDirectories(outputPath().parent)

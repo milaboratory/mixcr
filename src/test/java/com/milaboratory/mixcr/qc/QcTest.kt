@@ -45,25 +45,21 @@ class QcTest {
                 align,
                 percent = false,
                 showNonFunctional = true,
-                Chains.DEFAULT_EXPORT_CHAINS_LIST
             ),
             ChainUsage.chainUsageAlign(
                 align,
                 percent = true,
                 showNonFunctional = true,
-                Chains.DEFAULT_EXPORT_CHAINS_LIST
             ),
             ChainUsage.chainUsageAlign(
                 align,
                 percent = false,
                 showNonFunctional = false,
-                Chains.DEFAULT_EXPORT_CHAINS_LIST
             ),
             ChainUsage.chainUsageAlign(
                 align,
                 percent = true,
                 showNonFunctional = false,
-                Chains.DEFAULT_EXPORT_CHAINS_LIST
             ),
         )
 

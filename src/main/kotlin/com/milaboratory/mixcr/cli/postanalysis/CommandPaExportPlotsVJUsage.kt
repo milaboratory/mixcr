@@ -16,9 +16,10 @@ import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
 import com.milaboratory.mixcr.postanalysis.plots.VJUsage.dataFrame
 import com.milaboratory.mixcr.postanalysis.plots.VJUsage.plots
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 
-@CommandLine.Command(
+@Command(
     name = "vjUsage",
     sortOptions = false,
     separator = " ",
@@ -26,16 +27,31 @@ import picocli.CommandLine
     hidden = true
 )
 class CommandPaExportPlotsVJUsage : CommandPaExportPlotsHeatmap() {
-    @CommandLine.Option(description = ["Don't add V genes dendrogram"], names = ["--no-v-dendro"])
+    @Option(
+        description = ["Show gene family usage instead."],
+        names = ["--family-usage"]
+    )
+    var familyUsage: Boolean = false
+
+    @Option(
+        description = ["Don't add V genes dendrogram"],
+        names = ["--no-v-dendro"]
+    )
     var noVDendro = false
 
-    @CommandLine.Option(description = ["Don't add J genes dendrogram"], names = ["--no-j-dendro"])
+    @Option(
+        description = ["Don't add J genes dendrogram"],
+        names = ["--no-j-dendro"]
+    )
     var noJDendro = false
 
     override fun run(result: PaResultByGroup) {
-        val ch = result.schema.getGroup<Clone>(PostanalysisParametersIndividual.VJUsage)
-        val df = dataFrame(result.result.forGroup(ch), metadataDf)
-            .filterByMetadata()
+        val group = if (familyUsage)
+            PostanalysisParametersIndividual.VJFamilyUsage
+        else
+            PostanalysisParametersIndividual.VJUsage
+        val ch = result.schema.getGroup<Clone>(group)
+        val df = dataFrame(result.result.forGroup(ch), metadataDf).filterByMetadata()
         if (df.rowsCount() == 0) return
         val plots = plots(
             df,
@@ -46,7 +62,7 @@ class CommandPaExportPlotsVJUsage : CommandPaExportPlotsHeatmap() {
                 hLabelsSize,
                 vLabelsSize,
                 false,
-                parsePallete(),
+                parsePalette(),
                 width,
                 height
             )

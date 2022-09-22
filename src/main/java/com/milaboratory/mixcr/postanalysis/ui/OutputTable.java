@@ -116,34 +116,34 @@ public class OutputTable {
         return cells.toString();
     }
 
-    public void writeCSV(Path dir) {
-        writeCSV(dir, "");
+    public void writeCSV(Path dir, String firstColumnName) {
+        writeCSV(dir, firstColumnName, "");
     }
 
-    public void writeCSV(Path dir, String prefix) {
-        writeCSV(dir, prefix, ",", ".csv");
+    public void writeCSV(Path dir, String firstColumnName, String prefix) {
+        writeCSV(dir, firstColumnName, prefix, ",", ".csv");
     }
 
-    public void writeTSV(Path dir) {
-        writeTSV(dir, "");
+    public void writeTSV(Path dir, String firstColumnName) {
+        writeTSV(dir, firstColumnName, "");
     }
 
-    public void writeTSV(Path dir, String prefix) {
-        writeCSV(dir, prefix, "\t", ".tsv");
+    public void writeTSV(Path dir, String firstColumnName, String prefix) {
+        writeCSV(dir, firstColumnName, prefix, "\t", ".tsv");
     }
 
-    public void writeCSV(Path dir, String prefix, String sep, String ext) {
+    public void writeCSV(Path dir, String firstColumnName, String prefix, String sep, String ext) {
         Path outName = dir.resolve(prefix + name + ext);
         try (PrintStream writer = new PrintStream(outName.toFile())) {
-            writeCSV(writer, sep);
+            writeCSV(writer, firstColumnName, sep);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void writeCSV(PrintStream writer, String sep) {
+    public void writeCSV(PrintStream writer, String firstColumnName, String sep) {
         Object[][] rows2d = rows();
-        writer.print("");
+        writer.print(firstColumnName);
         for (Object column : colIds) {
             writer.print(sep);
             writer.print(colStringer.apply(column));

@@ -93,16 +93,6 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
         return idx;
     }
 
-    public int indexOfIgnoreCase(String tagName) {
-        int idx = -1;
-        for (TagInfo ti : this)
-            if (ti.getName().equalsIgnoreCase(tagName)) {
-                idx = ti.getIndex();
-                break;
-            }
-        return idx;
-    }
-
     @Override
     @SuppressWarnings("NullableProblems")
     public Iterator<TagInfo> iterator() {

@@ -51,14 +51,15 @@ public class CloneReaderMerger implements CloneReader {
         return rep.getUsedGenes();
     }
 
-    @Override
-    public MiXCRFooter getFooter() {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public MiXCRHeader getHeader() {
-        throw new UnsupportedOperationException();
+        return rep.getHeader();
+    }
+
+    @Override
+    public MiXCRFooter getFooter() {
+        return rep.getFooter();
     }
 
     @Override

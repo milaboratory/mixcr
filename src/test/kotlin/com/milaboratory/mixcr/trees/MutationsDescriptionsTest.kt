@@ -33,6 +33,7 @@ import io.repseq.core.GeneFeature.*
 import io.repseq.core.ReferencePoint.*
 import io.repseq.core.ReferencePoints
 import io.repseq.core.ReferenceUtil
+import org.junit.Ignore
 import org.junit.Test
 import kotlin.random.Random
 

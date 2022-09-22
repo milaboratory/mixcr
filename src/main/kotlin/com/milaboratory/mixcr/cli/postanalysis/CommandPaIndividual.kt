@@ -43,7 +43,7 @@ class CommandPaIndividual : CommandPa() {
     }
 
     override fun run(group: IsolationGroup, samples: List<String>): PaResultByGroup {
-        val groups = parameters.getGroups(group.chains.chains, tagsInfo)
+        val groups = parameters.getGroups(group.chains, tagsInfo)
         val schema = PostanalysisSchema(false, groups)
         val runner = PostanalysisRunner<Clone>()
         runner.addCharacteristics(schema.allCharacterisitcs)

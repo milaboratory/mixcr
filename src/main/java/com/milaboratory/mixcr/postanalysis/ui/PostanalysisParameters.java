@@ -207,7 +207,8 @@ public abstract class PostanalysisParameters {
                 int tagIndex = info.indexOf(weight);
                 if (tagIndex < 0)
                     throw new IllegalArgumentException("Unknown weight type: " + weight + ". Available types: none, default, read, " + info.stream().map(TagInfo::getName).collect(Collectors.joining(",")));
-                return new WeightFunctions.TagCount(tagIndex);
+                int tagLevel = tagIndex + 1;
+                return new WeightFunctions.TagCount(tagLevel);
         }
     }
 }

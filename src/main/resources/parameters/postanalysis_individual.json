@@ -127,6 +127,24 @@
       "dropOutliers": null,
       "weightFunction": null
     },
+    "vFamilyUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
+    "jFamilyUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
+    "vjFamilyUsage": {
+      "downsampling": null,
+      "onlyProductive": null,
+      "dropOutliers": null,
+      "weightFunction": null
+    },
     "isotypeUsage": {
       "downsampling": null,
       "onlyProductive": null,

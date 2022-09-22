@@ -13,27 +13,27 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.miplots.color.Palettes.parse
 import com.milaboratory.miplots.color.UniversalPalette
-import picocli.CommandLine
+import picocli.CommandLine.Option
 
 abstract class CommandPaExportPlotsHeatmap : CommandPaExportPlots() {
-    @CommandLine.Option(
+    @Option(
         description = ["Width of horizontal labels. One unit corresponds to the width of one tile."],
         names = ["--h-labels-size"]
     )
     var hLabelsSize = -1.0
 
-    @CommandLine.Option(
+    @Option(
         description = ["Height of vertical labels. One unit corresponds to the height of one tile."],
         names = ["--v-labels-size"]
     )
     var vLabelsSize = -1.0
 
-    @CommandLine.Option(
+    @Option(
         description = ["Color palette for heatmap. Available names: diverging, viridis2magma, lime2rose, " +
                 "blue2red, teal2red, softSpectral, sequential, viridis, magma, sunset, rainbow, salinity, density. Default is density."],
         names = ["--palette"]
     )
     var palette = "density"
 
-    fun parsePallete(): UniversalPalette = parse(palette)
+    fun parsePalette(): UniversalPalette = parse(palette)
 }

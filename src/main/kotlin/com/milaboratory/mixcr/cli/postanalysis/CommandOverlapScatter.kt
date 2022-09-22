@@ -13,6 +13,9 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod.Companion.parse
 import com.milaboratory.miplots.writeFile
+import com.milaboratory.mixcr.cli.ChainsUtil
+import com.milaboratory.mixcr.cli.ChainsUtil.name
+import com.milaboratory.mixcr.cli.ChainsUtil.toPath
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
@@ -20,15 +23,14 @@ import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter.dataFrame
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter.plot
+import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate.IncludeChains
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.SmartProgressReporter
-import io.repseq.core.Chains
-import io.repseq.core.Chains.NamedChains
 import picocli.CommandLine
-import java.nio.file.Path
-import java.nio.file.Paths
+import kotlin.io.path.Path
+import kotlin.io.path.nameWithoutExtension
 
 @CommandLine.Command(name = "overlapScatterPlot", separator = " ", description = ["Plot overlap scatter-plot."])
 class CommandOverlapScatter : AbstractMiXCRCommand() {
@@ -41,8 +43,8 @@ class CommandOverlapScatter : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["output.[pdf|eps|png|jpeg]"], index = "2")
     lateinit var out: String
 
-    @CommandLine.Option(description = ["Chains to export"], names = ["--chains"])
-    var chains: List<String>? = null
+    @CommandLine.Option(description = ["Chains to export"], names = ["--chains"], split = ",")
+    var chains: Set<String>? = null
 
     @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
@@ -66,46 +68,39 @@ class CommandOverlapScatter : AbstractMiXCRCommand() {
 
     override fun getOutputFiles(): List<String> = listOf(out)
 
-    private fun outputPath(chains: NamedChains): Path {
-        if (chains == Chains.ALL_NAMED) return Paths.get(out)
-        val fName = fName(out)
-        val fileNameWithoutExtension = fName.substring(0, fName.length - 3)
-        return Paths.get(out).toAbsolutePath().parent.resolve(
-            "$fileNameWithoutExtension${chains.name}.pdf"
-        )
-    }
-
     override fun run0() {
         val parameters = DownsamplingParameters.parse(
             downsampling,
             CommandPa.extractTagsInfo(inputFiles, !downsampling.equals("none", ignoreCase = true)),
             false, onlyProductive
         )
-        for (curChains in chains?.map { Chains.getNamedChains(it) } ?: Chains.DEFAULT_EXPORT_CHAINS_LIST) {
-            val downsampling = OverlapPreprocessorAdapter.Factory(parameters.getPreprocessor(curChains.chains))
+
+        var chainsToProcess = ChainsUtil.allChainsFromClnx(listOf(in1, in2).map { Path(it) })
+        chainsToProcess = chains?.let { ChainsFilter.parseChainsList(it) } ?: chainsToProcess
+
+        for (chain in chainsToProcess) {
+            val downsampling = OverlapPreprocessorAdapter.Factory(parameters.getPreprocessor(chain))
             val dataset = SetPreprocessor.processDatasets(
                 downsampling.newInstance(),
                 OverlapUtil.overlap(
                     listOf(in1, in2),
-                    IncludeChains(curChains.chains),
+                    IncludeChains(setOf(chain), false),
                     OverlapUtil.parseCriteria(overlapCriteria).ordering()
                 )
             ).first()
             val plotParameters = OverlapScatter.PlotParameters(
-                fName(in1),
-                fName(in2),
+                Path(in1).nameWithoutExtension,
+                Path(in2).nameWithoutExtension,
                 parse(method),
                 !noLog
             )
             dataset.mkElementsPort().use { port ->
-                SmartProgressReporter.startProgressReport("Processing ${curChains.name}", port)
+                SmartProgressReporter.startProgressReport("Processing ${chain.name}", port)
                 val df = dataFrame(port)
                 if (df.rowsCount() == 0) return@use
                 val plot = plot(df, plotParameters)
-                writeFile(outputPath(curChains), plot)
+                writeFile(chain.toPath(out), plot)
             }
         }
     }
-
-    private fun fName(file: String): String = Paths.get(file).toAbsolutePath().fileName.toString()
 }

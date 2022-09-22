@@ -27,7 +27,7 @@ mixcr analyze tcr_amplicon \
   +M assemble.sortBySequence=true \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case9
 
-assert "cat case9.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRAD.total" "237718"
+assert "cat case9.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "237718"
 assert "cat case9.assemble.report.json | head -n 1 | jq -r .readsInClones" "199560"
 assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "227"
 assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "768"

@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli.postanalysis
 import com.milaboratory.miplots.Position.Bottom
 import com.milaboratory.miplots.Position.Left
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.cli.MultipleMetricsInOneFile
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapType
 import com.milaboratory.mixcr.postanalysis.plots.ColorKey
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
@@ -24,26 +25,33 @@ import com.milaboratory.mixcr.postanalysis.plots.OverlapRow
 import com.milaboratory.mixcr.postanalysis.plots.parseFilter
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap
 import org.jetbrains.kotlinx.dataframe.DataFrame
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 import java.util.stream.Collectors
+import kotlin.io.path.Path
 
-@CommandLine.Command(name = "overlap", sortOptions = false, separator = " ", description = ["Export overlap heatmaps"])
-class CommandPaExportPlotsOverlap : CommandPaExportPlotsHeatmapWithGroupBy() {
-    @CommandLine.Option(description = ["Don't add dendrograms"], names = ["--no-dendro"])
+@Command(name = "overlap", sortOptions = false, separator = " ", description = ["Export overlap heatmaps"])
+class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlotsHeatmapWithGroupBy() {
+    @Option(description = ["Don't add dendrograms"], names = ["--no-dendro"])
     var noDendro = false
 
-    @CommandLine.Option(
+    @Option(
         description = ["Add color key layer; prefix 'x_' (add to the bottom) or 'y_' (add to the left) should be used."],
         names = ["--color-key"],
         paramLabel = "colorKey"
     )
     var colorKeysParam: List<String> = mutableListOf()
 
-    @CommandLine.Option(description = ["Fill diagonal line"], names = ["--fill-diagonal"])
+    @Option(description = ["Fill diagonal line"], names = ["--fill-diagonal"])
     var fillDiagonal = false
 
-    @CommandLine.Option(description = ["Select specific metrics to export."], names = ["--metric"])
+    @Option(description = ["Select specific metrics to export."], names = ["--metric"])
     var metrics: List<String>? = null
+
+    override fun validate() {
+        super.validate()
+        validateNonPdf(Path(out), metrics)
+    }
 
     private fun DataFrame<OverlapRow>.filterOverlapByMetadata(): DataFrame<OverlapRow> {
         var result = this
@@ -76,7 +84,7 @@ class CommandPaExportPlotsOverlap : CommandPaExportPlotsHeatmapWithGroupBy() {
             when {
                 key.startsWith("x_") -> ColorKey(key, Bottom)
                 key.startsWith("y_") -> ColorKey(key, Left)
-                else -> ColorKey("x_$key", Bottom)
+                else -> ColorKey("x_$key".lowercase(), Bottom)
             }
         }
         val par = HeatmapParameters(
@@ -87,7 +95,7 @@ class CommandPaExportPlotsOverlap : CommandPaExportPlotsHeatmapWithGroupBy() {
             hLabelsSize,
             vLabelsSize,
             false,
-            parsePallete(),
+            parsePalette(),
             width,
             height
         )

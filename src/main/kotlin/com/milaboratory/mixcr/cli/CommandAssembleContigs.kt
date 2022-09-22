@@ -211,7 +211,7 @@ object CommandAssembleContigs {
                                                             h.geneType != Variable && h.geneType != Joining ||
                                                                     FullSeqAssembler.checkGeneCompatibility(
                                                                         h,
-                                                                        reader.assemblingFeatures[0]
+                                                                        reader.assemblingFeatures
                                                                     )
                                                         }
                                                         .collect(
