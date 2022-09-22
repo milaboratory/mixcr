@@ -11,13 +11,18 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.cli.ValidationException
 import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.ReferencePoint
+import picocli.CommandLine.IParameterConsumer
+import picocli.CommandLine.Model.ArgSpec
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
+import java.util.*
 
 interface MiXCRMixinSet {
     fun mixIn(mixin: MiXCRMixin)
@@ -177,37 +182,94 @@ interface ExportMiXCRMixins : MiXCRMixinSet {
         mixIn(AddExportAlignmentsField(if (prepend) 0 else -1, sublist[0], sublist.drop(1)))
     }
 
-    @Option(names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "0"], arity = "1")
+    @Option(
+        names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "0"],
+        parameterConsumer = ExecParameterConsumer0::class,
+        arity = "1",
+    )
     fun prependExportClonesField0(data: List<String>) =
         addExportClonesField(data, true, 0)
 
-    @Option(names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "1"], arity = "2")
+    @Option(
+        names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "1"],
+        parameterConsumer = ExecParameterConsumer1::class,
+        arity = "2",
+    )
     fun prependExportClonesField1(data: List<String>) =
         addExportClonesField(data, true, 1)
 
-    @Option(names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "2"], arity = "3")
+    @Option(
+        names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "2"],
+        parameterConsumer = ExecParameterConsumer2::class,
+        arity = "3",
+    )
     fun prependExportClonesField2(data: List<String>) =
         addExportClonesField(data, true, 2)
 
-    @Option(names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "3"], arity = "4")
+    @Option(
+        names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX + "3"],
+        parameterConsumer = ExecParameterConsumer3::class,
+        arity = "4"
+    )
     fun prependExportClonesField3(data: List<String>) =
         addExportClonesField(data, true, 3)
 
-    @Option(names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "0"], arity = "1")
+    @Option(
+        names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "0"],
+        parameterConsumer = ExecParameterConsumer0::class,
+        arity = "1"
+    )
     fun appendExportClonesField0(data: List<String>) =
         addExportClonesField(data, false, 0)
 
-    @Option(names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "1"], arity = "2")
+    @Option(
+        names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "1"],
+        parameterConsumer = ExecParameterConsumer1::class,
+        arity = "2"
+    )
     fun appendExportClonesField1(data: List<String>) =
         addExportClonesField(data, false, 1)
 
-    @Option(names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "2"], arity = "3")
+    @Option(
+        names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "2"],
+        parameterConsumer = ExecParameterConsumer2::class,
+        arity = "3"
+    )
     fun appendExportClonesField2(data: List<String>) =
         addExportClonesField(data, false, 2)
 
-    @Option(names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "3"], arity = "4")
+    @Option(
+        names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX + "3"],
+        parameterConsumer = ExecParameterConsumer3::class,
+        arity = "4"
+    )
     fun appendExportClonesField3(data: List<String>) =
         addExportClonesField(data, false, 3)
+
+    companion object {
+        abstract class ExecParameterConsumer(private val nArgs: Int) : IParameterConsumer {
+            override fun consumeParameters(args: Stack<String>, argSpec: ArgSpec, commandSpec: CommandSpec) {
+                val list: MutableList<String> = mutableListOf()
+                var i = nArgs + 1
+                while (!args.isEmpty() && i > 0) {
+                    list.add(args.pop())
+                    --i
+                }
+                if (list.size != (nArgs + 1))
+                    throw ValidationException(
+                        commandSpec.commandLine(),
+                        "${nArgs + 1} parameters expected but only ${list.size} were supplied",
+                        true
+                    )
+                argSpec.setValue(list)
+            }
+        }
+
+        class ExecParameterConsumer0 : ExecParameterConsumer(0)
+        class ExecParameterConsumer1 : ExecParameterConsumer(1)
+        class ExecParameterConsumer2 : ExecParameterConsumer(2)
+        class ExecParameterConsumer3 : ExecParameterConsumer(3)
+    }
 }
 
 interface GenericMiXCRMixins : MiXCRMixinSet {
@@ -222,3 +284,5 @@ interface GenericMiXCRMixins : MiXCRMixinSet {
 class AllMiXCRMixins : MiXCRMixinCollector(), PipelineMiXCRMixins,
     AlignMiXCRMixins, AssembleMiXCRMixins,
     ExportMiXCRMixins, GenericMiXCRMixins
+
+class AllExportMiXCRMixins : MiXCRMixinCollector(), ExportMiXCRMixins

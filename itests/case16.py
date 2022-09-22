@@ -358,12 +358,11 @@ def mixcr_assemble(vdjca_file):
 
 def mixcr_exportClones(clns_file, txt_file = None):
     if txt_file == None:
-        mixcr_exportClones_args = ['mixcr', 'exportClones', '-f', '-t', '-o', '-c', 'TRB', '-p', 'full', '-nFeature', 'VJJunction', clns_file + '.clns', clns_file + '.txt']
+        mixcr_exportClones_args = ['mixcr', 'exportClones', '-f', '-t', '-o', '-c', 'TRB', '+appendExportClonesField1', '-nFeature', 'VJJunction', clns_file + '.clns', clns_file + '.txt']
     else:
-        mixcr_exportClones_args = ['mixcr', 'exportClones', '-f', '-t', '-o', '-c', 'TRB', '-p', 'full', '-nFeature', 'VJJunction',  clns_file + '.clns', txt_file + '.txt']
+        mixcr_exportClones_args = ['mixcr', 'exportClones', '-f', '-t', '-o', '-c', 'TRB', '+appendExportClonesField1', '-nFeature', 'VJJunction',  clns_file + '.clns', txt_file + '.txt']
     mixcr_exportClones = subprocess.Popen(mixcr_exportClones_args)
     mixcr_exportClones.wait()
-
 
 def downsample(downsampling):
     clns_files = glob.glob('*.clns')
