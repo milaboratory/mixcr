@@ -66,3 +66,7 @@ fi
 if [[ ! -d yf_sample_data ]]; then
   curl -sS https://s3.amazonaws.com/files.milaboratory.com/test-data/yf_sample_data.tar | tar -xv
 fi
+
+if [[ ! -d pa_test_data ]]; then
+  curl -sS https://s3.amazonaws.com/files.milaboratory.com/test-data/pa_test_data.tar | tar -xv
+fi

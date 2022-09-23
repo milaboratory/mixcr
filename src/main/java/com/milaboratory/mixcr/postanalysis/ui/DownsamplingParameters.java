@@ -66,7 +66,7 @@ public final class DownsamplingParameters {
         if (chains == null)
             return preproc;
         else
-            return preproc.filterFirst(weightFunction, new ElementPredicate.IncludeChains(chains));
+            return preproc.filterFirst(weightFunction, new ElementPredicate.IncludeChains(chains, false));
     }
 
     /**
@@ -110,7 +110,7 @@ public final class DownsamplingParameters {
                 break;
             default:
                 tag = tagStr.replace("-count", "");
-                int i = tagsInfo.indexOfIgnoreCase(tag);
+                int i = tagsInfo.indexOf(tag);
                 if (i < 0)
                     throw new IllegalArgumentException("Tag " + tagStr + " not found in the input files.");
                 tagLevel = i + 1;

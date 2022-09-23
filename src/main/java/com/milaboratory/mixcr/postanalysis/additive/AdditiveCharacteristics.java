@@ -189,11 +189,13 @@ public final class AdditiveCharacteristics {
     }
 
     public static AdditiveCharacteristic<String, Clone> familyUsage(GeneType geneType) {
-        return familyUsage(NoPreprocessing.factory(), geneType);
+        return familyUsage(NoPreprocessing.factory(), WeightFunctions.Count, geneType);
     }
 
-    public static AdditiveCharacteristic<String, Clone> familyUsage(SetPreprocessorFactory<Clone> preproc, GeneType geneType) {
-        return segmentUsage(preproc, geneType, new KeyFunctions.FamiltyUsage<>(geneType))
+    public static AdditiveCharacteristic<String, Clone> familyUsage(SetPreprocessorFactory<Clone> preproc,
+                                                                    WeightFunction<Clone> wt,
+                                                                    GeneType geneType) {
+        return segmentUsage(preproc, wt, geneType, new KeyFunctions.FamiltyUsage<>(geneType))
                 .setName(geneType.getLetter() + "FamilyUsage");
     }
 
@@ -240,11 +242,16 @@ public final class AdditiveCharacteristics {
         return vjUsage(preproc, new KeyFunctions.VJGeneUsage<>()).setName("VJGeneUsage");
     }
 
-    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjFamilysage() {
-        return vjFamilysage(NoPreprocessing.factory());
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjFamilyUsage() {
+        return vjFamilyUsage(NoPreprocessing.factory());
     }
 
-    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjFamilysage(SetPreprocessorFactory<Clone> preproc) {
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjFamilyUsage(SetPreprocessorFactory<Clone> preproc,
+                                                                               WeightFunction<Clone> wt) {
+        return vjUsage(preproc, wt, new KeyFunctions.VJFamilyUsage<>()).setName("VJFamilyUsage");
+    }
+
+    public static AdditiveCharacteristic<VJGenes<String>, Clone> vjFamilyUsage(SetPreprocessorFactory<Clone> preproc) {
         return vjUsage(preproc, new KeyFunctions.VJFamilyUsage<>()).setName("VJFamilyUsage");
     }
 

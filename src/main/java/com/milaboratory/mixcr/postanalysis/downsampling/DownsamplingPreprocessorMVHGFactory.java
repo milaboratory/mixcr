@@ -42,7 +42,7 @@ public class DownsamplingPreprocessorMVHGFactory<T> implements SetPreprocessorFa
 
     @Override
     public String id() {
-        return "Downsample " + downsampleValueChooser.id();
+        return "Downsample by reads " + downsampleValueChooser.id();
     }
 
     @Override

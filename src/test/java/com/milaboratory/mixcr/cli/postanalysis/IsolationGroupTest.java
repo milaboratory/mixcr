@@ -23,7 +23,7 @@ import java.util.HashMap;
 public class IsolationGroupTest {
     @Test
     public void test1() throws JsonProcessingException {
-        IsolationGroup expected = IsolationGroup.invoke(Chains.TRA_NAMED, new HashMap<>());
+        IsolationGroup expected = IsolationGroup.invoke(Chains.TRA, new HashMap<>());
         String str = GlobalObjectMappers.getPretty().writeValueAsString(expected);
         IsolationGroup actual = GlobalObjectMappers.getPretty().readValue(str, IsolationGroup.class);
         Assert.assertEquals(expected, actual);

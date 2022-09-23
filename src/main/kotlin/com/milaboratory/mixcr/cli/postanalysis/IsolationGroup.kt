@@ -13,11 +13,8 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import io.repseq.core.Chains.KnownChainsDeserializer
-import io.repseq.core.Chains.KnownChainsSerializer
-import io.repseq.core.Chains.NamedChains
+import com.milaboratory.mixcr.cli.ChainsUtil.name
+import io.repseq.core.Chains
 
 /**
  * Group of samples with specific metadata properties projected onto specific chains. Common downsampling is applied for
@@ -25,10 +22,8 @@ import io.repseq.core.Chains.NamedChains
  */
 data class IsolationGroup private constructor(
     /** Chains  */
-    @field:JsonDeserialize(using = KnownChainsDeserializer::class)
-    @field:JsonSerialize(using = KnownChainsSerializer::class)
     @field:JsonProperty("chains")
-    val chains: NamedChains,
+    val chains: Chains,
     /** Metadata field=value; always sorted by key  */
     @field:JsonProperty("groups")
     val group: Map<String, Any>?
@@ -40,6 +35,7 @@ data class IsolationGroup private constructor(
             else -> str
         }
     }
+
 
     override fun toString(): String = toString(true)
 
@@ -63,7 +59,7 @@ data class IsolationGroup private constructor(
         @JsonCreator
         @JvmStatic
         operator fun invoke(
-            @JsonProperty("chains") chains: NamedChains,
+            @JsonProperty("chains") chains: Chains,
             @JsonProperty("groups") group: Map<String, Any>?
         ) = IsolationGroup(
             chains,

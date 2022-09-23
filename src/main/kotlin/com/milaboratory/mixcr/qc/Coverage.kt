@@ -21,21 +21,11 @@ import gnu.trove.map.hash.TIntLongHashMap
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.ReferencePoint.CDR1Begin
-import io.repseq.core.ReferencePoint.CDR2Begin
-import io.repseq.core.ReferencePoint.CDR3Begin
-import io.repseq.core.ReferencePoint.FR1Begin
-import io.repseq.core.ReferencePoint.FR2Begin
-import io.repseq.core.ReferencePoint.FR3Begin
-import io.repseq.core.ReferencePoint.FR4Begin
-import io.repseq.core.ReferencePoint.FR4End
+import io.repseq.core.ReferencePoint.*
 import io.repseq.core.RelativePointSide
-import jetbrains.letsPlot.elementBlank
-import jetbrains.letsPlot.elementLine
-import jetbrains.letsPlot.elementRect
+import jetbrains.letsPlot.*
 import jetbrains.letsPlot.geom.geomLine
 import jetbrains.letsPlot.geom.geomPoint
-import jetbrains.letsPlot.ggplot
 import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.xlab
@@ -45,7 +35,6 @@ import jetbrains.letsPlot.scale.scaleColorManual
 import jetbrains.letsPlot.scale.scaleXContinuous
 import jetbrains.letsPlot.scale.scaleXReverse
 import jetbrains.letsPlot.scale.scaleYContinuous
-import jetbrains.letsPlot.theme
 import java.nio.file.Path
 import java.util.*
 import kotlin.math.max
@@ -91,7 +80,7 @@ object Coverage {
             stat.adjustOrPutValue(pos, 1, 1)
         }
 
-        fun cumsum(norm: Long? = null) = run {
+        fun cumsum(norm: Long? = null, isR2: Boolean = false) = run {
             val result = TreeMap<Int, Double>()
             val it0 = stat.iterator()
             while (it0.hasNext()) {
@@ -104,12 +93,13 @@ object Coverage {
             while (it1.hasNext()) {
                 val e = it1.next()
                 val newValue = prev + e.value
-                e.setValue(newValue + toTheLeft)
+                e.setValue(newValue + (if (isR2) toTheRight else toTheLeft))
                 prev = newValue
             }
 
             val it2 = result.iterator()
-            val sum = (norm ?: (prev + toTheLeft + positionUknown + toTheRight + unmatched)).toDouble()
+            val sum = (norm
+                ?: (prev + toTheLeft + positionUknown + (if (isR2) toTheLeft else toTheRight) + unmatched)).toDouble()
             while (it2.hasNext()) {
                 val e = it2.next()
                 val newValue = 100.0 * e.value / sum
@@ -203,11 +193,13 @@ object Coverage {
                                         refPointStats[i].addPosition(pCorrected(it.sequence2Range.from))
                                     } ?: ++refPointStats[i].positionUknown
                                 }
+
                                 Joining -> {
                                     al.getBestHit(Joining)?.getAlignment(iTarget)?.let {
                                         refPointStats[i].addPosition(pCorrected(it.sequence2Range.to))
                                     } ?: ++refPointStats[i].positionUknown
                                 }
+
                                 else ->
                                     ++refPointStats[i].positionUknown
                             }.exhaustive
@@ -237,7 +229,7 @@ object Coverage {
             )
 
             for (i in predefinedRefPoints.indices) {
-                val hist = refPointStats[i].cumsum(totalNumberOfReads)
+                val hist = refPointStats[i].cumsum(totalNumberOfReads, target == Target.R2)
                 val ref = predefinedRefPoints[i]
                 for ((pos, value) in hist) {
                     data[Var.RefPoint]!! += ref
@@ -252,7 +244,7 @@ object Coverage {
                     val e = if (ie == 0) vEdge else jEdge
                     val gt = if (ie == 0) Variable else Joining
                     val bound = if (ie == 0) 0 else 1
-                    val hist = e.cumsum(totalNumberOfReads)
+                    val hist = e.cumsum(totalNumberOfReads, target == Target.R2)
                     for ((pos, value) in hist) {
                         data[Var.RefPoint]!! += AlignmentEdgePoint(gt, bound)
                         data[Var.RefPointPosition]!! += if (target == Target.R2) pos + readLength else pos

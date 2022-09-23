@@ -25,79 +25,77 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import picocli.CommandLine
+import picocli.CommandLine.*
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
 import java.util.*
 
-@CommandLine.Command(
+@Command(
     name = "exportAlignmentsPretty",
     sortOptions = true,
     separator = " ",
     description = ["Export verbose information about alignments."]
 )
 class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(index = "0", description = ["alignments.vdjca"])
+    @Parameters(index = "0", description = ["alignments.vdjca"])
     lateinit var `in`: String
 
-    @CommandLine.Parameters(index = "1", description = ["output.txt"], arity = "0..1")
+    @Parameters(index = "1", description = ["output.txt"], arity = "0..1")
     var out: String? = null
 
-    @CommandLine.Option(description = ["Output only top hits"], names = ["-t", "--top"])
+    @Option(description = ["Output only top hits"], names = ["-t", "--top"])
     var onlyTop = false
 
-    @CommandLine.Option(description = ["Output full gene sequence"], names = ["-a", "--gene"])
+    @Option(description = ["Output full gene sequence"], names = ["-a", "--gene"])
     var geneSequence = false
 
-    @CommandLine.Option(description = ["Limit number of alignments before filtering"], names = ["-b", "--limit-before"])
+    @Option(description = ["Limit number of alignments before filtering"], names = ["-b", "--limit-before"])
     var limitBefore: Int? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Limit number of filtered alignments; no more " +
                 "than N alignments will be outputted"], names = ["-n", "--limit"]
     )
     var limitAfter: Int? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Filter export to a specific protein chain gene (e.g. TRA or IGH)."],
         names = ["-c", "--chains"]
     )
     var chain = "ALL"
 
-    @CommandLine.Option(description = ["Number of output alignments to skip"], names = ["-s", "--skip"])
+    @Option(description = ["Number of output alignments to skip"], names = ["-s", "--skip"])
     var skipAfter: Int? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Output only alignments where CDR3 exactly equals to given sequence"],
         names = ["-e", "--cdr3-equals"]
     )
     var cdr3Equals: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Output only alignments which contain a corresponding gene feature"],
         names = ["-g", "--feature"]
     )
     var feature: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Output only alignments where target read contains a given substring"],
         names = ["-r", "--read-contains"]
     )
     var readContains: String? = null
 
-    @CommandLine.Option(description = ["Custom filter"], names = ["--filter"])
+    @Option(description = ["Custom filter"], names = ["--filter"])
     var filter: String? = null
 
-    @CommandLine.Option(description = ["Print descriptions"], names = ["-d", "--descriptions"])
+    @Option(description = ["Print descriptions"], names = ["-d", "--descriptions"])
     var printDescriptions = false
 
-    @CommandLine.Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"])
+    @Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"])
     var readIds: List<Long> = mutableListOf()
 
-    // @CommandLine.Option(description = ["Alignment index"], names = ["--alignment-idx"])
-    // var alignmentIdx: List<Long> = mutableListOf()
-
-    @CommandLine.Option(description = ["List of clone ids to export"], names = ["--clone-ids"])
+    @Option(description = ["List of clone ids to export"], names = ["--clone-ids"])
     var cloneIds: List<Long> = mutableListOf()
 
     override fun getInputFiles(): List<String> = listOf(`in`)
@@ -172,6 +170,7 @@ class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
                         ++filtered
                         if (verbose) outputVerbose(output, alignments) else outputCompact(output, alignments)
                     }
+
 
                 output.println("Filtered: " + filtered + " / " + total + " = " + 100.0 * filtered / total + "%")
             }
