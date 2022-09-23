@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mitool.helpers.drainToAndClose
 import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
@@ -30,12 +30,12 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 @CommandLine.Command(name = "downsample", separator = " ", description = ["Downsample clonesets."])
-class CommandDownsample : MiXCRCommand() {
+class CommandDownsample : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["cloneset.{clns|clna}..."], arity = "1..*")
     lateinit var `in`: List<String>
 
-    @CommandLine.Option(description = ["Filter specific chains"], names = ["-c", "--chains"], required = true)
-    var chains = "ALL"
+    @CommandLine.Option(description = ["Specify chains"], names = ["-c", "--chains"], required = true)
+    var chains: String? = null
 
     @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
@@ -92,16 +92,21 @@ class CommandDownsample : MiXCRCommand() {
         val datasets = `in`.map { file -> ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault()) }
         val preprocessor = DownsamplingParameters
             .parse(downsampling, CommandPa.extractTagsInfo(inputFiles), false, onlyProductive)
-            .getPreprocessor(Chains.getByName(chains))
+            .getPreprocessor(Chains.parse(chains))
             .newInstance()
         val results = SetPreprocessor.processDatasets(preprocessor, datasets)
         ensureOutputPathExists()
         for (i in results.indices) {
             ClnsWriter(output(`in`[i]).toFile()).use { clnsWriter ->
                 val downsampled = results[i].mkElementsPort().toList()
-                clnsWriter.writeHeader(datasets[i].info, datasets[i].ordering(), datasets[i].usedGenes, downsampled.size)
+                clnsWriter.writeHeader(
+                    datasets[i].header,
+                    datasets[i].ordering(),
+                    datasets[i].usedGenes,
+                    downsampled.size
+                )
                 downsampled.port.drainToAndClose(clnsWriter.cloneWriter())
-                clnsWriter.writeFooter(emptyList(), null)
+                clnsWriter.setFooter(datasets[i].footer)
             }
         }
         val summaryStat = preprocessor.stat

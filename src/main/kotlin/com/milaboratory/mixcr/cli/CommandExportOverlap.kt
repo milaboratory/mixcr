@@ -18,16 +18,17 @@ import com.milaboratory.mixcr.export.FieldExtractor
 import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
+import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.util.OverlapBrowser
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
-import io.repseq.core.Chains.NamedChains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
+import picocli.CommandLine.*
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -35,45 +36,44 @@ import java.nio.file.Paths
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-@CommandLine.Command(
+@Command(
     separator = " ",
     description = ["Build cloneset overlap and export into tab delimited file."],
     sortOptions = false
 )
-class CommandExportOverlap : MiXCRCommand() {
-    @CommandLine.Parameters(description = ["cloneset.{clns|clna}... output.tsv"])
+class CommandExportOverlap : AbstractMiXCRCommand() {
+    @Parameters(description = ["cloneset.{clns|clna}... output.tsv"])
     var inOut: List<String> = mutableListOf()
 
-    @CommandLine.Option(description = ["Chains to export"], names = ["--chains"])
-    var chains: List<String>? = null
+    @Option(description = ["Chains to export"], names = ["--chains"], split = ",")
+    var chains: Set<String>? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Filter out-of-frame sequences and clonotypes with stop-codons"],
         names = ["--only-productive"]
     )
     var onlyProductive = false
 
-    @CommandLine.Option(description = ["Overlap criteria. Default CDR3|AA|V|J"], names = ["--criteria"])
+    @Option(description = ["Overlap criteria. Default CDR3|AA|V|J"], names = ["--criteria"])
     var overlapCriteria = "CDR3|AA|V|J"
 
     public override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
 
     override fun getOutputFiles(): List<String> = listOf(inOut.last())
 
-    private fun getOut(chains: NamedChains): Path {
+    private fun getOut(chains: Chains): Path {
         val out = Paths.get(inOut.last()).toAbsolutePath()
-        if (chains == Chains.ALL_NAMED) return out
         var fName = out.fileName.toString()
         fName = when {
-            fName.endsWith(".tsv") -> "${fName.replace("tsv", "")}${chains.name}.tsv"
-            else -> "${fName}_${chains.name}"
+            fName.endsWith(".tsv") -> "${fName.replace("tsv", "")}${chains}.tsv"
+            else -> "${fName}_${chains}"
         }
         return out.parent.resolve(fName)
     }
 
     override fun run0() {
         val samples = inputFiles
-        val chains = chains?.map { name -> Chains.getNamedChains(name) } ?: listOf(Chains.ALL_NAMED)
+        val chains = this.chains?.let { ChainsFilter.parseChainsList(this.chains) }
         val criteria = OverlapUtil.parseCriteria(overlapCriteria)
         val extractors = mutableListOf<OverlapFieldExtractor>()
         extractors += ExtractorUnique(
@@ -109,26 +109,29 @@ class CommandExportOverlap : MiXCRCommand() {
         extractors += TotalFraction()
         val fieldExtractors: List<FieldExtractor<Clone>> =
             CloneSetIO.mkReader(Paths.get(samples[0]), VDJCLibraryRegistry.getDefault()).use { cReader ->
-                CloneFieldsExtractorsFactory
-                    .parseSpec(spec.commandLine().parseResult)
-                    .flatMap { cmdArgs ->
-                        CloneFieldsExtractorsFactory.extract(cmdArgs, cReader, OutputMode.ScriptingFriendly)
-                    }
+                CloneFieldsExtractorsFactory.createExtractors(
+                    CloneFieldsExtractorsFactory
+                        .parsePicocli(spec.commandLine().parseResult), cReader.header, OutputMode.ScriptingFriendly
+                )
             }
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
-        val writers = chains.associateWith { chain ->
+
+        val overlapBrowser = OverlapBrowser(onlyProductive)
+        SmartProgressReporter.startProgressReport(overlapBrowser)
+
+        val countsByChain = overlapBrowser.computeCountsByChain(samples)
+        val chainsToWrite = chains?.intersect(countsByChain.keys) ?: countsByChain.keys
+        val writers = chainsToWrite.associateWith { chain ->
             val writer = InfoWriter(getOut(chain), samples, extractors)
             writer.writeHeader()
             writer
         }
-        val overlapBrowser = OverlapBrowser(chains, onlyProductive)
-        SmartProgressReporter.startProgressReport(overlapBrowser)
-        val counts = overlapBrowser.computeCounts(samples)
+
         val overlap = OverlapUtil.overlap(samples, { true }, criteria.ordering())
         overlap.mkElementsPort().use { port ->
-            overlapBrowser.overlap(counts, port).forEach { row ->
-                for ((namedChains, cloneOverlapGroup) in row) {
-                    writers[namedChains]!!.writeRow(cloneOverlapGroup)
+            overlapBrowser.overlap(countsByChain, port).forEach { row ->
+                for ((chains, cloneOverlapGroup) in row) {
+                    writers[chains]!!.writeRow(cloneOverlapGroup)
                 }
             }
         }
@@ -217,11 +220,11 @@ class CommandExportOverlap : MiXCRCommand() {
 
     companion object {
         @JvmStatic
-        fun mkSpec(): CommandLine.Model.CommandSpec {
+        fun mkSpec(): Model.CommandSpec {
             val export = CommandExportOverlap()
-            val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(export)
+            val spec = Model.CommandSpec.forAnnotatedObject(export)
             export.spec = spec // inject spec manually
-            CloneFieldsExtractorsFactory.addOptionsToSpec(spec, false)
+            CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
             return spec
         }
     }

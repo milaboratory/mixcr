@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
+
 /**
  * Created by poslavsky on 01/09/15.
  */
@@ -62,7 +64,7 @@ public class RunMiXCRTest {
         File tempFile = TempFileManager.getTempFile();
         try (ClnsWriter writer = new ClnsWriter(tempFile)) {
             writer.writeCloneSet(assemble.cloneSet);
-            writer.writeFooter(Collections.emptyList(), null);
+            writer.setFooter(emptyFooter());
         }
         CloneSet read = CloneSetIO.read(tempFile);
 
@@ -114,10 +116,10 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner.getBaseMetaInfo(), align.aligner.getUsedGenes());
+            writer.writeHeader(align.aligner.getBaseMetaInfo(), align.aligner.getUsedGenes());
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
-            writer.writeFooter(Collections.emptyList(), null);
+            writer.setFooter(emptyFooter());
         }
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
@@ -152,10 +154,10 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.header(align.aligner.getBaseMetaInfo(), align.aligner.getUsedGenes());
+            writer.writeHeader(align.aligner.getBaseMetaInfo(), align.aligner.getUsedGenes());
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
-            writer.writeFooter(Collections.emptyList(), null);
+            writer.setFooter(emptyFooter());
         }
 
         try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(tempFile)) {
@@ -182,13 +184,13 @@ public class RunMiXCRTest {
         RunMiXCR.FullSeqAssembleResult assemble = RunMiXCR.assembleContigs(assemble0);
 
         try (VDJCAlignmentsReader reader = align.resultReader()) {
-            for (MiXCRCommandReport r : reader.reports()) {
+            for (MiXCRCommandReport r : reader.getFooter().getReports()) {
                 System.out.println(r);
             }
         }
 
         try (ClnAReader reader = assemble0.resultReader()) {
-            for (MiXCRCommandReport r : reader.reports()) {
+            for (MiXCRCommandReport r : reader.getFooter().getReports()) {
                 System.out.println(r);
             }
         }

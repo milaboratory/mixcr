@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.postanalysis.plots
 
+import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.miplots.toPDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
@@ -105,4 +106,14 @@ object GeneUsage {
         z = GeneUsageRow::weight.name,
         params = params
     )
+
+    fun plotBarPlot(
+        df: DataFrame<GeneUsageRow>,
+        facetBy: String?,
+    ) = StandardPlots.PlotType.BarPlot.plot(
+        df,
+        y = GeneUsageRow::weight.name,
+        primaryGroup = GeneUsageRow::sample.name,
+        facetBy = facetBy
+    ).plot
 }

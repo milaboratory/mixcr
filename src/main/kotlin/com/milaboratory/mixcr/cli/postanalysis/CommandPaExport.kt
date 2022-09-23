@@ -12,24 +12,24 @@
 
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mixcr.cli.MiXCRCommand
-import io.repseq.core.Chains
-import picocli.CommandLine
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
+import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Paths
 
 /**
  *
  */
-abstract class CommandPaExport : MiXCRCommand {
-    @CommandLine.Parameters(
+abstract class CommandPaExport : AbstractMiXCRCommand {
+    @Parameters(
         description = ["Input file with postanalysis results."],
         index = "0",
-        defaultValue = "pa.json.gz"
     )
     lateinit var `in`: String
 
-    @CommandLine.Option(description = ["Export for specific chains only"], names = ["--chains"])
-    var chains: List<String>? = null
+    @Option(description = ["Export for specific chains only"], names = ["--chains"])
+    var chains: Set<String>? = null
 
     private val parsedPaResultFromInput: PaResult by lazy {
         PaResult.readJson(Paths.get(`in`).toAbsolutePath())
@@ -53,10 +53,12 @@ abstract class CommandPaExport : MiXCRCommand {
      */
     protected fun getPaResult(): PaResult = paResultFromConstructor ?: parsedPaResultFromInput
 
+    private val chainsToProcess by lazy { chains?.run { ChainsFilter.parseChainsList(chains) } }
+
     override fun run0() {
-        val set = chains?.map { name: String -> Chains.getNamedChains(name) }?.toSet()
+        val chains = chainsToProcess
         for (r in getPaResult().results) {
-            if (set == null || set.any { c -> c.chains.intersects(r.group.chains.chains) }) {
+            if (chains == null || chains.contains(r.group.chains)) {
                 run(r)
             }
         }

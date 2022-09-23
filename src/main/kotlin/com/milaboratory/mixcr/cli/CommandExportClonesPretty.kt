@@ -33,7 +33,7 @@ import java.util.*
     separator = " ",
     description = ["Export verbose information about clones."]
 )
-class CommandExportClonesPretty : MiXCRCommand() {
+class CommandExportClonesPretty : AbstractMiXCRCommand() {
     @CommandLine.Parameters(index = "0", description = ["clones.[clns|clna]"])
     lateinit var `in`: String
 

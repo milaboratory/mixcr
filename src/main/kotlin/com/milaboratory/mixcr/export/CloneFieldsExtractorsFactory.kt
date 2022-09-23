@@ -12,31 +12,11 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 
-object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
+object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
     override fun allAvailableFields(): List<Field<Clone>> =
         VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) + cloneFields()
-
-    override val defaultPreset: String = "full"
-
-    override val presets: Map<String, List<FieldCommandArgs>> = buildMap {
-        this["min"] = listOf(
-            FieldCommandArgs("-count")
-        ) + VDJCObjectFieldExtractors.presets["min"]!!
-
-        this["fullNoId"] = listOf(
-            FieldCommandArgs("-count"),
-            FieldCommandArgs("-fraction")
-        ) + VDJCObjectFieldExtractors.presets["full"]!!
-
-        this["fullNoIdImputed"] = listOf(
-            FieldCommandArgs("-count"),
-            FieldCommandArgs("-fraction")
-        ) + VDJCObjectFieldExtractors.presets["fullImputed"]!!
-
-        this["full"] = listOf(FieldCommandArgs("-cloneId")) + this["fullNoId"]!!
-        this["fullImputed"] = listOf(FieldCommandArgs("-cloneId")) + this["fullNoIdImputed"]!!
-    }
 
     fun cloneFields(): List<Field<Clone>> = buildList {
         this += FieldParameterless(
@@ -71,7 +51,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             "-tagFractions",
             "All tags with fractions",
             "All tags",
-            "taqFractions"
+            "tagFractions"
         ) { clone: Clone ->
             clone.tagFractions.toString()
         }

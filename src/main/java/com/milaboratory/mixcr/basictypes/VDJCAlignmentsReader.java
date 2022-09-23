@@ -13,9 +13,6 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
-import com.milaboratory.mixcr.cli.MiXCRReport;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
@@ -31,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -44,8 +40,7 @@ import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 public final class VDJCAlignmentsReader implements
         OutputPortCloseable<VDJCAlignments>,
         AlignmentsProvider,
-        VDJCFileHeaderData,
-        ReportsFooterData,
+        MiXCRFileInfo,
         CanReportProgress {
     public static final int DEFAULT_CONCURRENCY = 4;
     public static final int DEFAULT_READ_AHEAD_BLOCKS = 5;
@@ -58,10 +53,10 @@ public final class VDJCAlignmentsReader implements
     long alignmentsBegin;
     PrimitivIBlocks<VDJCAlignments>.Reader reader;
 
-    MiXCRMetaInfo info = null;
+    MiXCRHeader header = null;
     List<VDJCGene> usedGenes;
 
-    private List<MiXCRCommandReport> reports;
+    private MiXCRFooter footer;
 
     PrimitivIState iState;
 
@@ -116,7 +111,7 @@ public final class VDJCAlignmentsReader implements
         this.readAheadBlocks = readAheadBlocks;
         this.vdjcRegistry = vdjcRegistry;
 
-        try (PrimitivI i = input.beginRandomAccessPrimitivI(-FOOTER_LENGTH)) {
+        try (PrimitivI i = input.beginRandomAccessPrimitivI(-FIXED_FOOTER_LENGTH)) {
             reportsStartPosition = i.readLong();
             numberOfAlignments = i.readLong();
             numberOfReads = i.readLong();
@@ -147,9 +142,9 @@ public final class VDJCAlignmentsReader implements
 
             versionInfo = pi.readUTF();
 
-            info = Objects.requireNonNull(pi.readObject(MiXCRMetaInfo.class));
+            header = Objects.requireNonNull(pi.readObject(MiXCRHeader.class));
 
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, info.getAlignerParameters(), vdjcRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, header.getAlignerParameters(), vdjcRegistry);
             this.iState = pi.getState();
         }
 
@@ -157,11 +152,7 @@ public final class VDJCAlignmentsReader implements
         alignmentsBegin = input.getPosition();
 
         try (PrimitivI pi = input.beginRandomAccessPrimitivI(reportsStartPosition)) {
-            reports = new ArrayList<>();
-            int nReports = pi.readInt();
-            for (int i = 0; i < nReports; i++) {
-                reports.add((MiXCRCommandReport) pi.readObject(MiXCRReport.class));
-            }
+            footer = pi.readObject(MiXCRFooter.class);
         }
 
         this.reader = input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsBegin, readAheadBlocks);
@@ -173,14 +164,9 @@ public final class VDJCAlignmentsReader implements
         return reader.getParent().getStats();
     }
 
-    public MiXCRMetaInfo getInfo() {
-        ensureInitialized();
-        return info;
-    }
-
     public synchronized VDJCAlignerParameters getParameters() {
         ensureInitialized();
-        return info.getAlignerParameters();
+        return header.getAlignerParameters();
     }
 
     public synchronized List<VDJCGene> getUsedGenes() {
@@ -189,9 +175,15 @@ public final class VDJCAlignmentsReader implements
     }
 
     @Override
-    public TagsInfo getTagsInfo() {
+    public MiXCRHeader getHeader() {
         ensureInitialized();
-        return info.getTagsInfo();
+        return header;
+    }
+
+    @Override
+    public MiXCRFooter getFooter() {
+        ensureInitialized();
+        return footer;
     }
 
     /**
@@ -202,12 +194,6 @@ public final class VDJCAlignmentsReader implements
     public String getVersionInfo() {
         ensureInitialized();
         return versionInfo;
-    }
-
-    @Override
-    public List<MiXCRCommandReport> reports() {
-        ensureInitialized();
-        return reports;
     }
 
     /**

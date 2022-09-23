@@ -30,7 +30,7 @@ import java.nio.file.Path
     separator = " ",
     description = ["Output information about MiXCR version which generated the file."]
 )
-class CommandVersionInfo : MiXCRCommand() {
+class CommandVersionInfo : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["input_file"])
     lateinit var inputFile: Path
 

@@ -22,17 +22,34 @@ import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.AminoAcidSequence.translate
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Sequence
-import com.milaboratory.core.sequence.TranslationParameters.*
+import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithIncompleteCodon
+import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon
+import com.milaboratory.core.sequence.TranslationParameters.FromRightWithIncompleteCodon
 import com.milaboratory.mixcr.util.RandomizedTest
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneFeature
-import io.repseq.core.GeneFeature.*
-import io.repseq.core.ReferencePoint.*
+import io.repseq.core.GeneFeature.CDR2
+import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneFeature.FR3
+import io.repseq.core.GeneFeature.FR4
+import io.repseq.core.GeneFeature.JCDR3Part
+import io.repseq.core.GeneFeature.VCDR3Part
+import io.repseq.core.GeneFeature.VJJunction
+import io.repseq.core.ReferencePoint.CDR2Begin
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.CDR3End
+import io.repseq.core.ReferencePoint.FR3Begin
+import io.repseq.core.ReferencePoint.FR4End
+import io.repseq.core.ReferencePoint.JBegin
+import io.repseq.core.ReferencePoint.JBeginTrimmed
+import io.repseq.core.ReferencePoint.VEnd
+import io.repseq.core.ReferencePoint.VEndTrimmed
 import io.repseq.core.ReferencePoints
 import io.repseq.core.ReferenceUtil
+import org.junit.Ignore
 import org.junit.Test
 import kotlin.random.Random
 
@@ -494,6 +511,7 @@ class MutationsDescriptionsTest {
         (CDR2AAAlignment.target + FR3AAAlignment.target + CDR3AAAlignment.target + FR4AAAlignment.target) shouldBe expectedFullAATarget
     }
 
+    @Ignore("There is no way to build consistent difference. We can just try our best")
     @Test
     fun `randomized test of difference`() {
         RandomizedTest.randomized(::testDifference, numberOfRuns = 100000)

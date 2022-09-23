@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.export.OutputMode.*
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
@@ -19,6 +19,99 @@ import picocli.CommandLine
 import java.io.BufferedReader
 import java.io.FileReader
 import java.util.*
+
+abstract class FieldExtractorsFactoryNew<T : Any> {
+    val fields: Array<Field<T>> by lazy {
+        val initialized = allAvailableFields()
+        check(initialized.map { it.priority }.distinct().size == initialized.size) {
+            initialized.groupBy { it.priority }.values
+                .filter { it.size > 1 }
+                .map { fields -> fields.map { it.cmdArgName } }
+                .toString() + " have the same priority"
+        }
+        check(initialized.map { it.cmdArgName }.distinct().size == initialized.size)
+        initialized.sortedBy { it.priority }.toTypedArray()
+    }
+
+    private val fieldsMap by lazy {
+        fields.associateBy { it.cmdArgName.lowercase() }
+    }
+
+    fun getNArgsForField(fieldName: String) =
+        (fieldsMap[fieldName.lowercase()] ?: throw IllegalArgumentException("No such field: $fieldName")).nArguments
+
+    protected abstract fun allAvailableFields(): List<Field<T>>
+
+    fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec) {
+        for (field in fields) {
+            spec.addOption(
+                CommandLine.Model.OptionSpec
+                    .builder(field.cmdArgName)
+                    .description(field.description)
+                    .required(false)
+                    .type(if (field.nArguments > 0) Array<String>::class.java else Boolean::class.javaPrimitiveType)
+                    .arity(field.nArguments.toString())
+                    .paramLabel(field.metaVars)
+                    .hideParamSyntax(true)
+                    .hidden(field.deprecation != null)
+                    .build()
+            )
+        }
+    }
+
+    /** Creates field extractors from field descriptions */
+    fun createExtractors(
+        fields: List<ExportFieldDescription>,
+        header: MiXCRHeader,
+        mode: OutputMode
+    ): List<FieldExtractor<T>> =
+        fields.map { fieldDescr ->
+            val eField = fieldsMap[fieldDescr.field.lowercase()]
+                ?: throw IllegalArgumentException("No field ${fieldDescr.field}.")
+
+            when (eField.nArguments) {
+                0 -> {
+                    require(
+                        fieldDescr.args.isEmpty() ||
+                                (fieldDescr.args.size == 1 &&
+                                        (fieldDescr.args[0].lowercase() in setOf("true", "false")))
+                    )
+                    eField.create(mode, header, emptyArray())
+                }
+
+                else -> {
+                    require(fieldDescr.args.size == eField.nArguments)
+                    eField.create(mode, header, fieldDescr.args.toTypedArray())
+                }
+            }
+        }
+
+    private fun hasField(name: String): Boolean =
+        fields.any { field -> name.equals(field.cmdArgName, ignoreCase = true) }
+
+    /** Parses Picocli's parsing result into a list of export fields */
+    fun parsePicocli(parseResult: CommandLine.ParseResult): List<ExportFieldDescription> = buildList {
+        for (opt in parseResult.matchedOptions()) {
+            // non field options are skipped, unknown options are caught by picocli itself
+            // (leading to a corresponding error message being generated)
+            if (!hasField(opt.names()[0])) continue
+
+            val arity = opt.arity().min()
+            val args: Array<String>
+            if (arity > 0) {
+                val value = opt.getValue<Array<String>>()
+                // if the sam option was observed multiple times, picocli aggregates all it's arguments into
+                // one long array
+                args = value.copyOfRange(0, arity)
+                // setting shrunk array back to the option, to be parsed on the next occurrence
+                opt.setValue(value.copyOfRange(arity, value.size))
+            } else
+                args = emptyArray()
+
+            add(ExportFieldDescription(opt.names()[0], args.asList()))
+        }
+    }
+}
 
 abstract class FieldExtractorsFactory<T : Any> {
     val fields: Array<Field<T>> by lazy {
@@ -40,7 +133,7 @@ abstract class FieldExtractorsFactory<T : Any> {
     protected abstract fun allAvailableFields(): List<Field<T>>
 
     fun createExtractors(
-        header: VDJCFileHeaderData,
+        header: MiXCRHeader,
         cmdParseResult: CommandLine.ParseResult
     ): List<FieldExtractor<T>> {
         val humanReadable = cmdParseResult.matchedOption("--with-spaces")?.getValue<Boolean>() ?: false
@@ -123,7 +216,7 @@ abstract class FieldExtractorsFactory<T : Any> {
 
     fun extract(
         cmd: FieldCommandArgs,
-        header: VDJCFileHeaderData,
+        header: MiXCRHeader,
         mode: OutputMode
     ): List<FieldExtractor<T>> {
         val field = fields.firstOrNull { f -> cmd.field == f.cmdArgName }
@@ -135,6 +228,7 @@ abstract class FieldExtractorsFactory<T : Any> {
                 )
                 listOf(field.create(mode, header, emptyArray()))
             }
+
             else -> buildList {
                 var i = 0
                 while (i < cmd.args.size) {

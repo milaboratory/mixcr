@@ -39,8 +39,11 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
             CDR3Metrics = "cdr3metrics",
             Diversity = "diversity",
             VUsage = "vUsage",
-            JUsage = "JUsage",
-            VJUsage = "VJUsage",
+            JUsage = "jUsage",
+            VJUsage = "vjUsage",
+            VFamilyUsage = "vFamilyUsage",
+            JFamilyUsage = "jFamilyUsage",
+            VJFamilyUsage = "vjFamilyUsage",
             IsotypeUsage = "IsotypeUsage",
             CDR3Spectratype = "CDR3Spectratype",
             VSpectratype = "VSpectratype",
@@ -48,6 +51,9 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
     public CDR3MetricsParameters cdr3metrics = new CDR3MetricsParameters();
     public DiversityParameters diversity = new DiversityParameters();
+    public MetricParameters vFamilyUsage = new MetricParameters();
+    public MetricParameters jFamilyUsage = new MetricParameters();
+    public MetricParameters vjFamilyUsage = new MetricParameters();
     public MetricParameters vUsage = new MetricParameters();
     public MetricParameters jUsage = new MetricParameters();
     public MetricParameters vjUsage = new MetricParameters();
@@ -58,7 +64,11 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
     public List<CharacteristicGroup<?, Clone>> getGroups(Chains chains, TagsInfo tagsInfo) {
         for (WithParentAndTags wpt : Arrays.asList(
-                cdr3metrics, diversity, vUsage, jUsage, vjUsage, isotypeUsage, cdr3Spectratype, vSpectratype, vSpectratypeMean
+                cdr3metrics, diversity,
+                vUsage, jUsage, vjUsage,
+                vFamilyUsage, jFamilyUsage, vjFamilyUsage,
+                isotypeUsage,
+                cdr3Spectratype, vSpectratype, vSpectratypeMean
         )) {
             wpt.setParent(this);
             wpt.setTagsInfo(tagsInfo);
@@ -86,6 +96,31 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
 
                 new CharacteristicGroup<>(VJUsage,
                         Arrays.asList(AdditiveCharacteristics.vjSegmentUsage(
+                                vjUsage.preprocessor(chains),
+                                vjUsage.weightFunction()
+                        )),
+                        Arrays.asList(new GroupSummary.VJUsage<>())
+                ),
+
+                new CharacteristicGroup<>(VFamilyUsage,
+                        Arrays.asList(AdditiveCharacteristics.familyUsage(
+                                vUsage.preprocessor(chains),
+                                vUsage.weightFunction(),
+                                GeneType.Variable)),
+                        Arrays.asList(new GroupSummary.Simple<>())
+                ),
+
+                new CharacteristicGroup<>(JFamilyUsage,
+                        Arrays.asList(AdditiveCharacteristics.familyUsage(
+                                jUsage.preprocessor(chains),
+                                jUsage.weightFunction(),
+                                GeneType.Joining
+                        )),
+                        Arrays.asList(new GroupSummary.Simple<>())
+                ),
+
+                new CharacteristicGroup<>(VJFamilyUsage,
+                        Arrays.asList(AdditiveCharacteristics.vjFamilyUsage(
                                 vjUsage.preprocessor(chains),
                                 vjUsage.weightFunction()
                         )),
@@ -276,11 +311,11 @@ public class PostanalysisParametersIndividual extends PostanalysisParameters {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PostanalysisParametersIndividual that = (PostanalysisParametersIndividual) o;
-        return Objects.equals(cdr3metrics, that.cdr3metrics) && Objects.equals(diversity, that.diversity) && Objects.equals(vUsage, that.vUsage) && Objects.equals(jUsage, that.jUsage) && Objects.equals(vjUsage, that.vjUsage) && Objects.equals(isotypeUsage, that.isotypeUsage);
+        return Objects.equals(cdr3metrics, that.cdr3metrics) && Objects.equals(diversity, that.diversity) && Objects.equals(vFamilyUsage, that.vFamilyUsage) && Objects.equals(jFamilyUsage, that.jFamilyUsage) && Objects.equals(vjFamilyUsage, that.vjFamilyUsage) && Objects.equals(vUsage, that.vUsage) && Objects.equals(jUsage, that.jUsage) && Objects.equals(vjUsage, that.vjUsage) && Objects.equals(isotypeUsage, that.isotypeUsage) && Objects.equals(cdr3Spectratype, that.cdr3Spectratype) && Objects.equals(vSpectratype, that.vSpectratype) && Objects.equals(vSpectratypeMean, that.vSpectratypeMean);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(cdr3metrics, diversity, vUsage, jUsage, vjUsage, isotypeUsage);
+        return Objects.hash(cdr3metrics, diversity, vFamilyUsage, jFamilyUsage, vjFamilyUsage, vUsage, jUsage, vjUsage, isotypeUsage, cdr3Spectratype, vSpectratype, vSpectratypeMean);
     }
 }

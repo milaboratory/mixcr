@@ -41,8 +41,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters.PostFiltering.NoFiltering;
-import static com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters.PostFiltering.OnlyFullyDefined;
 import static io.repseq.core.GeneType.Joining;
 import static io.repseq.core.GeneType.Variable;
 
@@ -341,23 +339,13 @@ public final class FullSeqAssembler {
 
         // assert checkNonIntersectingGroups(branchSequences);
 
+        PostFilteringFunc postFilter = parameters.getPostFilter();
         Clone[] result = branchSequences.stream()
                 .map(branch -> buildClone(clean(branch)))
-                .filter(clone -> {
-                    if (parameters.getPostFiltering() != NoFiltering) {
-                        for (GeneFeature assemblingRegion : Objects.requireNonNull(parameters.getAssemblingRegions()).getFeatures()) {
-                            NucleotideSequence nFeature = clone.getNFeature(assemblingRegion);
-                            if (nFeature == null) return false;
-                            if (parameters.getPostFiltering() == OnlyFullyDefined && nFeature.containsWildcards()) {
-                                return false;
-                            }
-                        }
-                    }
-                    return true;
-                })
+                .filter(postFilter::accept)
                 .toArray(Clone[]::new);
 
-        if (result.length == 0 && parameters.getPostFiltering() == NoFiltering) {
+        if (result.length == 0 && parameters.getPostFiltering() == PostFiltering.NoFiltering.INSTANCE) {
             // In case assemble procedure failed to assemble even a single clonotype, returning original
             // clonotype, to prevent diversity losses
             report.onEmptyOutput(clone);
@@ -2100,10 +2088,12 @@ public final class FullSeqAssembler {
      * @param assemblingFeature clonal assembling feature
      * @return true if gene is compatible
      */
-    public static boolean checkGeneCompatibility(VDJCHit hit, GeneFeature assemblingFeature) {
-        GeneFeature vFeature = hit.getAlignedFeature();
+    public static boolean checkGeneCompatibility(VDJCHit hit, GeneFeature[] assemblingFeature) {
+        GeneFeature alignedFeature = hit.getAlignedFeature();
+        GeneFeature targetFeature = GeneFeature.intersection(new GeneFeature(assemblingFeature), alignedFeature);
+        if (targetFeature == null)
+            return false;
         VDJCGene gene = hit.getGene();
-        GeneFeature targetFeature = GeneFeature.intersection(assemblingFeature, vFeature);
         return gene.getPartitioning().isAvailable(targetFeature);
     }
 }

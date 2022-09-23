@@ -11,10 +11,7 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.annotations.Serializable;
@@ -22,6 +19,7 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +49,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     public CloneAssemblerParameters(@JsonProperty("assemblingFeatures") GeneFeature[] assemblingFeatures,
                                     @JsonProperty("minimalClonalSequenceLength") int minimalClonalSequenceLength,
                                     @JsonProperty("qualityAggregationType") QualityAggregationType qualityAggregationType,
-                                    @JsonProperty("cloneClusteringParameters") CloneClusteringParameters cloneClusteringParameters,
+                                    @JsonMerge @JsonProperty("cloneClusteringParameters") CloneClusteringParameters cloneClusteringParameters,
                                     @JsonProperty("cloneFactoryParameters") CloneFactoryParameters cloneFactoryParameters,
                                     @JsonProperty("separateByV") boolean separateByV,
                                     @JsonProperty("separateByJ") boolean separateByJ,
@@ -236,6 +234,23 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
 
     public CloneAssemblerParameters setSeparateByC(boolean separateByC) {
         this.separateByC = separateByC;
+        return this;
+    }
+
+    public CloneAssemblerParameters setSeparateBy(GeneType gt, boolean value) {
+        switch (Objects.requireNonNull(gt)) {
+            case Variable:
+                separateByV = value;
+                break;
+            case Joining:
+                separateByJ = value;
+                break;
+            case Constant:
+                separateByC = value;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
         return this;
     }
 

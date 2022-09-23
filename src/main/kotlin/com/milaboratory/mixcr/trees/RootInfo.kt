@@ -9,12 +9,16 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
+@file:Suppress("LocalVariableName")
+
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.VJPair
+import com.milaboratory.mixcr.util.readPair
+import com.milaboratory.mixcr.util.writePair
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
@@ -45,31 +49,26 @@ data class RootInfo(
 ) {
     class SerializerImpl : BasicSerializer<RootInfo>() {
         override fun write(output: PrimitivO, obj: RootInfo) {
-            output.writeObject(obj.sequence1.V)
-            output.writeObject(obj.sequence1.J)
-            output.writeObject(obj.partitioning.V)
-            output.writeObject(obj.partitioning.J)
-            output.writeObject(obj.rangeInCDR3.V)
-            output.writeObject(obj.rangeInCDR3.J)
+            output.writePair(obj.sequence1)
+            output.writePair(obj.partitioning)
+            output.writePair(obj.rangeInCDR3)
             output.writeObject(obj.reconstructedNDN)
             output.writeObject(obj.VJBase)
         }
 
-        override fun read(input: PrimitivI): RootInfo = RootInfo(
-            VJPair(
-                input.readObjectRequired(),
-                input.readObjectRequired()
-            ),
-            VJPair(
-                input.readObjectRequired(),
-                input.readObjectRequired()
-            ),
-            VJPair(
-                input.readObjectRequired(),
-                input.readObjectRequired()
-            ),
-            input.readObjectRequired(),
-            input.readObjectRequired()
-        )
+        override fun read(input: PrimitivI): RootInfo {
+            val sequence1 = input.readPair<NucleotideSequence>()
+            val partitioning = input.readPair<ReferencePoints>()
+            val rangeInCDR3 = input.readPair<Range>()
+            val reconstructedNDN = input.readObjectRequired<NucleotideSequence>()
+            val VJBase = input.readObjectRequired<VJBase>()
+            return RootInfo(
+                sequence1,
+                partitioning,
+                rangeInCDR3,
+                reconstructedNDN,
+                VJBase
+            )
+        }
     }
 }

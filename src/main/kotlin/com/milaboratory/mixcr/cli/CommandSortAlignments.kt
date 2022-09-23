@@ -35,7 +35,7 @@ import java.io.OutputStream
     separator = " ",
     description = ["Sort alignments in vdjca file by read id."]
 )
-class CommandSortAlignments : MiXCRCommand() {
+class CommandSortAlignments : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["alignments.vdjca"], index = "0")
     lateinit var `in`: String
 
@@ -54,7 +54,10 @@ class CommandSortAlignments : MiXCRCommand() {
                 VDJCAlignmentsSerializer(reader)
             ) { sorted ->
                 VDJCAlignmentsWriter(out).use { writer ->
-                    writer.header(reader.info.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) }, reader.usedGenes)
+                    writer.writeHeader(
+                        reader.header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) },
+                        reader.usedGenes
+                    )
                     val counter = CountingOutputPort(sorted)
                     SmartProgressReporter.startProgressReport(
                         "Writing sorted alignments",
@@ -64,7 +67,7 @@ class CommandSortAlignments : MiXCRCommand() {
                         writer.write(res)
                     }
                     writer.setNumberOfProcessedReads(reader.numberOfReads)
-                    writer.writeFooter(reader.reports(), null)
+                    writer.setFooter(reader.footer)
                 }
             }
         }

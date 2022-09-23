@@ -16,7 +16,7 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.extension
 
-abstract class CommandExportShmTreesAbstract : MiXCRCommand() {
+abstract class CommandExportShmTreesAbstract : AbstractMiXCRCommand() {
     @Parameters(
         index = "0",
         paramLabel = "trees.$shmFileExtension",

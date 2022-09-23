@@ -16,6 +16,8 @@
     },
     "minimalContigLength": 20,
     "alignedRegionsOnly": false,
-    "postFiltering": "NoFiltering"
+    "postFiltering": {
+      "type": "NoFiltering"
+    }
   }
 }

@@ -12,28 +12,10 @@
 package com.milaboratory.mixcr.qc
 
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.cli.AlignerReport
-import com.milaboratory.mixcr.cli.ChainUsageStats
-import com.milaboratory.mixcr.cli.ChainUsageStatsRecord
-import com.milaboratory.mixcr.cli.CloneAssemblerReport
-import com.milaboratory.mixcr.cli.MiXCRCommandReport
-import io.repseq.core.Chains.DEFAULT_EXPORT_CHAINS_LIST
-import io.repseq.core.Chains.IGH_NAMED
-import io.repseq.core.Chains.IGK_NAMED
-import io.repseq.core.Chains.IGL_NAMED
-import io.repseq.core.Chains.NamedChains
-import io.repseq.core.Chains.TRAD_NAMED
-import io.repseq.core.Chains.TRB_NAMED
-import io.repseq.core.Chains.TRG_NAMED
-import jetbrains.letsPlot.Pos
-import jetbrains.letsPlot.Stat
-import jetbrains.letsPlot.coordFlip
-import jetbrains.letsPlot.elementBlank
-import jetbrains.letsPlot.elementLine
-import jetbrains.letsPlot.elementText
+import com.milaboratory.mixcr.cli.*
+import io.repseq.core.Chains.*
+import jetbrains.letsPlot.*
 import jetbrains.letsPlot.geom.geomBar
-import jetbrains.letsPlot.ggplot
-import jetbrains.letsPlot.ggsize
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.label.xlab
@@ -42,9 +24,7 @@ import jetbrains.letsPlot.sampling.samplingNone
 import jetbrains.letsPlot.scale.guideLegend
 import jetbrains.letsPlot.scale.scaleFillManual
 import jetbrains.letsPlot.scale.scaleXDiscrete
-import jetbrains.letsPlot.theme
 import java.nio.file.Path
-import kotlin.io.path.name
 
 
 object ChainUsage {
@@ -53,9 +33,8 @@ object ChainUsage {
         files: List<Path>,
         percent: Boolean,
         showNonFunctional: Boolean,
-        chains: List<NamedChains>,
         hw: SizeParameters? = null
-    ) = chainUsage(files, percent, showNonFunctional, chains, hw) {
+    ) = chainUsage(files, percent, showNonFunctional, hw) {
         (it.first() as AlignerReport).chainUsage
     }
 
@@ -63,10 +42,9 @@ object ChainUsage {
         files: List<Path>,
         percent: Boolean,
         showNonFunctional: Boolean,
-        chains: List<NamedChains>,
         hw: SizeParameters? = null
     ) =
-        chainUsage(files, percent, showNonFunctional, chains, hw) {
+        chainUsage(files, percent, showNonFunctional, hw) {
             it.filterIsInstance<CloneAssemblerReport>().first().clonalChainUsage
         } + ggtitle("Clonal chain usage")
 
@@ -74,7 +52,6 @@ object ChainUsage {
         files: List<Path>,
         percent: Boolean,
         showNonFunctional: Boolean,
-        chains: List<NamedChains>,
         hw: SizeParameters? = null,
         usageExtractor: (List<MiXCRCommandReport>) -> ChainUsageStats
     ) = run {
@@ -83,7 +60,7 @@ object ChainUsage {
         else
             listOf(typeProductive)
 
-        val file2report = files.associate { it.fileName.name to usageExtractor(IOUtil.extractReports(it)) }
+        val file2report = files.associate { it.fileName.toString() to usageExtractor(IOUtil.extractReports(it)) }
 
         val data = mapOf<Any, MutableList<Any?>>(
             "sample" to mutableListOf(),
@@ -91,12 +68,12 @@ object ChainUsage {
             "chain" to mutableListOf(),
         )
 
+        val chains = file2report.values.flatMap { it.chains.keys }.toSet()
+
         for ((s, rep) in file2report) {
             val erec = ChainUsageStatsRecord.EMPTY
 
-            val map = DEFAULT_EXPORT_CHAINS_LIST
-                .filter { chains.contains(it) }
-                .associateWith { rep.chains.getOrDefault(it, erec) }
+            val map = chains.associateWith { rep.chains.getOrDefault(it, erec) }
 
             val total = chains.sumOf { rep.chains[it]?.total ?: 0L }
             val norm: Double = if (percent) (total / 100.0) else 1.0
@@ -104,7 +81,7 @@ object ChainUsage {
             for ((k, v) in map) {
                 for (type in typesToShow) {
                     data["sample"]!! += s
-                    data["chain"]!! += (k.name + type)
+                    data["chain"]!! += (k.toString() + type)
                     data["value"]!! += when (type) {
                         typeProductive -> v.productive().toDouble() / norm
                         typeOOF -> v.isOOF.toDouble() / norm
@@ -129,7 +106,7 @@ object ChainUsage {
         }
 
         plt += scaleXDiscrete(
-            breaks = files.map { it.fileName.name },
+            breaks = files.map { it.fileName.toString() },
         )
 
         fun getData(param: String) = chains.flatMap { typesToShow.map { t -> chainsData[it]!![param]!![t]!! } }
@@ -176,123 +153,163 @@ object ChainUsage {
     private const val typeStops = "stops"
 
     private val chainsData = mapOf(
-        TRAD_NAMED to mapOf(
+        TRAD to mapOf(
             "values" to mapOf(
-                typeProductive to "#105BCC",   // Chains.TRAD_NAMED
-                typeStops to "#2D93FA",   // Chains.TRAD_NAMED STOPS
-                typeOOF to "#99CCFF",   // Chains.TRAD_NAMED OOF
+                typeProductive to "#105BCC",   // Chains.TRAD
+                typeStops to "#2D93FA",   // Chains.TRAD STOPS
+                typeOOF to "#99CCFF",   // Chains.TRAD OOF
             ),
 
             "breaks" to mapOf(
-                typeProductive to (TRAD_NAMED.name + typeProductive),
-                typeStops to (TRAD_NAMED.name + typeStops),
-                typeOOF to (TRAD_NAMED.name + typeOOF),
+                typeProductive to ("$TRAD$typeProductive"),
+                typeStops to ("$TRAD$typeStops"),
+                typeOOF to ("$TRAD$typeOOF"),
             ),
 
             "labels" to mapOf(
-                typeProductive to (TRAD_NAMED.name),
-                typeStops to (TRAD_NAMED.name + " (stops)"),
-                typeOOF to (TRAD_NAMED.name + " (OOF)"),
+                typeProductive to (TRAD.toString()),
+                typeStops to ("$TRAD (stops)"),
+                typeOOF to ("$TRAD (OOF)"),
             )
         ),
 
-        TRB_NAMED to mapOf(
+        TRA to mapOf(
             "values" to mapOf(
-                typeProductive to "#198020",    // Chains.TRB_NAMED
-                typeStops to "#42B842",    // Chains.TRB_NAMED STOPS
-                typeOOF to "#99E099",    // Chains.TRB_NAMED OOF
+                typeProductive to "#105BCC",   // Chains.TRA
+                typeStops to "#2D93FA",   // Chains.TRA STOPS
+                typeOOF to "#99CCFF",   // Chains.TRA OOF
             ),
 
             "breaks" to mapOf(
-                typeProductive to (TRB_NAMED.name + typeProductive),
-                typeStops to (TRB_NAMED.name + typeStops),
-                typeOOF to (TRB_NAMED.name + typeOOF),
+                typeProductive to ("$TRA$typeProductive"),
+                typeStops to ("$TRA$typeStops"),
+                typeOOF to ("$TRA$typeOOF"),
             ),
 
             "labels" to mapOf(
-                typeProductive to (TRB_NAMED.name),
-                typeStops to (TRB_NAMED.name + " (stops)"),
-                typeOOF to (TRB_NAMED.name + " (OOF)"),
+                typeProductive to (TRA.toString()),
+                typeStops to ("$TRA (stops)"),
+                typeOOF to ("$TRA (OOF)"),
             )
         ),
 
-        TRG_NAMED to mapOf(
+        TRD to mapOf(
             "values" to mapOf(
-                typeProductive to "#5F31CC",    // Chains.TRG_NAMED
-                typeStops to "#845CFF",    // Chains.TRG_NAMED STOPS
-                typeOOF to "#C1ADFF",    // Chains.TRG_NAMED OOF
+                typeProductive to "#068A94",   // Chains.TRD
+                typeStops to "#27C2C2",   // Chains.TRD STOPS
+                typeOOF to "#90E0E0",   // Chains.TRD OOF
             ),
 
             "breaks" to mapOf(
-                typeProductive to (TRG_NAMED.name + typeProductive),
-                typeStops to (TRG_NAMED.name + typeStops),
-                typeOOF to (TRG_NAMED.name + typeOOF),
+                typeProductive to ("$TRD$typeProductive"),
+                typeStops to ("$TRD$typeStops"),
+                typeOOF to ("$TRD$typeOOF"),
             ),
 
             "labels" to mapOf(
-                typeProductive to (TRG_NAMED.name),
-                typeStops to (TRG_NAMED.name + " (stops)"),
-                typeOOF to (TRG_NAMED.name + " (OOF)"),
+                typeProductive to (TRD.toString()),
+                typeStops to ("$TRD (stops)"),
+                typeOOF to ("$TRD (OOF)"),
             )
         ),
 
-        IGH_NAMED to mapOf(
+        TRB to mapOf(
             "values" to mapOf(
-                typeProductive to "#C26A27",    // Chains.IGH_NAMED
-                typeStops to "#FF9429",    // Chains.IGH_NAMED STOPS
-                typeOOF to "#FFCB8F",    // Chains.IGH_NAMED OOF
+                typeProductive to "#198020",    // Chains.TRB
+                typeStops to "#42B842",    // Chains.TRB STOPS
+                typeOOF to "#99E099",    // Chains.TRB OOF
             ),
 
             "breaks" to mapOf(
-                typeProductive to (IGH_NAMED.name + typeProductive),
-                typeStops to (IGH_NAMED.name + typeStops),
-                typeOOF to (IGH_NAMED.name + typeOOF),
+                typeProductive to ("$TRB$typeProductive"),
+                typeStops to ("$TRB$typeStops"),
+                typeOOF to ("$TRB$typeOOF"),
             ),
 
             "labels" to mapOf(
-                typeProductive to (IGH_NAMED.name),
-                typeStops to (IGH_NAMED.name + " (stops)"),
-                typeOOF to (IGH_NAMED.name + " (OOF)"),
+                typeProductive to (TRB.toString()),
+                typeStops to ("$TRB (stops)"),
+                typeOOF to ("$TRB (OOF)"),
             )
         ),
 
-        IGK_NAMED to mapOf(
+        TRG to mapOf(
             "values" to mapOf(
-                typeProductive to "#A324B2",    // Chains.IGK_NAMED
-                typeStops to "#E553E5",    // Chains.IGK_NAMED STOPS
-                typeOOF to "#FAAAFA",    // Chains.IGK_NAMED OOF
+                typeProductive to "#5F31CC",    // Chains.TRG
+                typeStops to "#845CFF",    // Chains.TRG STOPS
+                typeOOF to "#C1ADFF",    // Chains.TRG OOF
             ),
 
             "breaks" to mapOf(
-                typeProductive to (IGK_NAMED.name + typeProductive),
-                typeStops to (IGK_NAMED.name + typeStops),
-                typeOOF to (IGK_NAMED.name + typeOOF),
+                typeProductive to ("$TRG$typeProductive"),
+                typeStops to ("$TRG$typeStops"),
+                typeOOF to ("$TRG$typeOOF"),
             ),
 
             "labels" to mapOf(
-                typeProductive to (IGK_NAMED.name),
-                typeStops to (IGK_NAMED.name + " (stops)"),
-                typeOOF to (IGK_NAMED.name + " (OOF)"),
+                typeProductive to (TRG.toString()),
+                typeStops to ("$TRG (stops)"),
+                typeOOF to ("$TRG (OOF)"),
             )
         ),
 
-        IGL_NAMED to mapOf(
+        IGH to mapOf(
             "values" to mapOf(
-                typeProductive to "#AD3757",    // Chains.IGL_NAMED
-                typeStops to "#F05670",    // Chains.IGL_NAMED STOPS
-                typeOOF to "#FFADBA",    // Chains.IGL_NAMED OOF
+                typeProductive to "#C26A27",    // Chains.IGH
+                typeStops to "#FF9429",    // Chains.IGH STOPS
+                typeOOF to "#FFCB8F",    // Chains.IGH OOF
             ),
 
             "breaks" to mapOf(
-                typeProductive to (IGL_NAMED.name + typeProductive),
-                typeStops to (IGL_NAMED.name + typeStops),
-                typeOOF to (IGL_NAMED.name + typeOOF),
+                typeProductive to ("$IGH$typeProductive"),
+                typeStops to ("$IGH$typeStops"),
+                typeOOF to ("$IGH$typeOOF"),
             ),
 
             "labels" to mapOf(
-                typeProductive to (IGL_NAMED.name),
-                typeStops to (IGL_NAMED.name + " (stops)"),
-                typeOOF to (IGL_NAMED.name + " (OOF)"),
+                typeProductive to (IGH.toString()),
+                typeStops to ("$IGH (stops)"),
+                typeOOF to ("$IGH (OOF)"),
+            )
+        ),
+
+        IGK to mapOf(
+            "values" to mapOf(
+                typeProductive to "#A324B2",    // Chains.IGK
+                typeStops to "#E553E5",    // Chains.IGK STOPS
+                typeOOF to "#FAAAFA",    // Chains.IGK OOF
+            ),
+
+            "breaks" to mapOf(
+                typeProductive to ("$IGK$typeProductive"),
+                typeStops to ("$IGK$typeStops"),
+                typeOOF to ("$IGK$typeOOF"),
+            ),
+
+            "labels" to mapOf(
+                typeProductive to (IGK.toString()),
+                typeStops to ("$IGK (stops)"),
+                typeOOF to ("$IGK (OOF)"),
+            )
+        ),
+
+        IGL to mapOf(
+            "values" to mapOf(
+                typeProductive to "#AD3757",    // Chains.IGL
+                typeStops to "#F05670",    // Chains.IGL STOPS
+                typeOOF to "#FFADBA",    // Chains.IGL OOF
+            ),
+
+            "breaks" to mapOf(
+                typeProductive to ("$IGL$typeProductive"),
+                typeStops to ("$IGL$typeStops"),
+                typeOOF to ("$IGL$typeOOF"),
+            ),
+
+            "labels" to mapOf(
+                typeProductive to (IGL.toString()),
+                typeStops to ("$IGL (stops)"),
+                typeOOF to ("$IGL (OOF)"),
             )
         )
     )

@@ -27,20 +27,21 @@ import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.LambdaSemaphore
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.StringUtil
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 import java.nio.file.Paths
 
-@CommandLine.Command(name = "overlap", sortOptions = false, separator = " ", description = ["Overlap analysis"])
+@Command(name = "overlap", sortOptions = false, separator = " ", description = ["Overlap analysis"])
 class CommandPaOverlap : CommandPa() {
-    @CommandLine.Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
+    @Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
     var overlapCriteria = "CDR3|AA|V|J"
 
-    @CommandLine.Option(
+    @Option(
         description = ["Aggregate samples in groups by specified metadata columns"],
         names = ["--factor-by"],
         split = ","
     )
-    var factoryBy: List<String> = mutableListOf()
+    var factoryBy = mutableListOf<String>()
 
     private val parameters: PostanalysisParametersOverlap by lazy {
         val result = PostanalysisParametersPreset.getByNameOverlap("default")
@@ -59,7 +60,7 @@ class CommandPaOverlap : CommandPa() {
         if (factoryBy.isEmpty()) {
             OverlapUtil.overlap(
                 samples,
-                IncludeChains(group.chains.chains),
+                IncludeChains(group.chains, false),
                 OverlapUtil.parseCriteria(overlapCriteria).ordering()
             )
         } else {
@@ -79,7 +80,7 @@ class CommandPaOverlap : CommandPa() {
             val group2samples = mutableMapOf<String, MutableList<String>>()
             for (i in mSamples.indices) {
                 val sample = meta2sample[mSamples[i]] ?: continue
-                val aggGroup = factoryBy.joinToString(",") { metadata[it]!![i].toString() }
+                val aggGroup = factoryBy.joinToString(",") { metadata[it.lowercase()]!![i].toString() }
                 group2samples.computeIfAbsent(aggGroup) { mutableListOf() }
                     .add(sample)
             }
@@ -91,7 +92,7 @@ class CommandPaOverlap : CommandPa() {
                 val reader = CloneReaderMerger(value.map {
                     OverlapUtil.mkCheckedReader(
                         Paths.get(it),
-                        IncludeChains(group.chains.chains),
+                        IncludeChains(group.chains, false),
                         concurrencyLimiter
                     )
                 })
@@ -108,7 +109,8 @@ class CommandPaOverlap : CommandPa() {
     override fun run(group: IsolationGroup, samples: List<String>): PaResultByGroup {
         val overlapDataset = overlapDataset(group, samples)
         val groups = parameters.getGroups(
-            overlapDataset.datasetIds.size,  // we do not specify chains here, since we will filter
+            overlapDataset.datasetIds.size,
+            // we do not specify chains here, since we will filter
             // each dataset individually before overlap to speed up computations
             null,
             tagsInfo

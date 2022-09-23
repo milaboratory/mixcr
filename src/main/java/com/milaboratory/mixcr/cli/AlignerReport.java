@@ -132,7 +132,7 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
 
     @Override
     public String command() {
-        return CommandAlign.ALIGN_COMMAND_NAME;
+        return CommandAlign.COMMAND_NAME;
     }
 
     @Override

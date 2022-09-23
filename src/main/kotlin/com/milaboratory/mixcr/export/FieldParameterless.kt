@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.VDJCFileHeaderData
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.export.OutputMode.HumanFriendly
 import com.milaboratory.mixcr.export.OutputMode.ScriptingFriendly
 
@@ -34,7 +34,7 @@ abstract class FieldParameterless<T : Any> protected constructor(
 
     override fun create1(
         outputMode: OutputMode,
-        headerData: VDJCFileHeaderData,
+        headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> = object : FieldExtractor<T> {
         override val header = getHeader(outputMode)

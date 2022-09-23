@@ -13,8 +13,6 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
-import com.milaboratory.mixcr.cli.MiXCRReport;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
@@ -39,13 +37,14 @@ import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
 public class ClnsReader implements CloneReader, AutoCloseable {
     private final PrimitivIHybrid input;
     private final VDJCLibraryRegistry libraryRegistry;
-    private final MiXCRMetaInfo info;
+    private final MiXCRHeader header;
+    private final MiXCRFooter footer;
     private final VDJCSProperties.CloneOrdering ordering;
     private final String versionInfo;
     private final List<VDJCGene> usedGenes;
     private final int numberOfClones;
     private final long clonesPosition;
-    private final List<MiXCRCommandReport> reports;
+
 
     public ClnsReader(String file, VDJCLibraryRegistry libraryRegistry) throws IOException {
         this(Paths.get(file), libraryRegistry, 3);
@@ -97,10 +96,10 @@ public class ClnsReader implements CloneReader, AutoCloseable {
         // read header
         try (PrimitivI i = input.beginPrimitivI(true)) {
             versionInfo = i.readUTF();
-            info = Objects.requireNonNull(i.readObject(MiXCRMetaInfo.class));
+            header = Objects.requireNonNull(i.readObject(MiXCRHeader.class));
             ordering = i.readObject(VDJCSProperties.CloneOrdering.class);
             numberOfClones = i.readInt();
-            MiXCRMetaInfo.FoundAlleles foundAlleles = info.getFoundAlleles();
+            MiXCRHeader.FoundAlleles foundAlleles = header.getFoundAlleles();
             if (foundAlleles != null) {
                 VDJCLibraryId foundAllelesLibraryId = foundAlleles.getLibraryIdWithoutChecksum();
                 boolean alreadyRegistered = libraryRegistry.getLoadedLibraries()
@@ -111,15 +110,11 @@ public class ClnsReader implements CloneReader, AutoCloseable {
                 }
             }
 
-            usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, info.getAlignerParameters(), libraryRegistry);
+            usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, header.getAlignerParameters(), libraryRegistry);
         }
 
         try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(reportsStartPosition)) {
-            int nReports = pi.readInt();
-            reports = new ArrayList<>();
-            for (int i = 0; i < nReports; i++) {
-                reports.add((MiXCRCommandReport) pi.readObject(MiXCRReport.class));
-            }
+            footer = pi.readObject(MiXCRFooter.class);
         }
 
         this.clonesPosition = input.getPosition();
@@ -134,14 +129,19 @@ public class ClnsReader implements CloneReader, AutoCloseable {
         List<Clone> clones = new ArrayList<>();
         for (Clone clone : CUtils.it(readClones()))
             clones.add(clone);
-        CloneSet cloneSet = new CloneSet(clones, usedGenes, info, ordering);
+        CloneSet cloneSet = new CloneSet(clones, usedGenes, header, footer, ordering);
         cloneSet.versionInfo = versionInfo;
         return cloneSet;
     }
 
     @Override
-    public MiXCRMetaInfo getInfo() {
-        return info;
+    public MiXCRHeader getHeader() {
+        return header;
+    }
+
+    @Override
+    public MiXCRFooter getFooter() {
+        return footer;
     }
 
     @Override
@@ -157,11 +157,6 @@ public class ClnsReader implements CloneReader, AutoCloseable {
     @Override
     public List<VDJCGene> getUsedGenes() {
         return usedGenes;
-    }
-
-    @Override
-    public List<MiXCRCommandReport> reports() {
-        return reports;
     }
 
     @Override

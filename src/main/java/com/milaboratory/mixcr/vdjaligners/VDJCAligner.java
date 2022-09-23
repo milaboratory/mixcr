@@ -15,8 +15,9 @@ import cc.redberry.pipe.Processor;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.mixcr.MiXCRParamsSpec;
 import com.milaboratory.mixcr.basictypes.HasGene;
-import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo;
+import com.milaboratory.mixcr.basictypes.MiXCRHeader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.HashFunctions;
@@ -50,8 +51,8 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         this.usedGenes = usedGenes;
     }
 
-    public MiXCRMetaInfo getBaseMetaInfo() {
-        return new MiXCRMetaInfo(null, TagsInfo.NO_TAGS, parameters, null, null, null);
+    public MiXCRHeader getBaseMetaInfo() {
+        return new MiXCRHeader(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS, parameters, null, null, null);
     }
 
     private static <R extends SequenceRead> long hash(R input) {
@@ -157,9 +158,9 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
     }
 
     public static VDJCAligner createAligner(VDJCAlignerParameters alignerParameters,
-                                            boolean paired, boolean merge) {
+                                            boolean paired, boolean overridePairedReads) {
         return paired ?
-                merge ? new VDJCAlignerWithMerge(alignerParameters)
+                overridePairedReads ? new VDJCAlignerWithMerge(alignerParameters)
                         : new VDJCAlignerPVFirst(alignerParameters)
                 : new VDJCAlignerS(alignerParameters);
     }

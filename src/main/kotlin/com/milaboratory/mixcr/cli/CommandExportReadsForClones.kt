@@ -39,7 +39,7 @@ import kotlin.streams.asSequence
             "export alignments not assigned to any clone (not assembled). If no clone ids are specified (only input " +
             "and output filenames are specified) all reads assigned to clonotypes will be exported."]
 )
-class CommandExportReadsForClones : MiXCRCommand() {
+class CommandExportReadsForClones : AbstractMiXCRCommand() {
     @CommandLine.Parameters(index = "0", description = ["input_file.clna"])
     lateinit var `in`: String
 

@@ -13,38 +13,28 @@ package com.milaboratory.mixcr.cli.qc
 
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.*
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAlign
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
-import io.repseq.core.Chains
 import picocli.CommandLine
+import picocli.CommandLine.*
 import java.nio.file.Paths
 
-@CommandLine.Command(name = "chainUsage", separator = " ", description = ["Chain usage plot."])
+@Command(name = "chainUsage", separator = " ", description = ["Chain usage plot."])
 class CommandExportQcChainUsage : CommandExportQc() {
-    @CommandLine.Parameters(description = ["sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]"], arity = "2..*")
+    @Parameters(description = ["sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]"], arity = "2..*")
     var `in`: List<String> = mutableListOf()
 
-    @CommandLine.Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
+    @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
     var absoluteValues = false
 
-    @CommandLine.Option(
+    @Option(
         names = ["--align-chain-usage"],
         description = ["When specifying .clnx files on input force to plot chain usage for alignments"]
     )
     var alignChainUsage = false
 
-    @CommandLine.Option(
-        names = ["--chains"],
-        description = ["Specify which chains to export. Possible values: TRAD, TRB, TRG, IGH, IGK, IGL."],
-        split = ","
-    )
-    var chains: List<String>? = null
-
-    @CommandLine.Option(
+    @Option(
         names = ["--hide-non-functional"],
         description = ["Hide fractions of non-functional CDR3s (out-of-frames and containing stops)"]
     )
@@ -61,33 +51,28 @@ class CommandExportQcChainUsage : CommandExportQc() {
             throwExecutionExceptionKotlin("Input files should have the same file type, got ${fileTypes.distinct()}")
         }
         val fileType = fileTypes.first()
-        val chains = chains?.map { Chains.getNamedChains(it) } ?: Chains.DEFAULT_EXPORT_CHAINS_LIST
-        val hw = sizeParameters!!
         val plot = when (fileType) {
             CLNA, CLNS -> when {
                 alignChainUsage -> chainUsageAlign(
                     files,
                     !absoluteValues,
                     !hideNonFunctional,
-                    chains,
-                    hw
+                    sizeParameters
                 )
                 else -> chainUsageAssemble(
                     files,
                     !absoluteValues,
                     !hideNonFunctional,
-                    chains,
-                    hw
+                    sizeParameters
                 )
             }
             VDJCA -> chainUsageAlign(
                 files,
                 !absoluteValues,
                 !hideNonFunctional,
-                chains,
-                hw
+                sizeParameters
             )
-            SHMT -> throw UnsupportedOperationException("Command don't support .shmt files")
+            SHMT -> throw IllegalArgumentException("Can't export chain usage from .shmt file")
         }
         writeFile(Paths.get(outputFiles[0]), plot)
     }

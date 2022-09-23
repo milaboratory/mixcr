@@ -40,8 +40,8 @@ public class IOUtil {
     public static final String MAGIC_VDJC = "MiXCR.VDJC";
     public static final String MAGIC_CLNS = "MiXCR.CLNS";
     public static final String MAGIC_CLNA = "MiXCR.CLNA";
-
     public static final String MAGIC_SHMT = "MiXCR.SHMT";
+
     public static final String END_MAGIC = "#MiXCR.File.End#";
     private static final byte[] END_MAGIC_BYTES = END_MAGIC.getBytes(StandardCharsets.US_ASCII);
     public static final int END_MAGIC_LENGTH = END_MAGIC_BYTES.length;
@@ -185,13 +185,8 @@ public class IOUtil {
 
                 byte[] beginMagic = new byte[BEGIN_MAGIC_LENGTH];
                 channel.read(ByteBuffer.wrap(beginMagic));
-                String magicFull = new String(beginMagic, StandardCharsets.US_ASCII);
                 String magicShort = new String(beginMagic, 0, BEGIN_MAGIC_LENGTH_SHORT,
                         StandardCharsets.US_ASCII);
-
-                if (!magicShort.equals(MAGIC_VDJC) && !magicShort.equals(MAGIC_CLNS)
-                        && !magicShort.equals(MAGIC_CLNA))
-                    throw new IllegalArgumentException("Unknown file type: " + path);
 
                 byte[] endMagic = new byte[END_MAGIC_LENGTH];
                 channel.read(ByteBuffer.wrap(endMagic), channel.size() - END_MAGIC_LENGTH);
@@ -217,25 +212,25 @@ public class IOUtil {
         switch (extractFileType(file)) {
             case VDJCA:
                 try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
-                    return reader.reports();
+                    return reader.getFooter().getReports();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNA:
                 try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.reports();
+                    return reader.getFooter().getReports();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNS:
                 try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.reports();
+                    return reader.getFooter().getReports();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case SHMT:
                 try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
-                    return reader.reports();
+                    return reader.getFooter().getReports();
                 }
             default:
                 throw new RuntimeException();

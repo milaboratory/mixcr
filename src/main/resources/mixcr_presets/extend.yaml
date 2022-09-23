@@ -1,0 +1,6 @@
+"extend_universal":
+  extend:
+    vAnchor: CDR3Begin
+    jAnchor: CDR3End
+    minimalVScore: 100
+    minimalJScore: 70

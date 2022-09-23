@@ -25,7 +25,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.MiXCRMetaInfo
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.port
@@ -66,7 +66,7 @@ import kotlin.io.path.nameWithoutExtension
     separator = " ",
     description = ["Find allele variants in clnx."]
 )
-class CommandFindAlleles : MiXCRCommand() {
+class CommandFindAlleles : AbstractMiXCRCommand() {
     @Parameters(
         arity = "1..*",
         paramLabel = "input_file.clns [input_file2.clns ...]",
@@ -205,13 +205,13 @@ class CommandFindAlleles : MiXCRCommand() {
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
-        require(cloneReaders.all { it.info.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.ASSEMBLE_CONTIGS_COMMAND_NAME} without ${CommandAssembleContigs.CUT_BY_FEATURE_OPTION_NAME} option"
+        require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
+            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${CommandAssembleContigs.BY_FEATURE_OPTION_NAME} option"
         }
-        require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
+        require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
         }
-        val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
+        val allFullyCoveredBy = cloneReaders.first().header.allFullyCoveredBy!!
 
         val allelesBuilder = AllelesBuilder(
             findAllelesParameters,
@@ -355,18 +355,19 @@ class CommandFindAlleles : MiXCRCommand() {
         val cloneSet = CloneSet(
             clones,
             resultLibrary.genes,
-            cloneReader.info.copy(
-                foundAlleles = MiXCRMetaInfo.FoundAlleles(
+            cloneReader.header.copy(
+                foundAlleles = MiXCRHeader.FoundAlleles(
                     resultLibrary.name,
                     resultLibrary.data
                 )
             ),
+            cloneReader.footer,
             cloneReader.ordering()
         )
         val clnsWriter = ClnsWriter(this)
         clnsWriter.writeCloneSet(cloneSet)
         return { report ->
-            clnsWriter.writeFooter(cloneReader.reports(), report)
+            clnsWriter.setFooter(cloneReader.footer.addReport(report))
             clnsWriter.close()
         }
     }
@@ -393,7 +394,7 @@ class CommandFindAlleles : MiXCRCommand() {
     ) {
         usedGenes.forEach { (name, geneData) ->
             if (geneData.geneType == Joining || geneData.geneType == Variable) {
-                //if gene wasn't processed in alleles search, then register it as a single allele
+                // if gene wasn't processed in alleles search, then register it as a single allele
                 if (!alleles.containsKey(name)) {
                     alleles[geneData.name] = listOf(geneData)
                 }

@@ -9,6 +9,8 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
+@file:Suppress("LocalVariableName")
+
 package com.milaboratory.mixcr.trees
 
 import com.google.common.collect.Sets
@@ -85,11 +87,16 @@ class CloneWrapper(
             output.writeCollection(obj.candidateVJBases)
         }
 
-        override fun read(input: PrimitivI): CloneWrapper = CloneWrapper(
-            input.readList(),
-            input.readObjectRequired(),
-            input.readList()
-        )
+        override fun read(input: PrimitivI): CloneWrapper {
+            val clones = input.readList<CloneWithDatasetId>()
+            val VJBase = input.readObjectRequired<VJBase>()
+            val candidateVJBases = input.readList<VJBase>()
+            return CloneWrapper(
+                clones,
+                VJBase,
+                candidateVJBases
+            )
+        }
     }
 
     companion object {
@@ -139,10 +146,14 @@ data class CloneWithDatasetId(
             output.writeInt(obj.datasetId)
         }
 
-        override fun read(input: PrimitivI): CloneWithDatasetId = CloneWithDatasetId(
-            input.readObjectRequired(),
-            input.readInt()
-        )
+        override fun read(input: PrimitivI): CloneWithDatasetId {
+            val clone = input.readObjectRequired<Clone>()
+            val datasetId = input.readInt()
+            return CloneWithDatasetId(
+                clone,
+                datasetId
+            )
+        }
     }
 }
 

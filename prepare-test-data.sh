@@ -47,9 +47,21 @@ esac
 cd "$dir/src/test/resources/sequences/big/"
 
 cd yf_sample_data
-parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze amplicon -f \
-  -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present \
-  --assemble '-OseparateByC=true' --assemble '-OseparateByV=true' --assemble '-OseparateByJ=true' \
-  --assemble '--sort-by-sequence' \
-  --impute-germline-on-export --json-report "{}" \
+
+#parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze amplicon -f \
+#  -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present \
+#  --assemble '-OseparateByC=true' --assemble '-OseparateByV=true' --assemble '-OseparateByJ=true' \
+#  --assemble '--sort-by-sequence' \
+#  --impute-germline-on-export --json-report "{}" \
+#  "{}_L001_R1.fastq.gz" "{}_L001_R2.fastq.gz" "{}" ::: Ig-2_S2 Ig-3_S3 Ig-4_S4 Ig-5_S5 Ig1_S1 Ig2_S2 Ig3_S3 Ig4_S4 Ig5_S5
+
+parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze bcr_amplicon -f \
+  +species hs \
+  +rna \
+  +floatingLeftAlignmentBoundary \
+  +floatingRightAlignmentBoundary C \
+  +addStep assembleContigs \
+  +splitClonesBy V +splitClonesBy J +splitClonesBy C \
+  +M assemble.sortBySequence=true \
+  +imputeGermlineOnExport \
   "{}_L001_R1.fastq.gz" "{}_L001_R2.fastq.gz" "{}" ::: Ig-2_S2 Ig-3_S3 Ig-4_S4 Ig-5_S5 Ig1_S1 Ig2_S2 Ig3_S3 Ig4_S4 Ig5_S5
