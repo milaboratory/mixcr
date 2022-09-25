@@ -136,6 +136,10 @@
               predicates:
                 - metrics:
                     - type: "group_metric_sum_weight"
+                      reportHist:
+                        log: true
+                        binNumber: 0 # don't limit number of bins, use only minBinWidth
+                        minBinWidth: 0.2 # in respect to log10 of the value
                   operator:
                     type: "group_operator_otsu1"
                     logX: true
@@ -147,6 +151,10 @@
                     - type: "group_metric_nunique"
                       keys:
                         - "UMI"
+                      reportHist:
+                        log: true
+                        binNumber: 0 # don't limit number of bins, use only minBinWidth
+                        minBinWidth: 0.2 # in respect to log10 of the value
                   operator:
                     type: "group_operator_range"
                     lower: 2.0
@@ -236,6 +244,10 @@
           predicates:
             - metrics:
                 - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0 # don't limit number of bins, use only minBinWidth
+                    minBinWidth: 0.2 # in respect to log10 of the value
               operator:
                 type: "group_operator_otsu1"
                 logX: true
@@ -303,6 +315,10 @@
           predicates:
             - metrics:
                 - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0 # don't limit number of bins, use only minBinWidth
+                    minBinWidth: 0.2 # in respect to log10 of the value
               operator:
                 type: "group_operator_otsu1"
                 logX: true
