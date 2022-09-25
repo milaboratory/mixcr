@@ -18,14 +18,14 @@ gradle.startParameter.excludedTaskNames += listOf(
     "shadowDistZip"
 )
 
-val dataframeVersion = "0.8.0-rc-8"
+val dataframeVersion = "0.8.1"
 
 plugins {
     `java-library`
     application
     `maven-publish`
-    kotlin("jvm") version "1.6.21"
-    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-8"
+    kotlin("jvm") version "1.7.10"
+    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.1"
     id("com.palantir.git-version") version "0.13.0" // don't upgrade, latest version that runs on Java 8
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.bmuschko.docker-java-application") version "7.4.0"
