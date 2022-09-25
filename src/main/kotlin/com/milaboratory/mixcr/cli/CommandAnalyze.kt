@@ -85,7 +85,7 @@ object CommandAnalyze {
         // the following two lines are to implement the AbstractMiXCRCommand interfaces,
         // analyze is an exception, and it not fully use the functionality of the AbstractMiXCRCommand
         // TODO maybe it is a good idea to restructure the CLI classes to make "analyze" fit more naturally in the hierarchy
-        override fun getInputFiles() = inFiles
+        override fun getInputFiles() = emptyList<String>() // inFiles
         override fun getOutputFiles() = emptyList<String>()
 
         /** Provides access to presets, mixins application, etc.. */
@@ -96,12 +96,6 @@ object CommandAnalyze {
         }
 
         override fun run0() {
-            // Checking inputs exist
-            inFiles.forEach {
-                if (!Path(it).exists())
-                    throwValidationException("File $it does not exist.")
-            }
-
             // Calculating output folder and output file suffix
             var outputIsFolder = outSuffix.endsWith(File.separator)
             val outputPath = Path(outSuffix)
