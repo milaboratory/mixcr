@@ -335,7 +335,7 @@ class CommandFindAlleles : MiXCRCommand() {
                 "scoreDelta" to { gene ->
                     val summaryStatistics = allelesStatistics.stats(gene.id).scoreDelta
                     if (summaryStatistics.n == 0L) "" else
-                        GlobalObjectMappers.toOneLine(MiXCRCommandReport.Stats.from(summaryStatistics))
+                        GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
                 }
             )
             val genes = resultLibrary.genes

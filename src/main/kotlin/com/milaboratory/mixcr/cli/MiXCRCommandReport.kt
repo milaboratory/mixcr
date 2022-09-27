@@ -14,11 +14,9 @@ package com.milaboratory.mixcr.cli
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
-import com.fasterxml.jackson.annotation.JsonUnwrapped
 import com.milaboratory.util.FormatUtils
 import com.milaboratory.util.ReportHelper
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import java.io.ByteArrayOutputStream
 import java.util.*
@@ -59,34 +57,38 @@ interface MiXCRCommandReport : MiXCRReport {
         return os.toString()
     }
 
+    interface Stats {
+        val size: Long
+        val sum: Double
+        val min: Double
+        val max: Double
+        val avg: Double
+        val quadraticMean: Double
+        val stdDeviation: Double
+    }
+
     @JsonAutoDetect(
         fieldVisibility = ANY,
         isGetterVisibility = NONE,
         getterVisibility = NONE
     )
-    data class Stats(
-        val size: Long,
-        val sum: Double,
-        val min: Double,
-        val max: Double,
-        val avg: Double,
-        val quadraticMean: Double,
-        val stdDeviation: Double
-    ) {
+    data class StandardStats(
+        override val size: Long,
+        override val sum: Double,
+        override val min: Double,
+        override val max: Double,
+        override val avg: Double,
+        override val quadraticMean: Double,
+        override val stdDeviation: Double
+    ) : Stats {
         companion object {
-            fun from(statistics: SummaryStatistics): Stats =
-                from(statistics, statistics.quadraticMean)
-
-            fun from(statistics: DescriptiveStatistics): Stats =
-                from(statistics, statistics.quadraticMean)
-
-            fun from(statistics: StatisticalSummary, quadraticMean: Double): Stats = Stats(
+            fun from(statistics: SummaryStatistics): StandardStats = StandardStats(
                 size = statistics.n,
                 sum = statistics.sum,
                 min = statistics.min,
                 max = statistics.max,
                 avg = statistics.sum / statistics.n,
-                quadraticMean = quadraticMean,
+                quadraticMean = statistics.quadraticMean,
                 stdDeviation = statistics.standardDeviation
             )
         }
@@ -98,19 +100,29 @@ interface MiXCRCommandReport : MiXCRReport {
         getterVisibility = NONE
     )
     data class StatsWithQuantiles(
-        @field:JsonUnwrapped
-        val stats: Stats,
+        override val size: Long,
+        override val sum: Double,
+        override val min: Double,
+        override val max: Double,
+        override val avg: Double,
+        override val quadraticMean: Double,
+        override val stdDeviation: Double,
         val percentile25: Double,
         val percentile50: Double,
         val percentile75: Double
-    ) {
+    ) : Stats {
         companion object {
             fun from(data: Collection<Double>): StatsWithQuantiles {
                 val statistics = DescriptiveStatistics()
-                statistics.quadraticMean
                 data.forEach { statistics.addValue(it) }
                 return StatsWithQuantiles(
-                    stats = Stats.from(statistics),
+                    size = statistics.n,
+                    sum = statistics.sum,
+                    min = statistics.min,
+                    max = statistics.max,
+                    avg = statistics.sum / statistics.n,
+                    quadraticMean = statistics.quadraticMean,
+                    stdDeviation = statistics.standardDeviation,
                     percentile25 = statistics.getPercentile(25.0),
                     percentile50 = statistics.getPercentile(50.0),
                     percentile75 = statistics.getPercentile(75.0)
@@ -128,13 +140,10 @@ interface MiXCRCommandReport : MiXCRReport {
         writeField("\tavg", stats.avg)
         writeField("\tquadratic mean", stats.quadraticMean)
         writeField("\tstd deviation", stats.stdDeviation)
+        if (stats is StatsWithQuantiles) {
+            writeField("\tpercentile 25", stats.percentile25)
+            writeField("\tpercentile 50", stats.percentile50)
+            writeField("\tpercentile 75", stats.percentile75)
+        }
     }
-
-    fun ReportHelper.write(title: String, statsWithQuantiles: StatsWithQuantiles) {
-        write(title, statsWithQuantiles.stats)
-        writeField("\tpercentile 25", statsWithQuantiles.percentile25)
-        writeField("\tpercentile 50", statsWithQuantiles.percentile50)
-        writeField("\tpercentile 75", statsWithQuantiles.percentile75)
-    }
-
 }
