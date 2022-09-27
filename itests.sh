@@ -47,7 +47,13 @@ FreeBSD)
   ;;
 esac
 
-tests=("case1" "case2" "case3" "case4" "case5" "case6" "case7" "case8" "case9" "case10" "case11" "case12" "case13" "case14" "case15" "case16" "case17" "case18")
+all_tests=`ls itests/*.sh | sed 's/\itests\///' | sed 's/\.sh//'`
+exlusions=()
+for exlusion in ${exlusions[@]}; do
+  all_tests=${all_tests[@]/$exlusion}
+done
+
+tests=("$all_tests")
 
 create_standard_results=false
 run_tests=false
