@@ -20,17 +20,21 @@ import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.TranslationParameters
-import com.milaboratory.core.sequence.TranslationParameters.FromCenter
 import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon
+import com.milaboratory.core.sequence.TranslationParameters.FromRightWithIncompleteCodon
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
 import io.repseq.core.ExtendedReferencePoints
 import io.repseq.core.ExtendedReferencePointsBuilder
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneFeature.JCDR3Part
+import io.repseq.core.GeneFeature.VCDR3Part
 import io.repseq.core.GeneFeature.VJJunction
 import io.repseq.core.GeneFeature.intersection
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
+import io.repseq.core.ReferencePoint
 import io.repseq.core.ReferencePoint.CDR3Begin
 import io.repseq.core.ReferencePoint.CDR3End
 import io.repseq.core.ReferencePoint.JBegin
@@ -42,193 +46,112 @@ import java.util.*
 
 class MutationsDescription private constructor(
     private val VPartsN: Parts<NucleotideSequence>,
-    private val baseNDN: NucleotideSequence,
-    private val NDNMutations: Mutations<NucleotideSequence>,
+    private val CDR3PartsN: Parts<NucleotideSequence>,
     private val JPartsN: Parts<NucleotideSequence>,
     private val maxShiftedTriplets: Int = Int.MAX_VALUE,
-    VPartsAA: MutationsDescription.() -> Parts<AminoAcidSequence>,
-    JPartsAA: MutationsDescription.() -> Parts<AminoAcidSequence>,
-    fullLengthPartsAA: MutationsDescription.() -> Parts<AminoAcidSequence>,
+    VPartsAaInit: () -> Parts<AminoAcidSequence>,
+    JPartsAaInit: () -> Parts<AminoAcidSequence>,
+    CDR3PartsAaInit: () -> Parts<AminoAcidSequence>,
 ) {
+    private val VPartsAa: Parts<AminoAcidSequence> by lazy {
+        VPartsAaInit()
+    }
 
-    constructor(
-        VParts: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
-        VSequence1: NucleotideSequence,
-        VPartitioning: ExtendedReferencePoints,
-        baseNDN: NucleotideSequence,
-        NDNMutations: Mutations<NucleotideSequence>,
-        JParts: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
-        JSequence1: NucleotideSequence,
-        JPartitioning: ExtendedReferencePoints,
-        maxShiftedTriplets: Int = Int.MAX_VALUE
-    ) : this(
-        VPartsN = Parts(VPartitioning, VSequence1, VParts),
-        baseNDN = baseNDN,
-        NDNMutations = NDNMutations,
-        JPartsN = Parts(JPartitioning, JSequence1, JParts),
-        maxShiftedTriplets = maxShiftedTriplets,
-        VPartsAA = { VPartsN.translate() },
-        JPartsAA = { JPartsN.translate() },
-        fullLengthPartsAA = { fullLengthPartsN.translate() }
-    )
+    private val JPartsAa: Parts<AminoAcidSequence> by lazy {
+        JPartsAaInit()
+    }
 
-    init {
-        check(VPartsN.mutations.lastKey().lastPoint == VEndTrimmed)
-        check(JPartsN.mutations.firstKey().firstPoint == JBeginTrimmed)
+    private val CDR3PartsAa: Parts<AminoAcidSequence> by lazy {
+        CDR3PartsAaInit()
     }
 
     private val fullLengthPartsN: Parts<NucleotideSequence> by lazy {
-        combinePartsForFullLength(VPartsN, VJJunction, baseNDN, NDNMutations, JPartsN)
+        combineFullLength(VPartsN, CDR3PartsN, JPartsN)
     }
 
-    private val VPartsAA: Parts<AminoAcidSequence> by lazy {
-        VPartsAA()
+    private val fullLengthPartsAa: Parts<AminoAcidSequence> by lazy {
+        combineFullLength(VPartsAa, CDR3PartsAa, JPartsAa)
     }
 
-    private val JPartsAA: Parts<AminoAcidSequence> by lazy {
-        JPartsAA()
-    }
-
-    private val fullLengthPartsAA: Parts<AminoAcidSequence> by lazy {
-        fullLengthPartsAA()
-    }
-
-    private fun <S : Sequence<S>> combinePartsForFullLength(
+    /**
+     * Combine mutations from CDR3 and V,J parts (without CDR3). All positions will be calculated accordingly
+     */
+    private fun <S : Sequence<S>> combineFullLength(
         VParts: Parts<S>,
-        geneFeatureInTheMiddle: GeneFeature,
-        sequence1InTheMiddle: S,
-        mutationsInTheMiddle: Mutations<S>,
+        CDR3Parts: Parts<S>,
         JParts: Parts<S>
     ): Parts<S> {
-        val VPartsEnd = VParts.partitioning.getPosition(geneFeatureInTheMiddle.firstPoint)
-        val JPartsBegin = JParts.partitioning.getPosition(geneFeatureInTheMiddle.lastPoint)
-
-        val JBeginTrimmedPosition = VPartsEnd + sequence1InTheMiddle.size()
+        val CDR3BeginPosition = VParts.partitioning.getPosition(CDR3Begin)
+        val JPositionShift = CDR3BeginPosition + CDR3Parts.partitioning.getPosition(CDR3End) -
+                JParts.partitioning.getPosition(CDR3End)
         val partitioningForFullSequence = ExtendedReferencePointsBuilder().apply {
-            setPositionsFrom(VParts.partitioning.without(VEnd))
-            setPosition(JBeginTrimmed, JBeginTrimmedPosition)
-            setPositionsFrom(JParts.partitioning.without(JBegin).move(JBeginTrimmedPosition - JPartsBegin))
+            setPositionsFrom(VParts.partitioning.without(VEndTrimmed).without(VEnd))
+            setPositionsFrom(CDR3Parts.partitioning.move(CDR3BeginPosition))
+            setPositionsFrom(JParts.partitioning.without(JBegin).without(JBeginTrimmed).move(JPositionShift))
         }.build()
-
-        val VGeneFeature = GeneFeature(VParts.mutations.firstKey().firstPoint, geneFeatureInTheMiddle.firstPoint)
-        val JGeneFeature = GeneFeature(geneFeatureInTheMiddle.lastPoint, JParts.mutations.lastKey().lastPoint)
-
-        val combinedSequence1 = VParts.sequence1.getRange(0, VPartsEnd) +
-                sequence1InTheMiddle +
-                JParts.sequence1.getRange(JPartsBegin, JParts.sequence1.size())
-
-        val croppedVMutations = VParts.cropMutations(VGeneFeature)
-        val croppedJMutations = JParts.cropMutations(JGeneFeature)
-        val mutationsFromCombinedSequence1: TreeMap<GeneFeature, Mutations<S>> = TreeMap()
-        croppedVMutations.keys.toList().subList(0, croppedVMutations.size - 1).forEach { key ->
-            mutationsFromCombinedSequence1[key] = croppedVMutations[key]!!
-        }
-        val lastVPartGeneFeature = croppedVMutations.lastKey()
-        val firstJPartGeneFeature = croppedJMutations.firstKey()
-        val JMutationsShift = JBeginTrimmedPosition - JPartsBegin
-        mutationsFromCombinedSequence1[GeneFeature(lastVPartGeneFeature.firstPoint, firstJPartGeneFeature.lastPoint)] =
-            croppedVMutations[lastVPartGeneFeature]!!
-                .concat(mutationsInTheMiddle.move(partitioningForFullSequence.getPosition(geneFeatureInTheMiddle.firstPoint)))
-                .concat(croppedJMutations[firstJPartGeneFeature]!!.move(JMutationsShift))
-        croppedJMutations.keys.toList().subList(1, croppedJMutations.size).forEach { key ->
-            mutationsFromCombinedSequence1[key] = croppedJMutations[key]!!.move(JMutationsShift)
-        }
+        val fullSequence1 = VParts.sequence1.getRange(0, CDR3BeginPosition) +
+                CDR3Parts.sequence1 +
+                JParts.sequence1.getRange(JParts.partitioning.getPosition(CDR3End), JParts.sequence1.size())
+        val resultMutations: SortedMap<GeneFeature, Mutations<S>> = TreeMap()
+        resultMutations += VParts.mutations.filterKeys { it != VCDR3Part }
+        resultMutations += CDR3Parts.mutations
+            .mapValues { (_, mutations) ->
+                mutations.move(partitioningForFullSequence.getPosition(CDR3Begin))
+            }
+        resultMutations += JParts.mutations
+            .filterKeys { it != JCDR3Part }
+            .mapValues { (_, mutations) ->
+                mutations.move(JPositionShift)
+            }
 
         return Parts(
             partitioningForFullSequence,
-            combinedSequence1,
-            mutationsFromCombinedSequence1
+            fullSequence1,
+            resultMutations
         )
     }
 
-
-    private class Parts<S : Sequence<S>>(
+    /**
+     * All info about some part of sequence that needed to build alignment.
+     */
+    private data class Parts<S : Sequence<S>>(
         val partitioning: ExtendedReferencePoints,
         val sequence1: S,
         val mutations: SortedMap<GeneFeature, Mutations<S>>
     ) {
-        fun cropMutations(cropBy: GeneFeature): SortedMap<GeneFeature, Mutations<S>> =
-            mutations.entries.associateTo(TreeMap()) { (geneFeature, mutations) ->
-                val intersection = intersection(geneFeature, cropBy)
-                intersection to mutations.extractAbsoluteMutations(partitioning.getRange(intersection), true)
-            }
-
-        val combinedMutations: Mutations<S> by lazy {
-            var result: Mutations<S> = Mutations.empty(sequence1.alphabet)
-            mutations.values.forEach {
-                result = result.concat(it)
-            }
-            result
-        }
-    }
-
-    private fun Parts<NucleotideSequence>.translate(): Parts<AminoAcidSequence> {
-        val translationParametersByFeatures = mutations.keys.associateTo(TreeMap()) { geneFeature ->
-            val withVJJunction = when {
-                geneFeature.lastPoint == VEndTrimmed -> GeneFeature(geneFeature.firstPoint, VEnd)
-                geneFeature.firstPoint == JBeginTrimmed -> GeneFeature(JBegin, geneFeature.lastPoint)
-                else -> geneFeature
-            }
-            withVJJunction to partitioning.getTranslationParameters(withVJJunction)
-        }
-        val translationParametersForSequence1 = partitioning.getTranslationParameters(
-            GeneFeature(
-                translationParametersByFeatures.firstKey().firstPoint,
-                translationParametersByFeatures.lastKey().lastPoint
-            )
+        /**
+         * If geneFeature in the key contains `splitBy` than it will be split and mutations will be split accordingly
+         */
+        fun withSplittedMutations(splitBy: ReferencePoint): Parts<S> = copy(
+            mutations = (getLeftPart(splitBy) + getRightPart(splitBy)).toSortedMap()
         )
-        return Parts(
-            ExtendedReferencePointsBuilder().apply {
-                for (i in 0 until partitioning.pointsCount()) {
-                    val referencePoint = partitioning.referencePointFromIndex(i)
-                    val position = partitioning.getPosition(referencePoint)
-                    if (position != -1) {
-                        val translationParameters = translationParametersByFeatures.entries
-                            .firstOrNull { referencePoint in it.key }
-                            ?.value
 
-                        if (translationParameters != null) {
-                            setPosition(
-                                referencePoint,
-                                AminoAcidSequence.convertNtPositionToAA(
-                                    position,
-                                    sequence1.size(),
-                                    translationParameters
-                                ).aminoAcidPosition
-                            )
-                        }
-                    }
-                }
-            }.build(),
-            AminoAcidSequence.translate(
-                sequence1,
-                translationParametersForSequence1
-            ),
-            mutations.mapValuesTo(TreeMap()) { (geneFeature, mutations) ->
-                //TODO left only partitioning.getTranslationParameters(geneFeature) after fix of io.repseq.core.GeneFeature.getCodingGeneFeature
-                val translationParameters = if (geneFeature.lastPoint == VEndTrimmed) {
-                    val VTranslationParameters =
-                        partitioning.getTranslationParameters(GeneFeature(geneFeature.firstPoint, CDR3Begin))
-                    if (VTranslationParameters == FromCenter) {
-                        FromLeftWithoutIncompleteCodon
-                    } else if (VTranslationParameters.fromLeft == true) {
-                        VTranslationParameters
-                    } else {
-                        error("Can't rebase $VTranslationParameters from left for $geneFeature")
-                    }
-                } else if (geneFeature.firstPoint == JBeginTrimmed) {
-                    translationParametersForSequence1
+        private fun getLeftPart(splitBy: ReferencePoint) = mutations
+            .filterKeys { it.firstPoint < splitBy }
+            .entries
+            .associate { (geneFeature, mutations) ->
+                if (splitBy in geneFeature) {
+                    val cropped = GeneFeature(geneFeature.firstPoint, splitBy)
+                    cropped to mutations
+                        .extractAbsoluteMutations(partitioning.getRange(cropped), isIncludeFirstInserts = true)
                 } else {
-                    partitioning.getTranslationParameters(geneFeature)
+                    geneFeature to mutations
                 }
-                MutationsUtil.nt2aa(
-                    sequence1,
-                    mutations,
-                    translationParameters,
-                    maxShiftedTriplets
-                )
             }
-        )
+
+        private fun getRightPart(splitBy: ReferencePoint) = mutations
+            .filterKeys { splitBy < it.lastPoint }
+            .entries
+            .associate { (geneFeature, mutations) ->
+                if (splitBy in geneFeature) {
+                    val cropped = GeneFeature(splitBy, geneFeature.lastPoint)
+                    cropped to mutations
+                        .extractAbsoluteMutations(partitioning.getRange(cropped), isIncludeFirstInserts = false)
+                } else {
+                    geneFeature to mutations
+                }
+            }
+
     }
 
     fun targetNSequence(geneFeature: GeneFeature): NucleotideSequence? =
@@ -257,18 +180,20 @@ class MutationsDescription private constructor(
 
     val nMutationsCount: Int
         get() =
-            VPartsN.mutations.values.sumOf { it.size() } + NDNMutations.size() + JPartsN.mutations.values.sumOf { it.size() }
+            VPartsN.mutations.filterKeys { it != VCDR3Part }.values.sumOf { it.size() } +
+                    CDR3PartsN.mutations.values.sumOf { it.size() } +
+                    JPartsN.mutations.filterKeys { it != JCDR3Part }.values.sumOf { it.size() }
 
     fun aaAlignment(geneFeature: GeneFeature, relativeTo: GeneFeature = geneFeature): Alignment<AminoAcidSequence>? {
         validateArgs(geneFeature, relativeTo)
         checkAAComparable(geneFeature)
         return when (geneFeature.geneType) {
-            Variable -> VPartsAA
-            Joining -> JPartsAA
+            Variable -> VPartsAa
+            Joining -> JPartsAa
             null -> {
                 check(geneFeature == relativeTo)
                 checkNotNull(intersection(geneFeature, VJJunction))
-                fullLengthPartsAA
+                fullLengthPartsAa
             }
             else -> throw IllegalArgumentException()
         }.buildAlignment(geneFeature, relativeTo)?.alignment
@@ -303,59 +228,99 @@ class MutationsDescription private constructor(
         check(JPartsN.mutations.keys == other.JPartsN.mutations.keys)
         return MutationsDescription(
             VPartsN = VPartsN.differenceWith(other.VPartsN),
-            baseNDN = NDNMutations.mutate(baseNDN),
-            NDNMutations = NDNMutations.invert().combineWith(other.NDNMutations),
+            CDR3PartsN = CDR3PartsN.differenceWith(other.CDR3PartsN),
             JPartsN = JPartsN.differenceWith(other.JPartsN),
-            maxShiftedTriplets = maxShiftedTriplets,
-            VPartsAA = { this@MutationsDescription.VPartsAA.differenceWith(other.VPartsAA) },
-            JPartsAA = { this@MutationsDescription.JPartsAA.differenceWith(other.JPartsAA) },
-            fullLengthPartsAA = { this@MutationsDescription.fullLengthPartsAA.differenceWith(other.fullLengthPartsAA) }
+            VPartsAaInit = { VPartsAa.differenceWith(other.VPartsAa) },
+            JPartsAaInit = { JPartsAa.differenceWith(other.JPartsAa) },
+            CDR3PartsAaInit = { CDR3PartsAa.differenceWith(other.CDR3PartsAa) },
+            maxShiftedTriplets = maxShiftedTriplets
         )
     }
 
-    private fun <S : Sequence<S>> Parts<S>.differenceWith(other: Parts<S>) =
-        Parts(
-            partitioning.applyMutations(combinedMutations),
+    /**
+     * Calculate difference in mutations and shift positions
+     */
+    private fun <S : Sequence<S>> Parts<S>.differenceWith(other: Parts<S>): Parts<S> {
+        val partitioningBuilder = ExtendedReferencePointsBuilder()
+        val resultMutations = TreeMap<GeneFeature, Mutations<S>>()
+        var shift = 0
+        var lastAddedPosition: ReferencePoint = mutations.firstKey().firstPoint
+        //first position will not change by mutations
+        partitioningBuilder.setPosition(lastAddedPosition, partitioning.getPosition(lastAddedPosition))
+        for (geneFeature in mutations.keys) {
+            //shift accordingly to mutations in previous features
+            val combined = mutations[geneFeature]!!.invert().combineWith(other.mutations[geneFeature]!!).move(shift)
+            //if just apply combinedMutations, insertions that were on boundary may be applied on wrong side of reference point
+            partitioningBuilder.setPositionsFrom(
+                //get all positions in geneFeature
+                partitioning.cutBy(geneFeature)
+                    //exclude first point if it was already proceeded
+                    .without(lastAddedPosition)
+                    //calculate new positions in resulting sequence
+                    .applyMutations(mutations[geneFeature]!!)
+                    //and shift accordingly to mutations in previous features
+                    .move(shift)
+            )
+            shift += mutations[geneFeature]!!.lengthDelta
+            lastAddedPosition = geneFeature.lastPoint
+            resultMutations[geneFeature] = combined
+        }
+        val combinedMutations = mutations.values
+            .reduce { acc, mutations -> acc.concat(mutations) }
+        return Parts(
+            partitioningBuilder.build(),
             combinedMutations.mutate(sequence1),
-            mutations.mapValuesTo(TreeMap()) { (geneFeature, mutations) ->
-                mutations.invert().combineWith(other.mutations[geneFeature]!!)
-            }
+            resultMutations
         )
+    }
 
     private fun <S : Sequence<S>> Parts<S>.buildAlignment(
-        geneFeature: GeneFeature,
+        requestedGeneFeature: GeneFeature,
         relativeTo: GeneFeature
     ): Result<S>? {
         val alignmentsOfIntersections = mutations.mapNotNull { (key, value) ->
-            intersection(key, geneFeature)?.let { intersection ->
-                val shift = partitioning.getPosition(relativeTo.firstPoint)
+            intersection(key, requestedGeneFeature)?.let { intersection ->
                 val sequence1Range = partitioning.getRange(intersection)
                 val isLeftBoundOfPart = intersection.firstPoint == key.firstPoint
                 val resultMutations = value.extractAbsoluteMutations(
                     sequence1Range,
                     isIncludeFirstInserts = isLeftBoundOfPart
                 )
-                Result(
-                    Alignment(
-                        sequence1.getRange(
-                            shift,
-                            //also adjust right position by relative gene feature
-                            partitioning.getPosition(relativeTo.lastPoint)
-                        ),
-                        resultMutations.move(-shift),
-                        sequence1Range.move(-shift),
-                        MutationsUtils.projectRange(resultMutations, sequence1Range).move(-shift),
-                        Float.NaN
-                    ),
-                    intersection,
-                    partitioning
+                val shift = partitioning.getPosition(relativeTo.firstPoint)
+                //build alignment by `intersection`, but shift everything accordingly to `relativeTo`
+                intersection to Alignment(
+                    sequence1.getRange(partitioning.getRange(relativeTo)),
+                    resultMutations.move(-shift),
+                    sequence1Range.move(-shift),
+                    MutationsUtils.projectRange(resultMutations, sequence1Range).move(-shift),
+                    Float.NaN
                 )
             }
         }
-        require(alignmentsOfIntersections.size <= 1) {
-            "Can't build single intersection of $geneFeature and ${mutations.keys}"
+        if (alignmentsOfIntersections.isEmpty()) return null
+        for (i in 1 until alignmentsOfIntersections.size) {
+            require(alignmentsOfIntersections[i - 1].first.lastPoint == alignmentsOfIntersections[i].first.firstPoint) {
+                "Can't build single intersection of $requestedGeneFeature and ${mutations.keys}"
+            }
         }
-        return alignmentsOfIntersections.firstOrNull()
+        //merge alignments for neighbor gene features
+        val (geneFeature, alignment) = alignmentsOfIntersections
+            .reduce { (previousGeneFeature, previousAlignment), (nextGeneFeature, nextAlignment) ->
+                val resultMutations = previousAlignment.absoluteMutations.concat(nextAlignment.absoluteMutations)
+                val sequence1Range = previousAlignment.sequence1Range.setUpper(nextAlignment.sequence1Range.upper)
+                GeneFeature(previousGeneFeature.firstPoint, nextGeneFeature.lastPoint) to Alignment(
+                    previousAlignment.sequence1,
+                    resultMutations,
+                    sequence1Range,
+                    MutationsUtils.projectRange(resultMutations, sequence1Range),
+                    Float.NaN
+                )
+            }
+        return Result(
+            alignment,
+            geneFeature,
+            partitioning
+        )
     }
 
     private data class Result<S : Sequence<S>>(
@@ -387,6 +352,133 @@ class MutationsDescription private constructor(
             require(geneFeature == relativeTo) {
                 "Can't calculate alignment $geneFeature relative to $relativeTo"
             }
+        }
+    }
+
+    companion object {
+        operator fun invoke(
+            VParts: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
+            VSequence1: NucleotideSequence,
+            VPartitioning: ExtendedReferencePoints,
+            baseNDN: NucleotideSequence,
+            NDNMutations: Mutations<NucleotideSequence>,
+            JParts: SortedMap<GeneFeature, Mutations<NucleotideSequence>>,
+            JSequence1: NucleotideSequence,
+            JPartitioning: ExtendedReferencePoints,
+            maxShiftedTriplets: Int = Int.MAX_VALUE
+        ): MutationsDescription {
+            check(VParts.lastKey().lastPoint == VEndTrimmed)
+            check(JParts.firstKey().firstPoint == JBeginTrimmed)
+            val VPartsN = Parts(VPartitioning, VSequence1, VParts).withSplittedMutations(CDR3Begin)
+            val JPartsN = Parts(JPartitioning, JSequence1, JParts).withSplittedMutations(CDR3End)
+            val CDR3PartsN = calculateCDR3PartsN(VPartsN, JPartsN, baseNDN, NDNMutations)
+            return MutationsDescription(
+                VPartsN = VPartsN,
+                CDR3PartsN = CDR3PartsN,
+                JPartsN = JPartsN,
+                maxShiftedTriplets = maxShiftedTriplets,
+                VPartsAaInit = { VPartsN.translate(maxShiftedTriplets) },
+                JPartsAaInit = { JPartsN.translate(maxShiftedTriplets) },
+                CDR3PartsAaInit = { CDR3PartsN.translate(maxShiftedTriplets) }
+            )
+        }
+
+        /**
+         * Combine mutations and other info from VCDR3Part, NDN and JCDR3Part
+         */
+        private fun calculateCDR3PartsN(
+            VPartsN: Parts<NucleotideSequence>,
+            JPartsN: Parts<NucleotideSequence>,
+            baseNDN: NucleotideSequence,
+            NDNMutations: Mutations<NucleotideSequence>
+        ): Parts<NucleotideSequence> {
+            val VCDR3PartN = VPartsN.sequence1.getRange(VPartsN.partitioning.getRange(VCDR3Part))
+            val JCDR3PartN = JPartsN.sequence1.getRange(JPartsN.partitioning.getRange(JCDR3Part))
+            val CDR3Sequence1 = VCDR3PartN + baseNDN + JCDR3PartN
+            val partitioningForCDR3 = ExtendedReferencePointsBuilder().apply {
+                setPosition(CDR3Begin, 0)
+                setPosition(VEndTrimmed, VCDR3PartN.size())
+                setPosition(
+                    JBeginTrimmed,
+                    CDR3Sequence1.size() - JCDR3PartN.size()
+                )
+                setPosition(CDR3End, CDR3Sequence1.size())
+            }.build()
+            val JMutationsShift = JPartsN.partitioning.getPosition(CDR3End) - JCDR3PartN.size()
+            return Parts(
+                partitioningForCDR3,
+                CDR3Sequence1,
+                sortedMapOf(
+                    CDR3 to VPartsN.mutations[VCDR3Part]!!.move(-VPartsN.partitioning.getPosition(CDR3Begin))
+                        .concat(NDNMutations.move(partitioningForCDR3.getPosition(VEndTrimmed)))
+                        .concat(JPartsN.mutations[JCDR3Part]!!.move(partitioningForCDR3.getPosition(JBeginTrimmed) - JMutationsShift))
+                )
+            )
+        }
+
+        /**
+         * Translate to AA (mutations, sequence1 and portioning)
+         */
+        private fun Parts<NucleotideSequence>.translate(maxShiftedTriplets: Int): Parts<AminoAcidSequence> {
+            //TODO left only partitioning.getTranslationParameters(geneFeature) after fix of io.repseq.core.GeneFeature.getCodingGeneFeature
+            val translationParametersByFeatures = mutations.keys.associateTo(TreeMap()) { geneFeature ->
+                val withVJJunction = when {
+                    geneFeature.lastPoint == VEndTrimmed -> GeneFeature(geneFeature.firstPoint, VEnd)
+                    geneFeature.firstPoint == JBeginTrimmed -> GeneFeature(JBegin, geneFeature.lastPoint)
+                    else -> geneFeature
+                }
+                withVJJunction to partitioning.getTranslationParameters(withVJJunction)
+            }
+            val translationParametersForSequence1 = partitioning.getTranslationParameters(
+                GeneFeature(
+                    translationParametersByFeatures.firstKey().firstPoint,
+                    translationParametersByFeatures.lastKey().lastPoint
+                )
+            )
+            //for every position calculate AA position
+            val newPartitioning = ExtendedReferencePointsBuilder().apply {
+                for (i in 0 until partitioning.pointsCount()) {
+                    val referencePoint = partitioning.referencePointFromIndex(i)
+                    val position = partitioning.getPosition(referencePoint)
+                    if (position != -1) {
+                        val translationParameters = translationParametersByFeatures.entries
+                            .firstOrNull { referencePoint in it.key }
+                            ?.value
+
+                        if (translationParameters != null) {
+                            setPosition(
+                                referencePoint,
+                                AminoAcidSequence.convertNtPositionToAA(
+                                    position,
+                                    sequence1.size(),
+                                    translationParameters
+                                ).aminoAcidPosition
+                            )
+                        }
+                    }
+                }
+            }.build()
+            return Parts(
+                newPartitioning,
+                AminoAcidSequence.translate(
+                    sequence1,
+                    translationParametersForSequence1
+                ),
+                mutations.mapValuesTo(TreeMap()) { (geneFeature, mutations) ->
+                    //TODO left only partitioning.getTranslationParameters(geneFeature) after fix of io.repseq.core.GeneFeature.getCodingGeneFeature
+                    val translationParameters = when (geneFeature) {
+                        VCDR3Part -> FromLeftWithoutIncompleteCodon
+                        JCDR3Part -> FromRightWithIncompleteCodon
+                        else -> partitioning.getTranslationParameters(geneFeature)
+                    }
+                    MutationsUtil.nt2aa(
+                        sequence1,
+                        mutations,
+                        translationParameters,
+                        maxShiftedTriplets
+                    )
+                }
+            )
         }
     }
 }

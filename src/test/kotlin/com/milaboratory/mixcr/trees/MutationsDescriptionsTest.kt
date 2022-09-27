@@ -15,6 +15,7 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Alignment
+import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.MutationsUtil
 import com.milaboratory.core.sequence.AminoAcidAlphabet.INCOMPLETE_CODON
@@ -26,6 +27,7 @@ import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithIncomple
 import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon
 import com.milaboratory.core.sequence.TranslationParameters.FromRightWithIncompleteCodon
 import com.milaboratory.mixcr.util.RandomizedTest
+import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
 import io.kotest.matchers.should
@@ -49,19 +51,18 @@ import io.repseq.core.ReferencePoint.VEnd
 import io.repseq.core.ReferencePoint.VEndTrimmed
 import io.repseq.core.ReferencePoints
 import io.repseq.core.ReferenceUtil
-import org.junit.Ignore
 import org.junit.Test
 import kotlin.random.Random
 
 class MutationsDescriptionsTest {
     @Test
     fun `get alignments with NDN bound mod == 3`() {
-        val VSequence1 = NucleotideSequence("AAAAAAGGGCCCCCCCCC")
+        val VSequence1 = NucleotideSequence("AaAaAaGGGCCCCCCCCC")
         val VSequence1A = AminoAcidSequence("KKGPPP")
         val VMutations = Mutations(NucleotideSequence.ALPHABET, "SA0GSG7T")
-        val baseNDN = NucleotideSequence("AAAAAA")
+        val baseNDN = NucleotideSequence("AaAaAa")
         val NDNMutations = Mutations(NucleotideSequence.ALPHABET, "SA1TSA4T")
-        val JSequence1 = NucleotideSequence("CCCCCCGGGAAAAAAAAA")
+        val JSequence1 = NucleotideSequence("CCCCCCGGGAaAaAaAaA")
         val JSequence1A = AminoAcidSequence("PPGKKK")
         val JMutations = Mutations(NucleotideSequence.ALPHABET, "SG7TSA17T")
         val mutationsDescription = MutationsDescription(
@@ -76,8 +77,8 @@ class MutationsDescriptionsTest {
             ReferencePoints(ReferenceUtil.getReferencePointIndex(JBegin), intArrayOf(0, 9, 18))
                 .withJCDR3PartLength(6)
         )
-        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("GAAAAAGTGCCCCCCCCC")
-        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAAAAAAAAT")
+        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("GAaAaAGTGCCCCCCCCC")
+        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAaAaAaAaT")
         translate(VMutations.mutate(VSequence1), FromLeftWithIncompleteCodon) shouldBe
                 AminoAcidSequence("EKVPPP")
         translate(JMutations.mutate(JSequence1), FromLeftWithIncompleteCodon) shouldBe
@@ -88,9 +89,9 @@ class MutationsDescriptionsTest {
         mutationsDescription.nAlignment(FR3, GeneFeature(FR3Begin, VEnd)) should {
             requireNotNull(it)
             it.sequence1 shouldBe VSequence1
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAa")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0G")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAaAaA")
         }
         mutationsDescription.aaAlignment(FR3, GeneFeature(FR3Begin, VEnd)) should {
             requireNotNull(it)
@@ -101,10 +102,10 @@ class MutationsDescriptionsTest {
         }
         mutationsDescription.nAlignment(FR3) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AAAAAA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
+            it.sequence1 shouldBe NucleotideSequence("AaAaAa")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAa")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0G")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAaAaA")
         }
         mutationsDescription.aaAlignment(FR3) should {
             requireNotNull(it)
@@ -133,10 +134,10 @@ class MutationsDescriptionsTest {
 
         mutationsDescription.nAlignment(CDR3) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("GGGCCCAAAAAACCCGGG")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCAAAAAACCCGGG")
+            it.sequence1 shouldBe NucleotideSequence("GGGCCCAaAaAaCCCGGG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCAaAaAaCCCGGG")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1TSA7TSA10TSG16T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCATAATACCCGTG")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCATAaTACCCGTG")
         }
         mutationsDescription.aaAlignment(CDR3) should {
             requireNotNull(it)
@@ -150,7 +151,7 @@ class MutationsDescriptionsTest {
             it.sequence1 shouldBe baseNDN
             it.sequence1.getRange(it.sequence1Range) shouldBe baseNDN
             it.absoluteMutations shouldBe NDNMutations
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("ATAATA")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("ATAaTA")
         }
 
 
@@ -172,9 +173,9 @@ class MutationsDescriptionsTest {
         mutationsDescription.nAlignment(FR4, GeneFeature(JBegin, FR4End)) should {
             requireNotNull(it)
             it.sequence1 shouldBe JSequence1
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaAaA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA17T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AAAAAAAAT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AaAaAaAaT")
         }
         mutationsDescription.aaAlignment(FR4, GeneFeature(JBegin, FR4End)) should {
             requireNotNull(it)
@@ -185,10 +186,10 @@ class MutationsDescriptionsTest {
         }
         mutationsDescription.nAlignment(FR4, GeneFeature(JBeginTrimmed, FR4End)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("CCCGGGAAAAAAAAA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAAAA")
+            it.sequence1 shouldBe NucleotideSequence("CCCGGGAaAaAaAaA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaAaA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA14T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AAAAAAAAT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AaAaAaAaT")
         }
         mutationsDescription.aaAlignment(FR4, GeneFeature(JBeginTrimmed, FR4End)) should {
             requireNotNull(it)
@@ -199,10 +200,10 @@ class MutationsDescriptionsTest {
         }
         mutationsDescription.nAlignment(FR4) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AAAAAAAAA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAAAA")
+            it.sequence1 shouldBe NucleotideSequence("AaAaAaAaA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaAaA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA8T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AAAAAAAAT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AaAaAaAaT")
         }
         mutationsDescription.aaAlignment(FR4) should {
             requireNotNull(it)
@@ -216,11 +217,11 @@ class MutationsDescriptionsTest {
 
         mutationsDescription.nAlignment(GeneFeature(FR3Begin, FR4End)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.sequence1 shouldBe NucleotideSequence("AaAaAaGGGCCCAaAaAaCCCGGGAaAaAaAaA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaGGGCCCAaAaAaCCCGGGAaAaAaAaA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0GSG7TSA13TSA16TSG22TSA32T")
             it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe
-                    NucleotideSequence("GAAAAAGTGCCCATAATACCCGTGAAAAAAAAT")
+                    NucleotideSequence("GAaAaAGTGCCCATAaTACCCGTGAaAaAaAaT")
         }
         mutationsDescription.aaAlignment(GeneFeature(FR3Begin, FR4End)) should {
             requireNotNull(it)
@@ -233,12 +234,12 @@ class MutationsDescriptionsTest {
 
     @Test
     fun `get alignments with NDN bound mod != 3`() {
-        val VSequence1 = NucleotideSequence("AAAAAAGGGCCCCCCCCC")
+        val VSequence1 = NucleotideSequence("AaAaAaGGGCCCCCCCCC")
         val VSequence1A = AminoAcidSequence("KKGPPP")
         val VMutations = Mutations(NucleotideSequence.ALPHABET, "SA0GSG7T")
-        val baseNDN = NucleotideSequence("AAAAAAA")
+        val baseNDN = NucleotideSequence("AaAaAaA")
         val NDNMutations = Mutations(NucleotideSequence.ALPHABET, "SA0TSA6T")
-        val JSequence1 = NucleotideSequence("CCCCCCGGGAAAAAAAAA")
+        val JSequence1 = NucleotideSequence("CCCCCCGGGAaAaAaAaA")
         val JSequence1A = AminoAcidSequence("PPGKKK")
         val JMutations = Mutations(NucleotideSequence.ALPHABET, "SG7TSA17T")
         val mutationsDescription = MutationsDescription(
@@ -253,8 +254,8 @@ class MutationsDescriptionsTest {
             ReferencePoints(ReferenceUtil.getReferencePointIndex(JBegin), intArrayOf(0, 9, 18))
                 .withJCDR3PartLength(7)
         )
-        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("GAAAAAGTGCCCCCCCCC")
-        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAAAAAAAAT")
+        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("GAaAaAGTGCCCCCCCCC")
+        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAaAaAaAaT")
         translate(VMutations.mutate(VSequence1), FromLeftWithIncompleteCodon) shouldBe
                 AminoAcidSequence("EKVPPP")
         translate(JMutations.mutate(JSequence1), FromLeftWithIncompleteCodon) shouldBe
@@ -281,10 +282,10 @@ class MutationsDescriptionsTest {
 
         mutationsDescription.nAlignment(CDR3) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("GGGCCCCAAAAAAACCCCGGG")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCCAAAAAAACCCCGGG")
+            it.sequence1 shouldBe NucleotideSequence("GGGCCCCAaAaAaACCCCGGG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCCAaAaAaACCCCGGG")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1TSA7TSA13TSG19T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCCTAAAAATCCCCGTG")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCCTAaAaATCCCCGTG")
         }
         mutationsDescription.aaAlignment(CDR3) should {
             requireNotNull(it)
@@ -295,24 +296,24 @@ class MutationsDescriptionsTest {
         }
         mutationsDescription.nAlignment(GeneFeature(CDR3Begin, JBeginTrimmed)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("GGGCCCCAAAAAAA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCCAAAAAAA")
+            it.sequence1 shouldBe NucleotideSequence("GGGCCCCAaAaAaA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCCAaAaAaA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1TSA7TSA13T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCCTAAAAAT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCCTAaAaAT")
         }
         mutationsDescription.nAlignment(VJJunction) should {
             requireNotNull(it)
             it.sequence1 shouldBe baseNDN
             it.sequence1.getRange(it.sequence1Range) shouldBe baseNDN
             it.absoluteMutations shouldBe NDNMutations
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("TAAAAAT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("TAaAaAT")
         }
         mutationsDescription.nAlignment(GeneFeature(VEndTrimmed, CDR3End)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AAAAAAACCCCGGG")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAACCCCGGG")
+            it.sequence1 shouldBe NucleotideSequence("AaAaAaACCCCGGG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaACCCCGGG")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0TSA6TSG12T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("TAAAAATCCCCGTG")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("TAaAaATCCCCGTG")
         }
 
 
@@ -336,11 +337,11 @@ class MutationsDescriptionsTest {
 
         mutationsDescription.nAlignment(GeneFeature(FR3Begin, FR4End)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCCAAAAAAACCCCGGGAAAAAAAAA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAGGGCCCCAAAAAAACCCCGGGAAAAAAAAA")
+            it.sequence1 shouldBe NucleotideSequence("AaAaAaGGGCCCCAaAaAaACCCCGGGAaAaAaAaA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaGGGCCCCAaAaAaACCCCGGGAaAaAaAaA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0GSG7TSA13TSA19TSG25TSA35T")
             it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe
-                    NucleotideSequence("GAAAAAGTGCCCCTAAAAATCCCCGTGAAAAAAAAT")
+                    NucleotideSequence("GAaAaAGTGCCCCTAaAaATCCCCGTGAaAaAaAaT")
         }
         mutationsDescription.aaAlignment(GeneFeature(FR3Begin, FR4End)) should {
             requireNotNull(it)
@@ -352,22 +353,22 @@ class MutationsDescriptionsTest {
     }
 
     @Test
-    fun `randomized test of broken AA`() {
-        RandomizedTest.randomized(::testBrokenAA, numberOfRuns = 100000)
+    fun `randomized test of broken Aa`() {
+        RandomizedTest.randomized(::testBrokenAa, numberOfRuns = 100000)
     }
 
     @Test
-    fun `reproduce test of broken AA`() {
+    fun `reproduce test of broken Aa`() {
         RandomizedTest.reproduce(
-            ::testBrokenAA,
+            ::testBrokenAa,
             -3966494014459193821L, -1558052645563470479L
         )
     }
 
-    private fun testBrokenAA(random: Random, print: Boolean) {
-        val VSequence1 = NucleotideSequence("AAAAAAGGGCCCCCCCCC")
+    private fun testBrokenAa(random: Random, print: Boolean) {
+        val VSequence1 = NucleotideSequence("AaAaAaGGGCCCCCCCCC")
         val VMutations = Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
-        val baseNDN = NucleotideSequence("AAAAAA")
+        val baseNDN = NucleotideSequence("AaAaAa")
         val NDNMutations = Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
         val JSequence1 = random.generateSequence(18 + random.nextInt(4))
         val JMutations = random.generateMutations(JSequence1)
@@ -397,7 +398,7 @@ class MutationsDescriptionsTest {
 
     @Test
     fun `randomized test of mutations projection`() {
-        RandomizedTest.randomized(::testMutationsProjection, numberOfRuns = 100000)
+        RandomizedTest.randomized(::testMutationsProjection, numberOfRuns = 100_000)
     }
 
     @Test
@@ -422,11 +423,11 @@ class MutationsDescriptionsTest {
         val baseNDN = random.generateSequence(9)
         val JSequence1 = random.generateSequence(12)
         val VMutations = random.generateMutations(VSequence1, Range(0, 15))
-        val VAASequence = translate(VSequence1, FromLeftWithoutIncompleteCodon)
+        val VAaSequence = translate(VSequence1, FromLeftWithoutIncompleteCodon)
         val NDNMutations = random.generateMutations(baseNDN)
         val JMutations = random.generateMutations(JSequence1, Range(3, 12))
         val expectedNTarget = VMutations.mutate(VSequence1.getRange(0, 15))
-        val expectedFullAATarget = translate(
+        val expectedFullAaTarget = translate(
             VMutations.mutate(VSequence1.getRange(0, 15)) +
                     NDNMutations.mutate(baseNDN) +
                     buildSequence(JSequence1, JMutations, Range(3, 12), true),
@@ -470,20 +471,20 @@ class MutationsDescriptionsTest {
             println("                    VCDR3Part:")
             println("$VCDR3PartNAlignment")
         }
-        val fullAAAlignment = mutationsDescription.aaAlignment(GeneFeature(CDR2Begin, FR4End))
-        val CDR2AAAlignment = mutationsDescription.aaAlignment(CDR2)
-        val FR3AAAlignment = mutationsDescription.aaAlignment(FR3)
-        val CDR3AAAlignment = mutationsDescription.aaAlignment(CDR3)
-        val FR4AAAlignment = mutationsDescription.aaAlignment(FR4)
-        checkNotNull(fullAAAlignment)
-        checkNotNull(CDR2AAAlignment)
-        checkNotNull(FR3AAAlignment)
-        checkNotNull(CDR3AAAlignment)
-        checkNotNull(FR4AAAlignment)
+        val fullAaAlignment = mutationsDescription.aaAlignment(GeneFeature(CDR2Begin, FR4End))
+        val CDR2AaAlignment = mutationsDescription.aaAlignment(CDR2)
+        val FR3AaAlignment = mutationsDescription.aaAlignment(FR3)
+        val CDR3AaAlignment = mutationsDescription.aaAlignment(CDR3)
+        val FR4AaAlignment = mutationsDescription.aaAlignment(FR4)
+        checkNotNull(fullAaAlignment)
+        checkNotNull(CDR2AaAlignment)
+        checkNotNull(FR3AaAlignment)
+        checkNotNull(CDR3AaAlignment)
+        checkNotNull(FR4AaAlignment)
         if (print) {
-            println("                  VAASequence1: $VAASequence")
+            println("                  VAaSequence1: $VAaSequence")
             println(
-                "                  VAAMutations: ${
+                "                  VAaMutations: ${
                     MutationsUtil.nt2aa(
                         VSequence1,
                         VMutations,
@@ -491,36 +492,48 @@ class MutationsDescriptionsTest {
                     )
                 }"
             )
-            println("expected fullMutatedAASegment: $expectedFullAATarget")
-            println("  actual fullMutatedAASegment: ${fullAAAlignment.target}")
-            println("composed fullMutatedAASegment: ${CDR2AAAlignment.target} ${FR3AAAlignment.target} ${CDR3AAAlignment.target} ${FR4AAAlignment.target}")
+            println("expected fullMutatedAaSegment: $expectedFullAaTarget")
+            println("  actual fullMutatedAaSegment: ${fullAaAlignment.target}")
+            println("composed fullMutatedAaSegment: ${CDR2AaAlignment.target} ${FR3AaAlignment.target} ${CDR3AaAlignment.target} ${FR4AaAlignment.target}")
             println("          [CDR2Begin, FR4End]:")
-            println("$fullAAAlignment")
+            println("$fullAaAlignment")
             println("                         CDR2:")
-            println("$CDR2AAAlignment")
+            println("$CDR2AaAlignment")
             println("                          FR3:")
-            println("$FR3AAAlignment")
+            println("$FR3AaAlignment")
             println("                         CDR3:")
-            println("$CDR3AAAlignment")
+            println("$CDR3AaAlignment")
             println("                          FR4:")
-            println("$FR4AAAlignment")
+            println("$FR4AaAlignment")
         }
         fullVNAlignment.target shouldBe expectedNTarget
         (CDR2NAlignment.target + FR3NAlignment.target + VCDR3PartNAlignment.target) shouldBe expectedNTarget
-        fullAAAlignment.target shouldBe expectedFullAATarget
-        (CDR2AAAlignment.target + FR3AAAlignment.target + CDR3AAAlignment.target + FR4AAAlignment.target) shouldBe expectedFullAATarget
+        fullAaAlignment.target shouldBe expectedFullAaTarget
+        (CDR2AaAlignment.target + FR3AaAlignment.target + CDR3AaAlignment.target + FR4AaAlignment.target) shouldBe expectedFullAaTarget
     }
 
-    @Ignore("There is no way to build consistent difference. We can just try our best")
     @Test
     fun `randomized test of difference`() {
-        RandomizedTest.randomized(::testDifference, numberOfRuns = 100000)
+        RandomizedTest.randomized(::testDifference, numberOfRuns = 10_000_000)
     }
 
     @Test
     fun `reproduce test of difference`() {
         RandomizedTest.reproduce(
             ::testDifference,
+            6188717389695233857L,
+            -1498261129221652450L,
+            -1391451482407814944L,
+            -806612386108641232L,
+            7885745501533895298L,
+            3918346117227262916L,
+            -9080740558421995995L,
+            -8984092378964770538L,
+            -7911449512021046160L,
+            -1011466467301499251L,
+            -8258866350102008211L,
+            -5108916171340241338L,
+            -5514327963004606929L,
             -2699654147603327555L,
             -1974766567385910414L,
             -4370699181734706309L,
@@ -544,26 +557,12 @@ class MutationsDescriptionsTest {
         val firstVMutations = random.generateMutations(VSequence1, Range(0, 15))
         val firstNDNMutations = random.generateMutations(baseNDN)
         val firstJMutations = random.generateMutations(JSequence1, Range(3, 12))
-        val expectedNTargetOfFirst = firstVMutations.mutate(VSequence1.getRange(0, 15))
-        val expectedAATargetOfFirst = translate(
-            buildSequence(VSequence1, firstVMutations, Range(0, 15), true) +
-                    firstNDNMutations.mutate(baseNDN) +
-                    buildSequence(JSequence1, firstJMutations, Range(3, 12), true),
-            FromLeftWithIncompleteCodon
-        )
         if (!isValid(VSequence1, firstVMutations, baseNDN, firstNDNMutations, JSequence1, firstJMutations)) {
             return
         }
         val secondVMutations = random.generateMutations(VSequence1, Range(0, 15))
         val secondNDNMutations = random.generateMutations(baseNDN)
         val secondJMutations = random.generateMutations(JSequence1, Range(3, 12))
-        val expectedNTargetOfSecond = secondVMutations.mutate(VSequence1.getRange(0, 15))
-        val expectedAATargetOfSecond = translate(
-            buildSequence(VSequence1, secondVMutations, Range(0, 15), true) +
-                    secondNDNMutations.mutate(baseNDN) +
-                    buildSequence(JSequence1, secondJMutations, Range(3, 12), true),
-            FromLeftWithIncompleteCodon
-        )
 
         if (!isValid(VSequence1, secondVMutations, baseNDN, secondNDNMutations, JSequence1, secondJMutations)) {
             return
@@ -593,8 +592,6 @@ class MutationsDescriptionsTest {
                 .withJCDR3PartLength(3)
         )
 
-        val fromFirstToSecond = firstMutationsDescription.differenceWith(secondMutationsDescription)
-
 
         val fullVNAlignmentOfFirst = firstMutationsDescription.nAlignment(GeneFeature(CDR2Begin, VEndTrimmed))
         val CDR2NAlignmentOfFirst = firstMutationsDescription.nAlignment(CDR2)
@@ -612,6 +609,9 @@ class MutationsDescriptionsTest {
         checkNotNull(CDR2NAlignmentOfSecond)
         checkNotNull(FR3NAlignmentOfSecond)
         checkNotNull(VCDR3PartNAlignmentOfSecond)
+
+
+        val fromFirstToSecond = firstMutationsDescription.differenceWith(secondMutationsDescription)
         val fullVNAlignmentFromFirstToSecond = fromFirstToSecond.nAlignment(GeneFeature(CDR2Begin, VEndTrimmed))
         val CDR2NAlignmentFromFirstToSecond = fromFirstToSecond.nAlignment(CDR2)
         val FR3NAlignmentFromFirstToSecond = fromFirstToSecond.nAlignment(FR3)
@@ -620,70 +620,198 @@ class MutationsDescriptionsTest {
         checkNotNull(CDR2NAlignmentFromFirstToSecond)
         checkNotNull(FR3NAlignmentFromFirstToSecond)
         checkNotNull(VCDR3PartNAlignmentFromFirstToSecond)
+
+        val expectedVNTargetOfFirst = firstVMutations.mutate(VSequence1.getRange(0, 15))
+        val expectedVNTargetOfSecond = secondVMutations.mutate(VSequence1.getRange(0, 15))
         if (print) {
             println("                            VNSequence1: $VSequence1")
-            println("                            VNMutations: $firstVMutations")
+            println("                      first VNMutations: $firstVMutations")
+            println("                     second VNMutations: $secondVMutations")
             println()
-            println(" expected fullMutatedVNSegment of first: $expectedNTargetOfFirst")
+            println(" expected fullMutatedVNSegment of first: $expectedVNTargetOfFirst")
             println("   actual fullMutatedVNSegment of first: ${fullVNAlignmentFromFirstToSecond.subsequence1}")
             println(" composed fullMutatedVNSegment of first: ${CDR2NAlignmentFromFirstToSecond.subsequence1} ${FR3NAlignmentFromFirstToSecond.subsequence1} ${VCDR3PartNAlignmentFromFirstToSecond.subsequence1}")
             println()
-            println("expected fullMutatedVNSegment of second: $expectedNTargetOfSecond")
+            println("expected fullMutatedVNSegment of second: $expectedVNTargetOfSecond")
             println("  actual fullMutatedVNSegment of second: ${fullVNAlignmentFromFirstToSecond.target}")
             println("composed fullMutatedVNSegment of second: ${CDR2NAlignmentFromFirstToSecond.target} ${FR3NAlignmentFromFirstToSecond.target} ${VCDR3PartNAlignmentFromFirstToSecond.target}")
         }
-        fullVNAlignmentFromFirstToSecond.subsequence1 shouldBe expectedNTargetOfFirst
-        (CDR2NAlignmentFromFirstToSecond.subsequence1 + FR3NAlignmentFromFirstToSecond.subsequence1 + VCDR3PartNAlignmentFromFirstToSecond.subsequence1) shouldBe expectedNTargetOfFirst
+        fullVNAlignmentFromFirstToSecond.subsequence1 shouldBe expectedVNTargetOfFirst
+        (CDR2NAlignmentFromFirstToSecond.subsequence1 + FR3NAlignmentFromFirstToSecond.subsequence1 + VCDR3PartNAlignmentFromFirstToSecond.subsequence1) shouldBe expectedVNTargetOfFirst
 
-        fullVNAlignmentFromFirstToSecond.target shouldBe expectedNTargetOfSecond
-        (CDR2NAlignmentFromFirstToSecond.target + FR3NAlignmentFromFirstToSecond.target + VCDR3PartNAlignmentFromFirstToSecond.target) shouldBe expectedNTargetOfSecond
+        fullVNAlignmentFromFirstToSecond.target shouldBe expectedVNTargetOfSecond
+        (CDR2NAlignmentFromFirstToSecond.target + FR3NAlignmentFromFirstToSecond.target + VCDR3PartNAlignmentFromFirstToSecond.target) shouldBe expectedVNTargetOfSecond
 
 
-        val fullVAAAlignmentOfFirst = firstMutationsDescription.aaAlignment(GeneFeature(CDR2Begin, FR4End))
-        val CDR2AAAlignmentOfFirst = firstMutationsDescription.aaAlignment(CDR2)
-        val FR3AAAlignmentOfFirst = firstMutationsDescription.aaAlignment(FR3)
-        val CDR3AAAlignmentOfFirst = firstMutationsDescription.aaAlignment(CDR3)
-        val FR4AAAlignmentOfFirst = firstMutationsDescription.aaAlignment(FR4)
-        checkNotNull(fullVAAAlignmentOfFirst)
-        checkNotNull(CDR2AAAlignmentOfFirst)
-        checkNotNull(FR3AAAlignmentOfFirst)
-        checkNotNull(CDR3AAAlignmentOfFirst)
-        checkNotNull(FR4AAAlignmentOfFirst)
-        val fullVAAAlignmentOfSecond = secondMutationsDescription.aaAlignment(GeneFeature(CDR2Begin, FR4End))
-        val CDR2AAAlignmentOfSecond = secondMutationsDescription.aaAlignment(CDR2)
-        val FR3AAAlignmentOfSecond = secondMutationsDescription.aaAlignment(FR3)
-        val CDR3AAAlignmentOfSecond = secondMutationsDescription.aaAlignment(CDR3)
-        val FR4AAAlignmentOfSecond = secondMutationsDescription.aaAlignment(FR4)
-        checkNotNull(fullVAAAlignmentOfSecond)
-        checkNotNull(CDR2AAAlignmentOfSecond)
-        checkNotNull(FR3AAAlignmentOfSecond)
-        checkNotNull(CDR3AAAlignmentOfSecond)
-        checkNotNull(FR4AAAlignmentOfSecond)
-        val fullVAAAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(GeneFeature(CDR2Begin, FR4End))
-        val CDR2AAAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(CDR2)
-        val FR3AAAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(FR3)
-        val CDR3AAAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(CDR3)
-        val FR4AAAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(FR4)
-        checkNotNull(fullVAAAlignmentFromFirstToSecond)
-        checkNotNull(CDR2AAAlignmentFromFirstToSecond)
-        checkNotNull(FR3AAAlignmentFromFirstToSecond)
-        checkNotNull(CDR3AAAlignmentFromFirstToSecond)
-        checkNotNull(FR4AAAlignmentFromFirstToSecond)
+        val fullJNAlignmentFromFirstToSecond = fromFirstToSecond.nAlignment(GeneFeature(JBeginTrimmed, FR4End))
+        val JCDR3PartNAlignmentFromFirstToSecond = fromFirstToSecond.nAlignment(JCDR3Part)
+        val FR4NAlignmentFromFirstToSecond = fromFirstToSecond.nAlignment(FR4)
+        checkNotNull(fullJNAlignmentFromFirstToSecond)
+        checkNotNull(JCDR3PartNAlignmentFromFirstToSecond)
+        checkNotNull(FR4NAlignmentFromFirstToSecond)
+
+        val expectedJNTargetOfFirst = buildSequence(JSequence1, firstJMutations, Range(3, 12), true)
+        val expectedJNTargetOfSecond = buildSequence(JSequence1, secondJMutations, Range(3, 12), true)
         if (print) {
             println()
-            println(" expected fullMutatedVAASegment of first: $expectedAATargetOfFirst")
-            println("   actual fullMutatedVAASegment of first: ${fullVAAAlignmentFromFirstToSecond.subsequence1}")
-            println(" composed fullMutatedVAASegment of first: ${CDR2AAAlignmentFromFirstToSecond.subsequence1} ${FR3AAAlignmentFromFirstToSecond.subsequence1} ${CDR3AAAlignmentFromFirstToSecond.subsequence1} ${FR4AAAlignmentFromFirstToSecond.subsequence1}")
+            println("                            JNSequence1: $JSequence1")
+            println("                      first JNMutations: $firstJMutations")
+            println("                     second JNMutations: $secondJMutations")
             println()
-            println("expected fullMutatedVAASegment of second: $expectedAATargetOfSecond")
-            println("  actual fullMutatedVAASegment of second: ${fullVAAAlignmentFromFirstToSecond.target}")
-            println("composed fullMutatedVAASegment of second: ${CDR2AAAlignmentFromFirstToSecond.target} ${FR3AAAlignmentFromFirstToSecond.target} ${CDR3AAAlignmentFromFirstToSecond.target} ${FR4AAAlignmentFromFirstToSecond.target}")
+            println(" expected fullMutatedJNSegment of first: $expectedJNTargetOfFirst")
+            println("   actual fullMutatedJNSegment of first: ${fullJNAlignmentFromFirstToSecond.subsequence1}")
+            println(" composed fullMutatedJNSegment of first: ${JCDR3PartNAlignmentFromFirstToSecond.subsequence1} ${FR4NAlignmentFromFirstToSecond.subsequence1}")
+            println()
+            println("expected fullMutatedJNSegment of second: $expectedJNTargetOfSecond")
+            println("  actual fullMutatedJNSegment of second: ${fullJNAlignmentFromFirstToSecond.target}")
+            println("composed fullMutatedJNSegment of second: ${JCDR3PartNAlignmentFromFirstToSecond.target} ${FR4NAlignmentFromFirstToSecond.target}")
         }
-        fullVAAAlignmentFromFirstToSecond.subsequence1 shouldBe expectedAATargetOfFirst
-        (CDR2AAAlignmentFromFirstToSecond.subsequence1 + FR3AAAlignmentFromFirstToSecond.subsequence1 + CDR3AAAlignmentFromFirstToSecond.subsequence1 + FR4AAAlignmentFromFirstToSecond.subsequence1) shouldBe expectedAATargetOfFirst
+        fullJNAlignmentFromFirstToSecond.subsequence1 shouldBe expectedJNTargetOfFirst
+        (JCDR3PartNAlignmentFromFirstToSecond.subsequence1 + FR4NAlignmentFromFirstToSecond.subsequence1) shouldBe expectedJNTargetOfFirst
 
-        fullVAAAlignmentFromFirstToSecond.target shouldBe expectedAATargetOfSecond
-        (CDR2AAAlignmentFromFirstToSecond.target + FR3AAAlignmentFromFirstToSecond.target + CDR3AAAlignmentFromFirstToSecond.target + FR4AAAlignmentFromFirstToSecond.target) shouldBe expectedAATargetOfSecond
+        fullJNAlignmentFromFirstToSecond.target shouldBe expectedJNTargetOfSecond
+        (JCDR3PartNAlignmentFromFirstToSecond.target + FR4NAlignmentFromFirstToSecond.target) shouldBe expectedJNTargetOfSecond
+
+
+        val fullVAaAlignmentOfFirst = firstMutationsDescription.aaAlignment(GeneFeature(CDR2Begin, FR4End))
+        val CDR2AaAlignmentOfFirst = firstMutationsDescription.aaAlignment(CDR2)
+        val FR3AaAlignmentOfFirst = firstMutationsDescription.aaAlignment(FR3)
+        val CDR3AaAlignmentOfFirst = firstMutationsDescription.aaAlignment(CDR3)
+        val FR4AaAlignmentOfFirst = firstMutationsDescription.aaAlignment(FR4)
+        checkNotNull(fullVAaAlignmentOfFirst)
+        checkNotNull(CDR2AaAlignmentOfFirst)
+        checkNotNull(FR3AaAlignmentOfFirst)
+        checkNotNull(CDR3AaAlignmentOfFirst)
+        checkNotNull(FR4AaAlignmentOfFirst)
+        val fullVAaAlignmentOfSecond = secondMutationsDescription.aaAlignment(GeneFeature(CDR2Begin, FR4End))
+        val CDR2AaAlignmentOfSecond = secondMutationsDescription.aaAlignment(CDR2)
+        val FR3AaAlignmentOfSecond = secondMutationsDescription.aaAlignment(FR3)
+        val CDR3AaAlignmentOfSecond = secondMutationsDescription.aaAlignment(CDR3)
+        val FR4AaAlignmentOfSecond = secondMutationsDescription.aaAlignment(FR4)
+        checkNotNull(fullVAaAlignmentOfSecond)
+        checkNotNull(CDR2AaAlignmentOfSecond)
+        checkNotNull(FR3AaAlignmentOfSecond)
+        checkNotNull(CDR3AaAlignmentOfSecond)
+        checkNotNull(FR4AaAlignmentOfSecond)
+        val CDR2AaAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(CDR2)
+        val FR3AaAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(FR3)
+        val CDR3AaAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(CDR3)
+        val FR4AaAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(FR4)
+        checkNotNull(CDR2AaAlignmentFromFirstToSecond)
+        checkNotNull(FR3AaAlignmentFromFirstToSecond)
+        checkNotNull(CDR3AaAlignmentFromFirstToSecond)
+        checkNotNull(FR4AaAlignmentFromFirstToSecond)
+
+        val CDR2_FR3_AaAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(GeneFeature(CDR2Begin, CDR3Begin))
+        checkNotNull(CDR2_FR3_AaAlignmentFromFirstToSecond)
+        val firstCDR2_FR3_AaMutations = MutationsUtil.nt2aa(
+            VSequence1,
+            firstVMutations.extractAbsoluteMutations(Range(0, 12), isIncludeFirstInserts = true),
+            FromLeftWithIncompleteCodon
+        )
+        val secondCDR2_FR3_AaMutations = MutationsUtil.nt2aa(
+            VSequence1,
+            secondVMutations.extractAbsoluteMutations(Range(0, 12), isIncludeFirstInserts = true),
+            FromLeftWithIncompleteCodon
+        )
+        val expectedCDR3_FR3_AaTargetOfFirst = firstCDR2_FR3_AaMutations.mutate(translate(VSequence1.getRange(0, 12)))
+        val expectedCDR3_FR3_AaTargetOfSecond = secondCDR2_FR3_AaMutations.mutate(translate(VSequence1.getRange(0, 12)))
+        if (print) {
+            println()
+            println("                            VAaSequence1: ${translate(VSequence1.getRange(0, 12))}")
+            println("                      first VAaMutations: $firstCDR2_FR3_AaMutations")
+            println("                     second VAaMutations: $secondCDR2_FR3_AaMutations")
+            println()
+            println(" expected fullMutatedVAaSegment of first: $expectedCDR3_FR3_AaTargetOfFirst")
+            println("   actual fullMutatedVAaSegment of first: ${CDR2_FR3_AaAlignmentFromFirstToSecond.subsequence1}")
+            println(" composed fullMutatedVAaSegment of first: ${CDR2AaAlignmentFromFirstToSecond.subsequence1} ${FR3AaAlignmentFromFirstToSecond.subsequence1}")
+            println()
+            println("expected fullMutatedVAaSegment of second: $expectedCDR3_FR3_AaTargetOfSecond")
+            println("  actual fullMutatedVAaSegment of second: ${CDR2_FR3_AaAlignmentFromFirstToSecond.target}")
+            println("composed fullMutatedVAaSegment of second: ${CDR2AaAlignmentFromFirstToSecond.target} ${FR3AaAlignmentFromFirstToSecond.target}")
+        }
+        CDR2_FR3_AaAlignmentFromFirstToSecond.subsequence1 shouldBe expectedCDR3_FR3_AaTargetOfFirst
+        (CDR2AaAlignmentFromFirstToSecond.subsequence1 + FR3AaAlignmentFromFirstToSecond.subsequence1) shouldBe expectedCDR3_FR3_AaTargetOfFirst
+
+        CDR2_FR3_AaAlignmentFromFirstToSecond.target shouldBe expectedCDR3_FR3_AaTargetOfSecond
+        (CDR2AaAlignmentFromFirstToSecond.target + FR3AaAlignmentFromFirstToSecond.target) shouldBe expectedCDR3_FR3_AaTargetOfSecond
+
+        val firstFR4_AaMutations = MutationsUtil.nt2aa(
+            JSequence1.getRange(6, 12),
+            firstJMutations.extractAbsoluteMutations(Range(6, 12), isIncludeFirstInserts = false).move(-6),
+            FromLeftWithIncompleteCodon
+        )
+        val secondFR4_AaMutations = MutationsUtil.nt2aa(
+            JSequence1.getRange(6, 12),
+            secondJMutations.extractAbsoluteMutations(Range(6, 12), isIncludeFirstInserts = false).move(-6),
+            FromLeftWithIncompleteCodon
+        )
+        val expectedFR4_AaTargetOfFirst = firstFR4_AaMutations.mutate(translate(JSequence1.getRange(6, 12)))
+        val expectedFR4_AaTargetOfSecond = secondFR4_AaMutations.mutate(translate(JSequence1.getRange(6, 12)))
+        if (print) {
+            println()
+            println("                            JAaSequence1: ${translate(JSequence1.getRange(6, 12))}")
+            println("                      first JAaMutations: $firstFR4_AaMutations")
+            println("                     second JAaMutations: $secondFR4_AaMutations")
+            println()
+            println(" expected fullMutatedJAaSegment of first: $expectedFR4_AaTargetOfFirst")
+            println("   actual fullMutatedJAaSegment of first: ${FR4AaAlignmentFromFirstToSecond.subsequence1}")
+            println()
+            println("expected fullMutatedJAaSegment of second: $expectedFR4_AaTargetOfSecond")
+            println("  actual fullMutatedJAaSegment of second: ${FR4AaAlignmentFromFirstToSecond.target}")
+        }
+        FR4AaAlignmentFromFirstToSecond.subsequence1 shouldBe expectedFR4_AaTargetOfFirst
+
+        FR4AaAlignmentFromFirstToSecond.target shouldBe expectedFR4_AaTargetOfSecond
+
+        val expectedNTargetOfFirst = buildSequence(VSequence1, firstVMutations, Range(0, 15), true) +
+                firstNDNMutations.mutate(baseNDN) +
+                buildSequence(JSequence1, firstJMutations, Range(3, 12), true)
+        val expectedNTargetOfSecond = buildSequence(VSequence1, secondVMutations, Range(0, 15), true) +
+                secondNDNMutations.mutate(baseNDN) +
+                buildSequence(JSequence1, secondJMutations, Range(3, 12), true)
+        val fullNAlignmentFromFirstToSecond = fromFirstToSecond.nAlignment(GeneFeature(CDR2Begin, FR4End))
+        val CDR3NAlignmentFromFirstToSecond = fromFirstToSecond.nAlignment(CDR3)
+        checkNotNull(fullNAlignmentFromFirstToSecond)
+        checkNotNull(CDR3NAlignmentFromFirstToSecond)
+
+        if (print) {
+            println()
+            println(" expected fullMutatedNSegment of first: $expectedNTargetOfFirst")
+            println("   actual fullMutatedNSegment of first: ${fullNAlignmentFromFirstToSecond.subsequence1}")
+            println(" composed fullMutatedNSegment of first: ${CDR2NAlignmentFromFirstToSecond.subsequence1} ${FR3NAlignmentFromFirstToSecond.subsequence1} ${CDR3NAlignmentFromFirstToSecond.subsequence1} ${FR4NAlignmentFromFirstToSecond.subsequence1}")
+            println()
+            println("expected fullMutatedNSegment of second: $expectedNTargetOfSecond")
+            println("  actual fullMutatedNSegment of second: ${fullNAlignmentFromFirstToSecond.target}")
+            println("composed fullMutatedNSegment of second: ${CDR2NAlignmentFromFirstToSecond.target} ${FR3NAlignmentFromFirstToSecond.target} ${CDR3NAlignmentFromFirstToSecond.target} ${FR4NAlignmentFromFirstToSecond.target}")
+        }
+        fullNAlignmentFromFirstToSecond.subsequence1 shouldBe expectedNTargetOfFirst
+        (CDR2NAlignmentFromFirstToSecond.subsequence1 + FR3NAlignmentFromFirstToSecond.subsequence1 + CDR3NAlignmentFromFirstToSecond.subsequence1 + FR4NAlignmentFromFirstToSecond.subsequence1) shouldBe expectedNTargetOfFirst
+
+        fullNAlignmentFromFirstToSecond.target shouldBe expectedNTargetOfSecond
+        (CDR2NAlignmentFromFirstToSecond.target + FR3NAlignmentFromFirstToSecond.target + CDR3NAlignmentFromFirstToSecond.target + FR4NAlignmentFromFirstToSecond.target) shouldBe expectedNTargetOfSecond
+
+
+        val fullAaAlignmentFromFirstToSecond = fromFirstToSecond.aaAlignment(GeneFeature(CDR2Begin, FR4End))
+        checkNotNull(fullAaAlignmentFromFirstToSecond)
+
+        val expectedAaTargetOfFirst = translate(expectedNTargetOfFirst, FromLeftWithIncompleteCodon)
+        val expectedAaTargetOfSecond = translate(expectedNTargetOfSecond, FromLeftWithIncompleteCodon)
+        if (print) {
+            println()
+            println(" expected fullMutatedAaSegment of first: $expectedAaTargetOfFirst")
+            println("   actual fullMutatedAaSegment of first: ${fullAaAlignmentFromFirstToSecond.subsequence1}")
+            println(" composed fullMutatedAaSegment of first: ${CDR2AaAlignmentFromFirstToSecond.subsequence1} ${FR3AaAlignmentFromFirstToSecond.subsequence1} ${CDR3AaAlignmentFromFirstToSecond.subsequence1} ${FR4AaAlignmentFromFirstToSecond.subsequence1}")
+            println()
+            println("expected fullMutatedAaSegment of second: $expectedAaTargetOfSecond")
+            println("  actual fullMutatedAaSegment of second: ${fullAaAlignmentFromFirstToSecond.target}")
+            println("composed fullMutatedAaSegment of second: ${CDR2AaAlignmentFromFirstToSecond.target} ${FR3AaAlignmentFromFirstToSecond.target} ${CDR3AaAlignmentFromFirstToSecond.target} ${FR4AaAlignmentFromFirstToSecond.target}")
+        }
+        fullAaAlignmentFromFirstToSecond.subsequence1 shouldBe expectedAaTargetOfFirst
+        (CDR2AaAlignmentFromFirstToSecond.subsequence1 + FR3AaAlignmentFromFirstToSecond.subsequence1 + CDR3AaAlignmentFromFirstToSecond.subsequence1 + FR4AaAlignmentFromFirstToSecond.subsequence1) shouldBe expectedAaTargetOfFirst
+
+        fullAaAlignmentFromFirstToSecond.target shouldBe expectedAaTargetOfSecond
+        (CDR2AaAlignmentFromFirstToSecond.target + FR3AaAlignmentFromFirstToSecond.target + CDR3AaAlignmentFromFirstToSecond.target + FR4AaAlignmentFromFirstToSecond.target) shouldBe expectedAaTargetOfSecond
     }
 
     private fun isValid(
@@ -698,6 +826,9 @@ class MutationsDescriptionsTest {
             return false
         }
         if (VMutations.extractAbsoluteMutations(Range(6, 12), false).lengthDelta % 3 != 0) {
+            return false
+        }
+        if (VMutations.asSequence().count { Mutation.getPosition(it) == 15 && Mutation.isInDel(it) } > 0) {
             return false
         }
         if (!translate(VMutations.mutate(VSequence1.getRange(0, 15)), FromLeftWithIncompleteCodon).isValid()) {
@@ -715,7 +846,7 @@ class MutationsDescriptionsTest {
         if (!translate(baseNDN, FromLeftWithIncompleteCodon).isValid()) {
             return false
         }
-        if (JMutations.extractAbsoluteMutations(Range(3, 6), true).lengthDelta % 3 != 0) {
+        if (JMutations.extractAbsoluteMutations(Range(0, 6), true).lengthDelta % 3 != 0) {
             return false
         }
         if (JMutations.extractAbsoluteMutations(Range(6, 12), false).lengthDelta % 3 != 0) {
@@ -726,6 +857,9 @@ class MutationsDescriptionsTest {
                 FromRightWithIncompleteCodon
             ).isValid()
         ) {
+            return false
+        }
+        if (JMutations.asSequence().count { Mutation.getPosition(it) == 3 && Mutation.isInDel(it) } > 0) {
             return false
         }
         if (!translate(JSequence1.getRange(3, 12), FromRightWithIncompleteCodon).isValid()) {
