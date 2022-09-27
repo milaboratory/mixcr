@@ -211,7 +211,7 @@ object DropNonCDR3Alignments : MiXCRMixinBase(10) {
     const val CMD_OPTION = "+dropNonCDR3Alignments"
 }
 
-@JsonTypeName("InputLimit")
+@JsonTypeName("LimitInput")
 data class LimitInput(
     @JsonProperty("number") val number: Long
 ) : MiXCRMixinBase(10) {
