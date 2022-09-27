@@ -309,7 +309,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
         var treeIdGenerator = 1
         val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters.topologyBuilder, scoringSet)
         outputTreesPath.toAbsolutePath().parent.createDirectories()
-        SHMTreesWriter(outputTreesPath.toString()).use { shmTreesWriter ->
+        SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
             shmTreesWriter.writeHeader(cloneReaders)
 
             val writer = shmTreesWriter.treesWriter()

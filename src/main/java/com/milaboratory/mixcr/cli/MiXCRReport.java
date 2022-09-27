@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.mitool.helpers.KObjectMapperProvider;
+import com.milaboratory.mixcr.alleles.FindAllelesReport;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReport;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport;
@@ -35,6 +36,7 @@ import com.milaboratory.util.Report;
         @JsonSubTypes.Type(value = VDJCObjectExtenderReport.class, name = "extenderReport"),
         @JsonSubTypes.Type(value = RefineTagsAndSortReport.class, name = "refineTagsAndSort"),
         @JsonSubTypes.Type(value = MultipleInputsReportWrapper.class, name = "multipleInputsReportWrapper"),
+        @JsonSubTypes.Type(value = FindAllelesReport.class, name = "findAllelesReport"),
         @JsonSubTypes.Type(value = BuildSHMTreeReport.class, name = "buildSHMTreeReport")
 })
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider.class)

@@ -26,6 +26,7 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.port
@@ -175,12 +176,12 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     override fun validate() {
         super.validate()
         libraryOutput?.let { libraryOutput ->
-            if (!libraryOutput.extension.endsWith("json")) {
+            if (libraryOutput.extension != "json") {
                 throwValidationExceptionKotlin("--export-library must be json: $libraryOutput")
             }
         }
         allelesMutationsOutput?.let { allelesMutationsOutput ->
-            if (!allelesMutationsOutput.extension.endsWith("csv")) {
+            if (allelesMutationsOutput.extension !in arrayOf("tsv", "csv")) {
                 throwValidationExceptionKotlin("--export-alleles-mutations must be csv: $allelesMutationsOutput")
             }
         }
@@ -279,7 +280,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         progressAndStage.finish()
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             allelesMutationsOutput.toAbsolutePath().parent.createDirectories()
-            printAllelesMutationsOutput(resultLibrary, overallAllelesStatistics, allelesMutationsOutput.toFile())
+            printAllelesMutationsOutput(resultLibrary, overallAllelesStatistics, allelesMutationsOutput)
         }
         ReportUtil.writeReportToStdout(report)
         if (reportFile != null) ReportUtil.appendReport(reportFile, report)
@@ -289,9 +290,9 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     private fun printAllelesMutationsOutput(
         resultLibrary: VDJCLibrary,
         allelesStatistics: OverallAllelesStatistics,
-        allelesMutationsOutput: File
+        allelesMutationsOutput: Path
     ) {
-        PrintStream(allelesMutationsOutput).use { output ->
+        PrintStream(allelesMutationsOutput.toFile()).use { output ->
             val columns = mapOf<String, (VDJCGene) -> Any?>(
                 "alleleName" to { it.name },
                 "geneName" to { it.geneName },
@@ -335,14 +336,14 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                 "scoreDelta" to { gene ->
                     val summaryStatistics = allelesStatistics.stats(gene.id).scoreDelta
                     if (summaryStatistics.n == 0L) "" else
-                        GlobalObjectMappers.toOneLine(MiXCRCommandReport.Stats.from(summaryStatistics))
+                        GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
                 }
             )
             val genes = resultLibrary.genes
                 .filter { it.geneType in VJ_REFERENCE }
                 .sortedWith(Comparator.comparing { gene: VDJCGene -> gene.geneType }
                     .thenComparing { gene: VDJCGene -> gene.name })
-            writeXSV(output, genes, columns, ";")
+            writeXSV(output, genes, columns, chooseDelimiter(allelesMutationsOutput))
         }
     }
 

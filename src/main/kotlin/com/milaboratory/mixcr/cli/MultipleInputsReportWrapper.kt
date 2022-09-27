@@ -11,13 +11,20 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
 import com.milaboratory.util.ReportHelper
 
+@JsonAutoDetect(
+    fieldVisibility = ANY,
+    isGetterVisibility = NONE,
+    getterVisibility = NONE
+)
 data class MultipleInputsReportWrapper(
-    @JsonProperty("inputIndex") val inputIndex: Int,
-    @JsonProperty("inputName") val inputName: String,
-    @JsonProperty("report") val report: MiXCRCommandReport
+    val inputIndex: Int,
+    val inputName: String,
+    val report: MiXCRCommandReport
 ) : MiXCRCommandReport by report {
     override fun writeReport(helper: ReportHelper) {
         helper.println("Report for input #${inputIndex} (${inputName})")
