@@ -266,9 +266,11 @@ object CommandAlign {
         )
         private val inOut: List<String> = mutableListOf()
 
-        override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
+        private val inputs get() = inOut.dropLast(1)
 
-        override fun getOutputFiles(): List<String> = inOut.subList(inOut.size - 1, inOut.size)
+        override fun getInputFiles() = emptyList<String>() // inOut.subList(0, inOut.size - 1)
+
+        override fun getOutputFiles() = inOut.takeLast(1) //.subList(inOut.size - 1, inOut.size)
 
         @Option(description = ["Size of buffer for FASTQ readers"], names = ["--read-buffer"])
         var readBufferSize = 1 shl 22 // 4 Mb
@@ -349,11 +351,11 @@ object CommandAlign {
         }
 
         private val isInputPaired: Boolean
-            get() = inputFiles.size == 2 || isInputBAM
+            get() = inputs.size == 2 || isInputBAM
 
         private val isInputBAM: Boolean
-            get() = inputFiles[0].lowercase(Locale.getDefault()).endsWith(".bam")
-                    || inputFiles[0].lowercase(Locale.getDefault()).endsWith(".sam")
+            get() = inputs[0].lowercase(Locale.getDefault()).endsWith(".bam")
+                    || inputs[0].lowercase(Locale.getDefault()).endsWith(".sam")
 
 
         private fun createReader(): SequenceReaderCloseable<out SequenceRead> {
@@ -362,26 +364,26 @@ object CommandAlign {
                 SingleFastqReader(
                     FileInputStream(path.toFile()),
                     SingleFastqReader.DEFAULT_QUALITY_FORMAT,
-                    CompressionType.detectCompressionType(inputFiles[0]),
+                    CompressionType.detectCompressionType(inputs[0]),
                     false, readBufferSize,
                     true, true
                 )
             }
             return if (isInputBAM) {
-                val bamNames = inputFiles
+                val bamNames = inputs
                 val readers = Array<Path>(bamNames.size) { i ->
                     Paths.get(bamNames[i])
                 }
                 BAMReader(readers, cmdParams.bamDropNonVDJ, true)
             } else if (isInputPaired) {
-                val resolved = inputFiles.map { rf: String -> expandPathNPattern(Paths.get(rf)) }
+                val resolved = inputs.map { rf: String -> expandPathNPattern(Paths.get(rf)) }
                 MiXCRMain.lm.reportApplicationInputs(resolved.flatten())
                 val readers = resolved.map { paths ->
                     ConcatenatingSingleReader(paths.map(readerFactory))
                 }
                 PairedFastqReader(readers[0], readers[1])
             } else {
-                val `in` = inputFiles[0]
+                val `in` = inputs[0]
                 val s = `in`.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 when {
                     s[s.size - 1] == "fasta" || s[s.size - 1] == "fa" -> FastaSequenceReaderWrapper(
@@ -539,7 +541,7 @@ object CommandAlign {
                         "(turn on verbose warnings by adding --verbose option)."
             )
             reportBuilder.setStartMillis(beginTimestamp)
-            reportBuilder.setInputFiles(inputFiles)
+            reportBuilder.setInputFiles(inputs)
             reportBuilder.setOutputFiles(outputFiles)
             reportBuilder.commandLine = commandLineArguments
             if (tagSearchPlan != null) reportBuilder.tagReportBuilder = tagSearchPlan.report

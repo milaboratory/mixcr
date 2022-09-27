@@ -112,6 +112,7 @@ object CommandExtend {
                 MiXCRFileType.VDJCA -> processVDJCA()
                 MiXCRFileType.CLNS -> processClns()
                 MiXCRFileType.CLNA -> throwValidationException("Operation is not supported for ClnA files.")
+                MiXCRFileType.SHMT -> throwValidationException("Operation is not supported for SHMT files.")
             }
         }
 

@@ -180,7 +180,7 @@ if [[ -z "$altJar" ]]; then
     fi
   done
 else
-  for j in $(ls -1 "${dir}"/* | grep "${app}" | grep ".jar" | grep "${altJar}"); do
+  for j in $(ls -1 "${dir}"/* | grep "${app}-${altJar}.jar"); do
     if [[ -e "$j" ]]; then
       jar=$j
       break

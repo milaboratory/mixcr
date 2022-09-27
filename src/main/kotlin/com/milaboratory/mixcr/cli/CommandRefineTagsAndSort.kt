@@ -179,6 +179,9 @@ object CommandRefineTagsAndSort {
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
         var reportFile: String? = null
 
+        @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
+        var jsonReport: String? = null
+
         override fun getInputFiles(): List<String> = listOf(inputFile)
 
         override fun getOutputFiles(): List<String> = listOf(outputFile)
@@ -349,12 +352,13 @@ object CommandRefineTagsAndSort {
                     writer.setFooter(
                         mainReader.footer
                             .withThresholds(thresholds)
-                        /*.addReport(correctAndSortTagsReport)*/ // fixme
+                        .addReport(refineTagsAndSortReport)
                     )
                 }
             }
             refineTagsAndSortReport.writeReport(ReportHelper.STDOUT)
-            if (reportFile != null) ReportUtil.appendReport(reportFile, mitoolReport)
+            if (reportFile != null) ReportUtil.appendReport(reportFile, refineTagsAndSortReport)
+            if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, refineTagsAndSortReport)
         }
     }
 }

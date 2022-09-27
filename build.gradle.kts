@@ -18,14 +18,14 @@ gradle.startParameter.excludedTaskNames += listOf(
     "shadowDistZip"
 )
 
-val dataframeVersion = "0.8.0-rc-8"
+val dataframeVersion = "0.8.1"
 
 plugins {
     `java-library`
     application
     `maven-publish`
-    kotlin("jvm") version "1.6.21"
-    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.0-rc-8"
+    kotlin("jvm") version "1.7.10"
+    id("org.jetbrains.kotlin.plugin.dataframe") version "0.8.1"
     id("com.palantir.git-version") version "0.13.0" // don't upgrade, latest version that runs on Java 8
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.bmuschko.docker-java-application") version "7.4.0"
@@ -98,11 +98,11 @@ repositories {
 }
 
 val milibVersion = "2.0.0-24-master"
-val repseqioVersion = "1.4.1-24-remove-named-chains"
+val repseqioVersion = "1.4.1-28-master"
 val miplotsVersion = "1.0.0-27-master"
-val mitoolVersion = "1.1.0-76-main"
+val mitoolVersion = "1.1.0-81-main"
 val jacksonBomVersion = "2.13.4"
-val redberryPipeVersion = "1.2.0-5-master"
+val redberryPipeVersion = "1.2.0-7-master"
 
 dependencies {
     implementation("cc.redberry:pipe:$redberryPipeVersion")

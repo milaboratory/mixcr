@@ -61,6 +61,9 @@ public class TargetMerger {
         EnumMap<GeneType, VDJCHit[]> result = new EnumMap<>(GeneType.class);
 
         for (GeneType geneType : GeneType.VJC_REFERENCE) {
+            if (alignerParameters.getGeneAlignerParameters(geneType) == null)
+                continue;
+
             final BatchAlignerWithBaseParameters bp = ((KGeneAlignmentParameters) alignerParameters.getGeneAlignerParameters(geneType)).getParameters();
             final VDJCHit[] leftHits = targetLeft.getAlignments().getHits(geneType);
             final VDJCHit[] rightHits = targetRight.getAlignments().getHits(geneType);
