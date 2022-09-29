@@ -14,13 +14,19 @@ package com.milaboratory.mixcr.alleles
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 
 data class CloneDescription(
+    private val cloneId: Int,
     /**
      * Mutations of clone without CDR3.
      */
     val mutations: Mutations<NucleotideSequence>,
+    /**
+     * Is mutations count of complimentary gene equal to 0.
+     */
+    val naiveByComplimentaryGeneMutations: Boolean,
     /**
      * Mutations groups of clone without CDR3.
      */
@@ -64,3 +70,8 @@ data class CloneDescription(
         }
     }
 }
+
+fun List<CloneDescription.MutationGroup>.asMutations(): Mutations<NucleotideSequence> = asSequence()
+    .flatMap { it.mutations }
+    .asMutations(NucleotideSequence.ALPHABET)
+

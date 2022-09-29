@@ -36,9 +36,9 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Diversity
 import io.repseq.core.GeneType.VJ_REFERENCE
-import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibrary
+import io.repseq.dto.VDJCGeneData
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
@@ -87,7 +87,6 @@ class CloneRebuild(
      */
     fun recalculateScores(
         input: OutputPort<Clone>,
-        overallAllelesStatistics: OverallAllelesStatistics,
         reportBuilder: FindAllelesReport.Builder
     ): List<Pair<Clone, EnumMap<GeneType, List<GeneAndScore>>>> {
         val errorsCount: MutableMap<VDJCGeneId, LongAdder> = ConcurrentHashMap()
@@ -106,22 +105,12 @@ class CloneRebuild(
 
                     for (hit in clone.getHits(geneType)) {
                         for (foundAlleleId in allelesMapping[hit.gene.name]!!) {
-                            changes[foundAlleleId] = when {
-                                foundAlleleId.name != hit.gene.name -> {
-                                    val (scoreDelta, recalculatedMutationsCount) = scoreDelta(
-                                        clone,
-                                        resultLibrary[foundAlleleId.name],
-                                        cloneFactory.parameters.getVJCParameters(geneType).scoring,
-                                        hit.alignments
-                                    )
-                                    AlignmentsChange(
-                                        hit,
-                                        scoreDelta,
-                                        recalculatedMutationsCount
-                                    )
-                                }
-                                else -> AlignmentsChange(hit)
-                            }
+                            changes[foundAlleleId] = alignmentsChange(
+                                clone,
+                                resultLibrary[foundAlleleId.name].data,
+                                cloneFactory.parameters.getVJCParameters(geneType).scoring,
+                                hit
+                            )
                         }
                     }
                     val maxScore = changes.values.maxOf { it.newScore }
@@ -140,14 +129,14 @@ class CloneRebuild(
                         }
 
                     val bestAlleleId = changes.entries.maxByOrNull { it.value.newScore }!!.key
-                    overallAllelesStatistics.registerBaseGene(changes[bestAlleleId]!!.originalHit.gene.id)
+                    reportBuilder.overallAllelesStatistics.registerBaseGene(changes[bestAlleleId]!!.originalHit.gene.id)
 
                     for ((alleleId, alignmentsChange) in changes) {
-                        val stats = overallAllelesStatistics.stats(alleleId)
+                        val stats = reportBuilder.overallAllelesStatistics.stats(alleleId)
                         if (alleleId == bestAlleleId) {
                             val complementaryGeneId = clone.getBestHit(complimentaryGeneType(geneType)).gene.id
                             stats.register(clone, complementaryGeneId)
-                            if (alignmentsChange.mutationsCount == 0) {
+                            if (alignmentsChange.naive) {
                                 stats.naive(clone)
                             }
                             stats.scoreDelta(clone, alignmentsChange.scoreDelta)
@@ -168,71 +157,99 @@ class CloneRebuild(
         return withRecalculatedScores
     }
 
-    /**
-     * Recalculate score and mutations for every alignment based on found allele
-     */
-    private fun scoreDelta(
-        clone: Clone,
-        foundAllele: VDJCGene,
-        scoring: AlignmentScoring<NucleotideSequence>,
-        alignments: Array<Alignment<NucleotideSequence>?>
-    ): Pair<Float, Int> {
-        val alleleMutations = foundAllele.data.baseSequence.mutations ?: throw IllegalArgumentException()
-        val alleleHasIndels = alleleMutations.asSequence().any { Mutation.isInDel(it) }
-        var scoreDelta = 0.0f
-        var mutationsCount = 0
-        alignments
-            .filterNotNull()
-            .forEachIndexed { index, alignment ->
-                val (recalculatedMutationsCount, recalculatedScore) = when {
-                    //in case of indels invert().combineWith(alleleMutations).invert() may work incorrect
-                    alleleHasIndels -> {
-                        val seq1RangeAfterAlleleMutations = Range(
-                            MutationsUtils.positionIfNucleotideWasDeleted(
-                                alleleMutations.convertToSeq2Position(
-                                    alignment.sequence1Range.lower
-                                )
-                            ),
-                            MutationsUtils.positionIfNucleotideWasDeleted(
-                                alleleMutations.convertToSeq2Position(
-                                    alignment.sequence1Range.upper
-                                )
-                            )
-                        )
-                        val newAlignment = Aligner.alignGlobal(
-                            scoring,
-                            alleleMutations.mutate(alignment.sequence1),
-                            clone.getTarget(index).sequence,
-                            seq1RangeAfterAlleleMutations.lower,
-                            seq1RangeAfterAlleleMutations.length(),
-                            alignment.sequence2Range.lower,
-                            alignment.sequence2Range.length(),
-                        )
-                        newAlignment.absoluteMutations.size() to newAlignment.score
-                    }
-                    else -> {
-                        val mutationsFromAllele =
-                            alignment.absoluteMutations.invert().combineWith(alleleMutations).invert()
-                                .extractAbsoluteMutationsForRange(alignment.sequence1Range)
-                        mutationsFromAllele.size() to AlignmentUtils.calculateScore(
-                            alleleMutations.mutate(alignment.sequence1),
-                            alignment.sequence1Range,
-                            mutationsFromAllele,
-                            scoring
-                        ).toFloat()
-                    }
-                }
-                mutationsCount += recalculatedMutationsCount
-                scoreDelta += recalculatedScore - alignment.score
-            }
-        return scoreDelta to mutationsCount
-    }
-
-    private data class AlignmentsChange(
+    data class AlignmentsChange(
         val originalHit: VDJCHit,
-        val scoreDelta: Float = 0.0F,
-        val mutationsCount: Int = 0
+        val naive: Boolean,
+        val scoreDelta: Float
     ) {
         val newScore: Float get() = originalHit.score + scoreDelta
+    }
+
+    companion object {
+        fun alignmentsChange(
+            clone: Clone,
+            foundAllele: VDJCGeneData,
+            scoring: AlignmentScoring<NucleotideSequence>,
+            hit: VDJCHit = clone.getBestHit(foundAllele.geneType)
+        ): AlignmentsChange = when {
+            foundAllele.name != hit.gene.name -> {
+                val (scoreDelta, recalculatedMutationsCount) = scoreDelta(
+                    clone,
+                    foundAllele,
+                    scoring,
+                    hit.alignments
+                )
+                AlignmentsChange(
+                    hit,
+                    recalculatedMutationsCount == 0,
+                    scoreDelta
+                )
+            }
+            else -> AlignmentsChange(
+                hit,
+                hit.alignments.asSequence().sumOf { it.absoluteMutations.size() } == 0,
+                0.0F
+            )
+        }
+
+        /**
+         * Recalculate score and mutations for every alignment based on found allele
+         */
+        private fun scoreDelta(
+            clone: Clone,
+            foundAllele: VDJCGeneData,
+            scoring: AlignmentScoring<NucleotideSequence>,
+            alignments: Array<Alignment<NucleotideSequence>?>
+        ): Pair<Float, Int> {
+            val alleleMutations = foundAllele.baseSequence.mutations ?: throw IllegalArgumentException()
+            val alleleHasIndels = alleleMutations.asSequence().any { Mutation.isInDel(it) }
+            var scoreDelta = 0.0f
+            var mutationsCount = 0
+            alignments
+                .filterNotNull()
+                .forEachIndexed { index, alignment ->
+                    val (recalculatedMutationsCount, recalculatedScore) = when {
+                        //in case of indels invert().combineWith(alleleMutations).invert() may work incorrect
+                        alleleHasIndels -> {
+                            val seq1RangeAfterAlleleMutations = Range(
+                                MutationsUtils.positionIfNucleotideWasDeleted(
+                                    alleleMutations.convertToSeq2Position(
+                                        alignment.sequence1Range.lower
+                                    )
+                                ),
+                                MutationsUtils.positionIfNucleotideWasDeleted(
+                                    alleleMutations.convertToSeq2Position(
+                                        alignment.sequence1Range.upper
+                                    )
+                                )
+                            )
+                            val newAlignment = Aligner.alignGlobal(
+                                scoring,
+                                alleleMutations.mutate(alignment.sequence1),
+                                clone.getTarget(index).sequence,
+                                seq1RangeAfterAlleleMutations.lower,
+                                seq1RangeAfterAlleleMutations.length(),
+                                alignment.sequence2Range.lower,
+                                alignment.sequence2Range.length(),
+                            )
+                            newAlignment.absoluteMutations.size() to newAlignment.score
+                        }
+                        else -> {
+                            val mutationsFromAllele =
+                                alignment.absoluteMutations.invert().combineWith(alleleMutations).invert()
+                                    .extractAbsoluteMutationsForRange(alignment.sequence1Range)
+                            mutationsFromAllele.size() to AlignmentUtils.calculateScore(
+                                alleleMutations.mutate(alignment.sequence1),
+                                alignment.sequence1Range,
+                                mutationsFromAllele,
+                                scoring
+                            ).toFloat()
+                        }
+                    }
+                    mutationsCount += recalculatedMutationsCount
+                    scoreDelta += recalculatedScore - alignment.score
+                }
+            return scoreDelta to mutationsCount
+        }
     }
 }

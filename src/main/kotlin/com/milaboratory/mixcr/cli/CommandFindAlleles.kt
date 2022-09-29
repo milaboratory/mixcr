@@ -130,6 +130,9 @@ class CommandFindAlleles : MiXCRCommand() {
     @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
     var jsonReport: String? = null
 
+    @Option(names = ["--debugDir"], hidden = true)
+    var debugDir: Path? = null
+
     private val outputClnsFiles: List<Path> by lazy {
         val template = outputTemplate ?: return@lazy emptyList()
         if (!template.endsWith(".clns")) {
@@ -191,10 +194,15 @@ class CommandFindAlleles : MiXCRCommand() {
 
     private fun ensureParametersInitialized() {
         findAllelesParameters
+        if (debugDir != null) {
+            debugDir?.toFile()?.mkdirs()
+        }
     }
 
     override fun run0() {
-        val reportBuilder = FindAllelesReport.Builder()
+        val reportBuilder = FindAllelesReport.Builder(
+            OverallAllelesStatistics(findAllelesParameters.useClonesWithCountGreaterThen)
+        )
             .setCommandLine(commandLineArguments)
             .setInputFiles(inputFiles)
             .setOutputFiles(outputFiles)
@@ -217,15 +225,16 @@ class CommandFindAlleles : MiXCRCommand() {
             findAllelesParameters,
             tempDest,
             cloneReaders,
-            allFullyCoveredBy
+            allFullyCoveredBy,
+            debugDir
         )
 
-        val progressAndStage = ProgressAndStage("Grouping by the same V gene", 0.0)
+        val progressAndStage = ProgressAndStage("Grouping by the same J gene", 0.0)
         SmartProgressReporter.startProgressReport(progressAndStage)
-        val VAlleles = allelesBuilder.searchForAlleles(Variable, progressAndStage, reportBuilder, threads)
-        val JAlleles = allelesBuilder.searchForAlleles(Joining, progressAndStage, reportBuilder, threads)
+        val JAlleles = allelesBuilder.searchForAlleles(Joining, emptyMap(), progressAndStage, reportBuilder, threads)
+        val VAlleles = allelesBuilder.searchForAlleles(Variable, JAlleles, progressAndStage, reportBuilder, threads)
 
-        val alleles = (VAlleles + JAlleles).toMap(mutableMapOf())
+        val alleles = (VAlleles + JAlleles).toMutableMap()
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
         val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)
@@ -236,7 +245,6 @@ class CommandFindAlleles : MiXCRCommand() {
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
         }
-        val overallAllelesStatistics = OverallAllelesStatistics(findAllelesParameters.useClonesWithCountGreaterThen)
         val writerCloseCallbacks = mutableListOf<(MiXCRCommandReport) -> Unit>()
         cloneReaders.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
@@ -253,7 +261,7 @@ class CommandFindAlleles : MiXCRCommand() {
                     progressAndStage,
                     "Recalculating scores ${inputFiles[i]}"
                 ) { clones ->
-                    cloneRebuild.recalculateScores(clones, overallAllelesStatistics, reportBuilder)
+                    cloneRebuild.recalculateScores(clones, reportBuilder)
                 }
                 if (outputTemplate != null) {
                     withRecalculatedScores.port.withProgress(
@@ -279,7 +287,11 @@ class CommandFindAlleles : MiXCRCommand() {
         progressAndStage.finish()
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             allelesMutationsOutput.toAbsolutePath().parent.createDirectories()
-            printAllelesMutationsOutput(resultLibrary, overallAllelesStatistics, allelesMutationsOutput.toFile())
+            printAllelesMutationsOutput(
+                resultLibrary,
+                reportBuilder.overallAllelesStatistics,
+                allelesMutationsOutput.toFile()
+            )
         }
         ReportUtil.writeReportToStdout(report)
         if (reportFile != null) ReportUtil.appendReport(reportFile, report)
@@ -292,52 +304,54 @@ class CommandFindAlleles : MiXCRCommand() {
         allelesMutationsOutput: File
     ) {
         PrintStream(allelesMutationsOutput).use { output ->
-            val columns = mapOf<String, (VDJCGene) -> Any?>(
-                "alleleName" to { it.name },
-                "geneName" to { it.geneName },
-                "type" to { it.geneType },
-                metaKeyForAlleleMutationsReliableRanges to { gene ->
+            val columns = buildMap<String, (VDJCGene) -> Any?> {
+                this["alleleName"] = { it.name }
+                this["geneName"] = { it.geneName }
+                this["type"] = { it.geneType }
+                this[metaKeyForAlleleMutationsReliableRanges] = { gene ->
                     gene.data.meta[metaKeyForAlleleMutationsReliableRanges]
-                },
-                metaKeyForAlleleMutationsReliableGeneFeatures to { gene ->
+                }
+                this[metaKeyForAlleleMutationsReliableGeneFeatures] = { gene ->
                     gene.data.meta[metaKeyForAlleleMutationsReliableGeneFeatures]
-                },
-                "mutations" to { gene ->
+                }
+                this["mutations"] = { gene ->
                     gene.data.baseSequence.mutations?.encode() ?: ""
-                },
-                "naivesCount" to { gene ->
+                }
+                this["naivesCount"] = { gene ->
                     allelesStatistics.stats(gene.id).naives(filteredByCount = false)
-                },
-                "lowerDiversityBound" to { gene ->
+                }
+                this["lowerDiversityBound"] = { gene ->
                     allelesStatistics.stats(gene.id).diversity()
-                },
-                "clonesCount" to { gene ->
+                }
+                this["clonesCount"] = { gene ->
                     allelesStatistics.stats(gene.id).count(filteredByCount = false)
-                },
-                "totalClonesCountForGene" to { gene ->
+                }
+                this["totalClonesCountForGene"] = { gene ->
                     allelesStatistics.baseGeneCount(gene.id)
-                },
-                "scoreNotChanged" to { gene ->
-                    allelesStatistics.stats(gene.id).scoreNotChanged.toLong()
-                },
-                "clonesCountWithNegativeScoreChange" to { gene ->
+                }
+                this["clonesCountWithNegativeScoreChange"] = { gene ->
                     allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = false)
-                },
-                "naivesCountWithCountGreaterThen${findAllelesParameters.useClonesWithCountGreaterThen}" to { gene ->
-                    allelesStatistics.stats(gene.id).naives(filteredByCount = true)
-                },
-                "clonesCountWithCountGreaterThen${findAllelesParameters.useClonesWithCountGreaterThen}" to { gene ->
-                    allelesStatistics.stats(gene.id).count(filteredByCount = true)
-                },
-                "clonesCountWithNegativeScoreChangeWithCountGreaterThen${findAllelesParameters.useClonesWithCountGreaterThen}" to { gene ->
-                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = true)
-                },
-                "scoreDelta" to { gene ->
+                }
+                if (allelesStatistics.useClonesWithCountGreaterThen != 0) {
+                    this["naivesCountWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
+                        { gene ->
+                            allelesStatistics.stats(gene.id).naives(filteredByCount = true)
+                        }
+                    this["clonesCountWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
+                        { gene ->
+                            allelesStatistics.stats(gene.id).count(filteredByCount = true)
+                        }
+                    this["clonesCountWithNegativeScoreChangeWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
+                        { gene ->
+                            allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = true)
+                        }
+                }
+                this["scoreDelta"] = { gene ->
                     val summaryStatistics = allelesStatistics.stats(gene.id).scoreDelta
                     if (summaryStatistics.n == 0L) "" else
                         GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
                 }
-            )
+            }
             val genes = resultLibrary.genes
                 .filter { it.geneType in VJ_REFERENCE }
                 .sortedWith(Comparator.comparing { gene: VDJCGene -> gene.geneType }
@@ -392,7 +406,7 @@ class CommandFindAlleles : MiXCRCommand() {
         usedGenes: Map<String, VDJCGeneData>
     ) {
         usedGenes.forEach { (name, geneData) ->
-            if (geneData.geneType == Joining || geneData.geneType == Variable) {
+            if (geneData.geneType in VJ_REFERENCE) {
                 //if gene wasn't processed in alleles search, then register it as a single allele
                 if (!alleles.containsKey(name)) {
                     alleles[geneData.name] = listOf(geneData)
