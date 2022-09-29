@@ -113,12 +113,10 @@ data class FindAllelesParameters(
                  * Window size that will be used for build regression of mutations frequency vs count of mutations
                  */
                 abstract val windowSizeForRegression: Int
-
                 /**
                  * Maximum absent points in a window to build regression
                  */
                 abstract val allowedSkippedPointsInRegression: Int
-
                 /**
                  * Mutations will be considered as a candidate for allele mutation if p-value of t-test of mutation frequency regression will be more than this parameter
                  */

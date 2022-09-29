@@ -182,7 +182,7 @@ class AllelesBuilder(
         }
 
         val sequence1 = clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1
-        val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
+        val allelesSearcher: AllelesSearcher = BCellsAllelesSearcher(
             reportBuilder,
             scoring[geneType],
             sequence1,

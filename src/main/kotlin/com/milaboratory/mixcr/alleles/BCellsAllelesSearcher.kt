@@ -9,7 +9,6 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-
 package com.milaboratory.mixcr.alleles
 
 import com.milaboratory.core.alignment.Aligner
@@ -19,9 +18,9 @@ import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.alleles.BCellsAllelesSearcher.Allele.Companion.ZERO_ALLELE
 import com.milaboratory.mixcr.alleles.CloneDescription.MutationGroup
 import com.milaboratory.mixcr.alleles.FindAllelesParameters.BCellsAlleleSearchParameters.RegressionFilter
-import com.milaboratory.mixcr.alleles.TIgGERAllelesSearcher.Allele.Companion.ZERO_ALLELE
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import io.repseq.core.VDJCGeneId
@@ -31,7 +30,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.floor
 
 
-class TIgGERAllelesSearcher(
+class BCellsAllelesSearcher(
     private val reportBuilder: FindAllelesReport.Builder,
     private val scoring: AlignmentScoring<NucleotideSequence>,
     private val sequence1: NucleotideSequence,
