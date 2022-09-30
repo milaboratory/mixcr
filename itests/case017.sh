@@ -9,4 +9,4 @@ mixcr analyze tcr_amplicon \
   +floatingLeftAlignmentBoundary \
   +floatingRightAlignmentBoundary J \
   +addStep assembleContigs \
-  test_R1.fastq test_R2.fastq case3
+  test_R1.fastq test_R2.fastq case17
