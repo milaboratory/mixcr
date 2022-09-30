@@ -67,6 +67,13 @@ application {
     applicationDefaultJvmArgs = listOf("-Xmx8g")
 }
 
+tasks.withType<JavaExec> {
+    if (project.hasProperty("runWorkingDir")) {
+        val runWorkingDir: String by project
+        workingDir = file(runWorkingDir)
+    }
+}
+
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }

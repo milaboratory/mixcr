@@ -11,14 +11,12 @@
  */
 package com.milaboratory.mixcr.alleles
 
-import com.milaboratory.core.mutations.Mutations
-import com.milaboratory.core.sequence.NucleotideSequence
-import io.repseq.core.VDJCGeneId
+import io.repseq.core.GeneType
 
-interface AllelesSearcher {
-    fun search(geneId: VDJCGeneId, clones: List<CloneDescription>): List<Result>
-
-    data class Result(
-        val allele: Mutations<NucleotideSequence>
-    )
+object AlleleUtil {
+    fun complimentaryGeneType(geneType: GeneType): GeneType = when (geneType) {
+        GeneType.Variable -> GeneType.Joining
+        GeneType.Joining -> GeneType.Variable
+        else -> throw IllegalArgumentException()
+    }
 }

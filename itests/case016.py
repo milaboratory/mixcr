@@ -13,7 +13,7 @@ from os.path import basename, isdir
 from scipy.stats import linregress
 from scipy.special import binom
 import itertools
-import sys
+
 
 ############################################################################################################
 ###################################### UTILS ###############################################################

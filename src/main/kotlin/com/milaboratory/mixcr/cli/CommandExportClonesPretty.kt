@@ -127,7 +127,7 @@ class CommandExportClonesPretty : AbstractMiXCRCommand() {
                 .filter { filter.accept(it) }
                 .drop(skipAfter)
                 .take(countAfter)
-                .onEach { clone ->
+                .forEach { clone ->
                     ++filtered
                     outputCompact(output, clone)
                 }
