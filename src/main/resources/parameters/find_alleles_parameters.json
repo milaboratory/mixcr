@@ -3,17 +3,25 @@
     "productiveOnly": true,
     "useClonesWithCountGreaterThen": 1,
     "searchAlleleParameter": {
-      "windowSizeForRegression": 10,
-      "allowedSkippedPointsInRegression": 3,
       "minDiversityRatioBetweenAlleles": 0.75,
-      "minDiversityForMutation": 3,
-      "minDiversityForAllele": 5,
-      "minPValueForRegression": 0.95,
-      "minYInterceptForHeterozygous": 0.2,
+      "minRelativePenaltyBetweenAllelesForCloneAlign": 0.15,
+      "diversityThresholds": {
+        "V": {
+          "minDiversityForMutation": 5,
+          "minDiversityForAllele": 5,
+          "diversityForSkipTestForRatioForZeroAllele": 15
+        },
+        "J": {
+          "minDiversityForMutation": 100,
+          "minDiversityForAllele": 100,
+          "diversityForSkipTestForRatioForZeroAllele": 300
+        }
+      },
       "diversityRatioToSearchCommonMutationsInAnAllele": 0.95,
-      "minYInterceptForHomozygous": 0.9,
-      "maxRegressionSlopeForHomozygous": "0.05",
-      "minCountOfNaiveClonesToAddAllele": 3
+      "minCountOfNaiveClonesToAddAllele": 2,
+      "regressionFilter": {
+        "type": "noop"
+      }
     },
     "searchMutationsInCDR3": {
       "minClonesCount": 5,

@@ -27,6 +27,7 @@ import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.VJPair
+import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.GroupingCriteria
@@ -54,6 +55,8 @@ import io.repseq.core.ReferencePoint.VEnd
 import io.repseq.core.ReferencePoints
 import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
+import java.io.PrintStream
+import java.nio.file.Path
 import java.util.*
 import kotlin.collections.set
 import kotlin.math.absoluteValue
@@ -62,7 +65,8 @@ class AllelesBuilder(
     private val parameters: FindAllelesParameters,
     private val tempDest: TempFileDest,
     private val datasets: List<CloneReader>,
-    private val allClonesCutBy: GeneFeatures
+    private val allClonesCutBy: GeneFeatures,
+    private val debugDir: Path?
 ) {
     private val scoring: VJPair<AlignmentScoring<NucleotideSequence>> = VJPair(
         V = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring,
@@ -71,10 +75,11 @@ class AllelesBuilder(
 
     fun searchForAlleles(
         geneType: GeneType,
+        complementaryAlleles: Map<String, List<VDJCGeneData>>,
         progress: ProgressAndStage,
         reportBuilder: FindAllelesReport.Builder,
         threads: Int
-    ): List<Pair<String, List<VDJCGeneData>>> {
+    ): Map<String, List<VDJCGeneData>> {
         val totalClonesCount = datasets.sumOf { it.numberOfClones() }.toLong()
         val stateBuilder = datasets.constructStateBuilder()
 
@@ -100,11 +105,15 @@ class AllelesBuilder(
                 ) { clustersWithTheSameV ->
                     clustersWithTheSameV.mapInParallel(threads) { cluster ->
                         val geneId = cluster[0].getBestHit(geneType).gene.name
-                        geneId to findAlleles(cluster, geneType, reportBuilder).sortedBy { it.name }
+                        geneId to findAlleles(
+                            cluster,
+                            complementaryAlleles,
+                            geneType,
+                            reportBuilder
+                        ).sortedBy { it.name }
                     }
                         .asSequence()
-                        .sortedBy { it.first }
-                        .toList()
+                        .toMap()
                 }
         }
     }
@@ -124,6 +133,7 @@ class AllelesBuilder(
 
     private fun findAlleles(
         clusterByTheSameGene: List<Clone>,
+        complementaryAlleles: Map<String, List<VDJCGeneData>>,
         geneType: GeneType,
         reportBuilder: FindAllelesReport.Builder
     ): List<VDJCGeneData> {
@@ -132,19 +142,52 @@ class AllelesBuilder(
 
         val cloneDescriptors = clusterByTheSameGene.asSequence()
             .map { clone ->
+                val alleles = complementaryAlleles[clone.getBestHit(complimentaryGeneType(geneType)).gene.name]
+                val naiveByComplimentaryGeneMutations = when {
+                    alleles.isNullOrEmpty() -> clone.getBestHit(complimentaryGeneType(geneType))
+                        .alignments
+                        .filterNotNull()
+                        .all { it.absoluteMutations == EMPTY_NUCLEOTIDE_MUTATIONS }
+                    else -> alleles.any {
+                        CloneRebuild.alignmentsChange(clone, it, scoring[complimentaryGeneType(geneType)]).naive
+                    }
+                }
                 CloneDescription(
+                    clone.id,
                     clone.getBestHit(geneType).mutationsWithoutCDR3(),
+                    naiveByComplimentaryGeneMutations,
                     clone.clusterIdentity(geneType)
                 )
             }
             .toList()
 
+        if (debugDir != null) {
+            val rows = cloneDescriptors
+                .groupBy { it.mutationGroups }
+                .entries
+                .sortedBy { it.key.size }
+            PrintStream(debugDir.resolve("${bestHit.gene.name}.tsv").toFile()).use { debugFile ->
+                XSV.writeXSV(
+                    debugFile,
+                    rows,
+                    mapOf(
+                        "diversity" to { (_, clones) -> clones.map { it.clusterIdentity }.distinct().size },
+                        "count" to { (_, clones) -> clones.size },
+                        "noMutationsInComplimentaryGene" to { (_, clones) -> clones.count { it.naiveByComplimentaryGeneMutations } },
+                        "mutations" to { (mutations, _) -> mutations },
+                    ),
+                    "\t"
+                )
+            }
+        }
+
         val sequence1 = clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1
-        val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
+        val allelesSearcher: AllelesSearcher = BCellsAllelesSearcher(
             reportBuilder,
             scoring[geneType],
             sequence1,
-            parameters.searchAlleleParameter
+            parameters.searchAlleleParameter,
+            parameters.searchAlleleParameter.diversityThresholds[geneType]
         )
 
         val foundAlleles = allelesSearcher.search(bestHit.gene.id, cloneDescriptors)

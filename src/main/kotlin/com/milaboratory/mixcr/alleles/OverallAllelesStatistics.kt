@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
 
 class OverallAllelesStatistics(
-    private val useClonesWithCountGreaterThen: Int
+    val useClonesWithCountGreaterThen: Int
 ) {
     private val genesTotalCount: MutableMap<String, LongAdder> = ConcurrentHashMap()
     private val alleles: MutableMap<VDJCGeneId, AlleleStatistics> = ConcurrentHashMap()
@@ -34,26 +34,25 @@ class OverallAllelesStatistics(
     fun stats(geneId: VDJCGeneId): AlleleStatistics =
         alleles.computeIfAbsent(geneId) { AlleleStatistics() }
 
+    val stats: Map<VDJCGeneId, AlleleStatistics> = alleles
+
     inner class AlleleStatistics {
         private val naives = LongAdder()
         private val naivesFilteredByCount = LongAdder()
         private val count = LongAdder()
         private val countFilteredByCount = LongAdder()
         private val diversity: MutableSet<Pair<VDJCGeneId, Int>> = ConcurrentHashMap.newKeySet()
-        val scoreNotChanged: LongAdder = LongAdder()
         private val withNegativeScoreChange: LongAdder = LongAdder()
         private val withNegativeScoreChangeFilteredByCount: LongAdder = LongAdder()
         val scoreDelta: SummaryStatistics = SynchronizedSummaryStatistics()
         fun scoreDelta(clone: Clone, delta: Float) {
-            if (delta == 0.0F) {
-                scoreNotChanged.increment()
-            } else {
-                if (delta < 0.0F) {
-                    withNegativeScoreChange.increment()
-                    if (clone.count > useClonesWithCountGreaterThen) {
-                        withNegativeScoreChangeFilteredByCount.increment()
-                    }
+            if (delta < 0.0F) {
+                withNegativeScoreChange.increment()
+                if (clone.count > useClonesWithCountGreaterThen) {
+                    withNegativeScoreChangeFilteredByCount.increment()
                 }
+            }
+            if (delta != 0.0F) {
                 scoreDelta.addValue(delta.toDouble())
             }
         }
