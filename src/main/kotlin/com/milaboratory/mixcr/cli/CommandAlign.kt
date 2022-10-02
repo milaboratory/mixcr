@@ -25,7 +25,6 @@ import com.milaboratory.core.io.CompressionType
 import com.milaboratory.core.io.sequence.*
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
-import com.milaboratory.core.io.sequence.fastq.PairedFastqReader
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
@@ -33,7 +32,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
-import com.milaboratory.mitool.helpers.expandPathNPattern
+import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.pattern.search.*
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
 import com.milaboratory.mitool.report.ParseReport
@@ -44,6 +43,7 @@ import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.*
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
@@ -66,6 +66,7 @@ import java.util.*
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import kotlin.io.path.Path
+import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.math.max
 
@@ -350,52 +351,85 @@ object CommandAlign {
             VDJCLibraryRegistry.getDefault().getLibrary(libraryName, cmdParams.species)
         }
 
-        private val isInputPaired: Boolean
-            get() = inputs.size == 2 || isInputBAM
+        /** I.e. list of mate-pair files */
+        private val inputFilesExpanded: List<List<Path>> by lazy {
+            val matchingResult = inputs.map { Path(it) }.parseAndRunAndCorrelateFSPattern()
+            matchingResult.map { fg -> fg.files }
+        }
 
-        private val isInputBAM: Boolean
-            get() = inputs[0].lowercase(Locale.getDefault()).endsWith(".bam")
-                    || inputs[0].lowercase(Locale.getDefault()).endsWith(".sam")
+        enum class InputType(val pairedRecords: Boolean) {
+            SingleEndFastq(false),
+            PairedEndFastq(true),
+            Fasta(false),
+            BAM(true)
+        }
 
+        private val fastqRegex = Regex("\\.f(?:ast)?q(?:\\.gz)?$", RegexOption.IGNORE_CASE)
+        private val fastaRegex = Regex("\\.f(?:ast)?a$", RegexOption.IGNORE_CASE)
+        private val bamRegex = Regex("\\.[bs]am$", RegexOption.IGNORE_CASE)
+
+        private val inputType: InputType by lazy {
+            val first = inputFilesExpanded.first()
+            if (first.size == 1) {
+                val f0 = first[0].name
+                when {
+                    f0.contains(fastqRegex) -> SingleEndFastq
+                    f0.contains(fastaRegex) -> Fasta
+                    f0.contains(bamRegex) -> BAM
+                    else -> throwValidationExceptionKotlin("Unknown file type: $f0")
+                }
+            } else if (first.size == 2) {
+                val f0 = first[0].name
+                val f1 = first[0].name
+                if (f0.contains(fastqRegex) && f1.contains(fastqRegex))
+                    PairedEndFastq
+                else
+                    throwValidationExceptionKotlin("Only fastq supports paired end input, can't recognise: $f0 + $f1")
+            } else
+                throwValidationExceptionKotlin("Too many inputs")
+        }
 
         private fun createReader(): SequenceReaderCloseable<out SequenceRead> {
             // Common single fastq reader constructor
-            val readerFactory: (Path) -> SingleFastqReader = { path: Path ->
+            val fastqReaderFactory: (Path) -> SingleFastqReader = { path: Path ->
                 SingleFastqReader(
                     FileInputStream(path.toFile()),
                     SingleFastqReader.DEFAULT_QUALITY_FORMAT,
-                    CompressionType.detectCompressionType(inputs[0]),
+                    CompressionType.detectCompressionType(path.name),
                     false, readBufferSize,
                     true, true
                 )
             }
-            return if (isInputBAM) {
-                val bamNames = inputs
-                val readers = Array<Path>(bamNames.size) { i ->
-                    Paths.get(bamNames[i])
+
+            return when (inputType) {
+                BAM -> {
+                    if (inputFilesExpanded.size != 1)
+                        throwValidationExceptionKotlin("File concatenation supported only for fastq files.")
+                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded[0])
+                    BAMReader(inputFilesExpanded[0].toTypedArray(), cmdParams.bamDropNonVDJ, true)
                 }
-                BAMReader(readers, cmdParams.bamDropNonVDJ, true)
-            } else if (isInputPaired) {
-                val resolved = inputs.map { rf: String -> expandPathNPattern(Paths.get(rf)) }
-                MiXCRMain.lm.reportApplicationInputs(resolved.flatten())
-                val readers = resolved.map { paths ->
-                    ConcatenatingSingleReader(paths.map(readerFactory))
-                }
-                PairedFastqReader(readers[0], readers[1])
-            } else {
-                val `in` = inputs[0]
-                val s = `in`.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                when {
-                    s[s.size - 1] == "fasta" || s[s.size - 1] == "fa" -> FastaSequenceReaderWrapper(
-                        FastaReader(`in`, NucleotideSequence.ALPHABET),
+
+                Fasta -> {
+                    if (inputFilesExpanded.size != 1)
+                        throwValidationExceptionKotlin("File concatenation supported only for fastq files.")
+                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFilesExpanded[0][0]))
+                    FastaSequenceReaderWrapper(
+                        FastaReader(inputFilesExpanded[0][0].toFile(), NucleotideSequence.ALPHABET),
                         true
                     )
+                }
 
-                    else -> {
-                        val resolved = expandPathNPattern(Paths.get(`in`))
-                        MiXCRMain.lm.reportApplicationInputs(resolved)
-                        ConcatenatingSingleReader(resolved.map(readerFactory))
-                    }
+                SingleEndFastq -> {
+                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.map { it[0] })
+                    ConcatenatingSingleReader(inputFilesExpanded.map { fastqReaderFactory(it[0]) })
+                }
+
+                PairedEndFastq -> {
+                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.flatten())
+                    PairedReader(
+                        ConcatenatingSingleReader(inputFilesExpanded.map { fastqReaderFactory(it[0]) }),
+                        ConcatenatingSingleReader(inputFilesExpanded.map { fastqReaderFactory(it[1]) })
+                    )
                 }
             }
         }
@@ -405,7 +439,7 @@ object CommandAlign {
                 return null
             val searchSettings = ReadSearchSettings(
                 SearchSettings.Default.copy(bitBudget = cmdParams.tagMaxBudget),
-                if (isInputPaired) if (cmdParams.tagUnstranded) ReadSearchMode.PairedUnknown else ReadSearchMode.PairedDirect else ReadSearchMode.Single
+                if (cmdParams.tagUnstranded) ReadSearchMode.DirectAndReversed else ReadSearchMode.Direct
             )
             val readSearchPlan = create(cmdParams.tagPattern!!, searchSettings)
             val parseInfo = parseTagsFromSet(readSearchPlan.allTags)
@@ -449,7 +483,7 @@ object CommandAlign {
             if (inOut.size > 3) throwValidationExceptionKotlin("Too many input files.")
             if (inOut.size < 2) throwValidationExceptionKotlin("No output file.")
             if (failedReadsR2 != null && failedReadsR1 == null) throwValidationExceptionKotlin("Wrong input for --not-aligned-R1,2")
-            if (failedReadsR1 != null && cmdParams.tagPattern == null && failedReadsR2 != null != isInputPaired) throwValidationExceptionKotlin(
+            if (failedReadsR1 != null && cmdParams.tagPattern == null && failedReadsR2 != null != (inputType == PairedEndFastq)) throwValidationExceptionKotlin(
                 "Option --not-aligned-R2 is not set.",
                 false
             )
@@ -496,7 +530,8 @@ object CommandAlign {
 
             // Tags
             val tagSearchPlan = getTagPattern()
-            val pairedPayload = if (tagSearchPlan != null) tagSearchPlan.readShortcuts.size == 2 else isInputPaired
+            val pairedPayload =
+                if (tagSearchPlan != null) tagSearchPlan.readShortcuts.size == 2 else inputType.pairedRecords
 
             // Creating aligner
             val aligner = VDJCAligner.createAligner(
