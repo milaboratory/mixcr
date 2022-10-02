@@ -1313,8 +1313,8 @@ public final class FullSeqAssembler {
         } while (++currentIndex <= count);
 
         if (variants.isEmpty()) {
-            // Checking best variant to meet output criteria
-            // Always assemble assembling feature
+            // Checking the best variant to meet output criteria
+            // Always assemble the assembling feature
             if (isAssemblingFeature ||
                     (bestVariantSumQuality >= parameters.getOutputMinimalQualityShare() * totalSumQuality &&
                             bestVariantSumQuality >= parameters.getOutputMinimalSumQuality())) {
@@ -1336,8 +1336,10 @@ public final class FullSeqAssembler {
                 // Should substitute 'N'
                 return Collections.singletonList(new Variant(AMBIGUOUS_PACKED_VARIANT_INFO, targetReads, 0));
         } else {
-            for (Variant variant : variants)
-                variant.reads.or(unassignedVariants);
+            if (variants.size() == 1)
+                // Adding unassigned reads to all variants (only if exactly one significant variant was found)
+                for (Variant variant : variants)
+                    variant.reads.or(unassignedVariants);
             return variants;
         }
     }
