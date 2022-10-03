@@ -232,6 +232,7 @@ class CommandFindAlleles : MiXCRCommand() {
         require(cloneReaders.map { it.info.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
         }
+
         val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
 
         val allelesBuilder = AllelesBuilder(
