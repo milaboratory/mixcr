@@ -45,6 +45,7 @@ import com.milaboratory.primitivio.forEachInParallel
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.mapInParallelOrdered
+import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.primitivio.writeCollection
@@ -215,7 +216,7 @@ internal class SHMTreeBuilderBySteps(
             "Group clones by the same V, J and CDR3Length"
         ) { groupedClones ->
             groupedClones
-                .flatMap { clones -> clones.asCloneWrappers() }
+                .flatMap { clones -> clones.asCloneWrappers().port }
                 //filter by user defined parameters
                 .filter { c -> clonesFilter.match(c) }
                 .groupBy(

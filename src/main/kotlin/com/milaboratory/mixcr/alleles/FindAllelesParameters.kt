@@ -25,10 +25,8 @@ import com.milaboratory.mixcr.util.VJPair
     getterVisibility = NONE
 )
 data class FindAllelesParameters(
-    /**
-     * Use only clones with count more than parameter
-     */
-    val useClonesWithCountGreaterThen: Int,
+    val filterForDataWithUmi: Filter,
+    val filterForDataWithoutUmi: Filter,
     /**
      * Use only productive clonotypes (no OOF, no stops).
      */
@@ -36,6 +34,18 @@ data class FindAllelesParameters(
     val searchAlleleParameter: BCellsAlleleSearchParameters,
     val searchMutationsInCDR3: SearchMutationsInCDR3Params
 ) {
+    @JsonAutoDetect(
+        fieldVisibility = ANY,
+        isGetterVisibility = NONE,
+        getterVisibility = NONE
+    )
+    data class Filter(
+        /**
+         * Use only clones with count more than parameter
+         */
+        val useClonesWithCountGreaterThen: Int,
+    )
+
     @JsonAutoDetect(
         fieldVisibility = ANY,
         isGetterVisibility = NONE,

@@ -1,7 +1,12 @@
 {
   "default": {
     "productiveOnly": true,
-    "useClonesWithCountGreaterThen": 1,
+    "filterForDataWithUmi": {
+      "useClonesWithCountGreaterThen": 0
+    },
+    "filterForDataWithoutUmi": {
+      "useClonesWithCountGreaterThen": 1
+    },
     "searchAlleleParameter": {
       "minDiversityRatioBetweenAlleles": 0.75,
       "minRelativePenaltyBetweenAllelesForCloneAlign": 0.15,

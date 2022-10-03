@@ -25,6 +25,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
@@ -33,9 +34,10 @@ import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.flatten
+import com.milaboratory.primitivio.flatMap
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
@@ -63,6 +65,7 @@ import kotlin.math.absoluteValue
 
 class AllelesBuilder(
     private val parameters: FindAllelesParameters,
+    private val clonesFilter: ClonesFilter,
     private val tempDest: TempFileDest,
     private val datasets: List<CloneReader>,
     private val allClonesCutBy: GeneFeatures,
@@ -119,17 +122,20 @@ class AllelesBuilder(
     }
 
 
-    private fun <R> filteredClones(function: (OutputPort<Clone>) -> R): R = datasets.map { it.readClones() }
-        .flatten()
-        .filter { c ->
-            // filter non-productive clonotypes
-            // todo CDR3?
-            !parameters.productiveOnly || (!c.containsStopsOrAbsent(CDR3) && !c.isOutOfFrameOrAbsent(CDR3))
-        }
-        .filter { c ->
-            c.count > parameters.useClonesWithCountGreaterThen
-        }
-        .use(function)
+    private fun <R> filteredClones(function: (OutputPort<Clone>) -> R): R =
+        datasets.port
+            .flatMap { cloneReader ->
+                cloneReader.readClones()
+                    .filter { c ->
+                        // filter non-productive clonotypes
+                        // todo CDR3?
+                        !parameters.productiveOnly || (!c.containsStopsOrAbsent(CDR3) && !c.isOutOfFrameOrAbsent(CDR3))
+                    }
+                    .filter { c ->
+                        clonesFilter.match(c, cloneReader.tagsInfo)
+                    }
+            }
+            .use(function)
 
     private fun findAlleles(
         clusterByTheSameGene: List<Clone>,
@@ -153,33 +159,13 @@ class AllelesBuilder(
                     }
                 }
                 CloneDescription(
-                    clone.id,
+                    clone,
                     clone.getBestHit(geneType).mutationsWithoutCDR3(),
                     naiveByComplimentaryGeneMutations,
                     clone.clusterIdentity(geneType)
                 )
             }
             .toList()
-
-        if (debugDir != null) {
-            val rows = cloneDescriptors
-                .groupBy { it.mutationGroups }
-                .entries
-                .sortedBy { it.key.size }
-            PrintStream(debugDir.resolve("${bestHit.gene.name}.tsv").toFile()).use { debugFile ->
-                XSV.writeXSV(
-                    debugFile,
-                    rows,
-                    mapOf(
-                        "diversity" to { (_, clones) -> clones.map { it.clusterIdentity }.distinct().size },
-                        "count" to { (_, clones) -> clones.size },
-                        "noMutationsInComplimentaryGene" to { (_, clones) -> clones.count { it.naiveByComplimentaryGeneMutations } },
-                        "mutations" to { (mutations, _) -> mutations },
-                    ),
-                    "\t"
-                )
-            }
-        }
 
         val sequence1 = clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1
         val allelesSearcher: AllelesSearcher = BCellsAllelesSearcher(
@@ -195,7 +181,7 @@ class AllelesBuilder(
         reportBuilder.foundAlleles(foundAlleles.count { it.allele != EMPTY_NUCLEOTIDE_MUTATIONS })
         reportBuilder.zygote(foundAlleles.size)
 
-        return foundAlleles.map { foundAllele ->
+        val result = foundAlleles.map { foundAllele ->
             val naiveClones = clusterByTheSameGene.asSequence()
                 .filter { clone -> clone.getBestHit(geneType).mutationsWithoutCDR3() == foundAllele.allele }
                 .filter { clone -> clone.getBestHit(complimentaryGeneType(geneType)).mutationsWithoutCDR3().isEmpty }
@@ -209,6 +195,39 @@ class AllelesBuilder(
                 knownCDR3RangeLength
             )
         }
+        if (debugDir != null) {
+            val rows = cloneDescriptors
+                .groupBy { it.mutationGroups }
+                .entries
+                .sortedBy { it.key.size }
+            PrintStream(debugDir.resolve("${bestHit.gene.name}.tsv").toFile()).use { debugFile ->
+                XSV.writeXSV(
+                    debugFile,
+                    rows,
+                    buildMap {
+                        this["diversity"] = { (_, clones) -> clones.map { it.clusterIdentity }.distinct().size }
+                        this["count"] = { (_, clones) -> clones.size }
+                        this["noMutationsInComplimentaryGene"] =
+                            { (_, clones) -> clones.count { it.naiveByComplimentaryGeneMutations } }
+                        this["mutations"] = { (mutations, _) -> mutations }
+                        result.forEach { allele ->
+                            this[allele.name] = { (_, clonesDescriptors) ->
+                                clonesDescriptors
+                                    .map { it.clone }
+                                    .minOf {
+                                        CloneRebuild
+                                            .alignmentsChange(it, allele, scoring[geneType])
+                                            .penalty
+                                    }
+                            }
+                        }
+                    },
+                    "\t"
+                )
+            }
+        }
+
+        return result
     }
 
     private fun buildAllele(
@@ -407,5 +426,9 @@ class AllelesBuilder(
     companion object {
         const val metaKeyForAlleleMutationsReliableGeneFeatures = "alleleMutationsReliableGeneFeatures"
         const val metaKeyForAlleleMutationsReliableRanges = "alleleMutationsReliableRanges"
+    }
+
+    interface ClonesFilter {
+        fun match(clone: Clone, tagsInfo: TagsInfo): Boolean
     }
 }

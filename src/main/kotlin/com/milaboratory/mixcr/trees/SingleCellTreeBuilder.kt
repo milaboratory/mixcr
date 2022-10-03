@@ -34,6 +34,7 @@ import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.mapNotNull
+import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.sort
@@ -108,7 +109,7 @@ class SingleCellTreeBuilder(
                     .clustersWithSameVJAndCDR3Length(cellBarcodesToGroupChainPair)
                     .flatMap { cellGroups ->
                         val rebasedChainPairs = groupDuplicatesAndRebaseFromGermline(cellGroups)
-                        clustersBuilder.buildClusters(rebasedChainPairs)
+                        clustersBuilder.buildClusters(rebasedChainPairs).port
                     }
                     .mapInParallelOrdered(threads) { clusterOfCells ->
                         //TODO build linked topology
@@ -204,7 +205,7 @@ class SingleCellTreeBuilder(
                         cellGroup.cellBarcode
                     )
                 }
-            }
+            }.port
         }
             //group by chain pairs. Groups will have intersection
             .groupBy(
@@ -266,6 +267,7 @@ class SingleCellTreeBuilder(
                     .map { (cellBarcode, umiCount) ->
                         CloneAndCellTag(clone, CellBarcodeWithDatasetId(cellBarcode, datasetId), umiCount)
                     }
+                    .port
             }
             .groupBy(
                 stateBuilder,
