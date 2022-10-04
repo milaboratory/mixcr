@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.milaboratory.mixcr.util.ParametersPresets
-import com.milaboratory.mixcr.util.VJPair
 
 @JsonAutoDetect(
     fieldVisibility = ANY,
@@ -88,23 +87,23 @@ data class FindAllelesParameters(
          * Min count
          */
         val minCountOfNaiveClonesToAddAllele: Int,
-        val diversityThresholds: VJPair<DiversityThresholds>,
+        val diversityThresholds: DiversityThresholds,
         val regressionFilter: RegressionFilter
     ) {
 
         data class DiversityThresholds(
             /**
-             * Min diversity of mutation for it may be considered as a candidate for allele mutation
+             * Min percentage from max diversity of mutation for it may be considered as a candidate for allele mutation
              */
-            val minDiversityForMutation: Int,
+            val minDiversityForMutation: Double,
             /**
-             * Filter allele candidates with diversity less than this parameter
+             * Filter out allele candidates with percentage from max diversity less than this parameter
              */
-            val minDiversityForAllele: Int,
+            val minDiversityForAllele: Double,
             /**
-             * If diversity of zero allele greater or equal to this, than it will not be tested by diversity ratio
+             * If percentage from max diversity of zero allele greater or equal to this, than it will not be tested by diversity ratio
              */
-            val diversityForSkipTestForRatioForZeroAllele: Int,
+            val diversityForSkipTestForRatioForZeroAllele: Double,
         )
 
         @JsonTypeInfo(

@@ -35,7 +35,7 @@ class BCellsAllelesSearcher(
     private val scoring: AlignmentScoring<NucleotideSequence>,
     private val sequence1: NucleotideSequence,
     private val parameters: FindAllelesParameters.BCellsAlleleSearchParameters,
-    private val diversityThresholds: FindAllelesParameters.BCellsAlleleSearchParameters.DiversityThresholds
+    private val diversityThresholds: DiversityThresholds
 ) : AllelesSearcher {
     private val maxScore = scoring.maximalMatchScore * sequence1.size()
 
@@ -412,4 +412,10 @@ class BCellsAllelesSearcher(
             return mutationGroups.toString()
         }
     }
+
+    data class DiversityThresholds(
+        val minDiversityForMutation: Int,
+        val minDiversityForAllele: Int,
+        val diversityForSkipTestForRatioForZeroAllele: Int,
+    )
 }

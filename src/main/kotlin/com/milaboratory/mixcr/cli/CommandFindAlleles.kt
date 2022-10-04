@@ -39,6 +39,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VDJC_REFERENCE
 import io.repseq.core.GeneType.VJ_REFERENCE
@@ -204,6 +205,11 @@ class CommandFindAlleles : MiXCRCommand() {
     override fun run0() {
         val clonesFilter: AllelesBuilder.ClonesFilter = object : AllelesBuilder.ClonesFilter {
             override fun match(clone: Clone, tagsInfo: TagsInfo): Boolean {
+                if (findAllelesParameters.productiveOnly) {
+                    if (clone.containsStopsOrAbsent(CDR3) || clone.isOutOfFrameOrAbsent(CDR3)) {
+                        return false
+                    }
+                }
                 val hasUmi = tagsInfo.any { it.type == TagType.Molecule }
                 val useClonesWithCountGreaterThen = when {
                     hasUmi -> findAllelesParameters.filterForDataWithUmi.useClonesWithCountGreaterThen
@@ -235,7 +241,7 @@ class CommandFindAlleles : MiXCRCommand() {
 
         val allFullyCoveredBy = cloneReaders.first().info.allFullyCoveredBy!!
 
-        val allelesBuilder = AllelesBuilder(
+        val allelesBuilder = AllelesBuilder.create(
             findAllelesParameters,
             clonesFilter,
             tempDest,
