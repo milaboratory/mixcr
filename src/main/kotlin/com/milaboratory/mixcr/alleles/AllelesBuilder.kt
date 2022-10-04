@@ -162,7 +162,7 @@ class AllelesBuilder(
                     clone,
                     clone.getBestHit(geneType).mutationsWithoutCDR3(),
                     naiveByComplimentaryGeneMutations,
-                    clone.clusterIdentity(geneType)
+                    clone.clusterIdentity(complimentaryGeneType(geneType))
                 )
             }
             .toList()
@@ -187,12 +187,20 @@ class AllelesBuilder(
                 .filter { clone -> clone.getBestHit(complimentaryGeneType(geneType)).mutationsWithoutCDR3().isEmpty }
                 .toList()
             //TODO calculate mutationsInCDR3 as separate action to get more precise filter by clone.getBestHit(complimentaryGeneType(geneType)).mutations
-            val (mutationsInCDR3, knownCDR3RangeLength) = mutationsInCDR3(geneType, sequence1, naiveClones)
+            val mutationsInCDR3 = when {
+                parameters.searchMutationsInCDR3 != null -> mutationsInCDR3(
+                    geneType,
+                    sequence1,
+                    naiveClones,
+                    parameters.searchMutationsInCDR3
+                )
+                else -> MutationsInCDR3.empty
+            }
             buildAllele(
                 bestHit,
                 foundAllele.allele,
-                mutationsInCDR3,
-                knownCDR3RangeLength
+                mutationsInCDR3.mutations,
+                mutationsInCDR3.knownCDR3RangeLength
             )
         }
         if (debugDir != null) {
@@ -281,7 +289,7 @@ class AllelesBuilder(
 
     private fun Clone.clusterIdentity(geneType: GeneType) = CloneDescription.ClusterIdentity(
         ntLengthOf(CDR3),
-        getBestHit(complimentaryGeneType(geneType)).gene.geneName
+        getBestHit(geneType).gene.geneName
     )
 
     private fun VDJCHit.mutationsWithoutCDR3(): Mutations<NucleotideSequence> {
@@ -308,10 +316,11 @@ class AllelesBuilder(
     private fun mutationsInCDR3(
         geneType: GeneType,
         sequence1: NucleotideSequence,
-        naiveClones: List<Clone>
-    ): Pair<Mutations<NucleotideSequence>, Int> {
-        if (naiveClones.size < parameters.searchMutationsInCDR3.minClonesCount) {
-            return EMPTY_NUCLEOTIDE_MUTATIONS to 0
+        naiveClones: List<Clone>,
+        searchMutationsInCDR3Params: FindAllelesParameters.SearchMutationsInCDR3Params
+    ): MutationsInCDR3 {
+        if (naiveClones.size < searchMutationsInCDR3Params.minClonesCount) {
+            return MutationsInCDR3.empty
         }
         val CDR3OfNaiveClones = naiveClones.map { it.getFeature(CDR3).sequence to it }.toMutableList()
         val minCDR3Size = CDR3OfNaiveClones.minOf { it.first.size() }
@@ -328,11 +337,11 @@ class AllelesBuilder(
             val diversityOfMostFrequentLetter = lettersInPosition[mostFrequent]!!
                 .map { it.second.getBestHit(complimentaryGeneType(geneType)).gene.id }
                 .distinct().size
-            if (diversityOfMostFrequentLetter < parameters.searchMutationsInCDR3.minDiversity) break
+            if (diversityOfMostFrequentLetter < searchMutationsInCDR3Params.minDiversity) break
             if (lettersInPosition.size != 1) {
                 val countOfPretender = lettersInPosition[mostFrequent]!!.size
-                if (countOfPretender < parameters.searchMutationsInCDR3.minClonesCount) break
-                if (countOfPretender <= CDR3OfNaiveClones.size * parameters.searchMutationsInCDR3.minPartOfTheSameLetter) break
+                if (countOfPretender < searchMutationsInCDR3Params.minClonesCount) break
+                if (countOfPretender <= CDR3OfNaiveClones.size * searchMutationsInCDR3Params.minPartOfTheSameLetter) break
             }
             val clonesToExclude = (lettersInPosition - mostFrequent).values
                 .flatMap { it.map { (_, clone) -> clone } }
@@ -340,7 +349,7 @@ class AllelesBuilder(
             CDR3OfNaiveClones.removeIf { (_, clone) -> clone in clonesToExclude }
             foundLettersInCDR3 += mostFrequent
         }
-        if (foundLettersInCDR3.isEmpty()) return EMPTY_NUCLEOTIDE_MUTATIONS to 0
+        if (foundLettersInCDR3.isEmpty()) return MutationsInCDR3.empty
         val bestHit = naiveClones.first().getBestHit(geneType)
         val partitioning = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
         val foundMutations = mutableListOf<Int>()
@@ -377,7 +386,7 @@ class AllelesBuilder(
             .asSequence()
             .sortedBy { Mutation.getPosition(it) }
             .asMutations(NucleotideSequence.ALPHABET)
-        return result to lastKnownShift
+        return MutationsInCDR3(result, lastKnownShift)
     }
 
     private fun metaForGeneratedGene(
@@ -426,6 +435,15 @@ class AllelesBuilder(
     companion object {
         const val metaKeyForAlleleMutationsReliableGeneFeatures = "alleleMutationsReliableGeneFeatures"
         const val metaKeyForAlleleMutationsReliableRanges = "alleleMutationsReliableRanges"
+    }
+
+    data class MutationsInCDR3(
+        val mutations: Mutations<NucleotideSequence>,
+        val knownCDR3RangeLength: Int
+    ) {
+        companion object {
+            val empty = MutationsInCDR3(EMPTY_NUCLEOTIDE_MUTATIONS, 0)
+        }
     }
 
     interface ClonesFilter {

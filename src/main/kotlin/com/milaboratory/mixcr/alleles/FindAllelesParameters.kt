@@ -32,7 +32,7 @@ data class FindAllelesParameters(
      */
     val productiveOnly: Boolean,
     val searchAlleleParameter: BCellsAlleleSearchParameters,
-    val searchMutationsInCDR3: SearchMutationsInCDR3Params
+    val searchMutationsInCDR3: SearchMutationsInCDR3Params?
 ) {
     @JsonAutoDetect(
         fieldVisibility = ANY,

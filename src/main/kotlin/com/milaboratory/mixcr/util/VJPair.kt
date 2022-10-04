@@ -11,10 +11,18 @@
  */
 package com.milaboratory.mixcr.util
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 
+@JsonAutoDetect(
+    fieldVisibility = ANY,
+    isGetterVisibility = NONE,
+    getterVisibility = NONE
+)
 data class VJPair<T>(
     val V: T,
     val J: T
