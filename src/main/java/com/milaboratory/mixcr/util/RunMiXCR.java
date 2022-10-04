@@ -231,7 +231,9 @@ public final class RunMiXCR {
                 SmartProgressReporter.startProgressReport("align", (CanReportProgress) reader);
 
             OutputPort<Chunk<SequenceRead>> mainInputReads = CUtils.buffered((OutputPort) chunked(reader, 64), 16);
-            OutputPort<VDJCAlignmentResult> alignments = unchunked(new ParallelProcessor(mainInputReads, chunked(aligner), parameters.threads));
+            OutputPort<VDJCAlignmentResult> alignments = unchunked(
+                    new ParallelProcessor(mainInputReads, chunked(VDJCAligner.asProcessor(aligner)),
+                            parameters.threads));
             List<VDJCAlignments> als = new ArrayList<>();
             int ind = 0;
             for (VDJCAlignmentResult t : CUtils.it(new OrderedOutputPort<>(alignments, r -> r.read.getId()))) {

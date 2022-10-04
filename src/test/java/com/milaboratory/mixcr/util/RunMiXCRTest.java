@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
 import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
 
 /**
@@ -116,7 +117,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.writeHeader(align.aligner.getBaseMetaInfo(), align.aligner.getUsedGenes());
+            writer.writeHeader(dummyHeader(), align.aligner.getUsedGenes());
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
             writer.setFooter(emptyFooter());
@@ -154,7 +155,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.writeHeader(align.aligner.getBaseMetaInfo(), align.aligner.getUsedGenes());
+            writer.writeHeader(dummyHeader(), align.aligner.getUsedGenes());
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
             writer.setFooter(emptyFooter());

@@ -13,17 +13,4 @@ package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.annotation.JsonValue
 
-// data class MiXCRPipelineElement(
-//     @JsonProperty("command") val command: MiXCRCommand<*>,
-//     @JsonProperty("outputSuffix") val outputSuffix: String,
-//     @JsonProperty("reportSuffix") val reportSuffix: String?,
-//     @JsonProperty("jsonReportSuffix") val jsonReportSuffix: String?,
-// )
-
-// typealias MiXCRPipeline = List<MiXCRCommand<*>>
-
 data class MiXCRPipeline(@JsonValue val steps: List<MiXCRCommand<*>>)
-
-// data class MiXCRPipeline(
-//     @JsonValue val pipeline: List<MiXCRPipelineElement>
-// )

@@ -141,7 +141,7 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override val allowMultipleRounds: Boolean get() = true
 
         override fun outputName(prefix: String, params: CommandAssemblePartial.Params, round: Int) =
-            "${prefix.ifBlank { "alignments" }}.passembled.${round}.vdjca"
+            "${prefix.ifBlank { "alignments" }}.passembled.${round + 1}.vdjca"
 
         override fun reportName(prefix: String, params: CommandAssemblePartial.Params, round: Int) =
             "${prefix.dotIfNotBlank()}assemblePartial.report.txt"

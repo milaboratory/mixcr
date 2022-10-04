@@ -11,14 +11,15 @@
  */
 package com.milaboratory.mixcr.util;
 
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.tests.TargetBuilder;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import io.repseq.core.*;
 import org.apache.commons.math3.random.Well44497b;
@@ -54,10 +55,18 @@ public class VDJCObjectExtenderTest {
                 NucleotideSequence seq2 = baseSeq.getRange(offset2, offset2 + len);
                 NucleotideSequence seq3 = offset3 == -1 ? null : baseSeq.getRange(offset3, offset3 + len);
 
-                VDJCAlignmentResult<VDJCMultiRead> alignment = offset3 == -1 ?
-                        aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2)) :
-                        aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2, seq3));
-                VDJCAlignments al = alignment.alignment;
+                VDJCMultiRead read = offset3 == -1 ?
+                        MiXCRTestUtils.createMultiRead(seq1, seq2) :
+                        MiXCRTestUtils.createMultiRead(seq1, seq2, seq3);
+
+                SequenceHistory[] histories = new SequenceHistory[read.numberOfReads()];
+                for (int i = 0; i < histories.length; i++)
+                    histories[i] = new SequenceHistory.RawSequence(read.getId(), (byte) i,
+                            false, read.getRead(i).getData().size());
+
+                NSQTuple data = read.toTuple();
+                VDJCAlignments al = aligner.process(data, read);
+                al = al.setHistory(histories, new NSQTuple[]{data});
                 Assert.assertNotNull(al);
 
                 VDJCObjectExtender<VDJCAlignments> extender = new VDJCObjectExtender<>(Chains.TCR, (byte) 35,

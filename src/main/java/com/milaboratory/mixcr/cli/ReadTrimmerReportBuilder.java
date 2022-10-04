@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.Range;
-import com.milaboratory.core.io.sequence.SequenceRead;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.quality.ReadTrimmerListener;
 import com.milaboratory.util.ReportBuilder;
 
@@ -102,11 +102,11 @@ public class ReadTrimmerReportBuilder implements ReadTrimmerListener, ReportBuil
     }
 
     @Override
-    public void onSequence(SequenceRead originalRead, int readIndex, Range range, boolean trimmed) {
+    public void onSequence(NSQTuple original, int readIndex, Range range, boolean trimmed) {
         if (readIndex == 0)
             totalAlignments.incrementAndGet();
 
-        int originalLength = originalRead.getRead(readIndex).getData().size();
+        int originalLength = original.get(readIndex).size();
 
         if (range == null) {
             bySideEvents.incrementAndGet(readIndex * 2);
