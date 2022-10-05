@@ -261,9 +261,9 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
         val allDatasetsHasCellTags = cloneReaders.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
         if (allDatasetsHasCellTags) {
             when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
-                is SHMTreeBuilderParameters.SingleCell.NoOP ->
-                    warn("Single cell tags will not be used but it's possible on this data")
-
+                is SHMTreeBuilderParameters.SingleCell.NoOP -> {
+//                    warn("Single cell tags will not be used, but it's possible on this data")
+}
                 is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
                     shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads) {
                         writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)

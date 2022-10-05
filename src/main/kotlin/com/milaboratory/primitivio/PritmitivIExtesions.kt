@@ -99,7 +99,7 @@ fun <T : Any, R : Any> OutputPort<T>.mapInParallel(
 ): ParallelProcessor<T, R> = ParallelProcessor(this, function, bufferSize, threads)
 
 fun <T : Any, R : Any> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPortCloseable<R> = flatMap {
-    listOfNotNull(function(it))
+    listOfNotNull(function(it)).port
 }
 
 fun <T : Any> OutputPort<T>.chunked(chunkSize: Int): OutputPort<Chunk<T>> = CUtils.chunked(this, chunkSize)
@@ -114,11 +114,11 @@ fun <T : Any> OutputPort<T>.ordered(indexer: Indexer<T>): OutputPort<T> = Ordere
 fun <T : Any> List<OutputPort<T>>.flatten(): OutputPortCloseable<T> =
     FlatteningOutputPort(this.port)
 
-fun <T : Any> OutputPort<List<T>>.flatten(): OutputPortCloseable<T> = flatMap { it }
+fun <T : Any> OutputPort<List<T>>.flatten(): OutputPortCloseable<T> = flatMap { it.port }
 
-fun <T : Any, R : Any> OutputPort<T>.flatMap(function: (element: T) -> Iterable<R>): OutputPortCloseable<R> =
+fun <T : Any, R : Any> OutputPort<T>.flatMap(function: (element: T) -> OutputPort<R>): OutputPortCloseable<R> =
     FlatteningOutputPort(CUtils.wrap(this) {
-        function(it).port
+        function(it)
     })
 
 fun <T : Any> OutputPort<T>.filter(test: Filter<T>): OutputPortCloseable<T> =

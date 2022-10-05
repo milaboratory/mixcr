@@ -25,6 +25,8 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
@@ -38,6 +40,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VDJC_REFERENCE
 import io.repseq.core.GeneType.VJ_REFERENCE
@@ -201,8 +204,24 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     }
 
     override fun run0() {
+        val clonesFilter: AllelesBuilder.ClonesFilter = object : AllelesBuilder.ClonesFilter {
+            override fun match(clone: Clone, tagsInfo: TagsInfo): Boolean {
+                if (findAllelesParameters.productiveOnly) {
+                    if (clone.containsStopsOrAbsent(CDR3) || clone.isOutOfFrameOrAbsent(CDR3)) {
+                        return false
+                    }
+                }
+                val hasUmi = tagsInfo.any { it.type == TagType.Molecule }
+                val useClonesWithCountGreaterThen = when {
+                    hasUmi -> findAllelesParameters.filterForDataWithUmi.useClonesWithCountGreaterThen
+                    else -> findAllelesParameters.filterForDataWithoutUmi.useClonesWithCountGreaterThen
+                }
+                return clone.count > useClonesWithCountGreaterThen
+            }
+        }
+
         val reportBuilder = FindAllelesReport.Builder(
-            OverallAllelesStatistics(findAllelesParameters.useClonesWithCountGreaterThen)
+            OverallAllelesStatistics(clonesFilter)
         )
             .setCommandLine(commandLineArguments)
             .setInputFiles(inputFiles)
@@ -220,10 +239,12 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
         }
+
         val allFullyCoveredBy = cloneReaders.first().header.allFullyCoveredBy!!
 
-        val allelesBuilder = AllelesBuilder(
+        val allelesBuilder = AllelesBuilder.create(
             findAllelesParameters,
+            clonesFilter,
             tempDest,
             cloneReaders,
             allFullyCoveredBy,
@@ -262,7 +283,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                     progressAndStage,
                     "Recalculating scores ${inputFiles[i]}"
                 ) { clones ->
-                    cloneRebuild.recalculateScores(clones, reportBuilder)
+                    cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
                 }
                 if (outputTemplate != null) {
                     withRecalculatedScores.port.withProgress(
@@ -319,33 +340,28 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                     gene.data.baseSequence.mutations?.encode() ?: ""
                 }
                 this["naivesCount"] = { gene ->
-                    allelesStatistics.stats(gene.id).naives(filteredByCount = false)
+                    allelesStatistics.stats(gene.id).naives(filtered = false)
                 }
                 this["lowerDiversityBound"] = { gene ->
                     allelesStatistics.stats(gene.id).diversity()
                 }
                 this["clonesCount"] = { gene ->
-                    allelesStatistics.stats(gene.id).count(filteredByCount = false)
+                    allelesStatistics.stats(gene.id).count(filtered = false)
                 }
                 this["totalClonesCountForGene"] = { gene ->
                     allelesStatistics.baseGeneCount(gene.id)
                 }
                 this["clonesCountWithNegativeScoreChange"] = { gene ->
-                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = false)
+                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filtered = false)
                 }
-                if (allelesStatistics.useClonesWithCountGreaterThen != 0) {
-                    this["naivesCountWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
-                        { gene ->
-                            allelesStatistics.stats(gene.id).naives(filteredByCount = true)
-                        }
-                    this["clonesCountWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
-                        { gene ->
-                            allelesStatistics.stats(gene.id).count(filteredByCount = true)
-                        }
-                    this["clonesCountWithNegativeScoreChangeWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
-                        { gene ->
-                            allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = true)
-                        }
+                this["filteredForAlleleSearchNaivesCount"] = { gene ->
+                    allelesStatistics.stats(gene.id).naives(filtered = true)
+                }
+                this["filteredForAlleleSearchClonesCount"] = { gene ->
+                    allelesStatistics.stats(gene.id).count(filtered = true)
+                }
+                this["filteredForAlleleSearchClonesCountWithNegativeScoreChange"] = { gene ->
+                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filtered = true)
                 }
                 this["scoreDelta"] = { gene ->
                     val summaryStatistics = allelesStatistics.stats(gene.id).scoreDelta
