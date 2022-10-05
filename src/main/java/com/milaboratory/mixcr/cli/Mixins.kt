@@ -12,7 +12,29 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.ValidationException
-import com.milaboratory.mixcr.*
+import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
+import com.milaboratory.mixcr.AlignMixins.LeftAlignmentBoundaryNoPoint
+import com.milaboratory.mixcr.AlignMixins.LeftAlignmentBoundaryWithPoint
+import com.milaboratory.mixcr.AlignMixins.LimitInput
+import com.milaboratory.mixcr.AlignMixins.MaterialTypeDNA
+import com.milaboratory.mixcr.AlignMixins.MaterialTypeRNA
+import com.milaboratory.mixcr.AlignMixins.RightAlignmentBoundaryNoPoint
+import com.milaboratory.mixcr.AlignMixins.RightAlignmentBoundaryWithPoint
+import com.milaboratory.mixcr.AlignMixins.SetLibrary
+import com.milaboratory.mixcr.AlignMixins.SetSpecies
+import com.milaboratory.mixcr.AlignMixins.SetTagPattern
+import com.milaboratory.mixcr.AssembleMixins.DropNonCDR3Alignments
+import com.milaboratory.mixcr.AssembleMixins.KeepNonCDR3Alignments
+import com.milaboratory.mixcr.AssembleMixins.SetClonotypeAssemblingFeatures
+import com.milaboratory.mixcr.AssembleMixins.SetSplitClonesBy
+import com.milaboratory.mixcr.ExportMixins.AddExportAlignmentsField
+import com.milaboratory.mixcr.ExportMixins.AddExportClonesField
+import com.milaboratory.mixcr.ExportMixins.DontImputeGermlineOnExport
+import com.milaboratory.mixcr.ExportMixins.ImputeGermlineOnExport
+import com.milaboratory.mixcr.GenericMixin
+import com.milaboratory.mixcr.MiXCRMixin
+import com.milaboratory.mixcr.PipelineMixins.AddPipelineStep
+import com.milaboratory.mixcr.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
@@ -42,17 +64,7 @@ interface PipelineMiXCRMixins : MiXCRMixinSet {
         mixIn(RemovePipelineStep(step))
 }
 
-interface TagMiXCRMixins : MiXCRMixinSet {
-    //
-    // Base tag-related settings
-    //
-
-    @Option(names = [SetTagPattern.CMD_OPTION])
-    fun tagPattern(pattern: String) =
-        mixIn(SetTagPattern(pattern))
-}
-
-interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
+interface AlignMiXCRMixins : MiXCRMixinSet {
     //
     // Base settings
     //
@@ -85,7 +97,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
     // Alignment boundaries
     //
 
-    @Option(names = [AlignmentBoundaryMixinConstants.LEFT_FLOATING_CMD_OPTION], arity = "0..1")
+    @Option(names = [AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION], arity = "0..1")
     fun floatingLeftAlignmentBoundary(arg: String?) =
         mixIn(
             if (arg.isNullOrBlank())
@@ -94,7 +106,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
                 LeftAlignmentBoundaryWithPoint(true, ReferencePoint.parse(arg))
         )
 
-    @Option(names = [AlignmentBoundaryMixinConstants.LEFT_RIGID_CMD_OPTION], arity = "0..1")
+    @Option(names = [AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION], arity = "0..1")
     fun rigidLeftAlignmentBoundary(arg: String?) =
         mixIn(
             if (arg.isNullOrBlank())
@@ -103,7 +115,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
                 LeftAlignmentBoundaryWithPoint(false, ReferencePoint.parse(arg))
         )
 
-    @Option(names = [AlignmentBoundaryMixinConstants.RIGHT_FLOATING_CMD_OPTION], arity = "1")
+    @Option(names = [AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION], arity = "1")
     fun floatingRightAlignmentBoundary(arg: String) =
         mixIn(
             when {
@@ -118,7 +130,7 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
             }
         )
 
-    @Option(names = [AlignmentBoundaryMixinConstants.RIGHT_RIGID_CMD_OPTION], arity = "0..1")
+    @Option(names = [AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION], arity = "0..1")
     fun rigidRightAlignmentBoundary(arg: String?) =
         mixIn(
             when {
@@ -135,6 +147,10 @@ interface AlignMiXCRMixins : MiXCRMixinSet, TagMiXCRMixins {
                     RightAlignmentBoundaryWithPoint(false, ReferencePoint.parse(arg))
             }
         )
+
+    @Option(names = [SetTagPattern.CMD_OPTION])
+    fun tagPattern(pattern: String) =
+        mixIn(SetTagPattern(pattern))
 }
 
 interface AssembleMiXCRMixins : MiXCRMixinSet {
