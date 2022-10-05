@@ -94,7 +94,7 @@ sealed class MiXCRMixinBase(
 @JsonTypeName("SetSpecies")
 data class SetSpecies(
     @JsonProperty("species") val species: String
-) : MiXCRMixinBase(50) {
+) : MiXCRMixinBase(50, Flags.Species) {
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::align.update {
             CommandAlign.Params::species setTo species

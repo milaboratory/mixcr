@@ -58,7 +58,7 @@ object Flags {
     val flagMessages = mapOf(
         Species to
                 "This preset requires to specify species, \n" +
-                "please use the following mix-in: +species [name],\n",
+                "please use the following mix-in: +species [name]",
         MaterialType to
                 "This preset requires to specify material type, \n" +
                 "please use one of the following mix-ins: +dna, +rna",
