@@ -23,6 +23,7 @@ import com.milaboratory.mixcr.AlignMixins.RightAlignmentBoundaryWithPoint
 import com.milaboratory.mixcr.AlignMixins.SetLibrary
 import com.milaboratory.mixcr.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.AlignMixins.SetTagPattern
+import com.milaboratory.mixcr.AssembleContigsMixins.SetCutByFeature
 import com.milaboratory.mixcr.AssembleMixins.DropNonCDR3Alignments
 import com.milaboratory.mixcr.AssembleMixins.KeepNonCDR3Alignments
 import com.milaboratory.mixcr.AssembleMixins.SetClonotypeAssemblingFeatures
@@ -175,6 +176,18 @@ interface AssembleMiXCRMixins : MiXCRMixinSet {
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), false)) }
 }
 
+interface AssembleContigsMiXCRMixins : MiXCRMixinSet {
+    @Option(
+        description = ["Selects the region of interest for the action. Clones will be separated if inconsistent " +
+                "nucleotides will be detected in the region, assembling procedure will be limited to the region, " +
+                "and only clonotypes that fully cover the region will be outputted, others will be filtered out."],
+        names = [SetCutByFeature.CMD_OPTION]
+    )
+    fun cutByFeature(gf: String) =
+        mixIn(SetCutByFeature(GeneFeatures.parse(gf)))
+
+}
+
 interface ExportMiXCRMixins : MiXCRMixinSet {
     @Option(names = [ImputeGermlineOnExport.CMD_OPTION], arity = "0")
     fun imputeGermlineOnExport(ignored: Boolean) =
@@ -298,7 +311,9 @@ interface GenericMiXCRMixins : MiXCRMixinSet {
 }
 
 class AllMiXCRMixins : MiXCRMixinCollector(), PipelineMiXCRMixins,
-    AlignMiXCRMixins, AssembleMiXCRMixins,
+    AlignMiXCRMixins, AssembleMiXCRMixins, AssembleContigsMiXCRMixins,
     ExportMiXCRMixins, GenericMiXCRMixins
 
 class AllExportMiXCRMixins : MiXCRMixinCollector(), ExportMiXCRMixins
+
+class AllAssembleContigsMiXCRMixins : MiXCRMixinCollector(), AssembleContigsMiXCRMixins

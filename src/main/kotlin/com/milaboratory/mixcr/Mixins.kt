@@ -23,9 +23,11 @@ import com.milaboratory.cli.POverridesBuilderDsl
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.POverridesBuilderOpsAbstract
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
+import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.CommandAlign
 import com.milaboratory.mixcr.cli.CommandAssemble
+import com.milaboratory.mixcr.cli.CommandAssembleContigs
 import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
@@ -36,6 +38,9 @@ import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -70,7 +75,7 @@ private fun MixinBuilderOps.modifyGeneAlignmentParams(gt: GeneType, action: KGen
     }
 
 sealed class MiXCRMixinBase(
-    @JsonIgnore override val importance: Int,
+    @JsonIgnore final override val importance: Int,
     @JsonIgnore private val flags: List<String>
 ) : MiXCRMixin {
     constructor(priority: Int, vararg flags: String) : this(priority, flags.asList())
@@ -160,7 +165,7 @@ object AlignMixins {
                 // there is no need in spending time searching for it
                 // NOTE: If such behaviour is still needed, other parameters should also be considered and changed,
                 // to achieve expected results
-                setGeneAlignerParameters(GeneType.Constant, null)
+                setGeneAlignerParameters(Constant, null)
             }
 
         override val cmdArgs get() = listOf(CMD_OPTION)
@@ -171,7 +176,7 @@ object AlignMixins {
     @JsonTypeName("MaterialTypeRNA")
     object MaterialTypeRNA : MiXCRMixinBase(20, Flags.MaterialType) {
         override fun MixinBuilderOps.action() =
-            modifyGeneAlignmentParams(GeneType.Variable) {
+            modifyGeneAlignmentParams(Variable) {
                 // V gene without intron sequence, including 5'UTR sequence
                 geneFeatureToAlign = GeneFeature.VTranscriptWithP
             }
@@ -216,7 +221,7 @@ object AlignMixins {
     ) :
         MiXCRMixinBase(10, Flags.LeftAlignmentMode) {
         override fun MixinBuilderOps.action() =
-            modifyGeneAlignmentParams(GeneType.Variable) {
+            modifyGeneAlignmentParams(Variable) {
                 parameters.isFloatingLeftBound = floating
             }
 
@@ -237,12 +242,12 @@ object AlignMixins {
         MiXCRMixinBase(10, Flags.LeftAlignmentMode) {
         init {
             // Checking parameters
-            if (anchorPoint.geneType != GeneType.Variable)
+            if (anchorPoint.geneType != Variable)
                 throw RuntimeException("$anchorPoint is not inside the V gene")
         }
 
         override fun MixinBuilderOps.action() =
-            modifyGeneAlignmentParams(GeneType.Variable) {
+            modifyGeneAlignmentParams(Variable) {
                 if (!geneFeatureToAlign.contains(anchorPoint))
                     throw RuntimeException("Can't apply mixin because $geneFeatureToAlign does not contain $anchorPoint")
                 geneFeatureToAlign = geneFeatureToAlign.splitBy(anchorPoint).right
@@ -280,15 +285,15 @@ object AlignMixins {
                     }
                 }
 
-                GeneType.Joining ->
+                Joining ->
                     modifyAlignmentParams {
                         // Setting alignment mode
                         jAlignerParameters.parameters.isFloatingRightBound = floating
                         // And turn off C gene alignment as alignment should terminate somewhere in J gene
-                        setGeneAlignerParameters(GeneType.Constant, null)
+                        setGeneAlignerParameters(Constant, null)
                     }
 
-                GeneType.Constant ->
+                Constant ->
                     modifyAlignmentParams {
                         // Checking mixin assumptions
                         if (jAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.FR4End)
@@ -326,7 +331,7 @@ object AlignMixins {
         MiXCRMixinBase(10, Flags.RightAlignmentMode) {
         override fun MixinBuilderOps.action() =
             when (anchorPoint.geneType) {
-                GeneType.Joining ->
+                Joining ->
                     modifyAlignmentParams {
                         // Checking mixin assumptions
                         if (jAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.FR4End &&
@@ -343,10 +348,10 @@ object AlignMixins {
                         // Setting alignment mode
                         jAlignerParameters.parameters.isFloatingRightBound = floating
                         // And turn off C gene alignment as alignment should terminate somewhere in J gene
-                        setGeneAlignerParameters(GeneType.Constant, null)
+                        setGeneAlignerParameters(Constant, null)
                     }
 
-                GeneType.Constant ->
+                Constant ->
                     modifyAlignmentParams {
                         // Checking mixin assumptions
                         if (cAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.CExon1End &&
@@ -458,7 +463,7 @@ object AssembleMixins {
         @JsonProperty("value") val value: Boolean
     ) : MiXCRMixinBase(10) {
         init {
-            if (geneType != GeneType.Variable && geneType != GeneType.Joining && geneType != GeneType.Constant)
+            if (geneType !in arrayOf(Variable, Joining, Constant))
                 throw IllegalArgumentException("Clone splitting supported only for V, J and C genes.")
         }
 
@@ -480,6 +485,35 @@ object AssembleMixins {
         companion object {
             const val CMD_OPTION_TRUE = "+splitClonesBy"
             const val CMD_OPTION_FALSE = "+dontSplitClonesBy"
+        }
+    }
+}
+
+object AssembleContigsMixins {
+    @JsonTypeName("SetCutByFeature")
+    data class SetCutByFeature(
+        @JsonProperty("cutBy") val cutByFeature: GeneFeatures
+    ) : MiXCRMixinBase(50) {
+        override fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::assembleContigs.update {
+                CommandAssembleContigs.Params::parameters.updateBy { p ->
+                    p.copy(
+                        subCloningRegions = cutByFeature,
+                        assemblingRegions = cutByFeature,
+                        postFiltering = PostFiltering.OnlyFullyDefined
+                    )
+                }
+            }
+        }
+
+        override val cmdArgs
+            get() = listOf(
+                CMD_OPTION,
+                cutByFeature.encode()
+            )
+
+        companion object {
+            const val CMD_OPTION = "+cutBy"
         }
     }
 }

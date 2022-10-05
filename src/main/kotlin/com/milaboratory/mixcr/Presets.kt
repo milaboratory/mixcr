@@ -39,6 +39,11 @@ data class MiXCRParamsSpec(
     @JsonProperty("presetAddress") override val presetAddress: String,
     @JsonProperty("mixins") override val mixins: List<MiXCRMixin>,
 ) : ParamsBundleSpec<MiXCRParamsBundle> {
+
+    fun addMixins(toAdd: List<MiXCRMixin>) = copy(
+        mixins = mixins + toAdd
+    )
+
     constructor(presetAddress: String, vararg mixins: MiXCRMixin) : this(presetAddress, listOf(*mixins))
 }
 

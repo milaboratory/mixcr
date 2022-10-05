@@ -17,7 +17,6 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
@@ -33,7 +32,11 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Model
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.util.*
 import java.util.stream.Stream
@@ -75,6 +78,8 @@ object CommandExportClones {
         @ArgGroup(validate = false, heading = "Export mix-ins", exclusive = false)
         private var mixins: AllExportMiXCRMixins? = null
 
+        protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
+
         @Option(
             description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
             names = ["-c", "--chains"]
@@ -112,13 +117,6 @@ object CommandExportClones {
                 Params::fields setIfNotEmpty CloneFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
             }
         }
-
-        fun paramsSpec(baseSpec: MiXCRParamsSpec) = run {
-            val initial = baseSpec.mixins
-            baseSpec.copy(
-                mixins = initial + (mixins?.mixins ?: emptyList())
-            )
-        }
     }
 
     @Command(
@@ -143,7 +141,7 @@ object CommandExportClones {
             val header = initialSet.header
             val tagsInfo = header.tagsInfo
             val (_, params) = paramsResolver.resolve(
-                paramsSpec(header.paramsSpec),
+                header.paramsSpec.addMixins(mixinsToAdd),
                 printParameters = outputFile != null,
             ) { params ->
                 if (params.splitByTags == null) {
