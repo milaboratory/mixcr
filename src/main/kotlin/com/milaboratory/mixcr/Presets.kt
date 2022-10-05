@@ -47,8 +47,8 @@ data class MiXCRParamsBundle(
 )
 
 object Flags {
-    // const val Species = "species"
 
+    const val Species = "species"
     const val MaterialType = "materialType"
     const val LeftAlignmentMode = "leftSideAmplificationPrimer"
     const val RightAlignmentMode = "rightSideAmplificationPrimer"
@@ -56,6 +56,9 @@ object Flags {
     const val TagPattern = "tagPattern"
 
     val flagMessages = mapOf(
+        Species to
+                "This preset requires to specify species, \n" +
+                "please use the following mix-in: +species [name],\n",
         MaterialType to
                 "This preset requires to specify material type, \n" +
                 "please use one of the following mix-ins: +dna, +rna",
