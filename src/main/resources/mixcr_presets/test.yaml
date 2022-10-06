@@ -162,3 +162,18 @@
   inheritFrom: _universal
   align:
     inheritFrom: align_default_4.0
+
+"test-subCloningRegions":
+  inheritFrom: _universal
+  align:
+    inheritFrom: align_default_4.0
+  assembleContigs:
+    inheritFrom: _universal
+    overrides:
+      parameters:
+        subCloningRegions:
+          - VDJRegion
+        assemblingRegions:
+          - VDJRegion
+        postFiltering:
+          type: OnlyFullyDefined

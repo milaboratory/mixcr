@@ -452,7 +452,7 @@ data class SetClonotypeAssemblingFeatures(
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::assemble.update {
             CommandAssemble.Params::cloneAssemblerParameters.applyAfterClone(CloneAssemblerParameters::clone) {
-                assemblingFeatures = features.features
+                assemblingFeatures = features.features.toTypedArray()
             }
         }
     }

@@ -14,21 +14,21 @@ package com.milaboratory.mixcr.basictypes
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.milaboratory.mitool.helpers.readList
+import com.milaboratory.mitool.helpers.writeList
 import com.milaboratory.mitool.pattern.search.BasicSerializer
+import com.milaboratory.mitool.pattern.search.readObject
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.readArray
-import com.milaboratory.primitivio.writeArray
 import com.milaboratory.util.GlobalObjectMappers
 import io.repseq.core.GeneFeature
 
 @Serializable(by = GeneFeatures.SerializerImpl::class)
-class GeneFeatures(
-    @get:JsonValue
-    val features: Array<GeneFeature>
+data class GeneFeatures(
+    @JsonValue val features: List<GeneFeature>
 ) {
-    constructor(geneFeature: GeneFeature) : this(arrayOf(geneFeature))
+    constructor(geneFeature: GeneFeature) : this(listOf(geneFeature))
 
     init {
         check(features.isNotEmpty())
@@ -42,26 +42,24 @@ class GeneFeatures(
     fun intersection(other: GeneFeature): GeneFeatures? {
         val result = features.mapNotNull { GeneFeature.intersection(it, other) }
         if (result.isEmpty()) return null
-        return GeneFeatures(result.toTypedArray())
+        return GeneFeatures(result)
     }
 
     operator fun plus(toAdd: GeneFeature): GeneFeatures {
         val lastFeature = features.last()
         return if (lastFeature.firstPoint < lastFeature.lastPoint && lastFeature.lastPoint == toAdd.firstPoint) {
-            GeneFeatures(features.clone().also {
-                it[features.size - 1] = features.last().append(toAdd)
-            })
+            GeneFeatures(features.dropLast(1) + listOf(features.last().append(toAdd)))
         } else {
-            GeneFeatures(features + toAdd)
+            GeneFeatures(features + listOf(toAdd))
         }
     }
 
     operator fun plus(toAdd: GeneFeatures): GeneFeatures =
         if (features.last().lastPoint == toAdd.features.first().firstPoint) {
             GeneFeatures(
-                features.clone().also {
-                    it[features.size - 1] = features.last().append(toAdd.features.first())
-                } + toAdd.features.copyOfRange(1, toAdd.features.size)
+                features.dropLast(1)
+                        + listOf(features.last().append(toAdd.features.first()))
+                        + toAdd.features.drop(1)
             )
         } else {
             GeneFeatures(features + toAdd.features)
@@ -69,29 +67,19 @@ class GeneFeatures(
 
     fun encode() = features.joinToString(",", "[", "]") { GeneFeature.encode(it) }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as GeneFeatures
-
-        if (!features.contentEquals(other.features)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int = features.contentHashCode()
-
     override fun toString(): String = encode()
-
 
     class SerializerImpl : BasicSerializer<GeneFeatures>() {
         override fun write(output: PrimitivO, obj: GeneFeatures) {
-            output.writeArray(obj.features)
+            output.writeList(obj.features) {
+                writeObject(it)
+            }
         }
 
         override fun read(input: PrimitivI): GeneFeatures {
-            val features = input.readArray<GeneFeature>()
+            val features = input.readList<GeneFeature> {
+                readObject<GeneFeature>()
+            }
             return GeneFeatures(features)
         }
 
@@ -103,7 +91,7 @@ class GeneFeatures(
         @JsonCreator
         fun parse(value: String): GeneFeatures =
             if (value.startsWith("[")) {
-                GeneFeatures(GlobalObjectMappers.getOneLine().readValue<Array<GeneFeature>>(value))
+                GeneFeatures(GlobalObjectMappers.getOneLine().readValue<List<GeneFeature>>(value))
             } else {
                 GeneFeatures(GeneFeature.parse(value))
             }
