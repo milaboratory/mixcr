@@ -119,7 +119,7 @@ public class PartialAlignmentsAssemblerReport extends AbstractMiXCRCommandReport
 
         long total = this.totalProcessed;
         if (independentRuns != 1)
-            helper.writeField("Independent runs", total);
+            helper.writeField("Independent runs", independentRuns);
         helper.writeField("Total alignments analysed", total);
         helper.writePercentAndAbsoluteField("Number of output alignments", outputAlignments, total);
         helper.writePercentAndAbsoluteField("Alignments already with CDR3 (no overlapping is performed)", withCDR3, total);

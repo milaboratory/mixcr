@@ -422,8 +422,12 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
 
     @Override
     public VDJCAlignerParameters clone() {
-        return new VDJCAlignerParameters(getVAlignerParameters(), getDAlignerParameters(), getJAlignerParameters(),
-                getCAlignerParameters(), vjAlignmentOrder, libraryStructure, includeDScore, includeCScore, minSumScore, maxHits,
+        return new VDJCAlignerParameters(
+                getVAlignerParameters() == null ? null : getVAlignerParameters().clone(),
+                getDAlignerParameters() == null ? null : getDAlignerParameters().clone(),
+                getJAlignerParameters() == null ? null : getJAlignerParameters().clone(),
+                getCAlignerParameters() == null ? null : getCAlignerParameters().clone(),
+                vjAlignmentOrder, libraryStructure, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
                 allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance,
                 minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads, smartForceEdgeAlignments);
