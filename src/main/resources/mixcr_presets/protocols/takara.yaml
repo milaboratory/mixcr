@@ -99,7 +99,7 @@
         separateByC: true
 
 "takara-human-tcr-V2-cdr3":
-  nheritFrom: _universal
+  inheritFrom: _universal
   pipeline:
     - align
     - refineTagsAndSort
