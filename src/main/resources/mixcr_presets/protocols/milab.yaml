@@ -257,8 +257,8 @@
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
     - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
+      floating: false
+      geneType: J
   assemble:
     inheritFrom: assemble_universal
     overrides:
