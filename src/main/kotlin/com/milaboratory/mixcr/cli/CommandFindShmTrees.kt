@@ -15,6 +15,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mitool.exhaustive
+import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
@@ -42,7 +43,6 @@ import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -85,15 +85,6 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
 
     @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
     var overrides: Map<String, String> = mutableMapOf()
-
-    @Option(
-        description = ["SHM tree builder parameters preset."],
-        names = ["-p", "--preset"],
-        defaultValue = "default",
-        paramLabel = "preset",
-        showDefaultValue = CommandLine.Help.Visibility.ALWAYS
-    )
-    lateinit var shmTreeBuilderParametersName: String
 
     @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
     var reportFile: String? = null
@@ -148,6 +139,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     var useLocalTemp = false
 
     private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
+        val shmTreeBuilderParametersName = "default"
         var result: SHMTreeBuilderParameters = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
             ?: throwValidationExceptionKotlin("Unknown parameters: $shmTreeBuilderParametersName")
         if (overrides.isNotEmpty()) {
@@ -227,7 +219,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
             "All input files must be assembled with the same alleles"
         }
         require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${CommandAssembleContigs.BY_FEATURE_OPTION_NAME} option"
+            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetCutByFeature.CMD_OPTION} option"
         }
         require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
@@ -263,7 +255,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
             when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
                 is SHMTreeBuilderParameters.SingleCell.NoOP -> {
 //                    warn("Single cell tags will not be used, but it's possible on this data")
-}
+                }
                 is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
                     shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads) {
                         writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)

@@ -18,9 +18,9 @@ import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.alleles.BCellsAllelesSearcher.Allele.Companion.ZERO_ALLELE
+import com.milaboratory.mixcr.alleles.AllelesMutationsSearcher.Allele.Companion.ZERO_ALLELE
 import com.milaboratory.mixcr.alleles.CloneDescription.MutationGroup
-import com.milaboratory.mixcr.alleles.FindAllelesParameters.BCellsAlleleSearchParameters.RegressionFilter
+import com.milaboratory.mixcr.alleles.FindAllelesParameters.AlleleMutationsSearchParameters.RegressionFilter
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import io.repseq.core.VDJCGeneId
@@ -30,11 +30,11 @@ import kotlin.math.absoluteValue
 import kotlin.math.floor
 
 
-class BCellsAllelesSearcher(
+class AllelesMutationsSearcher(
     private val reportBuilder: FindAllelesReport.Builder,
     private val scoring: AlignmentScoring<NucleotideSequence>,
     private val sequence1: NucleotideSequence,
-    private val parameters: FindAllelesParameters.BCellsAlleleSearchParameters,
+    private val parameters: FindAllelesParameters.AlleleMutationsSearchParameters,
     private val diversityThresholds: DiversityThresholds
 ) : AllelesSearcher {
     private val maxScore = scoring.maximalMatchScore * sequence1.size()
@@ -62,6 +62,7 @@ class BCellsAllelesSearcher(
         val foundAlleles = chooseAndGroupMutationsByAlleles(possibleAlleleMutations.toSet(), clones)
 
         val withZeroAllele = addZeroAlleleIfNeeded(foundAlleles, clones, searchHistory)
+        //TODO try remove (or may be only for zero allele)
         val enriched = enrichAllelesWithMutationsThatExistsInAlmostAllClones(withZeroAllele, clones)
         enriched
             .map { it.allele }
@@ -210,14 +211,18 @@ class BCellsAllelesSearcher(
                 }
             val diversityOfZeroAllele = alleleDiversities[ZERO_ALLELE] ?: 0
             when {
+                //TODO try remove
                 // Zero allele is not represented enough
                 diversityOfZeroAllele < diversityThresholds.minDiversityForAllele -> foundAlleles
                 else -> {
-                    searchHistory.alleles.addedKnownAllele = ZERO_ALLELE.mutationGroups
-                    val boundary = alleleDiversities.values.maxOrNull()!! * parameters.minDiversityRatioBetweenAlleles
-                    alleleDiversities
+                    val boundary = alleleDiversities.values.maxOrNull()!! * (1.0 - parameters.topByDiversity)
+                    val result = alleleDiversities
                         .filter { it.value >= boundary || it.value >= diversityThresholds.diversityForSkipTestForRatioForZeroAllele }
                         .keys
+                    if (ZERO_ALLELE in result) {
+                        searchHistory.alleles.addedKnownAllele = ZERO_ALLELE.mutationGroups
+                    }
+                    result
                 }
             }
         }
@@ -329,18 +334,18 @@ class BCellsAllelesSearcher(
         mutations: Set<MutationGroup>,
         clones: List<CloneDescription>
     ): Collection<Allele> {
-        //count diversity of coexisted variants of candidates and filter by minDiversityForAllele
-        val mutationSubsetsWithDiversity = clones.map { clone ->
+        val mutationSubsetsWithClones = clones.map { clone ->
             //subsetOfAlleleMutations may be empty (zero allele)
             val subsetOfAlleleMutations = clone.mutationGroups.filter { it in mutations }
             Allele(subsetOfAlleleMutations) to clone
-        }
-            .groupBy({ it.first }) { it.second }
+        }.groupBy({ it.first }) { it.second }
+
+        val mutationSubsetsWithDiversity = mutationSubsetsWithClones
             .filterValues { it.count { clone -> clone.naiveByComplimentaryGeneMutations } >= parameters.minCountOfNaiveClonesToAddAllele }
             .mapValues { it.value.diversity() }
-        val filteredMutationSubsets = mutationSubsetsWithDiversity
             .filterValues { it >= diversityThresholds.minDiversityForAllele }
-            .keys
+
+        val filteredMutationSubsets = mutationSubsetsWithDiversity.keys
         if (filteredMutationSubsets.isEmpty()) return emptyList()
 
         val alignedClones = alignClonesOnAlleles(clones, filteredMutationSubsets)
@@ -355,7 +360,7 @@ class BCellsAllelesSearcher(
         }
 
         //filter candidates with too low diversity in comparison to others
-        val boundary = alleleDiversities.values.maxOrNull()!! * parameters.minDiversityRatioBetweenAlleles
+        val boundary = alleleDiversities.values.maxOrNull()!! * (1.0 - parameters.topByDiversity)
         return alleleDiversities
             .filter { it.value >= boundary }
             .keys

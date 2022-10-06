@@ -30,7 +30,7 @@ data class FindAllelesParameters(
      * Use only productive clonotypes (no OOF, no stops).
      */
     val productiveOnly: Boolean,
-    val searchAlleleParameter: BCellsAlleleSearchParameters,
+    val searchAlleleParameter: AlleleMutationsSearchParameters,
     val searchMutationsInCDR3: SearchMutationsInCDR3Params?
 ) {
     @JsonAutoDetect(
@@ -40,7 +40,7 @@ data class FindAllelesParameters(
     )
     data class Filter(
         /**
-         * Use only clones with count more than parameter
+         * Use only clones with count greater or equal to then this parameter
          */
         val useClonesWithCountGreaterThen: Int,
     )
@@ -60,9 +60,9 @@ data class FindAllelesParameters(
          */
         val minPartOfTheSameLetter: Double,
         /**
-         * Letter must be represented by not less than `minDiversity` diversity of complimentary gene
+         * Letter must be represented by not less than `minDiversity` percentage of diversity by complimentary gene
          */
-        val minDiversity: Int,
+        val minDiversity: Double,
     )
 
     @JsonAutoDetect(
@@ -70,11 +70,11 @@ data class FindAllelesParameters(
         isGetterVisibility = NONE,
         getterVisibility = NONE
     )
-    data class BCellsAlleleSearchParameters(
+    data class AlleleMutationsSearchParameters(
         /**
-         * Alleles filtered that min and max diversity of result are bound by this ratio
+         * Percentage to get top of alleles by diversity
          */
-        val minDiversityRatioBetweenAlleles: Double,
+        val topByDiversity: Double,
         /**
          * On decision about clone matching to allele will check relation between score penalties between the best and the next alleles.
          */
@@ -84,7 +84,7 @@ data class FindAllelesParameters(
          */
         val diversityRatioToSearchCommonMutationsInAnAllele: Double,
         /**
-         * Min count
+         * Alleles will be filtered by min count of clones that are naive by complementary gene
          */
         val minCountOfNaiveClonesToAddAllele: Int,
         val diversityThresholds: DiversityThresholds,

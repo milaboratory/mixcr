@@ -13,6 +13,7 @@
 
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableRanges
@@ -25,9 +26,9 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.primitivio.forEach
@@ -91,26 +92,18 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     var outputTemplate: String? = null
 
     @Option(
-        description = ["File to write library with found alleles."],
+        description = ["Path to write library with found alleles."],
         names = ["--export-library"],
         paramLabel = "<path>"
     )
     var libraryOutput: Path? = null
 
     @Option(
-        description = ["File to description of each allele."],
+        description = ["Path to write descriptions and stats for all result alleles, existed and new."],
         names = ["--export-alleles-mutations"],
         paramLabel = "<path>"
     )
     var allelesMutationsOutput: Path? = null
-
-    @Option(
-        description = ["Find alleles parameters preset."],
-        names = ["-p", "--preset"],
-        defaultValue = "default",
-        paramLabel = "<preset>"
-    )
-    lateinit var findAllelesParametersName: String
 
     @Option(
         description = ["Put temporary files in the same folder as the output files."],
@@ -170,7 +163,8 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
-        var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
+        val findAllelesParametersName = "default"
+        var result: FindAllelesParameters = FindAllelesParameters.presets.getByName("findAllelesParametersName")
             ?: throwValidationExceptionKotlin("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
             result = JsonOverrider.override(result, FindAllelesParameters::class.java, overrides)
@@ -234,7 +228,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
             "input files must have the same aligner parameters"
         }
         require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${CommandAssembleContigs.BY_FEATURE_OPTION_NAME} option"
+            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetCutByFeature.CMD_OPTION} option"
         }
         require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"

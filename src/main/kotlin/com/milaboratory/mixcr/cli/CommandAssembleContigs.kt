@@ -53,7 +53,7 @@ import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -68,7 +68,6 @@ import java.util.stream.Collectors
 
 object CommandAssembleContigs {
     const val COMMAND_NAME = "assembleContigs"
-    const val BY_FEATURE_OPTION_NAME = "--by-feature"
 
     data class Params(
         @JsonProperty("ignoreTags") val ignoreTags: Boolean,
@@ -84,7 +83,7 @@ object CommandAssembleContigs {
         @Option(names = ["-O"], description = ["Overrides for the assembler parameters."])
         private var overrides: Map<String, String> = mutableMapOf()
 
-        @CommandLine.ArgGroup(validate = false, heading = "Assemble contig mix-ins", exclusive = false)
+        @ArgGroup(validate = false, heading = "Assemble contig mix-ins", exclusive = false)
         private var mixins: AllAssembleContigsMiXCRMixins? = null
 
         protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()

@@ -64,9 +64,10 @@ import java.util.*
 import kotlin.collections.set
 import kotlin.math.absoluteValue
 import kotlin.math.ceil
+import kotlin.math.floor
 
 class AllelesBuilder(
-    private val searchAlleleParameters: FindAllelesParameters.BCellsAlleleSearchParameters,
+    private val searchAlleleParameters: FindAllelesParameters.AlleleMutationsSearchParameters,
     private val searchMutationsInCDR3Parameters: FindAllelesParameters.SearchMutationsInCDR3Params?,
     private val clonesFilter: ClonesFilter,
     private val tempDest: TempFileDest,
@@ -154,12 +155,12 @@ class AllelesBuilder(
 
         val sequence1 = clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1
         val maxDiversity = CDR3Diversity * geneDiversity[complimentaryGeneType(geneType)]
-        val allelesSearcher: AllelesSearcher = BCellsAllelesSearcher(
+        val allelesSearcher: AllelesSearcher = AllelesMutationsSearcher(
             reportBuilder,
             scoring[geneType],
             sequence1,
             searchAlleleParameters,
-            BCellsAllelesSearcher.DiversityThresholds(
+            AllelesMutationsSearcher.DiversityThresholds(
                 ceil(searchAlleleParameters.diversityThresholds.minDiversityForMutation * maxDiversity).toInt(),
                 ceil(searchAlleleParameters.diversityThresholds.minDiversityForAllele * maxDiversity).toInt(),
                 ceil(searchAlleleParameters.diversityThresholds.diversityForSkipTestForRatioForZeroAllele * maxDiversity).toInt()
@@ -182,7 +183,8 @@ class AllelesBuilder(
                     geneType,
                     sequence1,
                     naiveClones,
-                    searchMutationsInCDR3Parameters
+                    searchMutationsInCDR3Parameters,
+                    geneDiversity[complimentaryGeneType(geneType)]
                 )
                 else -> MutationsInCDR3.empty
             }
@@ -307,7 +309,8 @@ class AllelesBuilder(
         geneType: GeneType,
         sequence1: NucleotideSequence,
         naiveClones: List<Clone>,
-        searchMutationsInCDR3Params: FindAllelesParameters.SearchMutationsInCDR3Params
+        searchMutationsInCDR3Params: FindAllelesParameters.SearchMutationsInCDR3Params,
+        diversityOfComlementaryGene: Int
     ): MutationsInCDR3 {
         if (naiveClones.size < searchMutationsInCDR3Params.minClonesCount) {
             return MutationsInCDR3.empty
@@ -327,7 +330,7 @@ class AllelesBuilder(
             val diversityOfMostFrequentLetter = lettersInPosition[mostFrequent]!!
                 .map { it.second.getBestHit(complimentaryGeneType(geneType)).gene.id }
                 .distinct().size
-            if (diversityOfMostFrequentLetter < searchMutationsInCDR3Params.minDiversity) break
+            if (diversityOfMostFrequentLetter < floor(diversityOfComlementaryGene * searchMutationsInCDR3Params.minDiversity)) break
             if (lettersInPosition.size != 1) {
                 val countOfPretender = lettersInPosition[mostFrequent]!!.size
                 if (countOfPretender < searchMutationsInCDR3Params.minClonesCount) break

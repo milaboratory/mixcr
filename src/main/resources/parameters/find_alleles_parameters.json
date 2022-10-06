@@ -8,7 +8,7 @@
       "useClonesWithCountGreaterThen": 1
     },
     "searchAlleleParameter": {
-      "minDiversityRatioBetweenAlleles": 0.75,
+      "topByDiversity": 0.25,
       "minRelativePenaltyBetweenAllelesForCloneAlign": 0.15,
       "diversityThresholds": {
         "minDiversityForMutation": 0.03,
@@ -24,7 +24,7 @@
     "searchMutationsInCDR3": {
       "minClonesCount": 5,
       "minPartOfTheSameLetter": 0.7,
-      "minDiversity": 3
+      "minDiversity": 0.5
     }
   }
 }
