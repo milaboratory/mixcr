@@ -103,7 +103,12 @@ object Presets {
         "refineTagsAndSort.yaml",
         "export.yaml",
         "test.yaml",
-        "protocols/takara.yaml"
+        "protocols/takara.yaml",
+        "protocols/neb.yaml",
+        "protocols/abhelix.yaml",
+        "protocols/biomed2.yaml",
+        "protocols/qiaseq.yaml",
+        "protocols/milab.yaml"
     )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
         val map = mutableMapOf<String, MiXCRParamsBundleRaw>()

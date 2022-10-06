@@ -1,4 +1,4 @@
-"takara-human-bcr-cdr3":
+"milab-human-bcr-multiplex-cdr3":
   inheritFrom: _universal
   pipeline:
     - align
@@ -7,11 +7,11 @@
     - exportClones
   mixins:
     - type: SetSpecies
-      species: hs
+      species: hsa
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
-      floating: true
+      floating: false
       geneType: C
     - type: SetClonotypeAssemblingFeatures
       features: CDR3
@@ -22,7 +22,7 @@
   align:
     inheritFrom: align_kaligner2_4.0
     overrides:
-      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort_universal
     overrides:
@@ -49,7 +49,7 @@
         separateByV: true
         separateByC: true
 
-"takara-human-bcr-full-length":
+"milab-human-bcr-multiplex-full-length":
   inheritFrom: _universal
   pipeline:
     - align
@@ -58,14 +58,14 @@
     - exportClones
   mixins:
     - type: SetSpecies
-      species: hs
+      species: hsa
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
-      floating: true
+      floating: false
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: "{CDR1Begin:FR4End}"
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -73,7 +73,7 @@
   align:
     inheritFrom: align_kaligner2_4.0
     overrides:
-      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort_universal
     overrides:
@@ -98,8 +98,8 @@
       cloneAssemblerParameters:
         separateByC: true
 
-"takara-human-tcr-V2-cdr3":
-  nheritFrom: _universal
+"milab-human-tcr-rna-race-cdr3":
+  inheritFrom: _universal
   pipeline:
     - align
     - refineTagsAndSort
@@ -122,7 +122,7 @@
   align:
     inheritFrom: align_default_4.0
     overrides:
-      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+      tagPattern: ^(R1:*) \ ^tggtatcaacgcagagt(UMI:N{14})(R2:*)
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort_universal
     overrides:
@@ -145,10 +145,10 @@
     inheritFrom: assemble_universal
     overrides:
       cloneAssemblerParameters:
-        separateByV: true
         separateByJ: true
+        separateByV: true
 
-"takara-human-tcr-V2-full-length":
+"milab-human-tcr-rna-race-full-length":
   inheritFrom: _universal
   pipeline:
     - align
@@ -157,7 +157,7 @@
     - exportClones
   mixins:
     - type: SetSpecies
-      species: hs
+      species: hsa
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
@@ -170,9 +170,9 @@
       field: -uniqueTagCount
       args: [ "UMI" ]
   align:
-    inheritFrom: align_kaligner2_4.0
+    inheritFrom: align_default_4.0
     overrides:
-      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+      tagPattern: ^(R1:*) \ ^tggtatcaacgcagagt(UMI:N{14})(R2:*)
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort_universal
     overrides:
@@ -192,7 +192,57 @@
                 type: "group_operator_otsu1"
                 logX: true
 
-"takara-human-tcr-V1-cdr3":
+"milab-human-tcr-rna-multiplex-cdr3":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: CDR3
+    - type: AddExportClonesField
+      insertIndex: 2
+      field: -uniqueTagCount
+      args: [ "UMI" ]
+  align:
+    inheritFrom: align_default_4.0
+    overrides:
+      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{21}(R1:*) \ ^N{20}(R2:*)
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort_universal
+    overrides:
+      parameters:
+        postFilter:
+          type: "filter_groups"
+          groupingKeys:
+            - "UMI"
+          predicates:
+            - metrics:
+                - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0 # don't limit number of bins, use only minBinWidth
+                    minBinWidth: 0.2 # in respect to log10 of the value
+              operator:
+                type: "group_operator_otsu1"
+                logX: true
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      cloneAssemblerParameters:
+        separateByJ: true
+        separateByV: true
+
+"milab-human-tcr-dna-multiplex-cdr3":
   inheritFrom: default_4.0
   pipeline:
     - align
@@ -201,10 +251,11 @@
   mixins:
     - type: SetSpecies
       species: hsa
+    - type: MaterialTypeDNA
     - type: SetClonotypeAssemblingFeatures
       features: CDR3
     - type: LeftAlignmentBoundaryNoPoint
-      floating: false
+      floating: true
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
@@ -214,107 +265,3 @@
       cloneAssemblerParameters:
         separateByJ: true
         separateByV: true
-
-"takara-human-tcr-V1-full-length":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  mixins:
-    - type: SetSpecies
-      species: hsa
-    - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-
-
-"takara-mouse-bcr-cdr3":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetClonotypeAssemblingFeatures
-      features: CDR3
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-  align:
-    inheritFrom: align_kaligner2_4.0
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
-
-"takara-mouse-bcr-full-length":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-  align:
-    inheritFrom: align_kaligner2_4.0
-
-"takara-mouse-tcr-cdr3":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetClonotypeAssemblingFeatures
-      features: CDR3
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
-
-"takara-mouse-tcr-full-length":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-
-
