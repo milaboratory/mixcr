@@ -326,6 +326,11 @@ data class RightAlignmentBoundaryNoPoint(
                             "Incompatible J gene right alignment feature boundary for the mix-in: " +
                                     "${jAlignerParameters.geneFeatureToAlign.lastPoint}"
                         )
+                    if (cAlignerParameters == null)
+                        throw RuntimeException(
+                            "Wrong application of mixin \"${cmdArgs.joinToString(" ")}\", " +
+                                    "underlying parameter set has no alignment parameters for C gene"
+                        )
 
                     // And setting strict alignment mode for the J gene
                     jAlignerParameters.parameters.isFloatingRightBound = false
@@ -502,10 +507,10 @@ data class AddPipelineStep(
     private val command = MiXCRCommand.fromString(step)
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::pipeline.updateBy {
-            val newValue = ArrayList(it)
+            val newValue = ArrayList(it.steps)
             newValue += command
             newValue.sort()
-            newValue
+            MiXCRPipeline(newValue)
         }
 
         if (command == MiXCRCommand.assembleContigs)
@@ -529,13 +534,13 @@ data class RemovePipelineStep(
     private val command = MiXCRCommand.fromString(step)
     override fun MixinBuilderOps.action() {
         MiXCRParamsBundle::pipeline.updateBy {
-            val idx = it.indexOf(command)
+            val idx = it.steps.indexOf(command)
             if (idx == -1)
                 it
             else {
-                val newValue = ArrayList(it)
+                val newValue = ArrayList(it.steps)
                 newValue.removeAt(idx)
-                newValue
+                MiXCRPipeline(newValue)
             }
         }
 

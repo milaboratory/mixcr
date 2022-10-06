@@ -51,7 +51,7 @@ abstract class MiXCRParamsResolver<P : Any>(
             cmd.throwExecutionExceptionKotlin("Error validating preset bundle.");
         }
         if (
-            bundle.pipeline?.contains(MiXCRCommand.assembleContigs) == true &&
+            bundle.pipeline?.steps?.contains(MiXCRCommand.assembleContigs) == true &&
             bundle.assemble?.clnaOutput == false
         )
             cmd.throwExecutionExceptionKotlin("assembleContigs step required clnaOutput=true on assemble step")

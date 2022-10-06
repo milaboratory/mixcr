@@ -101,7 +101,6 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
         return maxRightMatchesLimitReached;
     }
 
-
     public void buildLeftPartsIndex(OutputPort<VDJCAlignments> input) {
         // Resetting internal state if this object was reused
         kToIndexLeft.clear();
