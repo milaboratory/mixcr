@@ -116,7 +116,7 @@ object CommandAnalyze {
             // (it must already be sorted, but just in case)
             val (bundle, pipeline) = paramsResolver.resolve(paramsSpec, printParameters = false)
                 .let {
-                    it.first to it.second.sorted()
+                    it.first to it.second.steps.sorted()
                 }
 
             // Creating execution plan

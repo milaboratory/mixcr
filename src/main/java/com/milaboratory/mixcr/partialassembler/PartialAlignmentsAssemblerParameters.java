@@ -131,7 +131,6 @@ public class PartialAlignmentsAssemblerParameters {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(kValue, kOffset, minimalAssembleOverlap, minimalNOverlap, minimalAlignmentMergeIdentity, mergerParameters, maxLeftParts, maxLeftMatches);
     }
 
