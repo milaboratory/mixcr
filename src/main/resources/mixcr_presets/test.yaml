@@ -9,7 +9,7 @@
     - type: SetSpecies
       species: hs
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -171,9 +171,7 @@
     inheritFrom: _universal
     overrides:
       parameters:
-        subCloningRegions:
-          - VDJRegion
-        assemblingRegions:
-          - VDJRegion
+        subCloningRegions: [ "VDJRegion" ]
+        assemblingRegions: [ "VDJRegion" ]
         postFiltering:
           type: OnlyFullyDefined

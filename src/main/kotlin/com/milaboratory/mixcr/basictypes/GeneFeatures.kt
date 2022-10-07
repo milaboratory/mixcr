@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.basictypes
 
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import com.milaboratory.mitool.helpers.readList
 import com.milaboratory.mitool.helpers.writeList
@@ -56,8 +55,8 @@ data class GeneFeatures(
         if (features.last().lastPoint == toAdd.features.first().firstPoint) {
             GeneFeatures(
                 features.dropLast(1)
-                    + listOf(features.last().append(toAdd.features.first()))
-                    + toAdd.features.drop(1)
+                        + listOf(features.last().append(toAdd.features.first()))
+                        + toAdd.features.drop(1)
             )
         } else {
             GeneFeatures(features + toAdd.features)
@@ -86,11 +85,9 @@ data class GeneFeatures(
 
     companion object {
         @JvmStatic
-        @JsonCreator
         fun parse(value: String): GeneFeatures = GeneFeatures(GeneFeature.parse(value))
 
         @JvmStatic
-        @JsonCreator
         fun parse(value: Array<String>): GeneFeatures =
             GeneFeatures(value.map { GeneFeature.parse(it) })
     }
