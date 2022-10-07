@@ -32,8 +32,8 @@ class PresetsTest {
         // val bundle = Presets.resolveParamsBundle("assemblePartial_universal")
         // val bundle = Presets.resolveParamsBundle("_universal")
         // val bundle = Presets.resolveParamsBundle("_10x_vdj")
-        val bundle = Presets.resolveParamsBundle("milab-human-tcr-dna-multiplex-cdr3")
-        Presets.assemblePartial("milab-human-tcr-dna-multiplex-cdr3")
+        val bundle = Presets.resolveParamsBundle("test-subCloningRegions")
+        Presets.assembleContigs("test-subCloningRegions")
         assertJson(K_YAML_OM, bundle, true)
     }
 

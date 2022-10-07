@@ -66,7 +66,7 @@ data class MiXCRHeader(
         copy(assemblerParameters = assemblerParameters)
 
     fun withAllClonesCutBy(allClonesAlignedBy: Array<GeneFeature>) =
-        copy(allFullyCoveredBy = GeneFeatures(allClonesAlignedBy))
+        copy(allFullyCoveredBy = GeneFeatures(allClonesAlignedBy.toList()))
 
     @Serializable(by = FoundAlleles.SerializerImpl::class)
     data class FoundAlleles(
