@@ -18,8 +18,10 @@ import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Model.CommandSpec
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
@@ -79,9 +81,9 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         const val COMMAND_NAME = "exportShmTreesWithNodes"
 
         @JvmStatic
-        fun mkCommandSpec(): CommandLine.Model.CommandSpec {
+        fun mkCommandSpec(): CommandSpec {
             val command = CommandExportShmTreesTableWithNodes()
-            val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(command)
+            val spec = CommandSpec.forAnnotatedObject(command)
             command.spec = spec // inject spec manually
             SplittedTreeNodeFieldsExtractorsFactory.addOptionsToSpec(spec, true)
             return spec

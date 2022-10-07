@@ -6,7 +6,7 @@
     },
     "topologyBuilder": {
       "topToVoteOnNDNSize": 5,
-      "multiplierForNDSScore": 2.5,
+      "multiplierForNDNScore": 2.5,
       "penaltyForReversedMutations": 10,
       "countOfNodesToProbe": 3
     },

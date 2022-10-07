@@ -209,7 +209,7 @@ internal class SHMTreeBuilderBySteps(
         decisions = ConcurrentHashMap()
     }
 
-    private fun OutputPort<List<CloneWithDatasetId>>.groupByTheSameVJBase(progressAndStage: ProgressAndStage) =
+    private fun OutputPort<List<CloneWithDatasetId>>.groupByTheSameVJBase(progressAndStage: ProgressAndStage): OutputPort<Cluster> =
         withProgress(
             clonesCount,
             progressAndStage,
@@ -251,7 +251,7 @@ internal class SHMTreeBuilderBySteps(
     }
 
 
-    private fun OutputPort<CloneWithDatasetId>.groupByTheSameTargets(progressAndStage: ProgressAndStage) =
+    private fun OutputPort<CloneWithDatasetId>.groupByTheSameTargets(progressAndStage: ProgressAndStage): OutputPort<List<CloneWithDatasetId>> =
         withProgress(
             clonesCount,
             progressAndStage,

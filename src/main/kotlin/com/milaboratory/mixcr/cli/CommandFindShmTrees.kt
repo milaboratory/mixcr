@@ -110,7 +110,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     )
     var minCountForClone: Int? = null
 
-    @Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
+    @Option(description = ["Path to directory to store debug info"], names = ["--debug"], hidden = true)
     var debugDir: Path? = null
 
     private val debugDirectoryPath: Path by lazy {

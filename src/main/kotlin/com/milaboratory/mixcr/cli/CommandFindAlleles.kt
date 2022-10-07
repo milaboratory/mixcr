@@ -164,7 +164,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
         val findAllelesParametersName = "default"
-        var result: FindAllelesParameters = FindAllelesParameters.presets.getByName("findAllelesParametersName")
+        var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
             ?: throwValidationExceptionKotlin("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
             result = JsonOverrider.override(result, FindAllelesParameters::class.java, overrides)
