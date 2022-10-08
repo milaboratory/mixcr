@@ -35,7 +35,6 @@ import com.milaboratory.util.Report;
         @JsonSubTypes.Type(value = TagReport.class, name = "tagReport"),
         @JsonSubTypes.Type(value = VDJCObjectExtenderReport.class, name = "extenderReport"),
         @JsonSubTypes.Type(value = RefineTagsAndSortReport.class, name = "refineTagsAndSort"),
-        @JsonSubTypes.Type(value = MultipleInputsReportWrapper.class, name = "multipleInputsReportWrapper"),
         @JsonSubTypes.Type(value = FindAllelesReport.class, name = "findAllelesReport"),
         @JsonSubTypes.Type(value = BuildSHMTreeReport.class, name = "buildSHMTreeReport")
 })

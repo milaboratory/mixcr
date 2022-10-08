@@ -18,12 +18,41 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.milaboratory.mitool.helpers.K_OM
+import com.milaboratory.mitool.helpers.K_YAML_OM
+import com.milaboratory.mitool.helpers.readList
+import com.milaboratory.mitool.helpers.writeList
+import com.milaboratory.mitool.pattern.search.readObject
+import com.milaboratory.mixcr.alleles.FindAllelesReport
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport
 import com.milaboratory.mixcr.cli.*
+import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport
+import com.milaboratory.mixcr.trees.BuildSHMTreeReport
+import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
+import com.milaboratory.primitivio.annotations.Serializable
+import com.milaboratory.util.ReportHelper
+import kotlin.reflect.KClass
 
+/** Marker class to indicate the command has no report class associated with it. */
+class NoReport : AbstractMiXCRCommandReport(null, "", emptyArray(), emptyArray(), null, "") {
+    override fun writeReport(helper: ReportHelper) {
+        throw IllegalStateException()
+    }
+
+    override fun command() = ""
+}
+
+typealias AnyMiXCRCommand = MiXCRCommand<*, *>
 
 @JsonDeserialize(using = MiXCRCommand.Companion.JDeserializer::class)
-sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
+sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<AnyMiXCRCommand> {
+    abstract val paramClass: KClass<P>
+    abstract val reportClass: KClass<R>
     abstract val command: String
     abstract val order: Int
     open val allowMultipleRounds: Boolean get() = false
@@ -57,11 +86,14 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
             round
         )
 
-    override fun compareTo(other: MiXCRCommand<*>) = order.compareTo(other.order)
+    override fun compareTo(other: AnyMiXCRCommand) = order.compareTo(other.order)
 
     override fun toString() = command
 
-    object align : MiXCRCommand<CommandAlign.Params>() {
+    object align : MiXCRCommand<CommandAlign.Params, AlignerReport>() {
+        override val paramClass get() = CommandAlign.Params::class
+        override val reportClass get() = AlignerReport::class
+
         @get:JsonValue
         override val command get() = CommandAlign.COMMAND_NAME
         override val order get() = 0
@@ -80,7 +112,10 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandAlign.Cmd()
     }
 
-    object refineTagsAndSort : MiXCRCommand<CommandRefineTagsAndSort.Params>() {
+    object refineTagsAndSort : MiXCRCommand<CommandRefineTagsAndSort.Params, RefineTagsAndSortReport>() {
+        override val paramClass get() = CommandRefineTagsAndSort.Params::class
+        override val reportClass get() = RefineTagsAndSortReport::class
+
         @get:JsonValue
         override val command get() = CommandRefineTagsAndSort.COMMAND_NAME
         override val order get() = 1
@@ -99,7 +134,10 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandRefineTagsAndSort.Cmd()
     }
 
-    object exportAlignments : MiXCRCommand<CommandExportAlignments.Params>() {
+    object exportAlignments : MiXCRCommand<CommandExportAlignments.Params, NoReport>() {
+        override val paramClass get() = CommandExportAlignments.Params::class
+        override val reportClass get() = NoReport::class
+
         @get:JsonValue
         override val command get() = CommandExportAlignments.COMMAND_NAME
         override val order get() = 2
@@ -115,7 +153,10 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandExportAlignments.Cmd()
     }
 
-    object extend : MiXCRCommand<CommandExtend.Params>() {
+    object extend : MiXCRCommand<CommandExtend.Params, VDJCObjectExtenderReport>() {
+        override val paramClass get() = CommandExtend.Params::class
+        override val reportClass get() = VDJCObjectExtenderReport::class
+
         @get:JsonValue
         override val command get() = CommandExtend.COMMAND_NAME
         override val order get() = 3
@@ -134,7 +175,10 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandExtend.Cmd()
     }
 
-    object assemblePartial : MiXCRCommand<CommandAssemblePartial.Params>() {
+    object assemblePartial : MiXCRCommand<CommandAssemblePartial.Params, PartialAlignmentsAssemblerReport>() {
+        override val paramClass get() = CommandAssemblePartial.Params::class
+        override val reportClass get() = PartialAlignmentsAssemblerReport::class
+
         @get:JsonValue
         override val command get() = CommandAssemblePartial.COMMAND_NAME
         override val order get() = 4
@@ -154,7 +198,10 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandAssemblePartial.Cmd()
     }
 
-    object assemble : MiXCRCommand<CommandAssemble.Params>() {
+    object assemble : MiXCRCommand<CommandAssemble.Params, CloneAssemblerReport>() {
+        override val paramClass get() = CommandAssemble.Params::class
+        override val reportClass get() = CloneAssemblerReport::class
+
         @get:JsonValue
         override val command get() = CommandAssemble.COMMAND_NAME
         override val order get() = 5
@@ -173,7 +220,10 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandAssemble.Cmd()
     }
 
-    object assembleContigs : MiXCRCommand<CommandAssembleContigs.Params>() {
+    object assembleContigs : MiXCRCommand<CommandAssembleContigs.Params, FullSeqAssemblerReport>() {
+        override val paramClass get() = CommandAssembleContigs.Params::class
+        override val reportClass get() = FullSeqAssemblerReport::class
+
         @get:JsonValue
         override val command get() = CommandAssembleContigs.COMMAND_NAME
         override val order get() = 6
@@ -192,7 +242,10 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandAssembleContigs.Cmd()
     }
 
-    object exportClones : MiXCRCommand<CommandExportClones.Params>() {
+    object exportClones : MiXCRCommand<CommandExportClones.Params, NoReport>() {
+        override val paramClass get() = CommandExportClones.Params::class
+        override val reportClass get() = NoReport::class
+
         @get:JsonValue
         override val command get() = CommandExportClones.COMMAND_NAME
         override val order get() = 7
@@ -208,10 +261,46 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
         override fun createCommand() = CommandExportClones.Cmd()
     }
 
+    object findAlleles : MiXCRCommand<CommandFindAlleles.Params, FindAllelesReport>() {
+        override val paramClass get() = CommandFindAlleles.Params::class
+        override val reportClass get() = FindAllelesReport::class
+
+        @get:JsonValue
+        override val command get() = CommandExportClones.COMMAND_NAME
+        override val order get() = 8
+
+        override fun outputName(prefix: String, params: CommandFindAlleles.Params, round: Int) = TODO()
+
+        override fun reportName(prefix: String, params: CommandFindAlleles.Params, round: Int) = TODO()
+        override fun jsonReportName(prefix: String, params: CommandFindAlleles.Params, round: Int) = TODO()
+
+        override fun extractFromBundle(bundle: MiXCRParamsBundle) = TODO()
+
+        override fun createCommand() = TODO()
+    }
+
+    object findShmTrees : MiXCRCommand<CommandFindShmTrees.Params, BuildSHMTreeReport>() {
+        override val paramClass get() = CommandFindShmTrees.Params::class
+        override val reportClass get() = BuildSHMTreeReport::class
+
+        @get:JsonValue
+        override val command get() = CommandFindShmTrees.COMMAND_NAME
+        override val order get() = 9
+
+        override fun outputName(prefix: String, params: CommandFindShmTrees.Params, round: Int) = TODO()
+
+        override fun reportName(prefix: String, params: CommandFindShmTrees.Params, round: Int) = TODO()
+        override fun jsonReportName(prefix: String, params: CommandFindShmTrees.Params, round: Int) = TODO()
+
+        override fun extractFromBundle(bundle: MiXCRParamsBundle) = TODO()
+
+        override fun createCommand() = TODO()
+    }
+
     companion object {
         private fun String.dotIfNotBlank() = if (isBlank()) this else "$this."
 
-        fun fromStringOrNull(str: String): MiXCRCommand<*>? =
+        fun fromStringOrNull(str: String): AnyMiXCRCommand? =
             when (str) {
                 align.command -> align
                 refineTagsAndSort.command -> refineTagsAndSort
@@ -221,14 +310,16 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
                 assemble.command -> assemble
                 assembleContigs.command -> assembleContigs
                 exportClones.command -> exportClones
+                findAlleles.command -> findAlleles
+                findShmTrees.command -> findShmTrees
                 else -> null
             }
 
-        fun fromString(str: String): MiXCRCommand<*> =
+        fun fromString(str: String): AnyMiXCRCommand =
             fromStringOrNull(str) ?: throw IllegalArgumentException("Unknown command: $str")
 
-        class JDeserializer : JsonDeserializer<MiXCRCommand<*>>() {
-            override fun deserialize(p: JsonParser, ctxt: DeserializationContext): MiXCRCommand<*> = run {
+        class JDeserializer : JsonDeserializer<AnyMiXCRCommand>() {
+            override fun deserialize(p: JsonParser, ctxt: DeserializationContext): AnyMiXCRCommand = run {
                 if (p.currentToken != JsonToken.VALUE_STRING)
                     throw ctxt.wrongTokenException(p, MiXCRCommand::class.java, JsonToken.VALUE_STRING, "")
                 fromStringOrNull(p.text) ?: throw ctxt.instantiationException(
@@ -236,6 +327,163 @@ sealed class MiXCRCommand<P : MiXCRParams> : Comparable<MiXCRCommand<*>> {
                     "Unknown value: ${p.text}"
                 )
             }
+        }
+    }
+}
+
+interface IStepDataCollection {
+    val upstreamCollections: List<IStepDataCollection>
+    val dataMap: LinkedHashMap<String, List<ByteArray>>
+    val steps: List<String>
+
+    fun asTree(): JsonNode = run {
+        val resMap = linkedMapOf<String, List<JsonNode>>()
+        if (upstreamCollections.isNotEmpty())
+            resMap["upstreams"] = upstreamCollections.map { it.asTree() }
+        for (e in dataMap)
+            resMap[e.key] = e.value.map { K_OM.readTree(it) }
+        K_OM.valueToTree(resMap)
+    }
+
+    fun getTrees(step: String): List<JsonNode>
+    fun getTrees(step: AnyMiXCRCommand): List<JsonNode>
+
+    fun getYamls(step: String): List<String> =
+        getTrees(step).map { K_YAML_OM.writeValueAsString(step) }
+
+    fun getYamls(step: AnyMiXCRCommand): List<String> =
+        getTrees(step).map { K_YAML_OM.writeValueAsString(step) }
+
+    fun getPrettyJsons(step: String): List<String> =
+        getTrees(step).map { K_OM.writeValueAsString(step) }
+
+    fun getPrettyJsons(step: AnyMiXCRCommand): List<String> =
+        getTrees(step).map { K_OM.writeValueAsString(step) }
+
+    fun getCompactJsons(step: String): List<String> =
+        getTrees(step).map { K_OM.writeValueAsString(step) }
+
+    fun getCompactJsons(step: AnyMiXCRCommand): List<String> =
+        getTrees(step).map { K_OM.writeValueAsString(step) }
+}
+
+/** Represents a collection of reports / parameters for steps executed for the dataset. Each report encoded as Json. */
+@Serializable(by = StepDataCollection.Companion.SerializerImpl::class)
+class StepDataCollection(
+    override val upstreamCollections: List<StepDataCollection> = emptyList(),
+    private val perStepData: List<Pair<String, ByteArray>> = emptyList()
+) : IStepDataCollection {
+    override val dataMap by lazy {
+        val res = LinkedHashMap<String, List<ByteArray>>()
+        for (el in perStepData)
+            res.compute(el.first) { _, v -> (v ?: emptyList()) + el.second }
+        res
+    }
+
+    override val steps by lazy { dataMap.keys.toList() }
+
+    fun add(step: String, report: ByteArray) = StepDataCollection(upstreamCollections, perStepData + (step to report))
+    fun <D> add(step: AnyMiXCRCommand, report: D) = add(step.command, K_OM.writeValueAsBytes(report))
+    fun getBytes(step: String): List<ByteArray> = perStepData.filter { it.first == step }.map { it.second }
+    fun getBytes(step: AnyMiXCRCommand): List<ByteArray> = getBytes(step.command)
+    fun <D : Any> get(step: AnyMiXCRCommand, type: KClass<D>) = getBytes(step).map { K_OM.readValue(it, type.java) }
+    override fun getTrees(step: String) = getBytes(step).map { K_OM.readTree(it) }
+    override fun getTrees(step: AnyMiXCRCommand) = getBytes(step).map { K_OM.readTree(it) }
+
+    fun <D : Any, P : MiXCRParams, R : MiXCRCommandReport> get(
+        step: MiXCRCommand<P, R>,
+        typeExtractor: (MiXCRCommand<P, R>) -> KClass<D>
+    ) =
+        get(step, typeExtractor(step))
+
+    fun getMap(typeExtractor: (AnyMiXCRCommand) -> KClass<*>) =
+        dataMap.map { e ->
+            val cmd = MiXCRCommand.fromString(e.key)
+            val type = typeExtractor(cmd)
+            cmd to e.value.map { K_OM.readValue(it, type.java) }
+        }.toMap()
+
+    companion object {
+        class SerializerImpl : Serializer<StepDataCollection> {
+            override fun write(output: PrimitivO, obj: StepDataCollection) {
+                output.writeList(obj.upstreamCollections) {
+                    writeObject(it) // recurrent call to the same serializer
+                }
+                output.writeList(obj.perStepData) {
+                    writeUTF(it.first)
+                    writeObject(it.second)
+                }
+            }
+
+            override fun read(input: PrimitivI): StepDataCollection {
+                val upstreams = input.readList {
+                    readObject<StepDataCollection>() // recurrent call to the same serializer
+                }
+                val steps = input.readList {
+                    val step = readUTF()
+                    val content = readObject<ByteArray>()
+                    step to content
+                }
+                return StepDataCollection(upstreams, steps)
+            }
+
+            override fun isReference() = false
+            override fun handlesReference() = false
+        }
+    }
+}
+
+@Serializable(by = MiXCRStepReports.Companion.SerializerImpl::class)
+class MiXCRStepReports(val collection: StepDataCollection = StepDataCollection()) :
+    IStepDataCollection by collection {
+    val upstreams by lazy { collection.upstreamCollections.map { MiXCRStepReports(it) } }
+
+    val map by lazy {
+        @Suppress("UNCHECKED_CAST")
+        collection.getMap { it.reportClass } as Map<AnyMiXCRCommand, List<MiXCRCommandReport>>
+    }
+
+    fun <R : MiXCRCommandReport> add(step: MiXCRCommand<*, R>, report: R) =
+        MiXCRStepReports(collection.add(step, report))
+
+    operator fun <R : MiXCRCommandReport> get(step: MiXCRCommand<*, R>): List<R> =
+        collection.get(step) { it.reportClass }
+
+    companion object {
+        fun mergeUpstreams(upstreams: List<MiXCRStepReports>) =
+            MiXCRStepReports(StepDataCollection(upstreams.map { it.collection }))
+
+        class SerializerImpl : Serializer<MiXCRStepReports> {
+            override fun write(output: PrimitivO, obj: MiXCRStepReports) = output.writeObject(obj.collection)
+            override fun read(input: PrimitivI) = MiXCRStepReports(input.readObject<StepDataCollection>())
+            override fun isReference() = false
+            override fun handlesReference() = false
+        }
+    }
+}
+
+@Serializable(by = MiXCRStepParams.Companion.SerializerImpl::class)
+class MiXCRStepParams(private val collection: StepDataCollection = StepDataCollection()) :
+    IStepDataCollection by collection {
+    val upstreams by lazy { collection.upstreamCollections.map { MiXCRStepParams(it) } }
+
+    val map by lazy {
+        @Suppress("UNCHECKED_CAST")
+        collection.getMap { it.paramClass } as Map<AnyMiXCRCommand, List<MiXCRParams>>
+    }
+
+    fun <P : MiXCRParams> add(step: MiXCRCommand<P, *>, params: P) = MiXCRStepParams(collection.add(step, params))
+    operator fun <P : MiXCRParams> get(step: MiXCRCommand<P, *>): List<P> = collection.get(step) { it.paramClass }
+
+    companion object {
+        fun mergeUpstreams(upstreams: List<MiXCRStepParams>) =
+            MiXCRStepParams(StepDataCollection(upstreams.map { it.collection }))
+
+        class SerializerImpl : Serializer<MiXCRStepParams> {
+            override fun write(output: PrimitivO, obj: MiXCRStepParams) = output.writeObject(obj.collection)
+            override fun read(input: PrimitivI) = MiXCRStepParams(input.readObject<StepDataCollection>())
+            override fun isReference() = false
+            override fun handlesReference() = false
         }
     }
 }

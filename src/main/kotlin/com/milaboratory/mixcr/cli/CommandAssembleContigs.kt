@@ -21,48 +21,22 @@ import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.CloneFactory
-import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReportBuilder
-import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
-import com.milaboratory.mixcr.basictypes.ClnAReader
+import com.milaboratory.mixcr.assembler.fullseq.*
+import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.ClnAReader.CloneAlignments
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.MiXCRFooter
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.primitivio.PipeDataInputReader
-import com.milaboratory.primitivio.PrimitivI
-import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapInParallelOrdered
+import com.milaboratory.primitivio.*
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.StreamUtil
-import io.repseq.core.GeneFeature
-import io.repseq.core.GeneType
+import io.repseq.core.*
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.VDJCGene
-import io.repseq.core.VDJCGeneId
-import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.BufferedWriter
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
+import picocli.CommandLine.*
+import java.io.*
 import java.util.*
 import java.util.stream.Collectors
 
@@ -347,7 +321,7 @@ object CommandAssembleContigs {
                     clones[i++] = clone.setId(cloneId++)
                 }
             }
-            val resultHeader = if (
+            val resultHeader = (if (
                 cmdParams.parameters.assemblingRegions != null &&
                 cmdParams.parameters.subCloningRegions == cmdParams.parameters.assemblingRegions &&
                 cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyDefined
@@ -355,7 +329,8 @@ object CommandAssembleContigs {
                 header.copy(allFullyCoveredBy = cmdParams.parameters.assemblingRegions)
             } else {
                 header
-            }
+            })
+                .addStepParams(MiXCRCommand.assembleContigs, cmdParams)
 
             val cloneSet = CloneSet(listOf(*clones), genes, resultHeader, footer, ordering)
             ClnsWriter(outputFile).use { writer ->
@@ -370,7 +345,7 @@ object CommandAssembleContigs {
                 ReportUtil.writeReportToStdout(report)
                 if (reportFile != null) ReportUtil.appendReport(reportFile, report)
                 if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
-                writer.setFooter(footer.addReport(report))
+                writer.setFooter(footer.addStepReport(MiXCRCommand.assembleContigs, report))
             }
         }
     }

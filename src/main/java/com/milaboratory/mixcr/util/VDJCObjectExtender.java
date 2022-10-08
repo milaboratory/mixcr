@@ -378,7 +378,7 @@ public final class VDJCObjectExtender<T extends VDJCObject>
     }
 
     @Override
-    public MiXCRCommandReport buildReport() {
+    public VDJCObjectExtenderReport buildReport() {
         return new VDJCObjectExtenderReport(
                 getDate(),
                 getCommandLine(),

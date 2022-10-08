@@ -27,6 +27,8 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitool.data.CriticalThresholdCollection;
 import com.milaboratory.mixcr.MiXCRParamsSpec;
+import com.milaboratory.mixcr.MiXCRStepParams;
+import com.milaboratory.mixcr.MiXCRStepReports;
 import com.milaboratory.mixcr.assembler.*;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler;
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters;
@@ -116,12 +118,13 @@ public final class RunMiXCR {
 
             CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRHeader(
                     new MiXCRParamsSpec("default_4.0"),
+                    new MiXCRStepParams(),
                     align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                     align.parameters.alignerParameters,
                     align.parameters.cloneAssemblerParameters,
                     null,
                     null
-            ), new MiXCRFooter(Collections.emptyList(), new CriticalThresholdCollection()));
+            ), new MiXCRFooter(new MiXCRStepReports(), new CriticalThresholdCollection()));
             report.setFinishMillis(System.currentTimeMillis());
             return new AssembleResult(align, cloneSet, report.buildReport(), assembler);
         } finally {
@@ -186,13 +189,14 @@ public final class RunMiXCR {
                 align.usedGenes,
                 new MiXCRHeader(
                         new MiXCRParamsSpec("default_4.0"),
+                        new MiXCRStepParams(),
                         align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters,
                         align.parameters.cloneAssemblerParameters,
                         null,
                         null
                 ),
-                new MiXCRFooter(Collections.emptyList(), new CriticalThresholdCollection()),
+                new MiXCRFooter(new MiXCRStepReports(), new CriticalThresholdCollection()),
                 VDJCSProperties.CO_BY_COUNT
         );
 
@@ -284,7 +288,7 @@ public final class RunMiXCR {
                             cloneAssembler.getAssembledReadsPort())) {
                         writer.collateAlignments(merged, cloneAssembler.getAlignmentsCount());
                     }
-                    writer.setFooter(new MiXCRFooter(Arrays.asList(alignResult.report, report),
+                    writer.setFooter(new MiXCRFooter(new MiXCRStepReports(),
                             new CriticalThresholdCollection()));
                     writer.writeAlignmentsAndIndex();
                 }
@@ -321,6 +325,7 @@ public final class RunMiXCR {
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
                     MiXCRHeader info = new MiXCRHeader(
                             new MiXCRParamsSpec("default_4.0"),
+                            new MiXCRStepParams(),
                             tagsInfo != null ? tagsInfo : TagsInfo.NO_TAGS,
                             aligner.getParameters(),
                             null,
@@ -331,7 +336,7 @@ public final class RunMiXCR {
                     for (VDJCAlignments alignment : alignments)
                         writer.write(alignment);
                     writer.setNumberOfProcessedReads(totalNumberOfReads);
-                    writer.setFooter(new MiXCRFooter(Arrays.asList(report), new CriticalThresholdCollection()));
+                    writer.setFooter(new MiXCRFooter(new MiXCRStepReports(), new CriticalThresholdCollection()));
                 }
             }
             return new VDJCAlignmentsReader(alignmentsFile);

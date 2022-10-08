@@ -111,8 +111,9 @@ object CommandAssemblePartial {
                         val groupingDepth =
                             reader1.header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
                         writer.writeHeader(
-                            reader1.header // output data will be grouped only up to a groupingDepth
-                                .updateTagInfo { ti -> ti.setSorted(groupingDepth) },
+                            reader1.header
+                                .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
+                                .addStepParams(MiXCRCommand.assemblePartial, cmdParams),
                             reader1.usedGenes
                         )
                         val assembler = PartialAlignmentsAssembler(
@@ -166,7 +167,7 @@ object CommandAssemblePartial {
                         if (reportFile != null) ReportUtil.appendReport(reportFile, report)
                         if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
                         writer.setNumberOfProcessedReads(reader1.numberOfReads - assembler.overlapped.get())
-                        writer.setFooter(reader1.footer.addReport(report))
+                        writer.setFooter(reader1.footer.addStepReport(MiXCRCommand.assemblePartial, report))
                     }
                 }
             }

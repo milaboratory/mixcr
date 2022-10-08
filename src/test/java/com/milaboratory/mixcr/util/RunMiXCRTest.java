@@ -184,17 +184,17 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble0 = RunMiXCR.assemble(align, false);
         RunMiXCR.FullSeqAssembleResult assemble = RunMiXCR.assembleContigs(assemble0);
 
-        try (VDJCAlignmentsReader reader = align.resultReader()) {
-            for (MiXCRCommandReport r : reader.getFooter().getReports()) {
-                System.out.println(r);
-            }
-        }
-
-        try (ClnAReader reader = assemble0.resultReader()) {
-            for (MiXCRCommandReport r : reader.getFooter().getReports()) {
-                System.out.println(r);
-            }
-        }
+        // try (VDJCAlignmentsReader reader = align.resultReader()) {
+        //     for (MiXCRCommandReport r : reader.getFooter().getReports()) {
+        //         System.out.println(r);
+        //     }
+        // }
+        //
+        // try (ClnAReader reader = assemble0.resultReader()) {
+        //     for (MiXCRCommandReport r : reader.getFooter().getReports()) {
+        //         System.out.println(r);
+        //     }
+        // }
 
         for (Clone clone : assemble.cloneSet.getClones()) {
             Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),

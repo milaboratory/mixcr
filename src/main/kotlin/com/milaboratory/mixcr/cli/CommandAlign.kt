@@ -38,10 +38,7 @@ import com.milaboratory.mitool.pattern.search.*
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
 import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mitool.use
-import com.milaboratory.mixcr.MiXCRCommand
-import com.milaboratory.mixcr.MiXCRParams
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.*
@@ -620,8 +617,10 @@ object CommandAlign {
                 writer?.writeHeader(
                     MiXCRHeader(
                         paramsSpec,
+                        MiXCRStepParams().add(MiXCRCommand.align, cmdParams),
                         if (tagSearchPlan != null) TagsInfo(
                             0,
+
                             *tagSearchPlan.tagInfos.toTypedArray()
                         ) else TagsInfo.NO_TAGS,
                         aligner.parameters,
@@ -770,7 +769,7 @@ object CommandAlign {
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagSearchPlan != null) reportBuilder.tagReportBuilder = tagSearchPlan.reportAgg.report
                 val report = reportBuilder.buildReport()
-                writer?.setFooter(MiXCRFooter(listOf(report)))
+                writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommand.align, report))
 
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)

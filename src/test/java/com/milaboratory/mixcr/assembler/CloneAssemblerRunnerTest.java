@@ -21,7 +21,9 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import com.milaboratory.mixcr.MiXCRCommand;
 import com.milaboratory.mixcr.MiXCRParamsSpec;
+import com.milaboratory.mixcr.MiXCRStepParams;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
@@ -117,7 +119,7 @@ public class CloneAssemblerRunnerTest {
         assemblerRunner.run();
 
         CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRHeader(
-                        new MiXCRParamsSpec("default_4.0"),
+                        new MiXCRParamsSpec("default_4.0"), new MiXCRStepParams(),
                         TagsInfo.NO_TAGS, alignerParameters,
                         null, null, null),
                 emptyFooter());

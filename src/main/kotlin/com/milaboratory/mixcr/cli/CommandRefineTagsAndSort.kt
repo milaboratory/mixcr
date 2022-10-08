@@ -335,7 +335,9 @@ object CommandRefineTagsAndSort {
 
                     // Initializing and writing results to the output file
                     writer.writeHeader(
-                        header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) },
+                        header
+                            .updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) }
+                            .addStepParams(MiXCRCommand.refineTagsAndSort, cmdParams),
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)
@@ -352,7 +354,7 @@ object CommandRefineTagsAndSort {
                     writer.setFooter(
                         mainReader.footer
                             .withThresholds(thresholds)
-                        .addReport(refineTagsAndSortReport)
+                            .addStepReport(MiXCRCommand.refineTagsAndSort, refineTagsAndSortReport)
                     )
                 }
             }

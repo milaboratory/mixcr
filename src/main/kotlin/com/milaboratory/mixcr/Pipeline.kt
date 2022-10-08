@@ -13,4 +13,4 @@ package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.annotation.JsonValue
 
-data class MiXCRPipeline(@JsonValue val steps: List<MiXCRCommand<*>>)
+data class MiXCRPipeline(@JsonValue val steps: List<AnyMiXCRCommand>)
