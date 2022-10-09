@@ -337,11 +337,13 @@ interface IStepDataCollection {
     val steps: List<String>
 
     fun asTree(): JsonNode = run {
-        val resMap = linkedMapOf<String, List<JsonNode>>()
+        val resMap = linkedMapOf<String, Any>()
         if (upstreamCollections.isNotEmpty())
             resMap["upstreams"] = upstreamCollections.map { it.asTree() }
-        for (e in dataMap)
-            resMap[e.key] = e.value.map { K_OM.readTree(it) }
+        for (e in dataMap) {
+            val valuesSet = e.value.map { K_OM.readTree(it) }.toSet()
+            resMap[e.key] = (if (valuesSet.size == 1) valuesSet.first() else valuesSet)
+        }
         K_OM.valueToTree(resMap)
     }
 
