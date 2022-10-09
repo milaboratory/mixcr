@@ -24,7 +24,7 @@ import io.repseq.core.GeneFeature
 @Serializable(by = GeneFeatures.SerializerImpl::class)
 data class GeneFeatures(
     @JsonValue val features: List<GeneFeature>
-) : Iterable<GeneFeature> by features {
+) {
     constructor(geneFeature: GeneFeature) : this(listOf(geneFeature))
 
     init {

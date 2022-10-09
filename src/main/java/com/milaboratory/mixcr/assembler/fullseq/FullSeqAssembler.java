@@ -248,7 +248,7 @@ public final class FullSeqAssembler {
 
     private Range[] geneFeaturesToRanges(GeneFeatures features) {
         List<Range> result = new ArrayList<>();
-        for (GeneFeature feature : features) {
+        for (GeneFeature feature : features.getFeatures()) {
             int rangeFrom = -1, rangeTo = -1;
 
             if (hasV) {
