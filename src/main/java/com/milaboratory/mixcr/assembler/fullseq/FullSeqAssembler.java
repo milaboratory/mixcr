@@ -1924,7 +1924,7 @@ public final class FullSeqAssembler {
 
         // central
         for (int i = alSeq1RangeIntersection.getFrom(); i < alSeq1RangeIntersection.getTo(); ++i)
-            if (inAssemblingRegion(i + shift))
+            if (inAssemblingRegion(i + offset))
                 points.add(createPointSequence(i + offset, seq2, alignment.convertToSeq2Range(new Range(i, i + 1)), alignment.getSequence2Range()));
 
         // right
@@ -1934,7 +1934,7 @@ public final class FullSeqAssembler {
                 points.add(createPointSequence(i + shift, seq2, i, i + 1, alignment.getSequence2Range()));
     }
 
-    static Range convertToSeq1Range(Alignment alignment, Range rangeInSeq2) {
+    static Range convertToSeq1Range(Alignment<?> alignment, Range rangeInSeq2) {
         int from = alignment.convertToSeq1Position(rangeInSeq2.getFrom());
 
         if (rangeInSeq2.isEmpty())
