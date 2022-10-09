@@ -23,6 +23,9 @@ mixcr analyze -f 10x_vdj_bcr \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case10
 
+mixcr exportReports --yaml case10.contigs.clns
+mixcr exportReports case10.contigs.clns
+
 #mixcr refineTagsAndSort case10.aligned-vdjca case10.corrected-vdjca
 #
 #mixcr align -f \

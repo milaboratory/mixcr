@@ -42,9 +42,10 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
     private final AtomicLong realignedWithForcedNonFloatingLeftBoundInRightRead = new AtomicLong(0);
     private ReadTrimmerReportBuilder trimmingReportBuilder;
 
-    private ParseReport tagReport;
+    private ParseReport tagReport = null;
 
-    public AlignerReportBuilder() {}
+    public AlignerReportBuilder() {
+    }
 
     public void setTrimmingReportBuilder(ReadTrimmerReportBuilder trimmingReport) {
         this.trimmingReportBuilder = trimmingReport;
@@ -189,8 +190,7 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
                 realignedWithForcedNonFloatingLeftBoundInRightRead.get(),
                 noCDR3PartsAlignments.get(),
                 partialAlignments.get(),
-                tagReport == null ? null : new TagReport()
-//                new TagReport(tagReport.getTotalReads(), tagReport.getMatchedReads())
+                tagReport
         );
     }
 }
