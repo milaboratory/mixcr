@@ -128,9 +128,10 @@ class BuildSHMTreeReport(
                     it.getMutations("VMutationsFromRoot").size() + it.getMutations("JMutationsFromRoot").size()
                 }
             val clonesCountInTrees = debugInfosAfterDecisions
-                .filter { it["cloneId"] != null }
-                .groupingBy { it.treeId() }.eachCount()
+                .filterNot { it["clonesIds"].isNullOrBlank() }
+                .groupBy({ it.treeId() }, { it["clonesIds"]?.split(",") ?: emptyList() })
                 .values
+                .map { it.size }
             val NDNsByTrees = debugInfosAfterDecisions
                 .filter { it["id"] != "0" }
                 .groupBy { it.treeId() }
@@ -155,9 +156,9 @@ class BuildSHMTreeReport(
                         .maxOfOrNull { NDN -> NDN.wildcardsScore() }
                 }
             val surenessOfDecisions = debugInfosBeforeDecisions
-                .filter { it["cloneId"] != null }
+                .filterNot { it["clonesIds"].isNullOrBlank() }
                 .filter { it["decisionMetric"] != null }
-                .groupBy({ it["cloneId"] }) { it["decisionMetric"]!!.toDouble() }
+                .groupBy({ it["clonesIds"] }) { it["decisionMetric"]!!.toDouble() }
                 .filterValues { it.size > 1 }
                 .mapValues { (_, metrics) ->
                     val minMetric = metrics.minOrNull()!!

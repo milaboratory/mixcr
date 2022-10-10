@@ -58,7 +58,7 @@ data class SHMTreeBuilderParameters(
         /**
          * Multiplier of NDN score on calculating distance between clones in a tree.
          */
-        val multiplierForNDSScore: Double,
+        val multiplierForNDNScore: Double,
     )
 
     @JsonTypeInfo(
@@ -67,12 +67,12 @@ data class SHMTreeBuilderParameters(
     )
     sealed interface ClusterizationAlgorithm {
         /**
-         * Min count of common mutations in VJ for pair to form first clusterization.
+         * Min count of common mutations in V and J genes for pair to form edge in cluster.
          */
         val commonMutationsCountForClustering: Int
 
         /**
-         * Max penalty of NDN mutations per NDN length for pair to form first clusterization.
+         * Max penalty of NDN mutations per NDN length for pair to form edge in cluster.
          */
         val maxNDNDistanceForClustering: Double
 

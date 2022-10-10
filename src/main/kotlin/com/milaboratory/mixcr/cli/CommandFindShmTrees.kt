@@ -15,6 +15,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mitool.exhaustive
+import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.basictypes.CloneReader
@@ -30,7 +31,6 @@ import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.*
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
 import picocli.CommandLine.*
 import java.io.File
 import java.nio.file.Path
@@ -76,15 +76,6 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
     var overrides: Map<String, String> = mutableMapOf()
 
-    @Option(
-        description = ["SHM tree builder parameters preset."],
-        names = ["-p", "--preset"],
-        defaultValue = "default",
-        paramLabel = "preset",
-        showDefaultValue = CommandLine.Help.Visibility.ALWAYS
-    )
-    lateinit var shmTreeBuilderParametersName: String
-
     @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
     var reportFile: String? = null
 
@@ -109,7 +100,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     )
     var minCountForClone: Int? = null
 
-    @Option(description = ["Path to directory to store debug info"], names = ["-d", "--debug"])
+    @Option(description = ["Path to directory to store debug info"], names = ["--debugDir"], hidden = true)
     var debugDir: Path? = null
 
     private val debugDirectoryPath: Path by lazy {
@@ -138,6 +129,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     var useLocalTemp = false
 
     private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
+        val shmTreeBuilderParametersName = "default"
         var result: SHMTreeBuilderParameters = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
             ?: throwValidationExceptionKotlin("Unknown parameters: $shmTreeBuilderParametersName")
         if (overrides.isNotEmpty()) {
@@ -177,7 +169,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
                 throwValidationExceptionKotlin("--min-count must be empty if --build-from is specified")
             }
             if (debugDir != null) {
-                println("WARN: argument --debug will not be used with --build-from")
+                println("WARN: argument --debugDir will not be used with --build-from")
             }
         }
     }
@@ -217,7 +209,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
             "All input files must be assembled with the same alleles"
         }
         require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${CommandAssembleContigs.BY_FEATURE_OPTION_NAME} option"
+            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
         require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
@@ -251,9 +243,9 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
         val allDatasetsHasCellTags = cloneReaders.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
         if (allDatasetsHasCellTags) {
             when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
-                is SHMTreeBuilderParameters.SingleCell.NoOP ->
-                    warn("Single cell tags will not be used but it's possible on this data")
-
+                is SHMTreeBuilderParameters.SingleCell.NoOP -> {
+//                    warn("Single cell tags will not be used, but it's possible on this data")
+                }
                 is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
                     shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads) {
                         writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)

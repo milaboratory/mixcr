@@ -21,28 +21,53 @@ import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.CloneFactory
-import com.milaboratory.mixcr.assembler.fullseq.*
-import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReportBuilder
+import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
+import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAReader.CloneAlignments
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.MiXCRFooter
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.primitivio.*
+import com.milaboratory.primitivio.PipeDataInputReader
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.StreamUtil
-import io.repseq.core.*
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import picocli.CommandLine.*
-import java.io.*
+import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
+import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.BufferedWriter
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 import java.util.*
 import java.util.stream.Collectors
 
 object CommandAssembleContigs {
     const val COMMAND_NAME = "assembleContigs"
-    const val BY_FEATURE_OPTION_NAME = "--by-feature"
 
     data class Params(
         @JsonProperty("ignoreTags") val ignoreTags: Boolean,
@@ -55,35 +80,16 @@ object CommandAssembleContigs {
         @Option(description = ["Ignore tags (UMIs, cell-barcodes)"], names = ["--ignore-tags"])
         private var ignoreTags = false
 
-        @Option(
-            description = ["Selects the region of interest for the action. Clones will be separated if inconsistent " +
-                    "nucleotides will be detected in the region, assembling procedure will be limited to the region, " +
-                    "and only clonotypes that fully cover the region will be outputted, others will be filtered out."],
-            names = ["--by-feature"]
-        )
-        private var cutByFeatureParam: String? = null
-
         @Option(names = ["-O"], description = ["Overrides for the assembler parameters."])
         private var overrides: Map<String, String> = mutableMapOf()
 
+        @ArgGroup(validate = false, heading = "Assemble contig mix-ins", exclusive = false)
+        private var mixins: AllAssembleContigsMiXCRMixins? = null
+
+        protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
+
         override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::assembleContigs) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                cutByFeatureParam
-                    ?.takeIf { it.isNotBlank() }
-                    ?.also {
-                        val cutByFeature = GeneFeatures.parse(it)
-                        Params::parameters.updateBy { p ->
-                            if (p.subCloningRegions != null) warn("subCloningRegion already set")
-                            if (p.assemblingRegions != null) warn("assemblingRegions already set")
-                            if (p.postFiltering != PostFiltering.NoFiltering) warn("assemblingRegions already set")
-                            p.copy(
-                                subCloningRegions = cutByFeature,
-                                assemblingRegions = cutByFeature,
-                                postFiltering = PostFiltering.OnlyFullyDefined
-                            )
-                        }
-
-                    }
                 Params::ignoreTags setIfTrue ignoreTags
                 Params::parameters jsonOverrideWith overrides
             }
@@ -144,7 +150,7 @@ object CommandAssembleContigs {
             val footer: MiXCRFooter
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-                cmdParams = paramsResolver.resolve(reader.header.paramsSpec).second
+                cmdParams = paramsResolver.resolve(reader.header.paramsSpec.addMixins(mixinsToAdd)).second
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."

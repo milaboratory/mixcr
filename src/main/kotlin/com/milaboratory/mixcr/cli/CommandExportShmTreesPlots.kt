@@ -22,6 +22,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
+import kotlin.io.path.extension
 
 @Command(
     sortOptions = false,
@@ -134,7 +135,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     override fun validate() {
         super.validate()
-        if (!out.endsWith(".pdf"))
+        if (out.extension != "pdf")
             throwValidationExceptionKotlin("Output file must have .pdf extension")
     }
 

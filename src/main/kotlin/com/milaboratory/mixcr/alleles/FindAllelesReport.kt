@@ -204,6 +204,7 @@ class FindAllelesReport(
             overallAllelesStatistics.stats
                 .mapKeys { it.key.name }
                 .mapValues { MiXCRCommandReport.StandardStats.from(it.value.scoreDelta) }
+                .filterValues { it.size != 0L }
         )
 
         override fun that() = this

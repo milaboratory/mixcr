@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.alleles
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Aligner
-import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutation
@@ -26,6 +25,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -87,6 +87,7 @@ class CloneRebuild(
      */
     fun recalculateScores(
         input: OutputPort<Clone>,
+        tagsInfo: TagsInfo,
         reportBuilder: FindAllelesReport.Builder
     ): List<Pair<Clone, EnumMap<GeneType, List<GeneAndScore>>>> {
         val errorsCount: MutableMap<VDJCGeneId, LongAdder> = ConcurrentHashMap()
@@ -135,11 +136,11 @@ class CloneRebuild(
                         val stats = reportBuilder.overallAllelesStatistics.stats(alleleId)
                         if (alleleId == bestAlleleId) {
                             val complementaryGeneId = clone.getBestHit(complimentaryGeneType(geneType)).gene.id
-                            stats.register(clone, complementaryGeneId)
+                            stats.register(clone, complementaryGeneId, tagsInfo)
                             if (alignmentsChange.naive) {
-                                stats.naive(clone)
+                                stats.naive(clone, tagsInfo)
                             }
-                            stats.scoreDelta(clone, alignmentsChange.scoreDelta)
+                            stats.scoreDelta(clone, alignmentsChange.scoreDelta, tagsInfo)
                         }
                     }
                 }
@@ -160,7 +161,8 @@ class CloneRebuild(
     data class AlignmentsChange(
         val originalHit: VDJCHit,
         val naive: Boolean,
-        val scoreDelta: Float
+        val scoreDelta: Float,
+        val penalty: Double
     ) {
         val newScore: Float get() = originalHit.score + scoreDelta
     }
@@ -172,42 +174,34 @@ class CloneRebuild(
             scoring: AlignmentScoring<NucleotideSequence>,
             hit: VDJCHit = clone.getBestHit(foundAllele.geneType)
         ): AlignmentsChange = when {
-            foundAllele.name != hit.gene.name -> {
-                val (scoreDelta, recalculatedMutationsCount) = scoreDelta(
-                    clone,
-                    foundAllele,
-                    scoring,
-                    hit.alignments
-                )
-                AlignmentsChange(
-                    hit,
-                    recalculatedMutationsCount == 0,
-                    scoreDelta
-                )
-            }
+            foundAllele.name != hit.gene.name -> calculateChange(clone, foundAllele, scoring, hit)
             else -> AlignmentsChange(
                 hit,
                 hit.alignments.asSequence().sumOf { it.absoluteMutations.size() } == 0,
-                0.0F
+                0.0F,
+                hit.alignments.asSequence()
+                    .sumOf { it.sequence1Range.length() * scoring.maximalMatchScore - it.score.toDouble() }
             )
         }
 
         /**
          * Recalculate score and mutations for every alignment based on found allele
          */
-        private fun scoreDelta(
+        private fun calculateChange(
             clone: Clone,
             foundAllele: VDJCGeneData,
             scoring: AlignmentScoring<NucleotideSequence>,
-            alignments: Array<Alignment<NucleotideSequence>?>
-        ): Pair<Float, Int> {
+            hit: VDJCHit
+        ): AlignmentsChange {
             val alleleMutations = foundAllele.baseSequence.mutations ?: throw IllegalArgumentException()
             val alleleHasIndels = alleleMutations.asSequence().any { Mutation.isInDel(it) }
             var scoreDelta = 0.0f
-            var mutationsCount = 0
-            alignments
+            var noMutations = true
+            var penalty = 0.0
+            hit.alignments
                 .filterNotNull()
                 .forEachIndexed { index, alignment ->
+                    val maxScore = alignment.sequence1Range.length() * scoring.maximalMatchScore
                     val (recalculatedMutationsCount, recalculatedScore) = when {
                         //in case of indels invert().combineWith(alleleMutations).invert() may work incorrect
                         alleleHasIndels -> {
@@ -246,10 +240,17 @@ class CloneRebuild(
                             ).toFloat()
                         }
                     }
-                    mutationsCount += recalculatedMutationsCount
+                    noMutations = noMutations && recalculatedMutationsCount == 0
                     scoreDelta += recalculatedScore - alignment.score
+                    penalty += maxScore - recalculatedScore
                 }
-            return scoreDelta to mutationsCount
+            return AlignmentsChange(
+                hit,
+                noMutations,
+                scoreDelta,
+                penalty
+            )
         }
+
     }
 }

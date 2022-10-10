@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.alleles
 
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.util.geneName
 import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCGeneId
@@ -21,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
 
 class OverallAllelesStatistics(
-    val useClonesWithCountGreaterThen: Int
+    val clonesFilter: AllelesBuilder.ClonesFilter
 ) {
     private val genesTotalCount: MutableMap<String, LongAdder> = ConcurrentHashMap()
     private val alleles: MutableMap<VDJCGeneId, AlleleStatistics> = ConcurrentHashMap()
@@ -38,18 +39,18 @@ class OverallAllelesStatistics(
 
     inner class AlleleStatistics {
         private val naives = LongAdder()
-        private val naivesFilteredByCount = LongAdder()
+        private val naivesFiltered = LongAdder()
         private val count = LongAdder()
-        private val countFilteredByCount = LongAdder()
+        private val countFiltered = LongAdder()
         private val diversity: MutableSet<Pair<VDJCGeneId, Int>> = ConcurrentHashMap.newKeySet()
         private val withNegativeScoreChange: LongAdder = LongAdder()
-        private val withNegativeScoreChangeFilteredByCount: LongAdder = LongAdder()
+        private val withNegativeScoreChangeFiltered: LongAdder = LongAdder()
         val scoreDelta: SummaryStatistics = SynchronizedSummaryStatistics()
-        fun scoreDelta(clone: Clone, delta: Float) {
+        fun scoreDelta(clone: Clone, delta: Float, tagsInfo: TagsInfo) {
             if (delta < 0.0F) {
                 withNegativeScoreChange.increment()
-                if (clone.count > useClonesWithCountGreaterThen) {
-                    withNegativeScoreChangeFilteredByCount.increment()
+                if (clonesFilter.match(clone, tagsInfo)) {
+                    withNegativeScoreChangeFiltered.increment()
                 }
             }
             if (delta != 0.0F) {
@@ -57,34 +58,34 @@ class OverallAllelesStatistics(
             }
         }
 
-        fun withNegativeScoreChange(filteredByCount: Boolean) = when {
-            filteredByCount -> withNegativeScoreChangeFilteredByCount
+        fun withNegativeScoreChange(filtered: Boolean) = when {
+            filtered -> withNegativeScoreChangeFiltered
             else -> withNegativeScoreChange
         }.toLong()
 
-        fun naives(filteredByCount: Boolean) = when {
-            filteredByCount -> naivesFilteredByCount
+        fun naives(filtered: Boolean) = when {
+            filtered -> naivesFiltered
             else -> naives
         }.toLong()
 
-        fun naive(clone: Clone) {
+        fun naive(clone: Clone, tagsInfo: TagsInfo) {
             naives.increment()
-            if (clone.count > useClonesWithCountGreaterThen) {
-                naivesFilteredByCount.increment()
+            if (clonesFilter.match(clone, tagsInfo)) {
+                naivesFiltered.increment()
             }
         }
 
-        fun register(clone: Clone, complementaryGeneId: VDJCGeneId) {
+        fun register(clone: Clone, complementaryGeneId: VDJCGeneId, tagsInfo: TagsInfo) {
             count.increment()
-            if (clone.count > useClonesWithCountGreaterThen) {
-                countFilteredByCount.increment()
+            if (clonesFilter.match(clone, tagsInfo)) {
+                countFiltered.increment()
             }
             diversity += complementaryGeneId to clone.ntLengthOf(GeneFeature.CDR3)
         }
 
         fun diversity() = diversity.size
-        fun count(filteredByCount: Boolean) = when {
-            filteredByCount -> countFilteredByCount
+        fun count(filtered: Boolean) = when {
+            filtered -> countFiltered
             else -> count
         }.toLong()
     }
