@@ -90,7 +90,7 @@ class BuildSHMTreeReport(
 
     class Builder : AbstractCommandReportBuilder<Builder>() {
         private val stepResults = mutableListOf<StepResult>()
-        override fun buildReport(): BuildSHMTreeReport = BuildSHMTreeReport(
+        override fun buildReport() = BuildSHMTreeReport(
             date, commandLine, inputFiles, outputFiles, executionTimeMillis, version, stepResults
         )
 

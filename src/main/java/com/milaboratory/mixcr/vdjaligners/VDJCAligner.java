@@ -15,11 +15,9 @@ import cc.redberry.pipe.Processor;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
-import com.milaboratory.mixcr.MiXCRParamsSpec;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.mixcr.basictypes.HasGene;
-import com.milaboratory.mixcr.basictypes.MiXCRHeader;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.util.HashFunctions;
 import com.milaboratory.util.RandomUtil;
 import io.repseq.core.*;
@@ -29,7 +27,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 
-public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R, VDJCAlignmentResult<R>> {
+public abstract class VDJCAligner {
     protected volatile boolean initialized = false;
     protected final VDJCAlignerParameters parameters;
     protected final EnumMap<GeneType, List<VDJCGene>> genesToAlign;
@@ -41,7 +39,7 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         this.genesToAlign = new EnumMap<>(GeneType.class);
         this.usedGenes = new ArrayList<>();
         for (GeneType geneType : GeneType.values())
-            genesToAlign.put(geneType, new ArrayList<VDJCGene>());
+            genesToAlign.put(geneType, new ArrayList<>());
     }
 
     VDJCAligner(boolean initialized, VDJCAlignerParameters parameters, EnumMap<GeneType, List<VDJCGene>> genesToAlign, List<VDJCGene> usedGenes) {
@@ -51,11 +49,7 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         this.usedGenes = usedGenes;
     }
 
-    public MiXCRHeader getBaseMetaInfo() {
-        return new MiXCRHeader(new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS, parameters, null, null, null);
-    }
-
-    private static <R extends SequenceRead> long hash(R input) {
+    private static long hash(SequenceRead input) {
         long hash = 1;
         for (int i = 0; i < input.numberOfReads(); i++) {
             final SingleRead r = input.getRead(i);
@@ -68,28 +62,27 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         return hash;
     }
 
-    @Override
-    public final VDJCAlignmentResult<R> process(R input) {
-        if (parameters.isFixSeed())
-            RandomUtil.reseedThreadLocal(hash(input));
+    public final VDJCAlignments process(NSQTuple input, SequenceRead origin) {
         ensureInitialized();
+        if (parameters.isFixSeed())
+            RandomUtil.reseedThreadLocal(hash(origin));
         return process0(input);
     }
 
-    protected abstract VDJCAlignmentResult<R> process0(final R input);
+    protected abstract VDJCAlignments process0(NSQTuple input);
 
     public void setEventsListener(VDJCAlignerEventListener listener) {
         this.listener = listener;
     }
 
-    protected final void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
+    protected final void onFailedAlignment(VDJCAlignmentFailCause cause) {
         if (listener != null)
-            listener.onFailedAlignment(read, cause);
+            listener.onFailedAlignment(cause);
     }
 
-    protected final void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment) {
+    protected final void onSuccessfulAlignment(VDJCAlignments alignment) {
         if (listener != null) {
-            listener.onSuccessfulAlignment(read, alignment);
+            listener.onSuccessfulAlignment(alignment);
             if (!alignment.isAvailable(ReferencePoint.CDR3Begin) && !alignment.isAvailable(ReferencePoint.CDR3End))
                 listener.onNoCDR3PartsAlignment();
             else if (!alignment.isAvailable(GeneFeature.CDR3))
@@ -97,9 +90,9 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
         }
     }
 
-    protected final void onSegmentChimeraDetected(GeneType geneType, SequenceRead read, VDJCAlignments alignment) {
+    protected final void onSegmentChimeraDetected(GeneType geneType, VDJCAlignments alignment) {
         if (listener != null)
-            listener.onSegmentChimeraDetected(geneType, read, alignment);
+            listener.onSegmentChimeraDetected(geneType, alignment);
     }
 
     public boolean isInitialized() {
@@ -236,5 +229,18 @@ public abstract class VDJCAligner<R extends SequenceRead> implements Processor<R
 
     static HasGene wrapAlignmentHit(final AlignmentHit<?, VDJCGene> hit) {
         return hit::getRecordPayload;
+    }
+
+    public static <S extends SequenceRead> Processor<S, VDJCAlignmentResult<S>> asProcessor(VDJCAligner aligner) {
+        if (aligner.parameters.isSaveOriginalReads())
+            return input -> {
+                VDJCAlignments alignment = aligner.process(input.toTuple(), input);
+                if (alignment != null)
+                    alignment = alignment.setOriginalReads(input);
+                return new VDJCAlignmentResult<>(input, alignment);
+            };
+        else
+            return input -> new VDJCAlignmentResult<>(input, aligner.process(input.toTuple(), input));
+
     }
 }

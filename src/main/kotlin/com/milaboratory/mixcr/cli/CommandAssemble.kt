@@ -285,7 +285,9 @@ object CommandAssemble {
                     // Getting results
                     val cloneSet = CloneSet.reorder(
                         assemblerRunner.getCloneSet(
-                            inputHeader.withAssemblerParameters(cloneAssemblerParameters),
+                            inputHeader
+                                .withAssemblerParameters(cloneAssemblerParameters)
+                                .addStepParams(MiXCRCommand.assemble, cmdParam),
                             inputFooter
                         ),
                         ordering
@@ -308,7 +310,7 @@ object CommandAssemble {
                                 .use { merged -> writer.collateAlignments(merged, assembler.alignmentsCount) }
                             reportBuilder.setFinishMillis(System.currentTimeMillis())
                             report = reportBuilder.buildReport()
-                            writer.setFooter(alignmentsReader.footer.addReport(report))
+                            writer.setFooter(alignmentsReader.footer.addStepReport(MiXCRCommand.assemble, report))
                             writer.writeAlignmentsAndIndex()
                         }
                     } else {
@@ -316,7 +318,7 @@ object CommandAssemble {
                             writer.writeCloneSet(cloneSet)
                             reportBuilder.setFinishMillis(System.currentTimeMillis())
                             report = reportBuilder.buildReport()
-                            writer.setFooter(alignmentsReader.footer.addReport(report))
+                            writer.setFooter(alignmentsReader.footer.addStepReport(MiXCRCommand.assemble, report))
                         }
                     }
 

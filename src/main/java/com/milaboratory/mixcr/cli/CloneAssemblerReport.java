@@ -81,7 +81,7 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
                                 @JsonProperty("commandLine") String commandLine,
                                 @JsonProperty("inputFiles") String[] inputFiles,
                                 @JsonProperty("outputFiles") String[] outputFiles,
-                                @JsonProperty("executionTimeMillis") long executionTimeMillis,
+                                @JsonProperty("executionTimeMillis") Long executionTimeMillis,
                                 @JsonProperty("version") String version,
                                 @JsonProperty("preCloneAssemblerReport") PreCloneAssemblerReport preCloneAssemblerReport,
                                 @JsonProperty("totalReadsProcessed") long totalReadsProcessed,

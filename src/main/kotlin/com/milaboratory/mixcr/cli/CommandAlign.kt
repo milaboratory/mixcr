@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.Processor
 import cc.redberry.pipe.blocks.Merger
 import cc.redberry.pipe.util.Chunk
 import cc.redberry.pipe.util.CountLimitingOutputPort
@@ -28,26 +27,26 @@ import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
+import com.milaboratory.core.sequence.NSQTuple
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
+import com.milaboratory.mitool.helpers.mapUnchunked
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.pattern.search.*
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
-import com.milaboratory.mitool.report.ParseReport
-import com.milaboratory.mixcr.MiXCRCommand
-import com.milaboratory.mixcr.MiXCRParams
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mitool.report.ParseReportAggregator
+import com.milaboratory.mitool.use
+import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.*
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.*
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult
 import com.milaboratory.primitivio.*
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.ReportHelper
@@ -297,10 +296,16 @@ object CommandAlign {
 
 
         @Option(description = ["Pipe not aligned R1 reads into separate file."], names = ["--not-aligned-R1"])
-        var failedReadsR1: String? = null
+        var notAlignedReadsR1: String? = null
 
         @Option(description = ["Pipe not aligned R2 reads into separate file."], names = ["--not-aligned-R2"])
-        var failedReadsR2: String? = null
+        var notAlignedReadsR2: String? = null
+
+        @Option(description = ["Pipe not parsed R1 reads into separate file."], names = ["--not-parsed-R1"])
+        var notParsedReadsR1: String? = null
+
+        @Option(description = ["Pipe not parsed R2 reads into separate file."], names = ["--not-parsed-R2"])
+        var notParsedReadsR2: String? = null
 
         @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
@@ -357,11 +362,11 @@ object CommandAlign {
             matchingResult.map { fg -> fg.files }
         }
 
-        enum class InputType(val pairedRecords: Boolean) {
-            SingleEndFastq(false),
-            PairedEndFastq(true),
-            Fasta(false),
-            BAM(true)
+        enum class InputType(val pairedRecords: Boolean, val isFastq: Boolean) {
+            SingleEndFastq(false, true),
+            PairedEndFastq(true, true),
+            Fasta(false, false),
+            BAM(true, false)
         }
 
         private val fastqRegex = Regex("\\.f(?:ast)?q(?:\\.gz)?$", RegexOption.IGNORE_CASE)
@@ -389,7 +394,8 @@ object CommandAlign {
                 throwValidationExceptionKotlin("Too many inputs")
         }
 
-        private fun createReader(): SequenceReaderCloseable<out SequenceRead> {
+        @Suppress("UNCHECKED_CAST")
+        private fun createReader(): SequenceReaderCloseable<SequenceRead> {
             // Common single fastq reader constructor
             val fastqReaderFactory: (Path) -> SingleFastqReader = { path: Path ->
                 SingleFastqReader(
@@ -416,12 +422,14 @@ object CommandAlign {
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFilesExpanded[0][0].toFile(), NucleotideSequence.ALPHABET),
                         true
-                    )
+                    ) as SequenceReaderCloseable<SequenceRead>
                 }
 
                 SingleEndFastq -> {
                     MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.map { it[0] })
-                    ConcatenatingSingleReader(inputFilesExpanded.map { fastqReaderFactory(it[0]) })
+                    ConcatenatingSingleReader(
+                        inputFilesExpanded.map { fastqReaderFactory(it[0]) }
+                    ) as SequenceReaderCloseable<SequenceRead>
                 }
 
                 PairedEndFastq -> {
@@ -429,7 +437,7 @@ object CommandAlign {
                     PairedReader(
                         ConcatenatingSingleReader(inputFilesExpanded.map { fastqReaderFactory(it[0]) }),
                         ConcatenatingSingleReader(inputFilesExpanded.map { fastqReaderFactory(it[1]) })
-                    )
+                    ) as SequenceReaderCloseable<SequenceRead>
                 }
             }
         }
@@ -461,16 +469,6 @@ object CommandAlign {
                 "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported.",
                 false
             )
-            if (failedReadsR1 != null) {
-                if (failedReadsR2 == null && readShortcuts.size == 2) throwValidationExceptionKotlin(
-                    "Option --not-aligned-R2 is not specified but tag pattern defines two payload reads.",
-                    false
-                )
-                if (failedReadsR2 != null && readShortcuts.size == 1) throwValidationExceptionKotlin(
-                    "Option --not-aligned-R2 is specified but tag pattern defines only one payload read.",
-                    false
-                )
-            }
             return TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.tags)
         }
 
@@ -481,12 +479,31 @@ object CommandAlign {
         override fun validate() {
             super.validate()
             if (inOut.size > 3) throwValidationExceptionKotlin("Too many input files.")
-            if (inOut.size < 2) throwValidationExceptionKotlin("No output file.")
-            if (failedReadsR2 != null && failedReadsR1 == null) throwValidationExceptionKotlin("Wrong input for --not-aligned-R1,2")
-            if (failedReadsR1 != null && cmdParams.tagPattern == null && failedReadsR2 != null != (inputType == PairedEndFastq)) throwValidationExceptionKotlin(
-                "Option --not-aligned-R2 is not set.",
-                false
-            )
+            if (inOut.size < 2) throwValidationExceptionKotlin("Output file not specified.")
+
+            fun checkFailedReadsOptions(optionPrefix: String, r1: String?, r2: String?) {
+                if (r1 != null) {
+                    when {
+                        r2 != null && inputType == PairedEndFastq -> throwValidationExceptionKotlin(
+                            "Option ${optionPrefix}-R2 is not specified but paired-end input data provided.",
+                            false
+                        )
+
+                        r2 != null && inputType == SingleEndFastq -> throwValidationExceptionKotlin(
+                            "Option ${optionPrefix}-R2 is specified but single-end input data provided.",
+                            false
+                        )
+
+                        !inputType.isFastq -> throwValidationExceptionKotlin(
+                            "Option ${optionPrefix}-* options are supported for fastq data input only.",
+                            false
+                        )
+                    }
+                }
+            }
+            checkFailedReadsOptions("--not-aligned", notAlignedReadsR1, notAlignedReadsR2)
+            checkFailedReadsOptions("--not-parsed", notParsedReadsR1, notParsedReadsR2)
+
             if (cmdParams.library.contains("/") || cmdParams.library.contains("\\")) {
                 val libraryLocations = Paths.get(
                     System.getProperty("user.home"),
@@ -530,6 +547,8 @@ object CommandAlign {
 
             // Tags
             val tagSearchPlan = getTagPattern()
+
+            // true if final NSQTuple will have two reads, false otherwise
             val pairedPayload =
                 if (tagSearchPlan != null) tagSearchPlan.readShortcuts.size == 2 else inputType.pairedRecords
 
@@ -579,170 +598,213 @@ object CommandAlign {
             reportBuilder.setInputFiles(inputs)
             reportBuilder.setOutputFiles(outputFiles)
             reportBuilder.commandLine = commandLineArguments
-            if (tagSearchPlan != null) reportBuilder.tagReportBuilder = tagSearchPlan.report
 
             // Attaching report to aligner
             aligner.setEventsListener(reportBuilder)
             val outputFile = outputFiles[0]
-            createReader().use { reader ->
-                alignedWriter(outputFile).use { writer ->
-                    notAlignedWriter(pairedPayload).use { notAlignedWriter: SequenceWriter<SequenceRead>? ->
-                        writer?.writeHeader(
-                            MiXCRHeader(
-                                paramsSpec,
-                                if (tagSearchPlan != null) TagsInfo(
-                                    0,
-                                    *tagSearchPlan.tagInfos.toTypedArray()
-                                ) else TagsInfo.NO_TAGS,
-                                aligner.parameters,
-                                null,
-                                null,
-                                null
-                            ),
-                            aligner.usedGenes
-                        )
-                        val sReads: OutputPort<out SequenceRead> = when {
-                            cmdParams.limit != null -> CountLimitingOutputPort(reader, cmdParams.limit!!)
-                            else -> reader
-                        }
+            use(
+                createReader(),
+                alignedWriter(outputFile),
+                failedReadsWriter(
+                    notAlignedReadsR1,
+                    notAlignedReadsR2
+                ),
+                failedReadsWriter(
+                    notParsedReadsR1,
+                    notParsedReadsR2
+                )
+            ) { reader, writer, notAlignedWriter, notParsedWriter ->
+                writer?.writeHeader(
+                    MiXCRHeader(
+                        paramsSpec,
+                        MiXCRStepParams().add(MiXCRCommand.align, cmdParams),
+                        if (tagSearchPlan != null) TagsInfo(
+                            0,
 
-                        val progress: CanReportProgress = when (sReads) {
-                            is CountLimitingOutputPort -> SmartProgressReporter.extractProgress(sReads)
-                            is CanReportProgress -> sReads
-                            else -> throw IllegalArgumentException()
-                        }
-
-
-                        // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
-                        // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
-                        // may break the alignment (gaps there are already consolidated as much as possible)
-                        val gtRequiringIndelShifts = alignerParameters.geneTypesWithLinearScoring
-                        val emptyHits = EnumMap<GeneType, Array<VDJCHit?>>(GeneType::class.java)
-                        for (gt in GeneType.values()) if (alignerParameters.getGeneAlignerParameters(gt) != null) emptyHits[gt] =
-                            arrayOfNulls(0)
-                        val readsLayout = alignerParameters.readsLayout
-                        SmartProgressReporter.startProgressReport("Alignment", progress)
-                        @Suppress("UNCHECKED_CAST")
-                        val mainInputReads: Merger<Chunk<out SequenceRead>> = (sReads
-                            .chunked(64) as OutputPort<Chunk<out SequenceRead>>)
-                            .buffered(max(16, threads))
-                        val readTrimmerProcessor: ReadTrimmerProcessor<SequenceRead>?
-                        if (cmdParams.trimmingQualityThreshold > 0) {
-                            val rep = ReadTrimmerReportBuilder()
-                            readTrimmerProcessor = ReadTrimmerProcessor(qualityTrimmerParameters, rep)
-                            reportBuilder.setTrimmingReportBuilder(rep)
-                        } else {
-                            readTrimmerProcessor = null
-                        }
-
-                        // Creating processor from aligner
-                        val processor: Processor<SequenceRead, VDJCAlignmentResult<SequenceRead>> = when {
-                            tagSearchPlan != null -> Processor { input: SequenceRead ->
-                                val parsed = tagSearchPlan.parse(input)
-                                if (parsed == null) {
-                                    reportBuilder.onFailedAlignment(input, VDJCAlignmentFailCause.NoBarcode)
-                                    return@Processor VDJCAlignmentResult(input)
-                                }
-                                val read = when (readTrimmerProcessor) {
-                                    null -> parsed.payloadRead
-                                    else -> readTrimmerProcessor.process(parsed.payloadRead)
-                                }
-                                aligner(read).withTagTuple(parsed.tags)
-                            }
-
-                            else -> aligner
-                        }
-
-                        val mainInputReadsPreprocessed: OutputPort<Chunk<out SequenceRead>> = when {
-                            tagSearchPlan != null || readTrimmerProcessor == null -> mainInputReads
-                            else -> mainInputReads.map { readTrimmerProcessor(it) }
-                        }
-
-                        val alignedChunks = mainInputReadsPreprocessed.mapInParallel(
-                            bufferSize = max(16, threads),
-                            threads = threads
-                        ) { chunk -> processor(chunk) }
-                        if (reportBuffers) {
-                            checkNotNull(writer)
-                            println("Analysis threads: $threads")
-                            val reporter = StatusReporter()
-                            reporter.addBuffer("Input (chunked; chunk size = 64)", mainInputReads.bufferStatusProvider)
-                            reporter.addBuffer(
-                                "Alignment result (chunked; chunk size = 64)",
-                                alignedChunks.outputBufferStatusProvider
-                            )
-                            reporter.addCustomProvider(object : StatusProvider {
-                                @Suppress("ObjectPropertyName")
-                                @Volatile
-                                var _status: String = ""
-
-                                @Volatile
-                                var isClosed = false
-                                override fun updateStatus() {
-                                    _status = "Busy encoders: " + writer.busyEncoders + " / " + writer.encodersCount
-                                    isClosed = writer.isClosed
-                                }
-
-                                override fun isFinished(): Boolean = isClosed
-
-                                override fun getStatus(): String = _status
-                            })
-                            reporter.start()
-                        }
-                        val alignments = alignedChunks
-                            .unchunked()
-                            .map { it.shiftIndelsAtHomopolymers(gtRequiringIndelShifts) }
-
-                        alignments
-                            .ordered { it.read.id }
-                            .forEach { result ->
-                                val read = result.read
-                                var alignment = when {
-                                    result.alignment != null -> result.alignment
-                                    cmdParams.writeFailedAlignments -> {
-                                        // Creating empty alignment object if alignment for current read failed
-                                        val target = readsLayout.createTargets(read)[0]
-                                        VDJCAlignments(
-                                            emptyHits,
-                                            if (result.tagTuple == null) TagCount.NO_TAGS_1 else TagCount(result.tagTuple),
-                                            target.targets,
-                                            SequenceHistory.RawSequence.of(read.id, target),
-                                            if (alignerParameters.isSaveOriginalReads) arrayOf(read) else null
-                                        )
-                                    }
-
-                                    else -> null
-                                }
-                                if (alignment == null) {
-                                    notAlignedWriter?.write(result.read)
-                                    return@forEach
-                                }
-                                alignment = alignment.setTagCount(
-                                    if (result.tagTuple == null) TagCount.NO_TAGS_1 else TagCount(result.tagTuple)
-                                )
-                                if (alignment.isChimera) reportBuilder.onChimera()
-                                writer?.write(alignment)
-                            }
-                        writer?.setNumberOfProcessedReads(reader.numberOfReads)
-                        reportBuilder.setFinishMillis(System.currentTimeMillis())
-                        val report = reportBuilder.buildReport()
-                        writer?.setFooter(MiXCRFooter(listOf(report)))
-
-                        // Writing report to stout
-                        ReportUtil.writeReportToStdout(report)
-                        if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-                        if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
-                    }
+                            *tagSearchPlan.tagInfos.toTypedArray()
+                        ) else TagsInfo.NO_TAGS,
+                        aligner.parameters,
+                        null,
+                        null,
+                        null
+                    ),
+                    aligner.usedGenes
+                )
+                val sReads: OutputPort<out SequenceRead> = when {
+                    cmdParams.limit != null -> CountLimitingOutputPort(reader, cmdParams.limit!!)
+                    else -> reader
                 }
+
+                val progress: CanReportProgress = when (sReads) {
+                    is CountLimitingOutputPort -> SmartProgressReporter.extractProgress(sReads)
+                    is CanReportProgress -> sReads
+                    else -> throw IllegalArgumentException()
+                }
+
+                // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
+                // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
+                // may break the alignment (gaps there are already consolidated as much as possible)
+                val gtRequiringIndelShifts = alignerParameters.geneTypesWithLinearScoring
+                val emptyHits = EnumMap<GeneType, Array<VDJCHit?>>(GeneType::class.java)
+                for (gt in GeneType.values()) if (alignerParameters.getGeneAlignerParameters(gt) != null) emptyHits[gt] =
+                    arrayOfNulls(0)
+                val readsLayout = alignerParameters.readsLayout
+                SmartProgressReporter.startProgressReport("Alignment", progress)
+                @Suppress("UNCHECKED_CAST")
+                val mainInputReads: Merger<Chunk<SequenceRead>> = (sReads
+                    .chunked(64) as OutputPort<Chunk<out SequenceRead>>)
+                    .buffered(max(16, threads)) as Merger<Chunk<SequenceRead>>
+
+                val step0 = if (tagSearchPlan != null)
+                    mainInputReads.mapUnchunked {
+                        val parsingResult = tagSearchPlan.parse(it)
+                        if (parsingResult == null) {
+                            reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.NoBarcode)
+                            ProcessingBundle(it, status = NotParsed)
+                        } else
+                            ProcessingBundle(it, parsingResult.first, parsingResult.second)
+                    }
+                else
+                    mainInputReads.mapUnchunked {
+                        ProcessingBundle(it)
+                    }
+
+                val step1 = if (cmdParams.trimmingQualityThreshold > 0) {
+                    val rep = ReadTrimmerReportBuilder()
+                    val trimmerProcessor = ReadTrimmerProcessor(qualityTrimmerParameters, rep)
+                    reportBuilder.setTrimmingReportBuilder(rep)
+                    step0.mapUnchunked {
+                        it.mapSequence(trimmerProcessor::process)
+                    }
+                } else
+                    step0
+
+                val step2 = step1.mapChunksInParallel(
+                    bufferSize = max(16, threads),
+                    threads = threads
+                ) {
+                    if (it.ok) {
+                        var alignment =
+                            aligner.process(it.sequence, it.read)?.setTagCount(TagCount(it.tags))
+                        if (cmdParams.parameters.isSaveOriginalReads)
+                            alignment = alignment?.setOriginalReads(it.read)
+                        alignment = alignment?.shiftIndelsAtHomopolymers(gtRequiringIndelShifts)
+                        it.copy(
+                            alignment = alignment,
+                            status = if (alignment == null) NotAligned else Good
+                        )
+                    } else
+                        it
+                }
+
+                if (reportBuffers) {
+                    checkNotNull(writer)
+                    println("Analysis threads: $threads")
+                    val reporter = StatusReporter()
+                    reporter.addBuffer(
+                        "Input (chunked; chunk size = 64)",
+                        mainInputReads.bufferStatusProvider
+                    )
+                    reporter.addBuffer(
+                        "Alignment result (chunked; chunk size = 64)",
+                        step2.outputBufferStatusProvider
+                    )
+                    reporter.addCustomProvider(object : StatusProvider {
+                        @Suppress("ObjectPropertyName")
+                        @Volatile
+                        var _status: String = ""
+
+                        @Volatile
+                        var isClosed = false
+                        override fun updateStatus() {
+                            _status = "Busy encoders: " + writer.busyEncoders + " / " + writer.encodersCount
+                            isClosed = writer.isClosed
+                        }
+
+                        override fun isFinished(): Boolean = isClosed
+
+                        override fun getStatus(): String = _status
+                    })
+                    reporter.start()
+                }
+
+                step2
+                    .unchunked()
+                    .ordered { it.read.id }
+                    .forEach { bundle ->
+                        if (bundle.status == NotParsed)
+                            notParsedWriter?.write(bundle.read)
+                        if (bundle.status == NotAligned)
+                            notAlignedWriter?.write(bundle.read)
+
+                        val alignment = when {
+                            bundle.alignment != null -> bundle.alignment
+
+                            cmdParams.writeFailedAlignments -> {
+                                // Creating empty alignment object if alignment for current read failed
+                                val target = readsLayout.createTargets(bundle.sequence)[0]
+                                var a = VDJCAlignments(
+                                    emptyHits,
+                                    if (bundle.tags == TagTuple.NO_TAGS)
+                                        TagCount.NO_TAGS_1 else TagCount(bundle.tags),
+                                    target.targets,
+                                    SequenceHistory.RawSequence.of(bundle.read.id, target),
+                                    if (alignerParameters.isSaveOriginalSequence) arrayOf(bundle.sequence) else null
+                                )
+                                if (alignerParameters.isSaveOriginalReads)
+                                    a = a.setOriginalReads(bundle.read)
+                                a
+                            }
+
+                            else -> return@forEach
+                        }
+
+                        if (alignment.isChimera)
+                            reportBuilder.onChimera()
+
+                        writer?.write(alignment)
+                    }
+
+                writer?.setNumberOfProcessedReads(reader.numberOfReads)
+                reportBuilder.setFinishMillis(System.currentTimeMillis())
+                if (tagSearchPlan != null) reportBuilder.tagReportBuilder = tagSearchPlan.reportAgg.report
+                val report = reportBuilder.buildReport()
+                writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommand.align, report))
+
+                // Writing report to stout
+                ReportUtil.writeReportToStdout(report)
+                if (reportFile != null) ReportUtil.appendReport(reportFile, report)
+                if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
             }
         }
 
+        enum class ProcessingBundleStatus {
+            Good,
+            NotParsed,
+            NotAligned,
+        }
+
+        data class ProcessingBundle(
+            val read: SequenceRead,
+            val sequence: NSQTuple = read.toTuple(),
+            val tags: TagTuple = TagTuple.NO_TAGS,
+            val alignment: VDJCAlignments? = null,
+            val status: ProcessingBundleStatus = Good,
+        ) {
+            val ok get() = status == Good
+            fun mapSequence(mapping: (NSQTuple) -> NSQTuple) = copy(sequence = mapping(sequence))
+        }
+
         @Suppress("UNCHECKED_CAST")
-        private fun notAlignedWriter(pairedPayload: Boolean): SequenceWriter<SequenceRead>? = when (failedReadsR1) {
+        private fun failedReadsWriter(r1: String?, r2: String?): SequenceWriter<SequenceRead>? = when (r1) {
             null -> null
-            else -> when {
-                pairedPayload -> PairedFastqWriter(failedReadsR1, failedReadsR2) as SequenceWriter<SequenceRead>
-                else -> SingleFastqWriter(failedReadsR1) as SequenceWriter<SequenceRead>
+            else -> when (inputType) {
+                PairedEndFastq -> PairedFastqWriter(r1, r2!!) as SequenceWriter<SequenceRead>
+                SingleEndFastq -> SingleFastqWriter(r1) as SequenceWriter<SequenceRead>
+                else -> throw IllegalArgumentException(
+                    "Export of reads for which alignment / parsing failed " +
+                            "allowed only for fastq inputs."
+                ) // must never happen because of parameters validation
             }
         }
 
@@ -754,32 +816,25 @@ object CommandAlign {
             )
         }
 
-        private class TaggedSequence(val tags: TagTuple, val payloadRead: SequenceRead)
-
         private class TagSearchPlan(
             private val plan: ReadSearchPlan,
             private val tagShortcuts: List<ReadTagShortcut>, val readShortcuts: List<ReadTagShortcut>,
             val tagInfos: List<TagInfo>
         ) {
-            val report = ParseReport(plan)
+            val reportAgg = ParseReportAggregator(plan)
 
-            fun parse(read: SequenceRead): TaggedSequence? {
+            fun parse(read: SequenceRead): Pair<NSQTuple, TagTuple>? {
                 val result = plan.search(read)
-                report.consume(result)
+                reportAgg.consume(result)
                 if (result.hit == null) return null
                 val tags = tagShortcuts
                     .map { readTagShortcut: ReadTagShortcut ->
                         SequenceAndQualityTagValue(result.getTagValue(readTagShortcut).value)
                     }
                     .toTypedArray()
-                val reads = Array<SingleRead>(readShortcuts.size) { i ->
-                    SingleReadImpl(
-                        read.id,
-                        result.getTagValue(readShortcuts[i]).value,
-                        if (read.numberOfReads() <= i) read.getRead(0).description else read.getRead(i).description
-                    )
-                }
-                return TaggedSequence(TagTuple(*tags), SequenceReadUtil.construct(*reads))
+                val payload =
+                    NSQTuple(read.id, *Array(readShortcuts.size) { i -> result.getTagValue(readShortcuts[i]).value })
+                return payload to TagTuple(*tags)
             }
         }
 

@@ -14,6 +14,8 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.AssembleContigsMixins
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableRanges
@@ -51,9 +53,7 @@ import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
@@ -72,6 +72,10 @@ import kotlin.io.path.nameWithoutExtension
     description = ["Find allele variants in clnx."]
 )
 class CommandFindAlleles : AbstractMiXCRCommand() {
+    data class Params(val dummy: Boolean = true) : MiXCRParams {
+        override val command get() = MiXCRCommand.findAlleles
+    }
+
     @Parameters(
         arity = "1..*",
         paramLabel = "input_file.clns [input_file2.clns ...]",
@@ -261,7 +265,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
         }
-        val writerCloseCallbacks = mutableListOf<(MiXCRCommandReport) -> Unit>()
+        val writerCloseCallbacks = mutableListOf<(FindAllelesReport) -> Unit>()
         cloneReaders.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
                 resultLibrary,
@@ -375,7 +379,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         clones: List<Clone>,
         resultLibrary: VDJCLibrary,
         cloneReader: CloneReader
-    ): (MiXCRCommandReport) -> Unit {
+    ): (FindAllelesReport) -> Unit {
         toPath().toAbsolutePath().parent.toFile().mkdirs()
         val cloneSet = CloneSet(
             clones,
@@ -385,14 +389,14 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                     resultLibrary.name,
                     resultLibrary.data
                 )
-            ),
+            ).addStepParams(MiXCRCommand.findAlleles, Params()),
             cloneReader.footer,
             cloneReader.ordering()
         )
         val clnsWriter = ClnsWriter(this)
         clnsWriter.writeCloneSet(cloneSet)
         return { report ->
-            clnsWriter.setFooter(cloneReader.footer.addReport(report))
+            clnsWriter.setFooter(cloneReader.footer.addStepReport(MiXCRCommand.findAlleles, report))
             clnsWriter.close()
         }
     }

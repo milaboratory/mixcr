@@ -18,14 +18,14 @@ import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerAbstract;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
@@ -40,7 +40,7 @@ import static com.milaboratory.mixcr.vdjaligners.VDJCAlignerPVFirst.combine;
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract<VDJCMultiRead> {
+public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract {
     private final ThreadLocal<AlignerCustom.LinearMatrixCache> linearMatrixCache = new ThreadLocal<AlignerCustom.LinearMatrixCache>() {
         @Override
         protected AlignerCustom.LinearMatrixCache initialValue() {
@@ -61,8 +61,8 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
 
     @Override
     @SuppressWarnings({"unchecked", "Duplicates"})
-    protected VDJCAlignmentResult<VDJCMultiRead> process0(VDJCMultiRead input) {
-        final int nReads = input.numberOfReads();
+    protected VDJCAlignments process0(NSQTuple input) {
+        final int nReads = input.size();
         EnumMap<GeneType, VDJCHit[]> vdjcHits = new EnumMap<>(GeneType.class);
 
         NSequenceWithQuality[] targets = new NSequenceWithQuality[nReads];
@@ -79,9 +79,9 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
             AlignmentHit<NucleotideSequence, VDJCGene>[][] alignmentHits = new AlignmentHit[nReads][];
             Arrays.fill(alignmentHits, new AlignmentHit[0]);
             for (int targetId = lastAlignedTarget; targetId < nReads; targetId++) {
-                targets[targetId] = input.getRead(targetId).getData();
+                targets[targetId] = input.get(targetId);
 
-                final NucleotideSequence sequence = input.getRead(targetId).getData().getSequence();
+                final NucleotideSequence sequence = input.get(targetId).getSequence();
 
                 AlignmentResult<AlignmentHit<NucleotideSequence, VDJCGene>> als;
 
@@ -286,17 +286,14 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                         dGeneTarget, nReads);
         }
 
-        final VDJCAlignments alignment = new VDJCAlignments(
+        return new VDJCAlignments(
                 vResult,
                 dResult,
                 jResult,
                 cutRelativeScore(vdjcHits.get(GeneType.Constant), parameters.getCAlignerParameters().getRelativeMinScore(), parameters.getMaxHits()),
                 TagCount.NO_TAGS_1,
-                targets,
-                input.getHistory(),
-                input.getOriginalReads()
+                targets
         );
-        return new VDJCAlignmentResult<>(input, alignment);
     }
 
     private static VDJCHit[] cutRelativeScore(VDJCHit[] hs, float relativeMinScore, int maxHits) {

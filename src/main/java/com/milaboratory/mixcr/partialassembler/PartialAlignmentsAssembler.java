@@ -162,8 +162,10 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
             List<AlignedTarget> mergedTargets = searchResult.result;
             VDJCMultiRead mRead = new VDJCMultiRead(mergedTargets);
 
-            // Both parts have the same tag tuple
-            final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCount(searchResult.tagCount);
+            final VDJCAlignments mAlignment = aligner.process(mRead.toTuple(), mRead)
+                    .setTagCount(searchResult.tagCount) // note: both parts have the same tag tuple
+                    .setHistory(mRead.getHistory(), mRead.getOriginalSequences())
+                    .setOriginalReads(mRead.getOriginalReads());
 
             // Checking number of overlapped non-template (NRegion) letters
             int overlapTargetId = -1;

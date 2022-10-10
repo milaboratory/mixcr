@@ -31,6 +31,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.util.VDJCObjectExtender
+import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.port
@@ -138,17 +139,20 @@ object CommandExtend {
                     .map { clone -> clone.resetParentCloneSet() }
                     .sortedBy { it.id }
                     .toList()
-                val newCloneSet = CloneSet(
-                    clones,
-                    cloneSet.usedGenes,
-                    cloneSet.header.copy(allFullyCoveredBy = null),
-                    cloneSet.footer,
-                    cloneSet.ordering
-                )
+                val newCloneSet =
+                    CloneSet(
+                        clones,
+                        cloneSet.usedGenes,
+                        cloneSet.header
+                            .addStepParams(MiXCRCommand.extend, process.params)
+                            .copy(allFullyCoveredBy = null),
+                        cloneSet.footer,
+                        cloneSet.ordering
+                    )
                 ClnsWriter(outputFile).use { writer ->
                     writer.writeCloneSet(newCloneSet)
                     val report = process.finish()
-                    writer.setFooter(reader.footer.addReport(report))
+                    writer.setFooter(reader.footer.addStepReport(MiXCRCommand.extend, report))
                 }
             }
         }
@@ -172,7 +176,7 @@ object CommandExtend {
                         }
                     writer.setNumberOfProcessedReads(reader.numberOfReads)
                     val report = process.finish()
-                    writer.setFooter(reader.footer.addReport(report))
+                    writer.setFooter(reader.footer.addStepReport(MiXCRCommand.extend, report))
                 }
             }
         }
@@ -196,14 +200,15 @@ object CommandExtend {
             extender.setInputFiles(inputFile)
             extender.setOutputFiles(outputFile)
             extender.commandLine = commandLineArguments
-            return ProcessWrapper(extender, output)
+            return ProcessWrapper(extender, output, cmdParams)
         }
 
         private inner class ProcessWrapper<T : VDJCObject>(
             val reportBuilder: VDJCObjectExtender<T>,
-            val output: ParallelProcessor<T, T>
+            val output: ParallelProcessor<T, T>,
+            val params: Params,
         ) {
-            fun finish(): MiXCRCommandReport {
+            fun finish(): VDJCObjectExtenderReport {
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 val report = reportBuilder.buildReport()!!
                 // Writing report to stout

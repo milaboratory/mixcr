@@ -15,7 +15,6 @@ import cc.redberry.pipe.Processor;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentScoring;
-import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.mutations.MutationsBuilder;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -379,7 +378,7 @@ public final class VDJCObjectExtender<T extends VDJCObject>
     }
 
     @Override
-    public MiXCRCommandReport buildReport() {
+    public VDJCObjectExtenderReport buildReport() {
         return new VDJCObjectExtenderReport(
                 getDate(),
                 getCommandLine(),
@@ -451,9 +450,8 @@ public final class VDJCObjectExtender<T extends VDJCObject>
                 alignment.getTagCount(),
                 transformer.transform(alignment.getTargets()),
                 transformer.transform(alignment.getHistory()),
-                alignment.getOriginalReads() == null
-                        ? null
-                        : alignment.getOriginalReads().toArray(new SequenceRead[alignment.getOriginalReads().size()]))
+                alignment.getOriginalSequencesArray())
+                .setOriginalReads(alignment.getOriginalReadsArray())
                 .setAlignmentsIndex(alignment.getAlignmentsIndex());
     }
 

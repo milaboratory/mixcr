@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.io.sequence.SequenceRead;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
@@ -92,6 +93,7 @@ class IO {
         @Override
         public void write(PrimitivO output, VDJCAlignments object) {
             output.writeObject(object.targets);
+            output.writeObject(object.originalSequences);
             output.writeObject(object.originalReads);
             output.writeObject(object.history);
             output.writeObject(object.tagCount);
@@ -108,6 +110,7 @@ class IO {
         @Override
         public VDJCAlignments read(PrimitivI input) {
             NSequenceWithQuality[] targets = input.readObject(NSequenceWithQuality[].class);
+            NSQTuple[] originalSequences = input.readObject(NSQTuple[].class);
             SequenceRead[] originalReads = input.readObject(SequenceRead[].class);
             SequenceHistory[] history = input.readObject(SequenceHistory[].class);
             TagCount tagCount = input.readObject(TagCount.class);
@@ -123,7 +126,8 @@ class IO {
             long cloneIndex = -1;
             if (!ReadToCloneMapping.isDropped(mappingType))
                 cloneIndex = input.readVarLong();
-            return new VDJCAlignments(hits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
+            return new VDJCAlignments(hits, tagCount, targets, history, originalSequences, originalReads,
+                    mappingType, cloneIndex);
         }
 
         @Override
