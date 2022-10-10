@@ -159,6 +159,12 @@ interface AssembleMiXCRMixins : MiXCRMixinSet {
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), false)) }
 }
 
+interface AssembleContigsMiXCRMixins : MiXCRMixinSet {
+    @Option(names = [SetContigAssemblingFeatures.CMD_OPTION])
+    fun assembleContigsBy(gf: String) =
+        mixIn(SetContigAssemblingFeatures(GeneFeatures.parse(gf)))
+}
+
 interface ExportMiXCRMixins : MiXCRMixinSet {
     @Option(names = [ImputeGermlineOnExport.CMD_OPTION], arity = "0")
     fun imputeGermlineOnExport(ignored: Boolean) =
@@ -282,7 +288,7 @@ interface GenericMiXCRMixins : MiXCRMixinSet {
 }
 
 class AllMiXCRMixins : MiXCRMixinCollector(), PipelineMiXCRMixins,
-    AlignMiXCRMixins, AssembleMiXCRMixins,
+    AlignMiXCRMixins, AssembleMiXCRMixins, AssembleContigsMiXCRMixins,
     ExportMiXCRMixins, GenericMiXCRMixins
 
 class AllExportMiXCRMixins : MiXCRMixinCollector(), ExportMiXCRMixins
