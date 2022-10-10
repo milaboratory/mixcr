@@ -137,7 +137,7 @@ function run_test() {
 }
 
 if [[ $run_tests == true ]]; then
-  for testName in ${tests[@]}; do
+  for testName in "${tests[@]}"; do
     run_test "${testName}.sh"
   done
 
