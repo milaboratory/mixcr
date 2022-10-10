@@ -553,7 +553,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
 
         void buildClones() {
-            Collection<CloneAccumulator> source;
+            List<CloneAccumulator> source;
             if (clusteredClonesAccumulators != null &&
                     // addReadsCountOnClustering=true may change clone counts
                     // This fixes #468
