@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli;
 
-import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerEventListener;
@@ -43,9 +42,10 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
     private final AtomicLong realignedWithForcedNonFloatingLeftBoundInRightRead = new AtomicLong(0);
     private ReadTrimmerReportBuilder trimmingReportBuilder;
 
-    private ParseReport tagReport;
+    private ParseReport tagReport = null;
 
-    public AlignerReportBuilder() {}
+    public AlignerReportBuilder() {
+    }
 
     public void setTrimmingReportBuilder(ReadTrimmerReportBuilder trimmingReport) {
         this.trimmingReportBuilder = trimmingReport;
@@ -90,18 +90,18 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
     }
 
     @Override
-    public void onFailedAlignment(SequenceRead read, VDJCAlignmentFailCause cause) {
+    public void onFailedAlignment(VDJCAlignmentFailCause cause) {
         fails.incrementAndGet(cause.ordinal());
     }
 
     @Override
-    public void onSuccessfulAlignment(SequenceRead read, VDJCAlignments alignment) {
+    public void onSuccessfulAlignment(VDJCAlignments alignment) {
         successfullyAligned.incrementAndGet();
         chainUsageBuilder.increment(alignment);
     }
 
     @Override
-    public void onSuccessfulSequenceOverlap(SequenceRead read, VDJCAlignments alignments) {
+    public void onSuccessfulSequenceOverlap(VDJCAlignments alignments) {
         if (alignments == null)
             overlappedAndNotAligned.incrementAndGet();
         else
@@ -109,19 +109,19 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
     }
 
     @Override
-    public void onSuccessfulAlignmentOverlap(SequenceRead read, VDJCAlignments alignments) {
+    public void onSuccessfulAlignmentOverlap(VDJCAlignments alignments) {
         if (alignments == null)
             throw new IllegalArgumentException();
         alignmentAidedOverlaps.incrementAndGet();
     }
 
     @Override
-    public void onTopHitSequenceConflict(SequenceRead read, VDJCAlignments alignments, GeneType geneType) {
+    public void onTopHitSequenceConflict(VDJCAlignments alignments, GeneType geneType) {
         pairedEndAlignmentConflicts.incrementAndGet();
     }
 
     @Override
-    public void onSegmentChimeraDetected(GeneType geneType, SequenceRead read, VDJCAlignments alignments) {
+    public void onSegmentChimeraDetected(GeneType geneType, VDJCAlignments alignments) {
         switch (geneType) {
             case Variable:
                 vChimeras.incrementAndGet();
@@ -190,8 +190,7 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
                 realignedWithForcedNonFloatingLeftBoundInRightRead.get(),
                 noCDR3PartsAlignments.get(),
                 partialAlignments.get(),
-                tagReport == null ? null : new TagReport()
-//                new TagReport(tagReport.getTotalReads(), tagReport.getMatchedReads())
+                tagReport
         );
     }
 }

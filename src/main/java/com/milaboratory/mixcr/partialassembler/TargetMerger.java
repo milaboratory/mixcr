@@ -97,12 +97,11 @@ public class TargetMerger {
                 TagCountAggregator.merge(targetLeft.getAlignments().getTagCount(), targetRight.getAlignments().getTagCount()),
                 new NSequenceWithQuality[]{mergedTarget},
                 new SequenceHistory[]{
-                        new SequenceHistory.Merge(overlapType, targetLeft.getHistory(), targetRight.getHistory(), offset, nMismatches)
+                        new SequenceHistory.Merge(overlapType,
+                                targetLeft.getHistory(), targetRight.getHistory(), offset, nMismatches)
                 },
-                VDJCAlignments.mergeOriginalReads(
-                        targetLeft.getAlignments(),
-                        targetRight.getAlignments())
-        );
+                VDJCAlignments.mergeOriginalSequences(targetLeft.getAlignments(), targetRight.getAlignments())
+        ).setOriginalReads(VDJCAlignments.mergeOriginalReads(targetLeft.getAlignments(), targetRight.getAlignments()));
         AlignedTarget resultTarget = new AlignedTarget(alignments, 0);
         for (BPoint bPoint : BPoint.values()) {
             int leftPoint = targetLeft.getBPoint(bPoint);

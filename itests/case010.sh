@@ -32,6 +32,9 @@ mixcr analyze -f 10x_vdj_bcr \
 
 assert "cat case10.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "6"
 
+mixcr exportReports --yaml case10.vdjcontigs.contigs.clns
+mixcr exportReports case10.vdjcontigs.contigs.clns
+
 #mixcr refineTagsAndSort case10.aligned-vdjca case10.corrected-vdjca
 #
 #mixcr align -f \

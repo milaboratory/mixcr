@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.qc
 
+import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.cli.AlignerReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
@@ -34,7 +35,7 @@ object AlignmentQC {
         percent: Boolean = false,
         hw: SizeParameters? = null
     ) = run {
-        val file2report = files.associate { it.fileName.name to IOUtil.extractReports(it).first() as AlignerReport }
+        val file2report = files.associate { it.fileName.name to IOUtil.extractFooter(it).reports[MiXCRCommand.align].first() }
 
         val data = mapOf<Any, MutableList<Any?>>(
             "sample" to mutableListOf(),

@@ -181,6 +181,10 @@ public final class TagCount {
                 : tagMap.size();
     }
 
+    public int depth() {
+        return depth;
+    }
+
     /**
      * Reduces tag counts to the specified level, new tag counts will be computed as the number of uniques suffixes.
      */

@@ -325,7 +325,7 @@ object CommandAssembleContigs {
                     clones[i++] = clone.setId(cloneId++)
                 }
             }
-            val resultHeader = if (
+            val resultHeader = (if (
                 cmdParams.parameters.assemblingRegions != null &&
                 cmdParams.parameters.subCloningRegions == cmdParams.parameters.assemblingRegions &&
                 cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyDefined
@@ -333,7 +333,8 @@ object CommandAssembleContigs {
                 header.copy(allFullyCoveredBy = cmdParams.parameters.assemblingRegions)
             } else {
                 header
-            }
+            })
+                .addStepParams(MiXCRCommand.assembleContigs, cmdParams)
 
             val cloneSet = CloneSet(listOf(*clones), genes, resultHeader, footer, ordering)
             ClnsWriter(outputFile).use { writer ->
@@ -348,7 +349,7 @@ object CommandAssembleContigs {
                 ReportUtil.writeReportToStdout(report)
                 if (reportFile != null) ReportUtil.appendReport(reportFile, report)
                 if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
-                writer.setFooter(footer.addReport(report))
+                writer.setFooter(footer.addStepReport(MiXCRCommand.assembleContigs, report))
             }
         }
     }

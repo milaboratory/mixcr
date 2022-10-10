@@ -20,9 +20,8 @@ import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.milaboratory.mixcr.cli.*
 
-// @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, )
 interface MiXCRParams {
     @get:JsonIgnore
-    val command: MiXCRCommand<*>
+    val command: AnyMiXCRCommand
 }
 

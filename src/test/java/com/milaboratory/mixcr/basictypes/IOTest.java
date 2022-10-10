@@ -17,7 +17,6 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerS;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
@@ -29,9 +28,9 @@ import org.junit.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -62,16 +61,16 @@ public class IOTest {
 
 
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.writeHeader(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
+                writer.writeHeader(dummyHeader(), aligner.getUsedGenes());
 
                 header = writer.getPosition();
 
                 for (SingleRead read : CUtils.it(reader)) {
-                    VDJCAlignmentResult<SingleRead> result = aligner.process(read);
-                    if (result.alignment != null) {
+                    VDJCAlignments alignments = aligner.process(read.toTuple(), read);
+                    if (alignments != null) {
                         numberOfAlignments++;
-                        writer.write(result.alignment);
-                        alignemntsList.add(result.alignment);
+                        writer.write(alignments);
+                        alignemntsList.add(alignments);
                     }
                 }
 

@@ -98,14 +98,20 @@ fun <T : Any, R : Any> OutputPort<T>.mapInParallel(
     function: (T) -> R
 ): ParallelProcessor<T, R> = ParallelProcessor(this, function, bufferSize, threads)
 
+fun <T : Any, R : Any> OutputPort<Chunk<T>>.mapChunksInParallel(
+    threads: Int,
+    bufferSize: Int = Buffer.DEFAULT_SIZE,
+    function: (T) -> R
+): ParallelProcessor<Chunk<T>, Chunk<R>> = ParallelProcessor(this, CUtils.chunked(function), bufferSize, threads)
+
 fun <T : Any, R : Any> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPortCloseable<R> = flatMap {
     listOfNotNull(function(it))
 }
 
 fun <T : Any> OutputPort<T>.chunked(chunkSize: Int): OutputPort<Chunk<T>> = CUtils.chunked(this, chunkSize)
 
-@Suppress("UNCHECKED_CAST")
-fun <T : Any> OutputPort<Chunk<out T>>.unchunked(): OutputPort<T> = CUtils.unchunked(this as OutputPort<Chunk<T>>)
+// @Suppress("UNCHECKED_CAST")
+fun <T : Any> OutputPort<Chunk<T>>.unchunked(): OutputPort<T> = CUtils.unchunked(this)
 
 fun <T : Any> OutputPort<T>.buffered(bufferSize: Int): Merger<T> = CUtils.buffered(this, bufferSize)
 
@@ -134,6 +140,7 @@ fun <T : Any> OutputPort<T>.limit(limit: Long): OutputPortCloseable<T> = object 
             count++
             result
         }
+
         else -> null
     }
 

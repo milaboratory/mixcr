@@ -49,7 +49,7 @@ class PresetsTest {
                 TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 1),
             )
             val header = MiXCRHeader(
-                MiXCRParamsSpec(presetName), tagsInfo, bundle.align!!.parameters,
+                MiXCRParamsSpec(presetName), MiXCRStepParams().add(MiXCRCommand.align, bundle.align!!) , tagsInfo, bundle.align!!.parameters,
                 null, null, null
             )
             bundle.exportAlignments?.let { al ->

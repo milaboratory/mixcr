@@ -11,51 +11,67 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mitool.helpers.K_OM
+import com.milaboratory.mitool.helpers.K_YAML_OM
+import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.ReportHelper
-import com.milaboratory.util.ReportUtil
-import picocli.CommandLine
+import org.apache.commons.io.output.CloseShieldOutputStream
+import picocli.CommandLine.*
 import java.nio.file.Path
+import kotlin.io.path.outputStream
 
-@CommandLine.Command(
+@Command(
     name = CommandExportReports.EXPORT_REPORTS_COMMAND_NAME,
     separator = " ",
     description = ["Export MiXCR reports."]
 )
 class CommandExportReports : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
-    lateinit var `in`: Path
+    @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+    private lateinit var inputPath: Path
 
-    @CommandLine.Parameters(description = ["report.[txt|jsonl]"], index = "1", arity = "0..1")
-    var out: String? = null
+    @Parameters(description = ["report.[txt|jsonl]"], index = "1", arity = "0..1")
+    private var outputPath: Path? = null
 
-    @CommandLine.Option(names = ["--json"], description = ["Export as json lines"])
-    var json = false
+    @Option(names = ["--step"], description = ["Export report only for a specific step"])
+    private var step: String? = null
 
-    override fun getInputFiles(): List<String> = listOf(`in`.toString())
+    internal class OutputFormatFlags {
+        @Option(names = ["--yaml"], description = ["Export as yaml"])
+        var yaml = false
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(out)
+        @Option(names = ["--json"], description = ["Export as json"])
+        var json = false
+    }
+
+    @ArgGroup(exclusive = true, multiplicity = "0..1")
+    private var outputFormatFlags: OutputFormatFlags? = null
+
+    override fun getInputFiles(): List<String> = listOf(inputPath.toString())
+
+    override fun getOutputFiles(): List<String> = listOfNotNull(outputPath.toString())
 
     override fun run0() {
-        val reports = IOUtil.extractReports(`in`)
-        if (json) {
-            if (out != null) {
-                for (report in reports) {
-                    ReportUtil.appendJsonReport(out!!, report)
-                }
+        val footer = IOUtil.extractFooter(inputPath)
+        (if (outputPath == null) CloseShieldOutputStream.wrap(System.out)
+        else outputPath!!.outputStream()).use { o ->
+            if (outputFormatFlags?.json == true || outputFormatFlags?.yaml == true) {
+                val tree =
+                    if (step != null)
+                        K_OM.valueToTree(footer.reports.getTrees(step!!))
+                    else
+                        footer.reports.asTree()
+                if (outputFormatFlags?.json == true)
+                    K_OM.writeValue(o, tree)
+                else
+                    K_YAML_OM.writeValue(o, tree)
             } else {
-                println(GlobalObjectMappers.getPretty().writeValueAsString(reports))
-            }
-        } else {
-            val helper = when {
-                out != null -> ReportHelper(out!!)
-                else -> ReportHelper(System.out, false)
-            }
-            for (report in reports) {
-                report.writeHeader(helper)
-                report.writeReport(helper)
-                if (out == null) println()
+                val helper = ReportHelper(o, outputPath != null)
+                (if (step != null) footer.reports[MiXCRCommand.fromString(step!!)]
+                else footer.reports.map.values.flatten()).forEach { report ->
+                    report.writeHeader(helper)
+                    report.writeReport(helper)
+                }
             }
         }
     }

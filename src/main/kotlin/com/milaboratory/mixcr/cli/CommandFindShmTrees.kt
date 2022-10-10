@@ -15,37 +15,23 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mitool.exhaustive
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
 import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.trees.BuildSHMTreeReport
+import com.milaboratory.mixcr.trees.*
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
-import com.milaboratory.mixcr.trees.CloneWithDatasetId
-import com.milaboratory.mixcr.trees.MutationsUtils
-import com.milaboratory.mixcr.trees.SHMTreeBuilder
-import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
-import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
-import com.milaboratory.mixcr.trees.SHMTreeResult
-import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
-import com.milaboratory.mixcr.trees.ScoringSet
-import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.util.JsonOverrider
-import com.milaboratory.util.ProgressAndStage
-import com.milaboratory.util.ReportUtil
-import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.*
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -59,6 +45,10 @@ import kotlin.io.path.extension
     description = ["Builds SHM trees."]
 )
 class CommandFindShmTrees : AbstractMiXCRCommand() {
+    data class Params(val dummy: Boolean = true) : MiXCRParams {
+        override val command get() = MiXCRCommand.findShmTrees
+    }
+
     @Parameters(
         arity = "2..*",
         description = ["Paths to clns files that was processed by command ${CommandFindAlleles.COMMAND_NAME} and path to output file"],
@@ -310,7 +300,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
         val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters.topologyBuilder, scoringSet)
         outputTreesPath.toAbsolutePath().parent.createDirectories()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            shmTreesWriter.writeHeader(cloneReaders)
+            shmTreesWriter.writeHeader(cloneReaders, Params())
 
             val writer = shmTreesWriter.treesWriter()
             result.forEach { tree ->
@@ -334,13 +324,13 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
                 cloneReaders.foldIndexed(MiXCRFooterMerger()) { i, m, f ->
                     m.addReportsFromInput(i, clnsFileNames[i].toString(), f.footer)
                 }
-                    .addReport(reportBuilder.buildReport())
+                    .addStepReport(MiXCRCommand.findShmTrees, reportBuilder.buildReport())
                     .build()
             )
         }
     }
 
-    private fun SHMTreesWriter.writeHeader(cloneReaders: List<CloneReader>) {
+    private fun SHMTreesWriter.writeHeader(cloneReaders: List<CloneReader>, params: Params) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
         val headers = cloneReaders.map { it.header }
         require(headers.map { it.alignerParameters }.distinct().size == 1) {
@@ -348,7 +338,9 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
         }
         writeHeader(
             headers,
-            headers.fold(MiXCRHeaderMerger()) { m, h -> m.add(h) }.build(),
+            headers
+                .fold(MiXCRHeaderMerger()) { m, h -> m.add(h) }.build()
+                .addStepParams(MiXCRCommand.findShmTrees, params),
             clnsFileNames.map { it.toString() },
             usedGenes
         )
