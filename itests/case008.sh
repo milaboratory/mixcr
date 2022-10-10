@@ -28,6 +28,7 @@ mixcr analyze tcr_amplicon \
 
 assert "cat case8.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "237725"
 assert "cat case8.assemble.report.json | head -n 1 | jq -r .readsInClones" "199563"
+assert "cat case8.assemble.report.json | head -n 1 | jq -r .clones" "25614"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "227"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "1070"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .assemblePrematureTerminationEvents" "3"
