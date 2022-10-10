@@ -154,7 +154,7 @@ interface AssembleMiXCRMixins : MiXCRMixinSet {
     fun splitClonesBy(geneTypes: List<String>) =
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), true)) }
 
-    @Option(names = [SetSplitClonesBy.CMD_OPTION_FALSE], arity = "0")
+    @Option(names = [SetSplitClonesBy.CMD_OPTION_FALSE])
     fun dontSplitClonesBy(geneTypes: List<String>) =
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), false)) }
 }
