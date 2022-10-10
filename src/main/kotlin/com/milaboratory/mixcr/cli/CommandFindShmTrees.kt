@@ -110,7 +110,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     )
     var minCountForClone: Int? = null
 
-    @Option(description = ["Path to directory to store debug info"], names = ["--debug"], hidden = true)
+    @Option(description = ["Path to directory to store debug info"], names = ["--debugDir"], hidden = true)
     var debugDir: Path? = null
 
     private val debugDirectoryPath: Path by lazy {
@@ -179,7 +179,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
                 throwValidationExceptionKotlin("--min-count must be empty if --build-from is specified")
             }
             if (debugDir != null) {
-                println("WARN: argument --debug will not be used with --build-from")
+                println("WARN: argument --debugDir will not be used with --build-from")
             }
         }
     }
