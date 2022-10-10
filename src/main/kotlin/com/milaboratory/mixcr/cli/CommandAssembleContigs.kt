@@ -311,7 +311,11 @@ object CommandAssembleContigs {
                 }
             }
             assert(reportBuilder.finalCloneCount == totalClonesCount)
-            assert(reportBuilder.finalCloneCount >= reportBuilder.initialCloneCount)
+            assert(
+                cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyDefined ||
+                        cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyAssembled ||
+                        reportBuilder.finalCloneCount >= reportBuilder.initialCloneCount
+            )
             var cloneId = 0
             val clones = arrayOfNulls<Clone>(totalClonesCount)
             PrimitivI(BufferedInputStream(FileInputStream(outputFile))).use { tmpIn ->

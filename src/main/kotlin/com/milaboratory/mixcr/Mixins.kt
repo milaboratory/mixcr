@@ -14,11 +14,10 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.annotation.*
 import com.milaboratory.cli.*
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
+import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
 import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.cli.CommandAlign
-import com.milaboratory.mixcr.cli.CommandAssemble
-import com.milaboratory.mixcr.cli.CommandExportAlignments
-import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.cli.*
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractorsFactoryNew
@@ -492,6 +491,32 @@ data class SetSplitClonesBy(
     companion object {
         const val CMD_OPTION_TRUE = "+splitClonesBy"
         const val CMD_OPTION_FALSE = "+dontSplitClonesBy"
+    }
+}
+
+//
+// Assemble contigs
+//
+
+@JsonTypeName("SetContigAssemblingFeatures")
+data class SetContigAssemblingFeatures(
+    @JsonProperty("features") val features: GeneFeatures
+) : MiXCRMixinBase(50) {
+    override fun MixinBuilderOps.action() {
+        MiXCRParamsBundle::assembleContigs.update {
+            CommandAssembleContigs.Params::parameters.update {
+                FullSeqAssemblerParameters::assemblingRegions.setTo(features)
+                FullSeqAssemblerParameters::subCloningRegions.setTo(features)
+                FullSeqAssemblerParameters::isAlignedRegionsOnly.setTo(true)
+                FullSeqAssemblerParameters::postFiltering.setTo(PostFiltering.OnlyFullyDefined)
+            }
+        }
+    }
+
+    override val cmdArgs get() = listOf(CMD_OPTION, features.encode())
+
+    companion object {
+        const val CMD_OPTION = "+assembleContigsBy"
     }
 }
 

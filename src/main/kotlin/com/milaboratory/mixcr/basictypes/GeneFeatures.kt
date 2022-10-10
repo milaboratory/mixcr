@@ -62,9 +62,13 @@ data class GeneFeatures(
             GeneFeatures(features + toAdd.features)
         }
 
-    fun encode() = features.joinToString(",", "[", "]") { GeneFeature.encode(it) }
+    fun encode(): String =
+        if (features.size == 1)
+            GeneFeature.encode(features[0])
+        else
+            features.joinToString(",", "[", "]") { GeneFeature.encode(it) }
 
-    override fun toString(): String = encode()
+    override fun toString() = encode()
 
     class SerializerImpl : BasicSerializer<GeneFeatures>() {
         override fun write(output: PrimitivO, obj: GeneFeatures) {
@@ -85,7 +89,12 @@ data class GeneFeatures(
 
     companion object {
         @JvmStatic
-        fun parse(value: String): GeneFeatures = GeneFeatures(GeneFeature.parse(value))
+        fun parse(value: String): GeneFeatures = if (value.startsWith("[")) {
+            if (!value.endsWith("]"))
+                throw IllegalArgumentException("Malformed GeneFeatures: $value")
+            GeneFeatures(value.substring(1, value.length - 1).split(",").map { GeneFeature.parse(it) })
+        } else
+            GeneFeatures(GeneFeature.parse(value))
 
         @JvmStatic
         fun parse(value: Array<String>): GeneFeatures =
