@@ -23,6 +23,7 @@ import com.milaboratory.cli.POverridesBuilderDsl
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.POverridesBuilderOpsAbstract
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
+import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.CommandAlign
@@ -301,6 +302,11 @@ object AlignMixins {
                                 "Incompatible J gene right alignment feature boundary for the mix-in: " +
                                         "${jAlignerParameters.geneFeatureToAlign.lastPoint}"
                             )
+                        if (cAlignerParameters == null)
+                            throw RuntimeException(
+                                "Wrong application of mixin \"${cmdArgs.joinToString(" ")}\", " +
+                                        "underlying parameter set has no alignment parameters for C gene"
+                            )
 
                         // And setting strict alignment mode for the J gene
                         jAlignerParameters.parameters.isFloatingRightBound = false
@@ -445,7 +451,7 @@ object AssembleMixins {
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::assemble.update {
                 CommandAssemble.Params::cloneAssemblerParameters.applyAfterClone(CloneAssemblerParameters::clone) {
-                    assemblingFeatures = features.features
+                    assemblingFeatures = features.features.toTypedArray()
                 }
             }
         }
@@ -490,30 +496,25 @@ object AssembleMixins {
 }
 
 object AssembleContigsMixins {
-    @JsonTypeName("SetCutByFeature")
-    data class SetCutByFeature(
-        @JsonProperty("cutBy") val cutByFeature: GeneFeatures
+    @JsonTypeName("SetContigAssemblingFeatures")
+    data class SetContigAssemblingFeatures(
+        @JsonProperty("features") val features: GeneFeatures
     ) : MiXCRMixinBase(50) {
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::assembleContigs.update {
-                CommandAssembleContigs.Params::parameters.updateBy { p ->
-                    p.copy(
-                        subCloningRegions = cutByFeature,
-                        assemblingRegions = cutByFeature,
-                        postFiltering = PostFiltering.OnlyFullyDefined
-                    )
+                CommandAssembleContigs.Params::parameters.update {
+                    FullSeqAssemblerParameters::assemblingRegions.setTo(features)
+                    FullSeqAssemblerParameters::subCloningRegions.setTo(features)
+                    FullSeqAssemblerParameters::isAlignedRegionsOnly.setTo(true)
+                    FullSeqAssemblerParameters::postFiltering.setTo(PostFiltering.OnlyFullyDefined)
                 }
             }
         }
 
-        override val cmdArgs
-            get() = listOf(
-                CMD_OPTION,
-                cutByFeature.encode()
-            )
+        override val cmdArgs get() = listOf(CMD_OPTION, features.encode())
 
         companion object {
-            const val CMD_OPTION = "+cutBy"
+            const val CMD_OPTION = "+assembleContigsBy"
         }
     }
 }
@@ -527,7 +528,7 @@ object PipelineMixins {
         private val command = MiXCRCommand.fromString(step)
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::pipeline.updateBy {
-                (it + command).sorted()
+                MiXCRPipeline((it.steps + command).sorted())
             }
 
             if (command == MiXCRCommand.assembleContigs)
@@ -551,7 +552,7 @@ object PipelineMixins {
         private val command = MiXCRCommand.fromString(step)
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::pipeline.updateBy {
-                it - command
+                MiXCRPipeline(it.steps - command)
             }
 
             if (command == MiXCRCommand.assembleContigs)

@@ -228,7 +228,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
             "input files must have the same aligner parameters"
         }
         require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetCutByFeature.CMD_OPTION} option"
+            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
         require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"

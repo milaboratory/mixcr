@@ -18,8 +18,8 @@ class PresetsTest {
     @Test
     fun test1() {
         for (presetName in Presets.allPresetNames) {
-            val bundle = Presets.resolveParamsBundle(presetName)
             println(presetName)
+            val bundle = Presets.resolveParamsBundle(presetName)
             assertJson(K_OM, bundle, true)
             bundle.flags.forEach {
                 Assert.assertTrue("Flag = $it", Flags.flagMessages.containsKey(it))
@@ -32,8 +32,8 @@ class PresetsTest {
         // val bundle = Presets.resolveParamsBundle("assemblePartial_universal")
         // val bundle = Presets.resolveParamsBundle("_universal")
         // val bundle = Presets.resolveParamsBundle("_10x_vdj")
-        val bundle = Presets.resolveParamsBundle("10x_vdj_bcr")
-        Presets.assemblePartial("10x_vdj_bcr")
+        val bundle = Presets.resolveParamsBundle("test-subCloningRegions")
+        Presets.assembleContigs("test-subCloningRegions")
         assertJson(K_YAML_OM, bundle, true)
     }
 

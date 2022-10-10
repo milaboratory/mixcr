@@ -56,7 +56,7 @@ class CloneRebuild(
 ) {
     private val cloneFactory = CloneFactory(
         assemblerParameters.cloneFactoryParameters,
-        assemblingFeatures.features,
+        assemblingFeatures.features.toTypedArray(),
         resultLibrary.genes,
         alignerParameters.featuresToAlignMap
     )
