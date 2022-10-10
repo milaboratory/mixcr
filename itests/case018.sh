@@ -42,6 +42,10 @@ mixcr findShmTrees -j trees/report.json -r trees/report.txt `ls alleles/*.clns` 
 
 mixcr exportShmTrees trees/result.shmt trees/trees.tsv
 
+mixcr exportShmTreesWithNodes trees/result.shmt trees/trees_with_nodes.tsv
+
+mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
+
 FILES=`ls trees_samples/*_R1.fastq.gz`
 for filename in $FILES; do
   id=${filename#trees_samples/*}

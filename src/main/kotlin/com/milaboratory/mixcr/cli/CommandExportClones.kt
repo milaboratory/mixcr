@@ -126,7 +126,7 @@ object CommandExportClones {
         description = ["Export assembled clones into tab delimited file."]
     )
     class Cmd : CmdBase() {
-        @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+        @Parameters(description = ["data.[clns|clna]"], index = "0")
         lateinit var inputFile: String
 
         @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")

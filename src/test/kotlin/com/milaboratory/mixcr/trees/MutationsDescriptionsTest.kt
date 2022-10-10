@@ -26,6 +26,7 @@ import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithIncompleteCodon
 import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon
 import com.milaboratory.core.sequence.TranslationParameters.FromRightWithIncompleteCodon
+import com.milaboratory.core.sequence.TranslationParameters.withIncompleteCodon
 import com.milaboratory.mixcr.util.RandomizedTest
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
@@ -43,6 +44,7 @@ import io.repseq.core.GeneFeature.VJJunction
 import io.repseq.core.ReferencePoint.CDR2Begin
 import io.repseq.core.ReferencePoint.CDR3Begin
 import io.repseq.core.ReferencePoint.CDR3End
+import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.ReferencePoint.FR3Begin
 import io.repseq.core.ReferencePoint.FR4End
 import io.repseq.core.ReferencePoint.JBegin
@@ -50,19 +52,301 @@ import io.repseq.core.ReferencePoint.JBeginTrimmed
 import io.repseq.core.ReferencePoint.VEnd
 import io.repseq.core.ReferencePoint.VEndTrimmed
 import io.repseq.core.ReferencePoints
+import io.repseq.core.ReferencePointsBuilder
 import io.repseq.core.ReferenceUtil
 import org.junit.Test
 import kotlin.random.Random
 
 class MutationsDescriptionsTest {
     @Test
+    fun `get alignments with sequence 1 started from FR1Begin`() {
+        val VSequence1 = NucleotideSequence("TTTTTTAAAAAAGGGCCCCCCCCC")
+        val VSequence1A = AminoAcidSequence("FFKKGPPP")
+        val VMutations = Mutations(NucleotideSequence.ALPHABET, "SA6GSG13T")
+        val baseNDN = NucleotideSequence("AAAAAA")
+        val NDNMutations = Mutations(NucleotideSequence.ALPHABET, "SA1TSA4T")
+        val JSequence1 = NucleotideSequence("CCCCCCGGGAAAAAAAAA")
+        val JSequence1A = AminoAcidSequence("PPGKKK")
+        val JMutations = Mutations(NucleotideSequence.ALPHABET, "SG7TSA17T")
+        val mutationsDescription = MutationsDescription(
+            sortedMapOf(GeneFeature(FR3Begin, VEndTrimmed) to VMutations),
+            VSequence1,
+            ReferencePointsBuilder().apply {
+                setPosition(FR1Begin, 0)
+                setPosition(FR3Begin, 6)
+                setPosition(CDR3Begin, 12)
+                setPosition(VEnd, 24)
+            }.build().withVCDR3PartLength(6),
+            baseNDN,
+            NDNMutations,
+            sortedMapOf(GeneFeature(JBeginTrimmed, FR4End) to JMutations),
+            JSequence1,
+            ReferencePoints(ReferenceUtil.getReferencePointIndex(JBegin), intArrayOf(0, 9, 18))
+                .withJCDR3PartLength(6)
+        )
+        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("TTTTTTGAAAAAGTGCCCCCCCCC")
+        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAAAAAAAAT")
+        translate(VMutations.mutate(VSequence1), FromLeftWithoutIncompleteCodon) shouldBe
+                AminoAcidSequence("FFEKVPPP")
+        translate(JMutations.mutate(JSequence1), FromLeftWithoutIncompleteCodon) shouldBe
+                AminoAcidSequence("PPVKKN")
+        translate(VSequence1, FromLeftWithoutIncompleteCodon) shouldBe VSequence1A
+        translate(JSequence1, FromLeftWithoutIncompleteCodon) shouldBe JSequence1A
+
+        mutationsDescription.nAlignment(FR3, GeneFeature(FR1Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe VSequence1
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA6G")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
+        }
+        mutationsDescription.aaAlignment(FR3, GeneFeature(FR1Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe VSequence1A
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK2E")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EK")
+        }
+        mutationsDescription.nAlignment(FR3, GeneFeature(FR3Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCCCCCCC")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0G")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
+        }
+        mutationsDescription.aaAlignment(FR3, GeneFeature(FR3Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("KKGPPP")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK0E")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EK")
+        }
+        mutationsDescription.nAlignment(FR3) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("AAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0G")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
+        }
+        mutationsDescription.aaAlignment(FR3) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("KK")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK0E")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EK")
+        }
+
+        mutationsDescription.nAlignment(VCDR3Part, GeneFeature(FR3Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCCCCCCC")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCC")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG7T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCC")
+        }
+        mutationsDescription.nAlignment(VCDR3Part) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("GGGCCC")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCC")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCC")
+        }
+
+        mutationsDescription.nAlignment(CDR3) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("GGGCCCAAAAAACCCGGG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCAAAAAACCCGGG")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1TSA7TSA10TSG16T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCATAATACCCGTG")
+        }
+        mutationsDescription.aaAlignment(CDR3) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("GPKKPG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("GPKKPG")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SG0VSK2ISK3ISG5V")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("VPIIPV")
+        }
+
+        mutationsDescription.nAlignment(GeneFeature(FR3Begin, FR4End)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0GSG7TSA13TSA16TSG22TSA32T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe
+                    NucleotideSequence("GAAAAAGTGCCCATAATACCCGTGAAAAAAAAT")
+        }
+        mutationsDescription.aaAlignment(GeneFeature(FR3Begin, FR4End)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("KKGPKKPGKKK")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KKGPKKPGKKK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK0ESG2VSK4ISK5ISG7VSK10N")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EKVPIIPVKKN")
+        }
+
+        mutationsDescription.nAlignment(GeneFeature(FR3Begin, FR4End), GeneFeature(FR1Begin, FR4End)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("TTTTTTAAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA6GSG13TSA19TSA22TSG28TSA38T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe
+                    NucleotideSequence("GAAAAAGTGCCCATAATACCCGTGAAAAAAAAT")
+        }
+        mutationsDescription.aaAlignment(GeneFeature(FR3Begin, FR4End), GeneFeature(FR1Begin, FR4End)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("FFKKGPKKPGKKK")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KKGPKKPGKKK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK2ESG4VSK6ISK7ISG9VSK12N")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EKVPIIPVKKN")
+        }
+    }
+
+    @Test
+    fun `get alignments with sequence 1 started from FR1Begin with incomplete triplets`() {
+        val VSequence1 = NucleotideSequence("TTTTTAAAAAAGGGCCCCCCCC")
+        val VSequence1A = AminoAcidSequence("_FKKGPP_")
+        val VMutations = Mutations(NucleotideSequence.ALPHABET, "SA5GSG12T")
+        val baseNDN = NucleotideSequence("AAAAAA")
+        val NDNMutations = Mutations(NucleotideSequence.ALPHABET, "SA1TSA4T")
+        val JSequence1 = NucleotideSequence("CCCCCGGGAAAAAAAAA")
+        val JSequence1A = AminoAcidSequence("_PGKKK")
+        val JMutations = Mutations(NucleotideSequence.ALPHABET, "SG6TSA16T")
+        val mutationsDescription = MutationsDescription(
+            sortedMapOf(GeneFeature(FR3Begin, VEndTrimmed) to VMutations),
+            VSequence1,
+            ReferencePointsBuilder().apply {
+                setPosition(FR1Begin, 0)
+                setPosition(FR3Begin, 5)
+                setPosition(CDR3Begin, 11)
+                setPosition(VEnd, 22)
+            }.build().withVCDR3PartLength(6),
+            baseNDN,
+            NDNMutations,
+            sortedMapOf(GeneFeature(JBeginTrimmed, FR4End) to JMutations),
+            JSequence1,
+            ReferencePoints(ReferenceUtil.getReferencePointIndex(JBegin), intArrayOf(0, 8, 17))
+                .withJCDR3PartLength(6)
+        )
+        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("TTTTTGAAAAAGTGCCCCCCCC")
+        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCGTGAAAAAAAAT")
+        translate(VMutations.mutate(VSequence1), withIncompleteCodon(2)) shouldBe
+                AminoAcidSequence("_FEKVPP_")
+        translate(JMutations.mutate(JSequence1), withIncompleteCodon(2)) shouldBe
+                AminoAcidSequence("_PVKKN")
+        translate(VSequence1, withIncompleteCodon(2)) shouldBe VSequence1A
+        translate(JSequence1, withIncompleteCodon(2)) shouldBe JSequence1A
+
+        mutationsDescription.nAlignment(FR3, GeneFeature(FR1Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe VSequence1
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA5G")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
+        }
+        mutationsDescription.aaAlignment(FR3, GeneFeature(FR1Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("_FKKGPP")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK2E")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EK")
+        }
+        mutationsDescription.nAlignment(FR3, GeneFeature(FR3Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCCCCCC")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0G")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
+        }
+        mutationsDescription.aaAlignment(FR3, GeneFeature(FR3Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("KKGPP")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK0E")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EK")
+        }
+        mutationsDescription.nAlignment(FR3) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("AAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0G")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
+        }
+        mutationsDescription.aaAlignment(FR3) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("KK")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK0E")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EK")
+        }
+
+        mutationsDescription.nAlignment(VCDR3Part, GeneFeature(FR3Begin, VEnd)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCCCCCC")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCC")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG7T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCC")
+        }
+        mutationsDescription.nAlignment(VCDR3Part) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("GGGCCC")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCC")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCC")
+        }
+
+        mutationsDescription.nAlignment(CDR3) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("GGGCCCAAAAAACCCGGG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCAAAAAACCCGGG")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1TSA7TSA10TSG16T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCATAATACCCGTG")
+        }
+        mutationsDescription.aaAlignment(CDR3) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("GPKKPG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("GPKKPG")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SG0VSK2ISK3ISG5V")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("VPIIPV")
+        }
+
+        mutationsDescription.nAlignment(GeneFeature(FR3Begin, FR4End)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0GSG7TSA13TSA16TSG22TSA32T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe
+                    NucleotideSequence("GAAAAAGTGCCCATAATACCCGTGAAAAAAAAT")
+        }
+        mutationsDescription.aaAlignment(GeneFeature(FR3Begin, FR4End)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("KKGPKKPGKKK")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KKGPKKPGKKK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK0ESG2VSK4ISK5ISG7VSK10N")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EKVPIIPVKKN")
+        }
+        mutationsDescription.nAlignment(GeneFeature(FR3Begin, FR4End), GeneFeature(FR1Begin, FR4End)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe NucleotideSequence("TTTTTAAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA5GSG12TSA18TSA21TSG27TSA37T")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe
+                    NucleotideSequence("GAAAAAGTGCCCATAATACCCGTGAAAAAAAAT")
+        }
+        mutationsDescription.aaAlignment(GeneFeature(FR3Begin, FR4End), GeneFeature(FR1Begin, FR4End)) should {
+            requireNotNull(it)
+            it.sequence1 shouldBe AminoAcidSequence("_FKKGPKKPGKKK")
+            it.sequence1.getRange(it.sequence1Range) shouldBe AminoAcidSequence("KKGPKKPGKKK")
+            it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK2ESG4VSK6ISK7ISG9VSK12N")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EKVPIIPVKKN")
+        }
+    }
+
+    @Test
     fun `get alignments with NDN bound mod == 3`() {
-        val VSequence1 = NucleotideSequence("AaAaAaGGGCCCCCCCCC")
+        val VSequence1 = NucleotideSequence("AAAAAAGGGCCCCCCCCC")
         val VSequence1A = AminoAcidSequence("KKGPPP")
         val VMutations = Mutations(NucleotideSequence.ALPHABET, "SA0GSG7T")
-        val baseNDN = NucleotideSequence("AaAaAa")
+        val baseNDN = NucleotideSequence("AAAAAA")
         val NDNMutations = Mutations(NucleotideSequence.ALPHABET, "SA1TSA4T")
-        val JSequence1 = NucleotideSequence("CCCCCCGGGAaAaAaAaA")
+        val JSequence1 = NucleotideSequence("CCCCCCGGGAAAAAAAAA")
         val JSequence1A = AminoAcidSequence("PPGKKK")
         val JMutations = Mutations(NucleotideSequence.ALPHABET, "SG7TSA17T")
         val mutationsDescription = MutationsDescription(
@@ -77,8 +361,8 @@ class MutationsDescriptionsTest {
             ReferencePoints(ReferenceUtil.getReferencePointIndex(JBegin), intArrayOf(0, 9, 18))
                 .withJCDR3PartLength(6)
         )
-        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("GAaAaAGTGCCCCCCCCC")
-        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAaAaAaAaT")
+        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("GAAAAAGTGCCCCCCCCC")
+        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAAAAAAAAT")
         translate(VMutations.mutate(VSequence1), FromLeftWithIncompleteCodon) shouldBe
                 AminoAcidSequence("EKVPPP")
         translate(JMutations.mutate(JSequence1), FromLeftWithIncompleteCodon) shouldBe
@@ -89,9 +373,9 @@ class MutationsDescriptionsTest {
         mutationsDescription.nAlignment(FR3, GeneFeature(FR3Begin, VEnd)) should {
             requireNotNull(it)
             it.sequence1 shouldBe VSequence1
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAa")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0G")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAaAaA")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
         }
         mutationsDescription.aaAlignment(FR3, GeneFeature(FR3Begin, VEnd)) should {
             requireNotNull(it)
@@ -102,10 +386,10 @@ class MutationsDescriptionsTest {
         }
         mutationsDescription.nAlignment(FR3) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AaAaAa")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAa")
+            it.sequence1 shouldBe NucleotideSequence("AAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0G")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAaAaA")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GAAAAA")
         }
         mutationsDescription.aaAlignment(FR3) should {
             requireNotNull(it)
@@ -134,10 +418,10 @@ class MutationsDescriptionsTest {
 
         mutationsDescription.nAlignment(CDR3) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("GGGCCCAaAaAaCCCGGG")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCAaAaAaCCCGGG")
+            it.sequence1 shouldBe NucleotideSequence("GGGCCCAAAAAACCCGGG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCAAAAAACCCGGG")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1TSA7TSA10TSG16T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCATAaTACCCGTG")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCATAATACCCGTG")
         }
         mutationsDescription.aaAlignment(CDR3) should {
             requireNotNull(it)
@@ -151,7 +435,7 @@ class MutationsDescriptionsTest {
             it.sequence1 shouldBe baseNDN
             it.sequence1.getRange(it.sequence1Range) shouldBe baseNDN
             it.absoluteMutations shouldBe NDNMutations
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("ATAaTA")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("ATAATA")
         }
 
 
@@ -173,9 +457,9 @@ class MutationsDescriptionsTest {
         mutationsDescription.nAlignment(FR4, GeneFeature(JBegin, FR4End)) should {
             requireNotNull(it)
             it.sequence1 shouldBe JSequence1
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaAaA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAAAA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA17T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AaAaAaAaT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AAAAAAAAT")
         }
         mutationsDescription.aaAlignment(FR4, GeneFeature(JBegin, FR4End)) should {
             requireNotNull(it)
@@ -186,10 +470,10 @@ class MutationsDescriptionsTest {
         }
         mutationsDescription.nAlignment(FR4, GeneFeature(JBeginTrimmed, FR4End)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("CCCGGGAaAaAaAaA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaAaA")
+            it.sequence1 shouldBe NucleotideSequence("CCCGGGAAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAAAA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA14T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AaAaAaAaT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AAAAAAAAT")
         }
         mutationsDescription.aaAlignment(FR4, GeneFeature(JBeginTrimmed, FR4End)) should {
             requireNotNull(it)
@@ -200,10 +484,10 @@ class MutationsDescriptionsTest {
         }
         mutationsDescription.nAlignment(FR4) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AaAaAaAaA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaAaA")
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAAAA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA8T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AaAaAaAaT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("AAAAAAAAT")
         }
         mutationsDescription.aaAlignment(FR4) should {
             requireNotNull(it)
@@ -217,11 +501,11 @@ class MutationsDescriptionsTest {
 
         mutationsDescription.nAlignment(GeneFeature(FR3Begin, FR4End)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AaAaAaGGGCCCAaAaAaCCCGGGAaAaAaAaA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaGGGCCCAaAaAaCCCGGGAaAaAaAaA")
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAGGGCCCAAAAAACCCGGGAAAAAAAAA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0GSG7TSA13TSA16TSG22TSA32T")
             it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe
-                    NucleotideSequence("GAaAaAGTGCCCATAaTACCCGTGAaAaAaAaT")
+                    NucleotideSequence("GAAAAAGTGCCCATAATACCCGTGAAAAAAAAT")
         }
         mutationsDescription.aaAlignment(GeneFeature(FR3Begin, FR4End)) should {
             requireNotNull(it)
@@ -234,12 +518,12 @@ class MutationsDescriptionsTest {
 
     @Test
     fun `get alignments with NDN bound mod != 3`() {
-        val VSequence1 = NucleotideSequence("AaAaAaGGGCCCCCCCCC")
+        val VSequence1 = NucleotideSequence("AAAAAAGGGCCCCCCCCC")
         val VSequence1A = AminoAcidSequence("KKGPPP")
         val VMutations = Mutations(NucleotideSequence.ALPHABET, "SA0GSG7T")
-        val baseNDN = NucleotideSequence("AaAaAaA")
+        val baseNDN = NucleotideSequence("AAAAAAA")
         val NDNMutations = Mutations(NucleotideSequence.ALPHABET, "SA0TSA6T")
-        val JSequence1 = NucleotideSequence("CCCCCCGGGAaAaAaAaA")
+        val JSequence1 = NucleotideSequence("CCCCCCGGGAAAAAAAAA")
         val JSequence1A = AminoAcidSequence("PPGKKK")
         val JMutations = Mutations(NucleotideSequence.ALPHABET, "SG7TSA17T")
         val mutationsDescription = MutationsDescription(
@@ -254,8 +538,8 @@ class MutationsDescriptionsTest {
             ReferencePoints(ReferenceUtil.getReferencePointIndex(JBegin), intArrayOf(0, 9, 18))
                 .withJCDR3PartLength(7)
         )
-        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("GAaAaAGTGCCCCCCCCC")
-        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAaAaAaAaT")
+        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("GAAAAAGTGCCCCCCCCC")
+        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAAAAAAAAT")
         translate(VMutations.mutate(VSequence1), FromLeftWithIncompleteCodon) shouldBe
                 AminoAcidSequence("EKVPPP")
         translate(JMutations.mutate(JSequence1), FromLeftWithIncompleteCodon) shouldBe
@@ -282,10 +566,10 @@ class MutationsDescriptionsTest {
 
         mutationsDescription.nAlignment(CDR3) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("GGGCCCCAaAaAaACCCCGGG")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCCAaAaAaACCCCGGG")
+            it.sequence1 shouldBe NucleotideSequence("GGGCCCCAAAAAAACCCCGGG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCCAAAAAAACCCCGGG")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1TSA7TSA13TSG19T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCCTAaAaATCCCCGTG")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCCTAAAAATCCCCGTG")
         }
         mutationsDescription.aaAlignment(CDR3) should {
             requireNotNull(it)
@@ -296,24 +580,24 @@ class MutationsDescriptionsTest {
         }
         mutationsDescription.nAlignment(GeneFeature(CDR3Begin, JBeginTrimmed)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("GGGCCCCAaAaAaA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCCAaAaAaA")
+            it.sequence1 shouldBe NucleotideSequence("GGGCCCCAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("GGGCCCCAAAAAAA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SG1TSA7TSA13T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCCTAaAaAT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("GTGCCCCTAAAAAT")
         }
         mutationsDescription.nAlignment(VJJunction) should {
             requireNotNull(it)
             it.sequence1 shouldBe baseNDN
             it.sequence1.getRange(it.sequence1Range) shouldBe baseNDN
             it.absoluteMutations shouldBe NDNMutations
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("TAaAaAT")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("TAAAAAT")
         }
         mutationsDescription.nAlignment(GeneFeature(VEndTrimmed, CDR3End)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AaAaAaACCCCGGG")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaACCCCGGG")
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAACCCCGGG")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAACCCCGGG")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0TSA6TSG12T")
-            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("TAaAaATCCCCGTG")
+            it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe NucleotideSequence("TAAAAATCCCCGTG")
         }
 
 
@@ -337,11 +621,11 @@ class MutationsDescriptionsTest {
 
         mutationsDescription.nAlignment(GeneFeature(FR3Begin, FR4End)) should {
             requireNotNull(it)
-            it.sequence1 shouldBe NucleotideSequence("AaAaAaGGGCCCCAaAaAaACCCCGGGAaAaAaAaA")
-            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AaAaAaGGGCCCCAaAaAaACCCCGGGAaAaAaAaA")
+            it.sequence1 shouldBe NucleotideSequence("AAAAAAGGGCCCCAAAAAAACCCCGGGAAAAAAAAA")
+            it.sequence1.getRange(it.sequence1Range) shouldBe NucleotideSequence("AAAAAAGGGCCCCAAAAAAACCCCGGGAAAAAAAAA")
             it.absoluteMutations shouldBe Mutations(NucleotideSequence.ALPHABET, "SA0GSG7TSA13TSA19TSG25TSA35T")
             it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe
-                    NucleotideSequence("GAaAaAGTGCCCCTAaAaATCCCCGTGAaAaAaAaT")
+                    NucleotideSequence("GAAAAAGTGCCCCTAAAAATCCCCGTGAAAAAAAAT")
         }
         mutationsDescription.aaAlignment(GeneFeature(FR3Begin, FR4End)) should {
             requireNotNull(it)
@@ -366,9 +650,9 @@ class MutationsDescriptionsTest {
     }
 
     private fun testBrokenAa(random: Random, print: Boolean) {
-        val VSequence1 = NucleotideSequence("AaAaAaGGGCCCCCCCCC")
+        val VSequence1 = NucleotideSequence("AAAAAAGGGCCCCCCCCC")
         val VMutations = Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
-        val baseNDN = NucleotideSequence("AaAaAa")
+        val baseNDN = NucleotideSequence("AAAAAA")
         val NDNMutations = Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
         val JSequence1 = random.generateSequence(18 + random.nextInt(4))
         val JMutations = random.generateMutations(JSequence1)
@@ -514,7 +798,7 @@ class MutationsDescriptionsTest {
 
     @Test
     fun `randomized test of difference`() {
-        RandomizedTest.randomized(::testDifference, numberOfRuns = 10_000_000)
+        RandomizedTest.randomized(::testDifference, numberOfRuns = 100_000)
     }
 
     @Test

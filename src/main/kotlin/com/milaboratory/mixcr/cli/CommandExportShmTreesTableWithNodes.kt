@@ -42,7 +42,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
     @Option(
         description = ["Exclude nodes that was reconstructed by algorithm"],
-        names = ["-onlyObserved"],
+        names = ["--onlyObserved"],
     )
     var onlyObserved: Boolean = false
 
