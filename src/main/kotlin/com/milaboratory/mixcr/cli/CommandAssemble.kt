@@ -125,7 +125,7 @@ object CommandAssemble {
             hidden = true
         )
         fun useSystemTemp(value: Boolean) {
-            warn(
+            logger.warn(
                 "--use-system-temp is deprecated, it is now enabled by default, use --use-local-temp to invert the " +
                         "behaviour and place temporary files in the same folder as the output file."
             )
@@ -202,12 +202,7 @@ object CommandAssemble {
                 if (outputFile.lowercase(Locale.getDefault())
                         .endsWith(".clna") && !cmdParam.clnaOutput || outputFile.lowercase(Locale.getDefault())
                         .endsWith(".clns") && cmdParam.clnaOutput
-                ) warn(
-                    """
-                    WARNING: Unexpected file extension, use .clns extension for clones-only (normal) output and
-                    .clna if -a / --write-alignments options specified.
-                    """.trimIndent()
-                )
+                ) logger.warn("Unexpected file extension, use .clns extension for clones-only (normal) output and .clna if -a / --write-alignments options specified.")
 
                 // set aligner parameters
                 val cloneAssemblerParameters =

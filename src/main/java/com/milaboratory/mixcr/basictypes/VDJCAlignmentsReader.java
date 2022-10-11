@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
+import com.milaboratory.mixcr.cli.ApplicationException;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
@@ -136,8 +137,8 @@ public final class VDJCAlignmentsReader implements
                 case MAGIC:
                     break;
                 default:
-                    throw new RuntimeException("Unsupported file format; .vdjca file of version " + new String(magic)
-                            + " while you are running MiXCR " + MAGIC);
+                    throw new ApplicationException("Unsupported file format; .vdjca file of version " + new String(magic)
+                            + " while you are running MiXCR " + MAGIC, false);
             }
 
             versionInfo = pi.readUTF();

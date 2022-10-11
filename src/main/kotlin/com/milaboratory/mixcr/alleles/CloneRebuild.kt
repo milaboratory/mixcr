@@ -26,6 +26,7 @@ import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -153,7 +154,7 @@ class CloneRebuild(
             }
             .toList()
         errorsCount.forEach { (geneId, count) ->
-            println("WARN: for $geneId found $count clones that get negative score after realigning")
+            logger.warn("for $geneId found $count clones that get negative score after realigning")
         }
         return withRecalculatedScores
     }

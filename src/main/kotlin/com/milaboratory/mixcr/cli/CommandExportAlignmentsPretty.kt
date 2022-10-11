@@ -171,7 +171,7 @@ class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
                     .take(countAfter)
                     .forEach { alignments ->
                         ++filtered
-                        if (verbose) outputVerbose(output, alignments) else outputCompact(output, alignments)
+                        if (logger.verbose) outputVerbose(output, alignments) else outputCompact(output, alignments)
                     }
 
 

@@ -11,43 +11,23 @@
  */
 package com.milaboratory.mixcr.cli
 
-import picocli.CommandLine
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
 import java.io.File
 
 abstract class ACommand(appName: String) : ABaseCommand(appName), Runnable {
-    /** queue of warning messages  */
-    private val warningsQueue: MutableList<String> = ArrayList()
+    @Mixin
+    private lateinit var logger: logger
 
-    /** flag that signals we are entered the run method  */
-    private var running = false
-
-    @CommandLine.Option(names = ["-nw", "--no-warnings"], description = ["Suppress all warning messages."])
-    var quiet = false
-
-    @CommandLine.Option(description = ["Verbose warning messages."], names = ["--verbose"])
-    var verbose = false
-
-    @CommandLine.Option(names = ["-f", "--force-overwrite"], description = ["Force overwrite of output file(s)."])
+    @Option(names = ["-f", "--force-overwrite"], description = ["Force overwrite of output file(s)."])
     var forceOverwrite = false
 
-    @CommandLine.Option(names = ["--force"], hidden = true)
+    @Option(names = ["--force"], hidden = true)
     fun setForce(value: Boolean) {
         if (value) {
-            warn("--force option is deprecated; use --force-overwrite instead.")
+            logger.warn("--force option is deprecated; use --force-overwrite instead.")
             forceOverwrite = true
         }
-    }
-
-    /** Warning message  */
-    fun warn(message: String) {
-        if (quiet) return
-        if (!running) // add to a queue
-            warningsQueue.add(message) else  // print immediately
-            printWarn(message)
-    }
-
-    private fun printWarn(message: String) {
-        if (!quiet) System.err.println(message)
     }
 
     /** list of input files  */
@@ -79,18 +59,11 @@ abstract class ACommand(appName: String) : ABaseCommand(appName), Runnable {
 
     override fun run() {
         validate()
-        if (!quiet) for (m in warningsQueue) printWarn(m)
-        running = true
-        try {
-            run0()
-        } catch (e: RuntimeException) {
-            throw e
-        } catch (e: Exception) {
-            throw RuntimeException(e)
-        }
+        logger.printWarningQueue()
+        logger.running = true
+        run0()
     }
 
     /** Do actual job  */
-    @Throws(Exception::class)
     abstract fun run0()
 }

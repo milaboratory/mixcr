@@ -163,7 +163,7 @@ object CommandRefineTagsAndSort {
             hidden = true
         )
         fun useSystemTemp(value: Boolean) {
-            warn(
+            logger.warn(
                 "--use-system-temp is deprecated, it is now enabled by default, use --use-local-temp to invert the " +
                         "behaviour and place temporary files in the same folder as the output file."
             )

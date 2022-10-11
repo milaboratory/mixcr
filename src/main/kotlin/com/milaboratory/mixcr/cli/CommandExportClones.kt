@@ -180,11 +180,11 @@ object CommandExportClones {
                     val di = initialSet.size() - set.size()
                     val cdi = initialCount - count
                     val percentageDI = ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size())
-                    warn(
+                    logger.warn(
                         "Filtered ${set.size()} of ${initialSet.size()} clones ($percentageDI%)."
                     )
                     val percentageCDI = ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount)
-                    warn(
+                    logger.warn(
                         "Filtered $count of $initialCount reads ($percentageCDI%)."
                     )
                 }

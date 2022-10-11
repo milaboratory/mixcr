@@ -163,10 +163,10 @@ object CommandAssemblePartial {
                         // Writing report to stout
                         ReportUtil.writeReportToStdout(report)
                         if (assembler.leftPartsLimitReached()) {
-                            warn("WARNING: too many partial alignments detected, consider skipping assemblePartial (enriched library?). /leftPartsLimitReached/")
+                            logger.warn("too many partial alignments detected, consider skipping assemblePartial (enriched library?). /leftPartsLimitReached/")
                         }
                         if (assembler.maxRightMatchesLimitReached()) {
-                            warn("WARNING: too many partial alignments detected, consider skipping assemblePartial (enriched library?). /maxRightMatchesLimitReached/")
+                            logger.warn("too many partial alignments detected, consider skipping assemblePartial (enriched library?). /maxRightMatchesLimitReached/")
                         }
                         if (reportFile != null) ReportUtil.appendReport(reportFile, report)
                         if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)

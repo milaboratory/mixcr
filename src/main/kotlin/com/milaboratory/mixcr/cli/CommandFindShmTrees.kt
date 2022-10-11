@@ -187,7 +187,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
                 throw ValidationException("--min-count must be empty if --build-from is specified")
             }
             if (debugDir != null) {
-                println("WARN: argument --debugDir will not be used with --build-from")
+                logger.warn("argument --debugDir will not be used with --build-from")
             }
         }
     }

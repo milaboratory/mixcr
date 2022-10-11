@@ -159,7 +159,7 @@ object CommandAlign {
         )
         private var chains: String? = null
             set(value) {
-                warn(
+                logger.warn(
                     "Don't use --chains option on the alignment step. See --chains parameter in exportAlignments and " +
                             "exportClones actions to limit output to a subset of receptor chains."
                 )
@@ -232,8 +232,8 @@ object CommandAlign {
 
                 if (overrides.isNotEmpty()) {
                     // Printing warning message for some common mistakes in parameter overrides
-                    for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) warn(
-                        "WARNING: most probably you want to change \"${key[0]}Parameters.relativeMinScore\" " +
+                    for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) logger.warn(
+                        "most probably you want to change \"${key[0]}Parameters.relativeMinScore\" " +
                                 "instead of \"${key[0]}Parameters.parameters.relativeMinScore\". " +
                                 "The latter should be touched only in a very specific cases."
                     )
@@ -379,8 +379,8 @@ object CommandAlign {
             // Performing V featureToAlign correction if needed
             if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
                 val currentGenFeature = encode(parameters.vAlignerParameters.geneFeatureToAlign)
-                warn(
-                    "WARNING: forcing -OvParameters.geneFeatureToAlign=${encode(correctingFeature)} " +
+                logger.warn(
+                    "forcing -OvParameters.geneFeatureToAlign=${encode(correctingFeature)} " +
                             "since current gene feature ($currentGenFeature) is absent in " +
                             "${ReportHelper.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV)}% of V genes."
                 )
@@ -568,14 +568,14 @@ object CommandAlign {
 
             // Printing library level warnings, if specified for the library
             if (!vdjcLibrary.warnings.isEmpty()) {
-                warn("Library warnings:")
-                for (l in vdjcLibrary.warnings) warn(l)
+                logger.warnUnfomatted("Library warnings:")
+                for (l in vdjcLibrary.warnings) logger.warnUnfomatted(l)
             }
 
             // Printing citation notice, if specified for the library
             if (!vdjcLibrary.citations.isEmpty()) {
-                warn("Please cite:")
-                for (l in vdjcLibrary.citations) warn(l)
+                logger.warnUnfomatted("Please cite:")
+                for (l in vdjcLibrary.citations) logger.warnUnfomatted(l)
             }
 
             // Tags
@@ -610,15 +610,15 @@ object CommandAlign {
                 else {
                     if (gene.isFunctional) {
                         ++numberOfExcludedFGenes
-                        if (verbose) warn("WARNING: Functional gene " + gene.name + " excluded due to " + exclusionReason)
+                        if (logger.verbose) logger.warn("Functional gene " + gene.name + " excluded due to " + exclusionReason)
                     } else ++numberOfExcludedNFGenes
                 }
             }
-            if (numberOfExcludedFGenes > 0) warn(
-                "WARNING: $numberOfExcludedFGenes functional genes were excluded, " +
+            if (numberOfExcludedFGenes > 0) logger.warn(
+                "$numberOfExcludedFGenes functional genes were excluded, " +
                         "re-run with --verbose option to see the list of excluded genes and exclusion reason."
             )
-            if (verbose && numberOfExcludedNFGenes > 0) warn("WARNING: $numberOfExcludedNFGenes non-functional genes excluded.")
+            if (logger.verbose && numberOfExcludedNFGenes > 0) logger.warn("$numberOfExcludedNFGenes non-functional genes excluded.")
             if (aligner.vGenesToAlign.isEmpty()) throw ApplicationException(
                 "No V genes to align. Aborting execution. See warnings for more info " +
                         "(turn on verbose warnings by adding --verbose option)."
@@ -903,7 +903,7 @@ object CommandAlign {
                     )
 
                     name.matches(Regex("R\\d+")) -> readTags += name
-                    else -> warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
+                    else -> logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
                 }
             }
             tags

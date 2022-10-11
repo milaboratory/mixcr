@@ -18,6 +18,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.cli.ApplicationException
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.readList
 import io.repseq.core.VDJCGene
@@ -49,7 +50,7 @@ class SHMTreesReader(
             i.readFully(magicBytes)
             when (val magicString = String(magicBytes)) {
                 SHMTreesWriter.MAGIC -> {}
-                else -> throw RuntimeException(
+                else -> throw ApplicationException(
                     "Unsupported file format; .shmt file of version " + magicString +
                             " while you are running MiXCR " + SHMTreesWriter.MAGIC
                 )
