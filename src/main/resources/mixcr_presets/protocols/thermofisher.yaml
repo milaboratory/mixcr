@@ -8,7 +8,7 @@
     - type: SetSpecies
       species: hs
     - type: SetClonotypeAssemblingFeatures
-      features: "CDR3"
+      features: [ "CDR3" ]
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
@@ -31,7 +31,7 @@
     - type: SetSpecies
       species: hs
     - type: SetClonotypeAssemblingFeatures
-      features: "{CDR1Begin:FR4End}"
+      features: [ "{CDR1Begin:FR4End}" ]
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
@@ -54,7 +54,7 @@
     - type: SetSpecies
       species: hs
     - type: SetClonotypeAssemblingFeatures
-      features: "CDR3"
+      features: [ "CDR3" ]
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint

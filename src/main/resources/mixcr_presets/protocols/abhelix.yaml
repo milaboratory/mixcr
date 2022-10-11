@@ -36,7 +36,7 @@
       floating: true
       geneType: J
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
   align:
     inheritFrom: align_kaligner2_4.0
 
@@ -76,4 +76,4 @@
       floating: true
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
