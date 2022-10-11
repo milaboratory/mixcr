@@ -36,9 +36,11 @@ class CommandExportAlignmentsForClones : AbstractMiXCRCommand() {
 
     @CommandLine.Option(names = ["--id"], description = ["[cloneId1 [cloneId2 [cloneId3]]]"], arity = "0..*")
     var ids: List<Int> = mutableListOf()
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles: List<String>
+        get() = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles: List<String>
+        get() = listOf(out)
 
     private val cloneIds: IntArray
         get() = ids.sorted().toIntArray()

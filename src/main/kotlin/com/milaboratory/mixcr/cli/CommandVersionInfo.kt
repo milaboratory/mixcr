@@ -34,9 +34,11 @@ class CommandVersionInfo : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["input_file"])
     lateinit var inputFile: Path
 
-    override fun getInputFiles(): List<String> = listOf(inputFile.toString())
+    override val inputFiles: List<String>
+        get() = listOf(inputFile.toString())
 
-    override fun getOutputFiles(): List<String> = emptyList()
+    override val outputFiles: List<String>
+        get() = emptyList()
 
     override fun run0() {
         when (IOUtil.extractFileType(inputFile)) {

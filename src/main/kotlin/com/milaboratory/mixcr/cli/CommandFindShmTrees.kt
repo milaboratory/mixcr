@@ -23,15 +23,31 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
 import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.trees.*
+import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
+import com.milaboratory.mixcr.trees.CloneWithDatasetId
+import com.milaboratory.mixcr.trees.MutationsUtils
+import com.milaboratory.mixcr.trees.SHMTreeBuilder
+import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
+import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
+import com.milaboratory.mixcr.trees.SHMTreeResult
+import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
+import com.milaboratory.mixcr.trees.ScoringSet
+import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.util.*
+import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.ProgressAndStage
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -60,13 +76,15 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     @Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+            if (value <= 0) throw ValidationException("-t / --threads must be positive")
             field = value
         }
 
-    public override fun getInputFiles(): List<String> = inOut.dropLast(1).map { it.toString() }
+    public override val inputFiles: List<String>
+        get() = inOut.dropLast(1).map { it.toString() }
 
-    override fun getOutputFiles(): List<String> = inOut.takeLast(1).map { it.toString() }
+    override val outputFiles: List<String>
+        get() = inOut.takeLast(1).map { it.toString() }
 
     private val clnsFileNames: List<Path>
         get() = inOut.dropLast(1)
@@ -131,10 +149,10 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
         val shmTreeBuilderParametersName = "default"
         var result: SHMTreeBuilderParameters = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
-            ?: throwValidationExceptionKotlin("Unknown parameters: $shmTreeBuilderParametersName")
+            ?: throw ValidationException("Unknown parameters: $shmTreeBuilderParametersName")
         if (overrides.isNotEmpty()) {
             result = JsonOverrider.override(result, SHMTreeBuilderParameters::class.java, overrides)
-                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
+                ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
         result
     }
@@ -147,26 +165,26 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     override fun validate() {
         super.validate()
         if (!outputTreesPath.extension.endsWith(shmFileExtension)) {
-            throwValidationExceptionKotlin("Output file should have extension $shmFileExtension. Given $outputTreesPath")
+            throw ValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
         }
         if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
-            throwValidationExceptionKotlin("First step must be BuildingInitialTrees")
+            throw ValidationException("First step must be BuildingInitialTrees")
         }
         if (buildFrom != null) {
             if (!buildFrom!!.endsWith(".tsv")) {
-                throwValidationExceptionKotlin("--build-from must be .tsv, got $buildFrom")
+                throw ValidationException("--build-from must be .tsv, got $buildFrom")
             }
             if (VGenesToFilter.isNotEmpty()) {
-                throwValidationExceptionKotlin("--v-gene-names must be empty if --build-from is specified")
+                throw ValidationException("--v-gene-names must be empty if --build-from is specified")
             }
             if (JGenesToFilter.isNotEmpty()) {
-                throwValidationExceptionKotlin("--j-gene-names must be empty if --build-from is specified")
+                throw ValidationException("--j-gene-names must be empty if --build-from is specified")
             }
             if (CDR3LengthToFilter.isNotEmpty()) {
-                throwValidationExceptionKotlin("--cdr3-lengths must be empty if --build-from is specified")
+                throw ValidationException("--cdr3-lengths must be empty if --build-from is specified")
             }
             if (minCountForClone != null) {
-                throwValidationExceptionKotlin("--min-count must be empty if --build-from is specified")
+                throw ValidationException("--min-count must be empty if --build-from is specified")
             }
             if (debugDir != null) {
                 println("WARN: argument --debugDir will not be used with --build-from")

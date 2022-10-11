@@ -77,9 +77,11 @@ class CommandClonesDiff : AbstractMiXCRCommand() {
     //public String geneFeatureToMatch = "CDR3";
     //@Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for match")
     //public int hitsCompareLevel = 1;
-    override fun getInputFiles(): List<String> = listOf(in1, in2)
+    override val inputFiles: List<String>
+        get() = listOf(in1, in2)
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(report)
+    override val outputFiles: List<String>
+        get() = listOfNotNull(report)
 
     override fun run0() {
         (report?.let { PrintStream(it) } ?: System.out).use { report ->
@@ -137,7 +139,7 @@ class CommandClonesDiff : AbstractMiXCRCommand() {
                             "using -OseparateBy${letter.uppercaseChar()}=true option, please add -$letter option to this command."
                     else -> ""
                 }
-                throwValidationException(error)
+                throw ValidationException(error)
             }
             cRec.clones[i] = clone
         }

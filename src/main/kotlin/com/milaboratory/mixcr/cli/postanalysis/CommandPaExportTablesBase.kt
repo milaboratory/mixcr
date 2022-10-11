@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.mixcr.cli.ValidationException
 import picocli.CommandLine
 import java.nio.file.Files
 import java.nio.file.Path
@@ -19,9 +20,10 @@ import java.nio.file.Paths
 abstract class CommandPaExportTablesBase : CommandPaExport {
     @CommandLine.Parameters(description = ["Path for output files"], index = "1", defaultValue = "path/table.tsv")
     lateinit var out: String
-    override fun getOutputFiles(): List<String> {
-        return emptyList() // output will be always overriden
-    }
+    override val outputFiles: List<String>
+        get() {
+            return emptyList() // output will be always overriden
+        }
 
     constructor()
 
@@ -32,7 +34,7 @@ abstract class CommandPaExportTablesBase : CommandPaExport {
     override fun validate() {
         super.validate()
         if (!out.endsWith(".tsv") && !out.endsWith(".csv"))
-            throwValidationExceptionKotlin("Output file must have .tsv or .csv extension")
+            throw ValidationException("Output file must have .tsv or .csv extension")
     }
 
     protected fun outDir(): Path = Paths.get(out).toAbsolutePath().parent

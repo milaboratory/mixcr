@@ -31,7 +31,9 @@ import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParamet
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 
 object CommandAssemblePartial {
     const val COMMAND_NAME = "assemblePartial"
@@ -67,7 +69,7 @@ object CommandAssemblePartial {
         @Option(names = ["-O"], description = ["Overrides default parameter values."])
         private var overrides: Map<String, String> = mutableMapOf()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::assemblePartial) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemblePartial) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::overlappedOnly setIfTrue overlappedOnly
                 Params::dropPartial setIfTrue dropPartial
@@ -96,9 +98,11 @@ object CommandAssemblePartial {
         @Option(description = [JSON_REPORT], names = ["-j", "--json-report"])
         var jsonReport: String? = null
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles: List<String>
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOf(outputFile)
+        override val outputFiles: List<String>
+            get() = listOf(outputFile)
 
         override fun run0() {
             // Saving initial timestamp

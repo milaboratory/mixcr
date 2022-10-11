@@ -36,9 +36,11 @@ class CommandMergeAlignments : AbstractMiXCRCommand() {
     )
     var input: List<String> = mutableListOf()
 
-    public override fun getInputFiles(): List<String> = input.subList(0, input.size - 1)
+    public override val inputFiles: List<String>
+        get() = input.subList(0, input.size - 1)
 
-    override fun getOutputFiles(): List<String> = listOf(input.last())
+    override val outputFiles: List<String>
+        get() = listOf(input.last())
 
     override fun run0() {
         MultiReader(inputFiles).use { reader ->

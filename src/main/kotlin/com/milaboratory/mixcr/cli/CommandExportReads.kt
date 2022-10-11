@@ -31,9 +31,11 @@ class CommandExportReads : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]"], arity = "1..3")
     var inOut: List<String> = mutableListOf()
 
-    override fun getInputFiles(): List<String> = listOf(inOut.first())
+    override val inputFiles: List<String>
+        get() = listOf(inOut.first())
 
-    public override fun getOutputFiles(): List<String> = inOut.subList(1, inOut.size)
+    public override val outputFiles: List<String>
+        get() = inOut.subList(1, inOut.size)
 
     override fun run0() {
         VDJCAlignmentsReader(inputFiles.first()).use { reader ->
@@ -41,17 +43,17 @@ class CommandExportReads : AbstractMiXCRCommand() {
                 SmartProgressReporter.startProgressReport("Extracting reads", reader, System.err)
                 reader.forEach { alignments ->
                     val reads = alignments.originalReads
-                        ?: throwExecutionExceptionKotlin("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).")
+                        ?: throw ApplicationException("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).")
                     for (read in reads) {
                         when (writer) {
                             is PairedFastqWriter -> {
                                 if (read.numberOfReads() == 1)
-                                    throwExecutionExceptionKotlin("VDJCA file contains single-end reads, but two output files are specified.")
+                                    throw ValidationException("VDJCA file contains single-end reads, but two output files are specified.")
                                 writer.write(read as PairedRead)
                             }
                             is SingleFastqWriter -> {
                                 if (read.numberOfReads() == 2)
-                                    throwExecutionExceptionKotlin("VDJCA file contains paired-end reads, but only one / no output file is specified.")
+                                    throw ValidationException("VDJCA file contains paired-end reads, but only one / no output file is specified.")
                                 writer.write(read as SingleRead)
                             }
                         }

@@ -97,7 +97,7 @@ repositories {
     }
 }
 
-val milibVersion = "2.0.0-26-optimizations"
+val milibVersion = "2.0.0-28-remove_picocli"
 val repseqioVersion = "1.4.1-28-master"
 val miplotsVersion = "1.0.0-28-master"
 val mitoolVersion = "1.1.0-95-format"

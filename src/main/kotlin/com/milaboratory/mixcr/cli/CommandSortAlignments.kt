@@ -42,9 +42,11 @@ class CommandSortAlignments : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["alignments.sorted.vdjca"], index = "1")
     lateinit var out: String
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles: List<String>
+        get() = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles: List<String>
+        get() = listOf(out)
 
     override fun run0() {
         VDJCAlignmentsReader(`in`).use { reader ->

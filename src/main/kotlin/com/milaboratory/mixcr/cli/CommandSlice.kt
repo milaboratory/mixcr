@@ -97,9 +97,11 @@ class CommandSlice : AbstractMiXCRCommand() {
         result.sorted()
     }
 
-    override fun getInputFiles(): List<String> = listOf(input.toString())
+    override val inputFiles: List<String>
+        get() = listOf(input.toString())
 
-    override fun getOutputFiles(): List<String> = listOf(out.toString())
+    override val outputFiles: List<String>
+        get() = listOf(out.toString())
 
     override fun run0() {
         when (IOUtil.extractFileType(input)) {

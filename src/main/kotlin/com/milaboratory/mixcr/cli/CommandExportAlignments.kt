@@ -78,7 +78,7 @@ object CommandExportAlignments {
         )
         private var noHeader = false
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::exportAlignments) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportAlignments) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::noHeader setIfTrue noHeader
@@ -100,9 +100,11 @@ object CommandExportAlignments {
         @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
         var outputFile: Path? = null
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles: List<String>
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOfNotNull(outputFile).map { it.toString() }
+        override val outputFiles: List<String>
+            get() = listOfNotNull(outputFile).map { it.toString() }
 
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->

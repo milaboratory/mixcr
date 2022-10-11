@@ -15,6 +15,7 @@ import com.milaboratory.mitool.helpers.drainToAndClose
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
@@ -59,15 +60,17 @@ class CommandDownsample : AbstractMiXCRCommand() {
     private val outPath: Path?
         get() = out?.let { Paths.get(it) }
 
-    override fun getInputFiles(): List<String> = `in`
+    override val inputFiles: List<String>
+        get() = `in`
 
-    override fun getOutputFiles(): List<String> = inputFiles.map { output(it).toString() }
+    override val outputFiles: List<String>
+        get() = inputFiles.map { output(it).toString() }
 
     override fun validate() {
         super.validate()
         summary?.let { summary ->
             if (!summary.endsWith(".tsv") && !summary.endsWith(".csv"))
-                throwValidationExceptionKotlin("summary table should ends with .csv/.tsv")
+                throw ValidationException("summary table should ends with .csv/.tsv")
         }
     }
 

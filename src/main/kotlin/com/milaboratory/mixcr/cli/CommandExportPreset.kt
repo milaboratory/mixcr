@@ -16,7 +16,9 @@ import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
 import java.io.File
 
 object CommandExportPreset {
@@ -38,9 +40,9 @@ object CommandExportPreset {
         private val presetName get() = inOut[0]
         private val outputFile get() = if (inOut.size == 1) null else inOut[1]
 
-        override fun getInputFiles() = mutableListOf<String>()
+        override val inputFiles get() = mutableListOf<String>()
 
-        override fun getOutputFiles() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
+        override val outputFiles get() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
 
         @ArgGroup(validate = false, heading = "Analysis mix-ins")
         var mixins: AllMiXCRMixins? = null
@@ -58,7 +60,7 @@ object CommandExportPreset {
         }
 
         override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
-            get() = object : MiXCRParamsResolver<Unit>(this, MiXCRParamsBundle::exportPreset) {
+            get() = object : MiXCRParamsResolver<Unit>(MiXCRParamsBundle::exportPreset) {
                 override fun POverridesBuilderOps<Unit>.paramsOverrides() {
                 }
             }

@@ -26,7 +26,11 @@ import com.milaboratory.mixcr.assembler.CloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
-import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.ClnAWriter
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.util.ArraysUtils
 import com.milaboratory.util.ReportUtil
@@ -35,7 +39,9 @@ import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.util.*
 
 object CommandAssemble {
@@ -89,7 +95,7 @@ object CommandAssemble {
         )
         private var dontInferThreshold = false
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::assemble) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemble) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::clnaOutput setIfTrue isClnaOutput
                 Params::cellLevel setIfTrue cellLevel
@@ -147,9 +153,11 @@ object CommandAssemble {
         @Option(description = ["Show buffer statistics."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles: List<String>
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOf(outputFile)
+        override val outputFiles: List<String>
+            get() = listOf(outputFile)
 
         /**
          * Assemble report

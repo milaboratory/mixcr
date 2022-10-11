@@ -107,7 +107,7 @@ object CommandExportClones {
         @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         private var splitByTag: String? = null
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::exportClones) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::filterOutOfFrames setIfTrue filterOutOfFrames
@@ -132,9 +132,11 @@ object CommandExportClones {
         @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
         var outputFile: Path? = null
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles: List<String>
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOfNotNull(outputFile).map { it.toString() }
+        override val outputFiles: List<String>
+            get() = listOfNotNull(outputFile).map { it.toString() }
 
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())

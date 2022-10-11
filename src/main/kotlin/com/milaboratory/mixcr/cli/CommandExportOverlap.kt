@@ -27,8 +27,10 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Model
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -57,9 +59,11 @@ class CommandExportOverlap : AbstractMiXCRCommand() {
     @Option(description = ["Overlap criteria. Default CDR3|AA|V|J"], names = ["--criteria"])
     var overlapCriteria = "CDR3|AA|V|J"
 
-    public override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
+    public override val inputFiles: List<String>
+        get() = inOut.subList(0, inOut.size - 1)
 
-    override fun getOutputFiles(): List<String> = listOf(inOut.last())
+    override val outputFiles: List<String>
+        get() = listOf(inOut.last())
 
     private fun getOut(chains: Chains): Path {
         val out = Paths.get(inOut.last()).toAbsolutePath()

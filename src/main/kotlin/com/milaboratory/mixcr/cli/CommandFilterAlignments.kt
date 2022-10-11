@@ -26,7 +26,9 @@ import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 
 @Command(
     name = CommandFilterAlignments.COMMAND_NAME,
@@ -65,7 +67,7 @@ class CommandFilterAlignments : AbstractMiXCRCommand() {
     @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
     var limit: Long = 0
         set(value) {
-            if (value <= 0) throwValidationException("-n / --limit must be positive.")
+            if (value <= 0) throw ValidationException("-n / --limit must be positive.")
             field = value
         }
 
@@ -76,9 +78,11 @@ class CommandFilterAlignments : AbstractMiXCRCommand() {
             field = value
         }
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles: List<String>
+        get() = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles: List<String>
+        get() = listOf(out)
 
     private val readIds: TLongHashSet?
         get() = ids?.let { TLongHashSet(it) }

@@ -78,9 +78,11 @@ class CommandAlignmentsDiff : AbstractMiXCRCommand() {
         GeneFeature.parse(geneFeatureToMatch)
     }
 
-    override fun getInputFiles(): List<String> = listOf(in1, in2)
+    override val inputFiles: List<String>
+        get() = listOf(in1, in2)
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(report)
+    override val outputFiles: List<String>
+        get() = listOfNotNull(report)
 
     override fun run0() {
         VDJCAlignmentsReader(in1).use { reader1 ->

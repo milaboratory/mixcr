@@ -12,12 +12,23 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.*
+import com.milaboratory.mixcr.AnyMiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRPipeline
 import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteExisting
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 
 object CommandAnalyze {
     const val COMMAND_NAME = "analyze"
@@ -82,13 +93,11 @@ object CommandAnalyze {
         // the following two lines are to implement the AbstractMiXCRCommand interfaces,
         // analyze is an exception, and it not fully use the functionality of the AbstractMiXCRCommand
         // TODO maybe it is a good idea to restructure the CLI classes to make "analyze" fit more naturally in the hierarchy
-        override fun getInputFiles() = emptyList<String>() // inFiles
-        override fun getOutputFiles() = emptyList<String>()
+        override val inputFiles get() = emptyList<String>()
+        override val outputFiles get() = emptyList<String>()
 
         /** Provides access to presets, mixins application, etc.. */
-        private val paramsResolver = object : MiXCRParamsResolver<MiXCRPipeline>(
-            this, MiXCRParamsBundle::pipeline
-        ) {
+        private val paramsResolver = object : MiXCRParamsResolver<MiXCRPipeline>(MiXCRParamsBundle::pipeline) {
             override fun POverridesBuilderOps<MiXCRPipeline>.paramsOverrides() {}
         }
 
@@ -118,7 +127,7 @@ object CommandAnalyze {
 
             // Creating execution plan
             if (pipeline[0] != MiXCRCommand.align)
-                throwExecutionExceptionKotlin("Pipeline must stat from the align action.")
+                throw ValidationException("Pipeline must stat from the align action.")
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
                 !noReports, !noJsonReports,

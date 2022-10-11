@@ -30,9 +30,11 @@ class CommandExportQcCoverage : AbstractMiXCRCommand() {
 
     @CommandLine.Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])
     var showAlignmentBoundaries = false
-    override fun getInputFiles(): List<String> = `in`.subList(0, `in`.size - 1)
+    override val inputFiles: List<String>
+        get() = `in`.subList(0, `in`.size - 1)
 
-    override fun getOutputFiles(): List<String> = listOf(`in`.last())
+    override val outputFiles: List<String>
+        get() = listOf(`in`.last())
 
     override fun run0() {
         val inputFiles = inputFiles.map { Paths.get(it) }

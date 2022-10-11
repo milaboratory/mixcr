@@ -46,7 +46,8 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     )
     var onlyObserved: Boolean = false
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(out?.toString())
+    override val outputFiles: List<String>
+        get() = listOfNotNull(out?.toString())
 
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()

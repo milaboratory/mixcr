@@ -46,9 +46,11 @@ class CommandBAM2fastq : AbstractMiXCRCommand() {
     @CommandLine.Option(names = ["--keep-wildcards"], description = ["Keep sequences with wildcards in the output"])
     var keepWildcards = false
 
-    override fun getInputFiles(): List<String> = bamFiles.toList()
+    override val inputFiles: List<String>
+        get() = bamFiles.toList()
 
-    override fun getOutputFiles(): List<String> = listOf(fastq1, fastq2, fastqUnpaired)
+    override val outputFiles: List<String>
+        get() = listOf(fastq1, fastq2, fastqUnpaired)
 
     override fun run0() {
         BAMReader(bamFiles, dropNonVDJ, !keepWildcards).use { converter ->

@@ -11,15 +11,13 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual.CDR3Metrics
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual.Diversity
-import com.milaboratory.util.GlobalObjectMappers
 import picocli.CommandLine
-import java.io.File
 import java.io.IOException
 import java.nio.file.Paths
 
@@ -33,15 +31,17 @@ class CommandPaListMetrics : AbstractMiXCRCommand() {
     @CommandLine.Parameters(description = ["Input file with PA results"], index = "0")
     lateinit var `in`: String
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles: List<String>
+        get() = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = emptyList()
+    override val outputFiles: List<String>
+        get() = emptyList()
 
     override fun run0() {
         val paResult: PaResult = try {
             PaResult.readJson(Paths.get(`in`))
         } catch (e: IOException) {
-            throwValidationExceptionKotlin("Corrupted PA file.")
+            throw ValidationException("Corrupted PA file.")
         }
         val result = paResult.results.first()
         println("CDR3 metrics:")

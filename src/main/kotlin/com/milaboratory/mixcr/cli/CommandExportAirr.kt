@@ -92,9 +92,11 @@ class CommandExportAirr : AbstractMiXCRCommand() {
 
     @CommandLine.Parameters(index = "1", description = ["output.tsv"], arity = "0..1")
     var out: String? = null
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles: List<String>
+        get() = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(out)
+    override val outputFiles: List<String>
+        get() = listOfNotNull(out)
 
     private val fileType: MiXCRFileType by lazy {
         IOUtil.extractFileType(Paths.get(`in`))

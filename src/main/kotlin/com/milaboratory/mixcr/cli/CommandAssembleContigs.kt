@@ -88,7 +88,7 @@ object CommandAssembleContigs {
 
         protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::assembleContigs) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assembleContigs) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::ignoreTags setIfTrue ignoreTags
                 Params::parameters jsonOverrideWith overrides
@@ -97,7 +97,7 @@ object CommandAssembleContigs {
             override fun validateParams(params: Params) {
                 if (params.parameters.postFiltering != PostFiltering.NoFiltering) {
                     if (params.parameters.assemblingRegions == null) {
-                        throwValidationExceptionKotlin("assemblingRegion must be set if postFiltering is not NoFiltering")
+                        throw ValidationException("assemblingRegion must be set if postFiltering is not NoFiltering")
                     }
                 }
             }
@@ -120,7 +120,7 @@ object CommandAssembleContigs {
         @Option(description = ["Processing threads"], names = ["-t", "--threads"])
         var threads = Runtime.getRuntime().availableProcessors()
             set(value) {
-                if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+                if (value <= 0) throw ValidationException("-t / --threads must be positive")
                 field = value
             }
 
@@ -133,9 +133,9 @@ object CommandAssembleContigs {
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
         var jsonReport: String? = null
 
-        override fun getInputFiles() = listOf(inputFile)
+        override val inputFiles get() = listOf(inputFile)
 
-        override fun getOutputFiles() = listOf(outputFile)
+        override val outputFiles get() = listOf(outputFile)
 
         override fun run0() {
             val beginTimestamp = System.currentTimeMillis()

@@ -53,9 +53,11 @@ class CommandSortClones : AbstractMiXCRCommand() {
     )
     var useSystemTemp = false
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles: List<String>
+        get() = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles: List<String>
+        get() = listOf(out)
 
     override fun run0() {
         when (IOUtil.extractFileType(Paths.get(`in`))) {
@@ -90,8 +92,8 @@ class CommandSortClones : AbstractMiXCRCommand() {
                     writer.writeAlignmentsAndIndex()
                 }
             }
-            VDJCA -> throwValidationExceptionKotlin("File type is not supported by this command")
-            SHMT -> throwValidationExceptionKotlin("File type is not supported by this command")
+            VDJCA -> throw ValidationException("File type is not supported by this command")
+            SHMT -> throw ValidationException("File type is not supported by this command")
         }.exhaustive
     }
 

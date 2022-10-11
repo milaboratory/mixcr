@@ -22,9 +22,11 @@ import picocli.CommandLine
     description = ["List all available library by scanning all library search paths."]
 )
 class CommandListLibraries : AbstractMiXCRCommand() {
-    override fun getInputFiles(): List<String> = emptyList()
+    override val inputFiles: List<String>
+        get() = emptyList()
 
-    override fun getOutputFiles(): List<String> = emptyList()
+    override val outputFiles: List<String>
+        get() = emptyList()
 
     override fun run0() {
         VDJCLibraryRegistry.getDefault().loadAllLibraries()

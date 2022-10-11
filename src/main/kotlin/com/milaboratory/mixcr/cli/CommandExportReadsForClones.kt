@@ -48,9 +48,11 @@ class CommandExportReadsForClones : AbstractMiXCRCommand() {
 
     @CommandLine.Option(names = ["--id"], description = ["[cloneId1 [cloneId2 [cloneId3]]]"], arity = "0..*")
     var ids: List<Int> = mutableListOf()
-    public override fun getInputFiles(): List<String> = listOf(`in`)
+    public override val inputFiles: List<String>
+        get() = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles: List<String>
+        get() = listOf(out)
 
     @CommandLine.Option(
         description = ["Create separate files for each clone. File or pair of '_R1'/'_R2' files, with '_clnN' suffix, " +
@@ -64,11 +66,10 @@ class CommandExportReadsForClones : AbstractMiXCRCommand() {
         ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             val firstAlignment: VDJCAlignments = clna.readAllAlignments()
                 .use { dummyP -> dummyP.take() } ?: return
-            if (firstAlignment.originalReads == null)
-                throwValidationException(
-                    "Error: original reads were not saved in original .vdjca file: " +
-                            "re-run 'align' with '-OsaveOriginalReads=true' option."
-                )
+            ValidationException.requireNotNull(firstAlignment.originalReads) {
+                "Error: original reads were not saved in original .vdjca file: " +
+                        "re-run 'align' with '-OsaveOriginalReads=true' option."
+            }
             val cloneIds: () -> IntStream = {
                 when {
                     cloneIds.isEmpty() -> IntStream.range(0, clna.numberOfClones())

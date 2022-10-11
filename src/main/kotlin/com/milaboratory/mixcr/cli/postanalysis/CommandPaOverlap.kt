@@ -15,6 +15,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneReaderMerger
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
@@ -52,7 +53,7 @@ class CommandPaOverlap : CommandPa() {
         when {
             overrides.isEmpty() -> result
             else -> JsonOverrider.override(result, PostanalysisParametersOverlap::class.java, overrides)
-                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
+                ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
     }
 

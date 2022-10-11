@@ -24,8 +24,9 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
-import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
@@ -98,9 +99,11 @@ class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
     @Option(description = ["List of clone ids to export"], names = ["--clone-ids"])
     var cloneIds: List<Long> = mutableListOf()
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles: List<String>
+        get() = listOf(`in`)
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(out)
+    override val outputFiles: List<String>
+        get() = listOfNotNull(out)
 
     private fun getReadIds(): TLongHashSet? = if (readIds.isEmpty()) null else TLongHashSet(readIds)
 

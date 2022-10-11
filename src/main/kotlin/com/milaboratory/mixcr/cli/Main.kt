@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.cli
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
-import com.milaboratory.cli.ValidationException
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter
@@ -49,7 +48,7 @@ object Main {
     private var initialized = false
 
     @JvmStatic
-    fun main(args: Array<String>) {
+    fun main(vararg args: String) {
         val versionInfo = VersionInfo.getVersionInfoForArtifact("mixcr")
         MiXCRMain.mixcrArtefactName = "mixcr." +
                 versionInfo.version + "." +
@@ -59,47 +58,11 @@ object Main {
         MiXCRMain.main(*args)
         MiXCRMain.lm.reportFeature("app", "mixcr")
         MiXCRMain.lm.reportFeature("mixcr.version", versionInfo.version)
-        if (args.size >= 1) MiXCRMain.lm.reportFeature("mixcr.subcommand1", args[0])
+        if (args.isNotEmpty()) MiXCRMain.lm.reportFeature("mixcr.subcommand1", args[0])
         if (args.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", args[1])
-        GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule { }) }
+        GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
-        handleParseResult(parseArgs(*args).parseResult, args)
-    }
-
-    fun handleParseResult(parseResult: CommandLine.ParseResult?, args: Array<String>?) {
-        val exHandler = ExceptionHandler<Any?>()
-        exHandler.andExit(1)
-        val runLast: CommandLine.RunLast = object : CommandLine.RunLast() {
-            @Throws(CommandLine.ExecutionException::class)
-            override fun handle(parseResult: CommandLine.ParseResult): List<Any> {
-                val parsedCommands = parseResult.asCommandLineList()
-                val commandLine = parsedCommands[parsedCommands.size - 1]
-                val command = commandLine.getCommand<Any>()
-                return try {
-                    if (command is CommandLine.Model.CommandSpec && command.userObject() is Runnable) {
-                        (command.userObject() as Runnable).run()
-                        return ArrayList()
-                    }
-                    super.handle(parseResult)
-                } catch (ex: CommandLine.ParameterException) {
-                    throw ex
-                } catch (ex: CommandLine.ExecutionException) {
-                    throw ex
-                } catch (ex: Exception) {
-                    throw CommandLine.ExecutionException(
-                        commandLine,
-                        "Error while running command ($command): $ex", ex
-                    )
-                }
-            }
-        }
-        try {
-            runLast.handleParseResult(parseResult)
-        } catch (ex: CommandLine.ParameterException) {
-            exHandler.handleParseException(ex, args!!)
-        } catch (ex: CommandLine.ExecutionException) {
-            exHandler.handleExecutionException(ex, parseResult)
-        }
+        mkCmd().execute(*args)
     }
 
     private fun assertionsDisabled(): Boolean {
@@ -107,7 +70,7 @@ object Main {
     }
 
     @JvmStatic
-    fun mkCmd(): CommandLine {
+    private fun mkCmd(): CommandLine {
         System.setProperty("picocli.usage.width", "100")
 
         // Getting command string if executed from script
@@ -246,31 +209,58 @@ object Main {
                 CommandLine.Model.CommandSpec.forAnnotatedObject(CommandExportQcCoverage::class.java)
             )
         cmd.separator = " "
+        val defaultParameterExceptionHandler = cmd.parameterExceptionHandler
+        cmd.setParameterExceptionHandler { ex, args ->
+            when (val cause = ex.cause) {
+                is ValidationException -> ex.commandLine.handleValidationException(cause)
+                else -> defaultParameterExceptionHandler.handleParseException(ex, args)
+            }
+        }
+        cmd.setExecutionExceptionHandler { ex, commandLine, _ ->
+            when (ex) {
+                is ValidationException -> commandLine.handleValidationException(ex)
+                is ApplicationException -> {
+                    commandLine.printErrorMessage(ex.message)
+                    if (ex.printHelp) {
+                        commandLine.printHelp()
+                    }
+                    commandLine.commandSpec.exitCodeOnExecutionException()
+                }
+                else -> throw CommandLine.ExecutionException(
+                    commandLine,
+                    "Error while running command ${commandLine.commandName} $ex", ex
+                )
+            }
+        }
+
         return cmd
+    }
+
+    private fun CommandLine.handleValidationException(exception: ValidationException): Int {
+        printErrorMessage(exception.message)
+        if (exception.printHelp) {
+            printHelp()
+        }
+        return commandSpec.exitCodeOnInvalidInput()
+    }
+
+    private fun CommandLine.printHelp() {
+        usage(err, colorScheme)
+    }
+
+    private fun CommandLine.printErrorMessage(message: String) {
+        err.println(colorScheme.errorText(message))
     }
 
     @JvmStatic
-    fun parseArgs(vararg args: String?): CommandLine {
-        var args = args
-        if (args.size == 0) args = arrayOf<String?>("help")
-        val exHandler: ExceptionHandler<*> = ExceptionHandler<Any>()
-        exHandler.andExit(1)
+    fun parseArgs(vararg args: String): CommandLine {
+        @Suppress("UNCHECKED_CAST")
+        val resultArgs = when {
+            args.isEmpty() -> arrayOf("help")
+            else -> args as Array<String>
+        }
         val cmd = mkCmd()
-        try {
-            cmd.parseArgs(*args)
-        } catch (ex: CommandLine.ParameterException) {
-            exHandler.handleParseException(ex, args as Array<String>)
-        }
+        cmd.parseArgs(*resultArgs)
         return cmd
-    }
-
-    class ExceptionHandler<R> : CommandLine.DefaultExceptionHandler<R?>() {
-        override fun handleParseException(ex: CommandLine.ParameterException, args: Array<String>): R? {
-            if (ex is ValidationException && !ex.printHelp) {
-                System.err.println(ex.message)
-                return returnResultOrExit(null)
-            }
-            return super.handleParseException(ex, args)
-        }
     }
 }

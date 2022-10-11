@@ -46,7 +46,8 @@ abstract class CommandPaExport : AbstractMiXCRCommand {
         this.paResultFromConstructor = paResult
     }
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles: List<String>
+        get() = listOf(`in`)
 
     /**
      * Get full PA result

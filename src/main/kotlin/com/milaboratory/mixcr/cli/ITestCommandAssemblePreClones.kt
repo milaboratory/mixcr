@@ -24,58 +24,62 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
 import java.nio.file.Paths
 import java.util.*
 
-@CommandLine.Command(name = "itestAssemblePreClones", separator = " ", hidden = true)
+@Command(name = "itestAssemblePreClones", separator = " ", hidden = true)
 class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(arity = "4", description = ["input_file output_file output_clones output_alignments"])
-    var files: List<String>? = null
+    @Parameters(arity = "4", description = ["input_file output_file output_clones output_alignments"])
+    lateinit var files: List<String>
 
-    @CommandLine.Option(
+    @Option(
         description = ["Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes"],
         names = ["--cell-level"]
     )
     var cellLevel = false
 
-    @CommandLine.Option(
+    @Option(
         description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
         names = ["--use-system-temp"]
     )
     var useSystemTemp = false
 
-    @CommandLine.Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
+    @Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
     private val preCloneAssemblerOverrides: Map<String, String> = HashMap()
 
-    override fun getInputFiles(): List<String> = files!!.subList(0, 1)
+    override val inputFiles: List<String>
+        get() = files.subList(0, 1)
 
-    override fun getOutputFiles(): List<String> = files!!.subList(1, 3)
-
+    override val outputFiles: List<String>
+        get() = files.subList(1, 3)
 
     override fun run0() {
         var params = PreCloneAssemblerParameters.getDefaultParameters(cellLevel)
-        if (!preCloneAssemblerOverrides.isEmpty()) {
+        if (preCloneAssemblerOverrides.isNotEmpty()) {
             params = JsonOverrider.override(
                 params,
                 PreCloneAssemblerParameters::class.java,
                 preCloneAssemblerOverrides
             )
-            if (params == null) throwValidationException("Failed to override some pre-clone assembler parameters: $preCloneAssemblerOverrides")
+            if (params == null)
+                throw ValidationException("Failed to override some pre-clone assembler parameters: $preCloneAssemblerOverrides")
         }
         var totalAlignments: Long
-        val tmp = TempFileManager.smartTempDestination(files!![1], "", useSystemTemp)
+        val tmp = TempFileManager.smartTempDestination(files[1], "", useSystemTemp)
         var cdr3Hash = 0
-        VDJCAlignmentsReader(files!![0]).use { alignmentsReader ->
+        VDJCAlignmentsReader(files[0]).use { alignmentsReader ->
             totalAlignments = alignmentsReader.numberOfAlignments
             val assemblerRunner = PreCloneAssemblerRunner(
                 alignmentsReader,
                 if (cellLevel) TagType.Cell else TagType.Molecule, arrayOf(GeneFeature.CDR3),
                 params,
-                Paths.get(files!![1]),
+                Paths.get(files[1]),
                 tmp
             )
             SmartProgressReporter.startProgressReport(assemblerRunner)
@@ -87,17 +91,17 @@ class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
                 cdr3Hash += Objects.hashCode(al.getFeature(GeneFeature.CDR3))
                 val tagKey = al.tagCount.asKeyPrefixOrError(alignmentsReader.header.tagsInfo.getSortingLevel())
                 if (tagKey != prevTagKey) {
-                    if (!tagTuples.add(tagKey)) throwExecutionException("broken sorting: $tagKey")
+                    if (!tagTuples.add(tagKey)) throw ApplicationException("broken sorting: $tagKey")
                     prevTagKey = tagKey
                 }
             }
         }
-        FilePreCloneReader(Paths.get(files!![1])).use { reader ->
+        FilePreCloneReader(Paths.get(files[1])).use { reader ->
             val totalClones = reader.numberOfClones
 
             // Checking and exporting alignments
             var numberOfAlignmentsCheck: Long = 0
-            PrintStream(BufferedOutputStream(FileOutputStream(files!![2]), 1 shl 20)).use { ps ->
+            PrintStream(BufferedOutputStream(FileOutputStream(files[2]), 1 shl 20)).use { ps ->
                 ps.print("alignmentId\t")
                 for (ti in reader.tagsInfo) ps.print(ti.name + "\t")
                 ps.println("readIndex\tcloneId\tcdr3\tcdr3_qual\tbestV\tbestJ")
@@ -127,23 +131,21 @@ class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
                     }
                 }
             }
-            if (cdr3Hash != 0) throwExecutionException("inconsistent alignment composition between initial file and pre-clone container")
+            if (cdr3Hash != 0) throw ApplicationException("inconsistent alignment composition between initial file and pre-clone container")
             if (numberOfAlignmentsCheck != totalAlignments) {
-                throwExecutionException(
-                    "numberOfAlignmentsCheck != totalAlignments (" +
-                            numberOfAlignmentsCheck + " != " + totalAlignments + ")"
+                throw ApplicationException(
+                    "numberOfAlignmentsCheck != totalAlignments ($numberOfAlignmentsCheck != $totalAlignments)"
                 )
             }
             for (al in CUtils.it(reader.readAssignedAlignments())) numberOfAlignmentsCheck--
             for (al in CUtils.it(reader.readUnassignedAlignments())) numberOfAlignmentsCheck--
-            if (numberOfAlignmentsCheck != 0L) throwExecutionException(
-                "numberOfAlignmentsCheck != 0 (" +
-                        numberOfAlignmentsCheck + " != 0)"
+            if (numberOfAlignmentsCheck != 0L) throw ApplicationException(
+                "numberOfAlignmentsCheck != 0 ($numberOfAlignmentsCheck != 0)"
             )
 
             // Checking and exporting clones
             var numberOfClonesCheck: Long = 0
-            PrintStream(BufferedOutputStream(FileOutputStream(files!![3]), 1 shl 20)).use { ps ->
+            PrintStream(BufferedOutputStream(FileOutputStream(files[3]), 1 shl 20)).use { ps ->
                 ps.print("cloneId\t")
                 for (ti in reader.tagsInfo) ps.print(ti.name + "\t")
                 ps.println("count\tcount_full\tcdr3\tbestV\tbestJ")
@@ -168,9 +170,8 @@ class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
                     numberOfClonesCheck++
                 }
             }
-            if (numberOfClonesCheck != totalClones) throwExecutionException(
-                "numberOfClonesCheck != totalClones (" +
-                        numberOfClonesCheck + " != " + totalClones + ")"
+            if (numberOfClonesCheck != totalClones) throw ApplicationException(
+                "numberOfClonesCheck != totalClones ($numberOfClonesCheck != $totalClones)"
             )
         }
     }

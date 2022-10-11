@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.cli.ValidationException
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
 import com.milaboratory.mixcr.AlignMixins.LeftAlignmentBoundaryNoPoint
 import com.milaboratory.mixcr.AlignMixins.LeftAlignmentBoundaryWithPoint
@@ -285,7 +284,6 @@ interface ExportMiXCRMixins : MiXCRMixinSet {
                 }
                 if (list.size != (nArgs + 1))
                     throw ValidationException(
-                        commandSpec.commandLine(),
                         "${nArgs + 1} parameters expected but only ${list.size} were supplied",
                         true
                     )

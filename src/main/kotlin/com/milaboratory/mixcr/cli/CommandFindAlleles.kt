@@ -53,7 +53,9 @@ import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
@@ -118,7 +120,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     @Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+            if (value <= 0) throw ValidationException("-t / --threads must be positive")
             field = value
         }
 
@@ -137,7 +139,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     private val outputClnsFiles: List<Path> by lazy {
         val template = outputTemplate ?: return@lazy emptyList()
         if (!template.endsWith(".clns")) {
-            throwValidationExceptionKotlin("Wrong template: command produces only clns $template")
+            throw ValidationException("Wrong template: command produces only clns $template")
         }
         val clnsFiles = `in`
             .map { it.toAbsolutePath() }
@@ -149,14 +151,16 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
             .map { Paths.get(it) }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
-            throwValidationExceptionKotlin("Output clns files are not uniq: $clnsFiles")
+            throw ValidationException("Output clns files are not uniq: $clnsFiles")
         }
         clnsFiles
     }
 
-    public override fun getInputFiles(): List<String> = `in`.map { it.toString() }
+    public override val inputFiles: List<String>
+        get() = `in`.map { it.toString() }
 
-    public override fun getOutputFiles(): List<String> = outputPaths.map { it.toString() }
+    public override val outputFiles: List<String>
+        get() = outputPaths.map { it.toString() }
 
     private val outputPaths get() = outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput)
 
@@ -169,10 +173,10 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     private val findAllelesParameters: FindAllelesParameters by lazy {
         val findAllelesParametersName = "default"
         var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
-            ?: throwValidationExceptionKotlin("Unknown parameters: $findAllelesParametersName")
+            ?: throw ValidationException("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
             result = JsonOverrider.override(result, FindAllelesParameters::class.java, overrides)
-                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
+                ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
         result
     }
@@ -181,16 +185,16 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         super.validate()
         libraryOutput?.let { libraryOutput ->
             if (libraryOutput.extension != "json") {
-                throwValidationExceptionKotlin("--export-library must be json: $libraryOutput")
+                throw ValidationException("--export-library must be json: $libraryOutput")
             }
         }
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             if (allelesMutationsOutput.extension !in arrayOf("tsv", "csv")) {
-                throwValidationExceptionKotlin("--export-alleles-mutations must be csv: $allelesMutationsOutput")
+                throw ValidationException("--export-alleles-mutations must be csv: $allelesMutationsOutput")
             }
         }
         if (listOfNotNull(outputTemplate, libraryOutput, allelesMutationsOutput).isEmpty()) {
-            throwValidationExceptionKotlin("--output-template, --export-library or --export-alleles-mutations must be set")
+            throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
         }
     }
 

@@ -70,7 +70,7 @@ object CommandExtend {
         @Option(description = ["Minimal J hit score to perform right extension."], names = ["--min-j-score"])
         private var minimalJScore: Int? = null
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::extend) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::extend) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::vAnchor setIfNotNull vAnchorPoint?.let(ReferencePoint::parse)
                 Params::jAnchor setIfNotNull jAnchorPoint?.let(ReferencePoint::parse)
@@ -111,20 +111,22 @@ object CommandExtend {
         @Option(description = ["Processing threads"], names = ["-t", "--threads"])
         var threads = Runtime.getRuntime().availableProcessors()
             set(value) {
-                if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+                if (value <= 0) throw ValidationException("-t / --threads must be positive")
                 field = value
             }
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles: List<String>
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOf(outputFile)
+        override val outputFiles: List<String>
+            get() = listOf(outputFile)
 
         override fun run0() {
             when (IOUtil.extractFileType(Paths.get(inputFile))) {
                 VDJCA -> processVDJCA()
                 CLNS -> processClns()
-                CLNA -> throwValidationException("Operation is not supported for ClnA files.")
-                SHMT -> throwValidationException("Operation is not supported for SHMT files.")
+                CLNA -> throw ValidationException("Operation is not supported for ClnA files.")
+                SHMT -> throw ValidationException("Operation is not supported for SHMT files.")
             }
         }
 

@@ -131,12 +131,13 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     )
     var noAlignmentFill: Boolean = false
 
-    override fun getOutputFiles(): List<String> = listOf(out.toString())
+    override val outputFiles: List<String>
+        get() = listOf(out.toString())
 
     override fun validate() {
         super.validate()
         if (out.extension != "pdf")
-            throwValidationExceptionKotlin("Output file must have .pdf extension")
+            throw ValidationException("Output file must have .pdf extension")
     }
 
     val alignment by lazy {

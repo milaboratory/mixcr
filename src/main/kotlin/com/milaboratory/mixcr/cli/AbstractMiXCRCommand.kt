@@ -11,34 +11,20 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.cli.ACommand
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
-import com.milaboratory.mixcr.*
+import com.milaboratory.mixcr.Flags
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRMixin
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.Presets
 import kotlin.reflect.KProperty1
 
-abstract class AbstractMiXCRCommand : ACommand("mixcr") {
-    fun throwValidationExceptionKotlin(message: String, printHelp: Boolean): Nothing {
-        super.throwValidationException(message, printHelp)
-        error(message)
-    }
-
-    fun throwValidationExceptionKotlin(message: String): Nothing {
-        super.throwValidationException(message)
-        error(message)
-    }
-
-    fun throwExecutionExceptionKotlin(message: String): Nothing {
-        super.throwExecutionException(message)
-        error(message)
-    }
-}
+abstract class AbstractMiXCRCommand : ACommand("mixcr")
 
 abstract class MiXCRParamsResolver<P : Any>(
-    private val cmd: AbstractMiXCRCommand,
     paramsProperty: KProperty1<MiXCRParamsBundle, P?>
-) :
-    ParamsResolver<MiXCRParamsBundle, P>(Presets::resolveParamsBundle, paramsProperty) {
+) : ParamsResolver<MiXCRParamsBundle, P>(Presets::resolveParamsBundle, paramsProperty) {
     override fun validateBundle(bundle: MiXCRParamsBundle) {
         if (bundle.flags.isNotEmpty()) {
             println("Preset errors: ")
@@ -48,13 +34,13 @@ abstract class MiXCRParamsResolver<P : Any>(
             }
             println()
 
-            cmd.throwExecutionExceptionKotlin("Error validating preset bundle.");
+            throw ValidationException("Error validating preset bundle.");
         }
         if (
             bundle.pipeline?.steps?.contains(MiXCRCommand.assembleContigs) == true &&
             bundle.assemble?.clnaOutput == false
         )
-            cmd.throwExecutionExceptionKotlin("assembleContigs step required clnaOutput=true on assemble step")
+            throw ValidationException("assembleContigs step required clnaOutput=true on assemble step")
     }
 }
 

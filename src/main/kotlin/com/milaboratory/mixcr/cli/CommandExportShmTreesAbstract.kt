@@ -25,12 +25,13 @@ abstract class CommandExportShmTreesAbstract : AbstractMiXCRCommand() {
     )
     lateinit var `in`: Path
 
-    override fun getInputFiles(): List<String> = listOf(`in`.toString())
+    override val inputFiles: List<String>
+        get() = listOf(`in`.toString())
 
     override fun validate() {
         super.validate()
         if (!`in`.extension.endsWith(shmFileExtension)) {
-            throwValidationExceptionKotlin("Input file should have extension $shmFileExtension. Given $`in`")
+            throw ValidationException("Input file should have extension $shmFileExtension. Given $`in`")
         }
     }
 }

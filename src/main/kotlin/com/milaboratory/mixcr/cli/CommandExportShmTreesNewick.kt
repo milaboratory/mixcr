@@ -38,7 +38,8 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
     )
     lateinit var out: Path
 
-    override fun getOutputFiles(): List<String> = listOf(out.toString())
+    override val outputFiles: List<String>
+        get() = listOf(out.toString())
 
     override fun run0() {
         out.createDirectories()

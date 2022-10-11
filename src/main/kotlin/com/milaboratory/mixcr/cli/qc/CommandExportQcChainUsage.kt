@@ -13,11 +13,16 @@ package com.milaboratory.mixcr.cli.qc
 
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.*
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAlign
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
-import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Paths
 
 @Command(name = "chainUsage", separator = " ", description = ["Chain usage plot."])
@@ -40,18 +45,19 @@ class CommandExportQcChainUsage : CommandExportQc() {
     )
     var hideNonFunctional = false
 
-    override fun getInputFiles(): List<String> = `in`.subList(0, `in`.size - 1)
+    override val inputFiles: List<String>
+        get() = `in`.subList(0, `in`.size - 1)
 
-    override fun getOutputFiles(): List<String> = listOf(`in`.last())
+    override val outputFiles: List<String>
+        get() = listOf(`in`.last())
 
     override fun run0() {
         val files = inputFiles.map { Paths.get(it) }
         val fileTypes = files.map { IOUtil.extractFileType(it) }
         if (fileTypes.distinct().size != 1) {
-            throwExecutionExceptionKotlin("Input files should have the same file type, got ${fileTypes.distinct()}")
+            throw ValidationException("Input files should have the same file type, got ${fileTypes.distinct()}")
         }
-        val fileType = fileTypes.first()
-        val plot = when (fileType) {
+        val plot = when (fileTypes.first()) {
             CLNA, CLNS -> when {
                 alignChainUsage -> chainUsageAlign(
                     files,

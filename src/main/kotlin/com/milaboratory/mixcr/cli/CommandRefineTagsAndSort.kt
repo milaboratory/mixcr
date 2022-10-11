@@ -38,10 +38,16 @@ import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.hashGrouping
-import com.milaboratory.util.*
+import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.ReportHelper
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
 import gnu.trove.list.array.TIntArrayList
 import org.apache.commons.io.FileUtils
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.util.*
 
 object CommandRefineTagsAndSort {
@@ -118,7 +124,7 @@ object CommandRefineTagsAndSort {
         )
         private var whitelists: Map<String, String> = mutableMapOf()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::refineTagsAndSort) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::refineTagsAndSort) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::whitelists setIfNotEmpty whitelists
 
@@ -182,9 +188,11 @@ object CommandRefineTagsAndSort {
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
         var jsonReport: String? = null
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles: List<String>
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOf(outputFile)
+        override val outputFiles: List<String>
+            get() = listOf(outputFile)
 
         override fun run0() {
             val startTimeMillis = System.currentTimeMillis()
@@ -242,7 +250,7 @@ object CommandRefineTagsAndSort {
 
                         // Will read the input stream once and extract all the required information from it
                         corrector.initialize(mainReader, { al -> al.alignmentsIndex }) {
-                            if (it.tagCount.size() != 1) throwExecutionException(
+                            if (it.tagCount.size() != 1) throw ApplicationException(
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
                             )

@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
@@ -85,17 +86,19 @@ abstract class CommandPa : AbstractMiXCRCommand() {
     @Option(names = ["-O"], description = ["Overrides default postanalysis settings"])
     var overrides: Map<String, String> = mutableMapOf()
 
-    override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
-        .flatMap { file ->
-            val path = Paths.get(file)
-            when {
-                path.isDirectory() -> path.listDirectoryEntries()
-                else -> listOf(path)
+    override val inputFiles: List<String>
+        get() = inOut.subList(0, inOut.size - 1)
+            .flatMap { file ->
+                val path = Paths.get(file)
+                when {
+                    path.isDirectory() -> path.listDirectoryEntries()
+                    else -> listOf(path)
+                }
             }
-        }
-        .map { it.toString() }
+            .map { it.toString() }
 
-    override fun getOutputFiles(): List<String> = listOf(inOut.last())
+    override val outputFiles: List<String>
+        get() = listOf(inOut.last())
 
     protected val tagsInfo: TagsInfo by lazy {
         extractTagsInfo(inputFiles)
@@ -105,44 +108,43 @@ abstract class CommandPa : AbstractMiXCRCommand() {
         super.validate()
         val out = inOut.last()
         if (!out.endsWith(".json") && !out.endsWith(".json.gz"))
-            throwValidationExceptionKotlin("Output file name should ends with .json.gz or .json")
+            throw ValidationException("Output file name should ends with .json.gz or .json")
         try {
             DownsamplingParameters.parse(defaultDownsampling, tagsInfo, dropOutliers, onlyProductive)
         } catch (t: Throwable) {
-            throwValidationExceptionKotlin(t.message ?: t.javaClass.name)
+            throw ValidationException(t.message ?: t.javaClass.name)
         }
         preprocOut?.let { preprocOut ->
             if (!preprocOut.endsWith(".tsv") && !preprocOut.endsWith(".csv"))
-                throwValidationExceptionKotlin("--preproc-tables: table name should ends with .csv or .tsv")
+                throw ValidationException("--preproc-tables: table name should ends with .csv or .tsv")
             if (preprocOut.startsWith("."))
-                throwValidationExceptionKotlin("--preproc-tables: cant' start with \".\"")
+                throw ValidationException("--preproc-tables: cant' start with \".\"")
         }
         tablesOut?.let { tablesOut ->
             if (!tablesOut.endsWith(".tsv") && !tablesOut.endsWith(".csv"))
-                throwValidationExceptionKotlin("--tables: table name should ends with .csv or .tsv")
+                throw ValidationException("--tables: table name should ends with .csv or .tsv")
             if (tablesOut.startsWith("."))
-                throwValidationExceptionKotlin("--tables: cant' start with \".\"")
+                throw ValidationException("--tables: cant' start with \".\"")
         }
         metadataFile?.let { metadataFile ->
             if (!metadataFile.endsWith(".csv") && !metadataFile.endsWith(".tsv"))
-                throwValidationExceptionKotlin("Metadata should be .csv or .tsv")
+                throw ValidationException("Metadata should be .csv or .tsv")
         }
         val duplicates = inputFiles
             .groupingBy { it }.eachCount()
             .filterValues { it > 1 }
             .keys
         if (duplicates.isNotEmpty())
-            throwValidationExceptionKotlin("Duplicated samples detected: ${duplicates.joinToString(",")}")
+            throw ValidationException("Duplicated samples detected: ${duplicates.joinToString(",")}")
         metadata?.let { metadata ->
             if (!metadata.containsKey("sample"))
-                throwValidationExceptionKotlin("Metadata must contain 'sample' column")
+                throw ValidationException("Metadata must contain 'sample' column")
             val samples = inputFiles
             val mapping = StringUtil.matchLists(samples, metadata["sample"]!!.map { it as String })
             if (mapping.size < samples.size || mapping.values.any { it == null }) {
-                throwValidationException(
-                    "Metadata samples does not match input file names: " + samples.stream()
-                        .filter { s: String -> mapping[s] == null }
-                        .collect(Collectors.joining(",")))
+                throw ValidationException("Metadata samples does not match input file names: " + samples.stream()
+                    .filter { s: String -> mapping[s] == null }
+                    .collect(Collectors.joining(",")))
             }
         }
     }

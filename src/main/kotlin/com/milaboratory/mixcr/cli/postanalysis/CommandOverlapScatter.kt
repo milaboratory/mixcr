@@ -13,11 +13,11 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod.Companion.parse
 import com.milaboratory.miplots.writeFile
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.ChainsUtil.name
 import com.milaboratory.mixcr.cli.ChainsUtil.toPath
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter
@@ -64,9 +64,11 @@ class CommandOverlapScatter : AbstractMiXCRCommand() {
     @CommandLine.Option(description = ["Do not apply log10 to clonotype frequencies"], names = ["--no-log"])
     var noLog = false
 
-    override fun getInputFiles(): List<String> = listOf(in1, in2)
+    override val inputFiles: List<String>
+        get() = listOf(in1, in2)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles: List<String>
+        get() = listOf(out)
 
     override fun run0() {
         val parameters = DownsamplingParameters.parse(

@@ -17,7 +17,10 @@ import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.util.ReportHelper
 import org.apache.commons.io.output.CloseShieldOutputStream
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.outputStream
 
@@ -47,9 +50,11 @@ class CommandExportReports : AbstractMiXCRCommand() {
     @ArgGroup(exclusive = true, multiplicity = "0..1")
     private var outputFormatFlags: OutputFormatFlags? = null
 
-    override fun getInputFiles(): List<String> = listOf(inputPath.toString())
+    override val inputFiles: List<String>
+        get() = listOf(inputPath.toString())
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(outputPath.toString())
+    override val outputFiles: List<String>
+        get() = listOfNotNull(outputPath.toString())
 
     override fun run0() {
         val footer = IOUtil.extractFooter(inputPath)
