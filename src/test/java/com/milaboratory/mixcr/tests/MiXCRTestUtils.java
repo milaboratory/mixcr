@@ -20,6 +20,8 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mitool.data.CriticalThresholdCollection;
 import com.milaboratory.mixcr.MiXCRParamsSpec;
+import com.milaboratory.mixcr.MiXCRStepParams;
+import com.milaboratory.mixcr.MiXCRStepReports;
 import com.milaboratory.mixcr.Presets;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
@@ -33,13 +35,13 @@ import static com.milaboratory.core.alignment.AlignmentTestUtils.assertAlignment
 public class MiXCRTestUtils {
     public static MiXCRHeader dummyHeader() {
         return new MiXCRHeader(
-                new MiXCRParamsSpec("default_4.0"), TagsInfo.NO_TAGS,
+                new MiXCRParamsSpec("default_4.0"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                 Presets.INSTANCE.resolveParamsBundle("default_4.0").getAlign().getParameters(),
                 null, null, null);
     }
 
     public static MiXCRFooter emptyFooter() {
-        return new MiXCRFooter(Collections.emptyList(), new CriticalThresholdCollection());
+        return new MiXCRFooter(new MiXCRStepReports(), new CriticalThresholdCollection());
     }
 
     public static void assertAlignments(VDJCAlignments alignments) {

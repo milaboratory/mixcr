@@ -21,5 +21,5 @@ for file in ../../src/test/resources/sequences/big/pa_test_data/* ; do
   ln -s ${file} $(basename ${file})
 done
 
-python3 ../../itests/case16.py
+python3 ../../itests/case016.py
 

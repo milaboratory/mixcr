@@ -22,14 +22,14 @@ import com.milaboratory.primitivio.blocks.PrimitivOHybrid
 import com.milaboratory.primitivio.writeCollection
 import io.repseq.core.VDJCGene
 import java.nio.charset.StandardCharsets
-import java.nio.file.Paths
+import java.nio.file.Path
 
 class SHMTreesWriter(
     private val output: PrimitivOHybrid
 ) : AutoCloseable {
     private var footer: MiXCRFooter? = null
 
-    constructor(fileName: String) : this(PrimitivOHybrid(Paths.get(fileName)))
+    constructor(file: Path) : this(PrimitivOHybrid(file))
 
     fun writeHeader(
         originHeaders: List<MiXCRHeader>,

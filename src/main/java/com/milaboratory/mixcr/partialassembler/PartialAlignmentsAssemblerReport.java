@@ -71,7 +71,7 @@ public class PartialAlignmentsAssemblerReport extends AbstractMiXCRCommandReport
             @JsonProperty("commandLine") String commandLine,
             @JsonProperty("inputFiles") String[] inputFiles,
             @JsonProperty("outputFiles") String[] outputFiles,
-            @JsonProperty("executionTimeMillis") long executionTimeMillis,
+            @JsonProperty("executionTimeMillis") Long executionTimeMillis,
             @JsonProperty("version") String version,
             @JsonProperty("independentRuns") long independentRuns,
             @JsonProperty("totalProcessed") long totalProcessed,
@@ -119,7 +119,7 @@ public class PartialAlignmentsAssemblerReport extends AbstractMiXCRCommandReport
 
         long total = this.totalProcessed;
         if (independentRuns != 1)
-            helper.writeField("Independent runs", total);
+            helper.writeField("Independent runs", independentRuns);
         helper.writeField("Total alignments analysed", total);
         helper.writePercentAndAbsoluteField("Number of output alignments", outputAlignments, total);
         helper.writePercentAndAbsoluteField("Alignments already with CDR3 (no overlapping is performed)", withCDR3, total);

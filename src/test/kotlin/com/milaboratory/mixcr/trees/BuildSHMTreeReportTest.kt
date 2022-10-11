@@ -2,7 +2,7 @@ package com.milaboratory.mixcr.trees
 
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.mixcr.cli.BuildSHMTreeReport
+import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.util.GlobalObjectMappers
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.instanceOf
@@ -60,5 +60,6 @@ class BuildSHMTreeReportTest {
         deserialized.executionTimeMillis shouldBe null
     }
 
-    private fun statsSample() = BuildSHMTreeReport.Stats(10L, 2.0, 0.5, 15.0, 1.0, 3.0, 1.25, 1.9, 2.5)
+    private fun statsSample() =
+        MiXCRCommandReport.StatsWithQuantiles(10L, 10.0, 2.0, 0.5, 15.0, 1.0, 3.0, 1.25, 1.9, 2.5)
 }

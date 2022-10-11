@@ -73,12 +73,13 @@ public class FieldExtractorsTest {
                 NucleotideSequence seq2 = offset2 == -1 ? null : baseSeq.getRange(offset2, Math.min(baseSeq.size(), offset2 + len));
                 NucleotideSequence seq3 = offset3 == -1 ? null : baseSeq.getRange(offset3, Math.min(baseSeq.size(), offset3 + len));
 
-                VDJCAlignmentResult<VDJCMultiRead> alignment = offset3 == -1 ?
+                VDJCMultiRead read = offset3 == -1 ?
                         offset2 == -1 ?
-                                aligner.process(MiXCRTestUtils.createMultiRead(seq1)) :
-                                aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2)) :
-                        aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2, seq3));
-                VDJCAlignments al = alignment.alignment;
+                                MiXCRTestUtils.createMultiRead(seq1) :
+                                MiXCRTestUtils.createMultiRead(seq1, seq2) :
+                        MiXCRTestUtils.createMultiRead(seq1, seq2, seq3);
+
+                VDJCAlignments al = aligner.process(read.toTuple(), read);
                 Assert.assertNotNull(al);
 
                 if (print) {

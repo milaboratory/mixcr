@@ -2,16 +2,11 @@
   "default": {
     "productiveOnly": true,
     "singleCell": {
-      "type": "simpleClustering",
-      "algorithm": {
-        "type": "SingleLinkage",
-        "maxNDNDistanceForHeavyChain": 1.0,
-        "maxNDNDistanceForLightChain": 1.0
-      }
+      "type": "noop"
     },
     "topologyBuilder": {
       "topToVoteOnNDNSize": 5,
-      "multiplierForNDSScore": 2.5,
+      "multiplierForNDNScore": 2.5,
       "penaltyForReversedMutations": 10,
       "countOfNodesToProbe": 3
     },

@@ -16,8 +16,20 @@ import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mitool.helpers.filter
 import com.milaboratory.mitool.helpers.it
 import com.milaboratory.mitool.helpers.map
-import com.milaboratory.mixcr.basictypes.*
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.*
+import com.milaboratory.mixcr.basictypes.ClnAReader
+import com.milaboratory.mixcr.basictypes.ClnAWriter
+import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.basictypes.VDJCAlignments
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.Concurrency
@@ -27,9 +39,11 @@ import com.milaboratory.util.TempFileManager
 import gnu.trove.map.hash.TIntIntHashMap
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.io.path.readLines
 
@@ -40,11 +54,21 @@ import kotlin.io.path.readLines
     description = ["Slice vdjca|clns|clna|shmt file."]
 )
 class CommandSlice : AbstractMiXCRCommand() {
-    @Parameters(description = ["data.[vdjca|clns|clna|shmt]"], index = "0")
-    lateinit var `in`: String
+    @Parameters(
+        description = ["Input data to filter by ids"],
+        paramLabel = "data.[vdjca|clns|clna|shmt]",
+        hideParamSyntax = true,
+        index = "0"
+    )
+    lateinit var input: Path
 
-    @Parameters(description = ["data_sliced"], index = "1")
-    lateinit var out: String
+    @Parameters(
+        description = ["Output file with filtered data"],
+        paramLabel = "data_sliced",
+        hideParamSyntax = true,
+        index = "1"
+    )
+    lateinit var out: Path
 
     @ArgGroup(exclusive = true, multiplicity = "1")
     lateinit var idsOptions: IdsFilterOptions
@@ -73,12 +97,12 @@ class CommandSlice : AbstractMiXCRCommand() {
         result.sorted()
     }
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override fun getInputFiles(): List<String> = listOf(input.toString())
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override fun getOutputFiles(): List<String> = listOf(out.toString())
 
     override fun run0() {
-        when (IOUtil.extractFileType(Paths.get(`in`))) {
+        when (IOUtil.extractFileType(input)) {
             VDJCA -> sliceVDJCA()
             CLNS -> sliceClns()
             CLNA -> sliceClnA()
@@ -88,8 +112,8 @@ class CommandSlice : AbstractMiXCRCommand() {
 
     private fun sliceVDJCA() {
         val set = TLongHashSet(ids)
-        VDJCAlignmentsReader(`in`).use { reader ->
-            VDJCAlignmentsWriter(out).use { writer ->
+        VDJCAlignmentsReader(input).use { reader ->
+            VDJCAlignmentsWriter(out.toFile()).use { writer ->
                 writer.inheritHeaderAndFooterFrom(reader)
                 for (alignments in reader.it) {
                     if (set.removeAll(alignments.readIds)) writer.write(alignments)
@@ -101,8 +125,8 @@ class CommandSlice : AbstractMiXCRCommand() {
     }
 
     private fun sliceClnA() {
-        ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-            ClnAWriter(out, TempFileManager.smartTempDestination(out, "", false)).use { writer ->
+        ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
+            ClnAWriter(out.toFile(), TempFileManager.smartTempDestination(out, "", false)).use { writer ->
                 // Getting full clone set
                 val cloneSet = reader.readCloneSet()
 
@@ -138,8 +162,8 @@ class CommandSlice : AbstractMiXCRCommand() {
     }
 
     private fun sliceClns() {
-        ClnsReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
-            ClnsWriter(out).use { writer ->
+        ClnsReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
+            ClnsWriter(out.toFile()).use { writer ->
                 // Getting full clone set
                 val cloneSet = reader.cloneSet
 
@@ -158,7 +182,7 @@ class CommandSlice : AbstractMiXCRCommand() {
     }
 
     private fun sliceShmt() {
-        SHMTreesReader(Paths.get(`in`), VDJCLibraryRegistry.getDefault()).use { reader ->
+        SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             SHMTreesWriter(out).use { writer ->
                 writer.writeHeader(reader.originHeaders, reader.header, reader.fileNames, reader.userGenes)
 

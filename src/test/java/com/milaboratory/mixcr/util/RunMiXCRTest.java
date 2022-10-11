@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
 import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
 
 /**
@@ -116,7 +117,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.writeHeader(align.aligner.getBaseMetaInfo(), align.aligner.getUsedGenes());
+            writer.writeHeader(dummyHeader(), align.aligner.getUsedGenes());
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
             writer.setFooter(emptyFooter());
@@ -154,7 +155,7 @@ public class RunMiXCRTest {
 
         File tempFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
-            writer.writeHeader(align.aligner.getBaseMetaInfo(), align.aligner.getUsedGenes());
+            writer.writeHeader(dummyHeader(), align.aligner.getUsedGenes());
             for (VDJCAlignments alignment : align.alignments)
                 writer.write(alignment);
             writer.setFooter(emptyFooter());
@@ -183,17 +184,17 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble0 = RunMiXCR.assemble(align, false);
         RunMiXCR.FullSeqAssembleResult assemble = RunMiXCR.assembleContigs(assemble0);
 
-        try (VDJCAlignmentsReader reader = align.resultReader()) {
-            for (MiXCRCommandReport r : reader.getFooter().getReports()) {
-                System.out.println(r);
-            }
-        }
-
-        try (ClnAReader reader = assemble0.resultReader()) {
-            for (MiXCRCommandReport r : reader.getFooter().getReports()) {
-                System.out.println(r);
-            }
-        }
+        // try (VDJCAlignmentsReader reader = align.resultReader()) {
+        //     for (MiXCRCommandReport r : reader.getFooter().getReports()) {
+        //         System.out.println(r);
+        //     }
+        // }
+        //
+        // try (ClnAReader reader = assemble0.resultReader()) {
+        //     for (MiXCRCommandReport r : reader.getFooter().getReports()) {
+        //         System.out.println(r);
+        //     }
+        // }
 
         for (Clone clone : assemble.cloneSet.getClones()) {
             Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),

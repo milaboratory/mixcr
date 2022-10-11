@@ -27,7 +27,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class VDJCAlignerAbstract<R extends SequenceRead> extends VDJCAligner<R> {
+public abstract class VDJCAlignerAbstract extends VDJCAligner {
     protected volatile SingleDAligner singleDAligner = null;
     /**
      * Filter geneType -> (chain -> [corresponding gene indexes])

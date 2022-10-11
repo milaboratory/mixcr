@@ -11,7 +11,10 @@
  */
 package com.milaboratory.mixcr.qc
 
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.cli.*
 import io.repseq.core.Chains.*
 import jetbrains.letsPlot.*
@@ -35,7 +38,7 @@ object ChainUsage {
         showNonFunctional: Boolean,
         hw: SizeParameters? = null
     ) = chainUsage(files, percent, showNonFunctional, hw) {
-        (it.first() as AlignerReport).chainUsage
+        it[MiXCRCommand.align].first().chainUsage
     }
 
     fun chainUsageAssemble(
@@ -45,7 +48,7 @@ object ChainUsage {
         hw: SizeParameters? = null
     ) =
         chainUsage(files, percent, showNonFunctional, hw) {
-            it.filterIsInstance<CloneAssemblerReport>().first().clonalChainUsage
+            it[MiXCRCommand.assemble].first().clonalChainUsage
         } + ggtitle("Clonal chain usage")
 
     fun chainUsage(
@@ -53,14 +56,14 @@ object ChainUsage {
         percent: Boolean,
         showNonFunctional: Boolean,
         hw: SizeParameters? = null,
-        usageExtractor: (List<MiXCRCommandReport>) -> ChainUsageStats
+        usageExtractor: (MiXCRStepReports) -> ChainUsageStats
     ) = run {
         val typesToShow = if (showNonFunctional)
             listOf(typeProductive, typeStops, typeOOF)
         else
             listOf(typeProductive)
 
-        val file2report = files.associate { it.fileName.toString() to usageExtractor(IOUtil.extractReports(it)) }
+        val file2report = files.associate { it.fileName.toString() to usageExtractor(IOUtil.extractFooter(it).reports) }
 
         val data = mapOf<Any, MutableList<Any?>>(
             "sample" to mutableListOf(),

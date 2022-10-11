@@ -36,7 +36,7 @@ public class PartialAlignmentsAssemblerParameters {
             @JsonProperty("kOffset") int kOffset,
             @JsonProperty("minimalAssembleOverlap") int minimalAssembleOverlap,
             @JsonProperty("minimalNOverlap") int minimalNOverlap,
-            @JsonProperty("minimalAlignmentMergeIdentity") int minimalAlignmentMergeIdentity,
+            @JsonProperty("minimalAlignmentMergeIdentity") float minimalAlignmentMergeIdentity,
             @JsonProperty("mergerParameters") MergerParameters mergerParameters,
             @JsonProperty("maxLeftParts") long maxLeftParts,
             @JsonProperty("maxLeftMatches") int maxLeftMatches) {
@@ -131,7 +131,6 @@ public class PartialAlignmentsAssemblerParameters {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(kValue, kOffset, minimalAssembleOverlap, minimalNOverlap, minimalAlignmentMergeIdentity, mergerParameters, maxLeftParts, maxLeftMatches);
     }
 

@@ -14,16 +14,22 @@ package com.milaboratory.mixcr.util
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.*
 import java.util.stream.Collectors
+import kotlin.io.path.extension
 
 object XSV {
-    @JvmStatic
+    fun chooseDelimiter(outputFile: Path) = when (val extension = outputFile.extension) {
+        "tsv" -> "\t"
+        "csv" -> ";"
+        else -> throw IllegalArgumentException("unknown extension $extension")
+    }
+
     fun writeXSVHeaders(output: PrintStream, columns: Collection<String>, delimiter: String) {
         output.println(java.lang.String.join(delimiter, columns))
     }
 
-    @JvmStatic
     fun <T> writeXSV(
         output: PrintStream,
         records: Iterable<T>,
@@ -34,7 +40,6 @@ object XSV {
         writeXSVBody(output, records, columns, delimiter)
     }
 
-    @JvmStatic
     fun <T> writeXSVBody(
         output: PrintStream,
         records: Iterable<T>,
@@ -44,8 +49,8 @@ object XSV {
         for (record in records) {
             output.println(
                 columns.values.stream()
-                .map { column -> Objects.toString(column(record), "") }
-                .collect(Collectors.joining(delimiter))
+                    .map { column -> Objects.toString(column(record), "") }
+                    .collect(Collectors.joining(delimiter))
             )
         }
     }

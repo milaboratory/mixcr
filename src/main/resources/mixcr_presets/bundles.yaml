@@ -224,7 +224,7 @@
       species: hs
     - type: KeepNonCDR3Alignments
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -263,7 +263,7 @@
     - type: SetSpecies
       species: hs
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
     - type: MaterialTypeRNA
     - type: AddExportClonesField
       insertIndex: 2

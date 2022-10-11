@@ -20,11 +20,11 @@ import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
-import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.merger.MergerParameters;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasGene;
@@ -39,7 +39,7 @@ import io.repseq.core.*;
 
 import java.util.*;
 
-public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
+public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract {
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(-3);
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(+3);
     // Used in case of AMerge
@@ -70,18 +70,17 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
     }
 
     @Override
-    protected VDJCAlignmentResult<PairedRead> process0(final PairedRead input) {
-        Target[] targets = getTargets(input);
+    protected VDJCAlignments process0(NSQTuple input) {
+        Target[] targets = parameters.getReadsLayout().createTargets(input);
         // Creates helper classes for each PTarget
         PAlignmentHelper[] helpers = createInitialHelpers(targets);
 
-        VDJCAlignmentResult<PairedRead> result = parameters.getAllowPartialAlignments() ?
+        VDJCAlignments alignment = parameters.getAllowPartialAlignments() ?
                 processPartial(input, helpers) :
                 processStrict(input, helpers);
 
         // if sAligner == null (which means --no-merge option), no merge will be performed
-        if (result.alignment != null && sAligner != null) {
-            final VDJCAlignments alignment = result.alignment;
+        if (alignment != null && sAligner != null) {
             final TargetMerger.TargetMergingResult mergeResult = alignmentsMerger.merge(
                     new AlignedTarget(alignment, 0),
                     new AlignedTarget(alignment, 1),
@@ -94,37 +93,37 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
                                 > alignment.getBestHit(geneType).getAlignment(1).getScore()
                                 ? 1 : 0;
                 if (listener != null)
-                    listener.onTopHitSequenceConflict(input, alignment, geneType);
-                return new VDJCAlignmentResult<>(input, alignment.removeBestHitAlignment(geneType, removeId));
+                    listener.onTopHitSequenceConflict(alignment, geneType);
+                return alignment.removeBestHitAlignment(geneType, removeId);
             } else if (mergeResult.isSuccessful()) {
                 assert mergeResult.isUsingAlignments();
-
                 NSequenceWithQuality alignedTarget = mergeResult.getResult().getTarget();
-                SingleRead sRead = new SingleReadImpl(input.getId(), alignedTarget, "");
-                VDJCAlignmentResult<SingleRead> sResult = sAligner.process0(sRead);
-                if (sResult.alignment == null)
-                    return result;
-                VDJCAlignments sAlignment = sResult
-                        .alignment
+                VDJCAlignments sAlignments = sAligner.process0(new NSQTuple(input.getId(), alignedTarget));
+                if (sAlignments == null)
+                    return null;
+
+                // Reconstructing full history: paired-end read, merged (AlignmentOverlapped) and aligned
+                sAlignments = sAlignments
                         .setHistory(
                                 new SequenceHistory[]{
                                         new SequenceHistory.Merge(
                                                 SequenceHistory.OverlapType.AlignmentOverlap,
-                                                result.alignment.getHistory(0),
-                                                result.alignment.getHistory(1),
+                                                alignment.getHistory(0),
+                                                alignment.getHistory(1),
                                                 mergeResult.getOffset(),
                                                 mergeResult.getMismatched())},
-                                parameters.isSaveOriginalReads() ? new SequenceRead[]{input} : null
+                                parameters.isSaveOriginalReads() ? new NSQTuple[]{input} : null
                         );
                 if (listener != null)
-                    listener.onSuccessfulAlignmentOverlap(input, sAlignment);
-                return new VDJCAlignmentResult<>(input, sAlignment);
+                    listener.onSuccessfulAlignmentOverlap(sAlignments);
+                return sAlignments;
             }
         }
-        return result;
+
+        return alignment;
     }
 
-    private VDJCAlignmentResult<PairedRead> processPartial(PairedRead input, PAlignmentHelper[] helpers) {
+    private VDJCAlignments processPartial(NSQTuple input, PAlignmentHelper[] helpers) {
         // Calculates which PTarget was aligned with the highest score
         helpers[0].performCDAlignment();
         PAlignmentHelper bestHelper = helpers[0];
@@ -135,14 +134,14 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         }
 
         if (!bestHelper.hasVOrJHits()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
-            return new VDJCAlignmentResult<>(input);
+            onFailedAlignment(VDJCAlignmentFailCause.NoHits);
+            return null;
         }
 
         // Calculates if this score is bigger then the threshold
         if (bestHelper.score() < parameters.getMinSumScore()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
-            return new VDJCAlignmentResult<>(input);
+            onFailedAlignment(VDJCAlignmentFailCause.LowTotalScore);
+            return null;
         }
 
         // Finally filtering hits inside this helper to meet minSumScore and maxHits limits
@@ -150,11 +149,11 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         // TODO do we really need this ?
         if (!bestHelper.hasVOrJHits()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
-            return new VDJCAlignmentResult<>(input);
+            onFailedAlignment(VDJCAlignmentFailCause.LowTotalScore);
+            return null;
         }
 
-        VDJCAlignments alignments = bestHelper.createResult(input.getId(), this, input);
+        VDJCAlignments alignments = bestHelper.createResult(input, this);
 
         // Final check
         if (!parameters.getAllowNoCDR3PartAlignments()) {
@@ -176,23 +175,23 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
             }
 
             if (!containCDR3Parts) {
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoCDR3Parts);
-                return new VDJCAlignmentResult<>(input);
+                onFailedAlignment(VDJCAlignmentFailCause.NoCDR3Parts);
+                return null;
             }
         }
 
         // Read successfully aligned
 
-        onSuccessfulAlignment(input, alignments);
+        onSuccessfulAlignment(alignments);
         if (bestHelper.vChimera)
-            onSegmentChimeraDetected(GeneType.Variable, input, alignments);
+            onSegmentChimeraDetected(GeneType.Variable, alignments);
         if (bestHelper.jChimera)
-            onSegmentChimeraDetected(GeneType.Joining, input, alignments);
+            onSegmentChimeraDetected(GeneType.Joining, alignments);
 
-        return new VDJCAlignmentResult<>(input, alignments);
+        return alignments;
     }
 
-    private VDJCAlignmentResult<PairedRead> processStrict(PairedRead input, PAlignmentHelper[] helpers) {
+    private VDJCAlignments processStrict(NSQTuple input, PAlignmentHelper[] helpers) {
         // Calculates which PTarget was aligned with the highest score
         PAlignmentHelper bestHelper = helpers[0];
         for (int i = 1; i < helpers.length; ++i)
@@ -202,12 +201,12 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         // If V or J hits are absent
         if (!bestHelper.hasVAndJHits()) {
             if (!bestHelper.hasVOrJHits())
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
+                onFailedAlignment(VDJCAlignmentFailCause.NoHits);
             else if (!bestHelper.hasVHits())
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoVHits);
+                onFailedAlignment(VDJCAlignmentFailCause.NoVHits);
             else
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoJHits);
-            return new VDJCAlignmentResult<>(input);
+                onFailedAlignment(VDJCAlignmentFailCause.NoJHits);
+            return null;
         }
 
         // Performing alignment of C and D genes; if corresponding parameters are set include their scores to
@@ -216,8 +215,8 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
 
         // Calculates if this score is bigger then the threshold
         if (bestHelper.score() < parameters.getMinSumScore()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
-            return new VDJCAlignmentResult<>(input);
+            onFailedAlignment(VDJCAlignmentFailCause.LowTotalScore);
+            return null;
         }
 
         // Finally filtering hits inside this helper to meet minSumScore and maxHits limits
@@ -226,32 +225,28 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         // If hits for V or J are missing after filtration
         if (!bestHelper.isGoodVJ()) {
             if (!bestHelper.hasVHits())
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoVHits);
+                onFailedAlignment(VDJCAlignmentFailCause.NoVHits);
             else if (!bestHelper.hasJHits())
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoJHits);
+                onFailedAlignment(VDJCAlignmentFailCause.NoJHits);
             else if (!bestHelper.hasVJOnTheSameTarget())
-                onFailedAlignment(input, VDJCAlignmentFailCause.VAndJOnDifferentTargets);
+                onFailedAlignment(VDJCAlignmentFailCause.VAndJOnDifferentTargets);
             else
-                onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
+                onFailedAlignment(VDJCAlignmentFailCause.LowTotalScore);
 
-            return new VDJCAlignmentResult<>(input);
+            return null;
         }
 
         // Read successfully aligned
 
-        VDJCAlignments alignments = bestHelper.createResult(input.getId(), this, input);
+        VDJCAlignments alignments = bestHelper.createResult(input, this);
 
-        onSuccessfulAlignment(input, alignments);
+        onSuccessfulAlignment(alignments);
         if (bestHelper.vChimera)
-            onSegmentChimeraDetected(GeneType.Variable, input, alignments);
+            onSegmentChimeraDetected(GeneType.Variable, alignments);
         if (bestHelper.jChimera)
-            onSegmentChimeraDetected(GeneType.Joining, input, alignments);
+            onSegmentChimeraDetected(GeneType.Joining, alignments);
 
-        return new VDJCAlignmentResult<>(input, alignments);
-    }
-
-    Target[] getTargets(PairedRead read) {
-        return parameters.getReadsLayout().createTargets(read);
+        return alignments;
     }
 
     PAlignmentHelper[] createInitialHelpers(Target[] target) {
@@ -721,12 +716,13 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract<PairedRead> {
         /**
          * Converts this object to a final VDJAlignment object.
          */
-        VDJCAlignments createResult(long readId, VDJCAlignerPVFirst aligner, PairedRead originalRead) {
+        VDJCAlignments createResult(NSQTuple input, VDJCAlignerPVFirst aligner) {
             VDJCHit[] vHits = convert(this.vHits, GeneType.Variable, aligner);
             VDJCHit[] jHits = convert(this.jHits, GeneType.Joining, aligner);
 
             return new VDJCAlignments(vHits, dHits, jHits, cHits, TagCount.NO_TAGS_1, target.targets,
-                    SequenceHistory.RawSequence.of(readId, target), aligner.parameters.isSaveOriginalReads() ? new SequenceRead[]{originalRead} : null);
+                    SequenceHistory.RawSequence.of(input.getId(), target),
+                    aligner.parameters.isSaveOriginalSequence() ? new NSQTuple[]{input} : null);
         }
 
         /**

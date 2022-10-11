@@ -47,11 +47,15 @@ FreeBSD)
   ;;
 esac
 
-tests=("case1" "case2" "case3" "case4" "case5" "case6" "case7" "case8" "case9" "case10" "case11" "case12" "case13" "case14" "case16") # "case15"
+declare -a all_tests
+while read -r tst; do
+  all_tests=( "${all_tests[@]}" "$tst" )
+done < <(find itests -name '*.sh' | sed 's/\itests\///' | sed 's/\.sh//')
 
+tests=()
 create_standard_results=false
 run_tests=false
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
   key="$1"
   shift
   case $key in
@@ -62,7 +66,7 @@ while [[ $# > 0 ]]; do
     run_tests=true
     ;;
   case*)
-    tests=("$key")
+    tests=("${tests[@]}" "$key")
     ;;
   *)
     echo "Unknown option $key"
@@ -70,6 +74,11 @@ while [[ $# > 0 ]]; do
     ;;
   esac
 done
+
+# set to all tests if user didn't provide any specific test cases to run
+if [[ ${#tests[@]} -eq 0 ]]; then
+  tests=("${all_tests[@]}")
+fi
 
 rm -rf ${dir}/test_target
 mkdir ${dir}/test_target
@@ -81,6 +90,7 @@ ln -s ../src/test/resources/sequences/big/CD4M1_test_R1.fastq.gz ${dir}/test_tar
 ln -s ../src/test/resources/sequences/big/CD4M1_test_R2.fastq.gz ${dir}/test_target/CD4M1_test_R2.fastq.gz
 ln -s ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R1.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R1.fastq.gz
 ln -s ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R2.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R2.fastq.gz
+ln -s ../src/test/resources/sequences/big/trees_samples ${dir}/test_target/trees_samples
 ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R1.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R1.fastq.gz
 ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R2.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R2.fastq.gz
 ln -s ../src/test/resources/bam/unsorted.bam ${dir}/test_target/unsorted.bam
@@ -130,7 +140,7 @@ function run_test() {
 }
 
 if [[ $run_tests == true ]]; then
-  for testName in ${tests[@]}; do
+  for testName in "${tests[@]}"; do
     run_test "${testName}.sh"
   done
 

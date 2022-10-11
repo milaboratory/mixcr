@@ -11,22 +11,19 @@
  */
 @file:Suppress("LocalVariableName")
 
-package com.milaboratory.mixcr.cli
+package com.milaboratory.mixcr.trees
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.trees.BuildSHMTreeStep
-import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
-import com.milaboratory.mixcr.trees.BuildSHMTreeStep.CombineTrees
-import com.milaboratory.mixcr.trees.DebugInfo
-import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
-import com.milaboratory.mixcr.trees.forPrint
+import com.milaboratory.mixcr.cli.AbstractCommandReportBuilder
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport
+import com.milaboratory.mixcr.cli.CommandFindShmTrees
+import com.milaboratory.mixcr.cli.MiXCRCommandReport.StatsWithQuantiles
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportHelper
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.log2
@@ -37,14 +34,14 @@ import kotlin.math.log2
     getterVisibility = NONE
 )
 class BuildSHMTreeReport(
-    override val date: Date?,
-    override val commandLine: String,
-    override val inputFiles: Array<String>,
-    override val outputFiles: Array<String>,
-    override val executionTimeMillis: Long?,
-    override val version: String,
+    date: Date?,
+    commandLine: String,
+    inputFiles: Array<String>,
+    outputFiles: Array<String>,
+    executionTimeMillis: Long?,
+    version: String,
     val stepResults: List<StepResult>
-) : MiXCRCommandReport {
+) : AbstractMiXCRCommandReport(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version) {
     override fun command(): String = CommandFindShmTrees.COMMAND_NAME
 
     override fun toString(): String = asString()
@@ -55,20 +52,21 @@ class BuildSHMTreeReport(
 
         for (i in stepResults.indices) {
             val stepResult = stepResults[i]
-            helper.writeField("step ${i + 1}", stepResult.step.forPrint)
-            if (stepResult.step !is CombineTrees) {
-                helper.writeField("Clones was added", stepResult.clonesWasAdded)
+            helper.writeField("Step ${i + 1}", stepResult.step.forPrint)
+            if (stepResult.step !is BuildSHMTreeStep.CombineTrees) {
+                helper.writeField("\tClones was added", stepResult.clonesWasAdded)
             }
-            if (stepResult.step is BuildingInitialTrees) {
-                helper.writeField("Trees created", stepResult.treesCountDelta)
-            } else if (stepResult.step is CombineTrees) {
-                helper.writeField("Trees combined", -stepResult.treesCountDelta)
+            if (stepResult.step is BuildSHMTreeStep.BuildingInitialTrees) {
+                helper.writeField("\tTrees created", stepResult.treesCountDelta)
+            } else if (stepResult.step is BuildSHMTreeStep.CombineTrees) {
+                helper.writeField("\tTrees combined", -stepResult.treesCountDelta)
             }
         }
         helper.writeField("Total trees count", stepResults.sumOf { it.treesCountDelta })
         helper.writeField("Total clones count in trees", stepResults.sumOf { it.clonesWasAdded })
     }
 
+    @Suppress("unused")
     @JsonAutoDetect(
         fieldVisibility = ANY,
         isGetterVisibility = NONE,
@@ -79,55 +77,20 @@ class BuildSHMTreeReport(
         val clonesWasAdded: Int,
         val cloneNodesWasAdded: Int,
         val treesCountDelta: Int,
-        val commonVJMutationsCounts: Stats,
-        val clonesCountInTrees: Stats,
-        val wildcardsScore: Stats,
-        val wildcardsScoreForRoots: Stats,
-        val maxNDNsWildcardsScoreInTree: Stats,
-        val surenessOfDecisions: Stats,
-        val mutationsRateDifferences: Stats,
-        val minMutationsRateDifferences: Stats,
-        val maxMutationsRateDifferences: Stats,
+        val commonVJMutationsCounts: StatsWithQuantiles,
+        val clonesCountInTrees: StatsWithQuantiles,
+        val wildcardsScore: StatsWithQuantiles,
+        val wildcardsScoreForRoots: StatsWithQuantiles,
+        val maxNDNsWildcardsScoreInTree: StatsWithQuantiles,
+        val surenessOfDecisions: StatsWithQuantiles,
+        val mutationsRateDifferences: StatsWithQuantiles,
+        val minMutationsRateDifferences: StatsWithQuantiles,
+        val maxMutationsRateDifferences: StatsWithQuantiles,
     )
-
-    @JsonAutoDetect(
-        fieldVisibility = ANY,
-        isGetterVisibility = NONE,
-        getterVisibility = NONE
-    )
-    data class Stats(
-        val size: Long,
-        val mean: Double,
-        val standardDeviation: Double,
-        val sum: Double,
-        val min: Double,
-        val max: Double,
-        val percentile25: Double,
-        val percentile50: Double,
-        val percentile75: Double
-    ) {
-        companion object {
-            fun from(data: Collection<Double>): Stats {
-                val statistics = DescriptiveStatistics()
-                data.forEach { statistics.addValue(it) }
-                return Stats(
-                    size = statistics.n,
-                    mean = statistics.mean,
-                    standardDeviation = statistics.standardDeviation,
-                    sum = statistics.sum,
-                    min = statistics.min,
-                    max = statistics.max,
-                    percentile25 = statistics.getPercentile(25.0),
-                    percentile50 = statistics.getPercentile(50.0),
-                    percentile75 = statistics.getPercentile(75.0)
-                )
-            }
-        }
-    }
 
     class Builder : AbstractCommandReportBuilder<Builder>() {
         private val stepResults = mutableListOf<StepResult>()
-        override fun buildReport(): BuildSHMTreeReport = BuildSHMTreeReport(
+        override fun buildReport() = BuildSHMTreeReport(
             date, commandLine, inputFiles, outputFiles, executionTimeMillis, version, stepResults
         )
 
@@ -165,9 +128,10 @@ class BuildSHMTreeReport(
                     it.getMutations("VMutationsFromRoot").size() + it.getMutations("JMutationsFromRoot").size()
                 }
             val clonesCountInTrees = debugInfosAfterDecisions
-                .filter { it["cloneId"] != null }
-                .groupingBy { it.treeId() }.eachCount()
+                .filterNot { it["clonesIds"].isNullOrBlank() }
+                .groupBy({ it.treeId() }, { it["clonesIds"]?.split(",") ?: emptyList() })
                 .values
+                .map { it.size }
             val NDNsByTrees = debugInfosAfterDecisions
                 .filter { it["id"] != "0" }
                 .groupBy { it.treeId() }
@@ -192,9 +156,9 @@ class BuildSHMTreeReport(
                         .maxOfOrNull { NDN -> NDN.wildcardsScore() }
                 }
             val surenessOfDecisions = debugInfosBeforeDecisions
-                .filter { it["cloneId"] != null }
+                .filterNot { it["clonesIds"].isNullOrBlank() }
                 .filter { it["decisionMetric"] != null }
-                .groupBy({ it["cloneId"] }) { it["decisionMetric"]!!.toDouble() }
+                .groupBy({ it["clonesIds"] }) { it["decisionMetric"]!!.toDouble() }
                 .filterValues { it.size > 1 }
                 .mapValues { (_, metrics) ->
                     val minMetric = metrics.minOrNull()!!
@@ -213,15 +177,15 @@ class BuildSHMTreeReport(
                 clonesWasAdded = clonesWasAdded,
                 cloneNodesWasAdded = cloneNodesWasAdded,
                 treesCountDelta = treesCountDelta,
-                commonVJMutationsCounts = Stats.from(commonVJMutationsCounts.map { it.toDouble() }),
-                clonesCountInTrees = Stats.from(clonesCountInTrees.map { it.toDouble() }),
-                wildcardsScore = Stats.from(averageNDNWildcardsScore),
-                wildcardsScoreForRoots = Stats.from(NDNsWildcardsScoreForRoots),
-                maxNDNsWildcardsScoreInTree = Stats.from(maxNDNsWildcardsScoreInTree),
-                surenessOfDecisions = Stats.from(surenessOfDecisions),
-                mutationsRateDifferences = Stats.from(mutationRatesDifferences.flatten()),
-                minMutationsRateDifferences = Stats.from(mutationRatesDifferences.map { it.minOrNull()!! }),
-                maxMutationsRateDifferences = Stats.from(mutationRatesDifferences.map { it.maxOrNull()!! })
+                commonVJMutationsCounts = StatsWithQuantiles.from(commonVJMutationsCounts.map { it.toDouble() }),
+                clonesCountInTrees = StatsWithQuantiles.from(clonesCountInTrees.map { it.toDouble() }),
+                wildcardsScore = StatsWithQuantiles.from(averageNDNWildcardsScore),
+                wildcardsScoreForRoots = StatsWithQuantiles.from(NDNsWildcardsScoreForRoots),
+                maxNDNsWildcardsScoreInTree = StatsWithQuantiles.from(maxNDNsWildcardsScoreInTree),
+                surenessOfDecisions = StatsWithQuantiles.from(surenessOfDecisions),
+                mutationsRateDifferences = StatsWithQuantiles.from(mutationRatesDifferences.flatten()),
+                minMutationsRateDifferences = StatsWithQuantiles.from(mutationRatesDifferences.map { it.minOrNull()!! }),
+                maxMutationsRateDifferences = StatsWithQuantiles.from(mutationRatesDifferences.map { it.maxOrNull()!! })
             )
         }
 

@@ -67,10 +67,10 @@ public class VDJCAlignerPVFirstTest {
 
             for (PairedRead read : CUtils.it(reader)) {
                 ++total;
-                VDJCAlignmentResult<PairedRead> result = aligner.process(read);
-                if (result.alignment != null) {
-                    alignemntsList.add(result.alignment);
-                    for (VDJCHit hit : result.alignment.getHits(GeneType.Variable))
+                VDJCAlignments result = aligner.process(read.toTuple(), read);
+                if (result != null) {
+                    alignemntsList.add(result);
+                    for (VDJCHit hit : result.getHits(GeneType.Variable))
                         if (hit.getAlignment(0) != null && hit.getAlignment(1) != null)
                             ++leftHit;
                 }

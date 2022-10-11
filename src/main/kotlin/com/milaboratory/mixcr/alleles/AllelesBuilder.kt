@@ -17,22 +17,28 @@ import cc.redberry.pipe.OutputPort
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.helpers.get
+import com.milaboratory.mixcr.alleles.AlleleUtil.complimentaryGeneType
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.VJPair
+import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.flatten
+import com.milaboratory.primitivio.flatMap
+import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.mapInParallel
+import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
@@ -52,31 +58,39 @@ import io.repseq.core.ReferencePoint.VEnd
 import io.repseq.core.ReferencePoints
 import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
+import java.io.PrintStream
+import java.nio.file.Path
 import java.util.*
 import kotlin.collections.set
+import kotlin.math.absoluteValue
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class AllelesBuilder(
-    private val parameters: FindAllelesParameters,
+    private val searchAlleleParameters: FindAllelesParameters.AlleleMutationsSearchParameters,
+    private val searchMutationsInCDR3Parameters: FindAllelesParameters.SearchMutationsInCDR3Params?,
+    private val clonesFilter: ClonesFilter,
     private val tempDest: TempFileDest,
     private val datasets: List<CloneReader>,
-    private val allClonesCutBy: GeneFeatures
+    private val allClonesCutBy: GeneFeatures,
+    private val debugDir: Path?,
+    private val scoring: VJPair<AlignmentScoring<NucleotideSequence>>,
+    private val CDR3Diversity: Int,
+    private val geneDiversity: VJPair<Int>
 ) {
-    private val scoring: VJPair<AlignmentScoring<NucleotideSequence>> = VJPair(
-        V = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring,
-        J = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
-    )
-
     fun searchForAlleles(
         geneType: GeneType,
+        complementaryAlleles: Map<String, List<VDJCGeneData>>,
         progress: ProgressAndStage,
+        reportBuilder: FindAllelesReport.Builder,
         threads: Int
-    ): List<Pair<String, List<VDJCGeneData>>> {
+    ): Map<String, List<VDJCGeneData>> {
         val totalClonesCount = datasets.sumOf { it.numberOfClones() }.toLong()
         val stateBuilder = datasets.constructStateBuilder()
 
         //assumption: there are no allele genes in library
         //TODO how to check assumption?
-        return filteredClones { filteredClones ->
+        return datasets.filteredClones(clonesFilter) { filteredClones ->
             filteredClones.withProgress(
                 totalClonesCount,
                 progress,
@@ -96,68 +110,178 @@ class AllelesBuilder(
                 ) { clustersWithTheSameV ->
                     clustersWithTheSameV.mapInParallel(threads) { cluster ->
                         val geneId = cluster[0].getBestHit(geneType).gene.name
-                        geneId to findAlleles(cluster, geneType).toGeneData()
+                        geneId to findAlleles(
+                            cluster,
+                            complementaryAlleles,
+                            geneType,
+                            reportBuilder
+                        ).sortedBy { it.name }
                     }
                         .asSequence()
-                        .sortedBy { it.first }
-                        .toList()
+                        .toMap()
                 }
         }
     }
 
-
-    private fun <R> filteredClones(function: (OutputPort<Clone>) -> R): R = datasets.map { it.readClones() }
-        .flatten()
-        .filter { c ->
-            // filter non-productive clonotypes
-            // todo CDR3?
-            !parameters.productiveOnly || (!c.containsStopsOrAbsent(CDR3) && !c.isOutOfFrameOrAbsent(CDR3))
-        }
-        .filter { c ->
-            c.count > parameters.useClonesWithCountMoreThen
-        }
-        .use(function)
-
-    private fun findAlleles(clusterByTheSameGene: List<Clone>, geneType: GeneType): List<Allele> {
+    private fun findAlleles(
+        clusterByTheSameGene: List<Clone>,
+        complementaryAlleles: Map<String, List<VDJCGeneData>>,
+        geneType: GeneType,
+        reportBuilder: FindAllelesReport.Builder
+    ): List<VDJCGeneData> {
         require(clusterByTheSameGene.isNotEmpty())
         val bestHit = clusterByTheSameGene[0].getBestHit(geneType)
 
         val cloneDescriptors = clusterByTheSameGene.asSequence()
             .map { clone ->
+                val alleles = complementaryAlleles[clone.getBestHit(complimentaryGeneType(geneType)).gene.name]
+                val naiveByComplimentaryGeneMutations = when {
+                    alleles.isNullOrEmpty() -> clone.getBestHit(complimentaryGeneType(geneType))
+                        .alignments
+                        .filterNotNull()
+                        .all { it.absoluteMutations == EMPTY_NUCLEOTIDE_MUTATIONS }
+                    else -> alleles.any {
+                        CloneRebuild.alignmentsChange(clone, it, scoring[complimentaryGeneType(geneType)]).naive
+                    }
+                }
                 CloneDescription(
+                    clone,
                     clone.getBestHit(geneType).mutationsWithoutCDR3(),
-                    clone.clusterIdentity(geneType)
+                    naiveByComplimentaryGeneMutations,
+                    clone.clusterIdentity(complimentaryGeneType(geneType))
                 )
             }
             .toList()
+
         val sequence1 = clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1
-        val allelesSearcher: AllelesSearcher = TIgGERAllelesSearcher(
+        val maxDiversity = CDR3Diversity * geneDiversity[complimentaryGeneType(geneType)]
+        val allelesSearcher: AllelesSearcher = AllelesMutationsSearcher(
+            reportBuilder,
             scoring[geneType],
             sequence1,
-            parameters
+            searchAlleleParameters,
+            AllelesMutationsSearcher.DiversityThresholds(
+                ceil(searchAlleleParameters.diversityThresholds.minDiversityForMutation * maxDiversity).toInt(),
+                ceil(searchAlleleParameters.diversityThresholds.minDiversityForAllele * maxDiversity).toInt(),
+                ceil(searchAlleleParameters.diversityThresholds.diversityForSkipTestForRatioForZeroAllele * maxDiversity).toInt()
+            )
         )
 
-        val foundAlleles = allelesSearcher.search(cloneDescriptors)
+        val foundAlleles = allelesSearcher.search(bestHit.gene.id, cloneDescriptors)
 
-        val withMutationsInCDR3 = foundAlleles.map { foundAllele ->
-            foundAllele.withMutationsInCDR3(clusterByTheSameGene, geneType, sequence1)
-        }
+        reportBuilder.foundAlleles(foundAlleles.count { it.allele != EMPTY_NUCLEOTIDE_MUTATIONS })
+        reportBuilder.zygote(foundAlleles.size)
 
-        val mappedReferencePoints = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
-        return withMutationsInCDR3.map { (withMutationsInCDR3, knownCDR3RangeLength) ->
-            Allele(
-                bestHit.gene,
-                withMutationsInCDR3.allele,
-                bestHit.alignedFeature,
-                knownCDR3RangeLength,
-                mappedReferencePoints.applyMutations(withMutationsInCDR3.allele)
+        val result = foundAlleles.map { foundAllele ->
+            val naiveClones = clusterByTheSameGene.asSequence()
+                .filter { clone -> clone.getBestHit(geneType).mutationsWithoutCDR3() == foundAllele.allele }
+                .filter { clone -> clone.getBestHit(complimentaryGeneType(geneType)).mutationsWithoutCDR3().isEmpty }
+                .toList()
+            //TODO calculate mutationsInCDR3 as separate action to get more precise filter by clone.getBestHit(complimentaryGeneType(geneType)).mutations
+            val mutationsInCDR3 = when {
+                searchMutationsInCDR3Parameters != null -> mutationsInCDR3(
+                    geneType,
+                    sequence1,
+                    naiveClones,
+                    searchMutationsInCDR3Parameters,
+                    geneDiversity[complimentaryGeneType(geneType)]
+                )
+                else -> MutationsInCDR3.empty
+            }
+            buildAllele(
+                bestHit,
+                foundAllele.allele,
+                mutationsInCDR3.mutations,
+                mutationsInCDR3.knownCDR3RangeLength
             )
         }
+        if (debugDir != null) {
+            val rows = cloneDescriptors
+                .groupBy { it.mutationGroups }
+                .entries
+                .sortedBy { it.key.size }
+            PrintStream(debugDir.resolve("${bestHit.gene.name}.tsv").toFile()).use { debugFile ->
+                XSV.writeXSV(
+                    debugFile,
+                    rows,
+                    buildMap {
+                        this["diversity"] = { (_, clones) -> clones.map { it.clusterIdentity }.distinct().size }
+                        this["count"] = { (_, clones) -> clones.size }
+                        this["noMutationsInComplimentaryGene"] =
+                            { (_, clones) -> clones.count { it.naiveByComplimentaryGeneMutations } }
+                        this["mutations"] = { (mutations, _) -> mutations }
+                        result.forEach { allele ->
+                            this[allele.name] = { (_, clonesDescriptors) ->
+                                clonesDescriptors
+                                    .map { it.clone }
+                                    .minOf {
+                                        CloneRebuild
+                                            .alignmentsChange(it, allele, scoring[geneType])
+                                            .penalty
+                                    }
+                            }
+                        }
+                    },
+                    "\t"
+                )
+            }
+        }
+
+        return result
+    }
+
+    private fun buildAllele(
+        bestHit: VDJCHit,
+        mutationsWithoutCDR3: Mutations<NucleotideSequence>,
+        mutationsInCDR3: Mutations<NucleotideSequence>,
+        knownCDR3RangeLength: Int
+    ): VDJCGeneData {
+        val gene = bestHit.gene
+        val mutationsWithCDR3 = when (gene.geneType) {
+            Variable -> mutationsWithoutCDR3.concat(mutationsInCDR3)
+            Joining -> mutationsInCDR3.concat(mutationsWithoutCDR3)
+            else -> throw IllegalArgumentException()
+        }
+        return when (mutationsWithCDR3) {
+            EMPTY_NUCLEOTIDE_MUTATIONS -> gene.data
+            else -> {
+                val knownFeatures = calculateKnownFeatures(gene.geneType, knownCDR3RangeLength)
+                val mappedReferencePoints = bestHit.gene.partitioning
+                    .getRelativeReferencePoints(bestHit.alignedFeature)
+                    .applyMutations(mutationsWithCDR3)
+                VDJCGeneData(
+                    BaseSequence(
+                        gene.data.baseSequence.origin,
+                        gene.partitioning.getRanges(bestHit.alignedFeature),
+                        mutationsWithCDR3
+                    ),
+                    generateAlleleName(gene, mutationsWithoutCDR3, mutationsInCDR3, mutationsWithCDR3),
+                    gene.data.geneType,
+                    gene.data.isFunctional,
+                    gene.data.chains,
+                    metaForGeneratedGene(gene, knownFeatures),
+                    recalculatedAnchorPoints(mappedReferencePoints)
+                )
+            }
+        }
+    }
+
+    private fun generateAlleleName(
+        gene: VDJCGene,
+        mutationsWithoutCDR3: Mutations<NucleotideSequence>,
+        mutationsInCDR3: Mutations<NucleotideSequence>,
+        mutationsWithCDR3: Mutations<NucleotideSequence>
+    ): String {
+        val inCDR3 = when {
+            mutationsInCDR3 != EMPTY_NUCLEOTIDE_MUTATIONS -> "-CDR3-" + mutationsInCDR3.size()
+            else -> ""
+        }
+        return gene.name + "-M" + mutationsWithoutCDR3.size() + inCDR3 + "-" + mutationsWithCDR3.hashCode().absoluteValue
     }
 
     private fun Clone.clusterIdentity(geneType: GeneType) = CloneDescription.ClusterIdentity(
         ntLengthOf(CDR3),
-        getBestHit(complimentaryGeneType(geneType)).gene.geneName
+        getBestHit(geneType).gene.geneName
     )
 
     private fun VDJCHit.mutationsWithoutCDR3(): Mutations<NucleotideSequence> {
@@ -181,16 +305,15 @@ class AllelesBuilder(
      * Diversity of naive clones must be more than `parameters.minDiversityForAllele`
      * Register allele mutation if letter is the same in all naive clones in this position (stop on found difference)
      */
-    private fun AllelesSearcher.Result.withMutationsInCDR3(
-        clones: List<Clone>,
+    private fun mutationsInCDR3(
         geneType: GeneType,
-        sequence1: NucleotideSequence
-    ): Pair<AllelesSearcher.Result, Int> {
-        val naiveClones = clones.asSequence()
-            .filter { clone -> clone.getBestHit(geneType).mutationsWithoutCDR3() == allele }
-            .toList()
-        if (naiveClones.size < parameters.searchMutationsInCDR3.minClonesCount) {
-            return this to 0
+        sequence1: NucleotideSequence,
+        naiveClones: List<Clone>,
+        searchMutationsInCDR3Params: FindAllelesParameters.SearchMutationsInCDR3Params,
+        diversityOfComlementaryGene: Int
+    ): MutationsInCDR3 {
+        if (naiveClones.size < searchMutationsInCDR3Params.minClonesCount) {
+            return MutationsInCDR3.empty
         }
         val CDR3OfNaiveClones = naiveClones.map { it.getFeature(CDR3).sequence to it }.toMutableList()
         val minCDR3Size = CDR3OfNaiveClones.minOf { it.first.size() }
@@ -207,11 +330,11 @@ class AllelesBuilder(
             val diversityOfMostFrequentLetter = lettersInPosition[mostFrequent]!!
                 .map { it.second.getBestHit(complimentaryGeneType(geneType)).gene.id }
                 .distinct().size
-            if (diversityOfMostFrequentLetter < parameters.searchMutationsInCDR3.minDiversity) break
+            if (diversityOfMostFrequentLetter < floor(diversityOfComlementaryGene * searchMutationsInCDR3Params.minDiversity)) break
             if (lettersInPosition.size != 1) {
                 val countOfPretender = lettersInPosition[mostFrequent]!!.size
-                if (countOfPretender < parameters.searchMutationsInCDR3.minClonesCount) break
-                if (countOfPretender <= CDR3OfNaiveClones.size * parameters.searchMutationsInCDR3.minPartOfTheSameLetter) break
+                if (countOfPretender < searchMutationsInCDR3Params.minClonesCount) break
+                if (countOfPretender <= CDR3OfNaiveClones.size * searchMutationsInCDR3Params.minPartOfTheSameLetter) break
             }
             val clonesToExclude = (lettersInPosition - mostFrequent).values
                 .flatMap { it.map { (_, clone) -> clone } }
@@ -219,8 +342,8 @@ class AllelesBuilder(
             CDR3OfNaiveClones.removeIf { (_, clone) -> clone in clonesToExclude }
             foundLettersInCDR3 += mostFrequent
         }
-        if (foundLettersInCDR3.isEmpty()) return this to 0
-        val bestHit = clones.first().getBestHit(geneType)
+        if (foundLettersInCDR3.isEmpty()) return MutationsInCDR3.empty
+        val bestHit = naiveClones.first().getBestHit(geneType)
         val partitioning = bestHit.gene.partitioning.getRelativeReferencePoints(bestHit.alignedFeature)
         val foundMutations = mutableListOf<Int>()
         var lastKnownShift = 0
@@ -256,94 +379,116 @@ class AllelesBuilder(
             .asSequence()
             .sortedBy { Mutation.getPosition(it) }
             .asMutations(NucleotideSequence.ALPHABET)
-        val resultMutations = when (geneType) {
-            Variable -> allele.concat(result)
-            else -> result.concat(allele)
-        }
-        return AllelesSearcher.Result(resultMutations) to lastKnownShift
+        return MutationsInCDR3(result, lastKnownShift)
     }
 
-    private fun complimentaryGeneType(geneType: GeneType): GeneType = when (geneType) {
-        Variable -> Joining
-        Joining -> Variable
-        else -> throw IllegalArgumentException()
-    }
-
-    private fun List<Allele>.toGeneData() =
-        map { allele ->
-            when {
-                allele.mutations != Mutations.EMPTY_NUCLEOTIDE_MUTATIONS -> buildGene(allele)
-                else -> allele.gene.data
-            }
-        }
-            .sortedBy { it.name }
-
-    private fun buildGene(allele: Allele): VDJCGeneData = VDJCGeneData(
-        BaseSequence(
-            allele.gene.data.baseSequence.origin,
-            allele.gene.partitioning.getRanges(allele.alignedFeature),
-            allele.mutations
-        ),
-        allele.generateGeneName(),
-        allele.gene.data.geneType,
-        allele.gene.data.isFunctional,
-        allele.gene.data.chains,
-        allele.metaForGeneratedGene(),
-        allele.recalculatedAnchorPoints()
-    )
-
-    private fun Allele.generateGeneName(): String =
-        gene.name + "-M" + mutations.size() + "-" + mutations.hashCode()
-
-    private fun Allele.metaForGeneratedGene(): SortedMap<String, SortedSet<String>> {
+    private fun metaForGeneratedGene(
+        gene: VDJCGene,
+        knownFeatures: GeneFeatures
+    ): SortedMap<String, SortedSet<String>> {
         val meta: SortedMap<String, SortedSet<String>> = TreeMap(gene.data.meta)
-        val knownFeatures = when (gene.geneType) {
-            Variable -> {
-                val toAdd = GeneFeature(CDR3Begin, 0, knownCDR3RangeLength)
-                val intersection = allClonesCutBy.intersection(GeneFeature(UTR5Begin, CDR3Begin))
-                if (intersection != null) {
-                    intersection + toAdd
-                } else {
-                    GeneFeatures(toAdd)
-                }
-            }
-            Joining -> {
-                val toAdd = GeneFeatures(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
-                val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
-                if (intersection != null) {
-                    toAdd + intersection
-                } else {
-                    toAdd
-                }
-            }
-            else -> throw UnsupportedOperationException()
-        }
         meta[metaKeyForAlleleMutationsReliableGeneFeatures] =
             knownFeatures.features.map { GeneFeature.encode(it) }.toSortedSet()
+        meta[metaKeyForAlleleMutationsReliableRanges] =
+            knownFeatures.features
+                .flatMap { gene.partitioning.getRanges(it).asSequence() }
+                .map { it.toString() }
+                .toSortedSet()
         meta["alleleVariantOf"] = sortedSetOf(gene.name)
         return meta
     }
 
-    private fun Allele.recalculatedAnchorPoints(): SortedMap<ReferencePoint, Long> {
-        return (0 until mappedReferencePoints.pointsCount()).asSequence()
-            .map { index -> mappedReferencePoints.referencePointFromIndex(index) }
-            .associateByTo(TreeMap(), { it }, { mappedReferencePoints.getPosition(it).toLong() })
+    private fun calculateKnownFeatures(geneType: GeneType, knownCDR3RangeLength: Int) = when (geneType) {
+        Variable -> {
+            val toAdd = GeneFeature(CDR3Begin, 0, knownCDR3RangeLength)
+            val intersection = allClonesCutBy.intersection(GeneFeature(UTR5Begin, CDR3Begin))
+            if (intersection != null) {
+                intersection + toAdd
+            } else {
+                GeneFeatures(toAdd)
+            }
+        }
+        Joining -> {
+            val toAdd = GeneFeatures(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
+            val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
+            if (intersection != null) {
+                toAdd + intersection
+            } else {
+                toAdd
+            }
+        }
+        else -> throw UnsupportedOperationException()
     }
 
-    private class Allele(
-        val gene: VDJCGene,
+    private fun recalculatedAnchorPoints(mappedReferencePoints: ReferencePoints): SortedMap<ReferencePoint, Long> =
+        (0 until mappedReferencePoints.pointsCount()).asSequence()
+            .map { index -> mappedReferencePoints.referencePointFromIndex(index) }
+            .associateByTo(TreeMap(), { it }, { mappedReferencePoints.getPosition(it).toLong() })
+
+    data class MutationsInCDR3(
         val mutations: Mutations<NucleotideSequence>,
-        val alignedFeature: GeneFeature,
-        val knownCDR3RangeLength: Int,
-        val mappedReferencePoints: ReferencePoints
+        val knownCDR3RangeLength: Int
     ) {
-        override fun toString(): String = "Allele{" +
-                "id=" + gene.name +
-                ", mutations=" + mutations +
-                '}'
+        companion object {
+            val empty = MutationsInCDR3(EMPTY_NUCLEOTIDE_MUTATIONS, 0)
+        }
+
+    }
+
+    interface ClonesFilter {
+        fun match(clone: Clone, tagsInfo: TagsInfo): Boolean
     }
 
     companion object {
         const val metaKeyForAlleleMutationsReliableGeneFeatures = "alleleMutationsReliableGeneFeatures"
+        const val metaKeyForAlleleMutationsReliableRanges = "alleleMutationsReliableRanges"
+
+        fun create(
+            parameters: FindAllelesParameters,
+            clonesFilter: ClonesFilter,
+            tempDest: TempFileDest,
+            datasets: List<CloneReader>,
+            allClonesCutBy: GeneFeatures,
+            debugDir: Path?
+        ): AllelesBuilder {
+            val CDR3Variants = mutableSetOf<Int>()
+            val VVariants = mutableSetOf<String>()
+            val JVariants = mutableSetOf<String>()
+            datasets.filteredClones(clonesFilter) { clones ->
+                clones.forEach { clone ->
+                    CDR3Variants += clone.ntLengthOf(CDR3)
+                    VVariants += clone.getBestHit(Variable).gene.name
+                    JVariants += clone.getBestHit(Joining).gene.name
+                }
+            }
+
+            return AllelesBuilder(
+                parameters.searchAlleleParameter,
+                parameters.searchMutationsInCDR3,
+                clonesFilter,
+                tempDest,
+                datasets,
+                allClonesCutBy,
+                debugDir,
+                VJPair(
+                    V = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring,
+                    J = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
+                ),
+                CDR3Variants.size,
+                VJPair(
+                    VVariants.size,
+                    JVariants.size
+                )
+            )
+        }
+
+        private fun <R> List<CloneReader>.filteredClones(filter: ClonesFilter, function: (OutputPort<Clone>) -> R): R =
+            port
+                .flatMap { cloneReader ->
+                    cloneReader.readClones().filter { clone ->
+                        filter.match(clone, cloneReader.tagsInfo)
+                    }
+                }
+                .use(function)
     }
 }

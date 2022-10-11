@@ -74,7 +74,7 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
                     require(
                         fieldDescr.args.isEmpty() ||
                                 (fieldDescr.args.size == 1 &&
-                                        (fieldDescr.args[0].lowercase() in setOf("true", "false")))
+                                        (fieldDescr.args[0].lowercase() in arrayOf("true", "false")))
                     )
                     eField.create(mode, header, emptyArray())
                 }
@@ -86,8 +86,7 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
             }
         }
 
-    private fun hasField(name: String): Boolean =
-        fields.any { field -> name.equals(field.cmdArgName, ignoreCase = true) }
+    private fun hasField(name: String): Boolean = name.lowercase() in fieldsMap
 
     /** Parses Picocli's parsing result into a list of export fields */
     fun parsePicocli(parseResult: CommandLine.ParseResult): List<ExportFieldDescription> = buildList {
@@ -136,16 +135,13 @@ abstract class FieldExtractorsFactory<T : Any> {
         header: MiXCRHeader,
         cmdParseResult: CommandLine.ParseResult
     ): List<FieldExtractor<T>> {
-        val humanReadable = cmdParseResult.matchedOption("--with-spaces")?.getValue<Boolean>() ?: false
-        val oMode = if (humanReadable) HumanFriendly else ScriptingFriendly
-
         var fields = parseSpec(cmdParseResult)
 
         // if no options specified
         if (fields.isEmpty()) {
             fields = presets[defaultPreset]!!
         }
-        return fields.flatMap { fieldData -> extract(fieldData, header, oMode) }
+        return fields.flatMap { fieldData -> extract(fieldData, header, ScriptingFriendly) }
     }
 
     fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec, addPresetOptions: Boolean) {
@@ -174,14 +170,6 @@ abstract class FieldExtractorsFactory<T : Any> {
             spec.addArgGroup(
                 CommandLine.Model.ArgGroupSpec
                     .builder()
-                    .addArg(
-                        CommandLine.Model.OptionSpec
-                            .builder("-v", "--with-spaces")
-                            .description("Output column headers with spaces.")
-                            .required(true)
-                            .type(Boolean::class.java)
-                            .build()
-                    )
                     .addArg(
                         CommandLine.Model.OptionSpec
                             .builder("--no-headers")

@@ -110,15 +110,20 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
         setFooter(reader.getFooter());
     }
 
+    /** Header saved for alignment objects validation */
+    private MiXCRHeader header = null;
+
     @Override
-    public void writeHeader(MiXCRHeader info, List<VDJCGene> genes) {
-        if (info == null || genes == null)
+    public void writeHeader(MiXCRHeader header, List<VDJCGene> genes) {
+        if (header == null || genes == null)
             throw new IllegalArgumentException();
 
-        if (writer != null)
+        if (this.header != null)
             throw new IllegalStateException("Header already written.");
 
-        // Writing meta data using raw stream for easy reconstruction with simple tools like hex viewers
+        this.header = header;
+
+        // Writing metadata using raw stream for easy reconstruction with simple tools like hex viewers
         try (PrimitivO o = output.beginPrimitivO(true)) {
             // Writing magic bytes
             assert MAGIC_BYTES.length == MAGIC_LENGTH;
@@ -130,9 +135,9 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
                             AppVersionInfo.OutputType.ToFile));
 
             // Writing parameters
-            o.writeObject(info);
+            o.writeObject(header);
 
-            IOUtil.stdVDJCPrimitivOStateInit(o, genes, info.getAlignerParameters());
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, header.getAlignerParameters());
         }
 
         writer = output.beginPrimitivOBlocks(encoderThreads, alignmentsInBlock,
@@ -166,6 +171,9 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
 
         if (alignment == null)
             throw new NullPointerException();
+
+        if (alignment.getTagCount().depth() != header.getTagsInfo().size())
+            throw new IllegalStateException("Inconsistent tags in alignment and file header.");
 
         numberOfAlignments++;
         writer.write(alignment);
