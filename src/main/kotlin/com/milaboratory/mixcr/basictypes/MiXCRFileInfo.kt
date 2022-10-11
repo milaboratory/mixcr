@@ -13,15 +13,12 @@ package com.milaboratory.mixcr.basictypes
 
 import com.milaboratory.mitool.data.CriticalThresholdCollection
 import com.milaboratory.mitool.data.CriticalThresholdKey
-import com.milaboratory.mitool.helpers.readList
-import com.milaboratory.mitool.helpers.writeList
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mitool.pattern.search.readObject
-import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
-import com.milaboratory.mixcr.cli.MultipleInputsReportWrapper
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
@@ -45,6 +42,8 @@ interface MiXCRFileInfo {
 data class MiXCRHeader(
     /** Set by used on align step, used to deduce defaults on all downstream steps  */
     val paramsSpec: MiXCRParamsSpec,
+    /** Actual step parameters */
+    val stepParams: MiXCRStepParams = MiXCRStepParams(),
     /** Positional descriptors for tag tuples attached to objects in the file */
     val tagsInfo: TagsInfo = TagsInfo.NO_TAGS,
     /** Aligner parameters */
@@ -66,7 +65,10 @@ data class MiXCRHeader(
         copy(assemblerParameters = assemblerParameters)
 
     fun withAllClonesCutBy(allClonesAlignedBy: Array<GeneFeature>) =
-        copy(allFullyCoveredBy = GeneFeatures(allClonesAlignedBy))
+        copy(allFullyCoveredBy = GeneFeatures(allClonesAlignedBy.toList()))
+
+    fun <P : MiXCRParams> addStepParams(cmd: MiXCRCommand<P, *>, params: P) =
+        copy(stepParams = stepParams.add(cmd, params))
 
     @Serializable(by = FoundAlleles.SerializerImpl::class)
     data class FoundAlleles(
@@ -97,6 +99,7 @@ data class MiXCRHeader(
     class SerializerImpl : BasicSerializer<MiXCRHeader>() {
         override fun write(output: PrimitivO, obj: MiXCRHeader) {
             output.writeObject(obj.paramsSpec)
+            output.writeObject(obj.stepParams)
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
             output.writeObject(obj.assemblerParameters)
@@ -106,6 +109,7 @@ data class MiXCRHeader(
 
         override fun read(input: PrimitivI): MiXCRHeader {
             val paramsSpec = input.readObjectRequired<MiXCRParamsSpec>()
+            val stepParams = input.readObject<MiXCRStepParams>()
             val tagsInfo = input.readObjectRequired<TagsInfo>()
             val alignerParameters = input.readObjectRequired<VDJCAlignerParameters>()
             val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
@@ -113,6 +117,7 @@ data class MiXCRHeader(
             val allFullyCoveredBy = input.readObjectOptional<GeneFeatures>()
             return MiXCRHeader(
                 paramsSpec,
+                stepParams,
                 tagsInfo,
                 alignerParameters,
                 assemblerParameters,
@@ -124,6 +129,7 @@ data class MiXCRHeader(
 }
 
 class MiXCRHeaderMerger {
+    private var upstreamParams = mutableListOf<MiXCRStepParams>()
     private var paramsSpec: MiXCRParamsSpec? = null
     private var tagsInfo: TagsInfo? = null
     private var alignerParameters: VDJCAlignerParameters? = null
@@ -132,6 +138,7 @@ class MiXCRHeaderMerger {
     // TODO something seems to be done with alleles here ?
 
     fun add(header: MiXCRHeader) = run {
+        upstreamParams += header.stepParams
         if (paramsSpec == null) {
             paramsSpec = header.paramsSpec
             tagsInfo = header.tagsInfo
@@ -154,14 +161,22 @@ class MiXCRHeaderMerger {
     }
 
     fun build() =
-        MiXCRHeader(paramsSpec!!, tagsInfo!!, alignerParameters!!, assemblerParameters, null, allFullyCoveredBy)
+        MiXCRHeader(
+            paramsSpec!!,
+            MiXCRStepParams.mergeUpstreams(upstreamParams),
+            tagsInfo!!,
+            alignerParameters!!,
+            assemblerParameters,
+            null,
+            allFullyCoveredBy
+        )
 }
 
 /** Information stored in the footer of */
 @Serializable(by = MiXCRFooter.Companion.IO::class)
 data class MiXCRFooter(
     /** Step reports in the order they were applied to the initial data */
-    val reports: List<MiXCRCommandReport>,
+    val reports: MiXCRStepReports = MiXCRStepReports(),
     /** Collection of thresholds automatically or manually determined, to better select default parameters on
      * downstream steps*/
     val thresholds: CriticalThresholdCollection = CriticalThresholdCollection(),
@@ -170,17 +185,18 @@ data class MiXCRFooter(
 
     fun withThresholds(thresholds: Map<CriticalThresholdKey, Double>) = copy(thresholds = this.thresholds + thresholds)
 
-    fun addReport(report: MiXCRCommandReport) = copy(reports = reports + report)
+    fun <R : MiXCRCommandReport> addStepReport(step: MiXCRCommand<*, R>, report: R) =
+        copy(reports = reports.add(step, report))
 
     companion object {
         class IO : Serializer<MiXCRFooter> {
             override fun write(output: PrimitivO, obj: MiXCRFooter) {
-                output.writeList(obj.reports) { writeObject(it) }
+                output.writeObject(obj.reports)
                 output.writeObject(obj.thresholds)
             }
 
             override fun read(input: PrimitivI): MiXCRFooter {
-                val reports = input.readList { readObject<MiXCRCommandReport>() }
+                val reports = input.readObject<MiXCRStepReports>()
                 val thresholds = input.readObject<CriticalThresholdCollection>()
                 return MiXCRFooter(reports, thresholds)
             }
@@ -193,19 +209,25 @@ data class MiXCRFooter(
 }
 
 class MiXCRFooterMerger {
-    private val reports = mutableListOf<MiXCRCommandReport>()
+    private val upstreamReports = mutableListOf<MiXCRStepReports>()
+    private var reports: MiXCRStepReports? = null
 
     fun addReportsFromInput(inputIdx: Int, inputName: String, footer: MiXCRFooter) = run {
-        footer.reports.forEach { r ->
-            reports += MultipleInputsReportWrapper(inputIdx, inputName, r)
-        }
+        check(reports == null)
+        upstreamReports += footer.reports
         this
     }
 
-    fun addReport(report: MiXCRCommandReport) = run {
-        this.reports += report
+    fun <R : MiXCRCommandReport> addStepReport(step: MiXCRCommand<*, R>, report: R) = run {
+        if (reports == null)
+            reports = MiXCRStepReports.mergeUpstreams(upstreamReports)
+        reports = reports!!.add(step, report)
         this
     }
 
-    fun build() = MiXCRFooter(reports.toList())
+    fun build() = run {
+        if (reports == null)
+            reports = MiXCRStepReports.mergeUpstreams(upstreamReports)
+        MiXCRFooter(reports!!)
+    }
 }

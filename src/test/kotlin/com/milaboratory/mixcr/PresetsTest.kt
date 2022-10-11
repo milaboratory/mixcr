@@ -32,8 +32,8 @@ class PresetsTest {
         // val bundle = Presets.resolveParamsBundle("assemblePartial_universal")
         // val bundle = Presets.resolveParamsBundle("_universal")
         // val bundle = Presets.resolveParamsBundle("_10x_vdj")
-        val bundle = Presets.resolveParamsBundle("milab-human-tcr-dna-multiplex-cdr3")
-        Presets.assemblePartial("milab-human-tcr-dna-multiplex-cdr3")
+        val bundle = Presets.resolveParamsBundle("test-subCloningRegions")
+        Presets.assembleContigs("test-subCloningRegions")
         assertJson(K_YAML_OM, bundle, true)
     }
 
@@ -49,7 +49,7 @@ class PresetsTest {
                 TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 1),
             )
             val header = MiXCRHeader(
-                MiXCRParamsSpec(presetName), tagsInfo, bundle.align!!.parameters,
+                MiXCRParamsSpec(presetName), MiXCRStepParams().add(MiXCRCommand.align, bundle.align!!) , tagsInfo, bundle.align!!.parameters,
                 null, null, null
             )
             bundle.exportAlignments?.let { al ->

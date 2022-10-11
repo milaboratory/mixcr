@@ -72,7 +72,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
 
     override fun allAvailableFields(): List<Field<Wrapper>> = buildList {
         this += SHMTreeFieldsExtractorsFactory.treeFields(false).map { it.fromProperty { tree } }
-        this += SHMTreeNodeFieldsExtractor.nodeFields(true).map { it.fromProperty { node } }
+        this += SHMTreeNodeFieldsExtractor.nodeFields().map { it.fromProperty { node } }
         this += (VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = true) + CloneFieldsExtractorsFactory.cloneFields())
             .map { field ->
                 field.fromProperty(headerMapper = { "$it (only for nodes with clones)" }) { node.clone?.clone }

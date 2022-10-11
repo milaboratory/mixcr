@@ -22,7 +22,7 @@ import io.repseq.core.GeneFeature
 import java.util.*
 
 object SHMTreeNodeFieldsExtractor {
-    fun nodeFields(withTargetFeatures: Boolean): List<Field<SHMTreeForPostanalysis.SplittedNode>> = buildList {
+    fun nodeFields(): List<Field<SHMTreeForPostanalysis.SplittedNode>> = buildList {
         this += FieldParameterless(
             Order.treeNodeSpecific + 100,
             "-nodeId",
@@ -77,38 +77,37 @@ object SHMTreeNodeFieldsExtractor {
             it.clone?.fileName ?: NULL
         }
 
-        if (withTargetFeatures) {
-            this += FieldWithParameters(
-                Order.`-nFeature`,
-                "-nFeature",
-                "Export nucleotide sequence of specified gene feature.\n" +
-                        "If second arg is 'node', than feature will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
-                baseGeneFeatureArg("N. Seq. ", "nSeq"),
-                baseOrNodeArg()
-            ) { node, geneFeature, what ->
-                node.mutationsFromGermlineTo(what)
-                    ?.targetNSequence(geneFeature)
-                    ?.toString() ?: NULL
-            }
+        this += FieldWithParameters(
+            Order.`-nFeature`,
+            "-nFeature",
+            "Export nucleotide sequence of specified gene feature.\n" +
+                    "If second arg is 'node', then feature will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
+            baseGeneFeatureArg("N. Seq. ", "nSeq"),
+            baseOrNodeArg()
+        ) { node, geneFeature, what ->
+            node.mutationsFromGermlineTo(what)
+                ?.targetNSequence(geneFeature)
+                ?.toString() ?: NULL
+        }
 
-            this += FieldWithParameters(
-                Order.`-aaFeature`,
-                "-aaFeature",
-                "Export amino acid sequence of specified gene feature.\n" +
-                        "If second arg is 'node', than feature will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
-                baseGeneFeatureArg("AA. Seq. ", "aaSeq"),
-                baseOrNodeArg()
-            ) { node, geneFeature, what ->
-                node.mutationsFromGermlineTo(what)
-                    ?.targetAASequence(geneFeature)
-                    ?.toString() ?: NULL
-            }
+        this += FieldWithParameters(
+            Order.`-aaFeature`,
+            "-aaFeature",
+            "Export amino acid sequence of specified gene feature.\n" +
+                    "If second arg is 'node', than feature will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
+            baseGeneFeatureArg("AA. Seq. ", "aaSeq"),
+            baseOrNodeArg()
+        ) { node, geneFeature, what ->
+            node.mutationsFromGermlineTo(what)
+                ?.targetAASequence(geneFeature)
+                ?.toString() ?: NULL
         }
 
         this += FieldWithParameters(
             Order.`-lengthOf`,
             "-lengthOf",
-            "Export length of specified gene feature.",
+            "Export length of specified gene feature.\n" +
+                    "If second arg is 'node', than feature length will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
             baseGeneFeatureArg("Length of ", "lengthOf")
         ) { node, geneFeature ->
             node.mutationsFromGermline()
@@ -119,7 +118,7 @@ object SHMTreeNodeFieldsExtractor {
         this += FieldWithParameters(
             Order.`-nMutations`,
             "-nMutations",
-            "Extract nucleotide mutations for specific gene feature.",
+            "Extract nucleotide mutations from specific node for specific gene feature.",
             baseGeneFeatureArg("N. Mutations in ", "nMutations"),
             baseOnArg(),
             validateArgs = { feature, _ ->
@@ -135,7 +134,7 @@ object SHMTreeNodeFieldsExtractor {
         this += FieldWithParameters(
             Order.`-nMutationsRelative`,
             "-nMutationsRelative",
-            "Extract nucleotide mutations for specific gene feature relative to another feature.",
+            "Extract nucleotide mutations from specific node for specific gene feature relative to another feature.",
             baseGeneFeatureArg("N. Mutations in ", "nMutationsIn"),
             relativeGeneFeatureArg(),
             baseOnArg(),
@@ -153,7 +152,7 @@ object SHMTreeNodeFieldsExtractor {
         this += FieldWithParameters(
             Order.`-aaMutations`,
             "-aaMutations",
-            "Extract amino acid mutations for specific gene feature",
+            "Extract amino acid mutations from specific node for specific gene feature",
             baseGeneFeatureArg("AA. Mutations in ", "aaMutations"),
             baseOnArg(),
             validateArgs = { feature, _ ->
@@ -168,7 +167,7 @@ object SHMTreeNodeFieldsExtractor {
         this += FieldWithParameters(
             Order.`-aaMutationsRelative`,
             "-aaMutationsRelative",
-            "Extract amino acid mutations for specific gene feature relative to another feature.",
+            "Extract amino acid mutations from specific node for specific gene feature relative to another feature.",
             baseGeneFeatureArg("AA. Mutations in ", "aaMutations"),
             relativeGeneFeatureArg(),
             baseOnArg(),
@@ -188,7 +187,7 @@ object SHMTreeNodeFieldsExtractor {
         this += FieldWithParameters(
             Order.`-mutationsDetailed`,
             "-mutationsDetailed",
-            "Detailed list of nucleotide and corresponding amino acid mutations. $detailedMutationsFormat",
+            "Detailed list of nucleotide and corresponding amino acid mutations from specific node. $detailedMutationsFormat",
             baseGeneFeatureArg("Detailed mutations in ", "mutationsDetailedIn"),
             baseOnArg(),
             validateArgs = { feature, _ ->

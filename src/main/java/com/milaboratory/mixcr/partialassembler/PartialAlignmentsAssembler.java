@@ -48,6 +48,7 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
     final VDJCAlignerParameters alignerParameters;
     final TargetMerger targetMerger;
     final List<VDJCGene> usedGenes;
+    final PartialAlignmentsAssemblerAligner aligner;
     final Set<GeneType> geneTypesToShiftIndels;
     final long maxLeftParts;
     final int maxLeftMatches;
@@ -89,6 +90,10 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
         this.writePartial = writePartial;
         this.overlappedOnly = overlappedOnly;
         this.output = output;
+
+        this.aligner = new PartialAlignmentsAssemblerAligner(alignerParameters);
+        for (VDJCGene gene : usedGenes)
+            this.aligner.addGene(gene);
     }
 
     public boolean leftPartsLimitReached() {
@@ -120,10 +125,6 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
     }
 
     public void searchOverlaps(OutputPort<VDJCAlignments> input) {
-        PartialAlignmentsAssemblerAligner aligner = new PartialAlignmentsAssemblerAligner(alignerParameters);
-        for (VDJCGene gene : usedGenes)
-            aligner.addGene(gene);
-
         for (final VDJCAlignments alignment : CUtils.it(input)) {
             totalProcessed.incrementAndGet();
 
@@ -161,8 +162,10 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
             List<AlignedTarget> mergedTargets = searchResult.result;
             VDJCMultiRead mRead = new VDJCMultiRead(mergedTargets);
 
-            // Both parts have the same tag tuple
-            final VDJCAlignments mAlignment = aligner.process(mRead).alignment.setTagCount(searchResult.tagCount);
+            final VDJCAlignments mAlignment = aligner.process(mRead.toTuple(), mRead)
+                    .setTagCount(searchResult.tagCount) // note: both parts have the same tag tuple
+                    .setHistory(mRead.getHistory(), mRead.getOriginalSequences())
+                    .setOriginalReads(mRead.getOriginalReads());
 
             // Checking number of overlapped non-template (NRegion) letters
             int overlapTargetId = -1;

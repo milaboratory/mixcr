@@ -47,17 +47,15 @@ FreeBSD)
   ;;
 esac
 
-all_tests=`ls itests/*.sh | sed 's/\itests\///' | sed 's/\.sh//'`
-exlusions=()
-for exlusion in ${exlusions[@]}; do
-  all_tests=${all_tests[@]/$exlusion}
-done
+declare -a all_tests
+while read -r tst; do
+  all_tests=( "${all_tests[@]}" "$tst" )
+done < <(find itests -name '*.sh' | sed 's/\itests\///' | sed 's/\.sh//')
 
-tests=("$all_tests")
-
+tests=()
 create_standard_results=false
 run_tests=false
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
   key="$1"
   shift
   case $key in
@@ -68,7 +66,7 @@ while [[ $# > 0 ]]; do
     run_tests=true
     ;;
   case*)
-    tests=("$key")
+    tests=("${tests[@]}" "$key")
     ;;
   *)
     echo "Unknown option $key"
@@ -76,6 +74,11 @@ while [[ $# > 0 ]]; do
     ;;
   esac
 done
+
+# set to all tests if user didn't provide any specific test cases to run
+if [[ ${#tests[@]} -eq 0 ]]; then
+  tests=("${all_tests[@]}")
+fi
 
 rm -rf ${dir}/test_target
 mkdir ${dir}/test_target
@@ -137,7 +140,7 @@ function run_test() {
 }
 
 if [[ $run_tests == true ]]; then
-  for testName in ${tests[@]}; do
+  for testName in "${tests[@]}"; do
     run_test "${testName}.sh"
   done
 

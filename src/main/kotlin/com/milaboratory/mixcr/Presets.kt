@@ -14,10 +14,21 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.cli.*
+import com.milaboratory.cli.AbstractPresetBundleRaw
+import com.milaboratory.cli.ParamsBundleSpec
+import com.milaboratory.cli.RawParams
+import com.milaboratory.cli.Resolver
+import com.milaboratory.cli.apply
 import com.milaboratory.mitool.helpers.KObjectMapperProvider
 import com.milaboratory.mitool.helpers.K_YAML_OM
-import com.milaboratory.mixcr.cli.*
+import com.milaboratory.mixcr.cli.CommandAlign
+import com.milaboratory.mixcr.cli.CommandAssemble
+import com.milaboratory.mixcr.cli.CommandAssembleContigs
+import com.milaboratory.mixcr.cli.CommandAssemblePartial
+import com.milaboratory.mixcr.cli.CommandExportAlignments
+import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.cli.CommandExtend
+import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.primitivio.annotations.Serializable
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -28,6 +39,11 @@ data class MiXCRParamsSpec(
     @JsonProperty("presetAddress") override val presetAddress: String,
     @JsonProperty("mixins") override val mixins: List<MiXCRMixin>,
 ) : ParamsBundleSpec<MiXCRParamsBundle> {
+
+    fun addMixins(toAdd: List<MiXCRMixin>) = copy(
+        mixins = mixins + toAdd
+    )
+
     constructor(presetAddress: String, vararg mixins: MiXCRMixin) : this(presetAddress, listOf(*mixins))
 }
 
@@ -182,7 +198,7 @@ object Presets {
     fun resolveParamsBundle(presetName: String): MiXCRParamsBundle {
         val raw = rawResolve(presetName)
         val bundle = MiXCRParamsBundle(
-            flags = raw!!.flags ?: emptySet(),
+            flags = raw.flags ?: emptySet(),
             pipeline = pipeline(presetName),
             align = align(presetName),
             refineTagsAndSort = refineTagsAndSort(presetName),

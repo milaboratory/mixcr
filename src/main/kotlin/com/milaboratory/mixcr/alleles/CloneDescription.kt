@@ -14,11 +14,15 @@ package com.milaboratory.mixcr.alleles
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 
-data class CloneDescription(
-    private val cloneId: Int,
+class CloneDescription(
+    /**
+     * For working equals, hashcode
+     */
+    val clone: Clone,
     /**
      * Mutations of clone without CDR3.
      */

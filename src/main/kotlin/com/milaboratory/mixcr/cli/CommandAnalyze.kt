@@ -12,10 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.MiXCRCommand
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.MiXCRPipeline
+import com.milaboratory.mixcr.*
 import picocli.CommandLine
 import picocli.CommandLine.*
 import java.io.File
@@ -179,10 +176,10 @@ object CommandAnalyze {
             initialInputs: List<String>,
         ) {
             val executionPlan = mutableListOf<ExecutionStep>()
-            private val rounds = mutableMapOf<MiXCRCommand<*>, Int>()
+            private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
             private var nextInputs: List<String> = initialInputs
 
-            fun addStep(cmd: MiXCRCommand<*>, extraArgs: List<String> = emptyList()) {
+            fun addStep(cmd: AnyMiXCRCommand, extraArgs: List<String> = emptyList()) {
                 val round = rounds.compute(cmd) { c, p ->
                     if (p == null)
                         0
@@ -222,7 +219,7 @@ object CommandAnalyze {
         }
 
         data class ExecutionStep(
-            val command: MiXCRCommand<*>,
+            val command: AnyMiXCRCommand,
             val round: Int,
             val arguments: List<String>,
             val extraArgs: List<String>,

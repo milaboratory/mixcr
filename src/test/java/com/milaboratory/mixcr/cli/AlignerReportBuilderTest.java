@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.milaboratory.mitool.helpers.IOKt;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;
 
@@ -21,14 +22,14 @@ public class AlignerReportBuilderTest {
     @Test
     public void testIsSerializable() throws Exception {
         AlignerReport rep = reportBuilder().buildReport();
-        assertNotNull(GlobalObjectMappers.getPretty().writeValueAsString(rep));
+        assertNotNull(IOKt.getK_PRETTY_OM().writeValueAsString(rep));
     }
 
     @Test
     public void testNotSerializeDate() throws Exception {
         AlignerReport rep = reportBuilder().buildReport();
-        String asJson = GlobalObjectMappers.getPretty().writeValueAsString(rep);
-        assertNull(GlobalObjectMappers.getPretty().readValue(asJson, AlignerReport.class).getDate());
+        String asJson = IOKt.getK_PRETTY_OM().writeValueAsString(rep);
+        assertNull(IOKt.getK_PRETTY_OM().readValue(asJson, AlignerReport.class).getDate());
     }
 
     @Test
@@ -36,8 +37,8 @@ public class AlignerReportBuilderTest {
         AlignerReport rep = reportBuilder()
                 .setInputFiles("file1")
                 .buildReport();
-        String asJson = GlobalObjectMappers.getPretty().writeValueAsString(rep);
-        assertArrayEquals(new String[]{"file1"}, GlobalObjectMappers.getPretty().readValue(asJson, AlignerReport.class).getInputFiles());
+        String asJson = IOKt.getK_PRETTY_OM().writeValueAsString(rep);
+        assertArrayEquals(new String[]{"file1"}, IOKt.getK_PRETTY_OM().readValue(asJson, AlignerReport.class).getInputFiles());
     }
 
     @Test
@@ -45,15 +46,15 @@ public class AlignerReportBuilderTest {
         AlignerReport rep = reportBuilder()
                 .setCommandLine("cmd args")
                 .buildReport();
-        String asJson = GlobalObjectMappers.getPretty().writeValueAsString(rep);
-        assertEquals("cmd args", GlobalObjectMappers.getPretty().readValue(asJson, AlignerReport.class).getCommandLine());
+        String asJson = IOKt.getK_PRETTY_OM().writeValueAsString(rep);
+        assertEquals("cmd args", IOKt.getK_PRETTY_OM().readValue(asJson, AlignerReport.class).getCommandLine());
     }
-
+    
     private AlignerReportBuilder reportBuilder() {
         return new AlignerReportBuilder()
                 .setCommandLine("from test")
-                .setStartMillis(System.currentTimeMillis())
-                .setFinishMillis(System.currentTimeMillis())
+                .setStartMillis(123)
+                .setFinishMillis(123)
                 .setInputFiles()
                 .setOutputFiles();
     }

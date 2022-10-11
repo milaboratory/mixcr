@@ -21,7 +21,19 @@ mixcr analyze -f 10x_vdj_bcr \
   +species hs \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
-  case10
+  case10.raw
+
+mixcr analyze -f 10x_vdj_bcr \
+  +species hs \
+  +assembleContigsBy VDJRegion \
+  single_cell_vdj_t_subset_R1.fastq.gz \
+  single_cell_vdj_t_subset_R2.fastq.gz \
+  case10.vdjcontigs
+
+assert "cat case10.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "6"
+
+mixcr exportReports --yaml case10.vdjcontigs.contigs.clns
+mixcr exportReports case10.vdjcontigs.contigs.clns
 
 #mixcr refineTagsAndSort case10.aligned-vdjca case10.corrected-vdjca
 #

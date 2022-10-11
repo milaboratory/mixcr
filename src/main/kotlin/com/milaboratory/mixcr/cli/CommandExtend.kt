@@ -19,9 +19,19 @@ import com.milaboratory.mixcr.MiXCRCommand
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.basictypes.*
-import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
+import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
+import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
+import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.util.VDJCObjectExtender
+import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.port
@@ -30,7 +40,9 @@ import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Paths
 
 object CommandExtend {
@@ -108,11 +120,11 @@ object CommandExtend {
         override fun getOutputFiles(): List<String> = listOf(outputFile)
 
         override fun run0() {
-            when (IOUtil.extractFileType(Paths.get(inputFile))!!) {
-                MiXCRFileType.VDJCA -> processVDJCA()
-                MiXCRFileType.CLNS -> processClns()
-                MiXCRFileType.CLNA -> throwValidationException("Operation is not supported for ClnA files.")
-                MiXCRFileType.SHMT -> throwValidationException("Operation is not supported for SHMT files.")
+            when (IOUtil.extractFileType(Paths.get(inputFile))) {
+                VDJCA -> processVDJCA()
+                CLNS -> processClns()
+                CLNA -> throwValidationException("Operation is not supported for ClnA files.")
+                SHMT -> throwValidationException("Operation is not supported for SHMT files.")
             }
         }
 
@@ -128,11 +140,19 @@ object CommandExtend {
                     .sortedBy { it.id }
                     .toList()
                 val newCloneSet =
-                    CloneSet(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer, cloneSet.ordering)
+                    CloneSet(
+                        clones,
+                        cloneSet.usedGenes,
+                        cloneSet.header
+                            .addStepParams(MiXCRCommand.extend, process.params)
+                            .copy(allFullyCoveredBy = null),
+                        cloneSet.footer,
+                        cloneSet.ordering
+                    )
                 ClnsWriter(outputFile).use { writer ->
                     writer.writeCloneSet(newCloneSet)
                     val report = process.finish()
-                    writer.setFooter(reader.footer.addReport(report))
+                    writer.setFooter(reader.footer.addStepReport(MiXCRCommand.extend, report))
                 }
             }
         }
@@ -156,7 +176,7 @@ object CommandExtend {
                         }
                     writer.setNumberOfProcessedReads(reader.numberOfReads)
                     val report = process.finish()
-                    writer.setFooter(reader.footer.addReport(report))
+                    writer.setFooter(reader.footer.addStepReport(MiXCRCommand.extend, report))
                 }
             }
         }
@@ -180,14 +200,15 @@ object CommandExtend {
             extender.setInputFiles(inputFile)
             extender.setOutputFiles(outputFile)
             extender.commandLine = commandLineArguments
-            return ProcessWrapper(extender, output)
+            return ProcessWrapper(extender, output, cmdParams)
         }
 
         private inner class ProcessWrapper<T : VDJCObject>(
             val reportBuilder: VDJCObjectExtender<T>,
-            val output: ParallelProcessor<T, T>
+            val output: ParallelProcessor<T, T>,
+            val params: Params,
         ) {
-            fun finish(): MiXCRCommandReport {
+            fun finish(): VDJCObjectExtenderReport {
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 val report = reportBuilder.buildReport()!!
                 // Writing report to stout
