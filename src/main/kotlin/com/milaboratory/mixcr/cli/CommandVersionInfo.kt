@@ -22,23 +22,18 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
-@CommandLine.Command(
+@Command(
     name = "versionInfo",
     separator = " ",
     description = ["Output information about MiXCR version which generated the file."]
 )
-class CommandVersionInfo : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["input_file"])
+class CommandVersionInfo : MiXCRCommand() {
+    @Parameters(description = ["input_file"])
     lateinit var inputFile: Path
-
-    override val inputFiles: List<String>
-        get() = listOf(inputFile.toString())
-
-    override val outputFiles: List<String>
-        get() = emptyList()
 
     override fun run0() {
         when (IOUtil.extractFileType(inputFile)) {

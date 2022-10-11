@@ -34,7 +34,6 @@ import picocli.CommandLine.Parameters
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.collections.component1
 import kotlin.collections.component2
 
@@ -43,9 +42,9 @@ import kotlin.collections.component2
     description = ["Build cloneset overlap and export into tab delimited file."],
     sortOptions = false
 )
-class CommandExportOverlap : AbstractMiXCRCommand() {
+class CommandExportOverlap : MiXCRCommandWithOutputs() {
     @Parameters(description = ["cloneset.{clns|clna}... output.tsv"])
-    var inOut: List<String> = mutableListOf()
+    var inOut: List<Path> = mutableListOf()
 
     @Option(description = ["Chains to export"], names = ["--chains"], split = ",")
     var chains: Set<String>? = null
@@ -59,14 +58,14 @@ class CommandExportOverlap : AbstractMiXCRCommand() {
     @Option(description = ["Overlap criteria. Default CDR3|AA|V|J"], names = ["--criteria"])
     var overlapCriteria = "CDR3|AA|V|J"
 
-    public override val inputFiles: List<String>
+    public override val inputFiles
         get() = inOut.subList(0, inOut.size - 1)
 
-    override val outputFiles: List<String>
+    override val outputFiles
         get() = listOf(inOut.last())
 
     private fun getOut(chains: Chains): Path {
-        val out = Paths.get(inOut.last()).toAbsolutePath()
+        val out = inOut.last().toAbsolutePath()
         var fName = out.fileName.toString()
         fName = when {
             fName.endsWith(".tsv") -> "${fName.replace("tsv", "")}${chains}.tsv"
@@ -112,7 +111,7 @@ class CommandExportOverlap : AbstractMiXCRCommand() {
         extractors += TotalCount()
         extractors += TotalFraction()
         val fieldExtractors: List<FieldExtractor<Clone>> =
-            CloneSetIO.mkReader(Paths.get(samples[0]), VDJCLibraryRegistry.getDefault()).use { cReader ->
+            CloneSetIO.mkReader(samples[0], VDJCLibraryRegistry.getDefault()).use { cReader ->
                 CloneFieldsExtractorsFactory.createExtractors(
                     CloneFieldsExtractorsFactory
                         .parsePicocli(spec.commandLine().parseResult), cReader.header, OutputMode.ScriptingFriendly
@@ -131,7 +130,7 @@ class CommandExportOverlap : AbstractMiXCRCommand() {
             writer
         }
 
-        val overlap = OverlapUtil.overlap(samples, { true }, criteria.ordering())
+        val overlap = OverlapUtil.overlap(samples.map { it.toString() }, { true }, criteria.ordering())
         overlap.mkElementsPort().use { port ->
             overlapBrowser.overlap(countsByChain, port).forEach { row ->
                 for ((chains, cloneOverlapGroup) in row) {
@@ -144,11 +143,11 @@ class CommandExportOverlap : AbstractMiXCRCommand() {
 
     private class InfoWriter(
         out: Path,
-        samples: List<String>,
+        samples: List<Path>,
         private val extractors: List<OverlapFieldExtractor>
     ) : AutoCloseable {
         private val writer: PrintWriter = PrintWriter(FileWriter(out.toFile()))
-        private val samplesNames = samples.map { sampleName -> removeExt(sampleName) }
+        private val samplesNames = samples.map { sampleName -> removeExt(sampleName.toString()) }
 
         fun writeHeader() {
             writer.println(extractors

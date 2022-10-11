@@ -11,17 +11,15 @@
  */
 package com.milaboratory.mixcr.cli
 
-import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
-import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.exists
 
-abstract class ACommand(appName: String) : ABaseCommand(appName), Runnable {
-    @Mixin
-    private lateinit var logger: logger
-
+abstract class MiXCRCommandWithOutputs : MiXCRCommand() {
     @Option(names = ["-f", "--force-overwrite"], description = ["Force overwrite of output file(s)."])
     var forceOverwrite = false
 
+    @Suppress("unused")
     @Option(names = ["--force"], hidden = true)
     fun setForce(value: Boolean) {
         if (value) {
@@ -31,39 +29,37 @@ abstract class ACommand(appName: String) : ABaseCommand(appName), Runnable {
     }
 
     /** list of input files  */
-    protected abstract val inputFiles: List<String>
+    protected abstract val inputFiles: List<Path>
 
     /** list of output files produces as result  */
-    protected abstract val outputFiles: List<String>
+    protected abstract val outputFiles: List<Path>
 
     /** Intended to be overridden this to change validation behaviour  */
-    protected open fun inputsMustExist(): Boolean {
-        return true
-    }
+    protected open fun inputsMustExist(): Boolean = true
 
-    /** Validate injected parameters and options  */
-    open fun validate() {
-        for (`in` in inputFiles) {
-            if (!File(`in`).exists() && inputsMustExist()) {
-                throw ValidationException("ERROR: input file \"$`in`\" does not exist.")
+    private fun validateInputsOutputs() {
+        if (inputsMustExist()) {
+            for (input in inputFiles) {
+                if (!input.exists()) {
+                    throw ValidationException("ERROR: input file \"$input\" does not exist.")
+                }
             }
         }
-        for (f in outputFiles) if (File(f).exists()) handleExistenceOfOutputFile(f)
+        for (out in outputFiles) {
+            if (out.exists()) {
+                handleExistenceOfOutputFile(out)
+            }
+        }
     }
 
     /** Specifies behaviour in the case with output exists (default is to throw exception)  */
-    private fun handleExistenceOfOutputFile(outFileName: String) {
+    private fun handleExistenceOfOutputFile(outFile: Path) {
         if (!forceOverwrite)
-            throw ValidationException("File \"$outFileName\" already exists. Use -f / --force-overwrite option to overwrite it.")
+            throw ValidationException("File \"$outFile\" already exists. Use -f / --force-overwrite option to overwrite it.")
     }
 
-    override fun run() {
-        validate()
-        logger.printWarningQueue()
-        logger.running = true
-        run0()
+    final override fun run() {
+        validateInputsOutputs()
+        super.run()
     }
-
-    /** Do actual job  */
-    abstract fun run0()
 }

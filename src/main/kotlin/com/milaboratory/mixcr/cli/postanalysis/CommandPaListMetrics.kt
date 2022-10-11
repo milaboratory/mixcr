@@ -12,34 +12,29 @@
 package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
+import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual.CDR3Metrics
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual.Diversity
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
 import java.io.IOException
-import java.nio.file.Paths
+import java.nio.file.Path
 
-@CommandLine.Command(
+@Command(
     name = "listMetrics",
     sortOptions = false,
     separator = " ",
     description = ["List available metrics"]
 )
-class CommandPaListMetrics : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["Input file with PA results"], index = "0")
-    lateinit var `in`: String
-
-    override val inputFiles: List<String>
-        get() = listOf(`in`)
-
-    override val outputFiles: List<String>
-        get() = emptyList()
+class CommandPaListMetrics : MiXCRCommand() {
+    @Parameters(description = ["Input file with PA results"], index = "0")
+    lateinit var input: Path
 
     override fun run0() {
         val paResult: PaResult = try {
-            PaResult.readJson(Paths.get(`in`))
+            PaResult.readJson(input)
         } catch (e: IOException) {
             throw ValidationException("Corrupted PA file.")
         }

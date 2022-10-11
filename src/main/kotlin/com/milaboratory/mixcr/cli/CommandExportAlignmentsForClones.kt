@@ -16,37 +16,41 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 
 /**
  *
  */
-@CommandLine.Command(
+@Command(
     name = CommandExportAlignmentsForClones.COMMAND_NAME,
     sortOptions = true,
     separator = " ",
     description = ["Export alignments for particular clones from \"clones & alignments\" (*.clna) file."]
 )
-class CommandExportAlignmentsForClones : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(index = "0", description = ["clones.clna"])
-    lateinit var `in`: String
+class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
+    @Parameters(index = "0", description = ["clones.clna"])
+    lateinit var input: Path
 
-    @CommandLine.Parameters(index = "1", description = ["alignments.vdjca"])
-    lateinit var out: String
+    @Parameters(index = "1", description = ["alignments.vdjca"])
+    lateinit var out: Path
 
-    @CommandLine.Option(names = ["--id"], description = ["[cloneId1 [cloneId2 [cloneId3]]]"], arity = "0..*")
+    @Option(names = ["--id"], description = ["[cloneId1 [cloneId2 [cloneId3]]]"], arity = "0..*")
     var ids: List<Int> = mutableListOf()
-    override val inputFiles: List<String>
-        get() = listOf(`in`)
 
-    override val outputFiles: List<String>
+    override val inputFiles
+        get() = listOf(input)
+
+    override val outputFiles
         get() = listOf(out)
 
     private val cloneIds: IntArray
         get() = ids.sorted().toIntArray()
 
     override fun run0() {
-        ClnAReader(`in`, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
+        ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             VDJCAlignmentsWriter(out).use { writer ->
                 writer.writeHeader(clna.header, clna.usedGenes)
                 var count: Long = 0

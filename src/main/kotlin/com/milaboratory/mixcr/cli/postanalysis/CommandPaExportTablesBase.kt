@@ -12,43 +12,38 @@
 package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.cli.ValidationException
-import picocli.CommandLine
+import picocli.CommandLine.Parameters
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
+import kotlin.io.path.extension
 
 abstract class CommandPaExportTablesBase : CommandPaExport {
-    @CommandLine.Parameters(description = ["Path for output files"], index = "1", defaultValue = "path/table.tsv")
-    lateinit var out: String
-    override val outputFiles: List<String>
-        get() {
-            return emptyList() // output will be always overriden
-        }
+    @Parameters(description = ["Path for output files"], index = "1", defaultValue = "path/table.tsv")
+    lateinit var out: Path
 
     constructor()
 
-    constructor(paResult: PaResult, out: String) : super(paResult) {
+    constructor(paResult: PaResult, out: Path) : super(paResult) {
         this.out = out
     }
 
     override fun validate() {
-        super.validate()
-        if (!out.endsWith(".tsv") && !out.endsWith(".csv"))
-            throw ValidationException("Output file must have .tsv or .csv extension")
+        if (out.extension !in arrayOf("tsv", "csv"))
+            throw ValidationException("Output file must have .tsv or .csv extension, got $out")
     }
 
-    protected fun outDir(): Path = Paths.get(out).toAbsolutePath().parent
+    protected fun outDir(): Path = out.toAbsolutePath().parent
 
     protected fun outPrefix(): String {
-        val fName = Paths.get(out).fileName.toString()
+        val fName = out.fileName.toString()
         return fName.dropLast(4)
     }
 
     protected fun outExtension(group: IsolationGroup): String =
-        group.extension() + "." + out.takeLast(3)
+        group.extension() + "." + out.extension
 
     protected fun separator(): String =
-        if (out.endsWith("tsv")) "\t" else ","
+        if (out.extension == "tsv") "\t" else ","
 
     override fun run(result: PaResultByGroup) {
         Files.createDirectories(outDir())

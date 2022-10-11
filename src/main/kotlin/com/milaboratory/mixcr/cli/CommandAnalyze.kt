@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.AnyMiXCRCommand
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRPipeline
@@ -38,7 +38,10 @@ object CommandAnalyze {
         separator = " ",
         description = ["Run full MiXCR pipeline for specific input."],
     )
-    class Cmd : AbstractMiXCRCommand() {
+    class Cmd : MiXCRCommand() {
+        @Option(names = ["-f", "--force-overwrite"], description = ["Force overwrite of output file(s)."])
+        var forceOverwrite = false
+
         @Parameters(
             index = "0",
             arity = "1",
@@ -88,13 +91,7 @@ object CommandAnalyze {
 
         private val inFiles get() = inOut.dropLast(1)
 
-        private val outSuffix get() = inOut[inOut.size - 1]
-
-        // the following two lines are to implement the AbstractMiXCRCommand interfaces,
-        // analyze is an exception, and it not fully use the functionality of the AbstractMiXCRCommand
-        // TODO maybe it is a good idea to restructure the CLI classes to make "analyze" fit more naturally in the hierarchy
-        override val inputFiles get() = emptyList<String>()
-        override val outputFiles get() = emptyList<String>()
+        private val outSuffix get() = inOut.last()
 
         /** Provides access to presets, mixins application, etc.. */
         private val paramsResolver = object : MiXCRParamsResolver<MiXCRPipeline>(MiXCRParamsBundle::pipeline) {
@@ -126,7 +123,7 @@ object CommandAnalyze {
                 }
 
             // Creating execution plan
-            if (pipeline[0] != MiXCRCommand.align)
+            if (pipeline[0] != MiXCRCommandDescriptor.align)
                 throw ValidationException("Pipeline must stat from the align action.")
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
@@ -134,7 +131,7 @@ object CommandAnalyze {
                 inFiles
             )
             // Adding "align" step
-            planBuilder.addStep(MiXCRCommand.align,
+            planBuilder.addStep(MiXCRCommandDescriptor.align,
                 listOf("--preset", presetName) + mixins.flatMap { it.cmdArgs })
             // Adding all other steps
             pipeline.drop(1).forEach { cmd ->

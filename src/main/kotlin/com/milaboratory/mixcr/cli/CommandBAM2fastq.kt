@@ -17,45 +17,47 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.primitivio.forEach
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import java.nio.file.Path
 
-@CommandLine.Command(
+@Command(
     name = "BAM2fastq",
     hidden = true,
     description = ["Converts BAM/SAM file to paired/unpaired fastq files"]
 )
-class CommandBAM2fastq : AbstractMiXCRCommand() {
-    @CommandLine.Option(names = ["-b", "--bam"], description = ["BAM files for conversion."], required = true)
-    lateinit var bamFiles: Array<String>
+class CommandBAM2fastq : MiXCRCommandWithOutputs() {
+    @Option(names = ["-b", "--bam"], description = ["BAM files for conversion."], required = true)
+    lateinit var bamFiles: Array<Path>
 
-    @CommandLine.Option(names = ["-r1"], description = ["File for first reads."], required = true)
-    lateinit var fastq1: String
+    @Option(names = ["-r1"], description = ["File for first reads."], required = true)
+    lateinit var fastq1: Path
 
-    @CommandLine.Option(names = ["-r2"], description = ["File for second reads."], required = true)
-    lateinit var fastq2: String
+    @Option(names = ["-r2"], description = ["File for second reads."], required = true)
+    lateinit var fastq2: Path
 
-    @CommandLine.Option(names = ["-u"], description = ["File for unpaired reads."], required = true)
-    lateinit var fastqUnpaired: String
+    @Option(names = ["-u"], description = ["File for unpaired reads."], required = true)
+    lateinit var fastqUnpaired: Path
 
-    @CommandLine.Option(
+    @Option(
         names = ["--drop-non-vdj"],
         description = ["Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)"]
     )
     var dropNonVDJ = false
 
-    @CommandLine.Option(names = ["--keep-wildcards"], description = ["Keep sequences with wildcards in the output"])
+    @Option(names = ["--keep-wildcards"], description = ["Keep sequences with wildcards in the output"])
     var keepWildcards = false
 
-    override val inputFiles: List<String>
+    override val inputFiles
         get() = bamFiles.toList()
 
-    override val outputFiles: List<String>
+    override val outputFiles
         get() = listOf(fastq1, fastq2, fastqUnpaired)
 
     override fun run0() {
         BAMReader(bamFiles, dropNonVDJ, !keepWildcards).use { converter ->
-            PairedFastqWriter(fastq1, fastq2).use { wr ->
-                SingleFastqWriter(fastqUnpaired).use { swr ->
+            PairedFastqWriter(fastq1.toFile(), fastq2.toFile()).use { wr ->
+                SingleFastqWriter(fastqUnpaired.toFile()).use { swr ->
                     converter.forEach { read ->
                         when (read) {
                             is PairedRead -> wr.write(read)

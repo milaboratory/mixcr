@@ -11,20 +11,11 @@
  */
 package com.milaboratory.mixcr.cli
 
-import picocli.CommandLine
 import picocli.CommandLine.Option
-import picocli.CommandLine.Spec
 
-open class ABaseCommand(protected val appName: String) {
-    // injected by picocli
-    @Spec
-    lateinit var spec: CommandLine.Model.CommandSpec
-
+interface WithHelpOption {
     @Suppress("unused", "UNUSED_PARAMETER")
     @Option(names = ["-h", "--help"], usageHelp = true)
     fun requestHelp(b: Boolean) {
     }
-
-    val commandLineArguments: String
-        get() = spec.commandLine().parseResult.originalArgs().joinToString(" ")
 }

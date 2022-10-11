@@ -22,7 +22,7 @@ import com.milaboratory.mitool.pattern.SequenceSetCollection.loadSequenceSetByAd
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -48,6 +48,7 @@ import org.apache.commons.io.FileUtils
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.nio.file.Path
 import java.util.*
 
 object CommandRefineTagsAndSort {
@@ -61,10 +62,10 @@ object CommandRefineTagsAndSort {
         /** Correction parameters */
         @JsonMerge @JsonProperty("parameters") val parameters: TagCorrectorParameters
     ) : MiXCRParams {
-        override val command get() = MiXCRCommand.refineTagsAndSort
+        override val command get() = MiXCRCommandDescriptor.refineTagsAndSort
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["Don't correct barcodes, only sort alignments by tags"],
             names = ["--dont-correct"]
@@ -152,10 +153,10 @@ object CommandRefineTagsAndSort {
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["alignments.vdjca"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["alignments.corrected.vdjca"], index = "1")
-        lateinit var outputFile: String
+        lateinit var outputFile: Path
 
         @Option(
             description = ["Use system temp folder for temporary files."],
@@ -183,15 +184,15 @@ object CommandRefineTagsAndSort {
         var memoryBudget = 4 * FileUtils.ONE_GB
 
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: String? = null
+        var reportFile: Path? = null
 
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: String? = null
+        var jsonReport: Path? = null
 
-        override val inputFiles: List<String>
+        override val inputFiles
             get() = listOf(inputFile)
 
-        override val outputFiles: List<String>
+        override val outputFiles
             get() = listOf(outputFile)
 
         override fun run0() {
@@ -345,7 +346,7 @@ object CommandRefineTagsAndSort {
                     writer.writeHeader(
                         header
                             .updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) }
-                            .addStepParams(MiXCRCommand.refineTagsAndSort, cmdParams),
+                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams),
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)
@@ -354,7 +355,7 @@ object CommandRefineTagsAndSort {
                     }
                     refineTagsAndSortReport = RefineTagsAndSortReport(
                         Date(),
-                        commandLineArguments, arrayOf(inputFile), arrayOf(outputFile),
+                        commandLineArguments, arrayOf(inputFile.toString()), arrayOf(outputFile.toString()),
                         System.currentTimeMillis() - startTimeMillis,
                         MiXCRVersionInfo.get().shortestVersionString,
                         mitoolReport
@@ -362,7 +363,7 @@ object CommandRefineTagsAndSort {
                     writer.setFooter(
                         mainReader.footer
                             .withThresholds(thresholds)
-                            .addStepReport(MiXCRCommand.refineTagsAndSort, refineTagsAndSortReport)
+                            .addStepReport(MiXCRCommandDescriptor.refineTagsAndSort, refineTagsAndSortReport)
                     )
                 }
             }

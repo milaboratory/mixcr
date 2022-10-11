@@ -12,8 +12,9 @@
 package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.mitool.helpers.IOKt;
-import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Test;
+
+import java.nio.file.Paths;
 
 import static org.junit.Assert.*;
 
@@ -35,7 +36,7 @@ public class AlignerReportBuilderTest {
     @Test
     public void testSerializeInputFiles() throws Exception {
         AlignerReport rep = reportBuilder()
-                .setInputFiles("file1")
+                .setInputFiles(Paths.get("file1"))
                 .buildReport();
         String asJson = IOKt.getK_PRETTY_OM().writeValueAsString(rep);
         assertArrayEquals(new String[]{"file1"}, IOKt.getK_PRETTY_OM().readValue(asJson, AlignerReport.class).getInputFiles());

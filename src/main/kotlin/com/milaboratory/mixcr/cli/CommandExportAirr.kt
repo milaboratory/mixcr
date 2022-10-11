@@ -53,53 +53,56 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.VDJC_REFERENCE
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.PrintStream
-import java.nio.file.Paths
+import java.nio.file.Path
 
-@CommandLine.Command(
+@Command(
     name = "exportAirr",
     separator = " ",
     description = ["Exports a clns, clna or vdjca file to Airr formatted tsv file."]
 )
-class CommandExportAirr : AbstractMiXCRCommand() {
-    @CommandLine.Option(
+class CommandExportAirr : MiXCRCommandWithOutputs() {
+    @Option(
         description = ["Target id (use -1 to export from the target containing CDR3)."],
         names = ["-t", "--target"]
     )
     var targetId = -1
 
-    @CommandLine.Option(
+    @Option(
         description = ["If this option is specified, alignment fields will be padded with IMGT-style gaps."],
         names = ["-g", "--imgt-gaps"]
     )
     var withPadding = false
 
-    @CommandLine.Option(
+    @Option(
         description = ["Get fields like fwr1, cdr2, etc.. from alignment."],
         names = ["-a", "--from-alignment"]
     )
     var fromAlignment = false
 
-    @CommandLine.Option(
+    @Option(
         description = ["Limit number of filtered alignments; no more " +
                 "than N alignments will be outputted"], names = ["-n", "--limit"]
     )
     var limit: Int? = null
 
-    @CommandLine.Parameters(index = "0", description = ["input_file.[vdjca|clna|clns]"])
-    lateinit var `in`: String
+    @Parameters(index = "0", description = ["input_file.[vdjca|clna|clns]"])
+    lateinit var input: Path
 
-    @CommandLine.Parameters(index = "1", description = ["output.tsv"], arity = "0..1")
-    var out: String? = null
-    override val inputFiles: List<String>
-        get() = listOf(`in`)
+    @Parameters(index = "1", description = ["output.tsv"], arity = "0..1")
+    var out: Path? = null
 
-    override val outputFiles: List<String>
+    override val inputFiles
+        get() = listOf(input)
+
+    override val outputFiles
         get() = listOfNotNull(out)
 
     private val fileType: MiXCRFileType by lazy {
-        IOUtil.extractFileType(Paths.get(`in`))
+        IOUtil.extractFileType(input)
     }
 
     private fun nFeature(gf: GeneFeature, header: String): FieldExtractor<AirrVDJCObjectWrapper> {
@@ -196,14 +199,13 @@ class CommandExportAirr : AbstractMiXCRCommand() {
         val extractors: List<FieldExtractor<AirrVDJCObjectWrapper>>
         val closeable: AutoCloseable
         var port: OutputPortCloseable<out VDJCObject>
-        val inPath = Paths.get(`in`)
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val cPort: CountingOutputPort<out VDJCObject>
         var progressReporter: CanReportProgress? = null
         when (fileType) {
             CLNA -> {
                 extractors = cloneExtractors()
-                val clnaReader = ClnAReader(inPath, libraryRegistry, 4)
+                val clnaReader = ClnAReader(input, libraryRegistry, 4)
                 cPort = CountingOutputPort(clnaReader.readClones())
                 port = cPort
                 closeable = clnaReader
@@ -211,7 +213,7 @@ class CommandExportAirr : AbstractMiXCRCommand() {
             }
             CLNS -> {
                 extractors = cloneExtractors()
-                val clnsReader = ClnsReader(inPath, libraryRegistry)
+                val clnsReader = ClnsReader(input, libraryRegistry)
 
                 // I know, still writing airr is much slower...
                 var maxCount = 0
@@ -228,7 +230,7 @@ class CommandExportAirr : AbstractMiXCRCommand() {
             VDJCA -> {
                 extractors = alignmentsExtractors()
                 val alignmentsReader =
-                    VDJCAlignmentsReader(inPath, libraryRegistry)
+                    VDJCAlignmentsReader(input, libraryRegistry)
                 port = alignmentsReader
                 closeable = alignmentsReader
                 progressReporter = alignmentsReader
@@ -241,7 +243,7 @@ class CommandExportAirr : AbstractMiXCRCommand() {
             progressReporter = SmartProgressReporter.extractProgress(clop)
         }
         SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter)
-        (out?.let { PrintStream(it) } ?: System.out).use { output ->
+        (out?.let { PrintStream(it.toFile()) } ?: System.out).use { output ->
             closeable.use {
                 port.use {
                     var first = true

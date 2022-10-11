@@ -46,7 +46,7 @@ import com.milaboratory.mitool.pattern.search.ReadTagShortcut
 import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mitool.use
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
@@ -125,10 +125,10 @@ object CommandAlign {
         @JsonProperty("limit") val limit: Long? = null,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
     ) : MiXCRParams {
-        override val command get() = MiXCRCommand.align
+        override val command get() = MiXCRCommandDescriptor.align
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"])
         private var species: String? = null
 
@@ -302,11 +302,11 @@ object CommandAlign {
                 "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"
             ]
         )
-        private val inOut: List<String> = mutableListOf()
+        private val inOut: List<Path> = mutableListOf()
 
         private val inputs get() = inOut.dropLast(1)
 
-        override val inputFiles get() = emptyList<String>()
+        override val inputFiles get() = emptyList<Path>()
 
         override val outputFiles get() = inOut.takeLast(1)
 
@@ -314,10 +314,10 @@ object CommandAlign {
         var readBufferSize = 1 shl 22 // 4 Mb
 
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: String? = null
+        var reportFile: Path? = null
 
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: String? = null
+        var jsonReport: Path? = null
 
         @Option(description = ["Processing threads"], names = ["-t", "--threads"])
         var threads = Runtime.getRuntime().availableProcessors()
@@ -396,7 +396,7 @@ object CommandAlign {
 
         /** I.e. list of mate-pair files */
         private val inputFilesExpanded: List<List<Path>> by lazy {
-            val matchingResult = inputs.map { Path(it) }.parseAndRunAndCorrelateFSPattern()
+            val matchingResult = inputs.parseAndRunAndCorrelateFSPattern()
             matchingResult.map { fg -> fg.files }
         }
 
@@ -509,12 +509,9 @@ object CommandAlign {
             return TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.tags)
         }
 
-        override fun inputsMustExist(): Boolean {
-            return false
-        }
+        override fun inputsMustExist(): Boolean = false
 
         override fun validate() {
-            super.validate()
             if (inOut.size > 3) throw ValidationException("Too many input files.")
             if (inOut.size < 2) throw ValidationException("Output file not specified.")
 
@@ -650,7 +647,7 @@ object CommandAlign {
                 writer?.writeHeader(
                     MiXCRHeader(
                         paramsSpec,
-                        MiXCRStepParams().add(MiXCRCommand.align, cmdParams),
+                        MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         if (tagSearchPlan != null) TagsInfo(
                             0,
 
@@ -802,7 +799,7 @@ object CommandAlign {
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagSearchPlan != null) reportBuilder.tagReportBuilder = tagSearchPlan.reportAgg.report
                 val report = reportBuilder.buildReport()
-                writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommand.align, report))
+                writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)
@@ -841,7 +838,7 @@ object CommandAlign {
             }
         }
 
-        private fun alignedWriter(outputFile: String) = when (outputFile) {
+        private fun alignedWriter(outputFile: Path) = when (outputFile.toString()) {
             "." -> null
             else -> VDJCAlignmentsWriter(
                 outputFile, max(1, threads / 8),

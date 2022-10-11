@@ -30,6 +30,7 @@ import picocli.CommandLine.Parameters
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
+import java.nio.file.Path
 import java.util.*
 
 @Command(
@@ -38,12 +39,12 @@ import java.util.*
     separator = " ",
     description = ["Export verbose information about alignments."]
 )
-class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
+class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     @Parameters(index = "0", description = ["alignments.vdjca"])
-    lateinit var `in`: String
+    lateinit var input: Path
 
     @Parameters(index = "1", description = ["output.txt"], arity = "0..1")
-    var out: String? = null
+    var out: Path? = null
 
     @Option(description = ["Output only top hits"], names = ["-t", "--top"])
     var onlyTop = false
@@ -99,10 +100,10 @@ class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
     @Option(description = ["List of clone ids to export"], names = ["--clone-ids"])
     var cloneIds: List<Long> = mutableListOf()
 
-    override val inputFiles: List<String>
-        get() = listOf(`in`)
+    override val inputFiles
+        get() = listOf(input)
 
-    override val outputFiles: List<String>
+    override val outputFiles
         get() = listOfNotNull(out)
 
     private fun getReadIds(): TLongHashSet? = if (readIds.isEmpty()) null else TLongHashSet(readIds)
@@ -156,8 +157,9 @@ class CommandExportAlignmentsPretty : AbstractMiXCRCommand() {
         val filter = mkFilter()
         var total: Long = 0
         var filtered: Long = 0
-        CommandExportAlignments.openAlignmentsPort(`in`).use { readerAndHeader ->
-            (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it), 32768)) } ?: System.out).use { output ->
+        CommandExportAlignments.openAlignmentsPort(input).use { readerAndHeader ->
+            (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it.toFile()), 32768)) }
+                ?: System.out).use { output ->
                 val reader = readerAndHeader.port
                 val countBefore = limitBefore ?: Int.MAX_VALUE
                 val countAfter = limitAfter ?: Int.MAX_VALUE

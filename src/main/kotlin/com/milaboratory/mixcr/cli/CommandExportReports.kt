@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.util.ReportHelper
 import org.apache.commons.io.output.CloseShieldOutputStream
@@ -29,7 +29,7 @@ import kotlin.io.path.outputStream
     separator = " ",
     description = ["Export MiXCR reports."]
 )
-class CommandExportReports : AbstractMiXCRCommand() {
+class CommandExportReports : MiXCRCommandWithOutputs() {
     @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
     private lateinit var inputPath: Path
 
@@ -50,11 +50,11 @@ class CommandExportReports : AbstractMiXCRCommand() {
     @ArgGroup(exclusive = true, multiplicity = "0..1")
     private var outputFormatFlags: OutputFormatFlags? = null
 
-    override val inputFiles: List<String>
-        get() = listOf(inputPath.toString())
+    override val inputFiles
+        get() = listOf(inputPath)
 
-    override val outputFiles: List<String>
-        get() = listOfNotNull(outputPath.toString())
+    override val outputFiles
+        get() = listOfNotNull(outputPath)
 
     override fun run0() {
         val footer = IOUtil.extractFooter(inputPath)
@@ -72,7 +72,7 @@ class CommandExportReports : AbstractMiXCRCommand() {
                     K_YAML_OM.writeValue(o, tree)
             } else {
                 val helper = ReportHelper(o, outputPath != null)
-                (if (step != null) footer.reports[MiXCRCommand.fromString(step!!)]
+                (if (step != null) footer.reports[MiXCRCommandDescriptor.fromString(step!!)]
                 else footer.reports.map.values.flatten()).forEach { report ->
                     report.writeHeader(helper)
                     report.writeReport(helper)

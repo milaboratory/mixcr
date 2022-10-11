@@ -21,7 +21,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
 @Command(name = "mixcr", versionProvider = CommandMain.VersionProvider::class, separator = " ")
-class CommandMain internal constructor() : ABaseCommand("mixcr") {
+class CommandMain : WithHelpOption {
     @Suppress("unused", "UNUSED_PARAMETER")
     @Option(
         names = ["-v", "--version"],

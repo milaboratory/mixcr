@@ -16,7 +16,7 @@ import cc.redberry.primitives.Filter
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.exhaustive
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -41,7 +41,6 @@ import picocli.CommandLine.Model
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
-import java.nio.file.Paths
 
 object CommandExportAlignments {
     const val COMMAND_NAME = "exportAlignments"
@@ -51,7 +50,7 @@ object CommandExportAlignments {
         @JsonProperty("noHeader") val noHeader: Boolean,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
     ) : MiXCRParams {
-        override val command get() = MiXCRCommand.exportAlignments
+        override val command get() = MiXCRCommandDescriptor.exportAlignments
     }
 
     fun Params.mkFilter(): Filter<VDJCAlignments> {
@@ -65,7 +64,7 @@ object CommandExportAlignments {
         }
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
             names = ["-c", "--chains"]
@@ -95,16 +94,16 @@ object CommandExportAlignments {
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
         var outputFile: Path? = null
 
-        override val inputFiles: List<String>
+        override val inputFiles
             get() = listOf(inputFile)
 
-        override val outputFiles: List<String>
-            get() = listOfNotNull(outputFile).map { it.toString() }
+        override val outputFiles
+            get() = listOfNotNull(outputFile)
 
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->
@@ -139,8 +138,8 @@ object CommandExportAlignments {
     ) : AutoCloseable by closeable
 
     @JvmStatic
-    fun openAlignmentsPort(inputFile: String): AlignmentsAndMetaInfo =
-        when (IOUtil.extractFileType(Paths.get(inputFile))) {
+    fun openAlignmentsPort(inputFile: Path): AlignmentsAndMetaInfo =
+        when (IOUtil.extractFileType(inputFile)) {
             IOUtil.MiXCRFileType.VDJCA -> {
                 val vdjcaReader = VDJCAlignmentsReader(
                     inputFile,

@@ -29,6 +29,7 @@ import io.repseq.core.GeneType
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.nio.file.Path
 
 @Command(
     name = CommandFilterAlignments.COMMAND_NAME,
@@ -36,12 +37,12 @@ import picocli.CommandLine.Parameters
     separator = " ",
     description = ["Filter alignments."]
 )
-class CommandFilterAlignments : AbstractMiXCRCommand() {
+class CommandFilterAlignments : MiXCRCommandWithOutputs() {
     @Parameters(description = ["alignments.vdjca"], index = "0")
-    lateinit var `in`: String
+    lateinit var input: Path
 
     @Parameters(description = ["alignments.filtered.vdjca"], index = "1")
-    lateinit var out: String
+    lateinit var out: Path
 
     @Option(
         description = ["Specifies immunological protein chain gene for an alignment. If many, " +
@@ -78,17 +79,17 @@ class CommandFilterAlignments : AbstractMiXCRCommand() {
             field = value
         }
 
-    override val inputFiles: List<String>
-        get() = listOf(`in`)
+    override val inputFiles
+        get() = listOf(input)
 
-    override val outputFiles: List<String>
+    override val outputFiles
         get() = listOf(out)
 
     private val readIds: TLongHashSet?
         get() = ids?.let { TLongHashSet(it) }
 
     private val inputReader: VDJCAlignmentsReader
-        get() = VDJCAlignmentsReader(`in`)
+        get() = VDJCAlignmentsReader(input)
 
     private val outputWriter: VDJCAlignmentsWriter
         get() = VDJCAlignmentsWriter(out)

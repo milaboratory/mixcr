@@ -17,7 +17,7 @@ import cc.redberry.pipe.CUtils
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.CloneFactory
@@ -63,6 +63,7 @@ import java.io.BufferedWriter
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
+import java.nio.file.Path
 import java.util.*
 import java.util.stream.Collectors
 
@@ -73,10 +74,10 @@ object CommandAssembleContigs {
         @JsonProperty("ignoreTags") val ignoreTags: Boolean,
         @JsonProperty("parameters") @JsonMerge val parameters: FullSeqAssemblerParameters
     ) : MiXCRParams {
-        override val command = MiXCRCommand.assembleContigs
+        override val command = MiXCRCommandDescriptor.assembleContigs
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(description = ["Ignore tags (UMIs, cell-barcodes)"], names = ["--ignore-tags"])
         private var ignoreTags = false
 
@@ -112,10 +113,10 @@ object CommandAssembleContigs {
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["clones.clna"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["clones.clns"], index = "1")
-        lateinit var outputFile: String
+        lateinit var outputFile: Path
 
         @Option(description = ["Processing threads"], names = ["-t", "--threads"])
         var threads = Runtime.getRuntime().availableProcessors()
@@ -125,13 +126,13 @@ object CommandAssembleContigs {
             }
 
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: String? = null
+        var reportFile: Path? = null
 
         @Option(description = ["Report file."], names = ["--debug-report"], hidden = true)
-        var debugReportFile: String? = null
+        var debugReportFile: Path? = null
 
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: String? = null
+        var jsonReport: Path? = null
 
         override val inputFiles get() = listOf(inputFile)
 
@@ -169,8 +170,8 @@ object CommandAssembleContigs {
                     }
                 }
 
-                PrimitivO(BufferedOutputStream(FileOutputStream(outputFile))).use { tmpOut ->
-                    debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it))) }
+                PrimitivO(BufferedOutputStream(FileOutputStream(outputFile.toFile()))).use { tmpOut ->
+                    debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it.toFile()))) }
                         .use { debugReport ->
                             footer = reader.footer
                             ordering = reader.ordering()
@@ -286,7 +287,7 @@ object CommandAssembleContigs {
                                     if (debugReport != null) {
                                         @Suppress("BlockingMethodInNonBlockingContext")
                                         synchronized(debugReport) {
-                                            FileOutputStream(debugReportFile + "." + clone.id).use { fos ->
+                                            FileOutputStream(debugReportFile?.toString() + "." + clone.id).use { fos ->
                                                 val content = rawVariantsData.toCsv(10.toByte())
                                                 fos.write(content.toByteArray())
                                             }
@@ -324,7 +325,7 @@ object CommandAssembleContigs {
             )
             var cloneId = 0
             val clones = arrayOfNulls<Clone>(totalClonesCount)
-            PrimitivI(BufferedInputStream(FileInputStream(outputFile))).use { tmpIn ->
+            PrimitivI(BufferedInputStream(FileInputStream(outputFile.toFile()))).use { tmpIn ->
                 IOUtil.registerGeneReferences(tmpIn, genes, header.alignerParameters)
                 var i = 0
                 PipeDataInputReader(Clone::class.java, tmpIn, totalClonesCount.toLong()).forEach { clone ->
@@ -340,7 +341,7 @@ object CommandAssembleContigs {
             } else {
                 header
             })
-                .addStepParams(MiXCRCommand.assembleContigs, cmdParams)
+                .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
 
             val cloneSet = CloneSet(listOf(*clones), genes, resultHeader, footer, ordering)
             ClnsWriter(outputFile).use { writer ->
@@ -355,7 +356,7 @@ object CommandAssembleContigs {
                 ReportUtil.writeReportToStdout(report)
                 if (reportFile != null) ReportUtil.appendReport(reportFile, report)
                 if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
-                writer.setFooter(footer.addStepReport(MiXCRCommand.assembleContigs, report))
+                writer.setFooter(footer.addStepReport(MiXCRCommandDescriptor.assembleContigs, report))
             }
         }
     }

@@ -525,13 +525,13 @@ object PipelineMixins {
         @JsonProperty("step") val step: String
     ) : MiXCRMixinBase(10) {
         @JsonIgnore
-        private val command = MiXCRCommand.fromString(step)
+        private val command = MiXCRCommandDescriptor.fromString(step)
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::pipeline.updateBy {
                 MiXCRPipeline((it.steps + command).sorted())
             }
 
-            if (command == MiXCRCommand.assembleContigs)
+            if (command == MiXCRCommandDescriptor.assembleContigs)
                 MiXCRParamsBundle::assemble.update {
                     CommandAssemble.Params::clnaOutput setTo true
                 }
@@ -549,13 +549,13 @@ object PipelineMixins {
         @JsonProperty("step") val step: String
     ) : MiXCRMixinBase(10) {
         @JsonIgnore
-        private val command = MiXCRCommand.fromString(step)
+        private val command = MiXCRCommandDescriptor.fromString(step)
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::pipeline.updateBy {
                 MiXCRPipeline(it.steps - command)
             }
 
-            if (command == MiXCRCommand.assembleContigs)
+            if (command == MiXCRCommandDescriptor.assembleContigs)
                 MiXCRParamsBundle::assemble.update {
                     CommandAssemble.Params::clnaOutput setTo false
                 }

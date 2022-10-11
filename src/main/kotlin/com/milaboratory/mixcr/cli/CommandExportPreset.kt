@@ -19,7 +19,8 @@ import com.milaboratory.mixcr.MiXCRParamsSpec
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
-import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 
 object CommandExportPreset {
     const val COMMAND_NAME = "exportPreset"
@@ -29,7 +30,7 @@ object CommandExportPreset {
         sortOptions = false,
         description = ["Export a preset file given the preset name and a set of mix-ins"]
     )
-    class Cmd : MiXCRPresetAwareCommand<Unit>() {
+    class Cmd : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Unit> {
         @Parameters(
             arity = "1..2",
             hideParamSyntax = true,
@@ -38,9 +39,9 @@ object CommandExportPreset {
         private val inOut: List<String> = mutableListOf()
 
         private val presetName get() = inOut[0]
-        private val outputFile get() = if (inOut.size == 1) null else inOut[1]
+        private val outputFile get() = if (inOut.size == 1) null else Paths.get(inOut[1])
 
-        override val inputFiles get() = mutableListOf<String>()
+        override val inputFiles get() = mutableListOf<Path>()
 
         override val outputFiles get() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
 
@@ -54,7 +55,7 @@ object CommandExportPreset {
             )
             val of = outputFile
             if (of != null)
-                K_YAML_OM.writeValue(File(of), bundle)
+                K_YAML_OM.writeValue(of.toFile(), bundle)
             else
                 K_YAML_OM.writeValue(System.out, bundle)
         }

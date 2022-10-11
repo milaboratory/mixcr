@@ -67,8 +67,8 @@ public class CommandFindAllelesTest {
                 file2.toString()
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
-        assertTrue(command.getOutputFiles().get(0), command.getOutputFiles().get(0).endsWith("/folder1/file1_with_alleles.clns"));
-        assertTrue(command.getOutputFiles().get(1), command.getOutputFiles().get(1).endsWith("/folder2/file2_with_alleles.clns"));
+        assertTrue(command.getOutputFiles().get(0).toString(), command.getOutputFiles().get(0).toString().endsWith("/folder1/file1_with_alleles.clns"));
+        assertTrue(command.getOutputFiles().get(1).toString(), command.getOutputFiles().get(1).toString().endsWith("/folder2/file2_with_alleles.clns"));
     }
 
     @Test

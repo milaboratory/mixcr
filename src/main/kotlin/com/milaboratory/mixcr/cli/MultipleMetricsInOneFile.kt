@@ -12,13 +12,12 @@
 package com.milaboratory.mixcr.cli
 
 import java.nio.file.Path
-import java.util.*
 import kotlin.io.path.extension
 
 interface MultipleMetricsInOneFile {
     fun validateNonPdf(out: Path, metrics: List<String>?) = run {
-        if (!out.endsWith("pdf") && metrics.isNullOrEmpty()) {
-            val ext = out.extension.uppercase(Locale.getDefault())
+        if (out.extension != "pdf" && metrics.isNullOrEmpty()) {
+            val ext = out.extension
             "For export in $ext Use --metric option to specify only one metric to export. Or use PDF format for export."
         } else
             null

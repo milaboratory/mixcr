@@ -14,13 +14,11 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
 import com.milaboratory.mixcr.Flags
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRMixin
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.Presets
 import kotlin.reflect.KProperty1
-
-abstract class AbstractMiXCRCommand : ACommand("mixcr")
 
 abstract class MiXCRParamsResolver<P : Any>(
     paramsProperty: KProperty1<MiXCRParamsBundle, P?>
@@ -37,14 +35,14 @@ abstract class MiXCRParamsResolver<P : Any>(
             throw ValidationException("Error validating preset bundle.");
         }
         if (
-            bundle.pipeline?.steps?.contains(MiXCRCommand.assembleContigs) == true &&
+            bundle.pipeline?.steps?.contains(MiXCRCommandDescriptor.assembleContigs) == true &&
             bundle.assemble?.clnaOutput == false
         )
             throw ValidationException("assembleContigs step required clnaOutput=true on assemble step")
     }
 }
 
-abstract class MiXCRPresetAwareCommand<P : Any> : AbstractMiXCRCommand(), PresetAware<MiXCRParamsBundle, P>
+interface MiXCRPresetAwareCommand<P : Any> : PresetAware<MiXCRParamsBundle, P>
 
 abstract class MiXCRMixinCollector : MiXCRMixinSet {
     private val _mixins = mutableListOf<MiXCRMixin>()

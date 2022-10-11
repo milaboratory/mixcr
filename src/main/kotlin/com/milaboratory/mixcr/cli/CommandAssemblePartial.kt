@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.group
 import com.milaboratory.mitool.helpers.map
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
@@ -34,6 +34,7 @@ import com.milaboratory.util.SmartProgressReporter
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.nio.file.Path
 
 object CommandAssemblePartial {
     const val COMMAND_NAME = "assemblePartial"
@@ -44,10 +45,10 @@ object CommandAssemblePartial {
         @JsonProperty("cellLevel") val cellLevel: Boolean,
         @JsonProperty("parameters") @JsonMerge val parameters: PartialAlignmentsAssemblerParameters
     ) : MiXCRParams {
-        override val command = MiXCRCommand.assemblePartial
+        override val command = MiXCRCommandDescriptor.assemblePartial
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["Write only overlapped sequences (needed for testing)."],
             names = ["-o", "--overlapped-only"]
@@ -87,21 +88,21 @@ object CommandAssemblePartial {
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["alignments.vdjca"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["alignments.recovered.vdjca"], index = "1")
-        lateinit var outputFile: String
+        lateinit var outputFile: Path
 
         @Option(description = [REPORT], names = ["-r", "--report"])
-        var reportFile: String? = null
+        var reportFile: Path? = null
 
         @Option(description = [JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: String? = null
+        var jsonReport: Path? = null
 
-        override val inputFiles: List<String>
+        override val inputFiles
             get() = listOf(inputFile)
 
-        override val outputFiles: List<String>
+        override val outputFiles
             get() = listOf(outputFile)
 
         override fun run0() {
@@ -117,7 +118,7 @@ object CommandAssemblePartial {
                         writer.writeHeader(
                             reader1.header
                                 .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
-                                .addStepParams(MiXCRCommand.assemblePartial, cmdParams),
+                                .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams),
                             reader1.usedGenes
                         )
                         val assembler = PartialAlignmentsAssembler(
@@ -171,7 +172,7 @@ object CommandAssemblePartial {
                         if (reportFile != null) ReportUtil.appendReport(reportFile, report)
                         if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
                         writer.setNumberOfProcessedReads(reader1.numberOfReads - assembler.overlapped.get())
-                        writer.setFooter(reader1.footer.addStepReport(MiXCRCommand.assemblePartial, report))
+                        writer.setFooter(reader1.footer.addStepReport(MiXCRCommandDescriptor.assemblePartial, report))
                     }
                 }
             }

@@ -27,7 +27,22 @@ import com.milaboratory.mitool.helpers.writeList
 import com.milaboratory.mitool.pattern.search.readObject
 import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport
-import com.milaboratory.mixcr.cli.*
+import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport
+import com.milaboratory.mixcr.cli.AlignerReport
+import com.milaboratory.mixcr.cli.CloneAssemblerReport
+import com.milaboratory.mixcr.cli.CommandAlign
+import com.milaboratory.mixcr.cli.CommandAssemble
+import com.milaboratory.mixcr.cli.CommandAssembleContigs
+import com.milaboratory.mixcr.cli.CommandAssemblePartial
+import com.milaboratory.mixcr.cli.CommandExportAlignments
+import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.cli.CommandExtend
+import com.milaboratory.mixcr.cli.CommandFindAlleles
+import com.milaboratory.mixcr.cli.CommandFindShmTrees
+import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
+import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.MiXCRCommandReport
+import com.milaboratory.mixcr.cli.RefineTagsAndSortReport
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
@@ -47,10 +62,10 @@ class NoReport : AbstractMiXCRCommandReport(null, "", emptyArray(), emptyArray()
     override fun command() = ""
 }
 
-typealias AnyMiXCRCommand = MiXCRCommand<*, *>
+typealias AnyMiXCRCommand = MiXCRCommandDescriptor<*, *>
 
-@JsonDeserialize(using = MiXCRCommand.Companion.JDeserializer::class)
-sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<AnyMiXCRCommand> {
+@JsonDeserialize(using = MiXCRCommandDescriptor.Companion.JDeserializer::class)
+sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<AnyMiXCRCommand> {
     abstract val paramClass: KClass<P>
     abstract val reportClass: KClass<R>
     abstract val command: String
@@ -63,7 +78,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
 
     abstract fun extractFromBundle(bundle: MiXCRParamsBundle): P?
 
-    abstract fun createCommand(): AbstractMiXCRCommand
+    abstract fun createCommand(): MiXCRCommand
 
     fun outputName(prefix: String, bundle: MiXCRParamsBundle, round: Int) =
         outputName(
@@ -90,7 +105,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
 
     override fun toString() = command
 
-    object align : MiXCRCommand<CommandAlign.Params, AlignerReport>() {
+    object align : MiXCRCommandDescriptor<CommandAlign.Params, AlignerReport>() {
         override val paramClass get() = CommandAlign.Params::class
         override val reportClass get() = AlignerReport::class
 
@@ -112,7 +127,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = CommandAlign.Cmd()
     }
 
-    object refineTagsAndSort : MiXCRCommand<CommandRefineTagsAndSort.Params, RefineTagsAndSortReport>() {
+    object refineTagsAndSort : MiXCRCommandDescriptor<CommandRefineTagsAndSort.Params, RefineTagsAndSortReport>() {
         override val paramClass get() = CommandRefineTagsAndSort.Params::class
         override val reportClass get() = RefineTagsAndSortReport::class
 
@@ -134,7 +149,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = CommandRefineTagsAndSort.Cmd()
     }
 
-    object exportAlignments : MiXCRCommand<CommandExportAlignments.Params, NoReport>() {
+    object exportAlignments : MiXCRCommandDescriptor<CommandExportAlignments.Params, NoReport>() {
         override val paramClass get() = CommandExportAlignments.Params::class
         override val reportClass get() = NoReport::class
 
@@ -153,7 +168,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = CommandExportAlignments.Cmd()
     }
 
-    object extend : MiXCRCommand<CommandExtend.Params, VDJCObjectExtenderReport>() {
+    object extend : MiXCRCommandDescriptor<CommandExtend.Params, VDJCObjectExtenderReport>() {
         override val paramClass get() = CommandExtend.Params::class
         override val reportClass get() = VDJCObjectExtenderReport::class
 
@@ -175,7 +190,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = CommandExtend.Cmd()
     }
 
-    object assemblePartial : MiXCRCommand<CommandAssemblePartial.Params, PartialAlignmentsAssemblerReport>() {
+    object assemblePartial : MiXCRCommandDescriptor<CommandAssemblePartial.Params, PartialAlignmentsAssemblerReport>() {
         override val paramClass get() = CommandAssemblePartial.Params::class
         override val reportClass get() = PartialAlignmentsAssemblerReport::class
 
@@ -198,7 +213,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = CommandAssemblePartial.Cmd()
     }
 
-    object assemble : MiXCRCommand<CommandAssemble.Params, CloneAssemblerReport>() {
+    object assemble : MiXCRCommandDescriptor<CommandAssemble.Params, CloneAssemblerReport>() {
         override val paramClass get() = CommandAssemble.Params::class
         override val reportClass get() = CloneAssemblerReport::class
 
@@ -220,7 +235,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = CommandAssemble.Cmd()
     }
 
-    object assembleContigs : MiXCRCommand<CommandAssembleContigs.Params, FullSeqAssemblerReport>() {
+    object assembleContigs : MiXCRCommandDescriptor<CommandAssembleContigs.Params, FullSeqAssemblerReport>() {
         override val paramClass get() = CommandAssembleContigs.Params::class
         override val reportClass get() = FullSeqAssemblerReport::class
 
@@ -242,7 +257,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = CommandAssembleContigs.Cmd()
     }
 
-    object exportClones : MiXCRCommand<CommandExportClones.Params, NoReport>() {
+    object exportClones : MiXCRCommandDescriptor<CommandExportClones.Params, NoReport>() {
         override val paramClass get() = CommandExportClones.Params::class
         override val reportClass get() = NoReport::class
 
@@ -261,7 +276,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = CommandExportClones.Cmd()
     }
 
-    object findAlleles : MiXCRCommand<CommandFindAlleles.Params, FindAllelesReport>() {
+    object findAlleles : MiXCRCommandDescriptor<CommandFindAlleles.Params, FindAllelesReport>() {
         override val paramClass get() = CommandFindAlleles.Params::class
         override val reportClass get() = FindAllelesReport::class
 
@@ -279,7 +294,7 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         override fun createCommand() = TODO()
     }
 
-    object findShmTrees : MiXCRCommand<CommandFindShmTrees.Params, BuildSHMTreeReport>() {
+    object findShmTrees : MiXCRCommandDescriptor<CommandFindShmTrees.Params, BuildSHMTreeReport>() {
         override val paramClass get() = CommandFindShmTrees.Params::class
         override val reportClass get() = BuildSHMTreeReport::class
 
@@ -321,9 +336,9 @@ sealed class MiXCRCommand<P : MiXCRParams, R : MiXCRCommandReport> : Comparable<
         class JDeserializer : JsonDeserializer<AnyMiXCRCommand>() {
             override fun deserialize(p: JsonParser, ctxt: DeserializationContext): AnyMiXCRCommand = run {
                 if (p.currentToken != JsonToken.VALUE_STRING)
-                    throw ctxt.wrongTokenException(p, MiXCRCommand::class.java, JsonToken.VALUE_STRING, "")
+                    throw ctxt.wrongTokenException(p, MiXCRCommandDescriptor::class.java, JsonToken.VALUE_STRING, "")
                 fromStringOrNull(p.text) ?: throw ctxt.instantiationException(
-                    MiXCRCommand::class.java,
+                    MiXCRCommandDescriptor::class.java,
                     "Unknown value: ${p.text}"
                 )
             }
@@ -393,14 +408,14 @@ class StepDataCollection(
     override fun getTrees(step: AnyMiXCRCommand) = getBytes(step).map { K_OM.readTree(it) }
 
     fun <D : Any, P : MiXCRParams, R : MiXCRCommandReport> get(
-        step: MiXCRCommand<P, R>,
-        typeExtractor: (MiXCRCommand<P, R>) -> KClass<D>
+        step: MiXCRCommandDescriptor<P, R>,
+        typeExtractor: (MiXCRCommandDescriptor<P, R>) -> KClass<D>
     ) =
         get(step, typeExtractor(step))
 
     fun getMap(typeExtractor: (AnyMiXCRCommand) -> KClass<*>) =
         dataMap.map { e ->
-            val cmd = MiXCRCommand.fromString(e.key)
+            val cmd = MiXCRCommandDescriptor.fromString(e.key)
             val type = typeExtractor(cmd)
             cmd to e.value.map { K_OM.readValue(it, type.java) }
         }.toMap()
@@ -445,10 +460,10 @@ class MiXCRStepReports(val collection: StepDataCollection = StepDataCollection()
         collection.getMap { it.reportClass } as Map<AnyMiXCRCommand, List<MiXCRCommandReport>>
     }
 
-    fun <R : MiXCRCommandReport> add(step: MiXCRCommand<*, R>, report: R) =
+    fun <R : MiXCRCommandReport> add(step: MiXCRCommandDescriptor<*, R>, report: R) =
         MiXCRStepReports(collection.add(step, report))
 
-    operator fun <R : MiXCRCommandReport> get(step: MiXCRCommand<*, R>): List<R> =
+    operator fun <R : MiXCRCommandReport> get(step: MiXCRCommandDescriptor<*, R>): List<R> =
         collection.get(step) { it.reportClass }
 
     companion object {
@@ -474,8 +489,11 @@ class MiXCRStepParams(private val collection: StepDataCollection = StepDataColle
         collection.getMap { it.paramClass } as Map<AnyMiXCRCommand, List<MiXCRParams>>
     }
 
-    fun <P : MiXCRParams> add(step: MiXCRCommand<P, *>, params: P) = MiXCRStepParams(collection.add(step, params))
-    operator fun <P : MiXCRParams> get(step: MiXCRCommand<P, *>): List<P> = collection.get(step) { it.paramClass }
+    fun <P : MiXCRParams> add(step: MiXCRCommandDescriptor<P, *>, params: P) =
+        MiXCRStepParams(collection.add(step, params))
+
+    operator fun <P : MiXCRParams> get(step: MiXCRCommandDescriptor<P, *>): List<P> =
+        collection.get(step) { it.paramClass }
 
     companion object {
         fun mergeUpstreams(upstreams: List<MiXCRStepParams>) =

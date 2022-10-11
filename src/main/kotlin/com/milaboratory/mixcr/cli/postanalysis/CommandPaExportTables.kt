@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult
 import picocli.CommandLine
+import java.nio.file.Path
 
 @CommandLine.Command(
     name = "exportTables",
@@ -22,7 +23,7 @@ import picocli.CommandLine
 )
 class CommandPaExportTables : CommandPaExportTablesBase {
     constructor()
-    constructor(paResult: PaResult, out: String) : super(paResult, out)
+    constructor(paResult: PaResult, out: Path) : super(paResult, out)
 
     override fun run1(result: PaResultByGroup) {
         for (table in result.schema.tables) {

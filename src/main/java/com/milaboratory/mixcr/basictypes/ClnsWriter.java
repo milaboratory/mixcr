@@ -21,6 +21,7 @@ import io.repseq.core.VDJCGene;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -43,11 +44,15 @@ public final class ClnsWriter implements AutoCloseable {
     private MiXCRFooter footer = null;
 
     public ClnsWriter(String fileName) throws IOException {
-        this(new PrimitivOHybrid(Paths.get(fileName)));
+        this(Paths.get(fileName));
     }
 
     public ClnsWriter(File file) throws IOException {
-        this(new PrimitivOHybrid(file.toPath()));
+        this(file.toPath());
+    }
+
+    public ClnsWriter(Path file) throws IOException {
+        this(new PrimitivOHybrid(file));
     }
 
     public ClnsWriter(PrimitivOHybrid output) {

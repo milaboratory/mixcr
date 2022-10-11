@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.data.MinGroupsPerGroup
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
@@ -42,7 +42,8 @@ import io.repseq.core.GeneType.Variable
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.util.*
+import java.nio.file.Path
+import kotlin.io.path.extension
 
 object CommandAssemble {
     const val COMMAND_NAME = "assemble"
@@ -57,10 +58,10 @@ object CommandAssemble {
          * filtering metadata of tag-refinement step */
         @JsonProperty("inferMinRecordsPerConsensus") val inferMinRecordsPerConsensus: Boolean,
     ) : MiXCRParams {
-        override val command = MiXCRCommand.assemble
+        override val command = MiXCRCommandDescriptor.assemble
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["If this option is specified, output file will be written in \"Clones & " +
                     "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
@@ -114,10 +115,10 @@ object CommandAssemble {
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["alignments.vdjca"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["clones.[clns|clna]"], index = "1")
-        lateinit var outputFile: String
+        lateinit var outputFile: Path
 
         @Option(
             description = ["Use system temp folder for temporary files."],
@@ -145,18 +146,18 @@ object CommandAssemble {
         var highCompression = false
 
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: String? = null
+        var reportFile: Path? = null
 
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: String? = null
+        var jsonReport: Path? = null
 
         @Option(description = ["Show buffer statistics."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
 
-        override val inputFiles: List<String>
+        override val inputFiles
             get() = listOf(inputFile)
 
-        override val outputFiles: List<String>
+        override val outputFiles
             get() = listOf(outputFile)
 
         /**
@@ -199,9 +200,8 @@ object CommandAssemble {
                 }.second
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
-                if (outputFile.lowercase(Locale.getDefault())
-                        .endsWith(".clna") && !cmdParam.clnaOutput || outputFile.lowercase(Locale.getDefault())
-                        .endsWith(".clns") && cmdParam.clnaOutput
+                if (outputFile.extension == "clna" && !cmdParam.clnaOutput ||
+                    outputFile.extension == "clns" && cmdParam.clnaOutput
                 ) logger.warn("Unexpected file extension, use .clns extension for clones-only (normal) output and .clna if -a / --write-alignments options specified.")
 
                 // set aligner parameters
@@ -290,7 +290,7 @@ object CommandAssemble {
                         assemblerRunner.getCloneSet(
                             inputHeader
                                 .withAssemblerParameters(cloneAssemblerParameters)
-                                .addStepParams(MiXCRCommand.assemble, cmdParam),
+                                .addStepParams(MiXCRCommandDescriptor.assemble, cmdParam),
                             inputFooter
                         ),
                         ordering
@@ -313,7 +313,12 @@ object CommandAssemble {
                                 .use { merged -> writer.collateAlignments(merged, assembler.alignmentsCount) }
                             reportBuilder.setFinishMillis(System.currentTimeMillis())
                             report = reportBuilder.buildReport()
-                            writer.setFooter(alignmentsReader.footer.addStepReport(MiXCRCommand.assemble, report))
+                            writer.setFooter(
+                                alignmentsReader.footer.addStepReport(
+                                    MiXCRCommandDescriptor.assemble,
+                                    report
+                                )
+                            )
                             writer.writeAlignmentsAndIndex()
                         }
                     } else {
@@ -321,7 +326,12 @@ object CommandAssemble {
                             writer.writeCloneSet(cloneSet)
                             reportBuilder.setFinishMillis(System.currentTimeMillis())
                             report = reportBuilder.buildReport()
-                            writer.setFooter(alignmentsReader.footer.addStepReport(MiXCRCommand.assemble, report))
+                            writer.setFooter(
+                                alignmentsReader.footer.addStepReport(
+                                    MiXCRCommandDescriptor.assemble,
+                                    report
+                                )
+                            )
                         }
                     }
 

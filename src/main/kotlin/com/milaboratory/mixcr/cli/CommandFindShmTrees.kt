@@ -16,7 +16,7 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.AssembleContigsMixins
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
@@ -60,9 +60,9 @@ import kotlin.io.path.extension
     separator = " ",
     description = ["Builds SHM trees."]
 )
-class CommandFindShmTrees : AbstractMiXCRCommand() {
+class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     data class Params(val dummy: Boolean = true) : MiXCRParams {
-        override val command get() = MiXCRCommand.findShmTrees
+        override val command get() = MiXCRCommandDescriptor.findShmTrees
     }
 
     @Parameters(
@@ -80,11 +80,11 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
             field = value
         }
 
-    public override val inputFiles: List<String>
-        get() = inOut.dropLast(1).map { it.toString() }
+    public override val inputFiles
+        get() = inOut.dropLast(1)
 
-    override val outputFiles: List<String>
-        get() = inOut.takeLast(1).map { it.toString() }
+    override val outputFiles
+        get() = inOut.takeLast(1)
 
     private val clnsFileNames: List<Path>
         get() = inOut.dropLast(1)
@@ -95,10 +95,10 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     var overrides: Map<String, String> = mutableMapOf()
 
     @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-    var reportFile: String? = null
+    var reportFile: Path? = null
 
     @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-    var jsonReport: String? = null
+    var jsonReport: Path? = null
 
     @Option(description = ["List of VGene names to filter clones"], names = ["--v-gene-names"])
     var VGenesToFilter: Set<String> = mutableSetOf()
@@ -163,15 +163,14 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     }
 
     override fun validate() {
-        super.validate()
-        if (!outputTreesPath.extension.endsWith(shmFileExtension)) {
+        if (outputTreesPath.extension != shmFileExtension) {
             throw ValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
         }
         if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
             throw ValidationException("First step must be BuildingInitialTrees")
         }
         if (buildFrom != null) {
-            if (!buildFrom!!.endsWith(".tsv")) {
+            if (buildFrom!!.extension != "tsv") {
                 throw ValidationException("--build-from must be .tsv, got $buildFrom")
             }
             if (VGenesToFilter.isNotEmpty()) {
@@ -334,7 +333,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
                 cloneReaders.foldIndexed(MiXCRFooterMerger()) { i, m, f ->
                     m.addReportsFromInput(i, clnsFileNames[i].toString(), f.footer)
                 }
-                    .addStepReport(MiXCRCommand.findShmTrees, reportBuilder.buildReport())
+                    .addStepReport(MiXCRCommandDescriptor.findShmTrees, reportBuilder.buildReport())
                     .build()
             )
         }
@@ -350,7 +349,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
             headers,
             headers
                 .fold(MiXCRHeaderMerger()) { m, h -> m.add(h) }.build()
-                .addStepParams(MiXCRCommand.findShmTrees, params),
+                .addStepParams(MiXCRCommandDescriptor.findShmTrees, params),
             clnsFileNames.map { it.toString() },
             usedGenes
         )

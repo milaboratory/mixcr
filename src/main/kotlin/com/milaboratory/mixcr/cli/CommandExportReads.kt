@@ -19,22 +19,24 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.SmartProgressReporter
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 
-@CommandLine.Command(
+@Command(
     name = "exportReads",
     sortOptions = true,
     separator = " ",
     description = ["Export original reads from vdjca file."]
 )
-class CommandExportReads : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]"], arity = "1..3")
-    var inOut: List<String> = mutableListOf()
+class CommandExportReads : MiXCRCommandWithOutputs() {
+    @Parameters(description = ["input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]"], arity = "1..3")
+    var inOut: List<Path> = mutableListOf()
 
-    override val inputFiles: List<String>
+    override val inputFiles
         get() = listOf(inOut.first())
 
-    public override val outputFiles: List<String>
+    public override val outputFiles
         get() = inOut.subList(1, inOut.size)
 
     override fun run0() {
@@ -67,8 +69,8 @@ class CommandExportReads : AbstractMiXCRCommand() {
         val outputFiles = outputFiles
         return when (outputFiles.size) {
             0 -> SingleFastqWriter(System.out)
-            1 -> SingleFastqWriter(outputFiles[0])
-            2 -> PairedFastqWriter(outputFiles[0], outputFiles[1])
+            1 -> SingleFastqWriter(outputFiles[0].toFile())
+            2 -> PairedFastqWriter(outputFiles[0].toFile(), outputFiles[1].toFile())
             else -> throw IllegalArgumentException()
         }
     }

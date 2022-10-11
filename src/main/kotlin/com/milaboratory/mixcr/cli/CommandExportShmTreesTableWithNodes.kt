@@ -46,12 +46,12 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     )
     var onlyObserved: Boolean = false
 
-    override val outputFiles: List<String>
-        get() = listOfNotNull(out?.toString())
+    override val outputFiles
+        get() = listOfNotNull(out)
 
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
-        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+        SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             InfoWriter.create(
                 out,
                 SplittedTreeNodeFieldsExtractorsFactory,

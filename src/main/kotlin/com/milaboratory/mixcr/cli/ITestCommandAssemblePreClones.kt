@@ -30,13 +30,13 @@ import picocli.CommandLine.Parameters
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
-import java.nio.file.Paths
+import java.nio.file.Path
 import java.util.*
 
 @Command(name = "itestAssemblePreClones", separator = " ", hidden = true)
-class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
+class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
     @Parameters(arity = "4", description = ["input_file output_file output_clones output_alignments"])
-    lateinit var files: List<String>
+    lateinit var files: List<Path>
 
     @Option(
         description = ["Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes"],
@@ -53,10 +53,10 @@ class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
     @Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
     private val preCloneAssemblerOverrides: Map<String, String> = HashMap()
 
-    override val inputFiles: List<String>
+    override val inputFiles
         get() = files.subList(0, 1)
 
-    override val outputFiles: List<String>
+    override val outputFiles
         get() = files.subList(1, 3)
 
     override fun run0() {
@@ -79,7 +79,7 @@ class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
                 alignmentsReader,
                 if (cellLevel) TagType.Cell else TagType.Molecule, arrayOf(GeneFeature.CDR3),
                 params,
-                Paths.get(files[1]),
+                files[1],
                 tmp
             )
             SmartProgressReporter.startProgressReport(assemblerRunner)
@@ -96,12 +96,12 @@ class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
                 }
             }
         }
-        FilePreCloneReader(Paths.get(files[1])).use { reader ->
+        FilePreCloneReader(files[1]).use { reader ->
             val totalClones = reader.numberOfClones
 
             // Checking and exporting alignments
             var numberOfAlignmentsCheck: Long = 0
-            PrintStream(BufferedOutputStream(FileOutputStream(files[2]), 1 shl 20)).use { ps ->
+            PrintStream(BufferedOutputStream(FileOutputStream(files[2].toFile()), 1 shl 20)).use { ps ->
                 ps.print("alignmentId\t")
                 for (ti in reader.tagsInfo) ps.print(ti.name + "\t")
                 ps.println("readIndex\tcloneId\tcdr3\tcdr3_qual\tbestV\tbestJ")
@@ -145,7 +145,7 @@ class ITestCommandAssemblePreClones : AbstractMiXCRCommand() {
 
             // Checking and exporting clones
             var numberOfClonesCheck: Long = 0
-            PrintStream(BufferedOutputStream(FileOutputStream(files[3]), 1 shl 20)).use { ps ->
+            PrintStream(BufferedOutputStream(FileOutputStream(files[3].toFile()), 1 shl 20)).use { ps ->
                 ps.print("cloneId\t")
                 for (ti in reader.tagsInfo) ps.print(ti.name + "\t")
                 ps.println("count\tcount_full\tcdr3\tbestV\tbestJ")

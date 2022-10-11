@@ -25,31 +25,33 @@ import com.milaboratory.primitivio.sort
 import com.milaboratory.util.ObjectSerializer
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCGene
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.file.Path
 
-@CommandLine.Command(
+@Command(
     name = CommandSortAlignments.SORT_ALIGNMENTS_COMMAND_NAME,
     sortOptions = true,
     separator = " ",
     description = ["Sort alignments in vdjca file by read id."]
 )
-class CommandSortAlignments : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["alignments.vdjca"], index = "0")
-    lateinit var `in`: String
+class CommandSortAlignments : MiXCRCommandWithOutputs() {
+    @Parameters(description = ["alignments.vdjca"], index = "0")
+    lateinit var input: Path
 
-    @CommandLine.Parameters(description = ["alignments.sorted.vdjca"], index = "1")
-    lateinit var out: String
+    @Parameters(description = ["alignments.sorted.vdjca"], index = "1")
+    lateinit var out: Path
 
-    override val inputFiles: List<String>
-        get() = listOf(`in`)
+    override val inputFiles
+        get() = listOf(input)
 
-    override val outputFiles: List<String>
+    override val outputFiles
         get() = listOf(out)
 
     override fun run0() {
-        VDJCAlignmentsReader(`in`).use { reader ->
+        VDJCAlignmentsReader(input).use { reader ->
             SmartProgressReporter.startProgressReport("Reading vdjca", reader)
             reader.sort(
                 Comparator.comparing { it.minReadId },

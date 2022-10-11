@@ -16,22 +16,21 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.extension
 
-abstract class CommandExportShmTreesAbstract : AbstractMiXCRCommand() {
+abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
     @Parameters(
         index = "0",
         paramLabel = "trees.$shmFileExtension",
         hideParamSyntax = true,
         description = ["Input file produced by ${CommandFindShmTrees.COMMAND_NAME}."]
     )
-    lateinit var `in`: Path
+    lateinit var input: Path
 
-    override val inputFiles: List<String>
-        get() = listOf(`in`.toString())
+    override val inputFiles
+        get() = listOf(input)
 
     override fun validate() {
-        super.validate()
-        if (!`in`.extension.endsWith(shmFileExtension)) {
-            throw ValidationException("Input file should have extension $shmFileExtension. Given $`in`")
+        ValidationException.require(input.extension == shmFileExtension) {
+            "Input file should have extension $shmFileExtension. Given $input"
         }
     }
 }

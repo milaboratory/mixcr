@@ -38,8 +38,8 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
     )
     lateinit var out: Path
 
-    override val outputFiles: List<String>
-        get() = listOf(out.toString())
+    override val outputFiles
+        get() = listOf(out)
 
     override fun run0() {
         out.createDirectories()
@@ -48,7 +48,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
             it.content.id.toString()
         }
 
-        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+        SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             reader.readTrees().forEach { shmTree ->
                 val shmTreeForPostanalysis = shmTree.forPostanalysis(
                     reader.fileNames,

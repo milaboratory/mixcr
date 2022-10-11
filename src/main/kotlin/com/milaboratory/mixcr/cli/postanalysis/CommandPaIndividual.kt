@@ -21,9 +21,9 @@ import com.milaboratory.mixcr.postanalysis.ui.PostanalysisSchema
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.Command
 
-@CommandLine.Command(
+@Command(
     name = "individual",
     sortOptions = false,
     separator = " ",

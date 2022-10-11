@@ -38,12 +38,12 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     )
     val out: Path? = null
 
-    override val outputFiles: List<String>
-        get() = listOfNotNull(out?.toString())
+    override val outputFiles
+        get() = listOfNotNull(out)
 
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
-        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+        SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             InfoWriter.create(
                 out,
                 SHMTreeFieldsExtractorsFactory,

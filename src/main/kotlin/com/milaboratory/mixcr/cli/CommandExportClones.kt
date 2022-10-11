@@ -14,7 +14,7 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.primitives.Filter
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.Clone
@@ -52,7 +52,7 @@ object CommandExportClones {
         @JsonProperty("noHeader") val noHeader: Boolean,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
     ) : MiXCRParams {
-        override val command get() = MiXCRCommand.exportClones
+        override val command get() = MiXCRCommandDescriptor.exportClones
     }
 
     fun Params.mkFilter(): Filter<Clone> {
@@ -74,7 +74,7 @@ object CommandExportClones {
         }
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @ArgGroup(validate = false, heading = "Export mix-ins", exclusive = false)
         private var mixins: AllExportMiXCRMixins? = null
 
@@ -127,16 +127,16 @@ object CommandExportClones {
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["data.[clns|clna]"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
         var outputFile: Path? = null
 
-        override val inputFiles: List<String>
+        override val inputFiles
             get() = listOf(inputFile)
 
-        override val outputFiles: List<String>
-            get() = listOfNotNull(outputFile).map { it.toString() }
+        override val outputFiles
+            get() = listOfNotNull(outputFile)
 
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())

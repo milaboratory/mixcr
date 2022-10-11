@@ -131,8 +131,8 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     )
     var noAlignmentFill: Boolean = false
 
-    override val outputFiles: List<String>
-        get() = listOf(out.toString())
+    override val outputFiles
+        get() = listOf(out)
 
     override fun validate() {
         super.validate()
@@ -172,7 +172,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     override fun run0() {
         val plots = ShmTreePlotter(
-            `in`.toAbsolutePath(),
+            input.toAbsolutePath(),
             metadata?.toAbsolutePath(),
             filter = filter,
             limit = limit,
@@ -183,9 +183,9 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
             alignment = alignment
         ).plots
 
-        `in`.toAbsolutePath().parent.createDirectories()
+        input.toAbsolutePath().parent.createDirectories()
         writePDF(
-            `in`.toAbsolutePath(),
+            input.toAbsolutePath(),
             plots
         )
     }

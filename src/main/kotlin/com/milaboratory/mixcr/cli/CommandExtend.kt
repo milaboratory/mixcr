@@ -15,7 +15,7 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
@@ -43,7 +43,7 @@ import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.nio.file.Paths
+import java.nio.file.Path
 
 object CommandExtend {
     const val COMMAND_NAME = "extend"
@@ -54,10 +54,10 @@ object CommandExtend {
         @JsonProperty("minimalVScore") val minimalVScore: Int,
         @JsonProperty("minimalJScore") val minimalJScore: Int
     ) : MiXCRParams {
-        override val command = MiXCRCommand.extend
+        override val command = MiXCRCommandDescriptor.extend
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(description = ["V extension anchor point."], names = ["--v-anchor"])
         private var vAnchorPoint: String? = null
 
@@ -88,10 +88,10 @@ object CommandExtend {
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["extendeed.[vdjca|clns|clna]"], index = "1")
-        lateinit var outputFile: String
+        lateinit var outputFile: Path
 
         @Option(
             description = ["Apply procedure only to alignments with specific immunological-receptor chains."],
@@ -100,10 +100,10 @@ object CommandExtend {
         var chains = "TCR"
 
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: String? = null
+        var reportFile: Path? = null
 
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: String? = null
+        var jsonReport: Path? = null
 
         @Option(description = ["Quality score value to assign imputed sequences"], names = ["-q", "--quality"])
         var extensionQuality: Byte = 30
@@ -115,14 +115,14 @@ object CommandExtend {
                 field = value
             }
 
-        override val inputFiles: List<String>
+        override val inputFiles
             get() = listOf(inputFile)
 
-        override val outputFiles: List<String>
+        override val outputFiles
             get() = listOf(outputFile)
 
         override fun run0() {
-            when (IOUtil.extractFileType(Paths.get(inputFile))) {
+            when (IOUtil.extractFileType(inputFile)) {
                 VDJCA -> processVDJCA()
                 CLNS -> processClns()
                 CLNA -> throw ValidationException("Operation is not supported for ClnA files.")
@@ -146,7 +146,7 @@ object CommandExtend {
                         clones,
                         cloneSet.usedGenes,
                         cloneSet.header
-                            .addStepParams(MiXCRCommand.extend, process.params)
+                            .addStepParams(MiXCRCommandDescriptor.extend, process.params)
                             .copy(allFullyCoveredBy = null),
                         cloneSet.footer,
                         cloneSet.ordering
@@ -154,7 +154,7 @@ object CommandExtend {
                 ClnsWriter(outputFile).use { writer ->
                     writer.writeCloneSet(newCloneSet)
                     val report = process.finish()
-                    writer.setFooter(reader.footer.addStepReport(MiXCRCommand.extend, report))
+                    writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.extend, report))
                 }
             }
         }
@@ -178,7 +178,7 @@ object CommandExtend {
                         }
                     writer.setNumberOfProcessedReads(reader.numberOfReads)
                     val report = process.finish()
-                    writer.setFooter(reader.footer.addStepReport(MiXCRCommand.extend, report))
+                    writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.extend, report))
                 }
             }
         }

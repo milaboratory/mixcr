@@ -14,7 +14,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.AssembleContigsMixins
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
@@ -73,9 +73,9 @@ import kotlin.io.path.nameWithoutExtension
     separator = " ",
     description = ["Find allele variants in clnx."]
 )
-class CommandFindAlleles : AbstractMiXCRCommand() {
+class CommandFindAlleles : MiXCRCommandWithOutputs() {
     data class Params(val dummy: Boolean = true) : MiXCRParams {
-        override val command get() = MiXCRCommand.findAlleles
+        override val command get() = MiXCRCommandDescriptor.findAlleles
     }
 
     @Parameters(
@@ -83,7 +83,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         paramLabel = "input_file.clns [input_file2.clns ...]",
         description = ["Input files for allele search"]
     )
-    lateinit var `in`: List<Path>
+    override val inputFiles: List<Path> = mutableListOf()
 
     @Option(
         description = [
@@ -128,10 +128,10 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     var overrides: Map<String, String> = mutableMapOf()
 
     @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-    var reportFile: String? = null
+    var reportFile: Path? = null
 
     @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-    var jsonReport: String? = null
+    var jsonReport: Path? = null
 
     @Option(names = ["--debugDir"], hidden = true)
     var debugDir: Path? = null
@@ -141,7 +141,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         if (!template.endsWith(".clns")) {
             throw ValidationException("Wrong template: command produces only clns $template")
         }
-        val clnsFiles = `in`
+        val clnsFiles = inputFiles
             .map { it.toAbsolutePath() }
             .map { path ->
                 template
@@ -156,16 +156,10 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         clnsFiles
     }
 
-    public override val inputFiles: List<String>
-        get() = `in`.map { it.toString() }
-
-    public override val outputFiles: List<String>
-        get() = outputPaths.map { it.toString() }
-
-    private val outputPaths get() = outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput)
+    override val outputFiles get() = outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput)
 
     private val tempDest: TempFileDest by lazy {
-        val path = outputPaths.first()
+        val path = outputFiles.first()
         if (useLocalTemp) path.toAbsolutePath().parent.createDirectories()
         TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp)
     }
@@ -182,7 +176,6 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     }
 
     override fun validate() {
-        super.validate()
         libraryOutput?.let { libraryOutput ->
             if (libraryOutput.extension != "json") {
                 throw ValidationException("--export-library must be json: $libraryOutput")
@@ -231,7 +224,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
             .setStartMillis(System.currentTimeMillis())
         ensureParametersInitialized()
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
-        val cloneReaders = inputFiles.map { CloneSetIO.mkReader(Paths.get(it), libraryRegistry) }
+        val cloneReaders = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
@@ -393,14 +386,14 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                     resultLibrary.name,
                     resultLibrary.data
                 )
-            ).addStepParams(MiXCRCommand.findAlleles, Params()),
+            ).addStepParams(MiXCRCommandDescriptor.findAlleles, Params()),
             cloneReader.footer,
             cloneReader.ordering()
         )
         val clnsWriter = ClnsWriter(this)
         clnsWriter.writeCloneSet(cloneSet)
         return { report ->
-            clnsWriter.setFooter(cloneReader.footer.addStepReport(MiXCRCommand.findAlleles, report))
+            clnsWriter.setFooter(cloneReader.footer.addStepReport(MiXCRCommandDescriptor.findAlleles, report))
             clnsWriter.close()
         }
     }

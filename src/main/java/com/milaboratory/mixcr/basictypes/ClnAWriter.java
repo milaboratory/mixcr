@@ -35,6 +35,7 @@ import io.repseq.core.VDJCGene;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
@@ -88,16 +89,16 @@ public final class ClnAWriter implements
     private volatile long numberOfAlignments = -1, numberOfAlignmentsWritten = 0;
     private volatile boolean finished = false;
 
-    public ClnAWriter(String fileName, TempFileDest tempDest) throws IOException {
-        this(fileName, tempDest, false);
-    }
-
-    public ClnAWriter(String fileName, TempFileDest tempDest, boolean highCompression) throws IOException {
-        this(new File(fileName), tempDest, highCompression);
+    public ClnAWriter(Path path, TempFileDest tempDest, boolean highCompression) throws IOException {
+        this(path.toFile(), tempDest, highCompression);
     }
 
     public ClnAWriter(File file, TempFileDest tempDest) throws IOException {
         this(file, tempDest, false);
+    }
+
+    public ClnAWriter(Path file, TempFileDest tempDest) throws IOException {
+        this(file.toFile(), tempDest, false);
     }
 
     public ClnAWriter(File file, TempFileDest tempDest, boolean highCompression) throws IOException {

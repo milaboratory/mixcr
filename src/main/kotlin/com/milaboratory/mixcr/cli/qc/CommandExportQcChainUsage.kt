@@ -23,12 +23,12 @@ import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.nio.file.Paths
+import java.nio.file.Path
 
 @Command(name = "chainUsage", separator = " ", description = ["Chain usage plot."])
 class CommandExportQcChainUsage : CommandExportQc() {
     @Parameters(description = ["sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]"], arity = "2..*")
-    var `in`: List<String> = mutableListOf()
+    var inOut: List<Path> = mutableListOf()
 
     @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
     var absoluteValues = false
@@ -45,41 +45,40 @@ class CommandExportQcChainUsage : CommandExportQc() {
     )
     var hideNonFunctional = false
 
-    override val inputFiles: List<String>
-        get() = `in`.subList(0, `in`.size - 1)
+    override val inputFiles
+        get() = inOut.subList(0, inOut.size - 1)
 
-    override val outputFiles: List<String>
-        get() = listOf(`in`.last())
+    override val outputFiles
+        get() = listOf(inOut.last())
 
     override fun run0() {
-        val files = inputFiles.map { Paths.get(it) }
-        val fileTypes = files.map { IOUtil.extractFileType(it) }
+        val fileTypes = inputFiles.map { IOUtil.extractFileType(it) }
         if (fileTypes.distinct().size != 1) {
             throw ValidationException("Input files should have the same file type, got ${fileTypes.distinct()}")
         }
         val plot = when (fileTypes.first()) {
             CLNA, CLNS -> when {
                 alignChainUsage -> chainUsageAlign(
-                    files,
+                    inputFiles,
                     !absoluteValues,
                     !hideNonFunctional,
                     sizeParameters
                 )
                 else -> chainUsageAssemble(
-                    files,
+                    inputFiles,
                     !absoluteValues,
                     !hideNonFunctional,
                     sizeParameters
                 )
             }
             VDJCA -> chainUsageAlign(
-                files,
+                inputFiles,
                 !absoluteValues,
                 !hideNonFunctional,
                 sizeParameters
             )
             SHMT -> throw IllegalArgumentException("Can't export chain usage from .shmt file")
         }
-        writeFile(Paths.get(outputFiles[0]), plot)
+        writeFile(outputFiles[0], plot)
     }
 }
