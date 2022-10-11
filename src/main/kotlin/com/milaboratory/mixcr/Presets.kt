@@ -109,6 +109,8 @@ object Presets {
         "protocols/biomed2.yaml",
         "protocols/qiaseq.yaml",
         "protocols/milab.yaml",
+        "protocols/illumina.yaml",
+        "protocols/thermofisher.yaml",
         "protocols/rnaseq.yaml"
     )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
