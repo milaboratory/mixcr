@@ -13,3 +13,5 @@ mixcr analyze tcr_amplicon \
   +addStep assembleContigs \
   +imputeGermlineOnExport \
   empty_R1.fastq empty_R2.fastq case6
+
+[[ -f case6.clna ]] || exit 1

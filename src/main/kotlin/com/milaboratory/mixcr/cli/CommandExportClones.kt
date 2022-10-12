@@ -32,7 +32,6 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model
 import picocli.CommandLine.Option
@@ -75,11 +74,6 @@ object CommandExportClones {
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
-        @ArgGroup(validate = false, heading = "Export mix-ins", exclusive = false)
-        private var mixins: AllExportMiXCRMixins? = null
-
-        protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
-
         @Option(
             description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
             names = ["-c", "--chains"]
@@ -140,7 +134,7 @@ object CommandExportClones {
             val header = initialSet.header
             val tagsInfo = header.tagsInfo
             val (_, params) = paramsResolver.resolve(
-                header.paramsSpec.addMixins(mixinsToAdd),
+                header.paramsSpec,
                 printParameters = outputFile != null,
             ) { params ->
                 if (params.splitByTags == null) {

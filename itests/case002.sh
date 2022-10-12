@@ -8,3 +8,5 @@ mixcr analyze tcr_shotgun \
     +addStep assembleContigs \
     +imputeGermlineOnExport \
     test_R1.fastq test_R2.fastq case2
+
+[[ -f case2.clna ]] || exit 1

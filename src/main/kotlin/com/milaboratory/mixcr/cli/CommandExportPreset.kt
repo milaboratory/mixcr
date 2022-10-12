@@ -18,6 +18,7 @@ import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -42,12 +43,31 @@ object CommandExportPreset {
 
         override val outputFiles get() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
 
-        @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        var mixins: AllMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
+        var pipelineMiXCRMixins: PipelineMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
+        var alignMiXCRMixins: AlignMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
+        var assembleMiXCRMixins: AssembleMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
+        var assembleContigsMiXCRMixins: AssembleContigsMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
+        var exportMiXCRMixins: ExportMiXCRMixins? = null
+
+        @Mixin
+        var genericMiXCRMixins: GenericMiXCRMixins? = null
 
         override fun run0() {
+            val mixins = MiXCRMixinCollection.combine(
+                pipelineMiXCRMixins, alignMiXCRMixins, assembleMiXCRMixins,
+                assembleContigsMiXCRMixins, exportMiXCRMixins, genericMiXCRMixins
+            )
             val (bundle, _) = paramsResolver.resolve(
-                MiXCRParamsSpec(presetName, mixins = mixins?.mixins ?: emptyList()),
+                MiXCRParamsSpec(presetName, mixins = mixins.mixins),
                 printParameters = false
             )
             val of = outputFile

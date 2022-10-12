@@ -20,6 +20,7 @@ import com.milaboratory.mixcr.MiXCRPipeline
 import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
@@ -57,8 +58,29 @@ object CommandAnalyze {
         )
         private var inOut: List<String> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        lateinit var mixins: AllMiXCRMixins
+        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
+        var pipelineMiXCRMixins: PipelineMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
+        var alignMiXCRMixins: AlignMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
+        var assembleMiXCRMixins: AssembleMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
+        var assembleContigsMiXCRMixins: AssembleContigsMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
+        var exportMiXCRMixins: ExportMiXCRMixins? = null
+
+        @Mixin
+        var genericMiXCRMixins: GenericMiXCRMixins? = null
+
+        private val mixins: MiXCRMixinCollection
+            get() = MiXCRMixinCollection.combine(
+                pipelineMiXCRMixins, alignMiXCRMixins, assembleMiXCRMixins,
+                assembleContigsMiXCRMixins, exportMiXCRMixins, genericMiXCRMixins
+            )
 
         // @Option(
         //     description = ["Delete all output files of the command if they already exist."],

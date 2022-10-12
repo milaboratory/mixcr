@@ -53,8 +53,8 @@ import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.BufferedInputStream
@@ -84,8 +84,8 @@ object CommandAssembleContigs {
         @Option(names = ["-O"], description = ["Overrides for the assembler parameters."])
         private var overrides: Map<String, String> = mutableMapOf()
 
-        @ArgGroup(validate = false, heading = "Assemble contig mix-ins", exclusive = false)
-        private var mixins: AllAssembleContigsMiXCRMixins? = null
+        @Mixin
+        private var mixins: AssembleContigsMiXCRMixins? = null
 
         protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
 

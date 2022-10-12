@@ -44,19 +44,22 @@ abstract class MiXCRParamsResolver<P : Any>(
 
 interface MiXCRPresetAwareCommand<P : Any> : PresetAware<MiXCRParamsBundle, P>
 
-abstract class MiXCRMixinCollector : MiXCRMixinSet {
+interface MiXCRMixinCollection {
+    val mixins: List<MiXCRMixin>
+
+    companion object {
+        fun combine(vararg list: MiXCRMixinCollection?) = object : MiXCRMixinCollection {
+            override val mixins = list.filterNotNull().flatMap { it.mixins }
+        }
+    }
+}
+
+abstract class MiXCRMixinCollector : MiXCRMixinCollection {
     private val _mixins = mutableListOf<MiXCRMixin>()
 
-    override fun mixIn(mixin: MiXCRMixin) {
+    protected fun mixIn(mixin: MiXCRMixin) {
         _mixins += mixin
     }
 
-    val mixins: List<MiXCRMixin> get() = _mixins.sorted()
-
-    // val bundleOverride
-    //     get() = POverride<MiXCRParamsBundle> { bundle ->
-    //         val mixinsCopy = ArrayList(_mixins)
-    //         mixinsCopy.sortBy { -it.priority }
-    //         mixinsCopy.fold(bundle) { b, m -> m.mutation.apply(b) }
-    //     }
+    override val mixins: List<MiXCRMixin> get() = _mixins.sorted()
 }

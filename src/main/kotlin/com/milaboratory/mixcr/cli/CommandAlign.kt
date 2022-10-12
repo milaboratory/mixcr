@@ -94,6 +94,7 @@ import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.FileInputStream
@@ -281,8 +282,26 @@ object CommandAlign {
         )
         lateinit var presetName: String
 
-        @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        var mixins: AllMiXCRMixins? = null
+        @Mixin
+        var alignMiXCRMixins: AlignMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
+        var assembleMiXCRMixins: AssembleMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
+        var assembleContigsMiXCRMixins: AssembleContigsMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
+        var exportMiXCRMixins: ExportMiXCRMixins? = null
+
+        @Mixin
+        var genericMiXCRMixins: GenericMiXCRMixins? = null
+
+        private val mixins: MiXCRMixinCollection
+            get() = MiXCRMixinCollection.combine(
+                alignMiXCRMixins, assembleMiXCRMixins,
+                assembleContigsMiXCRMixins, exportMiXCRMixins, genericMiXCRMixins
+            )
 
         @Option(
             description = ["Don't embed preset into the output file"],
