@@ -13,13 +13,13 @@ package com.milaboratory.mixcr.assembler;
 
 import com.fasterxml.jackson.annotation.*;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
+import com.milaboratory.mitool.refinement.gfilter.KeyedRecordFilter;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,6 +44,9 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
     @JsonIgnore
     long variants;
     byte minimalQuality;
+    /** Filter to apply after clone assembly to the stream of tag*clonotypes */
+    @JsonProperty("postFilters")
+    List<KeyedRecordFilter> postFilters;
 
     @JsonCreator
     public CloneAssemblerParameters(@JsonProperty("assemblingFeatures") GeneFeature[] assemblingFeatures,
@@ -61,7 +64,8 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
                                     @JsonProperty("badQualityThreshold") byte badQualityThreshold,
                                     @JsonProperty("maxBadPointsPercent") double maxBadPointsPercent,
                                     @JsonProperty("mappingThreshold") String mappingThreshold,
-                                    @JsonProperty("minimalQuality") byte minimalQuality) {
+                                    @JsonProperty("minimalQuality") byte minimalQuality,
+                                    @JsonProperty("postFilters") List<KeyedRecordFilter> postFilters) {
         this.assemblingFeatures = assemblingFeatures;
         this.minimalClonalSequenceLength = minimalClonalSequenceLength;
         this.qualityAggregationType = qualityAggregationType;
@@ -78,6 +82,9 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         this.maxBadPointsPercent = maxBadPointsPercent;
         this.mappingThreshold = mappingThreshold;
         this.minimalQuality = minimalQuality;
+        this.postFilters = postFilters != null
+                ? Collections.unmodifiableList(new ArrayList<>(postFilters))
+                : null;
         updateVariants();
     }
 
@@ -288,14 +295,19 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         return cloneClusteringParameters != null;
     }
 
+    public List<KeyedRecordFilter> getPostFilters() {
+        return postFilters;
+    }
+
     @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public CloneAssemblerParameters clone() {
         return new CloneAssemblerParameters(assemblingFeatures.clone(), minimalClonalSequenceLength,
                 qualityAggregationType,
                 cloneClusteringParameters == null ? null : cloneClusteringParameters.clone(),
                 cloneFactoryParameters.clone(), separateByV, separateByJ, separateByC,
                 maximalPreClusteringRatio, preClusteringScoreFilteringRatio, preClusteringCountFilteringRatio, addReadsCountOnClustering, badQualityThreshold, maxBadPointsPercent,
-                mappingThreshold, minimalQuality);
+                mappingThreshold, minimalQuality, postFilters);
     }
 
     @Override
@@ -325,6 +337,8 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
             return false;
         if (minimalQuality != that.minimalQuality)
             return false;
+        if (!Objects.equals(postFilters, that.postFilters))
+            return false;
         return true;
     }
 
@@ -352,6 +366,7 @@ public final class CloneAssemblerParameters implements java.io.Serializable {
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (int) (variants ^ (variants >>> 32));
         result = 31 * result + (int) (minimalQuality ^ (minimalQuality >>> 32));
+        result = 31 * result + (postFilters != null ? postFilters.hashCode() : 0);
         return result;
     }
 }

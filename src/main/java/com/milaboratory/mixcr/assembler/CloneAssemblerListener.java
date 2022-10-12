@@ -11,7 +11,11 @@
  */
 package com.milaboratory.mixcr.assembler;
 
+import com.milaboratory.mitool.refinement.gfilter.KeyedFilterReport;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
+import com.milaboratory.mixcr.basictypes.Clone;
+
+import java.util.List;
 
 public interface CloneAssemblerListener {
     /* Initial Assembly */
@@ -39,4 +43,8 @@ public interface CloneAssemblerListener {
     void onPreClustered(CloneAccumulator majorClone, CloneAccumulator minorClone);
 
     void onCloneDropped(CloneAccumulator clone);
+
+    /* Post filtering */
+
+    void onPostFiltering(List<Clone> before, List<Clone> after, List<KeyedFilterReport> reports);
 }

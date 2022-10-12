@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli;
 
+import com.google.common.util.concurrent.AtomicDouble;
+import com.milaboratory.mitool.refinement.gfilter.KeyedFilterReport;
 import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.assembler.CloneAccumulator;
 import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
@@ -20,6 +22,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -44,6 +47,9 @@ public final class CloneAssemblerReportBuilder
     final AtomicInteger clonesPreClustered = new AtomicInteger();
     final AtomicLong readsPreClustered = new AtomicLong();
     final AtomicLong readsClustered = new AtomicLong();
+    final AtomicInteger clonesFilteredInPostFiltering = new AtomicInteger();
+    final AtomicDouble readsFilteredInPostFiltering = new AtomicDouble();
+    List<KeyedFilterReport> postFilteringReports = null;
 
     public void setPreCloneAssemblerReportBuilder(PreCloneAssemblerReportBuilder preCloneAssemblerReport) {
         if (this.preCloneAssemblerReportBuilder != null)
@@ -52,7 +58,7 @@ public final class CloneAssemblerReportBuilder
     }
 
     int getCloneCount() {
-        return initialClonesCreated.get() - clonesClustered.get() - clonesDroppedAsLowQuality.get() - clonesPreClustered.get();
+        return initialClonesCreated.get() - clonesClustered.get() - clonesDroppedAsLowQuality.get() - clonesPreClustered.get() - clonesFilteredInPostFiltering.get();
     }
 
     @Override
@@ -126,6 +132,14 @@ public final class CloneAssemblerReportBuilder
             clonalChainUsage.increment(clone);
     }
 
+    @Override
+    public void onPostFiltering(List<Clone> before, List<Clone> after, List<KeyedFilterReport> reports) {
+        this.clonesFilteredInPostFiltering.set(before.size() - after.size());
+        this.readsFilteredInPostFiltering.set(before.stream().mapToDouble(Clone::getCount).sum() -
+                after.stream().mapToDouble(Clone::getCount).sum());
+        this.postFilteringReports = reports;
+    }
+
     public void setTotalReads(long totalReads) {
         this.totalReadsProcessed = totalReads;
     }
@@ -166,7 +180,10 @@ public final class CloneAssemblerReportBuilder
                 readsInClones.get(),
                 getReadsInClonesBeforeClustering(),
                 readsDroppedWithLowQualityClones.get(),
-                clonalChainUsage.buildReport()
+                clonalChainUsage.buildReport(),
+                clonesFilteredInPostFiltering.get(),
+                readsFilteredInPostFiltering.get(),
+                postFilteringReports
         );
     }
 }

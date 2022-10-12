@@ -18,9 +18,9 @@ import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.annotations.Serializable;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.GeneType;
+import io.repseq.core.VDJCGene;
 
-import java.util.EnumMap;
-import java.util.Objects;
+import java.util.*;
 
 @Serializable(by = IO.CloneSerializer.class)
 public final class Clone extends VDJCObject {
@@ -69,9 +69,9 @@ public final class Clone extends VDJCObject {
         return parent;
     }
 
-    public Clone setTagCount(TagCount tc) {
+    public Clone setTagCount(TagCount tc, boolean resetCount) {
         Objects.requireNonNull(tc);
-        Clone c = new Clone(targets, hits, tc, count, id, group);
+        Clone c = new Clone(targets, hits, tc, resetCount ? tc.sum() : count, id, group);
         c.setParentCloneSet(getParentCloneSet());
         return c;
     }
@@ -108,7 +108,7 @@ public final class Clone extends VDJCObject {
     }
 
     public double getFraction(double totalCount) {
-        return 1.0 * count / totalCount;
+        return count / totalCount;
     }
 
     public double getCount() {
@@ -117,6 +117,37 @@ public final class Clone extends VDJCObject {
 
     public int getId() {
         return id;
+    }
+
+    // TODO weak/soft link ?
+    private HashMap<String, String> geneLabelsCache = null;
+
+    public synchronized String getGeneLabel(String labelName) {
+        if (geneLabelsCache == null)
+            geneLabelsCache = new HashMap<>();
+        // Null values can be present in the cache, so containsKey is the only way to determine cache hit
+        if (geneLabelsCache.containsKey(labelName))
+            return geneLabelsCache.get(labelName);
+        List<String> labelValues = new ArrayList<>();
+        for (VDJCGene gene : getBestHitGenes()) {
+            String labelValue = gene.getLabel(labelName);
+            if (labelValue != null)
+                // Using list as a lean set
+                if (!labelValues.contains(labelValue))
+                    labelValues.add(labelValue);
+        }
+        // Canonicalization
+        Collections.sort(labelValues);
+        String labelValue;
+        if (labelValues.size() == 0)
+            labelValue = null;
+        else if (labelValues.size() == 1)
+            labelValue = labelValues.get(0);
+        else
+            labelValue = String.join(",", labelValues);
+        // Saving to cache
+        geneLabelsCache.put(labelName, labelValue);
+        return labelValue;
     }
 
     @Override

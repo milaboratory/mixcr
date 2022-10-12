@@ -25,6 +25,7 @@ import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.Factory;
@@ -74,6 +75,7 @@ import static io.repseq.core.GeneFeature.*;
  * artificial diversity.
  */
 public final class CloneAssembler implements CanReportProgress, AutoCloseable {
+    final TagsInfo tagsInfo;
     final CloneAssemblerParameters parameters;
     // Accumulators and generators (atomics)
     final AtomicLong successfullyAssembledAlignments = new AtomicLong(),
@@ -111,12 +113,15 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
     };
 
-    public CloneAssembler(CloneAssemblerParameters parameters,
-                          boolean logAssemblerEvents,
-                          Collection<VDJCGene> genes,
-                          EnumMap<GeneType, GeneFeature> featuresToAlign) {
+    public CloneAssembler(
+            TagsInfo tagsInfo,
+            CloneAssemblerParameters parameters,
+            boolean logAssemblerEvents,
+            Collection<VDJCGene> genes,
+            EnumMap<GeneType, GeneFeature> featuresToAlign) {
         if (!parameters.isComplete())
             throw new IllegalArgumentException("Not complete parameters");
+        this.tagsInfo = tagsInfo;
         this.parameters = parameters.clone();
         this.featuresToAlign = featuresToAlign;
         if (!logAssemblerEvents && !parameters.isMappingEnabled())
@@ -127,8 +132,8 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             usedGenes.put(gene.getId(), gene);
     }
 
-    public CloneAssembler(CloneAssemblerParameters parameters, boolean logAssemblerEvents, Collection<VDJCGene> genes, VDJCAlignerParameters alignerParameters) {
-        this(parameters.clone().updateFrom(alignerParameters), logAssemblerEvents, genes, alignerParameters.getFeaturesToAlignMap());
+    public CloneAssembler(TagsInfo tagsInfo, CloneAssemblerParameters parameters, boolean logAssemblerEvents, Collection<VDJCGene> genes, VDJCAlignerParameters alignerParameters) {
+        this(tagsInfo, parameters.clone().updateFrom(alignerParameters), logAssemblerEvents, genes, alignerParameters.getFeaturesToAlignMap());
     }
 
     /* Initial Assembly Events */
@@ -553,7 +558,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         }
 
         void buildClones() {
-            Collection<CloneAccumulator> source;
+            List<CloneAccumulator> source;
             if (clusteredClonesAccumulators != null &&
                     // addReadsCountOnClustering=true may change clone counts
                     // This fixes #468
@@ -579,28 +584,42 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                     new CloneFactory(parameters.getCloneFactoryParameters(),
                             parameters.getAssemblingFeatures(), usedGenes, featuresToAlign);
 
-            TIntIntHashMap finalIdMapping = new TIntIntHashMap();
-            List<Clone> finalClones = new ArrayList<>(source.size());
-            Iterator<CloneAccumulator> iterator = source.iterator();
+            TIntIntHashMap fineFilteringIdMapping = new TIntIntHashMap();
+            List<Clone> clones = new ArrayList<>(source.size());
             int i = 0;
-            while (iterator.hasNext()) {
-                CloneAccumulator accumulator = iterator.next();
-
+            for (CloneAccumulator accumulator : source) {
                 int oldCloneId = accumulator.getCloneIndex();
-                int newId = finalClones.size();
+                int newId = clones.size();
 
                 Clone realClone = cloneFactory.create(newId, accumulator);
                 if (!fineFilteringPredicate(realClone, accumulator))
                     continue;
 
-                finalIdMapping.put(oldCloneId, newId);
-                finalClones.add(realClone);
+                fineFilteringIdMapping.put(oldCloneId, newId);
+                clones.add(realClone);
 
                 this.progress = ++i;
             }
-            addIdMapping(finalIdMapping, false);
+            addIdMapping(fineFilteringIdMapping, false);
 
-            realClones = finalClones.toArray(new Clone[0]);
+            List<Clone> clonesAfterPostFiltering;
+            if (parameters.postFilters == null || parameters.postFilters.isEmpty())
+                clonesAfterPostFiltering = clones;
+            else {
+                clonesAfterPostFiltering = new ArrayList<>();
+                TIntIntHashMap postFilteringIdMapping = new TIntIntHashMap();
+                // Assigning final clone ids
+                // Post filtering preserves original clone ids
+                for (Clone clone : doPostFilter(clones)) {
+                    int oldCloneId = clone.getId();
+                    int newId = clonesAfterPostFiltering.size();
+                    clonesAfterPostFiltering.add(clone.setId(newId));
+                    postFilteringIdMapping.put(oldCloneId, newId);
+                }
+                addIdMapping(postFilteringIdMapping, false);
+            }
+
+            realClones = clonesAfterPostFiltering.toArray(new Clone[0]);
         }
     }
 
@@ -610,6 +629,13 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 return false;
 
         return true;
+    }
+
+    public List<Clone> doPostFilter(List<Clone> clones) {
+        CloneTagFilter.CloneTagFilteringResult filterResult = CloneTagFilter.filter(tagsInfo, parameters.getPostFilters(), clones);
+        if (listener != null)
+            listener.onPostFiltering(clones, filterResult.clones, filterResult.reports);
+        return filterResult.clones;
     }
 
     /**
