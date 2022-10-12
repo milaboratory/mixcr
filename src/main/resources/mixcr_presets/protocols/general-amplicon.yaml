@@ -1,4 +1,4 @@
-"tcr_amplicon":
+"tcr-amplicon":
   pipeline:
     - align
     - assemble
@@ -11,7 +11,7 @@
   align:
     inheritFrom: align_rna-seq_4.0
 
-"bcr_amplicon":
+"bcr-amplicon":
   pipeline:
     - align
     - assemble
@@ -28,7 +28,7 @@
 # UMI amplicon pipelines
 #
 
-"tcr_amplicon_umi":
+"tcr-amplicon-umi":
   pipeline:
     - align
     - refineTagsAndSort
@@ -43,7 +43,7 @@
   align:
     inheritFrom: align_rna-seq_4.0
 
-"bcr_amplicon_umi":
+"bcr-amplicon-umi":
   pipeline:
     - align
     - refineTagsAndSort
