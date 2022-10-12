@@ -111,7 +111,9 @@ object Presets {
         "protocols/milab.yaml",
         "protocols/illumina.yaml",
         "protocols/thermofisher.yaml",
-        "protocols/rnaseq.yaml"
+        "protocols/rnaseq.yaml",
+        "protocols/irepertoire.yaml",
+        "protocols/general-amplicon.yaml"
     )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
         val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
