@@ -34,8 +34,6 @@ object CommandAnalyze {
     const val COMMAND_NAME = "analyze"
 
     @Command(
-        name = "analyze",
-        separator = " ",
         description = ["Run full MiXCR pipeline for specific input."],
     )
     class Cmd : MiXCRCommand() {
@@ -60,7 +58,7 @@ object CommandAnalyze {
         private var inOut: List<String> = mutableListOf()
 
         @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        private var mixins: AllMiXCRMixins? = null
+        lateinit var mixins: AllMiXCRMixins
 
         // @Option(
         //     description = ["Delete all output files of the command if they already exist."],
@@ -112,7 +110,7 @@ object CommandAnalyze {
                 outputFolder.createDirectories()
 
             // Creating params spec
-            val mixins = mixins?.mixins ?: emptyList()
+            val mixins = mixins.mixins
             val paramsSpec = MiXCRParamsSpec(presetName, mixins)
 
             // Resolving parameters and sorting the pipeline according to the natural command order

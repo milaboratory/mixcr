@@ -32,9 +32,6 @@ import java.io.OutputStream
 import java.nio.file.Path
 
 @Command(
-    name = CommandSortAlignments.SORT_ALIGNMENTS_COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
     description = ["Sort alignments in vdjca file by read id."]
 )
 class CommandSortAlignments : MiXCRCommandWithOutputs() {

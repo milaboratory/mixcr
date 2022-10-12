@@ -34,9 +34,6 @@ import java.util.stream.IntStream
 import kotlin.streams.asSequence
 
 @Command(
-    name = "exportReadsForClones",
-    sortOptions = true,
-    separator = " ",
     description = ["Export reads for particular clones from \"clones & alignments\" (*.clna) file. " +
             "Output file name will be transformed into '_R1'/'_R2' pair in case of paired end reads. Use cloneId = -1 to " +
             "export alignments not assigned to any clone (not assembled). If no clone ids are specified (only input " +

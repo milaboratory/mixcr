@@ -22,7 +22,6 @@ import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
 import io.repseq.core.Chains
 import picocli.CommandLine.Command
-import picocli.CommandLine.HelpCommand
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Files
@@ -268,10 +267,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     abstract fun run(group: IsolationGroup, samples: List<String>): PaResultByGroup
 
     @Command(
-        name = "postanalysis",
-        separator = " ",
         description = ["Run postanalysis routines."],
-        subcommands = [HelpCommand::class]
+        synopsisSubcommandLabel = "COMMAND"
     )
     class CommandPostanalysisMain
 

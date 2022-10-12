@@ -33,9 +33,6 @@ import java.io.PrintStream
 import java.nio.file.Path
 
 @Command(
-    name = "alignmentsDiff",
-    sortOptions = false,
-    separator = " ",
     description = ["Calculates the difference between two .vdjca files."]
 )
 class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {

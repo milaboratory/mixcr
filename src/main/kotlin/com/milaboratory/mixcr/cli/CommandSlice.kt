@@ -49,8 +49,6 @@ import kotlin.io.path.readLines
 
 @Command(
     name = CommandSlice.SLICE_COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
     description = ["Slice vdjca|clns|clna|shmt file."]
 )
 class CommandSlice : MiXCRCommandWithOutputs() {

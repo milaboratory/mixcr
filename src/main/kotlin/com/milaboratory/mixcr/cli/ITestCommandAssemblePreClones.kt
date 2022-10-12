@@ -33,7 +33,7 @@ import java.io.PrintStream
 import java.nio.file.Path
 import java.util.*
 
-@Command(name = "itestAssemblePreClones", separator = " ", hidden = true)
+@Command(hidden = true)
 class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
     @Parameters(arity = "4", description = ["input_file output_file output_clones output_alignments"])
     lateinit var files: List<Path>

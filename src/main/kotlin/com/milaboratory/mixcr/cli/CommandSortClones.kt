@@ -37,9 +37,6 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 @Command(
-    name = CommandSortClones.SORT_CLONES_COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
     description = ["Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows to build overlaps between clonesets."]
 )
 class CommandSortClones : MiXCRCommandWithOutputs() {

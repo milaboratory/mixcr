@@ -25,9 +25,6 @@ import java.nio.file.Path
  *
  */
 @Command(
-    name = CommandExportAlignmentsForClones.COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
     description = ["Export alignments for particular clones from \"clones & alignments\" (*.clna) file."]
 )
 class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
@@ -75,7 +72,4 @@ class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
         }
     }
 
-    companion object {
-        const val COMMAND_NAME = "exportAlignmentsForClones"
-    }
 }

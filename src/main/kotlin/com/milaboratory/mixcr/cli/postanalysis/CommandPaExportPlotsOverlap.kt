@@ -29,7 +29,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.util.stream.Collectors
 
-@Command(name = "overlap", sortOptions = false, separator = " ", description = ["Export overlap heatmaps"])
+@Command(description = ["Export overlap heatmaps"])
 class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlotsHeatmapWithGroupBy() {
     @Option(description = ["Don't add dendrograms"], names = ["--no-dendro"])
     var noDendro = false

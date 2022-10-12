@@ -26,7 +26,6 @@ import kotlin.io.path.outputStream
 
 @Command(
     name = CommandExportReports.EXPORT_REPORTS_COMMAND_NAME,
-    separator = " ",
     description = ["Export MiXCR reports."]
 )
 class CommandExportReports : MiXCRCommandWithOutputs() {

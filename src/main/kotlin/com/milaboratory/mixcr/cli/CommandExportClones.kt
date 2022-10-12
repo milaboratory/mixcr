@@ -120,9 +120,6 @@ object CommandExportClones {
     }
 
     @Command(
-        name = COMMAND_NAME,
-        separator = " ",
-        sortOptions = false,
         description = ["Export assembled clones into tab delimited file."]
     )
     class Cmd : CmdBase() {

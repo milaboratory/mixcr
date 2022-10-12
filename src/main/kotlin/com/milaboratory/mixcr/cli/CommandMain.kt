@@ -19,16 +19,33 @@ import io.repseq.core.VDJCLibraryRegistry.FolderLibraryResolver
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
+import picocli.CommandLine.ScopeType.INHERIT
 
-@Command(name = "mixcr", versionProvider = CommandMain.VersionProvider::class, separator = " ")
-class CommandMain : WithHelpOption {
+@Command(
+    name = "mixcr",
+    versionProvider = CommandMain.VersionProvider::class,
+    scope = INHERIT,
+    sortOptions = false
+)
+class CommandMain {
     @Suppress("unused", "UNUSED_PARAMETER")
     @Option(
         names = ["-v", "--version"],
         versionHelp = true,
-        description = ["print version information and exit"]
+        description = ["Print version information and exit"]
     )
     fun setVersionRequested(param: Boolean) {
+
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Option(
+        names = ["-h", "--help"],
+        usageHelp = true,
+        description = ["Show this help message and exit."],
+        scope = INHERIT
+    )
+    fun setHelpRequested(param: Boolean) {
 
     }
 

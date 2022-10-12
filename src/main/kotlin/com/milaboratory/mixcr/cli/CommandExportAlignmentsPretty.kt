@@ -34,9 +34,6 @@ import java.nio.file.Path
 import java.util.*
 
 @Command(
-    name = "exportAlignmentsPretty",
-    sortOptions = true,
-    separator = " ",
     description = ["Export verbose information about alignments."]
 )
 class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {

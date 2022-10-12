@@ -19,11 +19,8 @@ import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter
 import com.milaboratory.mixcr.cli.postanalysis.CommandPa.CommandPostanalysisMain
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlots.CommandExportPlotsMain
-import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsBasicStatistics.ExportCDR3Metrics
-import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsBasicStatistics.ExportDiversity
+import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsBasicStatistics
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsGeneUsage
-import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsGeneUsage.JUsage
-import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsGeneUsage.VUsage
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsOverlap
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsVJUsage
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportTables
@@ -41,6 +38,8 @@ import com.milaboratory.util.VersionInfo
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.seqbase.SequenceResolvers
 import picocli.CommandLine
+import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST
+import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADING
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -107,107 +106,125 @@ object Main {
             if (Files.exists(libraries)) VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries)
             initialized = true
         }
-        val cmd = CommandLine(CommandMain())
+
+        val groups: MutableList<Pair<String, Set<String>>> = mutableListOf()
+
+        fun CommandLine.commandsGroup(group: CommandsGroup): CommandLine {
+            group.commands.forEach { (name, command) ->
+                addSubcommand(name, command)
+            }
+            groups += group.name to group.commands.map { it.first }.toSet()
+            return this
+        }
+
+        val cmd = CommandLine(CommandMain::class.java)
             .setCommandName(command)
-            .addSubcommand("help", CommandLine.HelpCommand::class.java)
             .addSubcommand(CommandAnalyze.COMMAND_NAME, CommandAnalyze.Cmd::class.java) // Core command sequence
             .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.Cmd::class.java)
             .addSubcommand(CommandRefineTagsAndSort.COMMAND_NAME, CommandRefineTagsAndSort.Cmd::class.java)
             .addSubcommand(CommandAssemblePartial.COMMAND_NAME, CommandAssemblePartial.Cmd::class.java)
             .addSubcommand(CommandExtend.COMMAND_NAME, CommandExtend.Cmd::class.java)
-            .addSubcommand(
-                CommandAssemble.COMMAND_NAME,
-                CommandAssemble.Cmd::class.java
-            ) // .addSubcommand("groupCells", CommandGroupCells.class)
+            .addSubcommand(CommandAssemble.COMMAND_NAME, CommandAssemble.Cmd::class.java)
+            // .addSubcommand("groupCells", CommandGroupCells.class)
             .addSubcommand(CommandAssembleContigs.COMMAND_NAME, CommandAssembleContigs.Cmd::class.java)
-            .addSubcommand("postanalysis", CommandPostanalysisMain::class.java)
-            .addSubcommand("downsample", CommandDownsample::class.java)
-            .addSubcommand("exportPlots", CommandExportPlotsMain::class.java)
-            .addSubcommand("exportTables", CommandPaExportTables::class.java)
-            .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary::class.java)
-            .addSubcommand("overlapScatterPlot", CommandOverlapScatter::class.java)
-            .addSubcommand("bam2fastq", CommandBAM2fastq::class.java)
-            .addSubcommand(CommandExportAlignments.COMMAND_NAME, CommandExportAlignments.mkSpec())
-            .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty::class.java)
-            .addSubcommand(CommandExportClones.COMMAND_NAME, CommandExportClones.mkSpec())
-            .addSubcommand("exportClonesPretty", CommandExportClonesPretty::class.java)
-            .addSubcommand("exportReports", CommandExportReports::class.java)
-            .addSubcommand("exportQc", CommandExportQcMain::class.java)
-            .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
-            .addSubcommand("exportAirr", CommandExportAirr::class.java)
-            .addSubcommand("exportReadsForClones", CommandExportReadsForClones::class.java)
-            .addSubcommand(CommandExportAlignmentsForClones.COMMAND_NAME, CommandExportAlignmentsForClones::class.java)
-            .addSubcommand("exportReads", CommandExportReads::class.java)
-            .addSubcommand("mergeAlignments", CommandMergeAlignments::class.java)
-            .addSubcommand(CommandFilterAlignments.COMMAND_NAME, CommandFilterAlignments::class.java)
-            .addSubcommand("sortAlignments", CommandSortAlignments::class.java)
-            .addSubcommand("sortClones", CommandSortClones::class.java)
-            .addSubcommand("alignmentsDiff", CommandAlignmentsDiff::class.java)
-            .addSubcommand("clonesDiff", CommandClonesDiff::class.java)
-            .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones::class.java)
-            .addSubcommand("alignmentsStat", CommandAlignmentsStats::class.java)
-            .addSubcommand("listLibraries", CommandListLibraries::class.java)
-            .addSubcommand("versionInfo", CommandVersionInfo::class.java)
-            .addSubcommand("slice", CommandSlice::class.java)
+            .addSubcommand(CommandFindAlleles.COMMAND_NAME, CommandFindAlleles::class.java)
             .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees::class.java)
-            .addSubcommand(
-                CommandExportShmTreesTableWithNodes.COMMAND_NAME,
-                CommandExportShmTreesTableWithNodes.mkCommandSpec()
+            .addSubcommand("downsample", CommandDownsample::class.java)
+            .commandsGroup(
+                CommandsGroup("Postanalysis commands")
+                    .addSubcommand(
+                        "postanalysis",
+                        CommandLine(CommandPostanalysisMain::class.java)
+                            .addSubcommand("individual", CommandPaIndividual::class.java)
+                            .addSubcommand("overlap", CommandPaOverlap::class.java)
+                    )
+                    .addSubcommand("exportTables", CommandPaExportTables::class.java)
+                    .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary::class.java)
             )
-            .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
-            .addSubcommand(CommandExportShmTreesNewick.COMMAND_NAME, CommandExportShmTreesNewick::class.java)
-            .addSubcommand(CommandFindAlleles.COMMAND_NAME, CommandFindAlleles::class.java) // Util
-            .addSubcommand(CommandExportPreset.COMMAND_NAME, CommandExportPreset.Cmd::class.java)
+
+            .commandsGroup(
+                CommandsGroup("Export commands")
+                    .addSubcommand(
+                        "exportPlots",
+                        CommandLine(CommandExportPlotsMain::class.java)
+                            .addSubcommand("listMetrics", CommandPaListMetrics::class.java)
+                            .addSubcommand(
+                                "cdr3metrics",
+                                CommandPaExportPlotsBasicStatistics.ExportCDR3Metrics::class.java
+                            )
+                            .addSubcommand("diversity", CommandPaExportPlotsBasicStatistics.ExportDiversity::class.java)
+                            .addSubcommand("vUsage", CommandPaExportPlotsGeneUsage.VUsage::class.java)
+                            .addSubcommand("jUsage", CommandPaExportPlotsGeneUsage.JUsage::class.java)
+                            .addSubcommand("isotypeUsage", CommandPaExportPlotsGeneUsage.IsotypeUsage::class.java)
+                            .addSubcommand("vjUsage", CommandPaExportPlotsVJUsage::class.java)
+                            .addSubcommand("overlap", CommandPaExportPlotsOverlap::class.java)
+                            .addSubcommand("shmTrees", CommandExportShmTreesPlots::class.java)
+                    )
+                    .addSubcommand("overlapScatterPlot", CommandOverlapScatter::class.java)
+                    .addSubcommand(CommandExportAlignments.COMMAND_NAME, CommandExportAlignments.mkSpec())
+                    .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty::class.java)
+                    .addSubcommand(CommandExportClones.COMMAND_NAME, CommandExportClones.mkSpec())
+                    .addSubcommand("exportClonesPretty", CommandExportClonesPretty::class.java)
+                    .addSubcommand("exportShmTreesWithNodes", CommandExportShmTreesTableWithNodes.mkCommandSpec())
+                    .addSubcommand("exportShmTrees", CommandExportShmTreesTable.mkCommandSpec())
+                    .addSubcommand("exportShmTreesNewick", CommandExportShmTreesNewick::class.java)
+                    .addSubcommand("exportReports", CommandExportReports::class.java)
+                    .addSubcommand(
+                        "exportQc",
+                        CommandLine(CommandExportQcMain::class.java)
+                            .addSubcommand("align", CommandExportQcAlign::class.java)
+                            .addSubcommand("chainUsage", CommandExportQcChainUsage::class.java)
+                            .addSubcommand("coverage", CommandExportQcCoverage::class.java)
+                    )
+                    .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
+                    .addSubcommand("exportAirr", CommandExportAirr::class.java)
+                    .addSubcommand("exportReadsForClones", CommandExportReadsForClones::class.java)
+                    .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones::class.java)
+                    .addSubcommand("exportReads", CommandExportReads::class.java)
+            )
+            // Util
+            .commandsGroup(
+                CommandsGroup("Util commands")
+                    .addSubcommand("bam2fastq", CommandBAM2fastq::class.java)
+                    .addSubcommand("mergeAlignments", CommandMergeAlignments::class.java)
+                    .addSubcommand("filterAlignments", CommandFilterAlignments::class.java)
+                    .addSubcommand("sortAlignments", CommandSortAlignments::class.java)
+                    .addSubcommand("sortClones", CommandSortClones::class.java)
+                    .addSubcommand("alignmentsDiff", CommandAlignmentsDiff::class.java)
+                    .addSubcommand("clonesDiff", CommandClonesDiff::class.java)
+                    .addSubcommand("versionInfo", CommandVersionInfo::class.java)
+                    .addSubcommand("slice", CommandSlice::class.java)
+                    .addSubcommand("exportPreset", CommandExportPreset.Cmd::class.java)
+
+                    .addSubcommand("alignmentsStat", CommandAlignmentsStats::class.java)
+            )
+
+            //hidden
+            .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones::class.java)
+            .addSubcommand("listLibraries", CommandListLibraries::class.java)
 
 
-        // cmd.getSubcommands()
-        //         .get("analyze")
-        //         .addSubcommand("amplicon", CommandAnalyze.mkAmplicon())
-        //         .addSubcommand("shotgun", CommandAnalyze.mkShotgun());
-        cmd.subcommands["postanalysis"]!!
-            .addSubcommand(
-                "individual",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(CommandPaIndividual::class.java)
-            )
-            .addSubcommand("overlap", CommandLine.Model.CommandSpec.forAnnotatedObject(CommandPaOverlap::class.java))
-        cmd.subcommands["exportPlots"]!!
-            .addSubcommand(
-                "listMetrics",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(CommandPaListMetrics::class.java)
-            )
-            .addSubcommand(
-                "cdr3metrics",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(ExportCDR3Metrics::class.java)
-            )
-            .addSubcommand("diversity", CommandLine.Model.CommandSpec.forAnnotatedObject(ExportDiversity::class.java))
-            .addSubcommand("vUsage", CommandLine.Model.CommandSpec.forAnnotatedObject(VUsage::class.java))
-            .addSubcommand("jUsage", CommandLine.Model.CommandSpec.forAnnotatedObject(JUsage::class.java))
-            .addSubcommand(
-                "isotypeUsage",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(CommandPaExportPlotsGeneUsage.IsotypeUsage::class.java)
-            )
-            .addSubcommand(
-                "vjUsage",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(CommandPaExportPlotsVJUsage::class.java)
-            )
-            .addSubcommand(
-                "overlap",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(CommandPaExportPlotsOverlap::class.java)
-            )
-            .addSubcommand(
-                "shmTrees",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(CommandExportShmTreesPlots::class.java)
-            )
-        cmd.subcommands["exportQc"]!!
-            .addSubcommand("align", CommandLine.Model.CommandSpec.forAnnotatedObject(CommandExportQcAlign::class.java))
-            .addSubcommand(
-                "chainUsage",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(CommandExportQcChainUsage::class.java)
-            )
-            .addSubcommand(
-                "coverage",
-                CommandLine.Model.CommandSpec.forAnnotatedObject(CommandExportQcCoverage::class.java)
-            )
+        cmd.helpSectionMap.remove(SECTION_KEY_COMMAND_LIST_HEADING)
+        cmd.helpSectionMap[SECTION_KEY_COMMAND_LIST] = CommandLine.IHelpSectionRenderer { help ->
+            var result = help.createHeading("Base commands:\n")
+            val groupedCommands = groups.map { it.second }.flatten().toSet()
+            result += help.commandList(help.subcommands().filterKeys { it !in groupedCommands })
+            help.subcommands()
+                .forEach { (_, helpForCommand) ->
+                    if (helpForCommand.subcommands().isNotEmpty()) {
+                        val editedDescription = helpForCommand.commandSpec().usageMessage().description()
+                        editedDescription[editedDescription.size - 1] =
+                            editedDescription[editedDescription.size - 1] + " This command has subcommands, use -h to see more"
+                        helpForCommand.commandSpec().usageMessage().description(*editedDescription)
+                    }
+                }
+            groups.forEach { (groupHeader, commands) ->
+                result += help.createHeading("$groupHeader:\n")
+                result += help.commandList(help.subcommands().filterKeys { it in commands })
+            }
+            result
+        }
+
         cmd.separator = " "
         val defaultParameterExceptionHandler = cmd.parameterExceptionHandler
         cmd.setParameterExceptionHandler { ex, args ->
@@ -262,5 +279,16 @@ object Main {
         val cmd = mkCmd()
         cmd.parseArgs(*resultArgs)
         return cmd
+    }
+
+    private class CommandsGroup(
+        val name: String
+    ) {
+        val commands: MutableList<Pair<String, Any>> = mutableListOf()
+
+        fun addSubcommand(name: String, command: Any): CommandsGroup {
+            commands += name to command
+            return this
+        }
     }
 }

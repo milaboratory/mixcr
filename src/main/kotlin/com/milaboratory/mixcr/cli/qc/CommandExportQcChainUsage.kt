@@ -25,7 +25,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
-@Command(name = "chainUsage", separator = " ", description = ["Chain usage plot."])
+@Command(description = ["Chain usage plot."])
 class CommandExportQcChainUsage : CommandExportQc() {
     @Parameters(description = ["sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]"], arity = "2..*")
     var inOut: List<Path> = mutableListOf()

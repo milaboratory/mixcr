@@ -18,7 +18,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
-@Command(name = "align", separator = " ", description = ["QC plot for alignments."])
+@Command(description = ["QC plot for alignments."])
 class CommandExportQcAlign : CommandExportQc() {
     @Parameters(description = ["sample1.vdjca ... align.[pdf|eps|png|jpeg]"], arity = "2..*")
     var inOut: List<Path> = mutableListOf()

@@ -153,9 +153,6 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
     }
 
     @Command(
-        name = "cdr3metrics",
-        sortOptions = false,
-        separator = " ",
         description = ["Export CDR3 metrics"]
     )
     class ExportCDR3Metrics : CommandPaExportPlotsBasicStatistics() {
@@ -174,9 +171,6 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
     }
 
     @Command(
-        name = "diversity",
-        sortOptions = false,
-        separator = " ",
         description = ["Export diversity metrics"]
     )
     class ExportDiversity : CommandPaExportPlotsBasicStatistics() {

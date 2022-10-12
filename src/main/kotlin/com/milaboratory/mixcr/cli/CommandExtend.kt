@@ -81,9 +81,6 @@ object CommandExtend {
     }
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = true,
-        separator = " ",
         description = ["Impute alignments or clones with germline sequences."]
     )
     class Cmd : CmdBase() {

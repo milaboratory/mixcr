@@ -24,9 +24,6 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 @Command(
-    name = "exportReads",
-    sortOptions = true,
-    separator = " ",
     description = ["Export original reads from vdjca file."]
 )
 class CommandExportReads : MiXCRCommandWithOutputs() {

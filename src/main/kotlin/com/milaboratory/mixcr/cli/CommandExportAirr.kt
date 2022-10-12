@@ -61,7 +61,6 @@ import java.nio.file.Path
 
 @Command(
     name = "exportAirr",
-    separator = " ",
     description = ["Exports a clns, clna or vdjca file to Airr formatted tsv file."]
 )
 class CommandExportAirr : MiXCRCommandWithOutputs() {

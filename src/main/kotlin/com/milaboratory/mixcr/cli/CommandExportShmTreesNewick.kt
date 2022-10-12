@@ -24,9 +24,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @Command(
-    name = CommandExportShmTreesNewick.COMMAND_NAME,
-    sortOptions = false,
-    separator = " ",
     description = ["Export SHMTree as newick"]
 )
 class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
@@ -63,7 +60,4 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
         }
     }
 
-    companion object {
-        const val COMMAND_NAME = "exportShmTreesNewick"
-    }
 }

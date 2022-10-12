@@ -59,10 +59,7 @@ private val targetReferencePoints = arrayOf(
 )
 
 @Command(
-    name = "alignmentsStat",
-    sortOptions = true,
     hidden = true,
-    separator = " ",
     description = ["Alignments statistics."]
 )
 class CommandAlignmentsStats : MiXCRCommandWithOutputs() {

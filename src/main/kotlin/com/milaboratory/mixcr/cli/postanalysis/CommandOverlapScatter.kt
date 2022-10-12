@@ -34,7 +34,7 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.nameWithoutExtension
 
-@Command(name = "overlapScatterPlot", separator = " ", description = ["Plot overlap scatter-plot."])
+@Command(description = ["Plot overlap scatter-plot."])
 class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     @Parameters(description = ["cloneset_1.{clns|clna}..."], index = "0")
     lateinit var in1: Path

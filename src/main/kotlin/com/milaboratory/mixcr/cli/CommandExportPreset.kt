@@ -23,11 +23,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 object CommandExportPreset {
-    const val COMMAND_NAME = "exportPreset"
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = false,
         description = ["Export a preset file given the preset name and a set of mix-ins"]
     )
     class Cmd : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Unit> {

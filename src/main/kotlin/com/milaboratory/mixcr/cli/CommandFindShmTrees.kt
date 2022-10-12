@@ -55,9 +55,6 @@ import kotlin.io.path.extension
 
 
 @Command(
-    name = CommandFindShmTrees.COMMAND_NAME,
-    sortOptions = false,
-    separator = " ",
     description = ["Builds SHM trees."]
 )
 class CommandFindShmTrees : MiXCRCommandWithOutputs() {

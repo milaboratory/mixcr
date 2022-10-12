@@ -23,9 +23,6 @@ import java.io.IOException
 import java.nio.file.Path
 
 @Command(
-    name = "listMetrics",
-    sortOptions = false,
-    separator = " ",
     description = ["List available metrics"]
 )
 class CommandPaListMetrics : MiXCRCommand() {

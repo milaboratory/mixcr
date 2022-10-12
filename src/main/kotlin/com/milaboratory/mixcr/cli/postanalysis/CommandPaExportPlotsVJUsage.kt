@@ -20,9 +20,6 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
 @Command(
-    name = "vjUsage",
-    sortOptions = false,
-    separator = " ",
     description = ["Export V-J usage heatmap"],
     hidden = true
 )

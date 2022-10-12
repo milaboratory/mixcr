@@ -12,13 +12,10 @@
 package com.milaboratory.mixcr.cli
 
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.Command
 
-@CommandLine.Command(
-    name = "listLibraries",
-    sortOptions = true,
+@Command(
     hidden = true,
-    separator = " ",
     description = ["List all available library by scanning all library search paths."]
 )
 class CommandListLibraries : MiXCRCommand() {

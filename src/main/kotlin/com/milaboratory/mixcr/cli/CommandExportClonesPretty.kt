@@ -31,9 +31,6 @@ import java.nio.file.Path
 import java.util.*
 
 @Command(
-    name = "exportClonesPretty",
-    sortOptions = true,
-    separator = " ",
     description = ["Export verbose information about clones."]
 )
 class CommandExportClonesPretty : MiXCRCommandWithOutputs() {

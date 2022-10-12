@@ -106,9 +106,6 @@ object CommandAssembleContigs {
     }
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = true,
-        separator = " ",
         description = ["Assemble full sequences."]
     )
     class Cmd : CmdBase() {

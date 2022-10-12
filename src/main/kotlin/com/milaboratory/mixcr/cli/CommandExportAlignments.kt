@@ -87,9 +87,6 @@ object CommandExportAlignments {
     }
 
     @Command(
-        name = COMMAND_NAME,
-        separator = " ",
-        sortOptions = false,
         description = ["Export V/D/J/C alignments into tab delimited file."]
     )
     class Cmd : CmdBase() {

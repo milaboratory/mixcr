@@ -146,9 +146,6 @@ object CommandRefineTagsAndSort {
     }
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = false,
-        separator = " ",
         description = ["Applies error correction algorithm for tag sequences and sorts resulting file by tags."]
     )
     class Cmd : CmdBase() {

@@ -32,9 +32,6 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 @Command(
-    name = CommandFilterAlignments.COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
     description = ["Filter alignments."]
 )
 class CommandFilterAlignments : MiXCRCommandWithOutputs() {
@@ -162,7 +159,4 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
 
     }
 
-    companion object {
-        const val COMMAND_NAME = "filterAlignments"
-    }
 }

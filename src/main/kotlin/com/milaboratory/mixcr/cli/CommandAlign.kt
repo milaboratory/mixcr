@@ -269,8 +269,6 @@ object CommandAlign {
     }
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = false,
         description = ["Builds alignments with V,D,J and C genes for input sequencing reads."]
     )
     class Cmd : CmdBase() {

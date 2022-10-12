@@ -24,9 +24,6 @@ import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 
 @Command(
-    name = "individual",
-    sortOptions = false,
-    separator = " ",
     description = ["Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype metrics"]
 )
 class CommandPaIndividual : CommandPa() {

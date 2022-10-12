@@ -22,7 +22,6 @@ import jetbrains.letsPlot.intern.Plot
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import picocli.CommandLine.Command
-import picocli.CommandLine.HelpCommand
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Files
@@ -32,7 +31,6 @@ import kotlin.io.path.absolute
 import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
-@Command(name = "exportPlots", separator = " ", description = ["Export postanalysis plots."])
 abstract class CommandPaExportPlots : CommandPaExport() {
     @Option(description = [CommonDescriptions.METADATA], names = ["--metadata"])
     var metadata: Path? = null
@@ -122,10 +120,8 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     }
 
     @Command(
-        name = "exportPlots",
-        separator = " ",
         description = ["Export postanalysis plots."],
-        subcommands = [HelpCommand::class]
+        synopsisSubcommandLabel = "COMMAND"
     )
     class CommandExportPlotsMain
 }

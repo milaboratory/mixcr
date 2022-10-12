@@ -13,12 +13,10 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
 import picocli.CommandLine
+import picocli.CommandLine.*
 import java.nio.file.Path
 
-@CommandLine.Command(
-    name = "exportPreprocTables",
-    sortOptions = false,
-    separator = " ",
+@Command(
     description = ["Export preprocessing summary tables."]
 )
 class CommandPaExportTablesPreprocSummary : CommandPaExportTablesBase {

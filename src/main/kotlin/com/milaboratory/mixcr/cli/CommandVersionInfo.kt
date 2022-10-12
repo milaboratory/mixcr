@@ -28,7 +28,6 @@ import java.nio.file.Path
 
 @Command(
     name = "versionInfo",
-    separator = " ",
     description = ["Output information about MiXCR version which generated the file."]
 )
 class CommandVersionInfo : MiXCRCommand() {

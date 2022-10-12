@@ -33,7 +33,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.extension
 
-@Command(name = "downsample", separator = " ", description = ["Downsample clonesets."])
+@Command(description = ["Downsample clonesets."])
 class CommandDownsample : MiXCRCommandWithOutputs() {
     @Parameters(description = ["cloneset.{clns|clna}..."], arity = "1..*")
     override val inputFiles: List<Path> = mutableListOf()

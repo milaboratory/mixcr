@@ -68,9 +68,6 @@ import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
 @Command(
-    name = CommandFindAlleles.COMMAND_NAME,
-    sortOptions = false,
-    separator = " ",
     description = ["Find allele variants in clnx."]
 )
 class CommandFindAlleles : MiXCRCommandWithOutputs() {

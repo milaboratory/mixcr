@@ -110,7 +110,6 @@ object CommandAssemble {
 
     @Command(
         name = COMMAND_NAME,
-        separator = " ",
         description = ["Assemble clones."]
     )
     class Cmd : CmdBase() {

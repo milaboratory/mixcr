@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.cli.qc
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.qc.SizeParameters
 import picocli.CommandLine.Command
-import picocli.CommandLine.HelpCommand
 import picocli.CommandLine.Option
 
 abstract class CommandExportQc : MiXCRCommandWithOutputs() {
@@ -28,10 +27,8 @@ abstract class CommandExportQc : MiXCRCommandWithOutputs() {
         get() = if (width != -1 && height != -1) SizeParameters(width, height) else null
 
     @Command(
-        name = "qc",
-        separator = " ",
         description = ["Export QC plots."],
-        subcommands = [HelpCommand::class]
+        synopsisSubcommandLabel = "COMMAND"
     )
     class CommandExportQcMain
 }

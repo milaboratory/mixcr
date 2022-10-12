@@ -26,9 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 @Command(
-    name = CommandMergeAlignments.MERGE_ALIGNMENTS_COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
     description = ["Merge several *.vdjca files with alignments into a single alignments file."]
 )
 class CommandMergeAlignments : MiXCRCommandWithOutputs() {

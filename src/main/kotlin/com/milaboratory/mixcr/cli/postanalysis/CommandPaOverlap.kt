@@ -32,7 +32,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.nio.file.Paths
 
-@Command(name = "overlap", sortOptions = false, separator = " ", description = ["Overlap analysis"])
+@Command(description = ["Overlap analysis"])
 class CommandPaOverlap : CommandPa() {
     @Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
     var overlapCriteria = "CDR3|AA|V|J"

@@ -25,8 +25,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.extension
 
 @Command(
-    sortOptions = false,
-    separator = " ",
     description = ["Visualize SHM tree and save in PDF format"]
 )
 class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {

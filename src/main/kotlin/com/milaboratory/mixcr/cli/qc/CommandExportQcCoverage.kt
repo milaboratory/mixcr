@@ -26,13 +26,14 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.nio.file.Paths
 
-@Command(name = "coverage", separator = " ", description = ["Reads coverage plots."])
+@Command(description = ["Reads coverage plots."])
 class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
     @Parameters(description = ["sample1.vdjca ... coverage.[pdf|eps|png|jpeg]"])
     var inOut: List<Path> = mutableListOf()
 
     @Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])
     var showAlignmentBoundaries = false
+
     override val inputFiles
         get() = inOut.subList(0, inOut.size - 1)
 

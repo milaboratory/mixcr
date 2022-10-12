@@ -28,9 +28,6 @@ import java.io.PrintStream
 import java.nio.file.Path
 
 @Command(
-    name = "clonesDiff",
-    separator = " ",
-    sortOptions = true,
     description = ["Calculates the difference between two .clns files."]
 )
 class CommandClonesDiff : MiXCRCommandWithOutputs() {

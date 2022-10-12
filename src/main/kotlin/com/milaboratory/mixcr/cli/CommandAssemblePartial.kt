@@ -81,9 +81,6 @@ object CommandAssemblePartial {
     }
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = true,
-        separator = " ",
         description = ["Assembles partially aligned reads into longer sequences."]
     )
     class Cmd : CmdBase() {
