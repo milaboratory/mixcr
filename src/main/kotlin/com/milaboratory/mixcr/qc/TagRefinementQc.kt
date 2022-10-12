@@ -11,20 +11,87 @@
  */
 package com.milaboratory.mixcr.qc
 
-import com.milaboratory.mitool.refinement.gfilter.GroupFilterReport
+import com.milaboratory.mitool.exhaustive
+import com.milaboratory.mitool.refinement.gfilter.*
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
+import jetbrains.letsPlot.elementLine
 import jetbrains.letsPlot.geom.geomPolygon
+import jetbrains.letsPlot.geom.geomVLine
 import jetbrains.letsPlot.ggplot
+import jetbrains.letsPlot.intern.Plot
+import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.label.ylab
+import jetbrains.letsPlot.scale.scaleXContinuous
 import jetbrains.letsPlot.scale.scaleXLog10
-import jetbrains.letsPlot.scale.scaleYLog10
+import jetbrains.letsPlot.scale.scaleYContinuous
+import jetbrains.letsPlot.theme
 
 object TagRefinementQc {
+    /** Generates tag refinement QC plots */
+    fun tagRefinementQc(info: MiXCRFileInfo, log: Boolean = false) = run {
+        val report = info.footer.reports[MiXCRCommand.refineTagsAndSort].firstOrNull()
+        val filter = info.header.stepParams[MiXCRCommand.refineTagsAndSort].firstOrNull()?.parameters?.postFilter
+        val filterReport = report?.correctionReport?.filterReport
+        if (report == null || filter == null || filterReport == null)
+            return@run emptyList()
+        tagRefinementQc(filter, filterReport, log).map {
+            assert(report.outputFiles.size == 1)
+            it + ggtitle(report.outputFiles[0])
+        }
+    }
 
+    /** Generates tag refinement QC plots */
+    fun tagRefinementQc(
+        filter: KeyedRecordFilter,
+        rep: KeyedFilterReport,
+        log: Boolean = false,
+    ): List<Plot> = run {
+        when (filter) {
+            is AndKeyedFilter -> {
+                rep as AndTaggedFilterReport
+                filter.filters.flatMapIndexed { idx, f ->
+                    tagRefinementQc(f, rep.nestedReports[idx], log)
+                }
+            }
 
-    private fun GroupFilterReport.plot(idx: Int) = run {
-        val op = this.operatorReports[idx]
-        val hist = this.metricHists[idx]
+            is GroupFilter -> {
+                rep as GroupFilterReport
+                groupFilterQc(filter, rep, log)
+            }
+
+            else -> throw UnsupportedOperationException("${filter.javaClass} QC is not supported yet")
+        }.exhaustive
+    }
+
+    private fun groupFilterQc(filter: GroupFilter, rep: GroupFilterReport, log: Boolean) =
+        rep.operatorReports.indices.mapNotNull {
+            rep.groupFilterQc(
+                filter.predicates[it],
+                rep.operatorReports[it],
+                log
+            )
+        }
+
+    private fun GroupFilterReport.groupFilterQc(
+        predicate: GroupPredicate,
+        rep: OperatorReport,
+        log: Boolean
+    ): Plot? = run {
+        if (predicate.metrics.size > 1)
+            return@run null
+
+        val hist = rep.hist[0] ?: return@run null
+        val metric = predicate.metrics[0]
+        val xLabel = metric.toString()
+        val yLabel = "Number of ${this.groupingKeys.joinToString(",")} groups"
+        val thresholds = mutableListOf<Any>()
+
+        (rep.operatorReport as? GenericHistOpReport)?.threshold?.let { thresholds += it }
+        (predicate.operator as? RangeOp)?.let { op ->
+            listOfNotNull(op.lower, op.upper).forEach { thresholds += it }
+        }
 
         val data = mapOf(
             "x" to mutableListOf(),
@@ -32,9 +99,10 @@ object TagRefinementQc {
             "g" to mutableListOf<Any>()
         )
 
-        for ((i, bin) in hist.hist.bins.withIndex()) {
+        val zero = if (log) 1e-5 else 0
+        for ((i, bin) in hist.bins.withIndex()) {
             data["x"]!! += bin.from
-            data["y"]!! += 0.01
+            data["y"]!! += zero
             data["g"]!! += i
 
             data["x"]!! += bin.from
@@ -46,25 +114,39 @@ object TagRefinementQc {
             data["g"]!! += i
 
             data["x"]!! += bin.to
-            data["y"]!! += 0.01
+            data["y"]!! += zero
             data["g"]!! += i
         }
 
         var plt = ggplot(data)
 
-        plt += geomPolygon(fill = "black", alpha = 0.5) {
+        plt += geomPolygon(fill = "#929bad") {
             x = "x"
             y = "y"
             group = "g"
         }
 
-        plt += xlab(this.groupingKeys.joinToString { "+" })
-        plt += ylab("# reads")
+        if (thresholds.isNotEmpty()) {
+            plt += geomVLine(
+                data = mapOf("x" to thresholds),
+                color = "#f05670",
+                linetype = 5
+            ) {
+                xintercept = "x"
+            }
+        }
 
-        if (hist.metric.reportHist?.log == true)
+        plt += xlab(xLabel)
+        plt += ylab(yLabel)
+
+        plt += scaleXContinuous(expand = listOf(0, 0))
+        plt += scaleYContinuous(expand = listOf(0, 0))
+
+        if (hist.collectionSpec?.log == true)
             plt += scaleXLog10()
 
-        if (hist.hist.collectionSpec?.log == true)
-            plt += scaleYLog10()
+        plt += theme(axisLineY = elementLine(), panelBorder = elementLine())
+
+        plt
     }
 }
