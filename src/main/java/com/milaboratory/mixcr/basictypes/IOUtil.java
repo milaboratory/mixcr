@@ -211,28 +211,48 @@ public class IOUtil {
         switch (extractFileType(file)) {
             case VDJCA:
                 try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
-                    return reader;
+                    return new MiXCRFileInfoImpl(reader.getHeader(), reader.getFooter());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNA:
                 try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader;
+                    return new MiXCRFileInfoImpl(reader.getHeader(), reader.getFooter());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNS:
                 try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader;
+                    return new MiXCRFileInfoImpl(reader.getHeader(), reader.getFooter());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case SHMT:
                 try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
-                    return reader;
+                    return new MiXCRFileInfoImpl(reader.getHeader(), reader.getFooter());
                 }
             default:
                 throw new RuntimeException();
+        }
+    }
+
+    private static final class MiXCRFileInfoImpl implements MiXCRFileInfo {
+        final MiXCRHeader header;
+        final MiXCRFooter footer;
+
+        MiXCRFileInfoImpl(MiXCRHeader header, MiXCRFooter footer) {
+            this.header = header;
+            this.footer = footer;
+        }
+
+        @Override
+        public MiXCRHeader getHeader() {
+            return header;
+        }
+
+        @Override
+        public MiXCRFooter getFooter() {
+            return footer;
         }
     }
 
