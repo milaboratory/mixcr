@@ -21,14 +21,15 @@ import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.toList
 import picocli.CommandLine
+import picocli.CommandLine.*
 import java.nio.file.Paths
 
-@CommandLine.Command(name = "coverage", separator = " ", description = ["Reads coverage plots."])
+@Command(name = "coverage", separator = " ", description = ["Reads coverage plots."])
 class CommandExportQcCoverage : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["sample1.vdjca ... coverage.[pdf|eps|png|jpeg]"])
+    @Parameters(description = ["sample1.vdjca ... coverage.[pdf|eps|png|jpeg]"])
     var `in`: List<String> = mutableListOf()
 
-    @CommandLine.Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])
+    @Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])
     var showAlignmentBoundaries = false
     override fun getInputFiles(): List<String> = `in`.subList(0, `in`.size - 1)
 

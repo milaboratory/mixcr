@@ -207,61 +207,40 @@ public class IOUtil {
         }
     }
 
-    public static MiXCRFooter extractFooter(Path file) {
+    public static MiXCRFileInfo extractFileInfo(Path file) {
         switch (extractFileType(file)) {
             case VDJCA:
                 try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
-                    return reader.getFooter();
+                    return reader;
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNA:
                 try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getFooter();
+                    return reader;
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNS:
                 try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getFooter();
+                    return reader;
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case SHMT:
                 try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
-                    return reader.getFooter();
+                    return reader;
                 }
             default:
                 throw new RuntimeException();
         }
     }
 
+    public static MiXCRFooter extractFooter(Path file) {
+        return extractFileInfo(file).getFooter();
+    }
+
     public static MiXCRHeader extractHeader(Path file) {
-        switch (extractFileType(file)) {
-            case VDJCA:
-                try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
-                    return reader.getHeader();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            case CLNA:
-                try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getHeader();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            case CLNS:
-                try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getHeader();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            case SHMT:
-                try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
-                    return reader.getHeader();
-                }
-            default:
-                throw new RuntimeException();
-        }
+        return extractFileInfo(file).getHeader();
     }
 }
