@@ -78,7 +78,7 @@ public final class RunMiXCR {
         CloneAssembler assembler = null;
         try {
             RunMiXCRAnalysis parameters = align.parameters;
-            assembler = new CloneAssembler(parameters.cloneAssemblerParameters,
+            assembler = new CloneAssembler(TagsInfo.NO_TAGS, parameters.cloneAssemblerParameters,
                     false, align.usedGenes, align.parameters.alignerParameters);
 
             CloneAssemblerReportBuilder report = new CloneAssemblerReportBuilder()
