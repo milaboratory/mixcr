@@ -15,6 +15,7 @@ import com.milaboratory.core.io.sequence.MultiRead;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 
@@ -48,6 +49,24 @@ public class VDJCMultiRead extends MultiRead {
         return reads;
     }
 
+    SequenceHistory[] getHistory() {
+        SequenceHistory[] result = new SequenceHistory[numberOfReads()];
+        for (int i = 0; i < result.length; i++)
+            result[i] = targets == null
+                    ? new SequenceHistory.RawSequence(getId(), (byte) i, false, getRead(i).getData().size())
+                    : targets.get(i).getHistory();
+        return result;
+    }
+
+    NSQTuple[] getOriginalSequences() {
+        if (targets == null)
+            return null;
+        VDJCAlignments[] result = new VDJCAlignments[targets.size()];
+        for (int i = 0; i < result.length; i++)
+            result[i] = targets.get(i).getAlignments();
+        return VDJCAlignments.mergeOriginalSequences(result);
+    }
+
     SequenceRead[] getOriginalReads() {
         if (targets == null)
             return null;
@@ -57,12 +76,4 @@ public class VDJCMultiRead extends MultiRead {
         return VDJCAlignments.mergeOriginalReads(result);
     }
 
-    SequenceHistory[] getHistory() {
-        SequenceHistory[] result = new SequenceHistory[numberOfReads()];
-        for (int i = 0; i < result.length; i++)
-            result[i] = targets == null
-                    ? new SequenceHistory.RawSequence(getId(), (byte) i, false, getRead(i).getData().size())
-                    : targets.get(i).getHistory();
-        return result;
-    }
 }

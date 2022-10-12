@@ -20,8 +20,6 @@ import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.TranslationParameters
-import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon
-import com.milaboratory.core.sequence.TranslationParameters.FromRightWithIncompleteCodon
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
 import io.repseq.core.ExtendedReferencePoints
@@ -170,7 +168,6 @@ class MutationsDescription private constructor(
             Variable -> VPartsN
             Joining -> JPartsN
             null -> {
-                check(geneFeature == relativeTo)
                 checkNotNull(intersection(geneFeature, VJJunction))
                 fullLengthPartsN
             }
@@ -191,7 +188,6 @@ class MutationsDescription private constructor(
             Variable -> VPartsAa
             Joining -> JPartsAa
             null -> {
-                check(geneFeature == relativeTo)
                 checkNotNull(intersection(geneFeature, VJJunction))
                 fullLengthPartsAa
             }
@@ -349,9 +345,6 @@ class MutationsDescription private constructor(
             requireNotNull(intersection(geneFeature, VJJunction)) {
                 "Algorithm doesn't support $${GeneFeature.encode(geneFeature)}"
             }
-            require(geneFeature == relativeTo) {
-                "Can't calculate alignment $geneFeature relative to $relativeTo"
-            }
         }
     }
 
@@ -420,57 +413,34 @@ class MutationsDescription private constructor(
          * Translate to AA (mutations, sequence1 and portioning)
          */
         private fun Parts<NucleotideSequence>.translate(maxShiftedTriplets: Int): Parts<AminoAcidSequence> {
-            //TODO left only partitioning.getTranslationParameters(geneFeature) after fix of io.repseq.core.GeneFeature.getCodingGeneFeature
-            val translationParametersByFeatures = mutations.keys.associateTo(TreeMap()) { geneFeature ->
-                val withVJJunction = when {
-                    geneFeature.lastPoint == VEndTrimmed -> GeneFeature(geneFeature.firstPoint, VEnd)
-                    geneFeature.firstPoint == JBeginTrimmed -> GeneFeature(JBegin, geneFeature.lastPoint)
-                    else -> geneFeature
-                }
-                withVJJunction to partitioning.getTranslationParameters(withVJJunction)
+            val anchorPointForTranslation = when {
+                mutations.keys.any { CDR3Begin in it } -> CDR3Begin
+                else -> CDR3End
             }
-            val translationParametersForSequence1 = partitioning.getTranslationParameters(
-                GeneFeature(
-                    translationParametersByFeatures.firstKey().firstPoint,
-                    translationParametersByFeatures.lastKey().lastPoint
-                )
+            val translationParameters = TranslationParameters.withIncompleteCodon(
+                partitioning.getPosition(anchorPointForTranslation)
             )
             //for every position calculate AA position
             val newPartitioning = ExtendedReferencePointsBuilder().apply {
                 for (i in 0 until partitioning.pointsCount()) {
                     val referencePoint = partitioning.referencePointFromIndex(i)
                     val position = partitioning.getPosition(referencePoint)
-                    if (position != -1) {
-                        val translationParameters = translationParametersByFeatures.entries
-                            .firstOrNull { referencePoint in it.key }
-                            ?.value
-
-                        if (translationParameters != null) {
-                            setPosition(
-                                referencePoint,
-                                AminoAcidSequence.convertNtPositionToAA(
-                                    position,
-                                    sequence1.size(),
-                                    translationParameters
-                                ).aminoAcidPosition
-                            )
-                        }
+                    if (position >= 0) {
+                        setPosition(
+                            referencePoint,
+                            AminoAcidSequence.convertNtPositionToAA(
+                                position,
+                                sequence1.size(),
+                                translationParameters
+                            ).aminoAcidPosition
+                        )
                     }
                 }
             }.build()
             return Parts(
                 newPartitioning,
-                AminoAcidSequence.translate(
-                    sequence1,
-                    translationParametersForSequence1
-                ),
-                mutations.mapValuesTo(TreeMap()) { (geneFeature, mutations) ->
-                    //TODO left only partitioning.getTranslationParameters(geneFeature) after fix of io.repseq.core.GeneFeature.getCodingGeneFeature
-                    val translationParameters = when (geneFeature) {
-                        VCDR3Part -> FromLeftWithoutIncompleteCodon
-                        JCDR3Part -> FromRightWithIncompleteCodon
-                        else -> partitioning.getTranslationParameters(geneFeature)
-                    }
+                AminoAcidSequence.translate(sequence1, translationParameters),
+                mutations.mapValuesTo(TreeMap()) { (_, mutations) ->
                     MutationsUtil.nt2aa(
                         sequence1,
                         mutations,

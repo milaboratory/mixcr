@@ -34,7 +34,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
         index = "1",
         paramLabel = "outputDir",
         hideParamSyntax = true,
-        description = ["output directory to write newick files"]
+        description = ["Output directory to write newick files. Separate file for every tree will be created"]
     )
     lateinit var out: Path
 

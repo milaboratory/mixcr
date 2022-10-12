@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.milaboratory.mixcr.util.ParametersPresets
-import com.milaboratory.mixcr.util.VJPair
 
 @JsonAutoDetect(
     fieldVisibility = ANY,
@@ -25,17 +24,27 @@ import com.milaboratory.mixcr.util.VJPair
     getterVisibility = NONE
 )
 data class FindAllelesParameters(
-    /**
-     * Use only clones with count more than parameter
-     */
-    val useClonesWithCountGreaterThen: Int,
+    val filterForDataWithUmi: Filter,
+    val filterForDataWithoutUmi: Filter,
     /**
      * Use only productive clonotypes (no OOF, no stops).
      */
     val productiveOnly: Boolean,
-    val searchAlleleParameter: BCellsAlleleSearchParameters,
-    val searchMutationsInCDR3: SearchMutationsInCDR3Params
+    val searchAlleleParameter: AlleleMutationsSearchParameters,
+    val searchMutationsInCDR3: SearchMutationsInCDR3Params?
 ) {
+    @JsonAutoDetect(
+        fieldVisibility = ANY,
+        isGetterVisibility = NONE,
+        getterVisibility = NONE
+    )
+    data class Filter(
+        /**
+         * Use only clones with count greater or equal to then this parameter
+         */
+        val useClonesWithCountGreaterThen: Int,
+    )
+
     @JsonAutoDetect(
         fieldVisibility = ANY,
         isGetterVisibility = NONE,
@@ -51,9 +60,9 @@ data class FindAllelesParameters(
          */
         val minPartOfTheSameLetter: Double,
         /**
-         * Letter must be represented by not less than `minDiversity` diversity of complimentary gene
+         * Letter must be represented by not less than `minDiversity` percentage of diversity by complimentary gene
          */
-        val minDiversity: Int,
+        val minDiversity: Double,
     )
 
     @JsonAutoDetect(
@@ -61,11 +70,11 @@ data class FindAllelesParameters(
         isGetterVisibility = NONE,
         getterVisibility = NONE
     )
-    data class BCellsAlleleSearchParameters(
+    data class AlleleMutationsSearchParameters(
         /**
-         * Alleles filtered that min and max diversity of result are bound by this ratio
+         * Percentage to get top of alleles by diversity
          */
-        val minDiversityRatioBetweenAlleles: Double,
+        val topByDiversity: Double,
         /**
          * On decision about clone matching to allele will check relation between score penalties between the best and the next alleles.
          */
@@ -75,26 +84,26 @@ data class FindAllelesParameters(
          */
         val diversityRatioToSearchCommonMutationsInAnAllele: Double,
         /**
-         * Min count
+         * Alleles will be filtered by min count of clones that are naive by complementary gene
          */
         val minCountOfNaiveClonesToAddAllele: Int,
-        val diversityThresholds: VJPair<DiversityThresholds>,
+        val diversityThresholds: DiversityThresholds,
         val regressionFilter: RegressionFilter
     ) {
 
         data class DiversityThresholds(
             /**
-             * Min diversity of mutation for it may be considered as a candidate for allele mutation
+             * Min percentage from max diversity of mutation for it may be considered as a candidate for allele mutation
              */
-            val minDiversityForMutation: Int,
+            val minDiversityForMutation: Double,
             /**
-             * Filter allele candidates with diversity less than this parameter
+             * Filter out allele candidates with percentage from max diversity less than this parameter
              */
-            val minDiversityForAllele: Int,
+            val minDiversityForAllele: Double,
             /**
-             * If diversity of zero allele greater or equal to this, than it will not be tested by diversity ratio
+             * If percentage from max diversity of zero allele greater or equal to this, than it will not be tested by diversity ratio
              */
-            val diversityForSkipTestForRatioForZeroAllele: Int,
+            val diversityForSkipTestForRatioForZeroAllele: Double,
         )
 
         @JsonTypeInfo(

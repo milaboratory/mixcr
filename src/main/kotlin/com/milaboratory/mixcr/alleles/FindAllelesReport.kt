@@ -169,7 +169,7 @@ class FindAllelesReport(
             zygotes.computeIfAbsent(count) { LongAdder() }.increment()
         }
 
-        override fun buildReport(): MiXCRCommandReport = FindAllelesReport(
+        override fun buildReport() = FindAllelesReport(
             date,
             commandLine,
             inputFiles,
@@ -204,6 +204,7 @@ class FindAllelesReport(
             overallAllelesStatistics.stats
                 .mapKeys { it.key.name }
                 .mapValues { MiXCRCommandReport.StandardStats.from(it.value.scoreDelta) }
+                .filterValues { it.size != 0L }
         )
 
         override fun that() = this

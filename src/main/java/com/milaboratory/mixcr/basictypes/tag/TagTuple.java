@@ -76,6 +76,9 @@ public final class TagTuple implements Comparable<TagTuple>, Iterable<TagValue> 
             return key();
         if (depth == 0)
             return NO_TAGS;
+        if (depth > tags.length)
+            throw new IllegalArgumentException("Wrong depth=" + depth + " tag tuple has only " +
+                    tags.length + " elements");
         TagValue[] newTags = Arrays.copyOf(tags, depth);
         for (int i = 0; i < newTags.length; i++)
             newTags[i] = newTags[i].extractKey();

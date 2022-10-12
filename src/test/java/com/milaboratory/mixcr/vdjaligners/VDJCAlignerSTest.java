@@ -33,9 +33,9 @@ import org.junit.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
 import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
 
 public class VDJCAlignerSTest {
@@ -57,13 +57,13 @@ public class VDJCAlignerSTest {
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
-                writer.writeHeader(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
+                writer.writeHeader(dummyHeader(), aligner.getUsedGenes());
                 header = writer.getPosition();
                 for (SingleRead read : CUtils.it(reader)) {
-                    VDJCAlignmentResult<SingleRead> result = aligner.process(read);
-                    if (result.alignment != null) {
-                        writer.write(result.alignment);
-                        alignemntsList.add(result.alignment);
+                    VDJCAlignments result = aligner.process(read.toTuple(), read);
+                    if (result != null) {
+                        writer.write(result);
+                        alignemntsList.add(result);
                     }
                 }
                 writer.setFooter(emptyFooter());
@@ -96,6 +96,6 @@ public class VDJCAlignerSTest {
                 aligner.addGene(gene);
         SingleReadImpl read = new SingleReadImpl(0, new NSequenceWithQuality(new NucleotideSequence("GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC"), SequenceQuality.GOOD_QUALITY_VALUE), "");
         RandomUtil.getThreadLocalRandom().setSeed(29);
-        VDJCAlignmentResult<SingleRead> result = aligner.process0(read);
+        aligner.process0(read.toTuple());
     }
 }

@@ -14,7 +14,7 @@
       floating: false
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: CDR3
+      features: [ "CDR3" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -65,7 +65,7 @@
       floating: false
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: "{CDR1Begin:FR4End}"
+      features: [ "{CDR1Begin:FR4End}" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -114,7 +114,7 @@
       floating: true
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: CDR3
+      features: [ "CDR3" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -164,7 +164,7 @@
       floating: true
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -208,7 +208,7 @@
       floating: false
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: CDR3
+      features: [ "CDR3" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -253,7 +253,7 @@
       species: hsa
     - type: MaterialTypeDNA
     - type: SetClonotypeAssemblingFeatures
-      features: CDR3
+      features: [ "CDR3" ]
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
     - type: RightAlignmentBoundaryNoPoint

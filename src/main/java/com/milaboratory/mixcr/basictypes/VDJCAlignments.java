@@ -15,6 +15,7 @@ import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentUtils;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReadUtil;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;
@@ -29,20 +30,46 @@ import java.util.function.Function;
 
 @Serializable(by = IO.VDJCAlignmentsSerializer.class)
 public final class VDJCAlignments extends VDJCObject {
+    /** Describes how targets were obtained from the inputs */
     final SequenceHistory[] history;
+    /**
+     * Actual aligner input(s). Inputs are obtained after optional trimming and tag pattern matching from
+     * the original reads
+     */
+    final NSQTuple[] originalSequences;
+
+    /** Initial reads as they were in the input fastq file */
     final SequenceRead[] originalReads;
+
+    // Information about the linked clonotype
+
+    /** How the alignment was linked to the clonotype (using initial assembly, clustering or other assembly steps) */
     final byte mappingType;
+    /** Linked clonotype id */
     final long cloneIndex;
+
     private volatile long alignmentsIndex = -1;
 
-    public VDJCAlignments(long alignmentsIndex,
-                          EnumMap<GeneType, VDJCHit[]> hits,
-                          TagCount tagCount,
-                          NSequenceWithQuality[] targets,
-                          SequenceHistory[] history,
-                          SequenceRead[] originalReads,
-                          byte mappingType, long cloneIndex) {
+    VDJCAlignments(EnumMap<GeneType, VDJCHit[]> hits,
+                   TagCount tagCount,
+                   NSequenceWithQuality[] targets,
+                   SequenceHistory[] history,
+                   NSQTuple[] originalSequences,
+                   SequenceRead[] originalReads,
+                   byte mappingType, long cloneIndex) {
+        this(-1, hits, tagCount, targets, history, originalSequences, originalReads, mappingType, cloneIndex);
+    }
+
+    private VDJCAlignments(long alignmentsIndex,
+                           EnumMap<GeneType, VDJCHit[]> hits,
+                           TagCount tagCount,
+                           NSequenceWithQuality[] targets,
+                           SequenceHistory[] history,
+                           NSQTuple[] originalSequences,
+                           SequenceRead[] originalReads,
+                           byte mappingType, long cloneIndex) {
         super(hits, tagCount, targets);
+
 
         if (!ReadToCloneMapping.isCorrect(mappingType) ||
                 (ReadToCloneMapping.isDropped(mappingType) && cloneIndex != -1))
@@ -50,18 +77,19 @@ public final class VDJCAlignments extends VDJCObject {
 
         this.alignmentsIndex = alignmentsIndex;
         this.history = history;
+        this.originalSequences = originalSequences;
         this.originalReads = originalReads;
         this.mappingType = mappingType;
         this.cloneIndex = cloneIndex;
     }
 
-    public VDJCAlignments(long alignmentsIndex,
-                          EnumMap<GeneType, VDJCHit[]> hits,
-                          TagCount tagCount,
-                          NSequenceWithQuality[] targets,
-                          SequenceHistory[] history,
-                          SequenceRead[] originalReads) {
-        this(alignmentsIndex, hits, tagCount, targets, history, originalReads,
+    private VDJCAlignments(long alignmentsIndex,
+                           EnumMap<GeneType, VDJCHit[]> hits,
+                           TagCount tagCount,
+                           NSequenceWithQuality[] targets,
+                           SequenceHistory[] history,
+                           NSQTuple[] originalSequences) {
+        this(alignmentsIndex, hits, tagCount, targets, history, originalSequences, null,
                 ReadToCloneMapping.DROPPED_MASK, -1);
     }
 
@@ -69,25 +97,23 @@ public final class VDJCAlignments extends VDJCObject {
                           TagCount tagCount,
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
-                          SequenceRead[] originalReads,
-                          byte mappingType, long cloneIndex) {
-        this(-1, hits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
-    }
-
-    public VDJCAlignments(EnumMap<GeneType, VDJCHit[]> hits,
-                          TagCount tagCount,
-                          NSequenceWithQuality[] targets,
-                          SequenceHistory[] history,
-                          SequenceRead[] originalReads) {
-        this(-1, hits, tagCount, targets, history, originalReads);
+                          NSQTuple[] originalSequences) {
+        this(-1, hits, tagCount, targets, history, originalSequences);
     }
 
     public VDJCAlignments(VDJCHit[] vHits, VDJCHit[] dHits, VDJCHit[] jHits, VDJCHit[] cHits,
                           TagCount tagCount,
                           NSequenceWithQuality[] targets,
                           SequenceHistory[] history,
-                          SequenceRead[] originalReads) {
-        this(-1, createHits(vHits, dHits, jHits, cHits), tagCount, targets, history, originalReads);
+                          NSQTuple[] originalSequences) {
+        this(-1, createHits(vHits, dHits, jHits, cHits), tagCount, targets, history,
+                originalSequences);
+    }
+
+    public VDJCAlignments(VDJCHit[] vHits, VDJCHit[] dHits, VDJCHit[] jHits, VDJCHit[] cHits,
+                          TagCount tagCount,
+                          NSequenceWithQuality[] targets) {
+        this(-1, createHits(vHits, dHits, jHits, cHits), tagCount, targets, null, null);
     }
 
     public VDJCAlignments shiftIndelsAtHomopolymers(Set<GeneType> gts) {
@@ -97,10 +123,11 @@ public final class VDJCAlignments extends VDJCObject {
     }
 
     public VDJCAlignments mapHits(Function<VDJCHit, VDJCHit> mapper) {
-        EnumMap<GeneType, VDJCHit[]> result = new EnumMap<>(GeneType.class);
+        EnumMap<GeneType, VDJCHit[]> newHits = new EnumMap<>(GeneType.class);
         for (Map.Entry<GeneType, VDJCHit[]> e : hits.entrySet())
-            result.put(e.getKey(), Arrays.stream(e.getValue()).map(mapper).toArray(VDJCHit[]::new));
-        return new VDJCAlignments(alignmentsIndex, result, tagCount, targets, history, originalReads, mappingType, cloneIndex);
+            newHits.put(e.getKey(), Arrays.stream(e.getValue()).map(mapper).toArray(VDJCHit[]::new));
+        return new VDJCAlignments(alignmentsIndex, newHits, tagCount, targets, history, originalSequences, originalReads,
+                mappingType, cloneIndex);
     }
 
     public boolean isClustered() {
@@ -132,7 +159,8 @@ public final class VDJCAlignments extends VDJCObject {
     }
 
     public VDJCAlignments setTagCount(TagCount tc) {
-        return new VDJCAlignments(alignmentsIndex, hits, tc, targets, history, originalReads, mappingType, cloneIndex);
+        return new VDJCAlignments(alignmentsIndex, hits, tc, targets, history, originalSequences,
+                originalReads, mappingType, cloneIndex);
     }
 
     /** This strips all non-key information from tags */
@@ -145,28 +173,31 @@ public final class VDJCAlignments extends VDJCObject {
     }
 
     public VDJCAlignments setMapping(ReadToCloneMapping mapping) {
-        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads,
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalSequences, originalReads,
                 mapping.getMappingTypeByte(), mapping.getCloneIndex());
     }
 
     public VDJCAlignments withCloneIndex(long newCloneIndex) {
-        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads,
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalSequences, originalReads,
                 mappingType, newCloneIndex);
     }
 
     public VDJCAlignments withCloneIndexAndMappingType(long newCloneIndex, byte newMappingType) {
-        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads,
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalSequences, originalReads,
                 newMappingType, newCloneIndex);
     }
 
     public VDJCAlignments updateAlignments(Function<Alignment<NucleotideSequence>, Alignment<NucleotideSequence>> processor) {
         EnumMap<GeneType, VDJCHit[]> newHits = this.hits.clone();
         newHits.replaceAll((k, v) -> Arrays.stream(v).map(h -> h.mapAlignments(processor)).toArray(VDJCHit[]::new));
-        return new VDJCAlignments(alignmentsIndex, newHits, tagCount, targets, history, originalReads, mappingType, cloneIndex);
+        return new VDJCAlignments(alignmentsIndex, newHits, tagCount, targets,
+                history, originalSequences, originalReads, mappingType, cloneIndex);
     }
 
     public VDJCAlignments shiftReadId(long newAlignmentIndex, long shift) {
-        return new VDJCAlignments(newAlignmentIndex, hits, tagCount, targets, shift(history, shift), shift(originalReads, shift));
+        return new VDJCAlignments(newAlignmentIndex, hits, tagCount, targets,
+                shift(history, shift), shift(originalSequences, shift), shift(originalReads, shift),
+                mappingType, cloneIndex);
     }
 
     public static SequenceRead[] mergeOriginalReads(VDJCAlignments... array) {
@@ -182,6 +213,21 @@ public final class VDJCAlignments extends VDJCObject {
         if (isNull)
             return null;
         return map.values(new SequenceRead[map.size()]);
+    }
+
+    public static NSQTuple[] mergeOriginalSequences(VDJCAlignments... array) {
+        boolean isNull = array[0].originalSequences == null;
+        TLongObjectHashMap<NSQTuple> map = new TLongObjectHashMap<>();
+        for (VDJCAlignments a : array) {
+            if (isNull != (a.originalSequences == null))
+                throw new IllegalArgumentException();
+            if (a.originalSequences != null)
+                for (NSQTuple s : a.originalSequences)
+                    map.put(s.getId(), s);
+        }
+        if (isNull)
+            return null;
+        return map.values(new NSQTuple[map.size()]);
     }
 
     private static SequenceHistory[] shift(SequenceHistory[] data, long shift) {
@@ -200,12 +246,21 @@ public final class VDJCAlignments extends VDJCObject {
         return r;
     }
 
+    private static NSQTuple[] shift(NSQTuple[] data, long shift) {
+        if (data == null)
+            return null;
+        NSQTuple[] r = new NSQTuple[data.length];
+        for (int i = 0; i < data.length; i++)
+            r[i] = data[i].withId(data[i].getId() + shift);
+        return r;
+    }
+
     public SequenceHistory getHistory(int targetId) {
         return history[targetId];
     }
 
     public SequenceHistory[] getHistory() {
-        return history.clone();
+        return history == null ? null : history.clone();
     }
 
     public NSequenceWithQuality getOriginalSequence(SequenceHistory.FullReadIndex index) {
@@ -227,6 +282,18 @@ public final class VDJCAlignments extends VDJCObject {
         return originalReads == null ? null : Collections.unmodifiableList(Arrays.asList(originalReads));
     }
 
+    public List<NSQTuple> getOriginalSequences() {
+        return originalSequences == null ? null : Collections.unmodifiableList(Arrays.asList(originalSequences));
+    }
+
+    public SequenceRead[] getOriginalReadsArray() {
+        return originalReads == null ? null : originalReads.clone();
+    }
+
+    public NSQTuple[] getOriginalSequencesArray() {
+        return originalSequences == null ? null : originalSequences.clone();
+    }
+
     private long[] readIds = null;
 
     /**
@@ -246,8 +313,14 @@ public final class VDJCAlignments extends VDJCObject {
         return getReadIds().length;
     }
 
-    public VDJCAlignments setHistory(SequenceHistory[] history, SequenceRead[] originalReads) {
-        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads);
+    public VDJCAlignments setHistory(SequenceHistory[] history, NSQTuple[] originalSequences) {
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history,
+                originalSequences, originalReads, mappingType, cloneIndex);
+    }
+
+    public VDJCAlignments setOriginalReads(SequenceRead... originalReads) {
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalSequences, originalReads,
+                mappingType, cloneIndex);
     }
 
     public VDJCAlignments removeBestHitAlignment(GeneType geneType, int targetId) {
@@ -260,7 +333,8 @@ public final class VDJCAlignments extends VDJCObject {
         gHits[0] = new VDJCHit(gHits[0].getGene(), als, gHits[0].getAlignedFeature());
         Arrays.sort(gHits);
         hits.put(geneType, gHits);
-        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalReads);
+        return new VDJCAlignments(alignmentsIndex, hits, tagCount, targets, history, originalSequences, originalReads,
+                mappingType, cloneIndex);
     }
 
     public boolean hasNoHitsInTarget(int i) {

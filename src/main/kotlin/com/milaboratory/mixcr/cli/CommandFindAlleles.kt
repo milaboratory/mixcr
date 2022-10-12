@@ -13,6 +13,9 @@
 
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.AssembleContigsMixins
+import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableRanges
@@ -26,6 +29,8 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.primitivio.forEach
@@ -38,6 +43,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VDJC_REFERENCE
 import io.repseq.core.GeneType.VJ_REFERENCE
@@ -47,9 +53,7 @@ import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
@@ -68,6 +72,10 @@ import kotlin.io.path.nameWithoutExtension
     description = ["Find allele variants in clnx."]
 )
 class CommandFindAlleles : AbstractMiXCRCommand() {
+    data class Params(val dummy: Boolean = true) : MiXCRParams {
+        override val command get() = MiXCRCommand.findAlleles
+    }
+
     @Parameters(
         arity = "1..*",
         paramLabel = "input_file.clns [input_file2.clns ...]",
@@ -88,26 +96,18 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     var outputTemplate: String? = null
 
     @Option(
-        description = ["File to write library with found alleles."],
+        description = ["Path to write library with found alleles."],
         names = ["--export-library"],
         paramLabel = "<path>"
     )
     var libraryOutput: Path? = null
 
     @Option(
-        description = ["File to description of each allele."],
+        description = ["Path to write descriptions and stats for all result alleles, existed and new."],
         names = ["--export-alleles-mutations"],
         paramLabel = "<path>"
     )
     var allelesMutationsOutput: Path? = null
-
-    @Option(
-        description = ["Find alleles parameters preset."],
-        names = ["-p", "--preset"],
-        defaultValue = "default",
-        paramLabel = "<preset>"
-    )
-    lateinit var findAllelesParametersName: String
 
     @Option(
         description = ["Put temporary files in the same folder as the output files."],
@@ -167,6 +167,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
+        val findAllelesParametersName = "default"
         var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
             ?: throwValidationExceptionKotlin("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
@@ -201,8 +202,24 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     }
 
     override fun run0() {
+        val clonesFilter: AllelesBuilder.ClonesFilter = object : AllelesBuilder.ClonesFilter {
+            override fun match(clone: Clone, tagsInfo: TagsInfo): Boolean {
+                if (findAllelesParameters.productiveOnly) {
+                    if (clone.containsStopsOrAbsent(CDR3) || clone.isOutOfFrameOrAbsent(CDR3)) {
+                        return false
+                    }
+                }
+                val hasUmi = tagsInfo.any { it.type == TagType.Molecule }
+                val useClonesWithCountGreaterThen = when {
+                    hasUmi -> findAllelesParameters.filterForDataWithUmi.useClonesWithCountGreaterThen
+                    else -> findAllelesParameters.filterForDataWithoutUmi.useClonesWithCountGreaterThen
+                }
+                return clone.count > useClonesWithCountGreaterThen
+            }
+        }
+
         val reportBuilder = FindAllelesReport.Builder(
-            OverallAllelesStatistics(findAllelesParameters.useClonesWithCountGreaterThen)
+            OverallAllelesStatistics(clonesFilter)
         )
             .setCommandLine(commandLineArguments)
             .setInputFiles(inputFiles)
@@ -215,15 +232,17 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
             "input files must have the same aligner parameters"
         }
         require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${CommandAssembleContigs.BY_FEATURE_OPTION_NAME} option"
+            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
         require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
         }
+
         val allFullyCoveredBy = cloneReaders.first().header.allFullyCoveredBy!!
 
-        val allelesBuilder = AllelesBuilder(
+        val allelesBuilder = AllelesBuilder.create(
             findAllelesParameters,
+            clonesFilter,
             tempDest,
             cloneReaders,
             allFullyCoveredBy,
@@ -246,7 +265,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }
         }
-        val writerCloseCallbacks = mutableListOf<(MiXCRCommandReport) -> Unit>()
+        val writerCloseCallbacks = mutableListOf<(FindAllelesReport) -> Unit>()
         cloneReaders.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
                 resultLibrary,
@@ -262,7 +281,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                     progressAndStage,
                     "Recalculating scores ${inputFiles[i]}"
                 ) { clones ->
-                    cloneRebuild.recalculateScores(clones, reportBuilder)
+                    cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
                 }
                 if (outputTemplate != null) {
                     withRecalculatedScores.port.withProgress(
@@ -319,33 +338,28 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                     gene.data.baseSequence.mutations?.encode() ?: ""
                 }
                 this["naivesCount"] = { gene ->
-                    allelesStatistics.stats(gene.id).naives(filteredByCount = false)
+                    allelesStatistics.stats(gene.id).naives(filtered = false)
                 }
                 this["lowerDiversityBound"] = { gene ->
                     allelesStatistics.stats(gene.id).diversity()
                 }
                 this["clonesCount"] = { gene ->
-                    allelesStatistics.stats(gene.id).count(filteredByCount = false)
+                    allelesStatistics.stats(gene.id).count(filtered = false)
                 }
                 this["totalClonesCountForGene"] = { gene ->
                     allelesStatistics.baseGeneCount(gene.id)
                 }
                 this["clonesCountWithNegativeScoreChange"] = { gene ->
-                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = false)
+                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filtered = false)
                 }
-                if (allelesStatistics.useClonesWithCountGreaterThen != 0) {
-                    this["naivesCountWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
-                        { gene ->
-                            allelesStatistics.stats(gene.id).naives(filteredByCount = true)
-                        }
-                    this["clonesCountWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
-                        { gene ->
-                            allelesStatistics.stats(gene.id).count(filteredByCount = true)
-                        }
-                    this["clonesCountWithNegativeScoreChangeWithCountGreaterThen${allelesStatistics.useClonesWithCountGreaterThen}"] =
-                        { gene ->
-                            allelesStatistics.stats(gene.id).withNegativeScoreChange(filteredByCount = true)
-                        }
+                this["filteredForAlleleSearchNaivesCount"] = { gene ->
+                    allelesStatistics.stats(gene.id).naives(filtered = true)
+                }
+                this["filteredForAlleleSearchClonesCount"] = { gene ->
+                    allelesStatistics.stats(gene.id).count(filtered = true)
+                }
+                this["filteredForAlleleSearchClonesCountWithNegativeScoreChange"] = { gene ->
+                    allelesStatistics.stats(gene.id).withNegativeScoreChange(filtered = true)
                 }
                 this["scoreDelta"] = { gene ->
                     val summaryStatistics = allelesStatistics.stats(gene.id).scoreDelta
@@ -365,7 +379,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         clones: List<Clone>,
         resultLibrary: VDJCLibrary,
         cloneReader: CloneReader
-    ): (MiXCRCommandReport) -> Unit {
+    ): (FindAllelesReport) -> Unit {
         toPath().toAbsolutePath().parent.toFile().mkdirs()
         val cloneSet = CloneSet(
             clones,
@@ -375,14 +389,14 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                     resultLibrary.name,
                     resultLibrary.data
                 )
-            ),
+            ).addStepParams(MiXCRCommand.findAlleles, Params()),
             cloneReader.footer,
             cloneReader.ordering()
         )
         val clnsWriter = ClnsWriter(this)
         clnsWriter.writeCloneSet(cloneSet)
         return { report ->
-            clnsWriter.setFooter(cloneReader.footer.addReport(report))
+            clnsWriter.setFooter(cloneReader.footer.addStepReport(MiXCRCommand.findAlleles, report))
             clnsWriter.close()
         }
     }

@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.io.CompressionType;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.trees.SHMTreesReader;
 import com.milaboratory.primitivio.HasPrimitivIOState;
 import com.milaboratory.primitivio.PrimitivI;
@@ -208,29 +207,58 @@ public class IOUtil {
         }
     }
 
-    public static List<MiXCRCommandReport> extractReports(Path file) {
+    public static MiXCRFooter extractFooter(Path file) {
         switch (extractFileType(file)) {
             case VDJCA:
                 try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
-                    return reader.getFooter().getReports();
+                    return reader.getFooter();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNA:
                 try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getFooter().getReports();
+                    return reader.getFooter();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNS:
                 try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getFooter().getReports();
+                    return reader.getFooter();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case SHMT:
                 try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
-                    return reader.getFooter().getReports();
+                    return reader.getFooter();
+                }
+            default:
+                throw new RuntimeException();
+        }
+    }
+
+    public static MiXCRHeader extractHeader(Path file) {
+        switch (extractFileType(file)) {
+            case VDJCA:
+                try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
+                    return reader.getHeader();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            case CLNA:
+                try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
+                    return reader.getHeader();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            case CLNS:
+                try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
+                    return reader.getHeader();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            case SHMT:
+                try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
+                    return reader.getHeader();
                 }
             default:
                 throw new RuntimeException();

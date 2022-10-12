@@ -18,8 +18,7 @@ import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
 import com.milaboratory.core.alignment.kaligner1.KAlignerParameters;
 import com.milaboratory.core.alignment.kaligner2.KAlignerParameters2;
-import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.core.io.sequence.SingleRead;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -33,7 +32,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 
-public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
+public final class VDJCAlignerS extends VDJCAlignerAbstract {
     private static final ReferencePoint reqPointL = ReferencePoint.CDR3Begin.move(-3);
     private static final ReferencePoint reqPointR = ReferencePoint.CDR3End.move(3);
 
@@ -80,7 +79,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
     }
 
     @Override
-    protected VDJCAlignmentResult<SingleRead> process0(SingleRead input) {
+    protected VDJCAlignments process0(NSQTuple input) {
         // Different algorithms for
         // -OallowPartialAlignments=false and -OallowPartialAlignments=true
         return parameters.getAllowPartialAlignments() ?
@@ -88,7 +87,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
                 processStrict(input);
     }
 
-    private VDJCAlignmentResult<SingleRead> processPartial(SingleRead input) {
+    private VDJCAlignments processPartial(NSQTuple input) {
         Target[] targets = parameters.getReadsLayout().createTargets(input);
 
         KVJResultsForSingle[] results = new KVJResultsForSingle[targets.length];
@@ -107,38 +106,38 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
         }
 
         if (topResult.hasNoKVNorKJHits()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
-            return new VDJCAlignmentResult<>(input);
+            onFailedAlignment(VDJCAlignmentFailCause.NoHits);
+            return null;
         }
 
         // Checking minimal sum score
         if (topResult.sumScore() < parameters.getMinSumScore()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
-            return new VDJCAlignmentResult<>(input);
+            onFailedAlignment(VDJCAlignmentFailCause.LowTotalScore);
+            return null;
         }
 
         // Filtering hits basing on minSumScore
         topResult.calculateHits(parameters.getMinSumScore(), parameters.getMaxHits());
 
-        VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId(), input);
+        VDJCAlignments alignment = topResult.toVDJCAlignments(input);
 
         // Final check
         if (!parameters.getAllowNoCDR3PartAlignments()) {
             // CDR3 Begin / End
             if (!alignment.getPartitionedTarget(0).getPartitioning().isAvailable(reqPointL)
                     && !alignment.getPartitionedTarget(0).getPartitioning().isAvailable(reqPointR)) {
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoCDR3Parts);
-                return new VDJCAlignmentResult<>(input);
+                onFailedAlignment(VDJCAlignmentFailCause.NoCDR3Parts);
+                return null;
             }
         }
 
         // Read successfully aligned
 
-        onSuccessfulAlignment(input, alignment);
-        return new VDJCAlignmentResult<>(input, alignment);
+        onSuccessfulAlignment(alignment);
+        return alignment;
     }
 
-    private VDJCAlignmentResult<SingleRead> processStrict(SingleRead input) {
+    private VDJCAlignments processStrict(NSQTuple input) {
         Target[] targets = parameters.getReadsLayout().createTargets(input);
 
         // Algorithm below relies on this fact
@@ -159,12 +158,12 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
 
         if (!anyIsFull) {
             if (!anyHasJ && !anyHasV)
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoHits);
+                onFailedAlignment(VDJCAlignmentFailCause.NoHits);
             else if (!anyHasJ)
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoJHits);
+                onFailedAlignment(VDJCAlignmentFailCause.NoJHits);
             else
-                onFailedAlignment(input, VDJCAlignmentFailCause.NoVHits);
-            return new VDJCAlignmentResult<>(input);
+                onFailedAlignment(VDJCAlignmentFailCause.NoVHits);
+            return null;
         }
 
         KVJResultsForSingle topResult = null;
@@ -187,21 +186,20 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
 
         // Checking minimal sum score
         if (topResult.sumScore() < parameters.getMinSumScore()) {
-            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
-            return new VDJCAlignmentResult<>(input);
+            onFailedAlignment(VDJCAlignmentFailCause.LowTotalScore);
+            return null;
         }
 
         // Filtering hits basing on minSumScore
         topResult.calculateHits(parameters.getMinSumScore(), parameters.getMaxHits());
 
         if (topResult.hasVAndJHits()) {
-            VDJCAlignments alignment = topResult.toVDJCAlignments(input.getId(), input);
-
-            onSuccessfulAlignment(input, alignment);
-            return new VDJCAlignmentResult<>(input, alignment);
+            VDJCAlignments alignment = topResult.toVDJCAlignments(input);
+            onSuccessfulAlignment(alignment);
+            return alignment;
         } else {
-            onFailedAlignment(input, VDJCAlignmentFailCause.LowTotalScore);
-            return new VDJCAlignmentResult<>(input);
+            onFailedAlignment(VDJCAlignmentFailCause.LowTotalScore);
+            return null;
         }
     }
 
@@ -400,7 +398,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
             return score;
         }
 
-        public VDJCAlignments toVDJCAlignments(long inputId, SequenceRead input) {
+        public VDJCAlignments toVDJCAlignments(NSQTuple input) {
             EnumMap<GeneType, VDJCHit[]> hits = new EnumMap<>(GeneType.class);
 
             hits.put(GeneType.Variable, getVHits(parameters.getFeatureToAlign(GeneType.Variable)));
@@ -414,8 +412,10 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract<SingleRead> {
 
             return new VDJCAlignments(hits, TagCount.NO_TAGS_1, target.targets,
                     new SequenceHistory[]{
-                            new SequenceHistory.RawSequence(inputId, (byte) 0, target.getRCStateOfTarget(0), target.targets[0].size())},
-                    parameters.isSaveOriginalReads() ? new SequenceRead[]{input} : null);
+                            new SequenceHistory.RawSequence(input.getId(), (byte) 0,
+                                    target.getRCStateOfTarget(0),
+                                    target.targets[0].size())},
+                    parameters.isSaveOriginalSequence() ? new NSQTuple[]{input} : null);
         }
     }
 

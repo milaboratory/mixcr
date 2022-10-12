@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mitool.report.ParseReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
 import com.milaboratory.util.ReportHelper;
 
@@ -77,15 +78,15 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("partialAlignments")
     public final long partialAlignments;
 
-    @JsonProperty("tagReport")
-    public final TagReport tagReport;
+    @JsonProperty("tagParsingReport")
+    public final ParseReport tagParsingReport;
 
     @JsonCreator
     public AlignerReport(@JsonProperty("date") Date date,
                          @JsonProperty("commandLine") String commandLine,
                          @JsonProperty("inputFiles") String[] inputFiles,
                          @JsonProperty("outputFiles") String[] outputFiles,
-                         @JsonProperty("executionTimeMillis") long executionTimeMillis,
+                         @JsonProperty("executionTimeMillis") Long executionTimeMillis,
                          @JsonProperty("version") String version,
                          @JsonProperty("trimmingReport") ReadTrimmerReport trimmingReport,
                          @JsonProperty("totalReadsProcessed") long totalReadsProcessed,
@@ -106,7 +107,7 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
                          @JsonProperty("realignedWithForcedNonFloatingLeftBoundInRightRead") long realignedWithForcedNonFloatingLeftBoundInRightRead,
                          @JsonProperty("noCDR3PartsAlignments") long noCDR3PartsAlignments,
                          @JsonProperty("partialAlignments") long partialAlignments,
-                         @JsonProperty("tagReport") TagReport tagReport) {
+                         @JsonProperty("tagParsingReport") ParseReport tagParsingReport) {
         super(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version);
         this.trimmingReport = trimmingReport;
         this.totalReadsProcessed = totalReadsProcessed;
@@ -127,7 +128,7 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
         this.realignedWithForcedNonFloatingLeftBoundInRightRead = realignedWithForcedNonFloatingLeftBoundInRightRead;
         this.noCDR3PartsAlignments = noCDR3PartsAlignments;
         this.partialAlignments = partialAlignments;
-        this.tagReport = tagReport;
+        this.tagParsingReport = tagParsingReport;
     }
 
     @Override
@@ -144,11 +145,6 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
         long success = aligned;
         helper.writeField("Total sequencing reads", total);
         helper.writePercentAndAbsoluteField("Successfully aligned reads", success, total);
-
-        // if (getDroppedBarcodeNotInWhitelist() != 0 || getDroppedNoBarcode() != 0) {
-        //     helper.writePercentAndAbsoluteField("Absent barcode", getDroppedNoBarcode(), total);
-        //     helper.writePercentAndAbsoluteField("Barcode not in whitelist", getDroppedBarcodeNotInWhitelist(), total);
-        // }
 
         if (chimeras != 0)
             helper.writePercentAndAbsoluteField("Chimeras", chimeras, total);
@@ -180,10 +176,14 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
         helper.writePercentAndAbsoluteField("Realigned with forced non-floating right bound in left read", realignedWithForcedNonFloatingRightBoundInLeftRead, total);
         helper.writePercentAndAbsoluteField("Realigned with forced non-floating left bound in right read", realignedWithForcedNonFloatingLeftBoundInRightRead, total);
 
-        if (trimmingReport != null)
-            trimmingReport.writeReport(helper);
+        if (trimmingReport != null) {
+            helper.println("Trimming report:");
+            trimmingReport.writeReport(helper.indentedHelper());
+        }
 
-        if (tagReport != null)
-            tagReport.writeReport(helper);
+        if (tagParsingReport != null) {
+            helper.println("Tag parsing report:");
+            tagParsingReport.writeReport(helper.indentedHelper());
+        }
     }
 }

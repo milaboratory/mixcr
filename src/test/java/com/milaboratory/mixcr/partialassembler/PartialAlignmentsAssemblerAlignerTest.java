@@ -54,8 +54,8 @@ public class PartialAlignmentsAssemblerAlignerTest {
         NucleotideSequence seq2 = baseSeq.getRange(245, 245 + len);
         NucleotideSequence seq3 = baseSeq.getRange(320, 320 + len);
 
-        VDJCAlignmentResult<VDJCMultiRead> alignment = aligner.process(MiXCRTestUtils.createMultiRead(seq1, seq2, seq3));
-        VDJCAlignments al = alignment.alignment;
+        VDJCMultiRead read = MiXCRTestUtils.createMultiRead(seq1, seq2, seq3);
+        VDJCAlignments al = aligner.process(read.toTuple(), read);
         Assert.assertNotNull(al);
         assertInHits(genes.v, al);
         assertInHits(genes.d, al);

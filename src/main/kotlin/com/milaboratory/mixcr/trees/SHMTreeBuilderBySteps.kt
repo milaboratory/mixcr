@@ -45,6 +45,7 @@ import com.milaboratory.primitivio.forEachInParallel
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.mapInParallelOrdered
+import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.primitivio.writeCollection
@@ -208,14 +209,14 @@ internal class SHMTreeBuilderBySteps(
         decisions = ConcurrentHashMap()
     }
 
-    private fun OutputPort<List<CloneWithDatasetId>>.groupByTheSameVJBase(progressAndStage: ProgressAndStage) =
+    private fun OutputPort<List<CloneWithDatasetId>>.groupByTheSameVJBase(progressAndStage: ProgressAndStage): OutputPort<Cluster> =
         withProgress(
             clonesCount,
             progressAndStage,
             "Group clones by the same V, J and CDR3Length"
         ) { groupedClones ->
             groupedClones
-                .flatMap { clones -> clones.asCloneWrappers() }
+                .flatMap { clones -> clones.asCloneWrappers().port }
                 //filter by user defined parameters
                 .filter { c -> clonesFilter.match(c) }
                 .groupBy(
@@ -250,7 +251,7 @@ internal class SHMTreeBuilderBySteps(
     }
 
 
-    private fun OutputPort<CloneWithDatasetId>.groupByTheSameTargets(progressAndStage: ProgressAndStage) =
+    private fun OutputPort<CloneWithDatasetId>.groupByTheSameTargets(progressAndStage: ProgressAndStage): OutputPort<List<CloneWithDatasetId>> =
         withProgress(
             clonesCount,
             progressAndStage,

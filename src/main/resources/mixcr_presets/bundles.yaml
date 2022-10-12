@@ -223,7 +223,7 @@
     - type: SetSpecies
       species: hs
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
     - type: MaterialTypeRNA
     - type: AddExportClonesField
       insertIndex: 2

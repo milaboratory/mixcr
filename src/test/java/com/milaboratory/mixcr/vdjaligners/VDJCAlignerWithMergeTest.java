@@ -62,10 +62,10 @@ public class VDJCAlignerWithMergeTest {
 
             for (PairedRead read : CUtils.it(reader)) {
                 ++total;
-                VDJCAlignmentResult<PairedRead> result = aligner.process(read);
-                if (result.alignment != null) {
-                    alignemntsList.add(result.alignment);
-                    for (VDJCHit hit : result.alignment.getHits(GeneType.Variable))
+                VDJCAlignments alignment = aligner.process(read.toTuple(), read);
+                if (alignment != null) {
+                    alignemntsList.add(alignment);
+                    for (VDJCHit hit : alignment.getHits(GeneType.Variable))
                         if (hit.getAlignment(0) != null && hit.numberOfTargets() > 1 && hit.getAlignment(1) != null)
                             ++leftHit;
                 }

@@ -14,7 +14,7 @@
       floating: true
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: CDR3
+      features: [ "CDR3" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -79,7 +79,7 @@
       floating: true
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -138,7 +138,7 @@
       floating: true
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: CDR3
+      features: [ "CDR3" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount
@@ -203,7 +203,7 @@
       floating: true
       geneType: C
     - type: SetClonotypeAssemblingFeatures
-      features: VDJRegion
+      features: [ "VDJRegion" ]
     - type: AddExportClonesField
       insertIndex: 2
       field: -uniqueTagCount

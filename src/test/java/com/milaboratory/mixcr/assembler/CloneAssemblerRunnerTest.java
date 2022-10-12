@@ -21,7 +21,9 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import com.milaboratory.mixcr.MiXCRCommand;
 import com.milaboratory.mixcr.MiXCRParamsSpec;
+import com.milaboratory.mixcr.MiXCRStepParams;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
@@ -39,6 +41,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
 import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
 
 public class CloneAssemblerRunnerTest {
@@ -79,11 +82,11 @@ public class CloneAssemblerRunnerTest {
         //write alignments to byte array
         File vdjcaFile = TempFileManager.getTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
-            writer.writeHeader(aligner.getBaseMetaInfo(), aligner.getUsedGenes());
+            writer.writeHeader(dummyHeader(), aligner.getUsedGenes());
             for (Object read : CUtils.it(reader)) {
-                VDJCAlignmentResult result = (VDJCAlignmentResult) aligner.process((SequenceRead) read);
-                if (result.alignment != null)
-                    writer.write(result.alignment);
+                VDJCAlignments result = aligner.process(((SequenceRead) read).toTuple(), ((SequenceRead) read));
+                if (result != null)
+                    writer.write(result);
             }
             writer.setFooter(MiXCRTestUtils.emptyFooter());
         }
@@ -116,7 +119,7 @@ public class CloneAssemblerRunnerTest {
         assemblerRunner.run();
 
         CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRHeader(
-                        new MiXCRParamsSpec("default_4.0"),
+                        new MiXCRParamsSpec("default_4.0"), new MiXCRStepParams(),
                         TagsInfo.NO_TAGS, alignerParameters,
                         null, null, null),
                 emptyFooter());

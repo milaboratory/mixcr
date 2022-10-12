@@ -45,6 +45,7 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
     private int alignmentBoundaryTolerance;
     private int minChimeraDetectionScore;
     private int vjOverlapWindow;
+    private boolean saveOriginalSequence;
     private boolean saveOriginalReads;
     private boolean smartForceEdgeAlignments;
 
@@ -69,6 +70,7 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
                                  @JsonProperty("alignmentBoundaryTolerance") int alignmentBoundaryTolerance,
                                  @JsonProperty("minChimeraDetectionScore") int minChimeraDetectionScore,
                                  @JsonProperty("vjOverlapWindow") int vjOverlapWindow,
+                                 @JsonProperty("saveOriginalSequence") boolean saveOriginalSequence,
                                  @JsonProperty("saveOriginalReads") boolean saveOriginalReads,
                                  @JsonProperty("smartForceEdgeAlignments") boolean smartForceEdgeAlignments) {
         this.alignmentParameters = new EnumMap<>(GeneType.class);
@@ -92,6 +94,7 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
         this.alignmentBoundaryTolerance = alignmentBoundaryTolerance;
         this.minChimeraDetectionScore = minChimeraDetectionScore;
         this.vjOverlapWindow = vjOverlapWindow;
+        this.saveOriginalSequence = saveOriginalSequence;
         this.saveOriginalReads = saveOriginalReads;
         this.smartForceEdgeAlignments = smartForceEdgeAlignments;
     }
@@ -340,6 +343,15 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
         return mergerParameters;
     }
 
+    public boolean isSaveOriginalSequence() {
+        return saveOriginalSequence;
+    }
+
+    public VDJCAlignerParameters setSaveOriginalSequence(boolean saveOriginalSequence) {
+        this.saveOriginalSequence = saveOriginalSequence;
+        return this;
+    }
+
     public boolean isSaveOriginalReads() {
         return saveOriginalReads;
     }
@@ -406,6 +418,7 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
                 alignmentBoundaryTolerance == that.alignmentBoundaryTolerance &&
                 minChimeraDetectionScore == that.minChimeraDetectionScore &&
                 vjOverlapWindow == that.vjOverlapWindow &&
+                saveOriginalSequence == that.saveOriginalSequence &&
                 saveOriginalReads == that.saveOriginalReads &&
                 Objects.equals(alignmentParameters, that.alignmentParameters) &&
                 vjAlignmentOrder == that.vjAlignmentOrder &&
@@ -417,7 +430,12 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
 
     @Override
     public int hashCode() {
-        return Objects.hash(alignmentParameters, vjAlignmentOrder, libraryStructure, includeDScore, includeCScore, minSumScore, maxHits, relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance, minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads);
+        return Objects.hash(alignmentParameters, vjAlignmentOrder, libraryStructure, includeDScore,
+                includeCScore, minSumScore, maxHits, relativeMinVFR3CDR3Score,
+                allowPartialAlignments, allowNoCDR3PartAlignments, allowChimeras,
+                readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance,
+                minChimeraDetectionScore, vjOverlapWindow,
+                saveOriginalSequence, saveOriginalReads, smartForceEdgeAlignments);
     }
 
     @Override
@@ -430,6 +448,6 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
                 vjAlignmentOrder, libraryStructure, includeDScore, includeCScore, minSumScore, maxHits,
                 relativeMinVFR3CDR3Score, allowPartialAlignments, allowNoCDR3PartAlignments,
                 allowChimeras, readsLayout, mergerParameters, fixSeed, alignmentBoundaryTolerance,
-                minChimeraDetectionScore, vjOverlapWindow, saveOriginalReads, smartForceEdgeAlignments);
+                minChimeraDetectionScore, vjOverlapWindow, saveOriginalSequence, saveOriginalReads, smartForceEdgeAlignments);
     }
 }
