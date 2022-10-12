@@ -15,10 +15,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.milaboratory.cli.ValidationException;
 import com.milaboratory.milm.MiXCRMain;
 import com.milaboratory.mixcr.cli.postanalysis.*;
-import com.milaboratory.mixcr.cli.qc.CommandExportQc;
-import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign;
-import com.milaboratory.mixcr.cli.qc.CommandExportQcChainUsage;
-import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage;
+import com.milaboratory.mixcr.cli.qc.*;
 import com.milaboratory.util.GlobalObjectMappers;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.VersionInfo;
@@ -239,6 +236,7 @@ public final class Main {
                 .get("exportQc")
                 .addSubcommand("align", CommandSpec.forAnnotatedObject(CommandExportQcAlign.class))
                 .addSubcommand("chainUsage", CommandSpec.forAnnotatedObject(CommandExportQcChainUsage.class))
+                .addSubcommand("tags", CommandSpec.forAnnotatedObject(CommandExportQcTags.class))
                 .addSubcommand("coverage", CommandSpec.forAnnotatedObject(CommandExportQcCoverage.class));
 
         cmd.setSeparator(" ");
