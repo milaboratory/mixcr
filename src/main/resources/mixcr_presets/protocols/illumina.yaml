@@ -1,0 +1,68 @@
+"ampliseq-tcrb-plus-cdr3":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: J
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      cloneAssemblerParameters:
+        separateByJ: true
+        separateByV: true
+
+"ampliseq-tcrb-plus-full-length":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:FR4End}" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: J
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      cloneAssemblerParameters:
+        separateByJ: true
+        separateByV: true
+
+"ampliseq-tcrb-sr-cdr3":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: J
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      cloneAssemblerParameters:
+        separateByJ: true
+        separateByV: true

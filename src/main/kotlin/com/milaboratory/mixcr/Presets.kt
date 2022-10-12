@@ -63,8 +63,8 @@ data class MiXCRParamsBundle(
 )
 
 object Flags {
-    // const val Species = "species"
 
+    const val Species = "species"
     const val MaterialType = "materialType"
     const val LeftAlignmentMode = "leftSideAmplificationPrimer"
     const val RightAlignmentMode = "rightSideAmplificationPrimer"
@@ -72,6 +72,9 @@ object Flags {
     const val TagPattern = "tagPattern"
 
     val flagMessages = mapOf(
+        Species to
+                "This preset requires to specify species, \n" +
+                "please use the following mix-in: +species [name]",
         MaterialType to
                 "This preset requires to specify material type, \n" +
                 "please use one of the following mix-ins: +dna, +rna",
@@ -115,7 +118,18 @@ object Presets {
         "bundles.yaml",
         "refineTagsAndSort.yaml",
         "export.yaml",
-        "test.yaml"
+        "test.yaml",
+        "protocols/takara.yaml",
+        "protocols/neb.yaml",
+        "protocols/abhelix.yaml",
+        "protocols/biomed2.yaml",
+        "protocols/qiaseq.yaml",
+        "protocols/milab.yaml",
+        "protocols/illumina.yaml",
+        "protocols/thermofisher.yaml",
+        "protocols/rnaseq.yaml",
+        "protocols/irepertoire.yaml",
+        "protocols/general-amplicon.yaml"
     )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
         val map = mutableMapOf<String, MiXCRParamsBundleRaw>()

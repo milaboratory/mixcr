@@ -1,0 +1,85 @@
+"rnaseq-tcr-cdr3":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemblePartial
+    - assemblePartial
+    - extend
+    - assemble
+    - exportClones
+  flags:
+    - species
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align_rna-seq_4.0
+    overrides:
+      parameters:
+        allowPartialAlignments: true
+
+"rnaseq-tcr-full-length":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemblePartial
+    - assemblePartial
+    - extend
+    - assemble
+    - assembleContigs
+    - exportClones
+  flags:
+    - species
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align_rna-seq_4.0
+    overrides:
+      parameters:
+        allowPartialAlignments: true
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      inferMinRecordsPerConsensus: false
+      clnaOutput: true
+
+"rnaseq-bcr-cdr3":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemblePartial
+    - assemblePartial
+    - assemble
+    - exportClones
+  flags:
+    - species
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align_rna-seq_4.0
+    overrides:
+      parameters:
+        allowPartialAlignments: true
+
+"rnaseq-bcr-full-length":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemblePartial
+    - assemblePartial
+    - assemble
+    - assembleContigs
+    - exportClones
+  flags:
+    - species
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align_rna-seq_4.0
+    overrides:
+      parameters:
+        allowPartialAlignments: true
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      inferMinRecordsPerConsensus: false
+      clnaOutput: true
