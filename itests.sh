@@ -50,7 +50,7 @@ esac
 declare -a all_tests
 while read -r tst; do
   all_tests=( "${all_tests[@]}" "$tst" )
-done < <(find itests -name '*.sh' | sed 's/\itests\///' | sed 's/\.sh//')
+done < <(find itests -name '*.sh' | sed 's/\itests\///' | sed 's/\.sh//' | sort)
 
 tests=()
 create_standard_results=false
@@ -140,6 +140,13 @@ function run_test() {
 }
 
 if [[ $run_tests == true ]]; then
+  echo "======================================="
+  echo "The following tests are to be executed:"
+  for testName in "${tests[@]}"; do
+    echo "${testName}.sh"
+  done
+  echo "======================================="
+
   for testName in "${tests[@]}"; do
     run_test "${testName}.sh"
   done

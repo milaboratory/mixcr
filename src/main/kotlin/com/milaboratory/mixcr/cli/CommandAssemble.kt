@@ -222,6 +222,7 @@ object CommandAssemble {
                 }
 
                 CloneAssembler(
+                    inputHeader.tagsInfo,
                     cloneAssemblerParameters,
                     cmdParam.clnaOutput,
                     alignmentsReader.usedGenes,

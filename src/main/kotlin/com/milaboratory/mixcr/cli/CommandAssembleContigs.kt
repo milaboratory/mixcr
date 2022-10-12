@@ -196,7 +196,7 @@ object CommandAssembleContigs {
                                             TagCount(
                                                 TagTuple.NO_TAGS,
                                                 cloneAlignments.clone.tagCount.sum()
-                                            )
+                                            ), false
                                         )
 
                                     else -> cloneAlignments.clone
