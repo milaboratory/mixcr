@@ -117,7 +117,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     )
     var useLocalTemp = false
 
-    @Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
             if (value <= 0) throw ValidationException("-t / --threads must be positive")

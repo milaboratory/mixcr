@@ -65,14 +65,14 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
     @Option(description = ["Output only chimeric alignments."], names = ["-x", "--chimeras-only"])
     var chimerasOnly = false
 
-    @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
+    @set:Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
     var limit: Long = 0
         set(value) {
             if (value <= 0) throw ValidationException("-n / --limit must be positive.")
             field = value
         }
 
-    @Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"], hidden = true)
+    @set:Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"], hidden = true)
     var ids: List<Long>? = null
         set(value) {
             println("-i, --read-ids deprecated, use `mixcr slice -i ... alignments.vdjca alignments.filtered.vdjca` instead")

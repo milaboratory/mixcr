@@ -151,7 +151,7 @@ object CommandAlign {
         @Option(description = ["Read pre-processing: trimming window size"], names = ["--trimming-window-size"])
         private var trimmingWindowSize: Byte? = null
 
-        @Option(
+        @set:Option(
             description = ["Specifies immunological chain / gene(s) for alignment. If many, separate by comma ','. " +
                     "%nAvailable chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc..."],
             names = ["-c", "--chains"],
@@ -319,7 +319,7 @@ object CommandAlign {
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
         var jsonReport: Path? = null
 
-        @Option(description = ["Processing threads"], names = ["-t", "--threads"])
+        @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
         var threads = Runtime.getRuntime().availableProcessors()
             set(value) {
                 if (value <= 0) throw ValidationException("-t / --threads must be positive")

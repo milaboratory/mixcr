@@ -20,6 +20,7 @@ import picocli.CommandLine;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.Assert.*;
 
@@ -51,8 +52,8 @@ public class CommandFindAllelesTest {
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         assertEquals(
                 Lists.newArrayList(
-                        "/output/folder/file1_with_alleles.clns",
-                        "/output/folder/file2_with_alleles.clns"
+                        Paths.get("/output/folder/file1_with_alleles.clns"),
+                        Paths.get("/output/folder/file2_with_alleles.clns")
                 ),
                 command.getOutputFiles()
         );
@@ -83,9 +84,9 @@ public class CommandFindAllelesTest {
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         assertEquals(
                 Lists.newArrayList(
-                        "/output/folder/file1_with_alleles.clns",
-                        "/output/folder/file2_with_alleles.clns",
-                        "/output/folder/library.json"
+                        Paths.get("/output/folder/file1_with_alleles.clns"),
+                        Paths.get("/output/folder/file2_with_alleles.clns"),
+                        Paths.get("/output/folder/library.json")
                 ),
                 command.getOutputFiles()
         );
