@@ -632,7 +632,10 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     }
 
     public List<Clone> doPostFilter(List<Clone> clones) {
-        return CloneTagFilter.filter(tagsInfo, parameters.getPostFilters(), clones);
+        CloneTagFilter.CloneTagFilteringResult filterResult = CloneTagFilter.filter(tagsInfo, parameters.getPostFilters(), clones);
+        if (listener != null)
+            listener.onPostFiltering(clones, filterResult.clones, filterResult.reports);
+        return filterResult.clones;
     }
 
     /**

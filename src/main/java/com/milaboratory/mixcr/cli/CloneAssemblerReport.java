@@ -13,10 +13,12 @@ package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.milaboratory.mitool.refinement.gfilter.KeyedFilterReport;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReport;
 import com.milaboratory.util.ReportHelper;
 
 import java.util.Date;
+import java.util.List;
 
 public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("preCloneAssemblerReport")
@@ -76,6 +78,15 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("clonalChainUsage")
     public final ChainUsageStats clonalChainUsage;
 
+    @JsonProperty("clonesFilteredInPostFiltering")
+    final int clonesFilteredInPostFiltering;
+
+    @JsonProperty("readsFilteredInPostFiltering")
+    final double readsFilteredInPostFiltering;
+
+    @JsonProperty("postFilteringReports")
+    public final List<KeyedFilterReport> postFilteringReports;
+
     @JsonCreator
     public CloneAssemblerReport(@JsonProperty("date") Date date,
                                 @JsonProperty("commandLine") String commandLine,
@@ -101,7 +112,10 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
                                 @JsonProperty("readsInClones") long readsInClones,
                                 @JsonProperty("readsInClonesBeforeClustering") long readsInClonesBeforeClustering,
                                 @JsonProperty("readsDroppedWithLowQualityClones") long readsDroppedWithLowQualityClones,
-                                @JsonProperty("clonalChainUsage") ChainUsageStats clonalChainUsage) {
+                                @JsonProperty("clonalChainUsage") ChainUsageStats clonalChainUsage,
+                                @JsonProperty("clonesFilteredInPostFiltering") int clonesFilteredInPostFiltering,
+                                @JsonProperty("readsFilteredInPostFiltering") double readsFilteredInPostFiltering,
+                                @JsonProperty("postFilteringReports") List<KeyedFilterReport> postFilteringReports) {
         super(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version);
         this.preCloneAssemblerReport = preCloneAssemblerReport;
         this.totalReadsProcessed = totalReadsProcessed;
@@ -122,6 +136,9 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
         this.readsInClonesBeforeClustering = readsInClonesBeforeClustering;
         this.readsDroppedWithLowQualityClones = readsDroppedWithLowQualityClones;
         this.clonalChainUsage = clonalChainUsage;
+        this.clonesFilteredInPostFiltering = clonesFilteredInPostFiltering;
+        this.readsFilteredInPostFiltering = readsFilteredInPostFiltering;
+        this.postFilteringReports = postFilteringReports;
     }
 
     @Override
@@ -167,8 +184,11 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
                 .writePercentAndAbsoluteField("Reads dropped with low quality clones, percent of total", readsDroppedWithLowQualityClones, totalReadsProcessed)
                 .writeField("Clonotypes eliminated by PCR error correction", clonesClustered)
                 .writeField("Clonotypes dropped as low quality", clonesDroppedAsLowQuality)
-                .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered);
-
+                .writeField("Clonotypes pre-clustered due to the similar VJC-lists", clonesPreClustered)
+                .writePercentAndAbsoluteField("Clones dropped in post filtering",
+                        clonesFilteredInPostFiltering, clusterizationBase)
+                .writePercentAndAbsoluteField("Reads dropped in post filtering",
+                        readsFilteredInPostFiltering, totalReadsProcessed);
 
         // Writing distribution by chains
         clonalChainUsage.writeReport(helper);

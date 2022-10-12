@@ -167,19 +167,35 @@
         postFilters:
           - type: "filter_in_groups"
             isolationKeys:
-              - "geneLabel:ReliableChains"
+              - "geneLabel:ReliableChain"
               - "tag:CELL"
             nestedFilter:
               type: "filter_groups"
               groupingKeys:
                 - "clone"
-                - "tag:UMI"
               predicates:
                 - metrics:
-                    - type: "group_metric_sum_weight"
+                    - type: "group_metric_nunique"
+                      keys:
+                        - "tag:UMI"
                   operator:
                     type: "group_operator_cumtop"
-                    share: 0.9
+                    share: 0.95
+          - type: "filter_in_groups"
+            isolationKeys:
+              - "tag:CELL"
+            nestedFilter:
+              type: "filter_groups"
+              groupingKeys:
+                - "clone"
+              predicates:
+                - metrics:
+                    - type: "group_metric_nunique"
+                      keys:
+                        - "tag:UMI"
+                  operator:
+                    type: "group_operator_cumtop"
+                    share: 0.99
 
 "10x_vdj_bcr":
   inheritFrom: 10x_vdj

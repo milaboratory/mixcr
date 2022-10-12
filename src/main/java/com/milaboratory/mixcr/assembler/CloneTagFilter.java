@@ -18,6 +18,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.util.Tuple2;
 import com.milaboratory.util.sorting.SortingUtil;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -35,6 +36,16 @@ public final class CloneTagFilter {
     private CloneTagFilter() {
     }
 
+    public static final class CloneTagFilteringResult {
+        public final List<Clone> clones;
+        public final List<KeyedFilterReport> reports;
+
+        public CloneTagFilteringResult(List<Clone> clones, List<KeyedFilterReport> reports) {
+            this.clones = clones;
+            this.reports = reports;
+        }
+    }
+
     public static List<CloneTag> toCloneTags(List<Clone> clones) {
         List<CloneTag> result = new ArrayList<>();
         for (Clone clone : clones) {
@@ -47,12 +58,16 @@ public final class CloneTagFilter {
         return result;
     }
 
-    public static List<Clone> filter(TagsInfo tagsInfo, List<KeyedRecordFilter> filters, List<Clone> clones) {
+    public static CloneTagFilteringResult filter(TagsInfo tagsInfo, List<KeyedRecordFilter> filters, List<Clone> clones) {
         // Converting to a clone*tag list
         List<CloneTag> cloneTags = toCloneTags(clones);
+        List<KeyedFilterReport> reports = new ArrayList<>();
         // Filtering the clone*tag list
-        for (KeyedRecordFilter filter : filters)
-            cloneTags = filter(tagsInfo, filter, cloneTags);
+        for (KeyedRecordFilter filter : filters) {
+            Tuple2<List<CloneTag>, KeyedFilterReport> result = filter(tagsInfo, filter, cloneTags);
+            cloneTags = result._1;
+            reports.add(result._2);
+        }
         // Reassembling into a clone list
         TIntObjectHashMap<TagCountAggregator> tagReAggregators = new TIntObjectHashMap<>(clones.size());
         for (CloneTag cloneTag : cloneTags) {
@@ -65,24 +80,26 @@ public final class CloneTagFilter {
         List<Clone> newClones = new ArrayList<>(clones.size());
         for (Clone clone : clones) {
             TagCountAggregator agg = tagReAggregators.get(clone.getId());
-            if(agg == null)
+            if (agg == null)
                 // the clone was filtered out
                 continue;
             newClones.add(clone.setTagCount(agg.createAndDestroy(), true));
         }
-        return newClones;
+        return new CloneTagFilteringResult(newClones, reports);
     }
 
-    public static List<CloneTag> filter(TagsInfo tagsInfo, KeyedRecordFilter filter, List<CloneTag> cloneTags) {
+    public static Tuple2<List<CloneTag>, KeyedFilterReport> filter(TagsInfo tagsInfo, KeyedRecordFilter filter, List<CloneTag> cloneTags) {
         List<String> expectedSorting = filter.getExpectedSorting();
         List<CloneTagKey> keys = expectedSorting.stream()
                 .map(keyName -> getKeyByName(tagsInfo, keyName))
                 .collect(Collectors.toList());
-        List<CloneTag> groupped = SortingUtil.hGroup(cloneTags, keys);
+        List<CloneTag> grouped = SortingUtil.hGroup(cloneTags, keys);
         CloneTagStreamGrouping streamGrouping = new CloneTagStreamGrouping(expectedSorting, keys);
         KeyedFilterContext<CloneTag> ctx = new KeyedFilterContext<>(null, streamGrouping, Collections.emptyList());
-        List<CloneTag> result = CUtils.toList(filter.filter(ctx, PipeKt.asOutputPortFactory(groupped)).createPort());
-        return result;
+        FilteredOutputPortFactory<CloneTag> filtered = filter.filter(ctx, PipeKt.asOutputPortFactory(grouped));
+        List<CloneTag> result = CUtils.toList(filtered.createPort());
+        KeyedFilterReport report = filtered.getReport();
+        return new Tuple2<>(result, report);
     }
 
     private static final class CloneTagStreamGrouping implements StreamGrouping<CloneTag> {
@@ -119,7 +136,7 @@ public final class CloneTagFilter {
                 public Object get(CloneTag obj) {
                     ArrayList<Object> key = new ArrayList<>();
                     for (int i = 0; i < n; i++)
-                        key.add(keys.get(i));
+                        key.add(keys.get(i).get(obj));
                     return key;
                 }
             };
