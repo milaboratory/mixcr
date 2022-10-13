@@ -18,6 +18,5 @@ mixcr analyze tcr_amplicon \
   +addStep assembleContigs \
   test_R1.fastq test_R2.fastq case3_2
 
-[[ -f case3_1.clna ]] || exit 1
 [[ -f case3_2.clna ]] || exit 1
 

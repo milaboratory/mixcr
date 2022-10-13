@@ -44,27 +44,27 @@ object CommandExportPreset {
         override val outputFiles get() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
 
         @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
-        var pipelineMiXCRMixins: PipelineMiXCRMixins? = null
+        var pipelineMixins: PipelineMiXCRMixins? = null
 
         @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
-        var alignMiXCRMixins: AlignMiXCRMixins? = null
+        var alignMixins: AlignMiXCRMixins? = null
 
         @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
-        var assembleMiXCRMixins: AssembleMiXCRMixins? = null
+        var assembleMixins: AssembleMiXCRMixins? = null
 
         @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
-        var assembleContigsMiXCRMixins: AssembleContigsMiXCRMixins? = null
+        var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
 
         @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
-        var exportMiXCRMixins: ExportMiXCRMixins? = null
+        var exportMixins: ExportMiXCRMixins? = null
 
         @Mixin
-        var genericMiXCRMixins: GenericMiXCRMixins? = null
+        var genericMixins: GenericMiXCRMixins? = null
 
         override fun run0() {
             val mixins = MiXCRMixinCollection.combine(
-                pipelineMiXCRMixins, alignMiXCRMixins, assembleMiXCRMixins,
-                assembleContigsMiXCRMixins, exportMiXCRMixins, genericMiXCRMixins
+                pipelineMixins, alignMixins, assembleMixins,
+                assembleContigsMixins, exportMixins, genericMixins
             )
             val (bundle, _) = paramsResolver.resolve(
                 MiXCRParamsSpec(presetName, mixins = mixins.mixins),

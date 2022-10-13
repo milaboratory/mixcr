@@ -68,8 +68,7 @@ object Main {
         return System.getProperty("noAssertions") != null
     }
 
-    @JvmStatic
-    private fun mkCmd(): CommandLine {
+    fun mkCmd(): CommandLine {
         System.setProperty("picocli.usage.width", "100")
 
         // Getting command string if executed from script

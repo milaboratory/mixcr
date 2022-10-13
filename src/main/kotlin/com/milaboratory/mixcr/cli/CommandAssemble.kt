@@ -65,7 +65,7 @@ object CommandAssemble {
         @Option(
             description = ["If this option is specified, output file will be written in \"Clones & " +
                     "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
-                    "This file then can be used to build wider contigs for clonal sequence and extract original " +
+                    "This file then can be used to build wider contigs for clonal sequence or extract original " +
                     "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage)."],
             names = ["-a", "--write-alignments"]
         )
@@ -199,8 +199,8 @@ object CommandAssemble {
                 }.second
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
-                if (outputFile.extension == "clna" && !cmdParam.clnaOutput ||
-                    outputFile.extension == "clns" && cmdParam.clnaOutput
+                if ((outputFile.extension == "clna" && !cmdParam.clnaOutput) ||
+                    (outputFile.extension == "clns" && cmdParam.clnaOutput)
                 ) logger.warn("Unexpected file extension, use .clns extension for clones-only (normal) output and .clna if -a / --write-alignments options specified.")
 
                 // set aligner parameters

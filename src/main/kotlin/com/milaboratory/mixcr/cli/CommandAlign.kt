@@ -283,24 +283,27 @@ object CommandAlign {
         lateinit var presetName: String
 
         @Mixin
-        var alignMiXCRMixins: AlignMiXCRMixins? = null
-
-        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
-        var assembleMiXCRMixins: AssembleMiXCRMixins? = null
-
-        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
-        var assembleContigsMiXCRMixins: AssembleContigsMiXCRMixins? = null
-
-        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
-        var exportMiXCRMixins: ExportMiXCRMixins? = null
+        var pipelineMixins: PipelineMiXCRMixinsHidden? = null
 
         @Mixin
-        var genericMiXCRMixins: GenericMiXCRMixins? = null
+        var alignMixins: AlignMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
+        var assembleMixins: AssembleMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
+        var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
+        var exportMixins: ExportMiXCRMixins? = null
+
+        @Mixin
+        var genericMixins: GenericMiXCRMixins? = null
 
         private val mixins: MiXCRMixinCollection
             get() = MiXCRMixinCollection.combine(
-                alignMiXCRMixins, assembleMiXCRMixins,
-                assembleContigsMiXCRMixins, exportMiXCRMixins, genericMiXCRMixins
+                pipelineMixins, alignMixins, assembleMixins,
+                assembleContigsMixins, exportMixins, genericMixins
             )
 
         @Option(

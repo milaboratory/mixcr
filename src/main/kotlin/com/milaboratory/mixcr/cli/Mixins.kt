@@ -74,6 +74,26 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
     }
 }
 
+class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
+    //
+    // Pipeline manipulation mixins
+    //
+
+    @Option(
+        hidden = true,
+        names = [AddPipelineStep.CMD_OPTION],
+    )
+    fun addPipelineStep(step: String) =
+        mixIn(AddPipelineStep(step))
+
+    @Option(
+        hidden = true,
+        names = [RemovePipelineStep.CMD_OPTION],
+    )
+    fun removePipelineStep(step: String) =
+        mixIn(RemovePipelineStep(step))
+}
+
 class AlignMiXCRMixins : MiXCRMixinCollector() {
     //
     // Base settings
