@@ -27,8 +27,8 @@ mixcr analyze test-mikelov-et-al-2021-with-contigs \
       umi_single_read_R2.fastq \
       case12-with-contigs
 
-mixcr exportClones -nFeature VDJRegion case12-with-contigs.contigs.clns case12-with-contigs.clns.txt
-mixcr exportClones -nFeature VDJRegion case12-without-contigs.clns case12-without-contigs.clns.txt
+mixcr exportClones --drop-default-fields -nFeature VDJRegion case12-with-contigs.contigs.clns case12-with-contigs.clns.txt
+mixcr exportClones --drop-default-fields -nFeature VDJRegion case12-without-contigs.clns case12-without-contigs.clns.txt
 
 sort case12-with-contigs.clns.txt > case12-with-contigs.clns.txt.s
 sort case12-without-contigs.clns.txt > case12-without-contigs.clns.txt.s

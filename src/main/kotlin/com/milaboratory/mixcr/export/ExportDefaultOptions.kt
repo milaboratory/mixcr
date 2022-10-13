@@ -17,7 +17,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Spec
 import picocli.CommandLine.Spec.Target.MIXEE
 
-class ExportDefaultOptions : (List<ExportFieldDescription>) -> List<ExportFieldDescription> {
+class ExportDefaultOptions {
     @Option(
         description = ["Don't print first header line, print only data"],
         names = ["--no-header"]
@@ -41,29 +41,31 @@ class ExportDefaultOptions : (List<ExportFieldDescription>) -> List<ExportFieldD
     @Spec(MIXEE)
     private lateinit var spec: CommandSpec
 
-    override fun invoke(defaultFields: List<ExportFieldDescription>): List<ExportFieldDescription> {
-        val addedFields = CloneFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
-        if (prependColumns != null) {
-            ValidationException.require(!dropDefaultFields) {
-                "--prepend-columns has no meaning if --drop-default-fields is set"
+    fun fieldsUpdater(factory: FieldExtractorsFactoryNew<*>): (List<ExportFieldDescription>) -> List<ExportFieldDescription> {
+        return { defaultFields ->
+            val addedFields = factory.parsePicocli(spec.commandLine().parseResult)
+            if (prependColumns != null) {
+                ValidationException.require(!dropDefaultFields) {
+                    "--prepend-columns has no meaning if --drop-default-fields is set"
+                }
             }
-        }
-        if (addedFields.isEmpty()) {
-            ValidationException.require(prependColumns == null) {
-                "--prepend-columns is set but no fields was added"
+            if (addedFields.isEmpty()) {
+                ValidationException.require(prependColumns == null) {
+                    "--prepend-columns is set but no fields was added"
+                }
             }
-        }
 
-        val result = when {
-            dropDefaultFields -> addedFields
-            else -> when (prependColumns) {
-                true -> addedFields + defaultFields
-                else -> defaultFields + addedFields
+            val result = when {
+                dropDefaultFields -> addedFields
+                else -> when (prependColumns) {
+                    true -> addedFields + defaultFields
+                    else -> defaultFields + addedFields
+                }
             }
+            ValidationException.require(result.isNotEmpty()) {
+                "nothing to export, no fields are specified"
+            }
+            result
         }
-        ValidationException.require(result.isNotEmpty()) {
-            "nothing to export, no fields are specified"
-        }
-        return result
     }
 }
