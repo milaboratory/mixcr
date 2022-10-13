@@ -95,6 +95,8 @@ public final class Clone extends VDJCObject {
         if (parent == null)
             return null;
         TagCount totalFractions = parent.getTotalTagCounts();
+        if(totalFractions == null)
+            throw new IllegalStateException("Wrong parent (parent cloneset with no clones).");
 
         TagCountAggregator result = new TagCountAggregator();
         TObjectDoubleIterator<TagTuple> it = tagCount.iterator();

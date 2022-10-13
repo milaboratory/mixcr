@@ -50,7 +50,7 @@ public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatur
             clone.setParentCloneSet(this);
             tagCountAggregator.add(clone.tagCount);
         }
-        this.totalTagCounts = tagCountAggregator.createAndDestroy();
+        this.totalTagCounts = totalCount == 0 ? null : tagCountAggregator.createAndDestroy();
         this.header = header;
         this.footer = footer;
         this.ordering = ordering;
@@ -79,7 +79,7 @@ public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatur
                         throw new IllegalArgumentException("Different aligned feature for clones.");
                 }
         }
-        this.totalTagCounts = tagCountAggregator.createAndDestroy();
+        this.totalTagCounts = totalCount == 0 ? null : tagCountAggregator.createAndDestroy();
         this.header = null;
         this.footer = null;
         this.ordering = new VDJCSProperties.CloneOrdering();
