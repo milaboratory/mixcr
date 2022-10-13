@@ -14,25 +14,26 @@ package com.milaboratory.mixcr.cli.postanalysis
 import com.milaboratory.miplots.ExportType.Companion.determine
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.plots.parseFilter
 import com.milaboratory.mixcr.postanalysis.plots.readMetadata
 import com.milaboratory.util.StringUtil
 import jetbrains.letsPlot.intern.Plot
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
-@Command(name = "exportPlots", separator = " ", description = ["Export postanalysis plots."])
 abstract class CommandPaExportPlots : CommandPaExport() {
     @Option(description = [CommonDescriptions.METADATA], names = ["--metadata"])
-    var metadata: String? = null
+    var metadata: Path? = null
 
     @Option(description = ["Plot width"], names = ["--width"])
     var width = 0
@@ -48,9 +49,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     var filterByMetadata: List<String>? = null
 
     @Parameters(description = ["Output PDF/EPS/PNG/JPEG file name"], index = "1")
-    lateinit var out: String
-
-    override fun getOutputFiles(): List<String> = emptyList() // output will be always overriden
+    lateinit var out: Path
 
     protected fun <T> DataFrame<T>.filterByMetadata(): DataFrame<T> {
         var result = this
@@ -65,38 +64,37 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     /** Get metadata from file  */
     protected val metadataDf: DataFrame<*>? by lazy {
         when {
-            metadata != null -> readMetadata(metadata)
+            metadata != null -> readMetadata(metadata!!)
             else -> getPaResult().metadata?.toDataFrame()
         }
     }
 
     override fun validate() {
-        super.validate()
         try {
-            determine(Paths.get(out))
+            determine(out)
         } catch (e: Exception) {
-            throwValidationExceptionKotlin("Unsupported file extension (possible: pdf, eps, svg, png): $out")
+            throw ValidationException("Unsupported file extension (possible: pdf, eps, svg, png): $out")
         }
         metadata?.let { metadata ->
-            if (!metadata.endsWith(".csv") && !metadata.endsWith(".tsv"))
-                throwValidationExceptionKotlin("Metadata should be .csv or .tsv")
+            if (metadata.extension !in arrayOf("csv", "tsv"))
+                throw ValidationException("Metadata should be .csv or .tsv, got $metadata")
 
             if (!metadataDf!!.containsColumn("sample"))
-                throwValidationExceptionKotlin("Metadata must contain 'sample' column")
+                throw ValidationException("Metadata must contain 'sample' column")
             val samples = inputFiles
             val mapping = StringUtil.matchLists(
-                samples,
+                samples.map { it.toString() },
                 metadataDf!!["sample"].toList().map { it!!.toString() }
             )
             if (mapping.size < samples.size || mapping.values.any { it == null })
-                throwValidationExceptionKotlin("Metadata samples does not match input file names.")
+                throw ValidationException("Metadata samples does not match input file names.")
         }
         if (filterByMetadata != null && metadataDf == null)
-            throwValidationExceptionKotlin("Filter is specified by metadata is not.")
+            throw ValidationException("Filter is specified by metadata is not.")
     }
 
     private fun plotDestStr(group: IsolationGroup): String {
-        val out = Path(out).absolute()
+        val out = out.absolute()
         val ext = out.extension
         val withoutExt = out.parent.resolve(out.nameWithoutExtension)
         return "$withoutExt${group.extension()}.$ext"
@@ -105,7 +103,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     private fun plotDestPath(group: IsolationGroup): Path = Paths.get(plotDestStr(group))
 
     private fun ensureOutputPathExists() {
-        Files.createDirectories(Paths.get(out).toAbsolutePath().parent)
+        Files.createDirectories(out.toAbsolutePath().parent)
     }
 
     //    void writePlotsAndSummary(IsolationGroup group, List<byte[]> plots) {
@@ -122,10 +120,8 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     }
 
     @Command(
-        name = "exportPlots",
-        separator = " ",
         description = ["Export postanalysis plots."],
-        subcommands = [HelpCommand::class]
+        synopsisSubcommandLabel = "COMMAND"
     )
     class CommandExportPlotsMain
 }

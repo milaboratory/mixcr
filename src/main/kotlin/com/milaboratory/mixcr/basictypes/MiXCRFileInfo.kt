@@ -15,13 +15,21 @@ import com.milaboratory.mitool.data.CriticalThresholdCollection
 import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mitool.pattern.search.readObject
-import com.milaboratory.mixcr.*
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParams
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRStepParams
+import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import com.milaboratory.primitivio.*
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
+import com.milaboratory.primitivio.readObjectOptional
+import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCLibraryId
 import io.repseq.dto.VDJCLibraryData
@@ -67,7 +75,7 @@ data class MiXCRHeader(
     fun withAllClonesCutBy(allClonesAlignedBy: Array<GeneFeature>) =
         copy(allFullyCoveredBy = GeneFeatures(allClonesAlignedBy.toList()))
 
-    fun <P : MiXCRParams> addStepParams(cmd: MiXCRCommand<P, *>, params: P) =
+    fun <P : MiXCRParams> addStepParams(cmd: MiXCRCommandDescriptor<P, *>, params: P) =
         copy(stepParams = stepParams.add(cmd, params))
 
     @Serializable(by = FoundAlleles.SerializerImpl::class)
@@ -185,7 +193,7 @@ data class MiXCRFooter(
 
     fun withThresholds(thresholds: Map<CriticalThresholdKey, Double>) = copy(thresholds = this.thresholds + thresholds)
 
-    fun <R : MiXCRCommandReport> addStepReport(step: MiXCRCommand<*, R>, report: R) =
+    fun <R : MiXCRCommandReport> addStepReport(step: MiXCRCommandDescriptor<*, R>, report: R) =
         copy(reports = reports.add(step, report))
 
     companion object {
@@ -218,7 +226,7 @@ class MiXCRFooterMerger {
         this
     }
 
-    fun <R : MiXCRCommandReport> addStepReport(step: MiXCRCommand<*, R>, report: R) = run {
+    fun <R : MiXCRCommandReport> addStepReport(step: MiXCRCommandDescriptor<*, R>, report: R) = run {
         if (reports == null)
             reports = MiXCRStepReports.mergeUpstreams(upstreamReports)
         reports = reports!!.add(step, report)

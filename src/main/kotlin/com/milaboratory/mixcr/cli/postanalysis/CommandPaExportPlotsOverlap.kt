@@ -28,9 +28,8 @@ import org.jetbrains.kotlinx.dataframe.DataFrame
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.util.stream.Collectors
-import kotlin.io.path.Path
 
-@Command(name = "overlap", sortOptions = false, separator = " ", description = ["Export overlap heatmaps"])
+@Command(description = ["Export overlap heatmaps"])
 class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlotsHeatmapWithGroupBy() {
     @Option(description = ["Don't add dendrograms"], names = ["--no-dendro"])
     var noDendro = false
@@ -50,7 +49,7 @@ class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlo
 
     override fun validate() {
         super.validate()
-        validateNonPdf(Path(out), metrics)
+        validateNonPdf(out, metrics)
     }
 
     private fun DataFrame<OverlapRow>.filterOverlapByMetadata(): DataFrame<OverlapRow> {

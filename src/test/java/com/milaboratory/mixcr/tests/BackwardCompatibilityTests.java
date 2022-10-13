@@ -21,6 +21,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class BackwardCompatibilityTests {
     @Test
@@ -51,8 +52,8 @@ public class BackwardCompatibilityTests {
     }
 
     public static void assertGoodCLNS(String resource, int size, int good, double sumCount) throws IOException {
-        CloneSet cloneSet = CloneSetIO.read(BackwardCompatibilityTests.class
-                .getResource(resource).getFile());
+        CloneSet cloneSet = CloneSetIO.read(Paths.get(BackwardCompatibilityTests.class
+                .getResource(resource).getFile()));
         Assert.assertEquals(size, cloneSet.size());
         int countGood = 0;
         for (Clone clone : cloneSet.getClones()) {

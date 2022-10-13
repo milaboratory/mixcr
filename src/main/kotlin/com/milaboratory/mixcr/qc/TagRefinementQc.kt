@@ -12,8 +12,17 @@
 package com.milaboratory.mixcr.qc
 
 import com.milaboratory.mitool.exhaustive
-import com.milaboratory.mitool.refinement.gfilter.*
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mitool.refinement.gfilter.AndKeyedFilter
+import com.milaboratory.mitool.refinement.gfilter.AndTaggedFilterReport
+import com.milaboratory.mitool.refinement.gfilter.GenericHistOpReport
+import com.milaboratory.mitool.refinement.gfilter.GroupFilter
+import com.milaboratory.mitool.refinement.gfilter.GroupFilterReport
+import com.milaboratory.mitool.refinement.gfilter.GroupPredicate
+import com.milaboratory.mitool.refinement.gfilter.KeyedFilterReport
+import com.milaboratory.mitool.refinement.gfilter.KeyedRecordFilter
+import com.milaboratory.mitool.refinement.gfilter.OperatorReport
+import com.milaboratory.mitool.refinement.gfilter.RangeOp
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import jetbrains.letsPlot.elementLine
 import jetbrains.letsPlot.geom.geomPolygon
@@ -31,8 +40,9 @@ import jetbrains.letsPlot.theme
 object TagRefinementQc {
     /** Generates tag refinement QC plots */
     fun tagRefinementQc(info: MiXCRFileInfo, log: Boolean = false) = run {
-        val report = info.footer.reports[MiXCRCommand.refineTagsAndSort].firstOrNull()
-        val filter = info.header.stepParams[MiXCRCommand.refineTagsAndSort].firstOrNull()?.parameters?.postFilter
+        val report = info.footer.reports[MiXCRCommandDescriptor.refineTagsAndSort].firstOrNull()
+        val filter =
+            info.header.stepParams[MiXCRCommandDescriptor.refineTagsAndSort].firstOrNull()?.parameters?.postFilter
         val filterReport = report?.correctionReport?.filterReport
         if (report == null || filter == null || filterReport == null)
             return@run emptyList()

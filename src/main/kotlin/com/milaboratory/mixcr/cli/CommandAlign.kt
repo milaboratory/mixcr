@@ -21,7 +21,11 @@ import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.io.CompressionType
-import com.milaboratory.core.io.sequence.*
+import com.milaboratory.core.io.sequence.ConcatenatingSingleReader
+import com.milaboratory.core.io.sequence.PairedReader
+import com.milaboratory.core.io.sequence.SequenceRead
+import com.milaboratory.core.io.sequence.SequenceReaderCloseable
+import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
@@ -34,30 +38,65 @@ import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.mitool.helpers.mapUnchunked
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.mitool.pattern.search.*
+import com.milaboratory.mitool.pattern.search.ReadSearchMode
+import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
+import com.milaboratory.mitool.pattern.search.ReadSearchSettings
+import com.milaboratory.mitool.pattern.search.ReadTagShortcut
+import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mitool.use
-import com.milaboratory.mixcr.*
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParams
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.mixcr.basictypes.*
-import com.milaboratory.mixcr.basictypes.tag.*
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.*
+import com.milaboratory.mixcr.basictypes.MiXCRFooter
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.SequenceHistory
+import com.milaboratory.mixcr.basictypes.VDJCAlignments
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
+import com.milaboratory.mixcr.basictypes.VDJCHit
+import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
+import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.SingleEndFastq
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.Good
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotAligned
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotParsed
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.primitivio.*
+import com.milaboratory.primitivio.buffered
+import com.milaboratory.primitivio.chunked
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.mapChunksInParallel
+import com.milaboratory.primitivio.ordered
+import com.milaboratory.primitivio.unchunked
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
-import io.repseq.core.GeneFeature.*
+import io.repseq.core.GeneFeature.VRegion
+import io.repseq.core.GeneFeature.VRegionWithP
+import io.repseq.core.GeneFeature.encode
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.FileInputStream
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -87,10 +126,10 @@ object CommandAlign {
         @JsonProperty("limit") val limit: Long? = null,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
     ) : MiXCRParams {
-        override val command get() = MiXCRCommand.align
+        override val command get() = MiXCRCommandDescriptor.align
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"])
         private var species: String? = null
 
@@ -113,7 +152,7 @@ object CommandAlign {
         @Option(description = ["Read pre-processing: trimming window size"], names = ["--trimming-window-size"])
         private var trimmingWindowSize: Byte? = null
 
-        @Option(
+        @set:Option(
             description = ["Specifies immunological chain / gene(s) for alignment. If many, separate by comma ','. " +
                     "%nAvailable chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc..."],
             names = ["-c", "--chains"],
@@ -121,7 +160,7 @@ object CommandAlign {
         )
         private var chains: String? = null
             set(value) {
-                warn(
+                logger.warn(
                     "Don't use --chains option on the alignment step. See --chains parameter in exportAlignments and " +
                             "exportClones actions to limit output to a subset of receptor chains."
                 )
@@ -188,14 +227,14 @@ object CommandAlign {
         @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
         private var limit: Long? = null
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::align) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::align) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::species setIfNotNull species
 
                 if (overrides.isNotEmpty()) {
                     // Printing warning message for some common mistakes in parameter overrides
-                    for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) warn(
-                        "WARNING: most probably you want to change \"${key[0]}Parameters.relativeMinScore\" " +
+                    for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) logger.warn(
+                        "most probably you want to change \"${key[0]}Parameters.relativeMinScore\" " +
                                 "instead of \"${key[0]}Parameters.parameters.relativeMinScore\". " +
                                 "The latter should be touched only in a very specific cases."
                     )
@@ -225,14 +264,12 @@ object CommandAlign {
 
             override fun validateParams(params: Params) {
                 if (params.species.isEmpty())
-                    throwValidationExceptionKotlin("Species not set, please use -s / --species option to specified it.")
+                    throw ValidationException("Species not set, please use -s / --species option to specified it.")
             }
         }
     }
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = false,
         description = ["Builds alignments with V,D,J and C genes for input sequencing reads."]
     )
     class Cmd : CmdBase() {
@@ -245,8 +282,29 @@ object CommandAlign {
         )
         lateinit var presetName: String
 
-        @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        var mixins: AllMiXCRMixins? = null
+        @Mixin
+        var pipelineMixins: PipelineMiXCRMixinsHidden? = null
+
+        @Mixin
+        var alignMixins: AlignMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
+        var assembleMixins: AssembleMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
+        var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
+        var exportMixins: ExportMiXCRMixins? = null
+
+        @Mixin
+        var genericMixins: GenericMiXCRMixins? = null
+
+        private val mixins: MiXCRMixinCollection
+            get() = MiXCRMixinCollection.combine(
+                pipelineMixins, alignMixins, assembleMixins,
+                assembleContigsMixins, exportMixins, genericMixins
+            )
 
         @Option(
             description = ["Don't embed preset into the output file"],
@@ -264,27 +322,27 @@ object CommandAlign {
                 "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"
             ]
         )
-        private val inOut: List<String> = mutableListOf()
+        private val inOut: List<Path> = mutableListOf()
 
         private val inputs get() = inOut.dropLast(1)
 
-        override fun getInputFiles() = emptyList<String>() // inOut.subList(0, inOut.size - 1)
+        override val inputFiles get() = emptyList<Path>()
 
-        override fun getOutputFiles() = inOut.takeLast(1) //.subList(inOut.size - 1, inOut.size)
+        override val outputFiles get() = inOut.takeLast(1)
 
         @Option(description = ["Size of buffer for FASTQ readers"], names = ["--read-buffer"])
         var readBufferSize = 1 shl 22 // 4 Mb
 
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: String? = null
+        var reportFile: Path? = null
 
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: String? = null
+        var jsonReport: Path? = null
 
-        @Option(description = ["Processing threads"], names = ["-t", "--threads"])
+        @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
         var threads = Runtime.getRuntime().availableProcessors()
             set(value) {
-                if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+                if (value <= 0) throw ValidationException("-t / --threads must be positive")
                 field = value
             }
 
@@ -341,8 +399,8 @@ object CommandAlign {
             // Performing V featureToAlign correction if needed
             if (totalVErrors > totalV * 0.9 && hasVRegion > totalVErrors * 0.8) {
                 val currentGenFeature = encode(parameters.vAlignerParameters.geneFeatureToAlign)
-                warn(
-                    "WARNING: forcing -OvParameters.geneFeatureToAlign=${encode(correctingFeature)} " +
+                logger.warn(
+                    "forcing -OvParameters.geneFeatureToAlign=${encode(correctingFeature)} " +
                             "since current gene feature ($currentGenFeature) is absent in " +
                             "${ReportHelper.PERCENT_FORMAT.format(100.0 * totalVErrors / totalV)}% of V genes."
                 )
@@ -358,7 +416,7 @@ object CommandAlign {
 
         /** I.e. list of mate-pair files */
         private val inputFilesExpanded: List<List<Path>> by lazy {
-            val matchingResult = inputs.map { Path(it) }.parseAndRunAndCorrelateFSPattern()
+            val matchingResult = inputs.parseAndRunAndCorrelateFSPattern()
             matchingResult.map { fg -> fg.files }
         }
 
@@ -381,7 +439,7 @@ object CommandAlign {
                     f0.contains(fastqRegex) -> SingleEndFastq
                     f0.contains(fastaRegex) -> Fasta
                     f0.contains(bamRegex) -> BAM
-                    else -> throwValidationExceptionKotlin("Unknown file type: $f0")
+                    else -> throw ValidationException("Unknown file type: $f0")
                 }
             } else if (first.size == 2) {
                 val f0 = first[0].name
@@ -389,9 +447,9 @@ object CommandAlign {
                 if (f0.contains(fastqRegex) && f1.contains(fastqRegex))
                     PairedEndFastq
                 else
-                    throwValidationExceptionKotlin("Only fastq supports paired end input, can't recognise: $f0 + $f1")
+                    throw ValidationException("Only fastq supports paired end input, can't recognise: $f0 + $f1")
             } else
-                throwValidationExceptionKotlin("Too many inputs")
+                throw ValidationException("Too many inputs")
         }
 
         @Suppress("UNCHECKED_CAST")
@@ -410,14 +468,14 @@ object CommandAlign {
             return when (inputType) {
                 BAM -> {
                     if (inputFilesExpanded.size != 1)
-                        throwValidationExceptionKotlin("File concatenation supported only for fastq files.")
+                        throw ValidationException("File concatenation supported only for fastq files.")
                     MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded[0])
                     BAMReader(inputFilesExpanded[0].toTypedArray(), cmdParams.bamDropNonVDJ, true)
                 }
 
                 Fasta -> {
                     if (inputFilesExpanded.size != 1)
-                        throwValidationExceptionKotlin("File concatenation supported only for fastq files.")
+                        throw ValidationException("File concatenation supported only for fastq files.")
                     MiXCRMain.lm.reportApplicationInputs(listOf(inputFilesExpanded[0][0]))
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFilesExpanded[0][0].toFile(), NucleotideSequence.ALPHABET),
@@ -464,39 +522,32 @@ object CommandAlign {
             val readShortcuts = parseInfo.readTags
                 .map { name -> readSearchPlan.tagShortcut(name) }
             if (readShortcuts.isEmpty())
-                throwValidationExceptionKotlin("Tag pattern has no read (payload) groups, nothing to align.", false)
-            if (readShortcuts.size > 2) throwValidationExceptionKotlin(
-                "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported.",
-                false
+                throw ValidationException("Tag pattern has no read (payload) groups, nothing to align.")
+            if (readShortcuts.size > 2) throw ValidationException(
+                "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported."
             )
             return TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.tags)
         }
 
-        override fun inputsMustExist(): Boolean {
-            return false
-        }
+        override fun inputsMustExist(): Boolean = false
 
         override fun validate() {
-            super.validate()
-            if (inOut.size > 3) throwValidationExceptionKotlin("Too many input files.")
-            if (inOut.size < 2) throwValidationExceptionKotlin("Output file not specified.")
+            if (inOut.size > 3) throw ValidationException("Too many input files.")
+            if (inOut.size < 2) throw ValidationException("Output file not specified.")
 
             fun checkFailedReadsOptions(optionPrefix: String, r1: String?, r2: String?) {
                 if (r1 != null) {
                     when {
-                        r2 == null && inputType == PairedEndFastq -> throwValidationExceptionKotlin(
-                            "Option ${optionPrefix}-R2 is not specified but paired-end input data provided.",
-                            false
+                        r2 == null && inputType == PairedEndFastq -> throw ValidationException(
+                            "Option ${optionPrefix}-R2 is not specified but paired-end input data provided."
                         )
 
-                        r2 != null && inputType == SingleEndFastq -> throwValidationExceptionKotlin(
-                            "Option ${optionPrefix}-R2 is specified but single-end input data provided.",
-                            false
+                        r2 != null && inputType == SingleEndFastq -> throw ValidationException(
+                            "Option ${optionPrefix}-R2 is specified but single-end input data provided."
                         )
 
-                        !inputType.isFastq -> throwValidationExceptionKotlin(
-                            "Option ${optionPrefix}-* options are supported for fastq data input only.",
-                            false
+                        !inputType.isFastq -> throw ValidationException(
+                            "Option ${optionPrefix}-* options are supported for fastq data input only."
                         )
                     }
                 }
@@ -511,10 +562,9 @@ object CommandAlign {
                     "libraries",
                     "mylibrary.json"
                 ).toString()
-                throwValidationExceptionKotlin(
+                throw ValidationException(
                     "Library name can't be a path. Place your library to one of the library search locations " +
-                            "(e.g. '$libraryLocations', and put just a library name as -b / --library option value (e.g. '--library mylibrary').",
-                    false
+                            "(e.g. '$libraryLocations', and put just a library name as -b / --library option value (e.g. '--library mylibrary')."
                 )
             }
         }
@@ -535,14 +585,14 @@ object CommandAlign {
 
             // Printing library level warnings, if specified for the library
             if (!vdjcLibrary.warnings.isEmpty()) {
-                warn("Library warnings:")
-                for (l in vdjcLibrary.warnings) warn(l)
+                logger.warnUnfomatted("Library warnings:")
+                for (l in vdjcLibrary.warnings) logger.warnUnfomatted(l)
             }
 
             // Printing citation notice, if specified for the library
             if (!vdjcLibrary.citations.isEmpty()) {
-                warn("Please cite:")
-                for (l in vdjcLibrary.citations) warn(l)
+                logger.warnUnfomatted("Please cite:")
+                for (l in vdjcLibrary.citations) logger.warnUnfomatted(l)
             }
 
             // Tags
@@ -577,20 +627,20 @@ object CommandAlign {
                 else {
                     if (gene.isFunctional) {
                         ++numberOfExcludedFGenes
-                        if (verbose) warn("WARNING: Functional gene " + gene.name + " excluded due to " + exclusionReason)
+                        if (logger.verbose) logger.warn("Functional gene " + gene.name + " excluded due to " + exclusionReason)
                     } else ++numberOfExcludedNFGenes
                 }
             }
-            if (numberOfExcludedFGenes > 0) warn(
-                "WARNING: $numberOfExcludedFGenes functional genes were excluded, " +
+            if (numberOfExcludedFGenes > 0) logger.warn(
+                "$numberOfExcludedFGenes functional genes were excluded, " +
                         "re-run with --verbose option to see the list of excluded genes and exclusion reason."
             )
-            if (verbose && numberOfExcludedNFGenes > 0) warn("WARNING: $numberOfExcludedNFGenes non-functional genes excluded.")
-            if (aligner.vGenesToAlign.isEmpty()) throwExecutionExceptionKotlin(
+            if (logger.verbose && numberOfExcludedNFGenes > 0) logger.warn("$numberOfExcludedNFGenes non-functional genes excluded.")
+            if (aligner.vGenesToAlign.isEmpty()) throw ApplicationException(
                 "No V genes to align. Aborting execution. See warnings for more info " +
                         "(turn on verbose warnings by adding --verbose option)."
             )
-            if (aligner.jGenesToAlign.isEmpty()) throwExecutionExceptionKotlin(
+            if (aligner.jGenesToAlign.isEmpty()) throw ApplicationException(
                 "No J genes to align. Aborting execution. See warnings for more info " +
                         "(turn on verbose warnings by adding --verbose option)."
             )
@@ -617,7 +667,7 @@ object CommandAlign {
                 writer?.writeHeader(
                     MiXCRHeader(
                         paramsSpec,
-                        MiXCRStepParams().add(MiXCRCommand.align, cmdParams),
+                        MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         if (tagSearchPlan != null) TagsInfo(
                             0,
 
@@ -769,7 +819,7 @@ object CommandAlign {
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagSearchPlan != null) reportBuilder.tagReportBuilder = tagSearchPlan.reportAgg.report
                 val report = reportBuilder.buildReport()
-                writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommand.align, report))
+                writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)
@@ -808,7 +858,7 @@ object CommandAlign {
             }
         }
 
-        private fun alignedWriter(outputFile: String) = when (outputFile) {
+        private fun alignedWriter(outputFile: Path) = when (outputFile.toString()) {
             "." -> null
             else -> VDJCAlignmentsWriter(
                 outputFile, max(1, threads / 8),
@@ -870,7 +920,7 @@ object CommandAlign {
                     )
 
                     name.matches(Regex("R\\d+")) -> readTags += name
-                    else -> warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
+                    else -> logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
                 }
             }
             tags

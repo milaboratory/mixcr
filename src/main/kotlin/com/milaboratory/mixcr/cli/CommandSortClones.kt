@@ -31,35 +31,36 @@ import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
-import java.nio.file.Paths
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 
-@CommandLine.Command(
-    name = CommandSortClones.SORT_CLONES_COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
+@Command(
     description = ["Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows to build overlaps between clonesets."]
 )
-class CommandSortClones : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["clones.[clns|clna]"], index = "0")
-    lateinit var `in`: String
+class CommandSortClones : MiXCRCommandWithOutputs() {
+    @Parameters(description = ["clones.[clns|clna]"], index = "0")
+    lateinit var input: Path
 
-    @CommandLine.Parameters(description = ["clones.sorted.clns"], index = "1")
-    lateinit var out: String
+    @Parameters(description = ["clones.sorted.clns"], index = "1")
+    lateinit var out: Path
 
-    @CommandLine.Option(
+    @Option(
         description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
         names = ["--use-system-temp"]
     )
     var useSystemTemp = false
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles
+        get() = listOf(input)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles
+        get() = listOf(out)
 
     override fun run0() {
-        when (IOUtil.extractFileType(Paths.get(`in`))) {
-            CLNS -> ClnsReader(Paths.get(`in`), VDJCLibraryRegistry.getDefault()).use { reader ->
+        when (IOUtil.extractFileType(input)) {
+            CLNS -> ClnsReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
                 ClnsWriter(out).use { writer ->
                     val assemblingFeatures =
                         sortGeneFeaturesContainingCDR3First(reader.assemblerParameters.assemblingFeatures)
@@ -72,7 +73,7 @@ class CommandSortClones : AbstractMiXCRCommand() {
                 }
             }
             CLNA -> ClnAReader(
-                Paths.get(`in`),
+                input,
                 VDJCLibraryRegistry.getDefault(),
                 Runtime.getRuntime().availableProcessors()
             ).use { reader ->
@@ -90,8 +91,8 @@ class CommandSortClones : AbstractMiXCRCommand() {
                     writer.writeAlignmentsAndIndex()
                 }
             }
-            VDJCA -> throwValidationExceptionKotlin("File type is not supported by this command")
-            SHMT -> throwValidationExceptionKotlin("File type is not supported by this command")
+            VDJCA -> throw ValidationException("File type is not supported by this command")
+            SHMT -> throw ValidationException("File type is not supported by this command")
         }.exhaustive
     }
 

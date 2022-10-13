@@ -11,22 +11,43 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.cli.ABaseCommand
 import com.milaboratory.cli.AppVersionInfo
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.core.VDJCLibraryRegistry.ClasspathLibraryResolver
 import io.repseq.core.VDJCLibraryRegistry.FolderLibraryResolver
 import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.ScopeType.INHERIT
 
-@CommandLine.Command(name = "mixcr", versionProvider = CommandMain.VersionProvider::class, separator = " ")
-class CommandMain internal constructor() : ABaseCommand("mixcr") {
-    @CommandLine.Option(
+@Command(
+    name = "mixcr",
+    versionProvider = CommandMain.VersionProvider::class,
+    scope = INHERIT,
+    sortOptions = false
+)
+class CommandMain {
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Option(
         names = ["-v", "--version"],
         versionHelp = true,
-        description = ["print version information and exit"]
+        description = ["Print version information and exit"]
     )
-    var versionRequested = false
+    fun setVersionRequested(param: Boolean) {
+
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Option(
+        names = ["-h", "--help"],
+        usageHelp = true,
+        description = ["Show this help message and exit."],
+        scope = INHERIT
+    )
+    fun setHelpRequested(param: Boolean) {
+
+    }
 
     internal class VersionProvider : CommandLine.IVersionProvider {
         override fun getVersion(): Array<String> {

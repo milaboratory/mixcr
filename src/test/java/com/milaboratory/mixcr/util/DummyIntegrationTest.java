@@ -18,12 +18,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Category(IntegrationTest.class)
 public class DummyIntegrationTest {
     @Test
     public void test1() throws IOException {
-        String file = DummyIntegrationTest.class.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").getFile();
+        Path file = Paths.get(DummyIntegrationTest.class.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").getFile());
         CloneSet clns = CloneSetIO.read(file);
         System.out.println(clns.getOrdering());
     }

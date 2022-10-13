@@ -25,8 +25,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.extension
 
 @Command(
-    sortOptions = false,
-    separator = " ",
     description = ["Visualize SHM tree and save in PDF format"]
 )
 class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
@@ -131,12 +129,13 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     )
     var noAlignmentFill: Boolean = false
 
-    override fun getOutputFiles(): List<String> = listOf(out.toString())
+    override val outputFiles
+        get() = listOf(out)
 
     override fun validate() {
         super.validate()
         if (out.extension != "pdf")
-            throwValidationExceptionKotlin("Output file must have .pdf extension")
+            throw ValidationException("Output file must have .pdf extension")
     }
 
     val alignment by lazy {
@@ -171,7 +170,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     override fun run0() {
         val plots = ShmTreePlotter(
-            `in`.toAbsolutePath(),
+            input.toAbsolutePath(),
             metadata?.toAbsolutePath(),
             filter = filter,
             limit = limit,
@@ -182,9 +181,9 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
             alignment = alignment
         ).plots
 
-        `in`.toAbsolutePath().parent.createDirectories()
+        input.toAbsolutePath().parent.createDirectories()
         writePDF(
-            `in`.toAbsolutePath(),
+            input.toAbsolutePath(),
             plots
         )
     }

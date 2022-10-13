@@ -21,40 +21,40 @@ import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGeneId
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.PrintStream
+import java.nio.file.Path
 
-@CommandLine.Command(
-    name = "clonesDiff",
-    separator = " ",
-    sortOptions = true,
+@Command(
     description = ["Calculates the difference between two .clns files."]
 )
-class CommandClonesDiff : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["input1.clns"], index = "0")
-    lateinit var in1: String
+class CommandClonesDiff : MiXCRCommandWithOutputs() {
+    @Parameters(description = ["input1.clns"], index = "0")
+    lateinit var in1: Path
 
-    @CommandLine.Parameters(description = ["input2.clns"], index = "1")
-    lateinit var in2: String
+    @Parameters(description = ["input2.clns"], index = "1")
+    lateinit var in2: Path
 
-    @CommandLine.Parameters(description = ["[report]"], index = "2", arity = "0..1")
-    var report: String? = null
+    @Parameters(description = ["[report]"], index = "2", arity = "0..1")
+    var report: Path? = null
 
-    @CommandLine.Option(
+    @Option(
         names = ["-v"],
         description = ["Use V gene in clone comparison (include it as a clone key along with a clone sequence)."],
         paramLabel = "v"
     )
     var useV = false
 
-    @CommandLine.Option(
+    @Option(
         names = ["-j"],
         description = ["Use J gene in clone comparison (include it as a clone key along with a clone sequence)."],
         paramLabel = "j"
     )
     var useJ = false
 
-    @CommandLine.Option(
+    @Option(
         names = ["-c"],
         description = ["Use C gene in clone comparison (include it as a clone key along with a clone sequence)."],
         paramLabel = "c"
@@ -77,12 +77,14 @@ class CommandClonesDiff : AbstractMiXCRCommand() {
     //public String geneFeatureToMatch = "CDR3";
     //@Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for match")
     //public int hitsCompareLevel = 1;
-    override fun getInputFiles(): List<String> = listOf(in1, in2)
+    override val inputFiles
+        get() = listOf(in1, in2)
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(report)
+    override val outputFiles
+        get() = listOfNotNull(report)
 
     override fun run0() {
-        (report?.let { PrintStream(it) } ?: System.out).use { report ->
+        (report?.let { PrintStream(it.toFile()) } ?: System.out).use { report ->
             val cs1 = CloneSetIO.read(in1)
             val cs2 = CloneSetIO.read(in2)
             val recs = mutableMapOf<CKey, CRec>()
@@ -137,7 +139,7 @@ class CommandClonesDiff : AbstractMiXCRCommand() {
                             "using -OseparateBy${letter.uppercaseChar()}=true option, please add -$letter option to this command."
                     else -> ""
                 }
-                throwValidationException(error)
+                throw ValidationException(error)
             }
             cRec.clones[i] = clone
         }

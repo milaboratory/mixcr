@@ -16,6 +16,7 @@ package com.milaboratory.mixcr.trees
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
+import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
@@ -65,7 +66,7 @@ class TreeBuilderByUserData(
         val CDR3lengths = cluster.map { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) }
             .groupingBy { it }.eachCount()
         if (CDR3lengths.size > 1) {
-            println("WARN: in $treeId not all clones have the same length of CDR3")
+            logger.warn("in $treeId not all clones have the same length of CDR3")
         }
         val VJBase = VJBase(
             VJPair(V = VGeneId, J = JGeneId),
@@ -90,7 +91,7 @@ class TreeBuilderByUserData(
 
         if (cloneWrappers.size != cluster.size) {
             val excludedCloneIds = cluster.map { it.clone.id } - cloneWrappers.map { it.id }.toSet()
-            println("WARN: $excludedCloneIds will be not included in $treeId")
+            logger.warn("$excludedCloneIds will be not included in $treeId")
         }
         return cloneWrappers
     }

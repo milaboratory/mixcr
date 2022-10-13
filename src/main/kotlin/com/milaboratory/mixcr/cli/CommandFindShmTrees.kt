@@ -16,22 +16,38 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.AssembleContigsMixins
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
 import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.trees.*
+import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
+import com.milaboratory.mixcr.trees.CloneWithDatasetId
+import com.milaboratory.mixcr.trees.MutationsUtils
+import com.milaboratory.mixcr.trees.SHMTreeBuilder
+import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
+import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
+import com.milaboratory.mixcr.trees.SHMTreeResult
+import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
+import com.milaboratory.mixcr.trees.ScoringSet
+import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.util.*
+import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.ProgressAndStage
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -39,14 +55,11 @@ import kotlin.io.path.extension
 
 
 @Command(
-    name = CommandFindShmTrees.COMMAND_NAME,
-    sortOptions = false,
-    separator = " ",
     description = ["Builds SHM trees."]
 )
-class CommandFindShmTrees : AbstractMiXCRCommand() {
+class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     data class Params(val dummy: Boolean = true) : MiXCRParams {
-        override val command get() = MiXCRCommand.findShmTrees
+        override val command get() = MiXCRCommandDescriptor.findShmTrees
     }
 
     @Parameters(
@@ -57,16 +70,18 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     )
     lateinit var inOut: List<Path>
 
-    @Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+            if (value <= 0) throw ValidationException("-t / --threads must be positive")
             field = value
         }
 
-    public override fun getInputFiles(): List<String> = inOut.dropLast(1).map { it.toString() }
+    public override val inputFiles
+        get() = inOut.dropLast(1)
 
-    override fun getOutputFiles(): List<String> = inOut.takeLast(1).map { it.toString() }
+    override val outputFiles
+        get() = inOut.takeLast(1)
 
     private val clnsFileNames: List<Path>
         get() = inOut.dropLast(1)
@@ -77,10 +92,10 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     var overrides: Map<String, String> = mutableMapOf()
 
     @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-    var reportFile: String? = null
+    var reportFile: Path? = null
 
     @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-    var jsonReport: String? = null
+    var jsonReport: Path? = null
 
     @Option(description = ["List of VGene names to filter clones"], names = ["--v-gene-names"])
     var VGenesToFilter: Set<String> = mutableSetOf()
@@ -131,10 +146,10 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
         val shmTreeBuilderParametersName = "default"
         var result: SHMTreeBuilderParameters = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
-            ?: throwValidationExceptionKotlin("Unknown parameters: $shmTreeBuilderParametersName")
+            ?: throw ValidationException("Unknown parameters: $shmTreeBuilderParametersName")
         if (overrides.isNotEmpty()) {
             result = JsonOverrider.override(result, SHMTreeBuilderParameters::class.java, overrides)
-                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
+                ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
         result
     }
@@ -145,31 +160,30 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
     }
 
     override fun validate() {
-        super.validate()
-        if (!outputTreesPath.extension.endsWith(shmFileExtension)) {
-            throwValidationExceptionKotlin("Output file should have extension $shmFileExtension. Given $outputTreesPath")
+        if (outputTreesPath.extension != shmFileExtension) {
+            throw ValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
         }
         if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
-            throwValidationExceptionKotlin("First step must be BuildingInitialTrees")
+            throw ValidationException("First step must be BuildingInitialTrees")
         }
         if (buildFrom != null) {
-            if (!buildFrom!!.endsWith(".tsv")) {
-                throwValidationExceptionKotlin("--build-from must be .tsv, got $buildFrom")
+            if (buildFrom!!.extension != "tsv") {
+                throw ValidationException("--build-from must be .tsv, got $buildFrom")
             }
             if (VGenesToFilter.isNotEmpty()) {
-                throwValidationExceptionKotlin("--v-gene-names must be empty if --build-from is specified")
+                throw ValidationException("--v-gene-names must be empty if --build-from is specified")
             }
             if (JGenesToFilter.isNotEmpty()) {
-                throwValidationExceptionKotlin("--j-gene-names must be empty if --build-from is specified")
+                throw ValidationException("--j-gene-names must be empty if --build-from is specified")
             }
             if (CDR3LengthToFilter.isNotEmpty()) {
-                throwValidationExceptionKotlin("--cdr3-lengths must be empty if --build-from is specified")
+                throw ValidationException("--cdr3-lengths must be empty if --build-from is specified")
             }
             if (minCountForClone != null) {
-                throwValidationExceptionKotlin("--min-count must be empty if --build-from is specified")
+                throw ValidationException("--min-count must be empty if --build-from is specified")
             }
             if (debugDir != null) {
-                println("WARN: argument --debugDir will not be used with --build-from")
+                logger.warn("argument --debugDir will not be used with --build-from")
             }
         }
     }
@@ -316,7 +330,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
                 cloneReaders.foldIndexed(MiXCRFooterMerger()) { i, m, f ->
                     m.addReportsFromInput(i, clnsFileNames[i].toString(), f.footer)
                 }
-                    .addStepReport(MiXCRCommand.findShmTrees, reportBuilder.buildReport())
+                    .addStepReport(MiXCRCommandDescriptor.findShmTrees, reportBuilder.buildReport())
                     .build()
             )
         }
@@ -332,7 +346,7 @@ class CommandFindShmTrees : AbstractMiXCRCommand() {
             headers,
             headers
                 .fold(MiXCRHeaderMerger()) { m, h -> m.add(h) }.build()
-                .addStepParams(MiXCRCommand.findShmTrees, params),
+                .addStepParams(MiXCRCommandDescriptor.findShmTrees, params),
             clnsFileNames.map { it.toString() },
             usedGenes
         )

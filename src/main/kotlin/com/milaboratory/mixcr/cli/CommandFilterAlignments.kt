@@ -26,20 +26,20 @@ import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 
 @Command(
-    name = CommandFilterAlignments.COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
     description = ["Filter alignments."]
 )
-class CommandFilterAlignments : AbstractMiXCRCommand() {
+class CommandFilterAlignments : MiXCRCommandWithOutputs() {
     @Parameters(description = ["alignments.vdjca"], index = "0")
-    lateinit var `in`: String
+    lateinit var input: Path
 
     @Parameters(description = ["alignments.filtered.vdjca"], index = "1")
-    lateinit var out: String
+    lateinit var out: Path
 
     @Option(
         description = ["Specifies immunological protein chain gene for an alignment. If many, " +
@@ -62,29 +62,31 @@ class CommandFilterAlignments : AbstractMiXCRCommand() {
     @Option(description = ["Output only chimeric alignments."], names = ["-x", "--chimeras-only"])
     var chimerasOnly = false
 
-    @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
+    @set:Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
     var limit: Long = 0
         set(value) {
-            if (value <= 0) throwValidationException("-n / --limit must be positive.")
+            if (value <= 0) throw ValidationException("-n / --limit must be positive.")
             field = value
         }
 
-    @Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"], hidden = true)
+    @set:Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"], hidden = true)
     var ids: List<Long>? = null
         set(value) {
             println("-i, --read-ids deprecated, use `mixcr slice -i ... alignments.vdjca alignments.filtered.vdjca` instead")
             field = value
         }
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles
+        get() = listOf(input)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles
+        get() = listOf(out)
 
     private val readIds: TLongHashSet?
         get() = ids?.let { TLongHashSet(it) }
 
     private val inputReader: VDJCAlignmentsReader
-        get() = VDJCAlignmentsReader(`in`)
+        get() = VDJCAlignmentsReader(input)
 
     private val outputWriter: VDJCAlignmentsWriter
         get() = VDJCAlignmentsWriter(out)
@@ -157,7 +159,4 @@ class CommandFilterAlignments : AbstractMiXCRCommand() {
 
     }
 
-    companion object {
-        const val COMMAND_NAME = "filterAlignments"
-    }
 }

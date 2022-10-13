@@ -14,7 +14,7 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.primitives.Filter
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.Clone
@@ -22,6 +22,7 @@ import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.OutputMode
@@ -32,8 +33,8 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -52,7 +53,7 @@ object CommandExportClones {
         @JsonProperty("noHeader") val noHeader: Boolean,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
     ) : MiXCRParams {
-        override val command get() = MiXCRCommand.exportClones
+        override val command get() = MiXCRCommandDescriptor.exportClones
     }
 
     fun Params.mkFilter(): Filter<Clone> {
@@ -74,23 +75,12 @@ object CommandExportClones {
         }
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
-        @ArgGroup(validate = false, heading = "Export mix-ins", exclusive = false)
-        private var mixins: AllExportMiXCRMixins? = null
-
-        protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
-
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
             names = ["-c", "--chains"]
         )
         private var chains: String? = null
-
-        @Option(
-            description = ["Don't print first header line, print only data"],
-            names = ["--no-header"]
-        )
-        private var noHeader = false
 
         @Option(
             description = ["Exclude clones with out-of-frame clone sequences (fractions will be recalculated)"],
@@ -107,41 +97,43 @@ object CommandExportClones {
         @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         private var splitByTag: String? = null
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::exportClones) {
+        @Mixin
+        private lateinit var exportDefaults: ExportDefaultOptions
+
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::filterOutOfFrames setIfTrue filterOutOfFrames
                 Params::filterStops setIfTrue filterStops
                 Params::splitByTags setIfNotNull splitByTag
-                Params::noHeader setIfTrue noHeader
-                Params::fields setIfNotEmpty CloneFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
+                Params::noHeader setIfTrue exportDefaults.noHeader
+                Params::fields updateBy exportDefaults.fieldsUpdater(CloneFieldsExtractorsFactory)
             }
         }
     }
 
     @Command(
-        name = COMMAND_NAME,
-        separator = " ",
-        sortOptions = false,
         description = ["Export assembled clones into tab delimited file."]
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["data.[clns|clna]"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
         var outputFile: Path? = null
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOfNotNull(outputFile).map { it.toString() }
+        override val outputFiles
+            get() = listOfNotNull(outputFile)
 
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val header = initialSet.header
             val tagsInfo = header.tagsInfo
             val (_, params) = paramsResolver.resolve(
-                header.paramsSpec.addMixins(mixinsToAdd),
+                header.paramsSpec,
                 printParameters = outputFile != null,
             ) { params ->
                 if (params.splitByTags == null) {
@@ -178,11 +170,11 @@ object CommandExportClones {
                     val di = initialSet.size() - set.size()
                     val cdi = initialCount - count
                     val percentageDI = ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size())
-                    warn(
+                    logger.warn(
                         "Filtered ${set.size()} of ${initialSet.size()} clones ($percentageDI%)."
                     )
                     val percentageCDI = ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount)
-                    warn(
+                    logger.warn(
                         "Filtered $count of $initialCount reads ($percentageCDI%)."
                     )
                 }

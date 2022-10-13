@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.cli.ApplicationException;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
 import com.milaboratory.util.CanReportProgress;
@@ -92,8 +93,8 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
             ii.readFully(magicBytes);
             magicString = new String(magicBytes, StandardCharsets.US_ASCII);
             if (!magicString.equals(ClnAWriter.MAGIC))
-                throw new IllegalArgumentException("Unexpected file version of format: found " +
-                        magicString + " expected " + ClnAWriter.MAGIC);
+                throw new ApplicationException("Unexpected file version of format: found " +
+                        magicString + " expected " + ClnAWriter.MAGIC, false);
 
             // Reading number of clones
             this.numberOfClones = ii.readInt();

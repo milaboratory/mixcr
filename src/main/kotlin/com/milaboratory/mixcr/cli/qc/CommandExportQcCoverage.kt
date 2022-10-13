@@ -14,41 +14,46 @@ package com.milaboratory.mixcr.cli.qc
 import com.milaboratory.miplots.ExportType
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.miplots.writePDF
-import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
+import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.qc.Coverage.coveragePlot
 import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.toList
-import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 import java.nio.file.Paths
 
-@Command(name = "coverage", separator = " ", description = ["Reads coverage plots."])
-class CommandExportQcCoverage : AbstractMiXCRCommand() {
+@Command(description = ["Reads coverage plots."])
+class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
     @Parameters(description = ["sample1.vdjca ... coverage.[pdf|eps|png|jpeg]"])
-    var `in`: List<String> = mutableListOf()
+    var inOut: List<Path> = mutableListOf()
 
     @Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])
     var showAlignmentBoundaries = false
-    override fun getInputFiles(): List<String> = `in`.subList(0, `in`.size - 1)
 
-    override fun getOutputFiles(): List<String> = listOf(`in`.last())
+    override val inputFiles
+        get() = inOut.subList(0, inOut.size - 1)
+
+    override val outputFiles
+        get() = listOf(inOut.last())
 
     override fun run0() {
-        val inputFiles = inputFiles.map { Paths.get(it) }
+        val inputFiles = inputFiles.map { it }
         val plots = inputFiles.port
             .mapInParallelOrdered(Runtime.getRuntime().availableProcessors()) {
                 coveragePlot(it, showAlignmentBoundaries)
             }
             .flatten()
             .toList()
-        val out = Paths.get(outputFiles.first())
+        val out = outputFiles.first()
         if (ExportType.determine(out) === ExportType.PDF) {
             writePDF(out, plots)
         } else {
             plots.forEachIndexed { i, plt ->
-                var outStr = outputFiles.first()
+                var outStr = outputFiles.first().toString()
                 val l = outStr.lastIndexOf(".")
                 val suffix = if (i < 3) "R$i" else "Overlap"
                 outStr = "${outStr.substring(0, l)}_$suffix${outStr.substring(l)}"

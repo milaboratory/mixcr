@@ -25,6 +25,7 @@ import io.repseq.core.VDJCGene;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -81,15 +82,19 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
     }
 
     public VDJCAlignmentsWriter(File file) throws IOException {
-        this(file, DEFAULT_ENCODER_THREADS, DEFAULT_ALIGNMENTS_IN_BLOCK);
+        this(file.toPath());
+    }
+
+    public VDJCAlignmentsWriter(Path file) throws IOException {
+        this(file.toFile(), DEFAULT_ENCODER_THREADS, DEFAULT_ALIGNMENTS_IN_BLOCK);
     }
 
     public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock) throws IOException {
         this(new PrimitivOHybrid(file.toPath()), encoderThreads, alignmentsInBlock, false);
     }
 
-    public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock, boolean highCompression) throws IOException {
-        this(new PrimitivOHybrid(file.toPath()), encoderThreads, alignmentsInBlock, highCompression);
+    public VDJCAlignmentsWriter(Path file, int encoderThreads, int alignmentsInBlock, boolean highCompression) throws IOException {
+        this(new PrimitivOHybrid(file), encoderThreads, alignmentsInBlock, highCompression);
     }
 
     public VDJCAlignmentsWriter(PrimitivOHybrid output, int encoderThreads, int alignmentsInBlock, boolean highCompression) {

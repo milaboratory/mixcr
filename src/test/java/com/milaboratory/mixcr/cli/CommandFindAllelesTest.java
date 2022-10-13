@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.cli;
 
 import com.google.common.collect.Lists;
-import com.milaboratory.cli.ValidationException;
 import com.milaboratory.util.TempFileDest;
 import com.milaboratory.util.TempFileManager;
 import org.junit.Before;
@@ -21,6 +20,7 @@ import picocli.CommandLine;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.Assert.*;
 
@@ -52,8 +52,8 @@ public class CommandFindAllelesTest {
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         assertEquals(
                 Lists.newArrayList(
-                        "/output/folder/file1_with_alleles.clns",
-                        "/output/folder/file2_with_alleles.clns"
+                        Paths.get("/output/folder/file1_with_alleles.clns"),
+                        Paths.get("/output/folder/file2_with_alleles.clns")
                 ),
                 command.getOutputFiles()
         );
@@ -68,8 +68,8 @@ public class CommandFindAllelesTest {
                 file2.toString()
         ).getParseResult();
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
-        assertTrue(command.getOutputFiles().get(0), command.getOutputFiles().get(0).endsWith("/folder1/file1_with_alleles.clns"));
-        assertTrue(command.getOutputFiles().get(1), command.getOutputFiles().get(1).endsWith("/folder2/file2_with_alleles.clns"));
+        assertTrue(command.getOutputFiles().get(0).toString(), command.getOutputFiles().get(0).toString().endsWith("/folder1/file1_with_alleles.clns"));
+        assertTrue(command.getOutputFiles().get(1).toString(), command.getOutputFiles().get(1).toString().endsWith("/folder2/file2_with_alleles.clns"));
     }
 
     @Test
@@ -84,9 +84,9 @@ public class CommandFindAllelesTest {
         CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         assertEquals(
                 Lists.newArrayList(
-                        "/output/folder/file1_with_alleles.clns",
-                        "/output/folder/file2_with_alleles.clns",
-                        "/output/folder/library.json"
+                        Paths.get("/output/folder/file1_with_alleles.clns"),
+                        Paths.get("/output/folder/file2_with_alleles.clns"),
+                        Paths.get("/output/folder/library.json")
                 ),
                 command.getOutputFiles()
         );

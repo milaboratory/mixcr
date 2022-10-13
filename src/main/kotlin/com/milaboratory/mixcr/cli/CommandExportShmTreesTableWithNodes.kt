@@ -26,9 +26,6 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
 @Command(
-    name = CommandExportShmTreesTableWithNodes.COMMAND_NAME,
-    sortOptions = false,
-    separator = " ",
     description = ["Export SHMTree as a table with a row for every node"]
 )
 class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
@@ -46,11 +43,12 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     )
     var onlyObserved: Boolean = false
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(out?.toString())
+    override val outputFiles
+        get() = listOfNotNull(out)
 
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
-        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+        SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             InfoWriter.create(
                 out,
                 SplittedTreeNodeFieldsExtractorsFactory,
@@ -78,7 +76,6 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     }
 
     companion object {
-        const val COMMAND_NAME = "exportShmTreesWithNodes"
 
         @JvmStatic
         fun mkCommandSpec(): CommandSpec {

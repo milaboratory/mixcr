@@ -11,12 +11,18 @@
  */
 package com.milaboratory.mixcr.qc
 
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.cli.AlignerReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import jetbrains.letsPlot.*
+import jetbrains.letsPlot.Pos
+import jetbrains.letsPlot.Stat
+import jetbrains.letsPlot.coordFlip
+import jetbrains.letsPlot.elementBlank
+import jetbrains.letsPlot.elementLine
+import jetbrains.letsPlot.elementText
 import jetbrains.letsPlot.geom.geomBar
+import jetbrains.letsPlot.ggplot
+import jetbrains.letsPlot.ggsize
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.label.ylab
@@ -24,6 +30,7 @@ import jetbrains.letsPlot.sampling.samplingNone
 import jetbrains.letsPlot.scale.guideLegend
 import jetbrains.letsPlot.scale.scaleFillManual
 import jetbrains.letsPlot.scale.scaleXDiscrete
+import jetbrains.letsPlot.theme
 import java.nio.file.Path
 import kotlin.io.path.name
 
@@ -35,7 +42,8 @@ object AlignmentQC {
         percent: Boolean = false,
         hw: SizeParameters? = null
     ) = run {
-        val file2report = files.associate { it.fileName.name to IOUtil.extractFooter(it).reports[MiXCRCommand.align].first() }
+        val file2report =
+            files.associate { it.fileName.name to IOUtil.extractFooter(it).reports[MiXCRCommandDescriptor.align].first() }
 
         val data = mapOf<Any, MutableList<Any?>>(
             "sample" to mutableListOf(),

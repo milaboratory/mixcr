@@ -28,7 +28,6 @@ import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.util.*
-import kotlin.io.path.Path
 
 abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, CommandPaExportPlots() {
     @Option(
@@ -114,7 +113,7 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
 
     override fun validate() {
         super.validate()
-        validateNonPdf(Path(out), metrics)
+        validateNonPdf(out, metrics)
     }
 
     override fun run(result: PaResultByGroup) {
@@ -154,9 +153,6 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
     }
 
     @Command(
-        name = "cdr3metrics",
-        sortOptions = false,
-        separator = " ",
         description = ["Export CDR3 metrics"]
     )
     class ExportCDR3Metrics : CommandPaExportPlotsBasicStatistics() {
@@ -175,9 +171,6 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
     }
 
     @Command(
-        name = "diversity",
-        sortOptions = false,
-        separator = " ",
         description = ["Export diversity metrics"]
     )
     class ExportDiversity : CommandPaExportPlotsBasicStatistics() {

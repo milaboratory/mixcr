@@ -21,61 +21,63 @@ import gnu.trove.set.hash.TIntHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
+import java.nio.file.Path
 import java.util.*
 
-@CommandLine.Command(
-    name = "exportClonesPretty",
-    sortOptions = true,
-    separator = " ",
+@Command(
     description = ["Export verbose information about clones."]
 )
-class CommandExportClonesPretty : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(index = "0", description = ["clones.[clns|clna]"])
-    lateinit var `in`: String
+class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
+    @Parameters(index = "0", description = ["clones.[clns|clna]"])
+    lateinit var input: Path
 
-    @CommandLine.Parameters(index = "1", description = ["output.txt"], arity = "0..1")
-    var out: String? = null
+    @Parameters(index = "1", description = ["output.txt"], arity = "0..1")
+    var out: Path? = null
 
-    @CommandLine.Option(description = ["Limit number of alignments before filtering"], names = ["-b", "--limitBefore"])
+    @Option(description = ["Limit number of alignments before filtering"], names = ["-b", "--limitBefore"])
     var limitBefore: Int? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Limit number of filtered alignments; no more " +
                 "than N alignments will be outputted"], names = ["-n", "--limit"]
     )
     var limitAfter: Int? = null
 
-    @CommandLine.Option(description = ["List of clone ids to export"], names = ["-i", "--clone-ids"])
+    @Option(description = ["List of clone ids to export"], names = ["-i", "--clone-ids"])
     var ids: List<Int> = mutableListOf()
 
-    @CommandLine.Option(description = ["Number of output alignments to skip"], names = ["-s", "--skip"])
+    @Option(description = ["Number of output alignments to skip"], names = ["-s", "--skip"])
     var skipAfter: Int? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Filter export to a specific protein chain gene (e.g. TRA or IGH)."],
         names = ["-c", "--chains"]
     )
     var chain = "ALL"
 
-    @CommandLine.Option(
+    @Option(
         description = ["Only output clones where CDR3 (not whole clonal sequence) exactly equals to given sequence"],
         names = ["-e", "--cdr3-equals"]
     )
     var cdr3Equals: String? = null
 
-    @CommandLine.Option(
+    @Option(
         description = ["Only output clones where target clonal sequence contains sub-sequence."],
         names = ["-r", "--clonal-sequence-contains"]
     )
     var csContain: String? = null
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles
+        get() = listOf(input)
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(out)
+    override val outputFiles
+        get() = listOfNotNull(out)
 
     private val cloneIds: TIntHashSet?
         get() = if (ids.isEmpty()) null else TIntHashSet(ids)
@@ -115,8 +117,9 @@ class CommandExportClonesPretty : AbstractMiXCRCommand() {
         val filter = mkFilter()
         var total: Long = 0
         var filtered: Long = 0
-        val cloneSet = CloneSetIO.read(`in`)
-        (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it), 32768)) } ?: System.out).use { output ->
+        val cloneSet = CloneSetIO.read(input)
+        (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it.toFile()), 32768)) }
+            ?: System.out).use { output ->
             val countBefore = limitBefore ?: Int.MAX_VALUE
             val countAfter = limitAfter ?: Int.MAX_VALUE
             val skipAfter = skipAfter ?: 0

@@ -19,26 +19,27 @@ import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
-@CommandLine.Command(
-    name = CommandMergeAlignments.MERGE_ALIGNMENTS_COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
+@Command(
     description = ["Merge several *.vdjca files with alignments into a single alignments file."]
 )
-class CommandMergeAlignments : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(
+class CommandMergeAlignments : MiXCRCommandWithOutputs() {
+    @Parameters(
         description = ["[input_file1.vdjca [input_file2.vdjca ....]] output_file.vdjca"],
         arity = "2..*"
     )
-    var input: List<String> = mutableListOf()
+    var input: List<Path> = mutableListOf()
 
-    public override fun getInputFiles(): List<String> = input.subList(0, input.size - 1)
+    public override val inputFiles
+        get() = input.subList(0, input.size - 1)
 
-    override fun getOutputFiles(): List<String> = listOf(input.last())
+    override val outputFiles
+        get() = listOf(input.last())
 
     override fun run0() {
         MultiReader(inputFiles).use { reader ->
@@ -55,7 +56,7 @@ class CommandMergeAlignments : AbstractMiXCRCommand() {
     }
 
     // Not thread-safe !
-    private class MultiReader(val files: List<String>) : OutputPort<VDJCAlignments>, CanReportProgress, AutoCloseable {
+    private class MultiReader(val files: List<Path>) : OutputPort<VDJCAlignments>, CanReportProgress, AutoCloseable {
         init {
             require(files.isNotEmpty())
         }

@@ -14,7 +14,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.AssembleContigsMixins
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
@@ -53,7 +53,9 @@ import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
@@ -66,14 +68,11 @@ import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
 @Command(
-    name = CommandFindAlleles.COMMAND_NAME,
-    sortOptions = false,
-    separator = " ",
     description = ["Find allele variants in clnx."]
 )
-class CommandFindAlleles : AbstractMiXCRCommand() {
+class CommandFindAlleles : MiXCRCommandWithOutputs() {
     data class Params(val dummy: Boolean = true) : MiXCRParams {
-        override val command get() = MiXCRCommand.findAlleles
+        override val command get() = MiXCRCommandDescriptor.findAlleles
     }
 
     @Parameters(
@@ -81,7 +80,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
         paramLabel = "input_file.clns [input_file2.clns ...]",
         description = ["Input files for allele search"]
     )
-    lateinit var `in`: List<Path>
+    override val inputFiles: List<Path> = mutableListOf()
 
     @Option(
         description = [
@@ -115,10 +114,10 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     )
     var useLocalTemp = false
 
-    @Option(description = ["Processing threads"], names = ["-t", "--threads"])
+    @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
     var threads = Runtime.getRuntime().availableProcessors()
         set(value) {
-            if (value <= 0) throwValidationExceptionKotlin("-t / --threads must be positive")
+            if (value <= 0) throw ValidationException("-t / --threads must be positive")
             field = value
         }
 
@@ -126,10 +125,10 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     var overrides: Map<String, String> = mutableMapOf()
 
     @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-    var reportFile: String? = null
+    var reportFile: Path? = null
 
     @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-    var jsonReport: String? = null
+    var jsonReport: Path? = null
 
     @Option(names = ["--debugDir"], hidden = true)
     var debugDir: Path? = null
@@ -137,9 +136,9 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     private val outputClnsFiles: List<Path> by lazy {
         val template = outputTemplate ?: return@lazy emptyList()
         if (!template.endsWith(".clns")) {
-            throwValidationExceptionKotlin("Wrong template: command produces only clns $template")
+            throw ValidationException("Wrong template: command produces only clns $template")
         }
-        val clnsFiles = `in`
+        val clnsFiles = inputFiles
             .map { it.toAbsolutePath() }
             .map { path ->
                 template
@@ -149,19 +148,15 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
             .map { Paths.get(it) }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
-            throwValidationExceptionKotlin("Output clns files are not uniq: $clnsFiles")
+            throw ValidationException("Output clns files are not uniq: $clnsFiles")
         }
         clnsFiles
     }
 
-    public override fun getInputFiles(): List<String> = `in`.map { it.toString() }
-
-    public override fun getOutputFiles(): List<String> = outputPaths.map { it.toString() }
-
-    private val outputPaths get() = outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput)
+    override val outputFiles get() = outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput)
 
     private val tempDest: TempFileDest by lazy {
-        val path = outputPaths.first()
+        val path = outputFiles.first()
         if (useLocalTemp) path.toAbsolutePath().parent.createDirectories()
         TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp)
     }
@@ -169,28 +164,27 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
     private val findAllelesParameters: FindAllelesParameters by lazy {
         val findAllelesParametersName = "default"
         var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
-            ?: throwValidationExceptionKotlin("Unknown parameters: $findAllelesParametersName")
+            ?: throw ValidationException("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
             result = JsonOverrider.override(result, FindAllelesParameters::class.java, overrides)
-                ?: throwValidationExceptionKotlin("Failed to override some parameter: $overrides")
+                ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
         result
     }
 
     override fun validate() {
-        super.validate()
         libraryOutput?.let { libraryOutput ->
             if (libraryOutput.extension != "json") {
-                throwValidationExceptionKotlin("--export-library must be json: $libraryOutput")
+                throw ValidationException("--export-library must be json: $libraryOutput")
             }
         }
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             if (allelesMutationsOutput.extension !in arrayOf("tsv", "csv")) {
-                throwValidationExceptionKotlin("--export-alleles-mutations must be csv: $allelesMutationsOutput")
+                throw ValidationException("--export-alleles-mutations must be csv: $allelesMutationsOutput")
             }
         }
         if (listOfNotNull(outputTemplate, libraryOutput, allelesMutationsOutput).isEmpty()) {
-            throwValidationExceptionKotlin("--output-template, --export-library or --export-alleles-mutations must be set")
+            throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
         }
     }
 
@@ -227,7 +221,7 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
             .setStartMillis(System.currentTimeMillis())
         ensureParametersInitialized()
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
-        val cloneReaders = inputFiles.map { CloneSetIO.mkReader(Paths.get(it), libraryRegistry) }
+        val cloneReaders = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
         require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
@@ -389,14 +383,14 @@ class CommandFindAlleles : AbstractMiXCRCommand() {
                     resultLibrary.name,
                     resultLibrary.data
                 )
-            ).addStepParams(MiXCRCommand.findAlleles, Params()),
+            ).addStepParams(MiXCRCommandDescriptor.findAlleles, Params()),
             cloneReader.footer,
             cloneReader.ordering()
         )
         val clnsWriter = ClnsWriter(this)
         clnsWriter.writeCloneSet(cloneSet)
         return { report ->
-            clnsWriter.setFooter(cloneReader.footer.addStepReport(MiXCRCommand.findAlleles, report))
+            clnsWriter.setFooter(cloneReader.footer.addStepReport(MiXCRCommandDescriptor.findAlleles, report))
             clnsWriter.close()
         }
     }

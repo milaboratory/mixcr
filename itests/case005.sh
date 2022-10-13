@@ -17,7 +17,7 @@ mixcr analyze tcr_amplicon \
   +splitClonesBy V +splitClonesBy J +splitClonesBy C \
   case5_R1.fastq case5_R2.fastq case5
 
-mixcr exportAlignments -f -readIds -cloneIdWithMappingType case5.clna case5.als.txt
+mixcr exportAlignments -f --drop-default-fields -readIds -cloneIdWithMappingType case5.clna case5.als.txt
 
 sort -t $'\t' --key=1 -n case5.als.txt | tail -n +2 > case5.als.sorted.txt
 

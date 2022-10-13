@@ -93,9 +93,6 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
     }
 
     @Command(
-        name = "vUsage",
-        sortOptions = false,
-        separator = " ",
         description = ["Export V gene usage"]
     )
     class VUsage : CommandPaExportPlotsGeneUsage() {
@@ -107,9 +104,6 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
     }
 
     @Command(
-        name = "jUsage",
-        sortOptions = false,
-        separator = " ",
         description = ["Export J gene usage"]
     )
     class JUsage : CommandPaExportPlotsGeneUsage() {
@@ -121,9 +115,6 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
     }
 
     @Command(
-        name = "isotypeUsage",
-        sortOptions = false,
-        separator = " ",
         description = ["Export isotype usage heatmap"]
     )
     class IsotypeUsage : CommandPaExportPlotsGeneUsage() {

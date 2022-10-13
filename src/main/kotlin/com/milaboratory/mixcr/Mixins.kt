@@ -525,13 +525,13 @@ object PipelineMixins {
         @JsonProperty("step") val step: String
     ) : MiXCRMixinBase(10) {
         @JsonIgnore
-        private val command = MiXCRCommand.fromString(step)
+        private val command = MiXCRCommandDescriptor.fromString(step)
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::pipeline.updateBy {
                 MiXCRPipeline((it.steps + command).sorted())
             }
 
-            if (command == MiXCRCommand.assembleContigs)
+            if (command == MiXCRCommandDescriptor.assembleContigs)
                 MiXCRParamsBundle::assemble.update {
                     CommandAssemble.Params::clnaOutput setTo true
                 }
@@ -549,13 +549,13 @@ object PipelineMixins {
         @JsonProperty("step") val step: String
     ) : MiXCRMixinBase(10) {
         @JsonIgnore
-        private val command = MiXCRCommand.fromString(step)
+        private val command = MiXCRCommandDescriptor.fromString(step)
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::pipeline.updateBy {
                 MiXCRPipeline(it.steps - command)
             }
 
-            if (command == MiXCRCommand.assembleContigs)
+            if (command == MiXCRCommandDescriptor.assembleContigs)
                 MiXCRParamsBundle::assemble.update {
                     CommandAssemble.Params::clnaOutput setTo false
                 }
@@ -594,7 +594,6 @@ object ExportMixins {
             MiXCRParamsBundle::exportAlignments.update { CommandExportAlignments.Params::fields.updateBy(::modifyFields) }
             MiXCRParamsBundle::exportClones.update { CommandExportClones.Params::fields.updateBy(::modifyFields) }
         }
-
     }
 
     @JsonTypeName("ImputeGermlineOnExport")
@@ -657,15 +656,14 @@ object ExportMixins {
         @JsonProperty("args") @JsonInclude(NON_EMPTY) val args: List<String> = emptyList(),
     ) : AddExportField(false, insertIndex, field, args) {
         override val cmdArgs
-            get() =
-                listOf(
-                    (when (insertIndex) {
-                        0 -> CMD_OPTION_PREPEND_PREFIX
-                        -1 -> CMD_OPTION_APPEND_PREFIX
-                        else -> throw IllegalArgumentException()
-                    }) + args.size,
-                    field
-                ) + args
+            get() = listOf(
+                when (insertIndex) {
+                    0 -> CMD_OPTION_PREPEND_PREFIX
+                    -1 -> CMD_OPTION_APPEND_PREFIX
+                    else -> throw IllegalArgumentException()
+                },
+                field
+            ) + args
 
         companion object {
             const val CMD_OPTION_PREPEND_PREFIX = "+prependExportAlignmentsField"
@@ -680,15 +678,14 @@ object ExportMixins {
         @JsonProperty("args") @JsonInclude(NON_EMPTY) val args: List<String> = emptyList(),
     ) : AddExportField(true, insertIndex, field, args) {
         override val cmdArgs
-            get() =
-                listOf(
-                    (when (insertIndex) {
-                        0 -> CMD_OPTION_PREPEND_PREFIX
-                        -1 -> CMD_OPTION_APPEND_PREFIX
-                        else -> throw IllegalArgumentException()
-                    }) + args.size,
-                    field
-                ) + args
+            get() = listOf(
+                when (insertIndex) {
+                    0 -> CMD_OPTION_PREPEND_PREFIX
+                    -1 -> CMD_OPTION_APPEND_PREFIX
+                    else -> throw IllegalArgumentException()
+                },
+                field
+            ) + args
 
         companion object {
             const val CMD_OPTION_PREPEND_PREFIX = "+prependExportClonesField"
