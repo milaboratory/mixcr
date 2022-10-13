@@ -22,6 +22,7 @@ import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.OutputMode
@@ -33,6 +34,7 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -81,12 +83,6 @@ object CommandExportClones {
         private var chains: String? = null
 
         @Option(
-            description = ["Don't print first header line, print only data"],
-            names = ["--no-header"]
-        )
-        private var noHeader = false
-
-        @Option(
             description = ["Exclude clones with out-of-frame clone sequences (fractions will be recalculated)"],
             names = ["-o", "--filter-out-of-frames"]
         )
@@ -101,14 +97,17 @@ object CommandExportClones {
         @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         private var splitByTag: String? = null
 
+        @Mixin
+        private lateinit var exportDefaults: ExportDefaultOptions
+
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::filterOutOfFrames setIfTrue filterOutOfFrames
                 Params::filterStops setIfTrue filterStops
                 Params::splitByTags setIfNotNull splitByTag
-                Params::noHeader setIfTrue noHeader
-                Params::fields setIfNotEmpty CloneFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
+                Params::noHeader setIfTrue exportDefaults.noHeader
+                Params::fields.updateBy(exportDefaults)
             }
         }
     }

@@ -24,6 +24,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.OutputMode
@@ -37,6 +38,7 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -71,17 +73,14 @@ object CommandExportAlignments {
         )
         private var chains: String? = null
 
-        @Option(
-            description = ["Don't print first header line, print only data"],
-            names = ["--no-header"]
-        )
-        private var noHeader = false
+        @Mixin
+        private lateinit var exportDefaults: ExportDefaultOptions
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportAlignments) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
-                Params::noHeader setIfTrue noHeader
-                Params::fields setIfNotEmpty VDJCAlignmentsFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
+                Params::noHeader setIfTrue exportDefaults.noHeader
+                Params::fields.updateBy(exportDefaults)
             }
         }
     }
