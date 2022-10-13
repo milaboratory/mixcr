@@ -293,14 +293,18 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
 
 class ExportMiXCRMixins : MiXCRMixinCollector() {
     @Option(
-        description = [],
+        description = ["Export nucleotide sequences using letters from germline (marked lowercase) for uncovered regions"],
         names = [ImputeGermlineOnExport.CMD_OPTION],
         arity = "0"
     )
     fun imputeGermlineOnExport(ignored: Boolean) =
         mixIn(ImputeGermlineOnExport)
 
-    @Option(names = [DontImputeGermlineOnExport.CMD_OPTION], arity = "0")
+    @Option(
+        description = ["Export nucleotide sequences only from covered region"],
+        names = [DontImputeGermlineOnExport.CMD_OPTION],
+        arity = "0"
+    )
     fun dontImputeGermlineOnExport(ignored: Boolean) =
         mixIn(DontImputeGermlineOnExport)
 
@@ -315,13 +319,16 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
     }
 
     @Option(
+        description = ["Add clones export column before other columns. First param is field name as it is in '${CommandExportClones.COMMAND_NAME}' command, left params are params of the field"],
         names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX],
         parameterConsumer = CloneExportParameterConsumer::class,
         arity = "1..*",
+        paramLabel = "<field [params ...]>"
     )
     fun prependExportClonesField(data: List<String>) = addExportClonesField(data, true)
 
     @Option(
+        description = ["Add clones export column after other columns. First param is field name as it is in '${CommandExportClones.COMMAND_NAME}' command, left params are params of the field"],
         names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX],
         parameterConsumer = CloneExportParameterConsumer::class,
         arity = "1..*",
@@ -329,16 +336,18 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
     fun appendExportClonesField(data: List<String>) = addExportClonesField(data, false)
 
     @Option(
+        description = ["Add clones export column before other columns. First param is field name as it is in '${CommandExportAlignments.COMMAND_NAME}' command, left params are params of the field"],
         names = [AddExportAlignmentsField.CMD_OPTION_PREPEND_PREFIX],
-        parameterConsumer = CloneExportParameterConsumer::class,
-        arity = "0..*",
+        parameterConsumer = AlignsExportParameterConsumer::class,
+        arity = "1..*",
     )
     fun prependExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, true)
 
     @Option(
+        description = ["Add clones export column after other columns. First param is field name as it is in '${CommandExportAlignments.COMMAND_NAME}' command, left params are params of the field"],
         names = [AddExportAlignmentsField.CMD_OPTION_APPEND_PREFIX],
-        parameterConsumer = CloneExportParameterConsumer::class,
-        arity = "0..*",
+        parameterConsumer = AlignsExportParameterConsumer::class,
+        arity = "1..*",
     )
     fun appendExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, false)
 
@@ -361,28 +370,14 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         class CloneExportParameterConsumer : ExportParameterConsumer(CloneFieldsExtractorsFactory)
 
         class AlignsExportParameterConsumer : ExportParameterConsumer(VDJCAlignmentsFieldsExtractorsFactory)
-
-        abstract class ExecParameterConsumer(private val nArgs: Int) : IParameterConsumer {
-            override fun consumeParameters(args: Stack<String>, argSpec: ArgSpec, commandSpec: CommandSpec) {
-                val list: MutableList<String> = mutableListOf()
-                var i = nArgs + 1
-                while (!args.isEmpty() && i > 0) {
-                    list.add(args.pop())
-                    --i
-                }
-                if (list.size != (nArgs + 1))
-                    throw ValidationException(
-                        "${nArgs + 1} parameters expected but only ${list.size} were supplied",
-                        true
-                    )
-                argSpec.setValue(list)
-            }
-        }
     }
 }
 
 class GenericMiXCRMixins : MiXCRMixinCollector() {
-    @Option(names = [GenericMixin.CMD_OPTION])
+    @Option(
+        description = ["Overrides preset parameters"],
+        names = [GenericMixin.CMD_OPTION]
+    )
     fun genericMixin(fieldAndOverrides: Map<String, String>) {
         fieldAndOverrides.forEach { (field, override) ->
             mixIn(GenericMixin(field, override))
