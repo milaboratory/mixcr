@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.StatusReporter
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -23,20 +24,20 @@ import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
 import com.milaboratory.mixcr.assembler.CloneAssembler
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneAssemblerRunner
+import com.milaboratory.mixcr.assembler.ReadToCloneMapping.DROPPED_WITH_CLONE_MASK
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
-import com.milaboratory.mixcr.basictypes.ClnAWriter
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.mixcr.basictypes.VDJCSProperties
+import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.primitivio.map
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.util.ArraysUtils
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
+import gnu.trove.map.hash.TIntObjectHashMap
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
@@ -194,10 +195,13 @@ object CommandAssemble {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
 
+            val numberOfAlignments: Long
+
             val cmdParam: Params
             VDJCAlignmentsReader(inputFile).use { alignmentsReader ->
                 val inputHeader = alignmentsReader.header
                 val inputFooter = alignmentsReader.footer
+                numberOfAlignments = alignmentsReader.numberOfAlignments
 
                 cmdParam = paramsResolver.resolve(inputHeader.paramsSpec) { cp ->
                     if (!cp.inferMinRecordsPerConsensus)
@@ -335,8 +339,33 @@ object CommandAssemble {
                             SmartProgressReporter.startProgressReport(writer)
                             // Writing clone block
                             writer.writeClones(cloneSet)
+
+                            // Preparing a cloneId -> tag count map for filtering
+                            // (read below)
+                            val cloneTagCounts = TIntObjectHashMap<TagCount>(cloneSet.size())
+                            for (clone in cloneSet)
+                                if (cloneTagCounts.put(clone.id, clone.tagCount) != null)
+                                    throw IllegalStateException("Repeated clone id.")
+
                             AlignmentsMappingMerger(preClones.readAlignments(), assembler.assembledReadsPort)
-                                .use { merged -> writer.collateAlignments(merged, assembler.alignmentsCount) }
+                                .use { merged ->
+                                    // Because clone's tag counts may be additionally filtered in post filtering,
+                                    // it is important to take this into account here, to drop those alignments
+                                    // with dropped tags / tag prefixes
+                                    val filteredByTags: OutputPort<VDJCAlignments> = merged.map {
+                                        if (it.cloneIndex == -1L)
+                                            return@map it
+                                        val cloneTagCount = cloneTagCounts.get(it.cloneIndex.toInt())!!
+                                        val prefixes = it.tagCount.reduceToLevel(cloneTagCount.depth())
+                                        if (!cloneTagCount.containsAll(prefixes.tuples())) {
+                                            reportBuilder.onAlignmentFilteredByPrefix(it)
+                                            // Dropped with clone semantically fits the case the most
+                                            return@map it.withCloneIndexAndMappingType(-1, DROPPED_WITH_CLONE_MASK)
+                                        }
+                                        it
+                                    }
+                                    writer.collateAlignments(filteredByTags, numberOfAlignments)
+                                }
                             reportBuilder.setFinishMillis(System.currentTimeMillis())
                             report = reportBuilder.buildReport()
                             writer.setFooter(

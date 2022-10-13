@@ -120,7 +120,7 @@ public final class TagCountAggregator {
 
     private TagCount createTagCounter() {
         if (singletonTuple == null && tagMap == null)
-            return TagCount.NO_TAGS_1;
+            throw new IllegalStateException("Building empty tag counter.");
 
         if (singletonTuple != null)
             return new TagCount(singletonTuple, singletonCount);

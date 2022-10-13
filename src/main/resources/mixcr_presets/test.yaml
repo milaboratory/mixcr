@@ -11,8 +11,12 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 4
+      field: -uniqueTagFraction
       args: [ "UMI" ]
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
@@ -49,24 +53,6 @@
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*)) |
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
 
 "test-mikelov-et-al-2021-with-contigs":
   inheritFrom: _universal
@@ -81,8 +67,12 @@
     - type: AddPipelineStep
       step: assembleContigs
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 4
+      field: -uniqueTagFraction
       args: [ "UMI" ]
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
@@ -119,24 +109,6 @@
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*)) |
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
 
 "test-airr-long-ig-base":
   inheritFrom: _universal

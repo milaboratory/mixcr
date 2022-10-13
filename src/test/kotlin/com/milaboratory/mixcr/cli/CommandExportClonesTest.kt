@@ -20,7 +20,7 @@ class CommandExportClonesTest {
         output.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} $input ${output.path}")
         val columns = output.readLines().first().split("\t")
-        columns shouldContainAll listOf("cloneId", "cloneCount")
+        columns shouldContainAll listOf("cloneId", "readCount")
     }
 
     @Test
@@ -31,7 +31,7 @@ class CommandExportClonesTest {
         output.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} -nFeature VDJRegion $input ${output.path}")
         val columns = output.readLines().first().split("\t")
-        columns shouldContainInOrder listOf("cloneId", "cloneCount", "nSeqVDJRegion")
+        columns shouldContainInOrder listOf("cloneId", "readCount", "nSeqVDJRegion")
     }
 
     @Test
@@ -42,7 +42,7 @@ class CommandExportClonesTest {
         output.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} -nFeature VDJRegion --prepend-columns $input ${output.path}")
         val columns = output.readLines().first().split("\t")
-        columns shouldContainInOrder listOf("nSeqVDJRegion", "cloneId", "cloneCount")
+        columns shouldContainInOrder listOf("nSeqVDJRegion", "cloneId", "readCount")
     }
 
     @Test

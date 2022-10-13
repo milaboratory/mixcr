@@ -50,6 +50,7 @@ public final class CloneAssemblerReportBuilder
     final AtomicInteger clonesFilteredInPostFiltering = new AtomicInteger();
     final AtomicDouble readsFilteredInPostFiltering = new AtomicDouble();
     List<KeyedFilterReport> postFilteringReports = null;
+    final AtomicLong alignmentsFilteredByTagPrefix = new AtomicLong();
 
     public void setPreCloneAssemblerReportBuilder(PreCloneAssemblerReportBuilder preCloneAssemblerReport) {
         if (this.preCloneAssemblerReportBuilder != null)
@@ -134,18 +135,22 @@ public final class CloneAssemblerReportBuilder
 
     @Override
     public void onPostFiltering(List<Clone> before, List<Clone> after, List<KeyedFilterReport> reports) {
-        this.clonesFilteredInPostFiltering.set(before.size() - after.size());
-        this.readsFilteredInPostFiltering.set(before.stream().mapToDouble(Clone::getCount).sum() -
+        clonesFilteredInPostFiltering.set(before.size() - after.size());
+        readsFilteredInPostFiltering.set(before.stream().mapToDouble(Clone::getCount).sum() -
                 after.stream().mapToDouble(Clone::getCount).sum());
-        this.postFilteringReports = reports;
+        postFilteringReports = reports;
     }
 
     public void setTotalReads(long totalReads) {
-        this.totalReadsProcessed = totalReads;
+        totalReadsProcessed = totalReads;
     }
 
     public long getReadsInClonesBeforeClustering() {
         return lowQualityRescued.get() + coreReads.get();
+    }
+
+    public void onAlignmentFilteredByPrefix(VDJCAlignments alignments) {
+        alignmentsFilteredByTagPrefix.incrementAndGet();
     }
 
     @Override
@@ -183,7 +188,8 @@ public final class CloneAssemblerReportBuilder
                 clonalChainUsage.buildReport(),
                 clonesFilteredInPostFiltering.get(),
                 readsFilteredInPostFiltering.get(),
-                postFilteringReports
+                postFilteringReports,
+                alignmentsFilteredByTagPrefix.get()
         );
     }
 }

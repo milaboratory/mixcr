@@ -587,6 +587,8 @@ public final class FullSeqAssembler {
             grps = new TIntHashSet();
             for (int readId = branch.reads.nextSetBit(0); readId >= 0; readId = branch.reads.nextSetBit(readId + 1))
                 grps.add(groups[readId]);
+            if (grps.isEmpty())
+                throw new IllegalArgumentException();
         }
 
         return new BranchSequences(
@@ -664,6 +666,8 @@ public final class FullSeqAssembler {
             this.positionMaps = positionMaps;
             this.sequences = sequences;
             this.groups = groups;
+            if (groups != null && groups.isEmpty())
+                throw new IllegalArgumentException("Orphan branch sequence: no group assignments.");
             assert check();
         }
 

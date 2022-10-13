@@ -33,4 +33,5 @@ mixcr exportClones --drop-default-fields -nFeature VDJRegion case11-without-cont
 sort case11-with-contigs.clns.txt > case11-with-contigs.clns.txt.s
 sort case11-without-contigs.clns.txt > case11-without-contigs.clns.txt.s
 
+[[ $(cat case11-with-contigs.clns.txt.s | wc -l) -eq 4 ]] || exit 1
 cmp case11-with-contigs.clns.txt.s case11-without-contigs.clns.txt.s

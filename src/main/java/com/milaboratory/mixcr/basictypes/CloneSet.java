@@ -35,26 +35,35 @@ public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatur
     final List<VDJCGene> usedGenes;
     final List<Clone> clones;
     final double totalCount;
-    final TagCount totalTagCounts;
+    private final TagCount totalTagCounts;
+    /** Total number of unique tag combinations on each level */
+    private final int[] tagDiversity;
 
     public CloneSet(List<Clone> clones, Collection<VDJCGene> usedGenes,
                     MiXCRHeader header, MiXCRFooter footer,
                     VDJCSProperties.CloneOrdering ordering) {
         ArrayList<Clone> list = new ArrayList<>(clones);
         list.sort(ordering.comparator());
-        this.clones = Collections.unmodifiableList(list);
-        long totalCount = 0;
-        TagCountAggregator tagCountAggregator = new TagCountAggregator();
-        for (Clone clone : clones) {
-            totalCount += clone.count;
-            clone.setParentCloneSet(this);
-            tagCountAggregator.add(clone.tagCount);
-        }
-        this.totalTagCounts = tagCountAggregator.createAndDestroy();
         this.header = header;
         this.footer = footer;
         this.ordering = ordering;
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(usedGenes));
+        this.clones = Collections.unmodifiableList(list);
+
+        long totalCount = 0;
+        int[] tagDiversity = new int[header.getTagsInfo().size() + 1];
+        TagCountAggregator tagCountAggregator = new TagCountAggregator();
+        for (Clone clone : clones) {
+            totalCount += clone.count;
+            clone.setParentCloneSet(this);
+            if (clone.tagCount.depth() != header.getTagsInfo().size())
+                throw new IllegalArgumentException("Conflict in tags info and clone tag counter.");
+            tagCountAggregator.add(clone.tagCount);
+            for (int d = 0; d < tagDiversity.length; d++)
+                tagDiversity[d] += clone.getTagCount().getTagDiversity(d);
+        }
+        this.totalTagCounts = clones.size() == 0 ? null : tagCountAggregator.createAndDestroy();
+        this.tagDiversity = tagDiversity;
         this.totalCount = totalCount;
     }
 
@@ -79,9 +88,10 @@ public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatur
                         throw new IllegalArgumentException("Different aligned feature for clones.");
                 }
         }
-        this.totalTagCounts = tagCountAggregator.createAndDestroy();
+        this.totalTagCounts = clones.size() == 0 ? null : tagCountAggregator.createAndDestroy();
         this.header = null;
         this.footer = null;
+        this.tagDiversity = null;
         this.ordering = new VDJCSProperties.CloneOrdering();
         this.usedGenes = Collections.unmodifiableList(new ArrayList<>(genes.values()));
         this.totalCount = totalCount;
@@ -99,7 +109,7 @@ public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatur
         return clones.size();
     }
 
-    public boolean isHeaderAvailable(){
+    public boolean isHeaderAvailable() {
         return header != null;
     }
 
@@ -108,7 +118,7 @@ public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatur
         return Objects.requireNonNull(header);
     }
 
-    public boolean isFooterAvailable(){
+    public boolean isFooterAvailable() {
         return footer != null;
     }
 
@@ -160,6 +170,10 @@ public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatur
 
     public TagCount getTotalTagCounts() {
         return totalTagCounts;
+    }
+
+    public int getTagDiversity(int level) {
+        return tagDiversity[level];
     }
 
     public String getVersionInfo() {

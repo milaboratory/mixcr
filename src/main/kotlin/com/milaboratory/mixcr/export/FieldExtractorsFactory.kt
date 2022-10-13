@@ -289,7 +289,7 @@ abstract class FieldExtractorsFactory<T : Any> {
         const val readDescriptions = 140_000
         const val alignmentCloneIds = 150_000
         const val identityPercents = 160_000
-        const val chains = 170_000
+        const val labels = 170_000
         const val tags = 180_000
         const val treeStats = 190_000
 

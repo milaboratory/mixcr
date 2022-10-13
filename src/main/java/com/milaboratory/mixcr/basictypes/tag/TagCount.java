@@ -189,9 +189,9 @@ public final class TagCount {
      * Reduces tag counts to the specified level, new tag counts will be computed as the number of uniques suffixes.
      */
     public TagCount reduceToLevel(int level) {
-        if (level == depth) {
+        if (level == depth)
             return this;
-        }
+
         TagCountAggregator agg = new TagCountAggregator();
         TObjectDoubleIterator<TagTuple> it = iterator();
         while (it.hasNext()) {
@@ -199,6 +199,32 @@ public final class TagCount {
             agg.add(it.key().prefix(level), 1d);
         }
         return agg.createAndDestroy();
+    }
+
+    /** The same ase reduceToLevel(level).size() */
+    public int getTagDiversity(int level) {
+        if (level == depth)
+            return size();
+
+        Set<TagTuple> uniqueTags = new HashSet<>();
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+            uniqueTags.add(it.key().prefix(level));
+        }
+
+        return uniqueTags.size();
+    }
+
+    /** Returns true if all keys in the counter has the provided prefix. */
+    public boolean allTagsHasPrefix(TagTuple prefix) {
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+            if (!it.key().hasPrefix(prefix))
+                return false;
+        }
+        return true;
     }
 
     public double get(TagTuple tt) {
@@ -211,7 +237,10 @@ public final class TagCount {
     }
 
     public boolean containsAll(Set<TagTuple> other) {
-        return tagMap.keySet().containsAll(other);
+        if (singletonTuple != null)
+            return other.size() == 0 || (other.size() == 1 && singletonTuple.equals(other.iterator().next()));
+        else
+            return tagMap.keySet().containsAll(other);
     }
 
     public boolean containsAll(TagCount other) {
@@ -357,17 +386,4 @@ public final class TagCount {
         }
         return sum;
     }
-
-    // public TagCounter toFractions() {
-    //     double sum = sum();
-    //     if (sum == 0)
-    //         return this;
-    //     TObjectDoubleHashMap<TagTuple> result = new TObjectDoubleHashMap<>();
-    //     TObjectDoubleIterator<TagTuple> it = iterator();
-    //     while (it.hasNext()) {
-    //         it.advance();
-    //         result.put(it.key(), it.value() / sum);
-    //     }
-    //     return new TagCounter(result);
-    // }
 }

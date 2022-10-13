@@ -19,6 +19,7 @@ import com.milaboratory.mixcr.cli.afiltering.AFilter
 import com.milaboratory.mixcr.util.and
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.util.NSequenceWithQualityPrintHelper
+import gnu.trove.set.hash.TIntHashSet
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
