@@ -77,7 +77,6 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
     companion object {
 
-        @JvmStatic
         fun mkCommandSpec(): CommandSpec {
             val command = CommandExportShmTreesTableWithNodes()
             val spec = CommandSpec.forAnnotatedObject(command)

@@ -35,6 +35,7 @@ import com.milaboratory.mixcr.GenericMixin
 import com.milaboratory.mixcr.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.basictypes.GeneFeatures
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.FieldExtractorsFactoryNew
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
@@ -150,35 +151,35 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         description = [],
         names = [AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION],
         arity = "0..1",
-        paramLabel = "<anchor_point>"
+        paramLabel = Labels.ANCHOR_POINT
     )
-    fun floatingLeftAlignmentBoundary(arg: String?) =
+    fun floatingLeftAlignmentBoundary(arg: ReferencePoint?) =
         mixIn(
-            if (arg.isNullOrBlank())
+            if (arg == null)
                 LeftAlignmentBoundaryNoPoint(true)
             else
-                LeftAlignmentBoundaryWithPoint(true, ReferencePoint.parse(arg))
+                LeftAlignmentBoundaryWithPoint(true, arg)
         )
 
     @Option(
         description = [],
         names = [AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION],
         arity = "0..1",
-        paramLabel = "<anchor_point>"
+        paramLabel = Labels.ANCHOR_POINT
     )
-    fun rigidLeftAlignmentBoundary(arg: String?) =
+    fun rigidLeftAlignmentBoundary(arg: ReferencePoint?) =
         mixIn(
-            if (arg.isNullOrBlank())
+            if (arg == null)
                 LeftAlignmentBoundaryNoPoint(false)
             else
-                LeftAlignmentBoundaryWithPoint(false, ReferencePoint.parse(arg))
+                LeftAlignmentBoundaryWithPoint(false, arg)
         )
 
     @Option(
         description = [],
         names = [AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION],
         arity = "1",
-        paramLabel = "<anchor_point>"
+        paramLabel = Labels.ANCHOR_POINT
     )
     fun floatingRightAlignmentBoundary(arg: String) =
         mixIn(
@@ -198,7 +199,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         description = [],
         names = [AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION],
         arity = "0..1",
-        paramLabel = "<anchor_point>"
+        paramLabel = Labels.ANCHOR_POINT
     )
     fun rigidRightAlignmentBoundary(arg: String?) =
         mixIn(
@@ -234,10 +235,10 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Specify gene features used to assemble clonotypes. One may specify any custom gene region (e.g. `FR3+CDR3`); target clonal sequence can even be disjoint. Note that `assemblingFeatures` must cover CDR3"],
         names = [SetClonotypeAssemblingFeatures.CMD_OPTION],
-        paramLabel = "<gene_features>"
+        paramLabel = Labels.GENE_FEATURES
     )
-    fun assembleClonotypesBy(gf: String) =
-        mixIn(SetClonotypeAssemblingFeatures(GeneFeatures.parse(gf)))
+    fun assembleClonotypesBy(gf: GeneFeatures) =
+        mixIn(SetClonotypeAssemblingFeatures(gf))
 
     @Option(
         description = [],
@@ -258,18 +259,18 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Clones with equal clonal sequence but different gene will not be merged."],
         names = [SetSplitClonesBy.CMD_OPTION_TRUE],
-        paramLabel = "<gene_types>.."
+        paramLabel = Labels.GENE_TYPE
     )
-    fun splitClonesBy(geneTypes: List<String>) =
-        geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), true)) }
+    fun splitClonesBy(geneTypes: List<GeneType>) =
+        geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(geneType, true)) }
 
     @Option(
         description = ["Clones with equal clonal sequence but different gene will be merged into single clone."],
         names = [SetSplitClonesBy.CMD_OPTION_FALSE],
-        paramLabel = "<gene_types>.."
+        paramLabel = Labels.GENE_TYPE
     )
-    fun dontSplitClonesBy(geneTypes: List<String>) =
-        geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), false)) }
+    fun dontSplitClonesBy(geneTypes: List<GeneType>) =
+        geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(geneType, false)) }
 
     companion object {
         const val DESCRIPTION = "Params for ${CommandAssemble.COMMAND_NAME} command\n"
@@ -282,10 +283,10 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
                 "nucleotides will be detected in the region, assembling procedure will be limited to the region, " +
                 "and only clonotypes that fully cover the region will be outputted, others will be filtered out."],
         names = [SetContigAssemblingFeatures.CMD_OPTION],
-        paramLabel = "<gene_features>"
+        paramLabel = Labels.GENE_FEATURES
     )
-    fun assembleContigsBy(gf: String) =
-        mixIn(SetContigAssemblingFeatures(GeneFeatures.parse(gf)))
+    fun assembleContigsBy(gf: GeneFeatures) =
+        mixIn(SetContigAssemblingFeatures(gf))
 
     companion object {
         const val DESCRIPTION = "Params for ${CommandAssembleContigs.COMMAND_NAME} command\n"
@@ -324,7 +325,8 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX],
         parameterConsumer = CloneExportParameterConsumer::class,
         arity = "1..*",
-        paramLabel = "<field [params ...]>"
+        paramLabel = "<field [params...]>",
+        hideParamSyntax = true
     )
     fun prependExportClonesField(data: List<String>) = addExportClonesField(data, true)
 
@@ -333,6 +335,8 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX],
         parameterConsumer = CloneExportParameterConsumer::class,
         arity = "1..*",
+        paramLabel = "<field [params...]>",
+        hideParamSyntax = true
     )
     fun appendExportClonesField(data: List<String>) = addExportClonesField(data, false)
 
@@ -341,6 +345,8 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [AddExportAlignmentsField.CMD_OPTION_PREPEND_PREFIX],
         parameterConsumer = AlignsExportParameterConsumer::class,
         arity = "1..*",
+        paramLabel = "<field [params...]>",
+        hideParamSyntax = true
     )
     fun prependExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, true)
 
@@ -349,6 +355,8 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [AddExportAlignmentsField.CMD_OPTION_APPEND_PREFIX],
         parameterConsumer = AlignsExportParameterConsumer::class,
         arity = "1..*",
+        paramLabel = "<field [params...]>",
+        hideParamSyntax = true
     )
     fun appendExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, false)
 
@@ -377,7 +385,8 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
 class GenericMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Overrides preset parameters"],
-        names = [GenericMixin.CMD_OPTION]
+        names = [GenericMixin.CMD_OPTION],
+        paramLabel = Labels.OVERRIDES
     )
     fun genericMixin(fieldAndOverrides: Map<String, String>) {
         fieldAndOverrides.forEach { (field, override) ->

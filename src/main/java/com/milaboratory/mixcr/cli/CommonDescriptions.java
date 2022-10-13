@@ -15,6 +15,18 @@ public class CommonDescriptions {
     private CommonDescriptions() {
     }
 
+    public static class Labels {
+        public static final String OVERRIDES = "<key=value>";
+
+        public static final String ANCHOR_POINT = "<anchor_point>";
+
+        public static final String GENE_FEATURES = "<gene_features>";
+
+        public static final String GENE_TYPE = "<gene_type>";
+
+        public static final String CHAINS = "<chains>";
+    }
+
     public static final String SPECIES =
             "Species (organism), as specified in library file or taxon id.%n" +
                     "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.";

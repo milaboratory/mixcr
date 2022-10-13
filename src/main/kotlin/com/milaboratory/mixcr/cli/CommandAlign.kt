@@ -73,6 +73,7 @@ import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.SingleEndFastq
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.Good
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotAligned
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotParsed
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
@@ -93,9 +94,11 @@ import io.repseq.core.GeneFeature.encode
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.FileInputStream
@@ -104,7 +107,6 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.regex.Pattern
 import java.util.stream.Collectors
-import kotlin.io.path.Path
 import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.math.max
@@ -130,40 +132,71 @@ object CommandAlign {
         override val command get() = MiXCRCommandDescriptor.align
     }
 
+    private const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
+
+    private const val outputLabel = "alignments.vdjca"
+
+    fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(Cmd::class.java)
+        .addPositional(
+            CommandLine.Model.PositionalParamSpec.builder()
+                .index("0")
+                .required(false)
+                .arity("0..*")
+                .type(Path::class.java)
+                .paramLabel(inputsLabel)
+                .hideParamSyntax(true)
+                .description(
+                    "Two fastq files for paired reads or one file for single read data.",
+                    "Use {{n}} if you want to concatenate files from multiple lanes, like:",
+                    "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"
+                )
+                .build()
+        )
+        .addPositional(
+            CommandLine.Model.PositionalParamSpec.builder()
+                .index("1")
+                .required(false)
+                .arity("0..*")
+                .type(Path::class.java)
+                .paramLabel(outputLabel)
+                .hideParamSyntax(true)
+                .description("Path to write output alignments")
+                .build()
+        )
+
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
-        @Option(names = ["-O"], description = ["Overrides aligner parameters from the selected preset"])
+        @Option(
+            names = ["-O"],
+            description = ["Overrides aligner parameters from the selected preset"],
+            paramLabel = Labels.OVERRIDES
+        )
         private var overrides: Map<String, String> = mutableMapOf()
 
         @Option(
             description = ["Read pre-processing: trimming quality threshold"],
-            names = ["--trimming-quality-threshold"]
+            names = ["--trimming-quality-threshold"],
+            paramLabel = "<n>"
         )
         private var trimmingQualityThreshold: Byte? = null
 
-        @Option(description = ["Read pre-processing: trimming window size"], names = ["--trimming-window-size"])
+        @Option(
+            description = ["Read pre-processing: trimming window size"],
+            names = ["--trimming-window-size"],
+            paramLabel = "<n>"
+        )
         private var trimmingWindowSize: Byte? = null
 
-        @set:Option(
-            description = ["Specifies immunological chain / gene(s) for alignment. If many, separate by comma ','. " +
-                    "%nAvailable chains: IGH, IGL, IGK, TRA, TRB, TRG, TRD, etc..."],
+        @Suppress("unused", "UNUSED_PARAMETER")
+        @Option(
             names = ["-c", "--chains"],
             hidden = true
         )
-        private var chains: String? = null
-            set(value) {
-                logger.warn(
-                    "Don't use --chains option on the alignment step. See --chains parameter in exportAlignments and " +
-                            "exportClones actions to limit output to a subset of receptor chains."
-                )
-                field = value
-            }
-
-        @Option(
-            description = ["Do not merge paired reads."],
-            names = ["-d", "--no-merge"],
-            hidden = true
-        )
-        private var noMerge = false
+        fun setChains(ignored: String) {
+            logger.warn(
+                "Don't use --chains option on the alignment step. See --chains parameter in exportAlignments and " +
+                        "exportClones actions to limit output to a subset of receptor chains."
+            )
+        }
 
         @Option(
             description = ["Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)"],
@@ -180,9 +213,10 @@ object CommandAlign {
 
         @Option(
             description = ["Read tag pattern from a file."],
-            names = ["--tag-pattern-file"]
+            names = ["--tag-pattern-file"],
+            paramLabel = "<path>"
         )
-        var tagPatternFile: String? = null
+        var tagPatternFile: Path? = null
 
         @Option(
             description = ["If paired-end input is used, determines whether to try all combinations of mate-pairs or " +
@@ -193,7 +227,8 @@ object CommandAlign {
 
         @Option(
             description = ["Maximal bit budget, higher values allows more substitutions in small letters."],
-            names = ["--tag-max-budget"]
+            names = ["--tag-max-budget"],
+            paramLabel = "<n>"
         )
         private var tagMaxBudget: Double? = null
 
@@ -225,10 +260,9 @@ object CommandAlign {
 
                 Params::trimmingQualityThreshold setIfNotNull trimmingQualityThreshold
                 Params::trimmingWindowSize setIfNotNull trimmingWindowSize
-                Params::overlapPairedReads resetIfTrue noMerge
                 Params::bamDropNonVDJ setIfTrue dropNonVDJ
                 Params::writeFailedAlignments setIfTrue writeAllResults
-                Params::tagPattern setIfNotNull tagPatternFile?.let { Path(it) }?.readText()
+                Params::tagPattern setIfNotNull tagPatternFile?.readText()
                 Params::tagUnstranded setIfTrue tagUnstranded
                 Params::tagMaxBudget setIfNotNull tagMaxBudget
 
@@ -256,6 +290,7 @@ object CommandAlign {
                     "This is a required parameter. It is very important to carefully select the most appropriate preset " +
                     "for the data you analyse."],
             names = ["-p", "--preset"],
+            paramLabel = "<name>",
             required = true,
         )
         lateinit var presetName: String
@@ -284,45 +319,32 @@ object CommandAlign {
                 assembleContigsMixins, exportMixins, genericMixins
             )
 
-        @Option(
-            description = ["Don't embed preset into the output file"],
-            names = ["--dont-embed-preset"]
-        )
-        var dontEmbedPreset = false
-
         @Parameters(
+            index = "0",
             arity = "2..3",
-            paramLabel = "files",
+            paramLabel = "$inputsLabel $outputLabel",
             hideParamSyntax = true,
-            description = [
-                "file_R1.(fastq[.gz]|fasta|bam|sam) [file_R2.(fastq[.gz]|bam|sam)] [file_RN.(bam|sam)] alignments.vdjca",
-                "Use {{n}} if you want to concatenate files from multiple lanes, like:",
-                "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"
-            ]
+            //help is covered by mkCommandSpec
+            hidden = true
         )
         private val inOut: List<Path> = mutableListOf()
 
-        private val inputs get() = inOut.dropLast(1)
-
-        override val inputFiles get() = emptyList<Path>()
+        override val inputFiles get() = inOut.dropLast(1)
 
         override val outputFiles get() = inOut.takeLast(1)
 
-        @Option(description = ["Size of buffer for FASTQ readers"], names = ["--read-buffer"])
+        @Option(
+            description = ["Size of buffer for FASTQ readers in bytes. Default: 4Mb"],
+            names = ["--read-buffer"],
+            paramLabel = "<n>"
+        )
         var readBufferSize = 1 shl 22 // 4 Mb
 
-        @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: Path? = null
+        @Mixin
+        lateinit var reportOptions: ReportOptions
 
-        @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: Path? = null
-
-        @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
-        var threads = Runtime.getRuntime().availableProcessors()
-            set(value) {
-                if (value <= 0) throw ValidationException("-t / --threads must be positive")
-                field = value
-            }
+        @Mixin
+        lateinit var threads: ThreadsOption
 
         @Option(
             description = ["Use higher compression for output file, 10~25%% slower, minus 30~50%% of file size."],
@@ -331,28 +353,42 @@ object CommandAlign {
         var highCompression = false
 
 
-        @Option(description = ["Pipe not aligned R1 reads into separate file."], names = ["--not-aligned-R1"])
-        var notAlignedReadsR1: String? = null
+        @Option(
+            description = ["Pipe not aligned R1 reads into separate file."],
+            names = ["--not-aligned-R1"],
+            paramLabel = "<path>"
+        )
+        var notAlignedReadsR1: Path? = null
 
-        @Option(description = ["Pipe not aligned R2 reads into separate file."], names = ["--not-aligned-R2"])
-        var notAlignedReadsR2: String? = null
+        @Option(
+            description = ["Pipe not aligned R2 reads into separate file."],
+            names = ["--not-aligned-R2"],
+            paramLabel = "<path>"
+        )
+        var notAlignedReadsR2: Path? = null
 
-        @Option(description = ["Pipe not parsed R1 reads into separate file."], names = ["--not-parsed-R1"])
-        var notParsedReadsR1: String? = null
+        @Option(
+            description = ["Pipe not parsed R1 reads into separate file."],
+            names = ["--not-parsed-R1"],
+            paramLabel = "<path>"
+        )
+        var notParsedReadsR1: Path? = null
 
-        @Option(description = ["Pipe not parsed R2 reads into separate file."], names = ["--not-parsed-R2"])
-        var notParsedReadsR2: String? = null
+        @Option(
+            description = ["Pipe not parsed R2 reads into separate file."],
+            names = ["--not-parsed-R2"],
+            paramLabel = "<path>"
+        )
+        var notParsedReadsR2: Path? = null
 
         @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
 
-        private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins?.mixins ?: emptyList()) }
+        private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins.mixins) }
 
         private val bpPair by lazy { paramsResolver.resolve(paramsSpec) }
 
-        private val bundle by lazy { bpPair.first }
-
-        private val cmdParams by lazy { bpPair.second }
+        private val cmdParams get() = bpPair.second
 
         val alignerParameters: VDJCAlignerParameters by lazy {
             val parameters = cmdParams.parameters
@@ -394,7 +430,7 @@ object CommandAlign {
 
         /** I.e. list of mate-pair files */
         private val inputFilesExpanded: List<List<Path>> by lazy {
-            val matchingResult = inputs.parseAndRunAndCorrelateFSPattern()
+            val matchingResult = inputFiles.parseAndRunAndCorrelateFSPattern()
             matchingResult.map { fg -> fg.files }
         }
 
@@ -513,7 +549,7 @@ object CommandAlign {
             if (inOut.size > 3) throw ValidationException("Too many input files.")
             if (inOut.size < 2) throw ValidationException("Output file not specified.")
 
-            fun checkFailedReadsOptions(optionPrefix: String, r1: String?, r2: String?) {
+            fun checkFailedReadsOptions(optionPrefix: String, r1: Path?, r2: Path?) {
                 if (r1 != null) {
                     when {
                         r2 != null && inputType == PairedEndFastq -> throw ValidationException(
@@ -623,7 +659,7 @@ object CommandAlign {
                         "(turn on verbose warnings by adding --verbose option)."
             )
             reportBuilder.setStartMillis(beginTimestamp)
-            reportBuilder.setInputFiles(inputs)
+            reportBuilder.setInputFiles(inputFiles)
             reportBuilder.setOutputFiles(outputFiles)
             reportBuilder.commandLine = commandLineArguments
 
@@ -681,7 +717,7 @@ object CommandAlign {
                 @Suppress("UNCHECKED_CAST")
                 val mainInputReads: Merger<Chunk<SequenceRead>> = (sReads
                     .chunked(64) as OutputPort<Chunk<out SequenceRead>>)
-                    .buffered(max(16, threads)) as Merger<Chunk<SequenceRead>>
+                    .buffered(max(16, threads.value)) as Merger<Chunk<SequenceRead>>
 
                 val step0 = if (tagSearchPlan != null)
                     mainInputReads.mapUnchunked {
@@ -708,8 +744,8 @@ object CommandAlign {
                     step0
 
                 val step2 = step1.mapChunksInParallel(
-                    bufferSize = max(16, threads),
-                    threads = threads
+                    bufferSize = max(16, threads.value),
+                    threads = threads.value
                 ) {
                     if (it.ok) {
                         var alignment =
@@ -801,8 +837,7 @@ object CommandAlign {
 
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)
-                if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-                if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+                reportOptions.appendToFiles(report)
             }
         }
 
@@ -824,14 +859,13 @@ object CommandAlign {
         }
 
         @Suppress("UNCHECKED_CAST")
-        private fun failedReadsWriter(r1: String?, r2: String?): SequenceWriter<SequenceRead>? = when (r1) {
+        private fun failedReadsWriter(r1: Path?, r2: Path?): SequenceWriter<SequenceRead>? = when (r1) {
             null -> null
             else -> when (inputType) {
-                PairedEndFastq -> PairedFastqWriter(r1, r2!!) as SequenceWriter<SequenceRead>
-                SingleEndFastq -> SingleFastqWriter(r1) as SequenceWriter<SequenceRead>
-                else -> throw IllegalArgumentException(
-                    "Export of reads for which alignment / parsing failed " +
-                            "allowed only for fastq inputs."
+                PairedEndFastq -> PairedFastqWriter(r1.toFile(), r2!!.toFile()) as SequenceWriter<SequenceRead>
+                SingleEndFastq -> SingleFastqWriter(r1.toFile()) as SequenceWriter<SequenceRead>
+                else -> throw ApplicationException(
+                    "Export of reads for which alignment / parsing failed allowed only for fastq inputs."
                 ) // must never happen because of parameters validation
             }
         }
@@ -839,7 +873,7 @@ object CommandAlign {
         private fun alignedWriter(outputFile: Path) = when (outputFile.toString()) {
             "." -> null
             else -> VDJCAlignmentsWriter(
-                outputFile, max(1, threads / 8),
+                outputFile, max(1, threads.value / 8),
                 VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
             )
         }

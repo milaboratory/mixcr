@@ -43,7 +43,8 @@ class CommandMain {
         names = ["-h", "--help"],
         usageHelp = true,
         description = ["Show this help message and exit."],
-        scope = INHERIT
+        scope = INHERIT,
+        order = 1_000_000
     )
     fun setHelpRequested(param: Boolean) {
 

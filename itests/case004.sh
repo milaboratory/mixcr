@@ -8,7 +8,7 @@ mixcr analyze tcr_amplicon \
   --rna \
   --floating-left-alignment-boundary \
   --floating-right-alignment-boundary J \
-  --addstep assembleContigs \
+  --add-step assembleContigs \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case4
 
 # Checking AIRR export on big files

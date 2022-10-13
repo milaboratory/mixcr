@@ -24,14 +24,14 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.cli.CommonDescriptions.JSON_REPORT
-import com.milaboratory.mixcr.cli.CommonDescriptions.REPORT
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -57,7 +57,8 @@ object CommandAssemblePartial {
 
         @Option(
             description = ["Drop partial sequences which were not assembled. Can be used to reduce output file " +
-                    "size if no additional rounds of 'assemblePartial' are required."], names = ["-d", "--drop-partial"]
+                    "size if no additional rounds of 'assemblePartial' are required."],
+            names = ["-d", "--drop-partial"]
         )
         private var dropPartial = false
 
@@ -67,7 +68,11 @@ object CommandAssemblePartial {
         )
         private var cellLevel = false
 
-        @Option(names = ["-O"], description = ["Overrides default parameter values."])
+        @Option(
+            names = ["-O"],
+            description = ["Overrides default parameter values."],
+            paramLabel = Labels.OVERRIDES
+        )
         private var overrides: Map<String, String> = mutableMapOf()
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemblePartial) {
@@ -84,17 +89,22 @@ object CommandAssemblePartial {
         description = ["Assembles partially aligned reads into longer sequences."]
     )
     class Cmd : CmdBase() {
-        @Parameters(description = ["alignments.vdjca"], index = "0")
+        @Parameters(
+            description = ["Path to input alignments file."],
+            paramLabel = "alignments.vdjca",
+            index = "0",
+        )
         lateinit var inputFile: Path
 
-        @Parameters(description = ["alignments.recovered.vdjca"], index = "1")
+        @Parameters(
+            description = ["Path to write recovered alignments."],
+            paramLabel = "alignments.recovered.vdjca",
+            index = "1"
+        )
         lateinit var outputFile: Path
 
-        @Option(description = [REPORT], names = ["-r", "--report"])
-        var reportFile: Path? = null
-
-        @Option(description = [JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: Path? = null
+        @Mixin
+        lateinit var reportOptions: ReportOptions
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -166,8 +176,7 @@ object CommandAssemblePartial {
                         if (assembler.maxRightMatchesLimitReached()) {
                             logger.warn("too many partial alignments detected, consider skipping assemblePartial (enriched library?). /maxRightMatchesLimitReached/")
                         }
-                        if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-                        if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+                        reportOptions.appendToFiles(report)
                         writer.setNumberOfProcessedReads(reader1.numberOfReads - assembler.overlapped.get())
                         writer.setFooter(reader1.footer.addStepReport(MiXCRCommandDescriptor.assemblePartial, report))
                     }
