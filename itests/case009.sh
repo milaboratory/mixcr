@@ -24,7 +24,7 @@ mixcr analyze tcr_amplicon \
   --floating-right-alignment-boundary C \
   --add-step assembleContigs \
   --split-clones-by V --split-clones-by J --split-clones-by C \
-  --M assemble.sortBySequence=true \
+  -M assemble.sortBySequence=true \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case9
 
 assert "cat case9.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "237725"
