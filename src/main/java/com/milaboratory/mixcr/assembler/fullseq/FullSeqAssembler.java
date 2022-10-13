@@ -664,6 +664,8 @@ public final class FullSeqAssembler {
             this.positionMaps = positionMaps;
             this.sequences = sequences;
             this.groups = groups;
+            if (groups != null && groups.isEmpty())
+                throw new IllegalArgumentException("Orphan branch sequence: no group assignments.");
             assert check();
         }
 
@@ -1036,6 +1038,8 @@ public final class FullSeqAssembler {
             while (it.hasNext())
                 tagTuples.add(groupToTagTuple.get(it.next()));
             tagCount = tagCount.filter(tagTuples::contains);
+            // if (tagCount.isNoTag())
+            //     throw new IllegalStateException("Can't assign clone tags.");
         }
 
         return new Clone(targets.sequences, hits, tagCount, targets.count, 0, clone.getGroup());
