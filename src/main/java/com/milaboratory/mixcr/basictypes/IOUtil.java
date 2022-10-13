@@ -207,61 +207,60 @@ public class IOUtil {
         }
     }
 
-    public static MiXCRFooter extractFooter(Path file) {
+    public static MiXCRFileInfo extractFileInfo(Path file) {
         switch (extractFileType(file)) {
             case VDJCA:
                 try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
-                    return reader.getFooter();
+                    return new MiXCRFileInfoImpl(reader.getHeader(), reader.getFooter());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNA:
                 try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getFooter();
+                    return new MiXCRFileInfoImpl(reader.getHeader(), reader.getFooter());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case CLNS:
                 try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getFooter();
+                    return new MiXCRFileInfoImpl(reader.getHeader(), reader.getFooter());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             case SHMT:
                 try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
-                    return reader.getFooter();
+                    return new MiXCRFileInfoImpl(reader.getHeader(), reader.getFooter());
                 }
             default:
                 throw new RuntimeException();
         }
     }
 
-    public static MiXCRHeader extractHeader(Path file) {
-        switch (extractFileType(file)) {
-            case VDJCA:
-                try (VDJCAlignmentsReader reader = new VDJCAlignmentsReader(file)) {
-                    return reader.getHeader();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            case CLNA:
-                try (ClnAReader reader = new ClnAReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getHeader();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            case CLNS:
-                try (ClnsReader reader = new ClnsReader(file, VDJCLibraryRegistry.getDefault(), 1)) {
-                    return reader.getHeader();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            case SHMT:
-                try (SHMTreesReader reader = new SHMTreesReader(file, VDJCLibraryRegistry.getDefault())) {
-                    return reader.getHeader();
-                }
-            default:
-                throw new RuntimeException();
+    private static final class MiXCRFileInfoImpl implements MiXCRFileInfo {
+        final MiXCRHeader header;
+        final MiXCRFooter footer;
+
+        MiXCRFileInfoImpl(MiXCRHeader header, MiXCRFooter footer) {
+            this.header = header;
+            this.footer = footer;
         }
+
+        @Override
+        public MiXCRHeader getHeader() {
+            return header;
+        }
+
+        @Override
+        public MiXCRFooter getFooter() {
+            return footer;
+        }
+    }
+
+    public static MiXCRFooter extractFooter(Path file) {
+        return extractFileInfo(file).getFooter();
+    }
+
+    public static MiXCRHeader extractHeader(Path file) {
+        return extractFileInfo(file).getHeader();
     }
 }

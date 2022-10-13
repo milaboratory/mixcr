@@ -122,7 +122,7 @@ object AlignMixins {
     @JsonTypeName("SetSpecies")
     data class SetSpecies(
         @JsonProperty("species") val species: String
-    ) : MiXCRMixinBase(50) {
+    ) : MiXCRMixinBase(50, Flags.Species) {
         override fun MixinBuilderOps.action() {
             MiXCRParamsBundle::align.update {
                 CommandAlign.Params::species setTo species
@@ -295,18 +295,18 @@ object AlignMixins {
                     }
 
                 Constant ->
-                    modifyAlignmentParams {
-                        // Checking mixin assumptions
-                        if (jAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.FR4End)
-                            throw RuntimeException(
-                                "Incompatible J gene right alignment feature boundary for the mix-in: " +
-                                        "${jAlignerParameters.geneFeatureToAlign.lastPoint}"
-                            )
-                        if (cAlignerParameters == null)
-                            throw RuntimeException(
-                                "Wrong application of mixin \"${cmdArgs.joinToString(" ")}\", " +
-                                        "underlying parameter set has no alignment parameters for C gene"
-                            )
+                modifyAlignmentParams {
+                    // Checking mixin assumptions
+                    if (jAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.FR4End)
+                        throw RuntimeException(
+                            "Incompatible J gene right alignment feature boundary for the mix-in: " +
+                                    "${jAlignerParameters.geneFeatureToAlign.lastPoint}"
+                        )
+                    if (cAlignerParameters == null)
+                        throw RuntimeException(
+                            "Wrong application of mixin \"${cmdArgs.joinToString(" ")}\", " +
+                                    "underlying parameter set has no alignment parameters for C gene"
+                        )
 
                         // And setting strict alignment mode for the J gene
                         jAlignerParameters.parameters.isFloatingRightBound = false

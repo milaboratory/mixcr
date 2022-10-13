@@ -119,7 +119,7 @@ public class DownsamplingPreprocessorByTags implements SetPreprocessor<Clone> {
             if (newTc.isNoTag())
                 return null;
 
-            Clone newClone = clone.setTagCount(newTc);
+            Clone newClone = clone.setTagCount(newTc, true);
             stats.after(iDataset, newClone);
             return newClone;
         };

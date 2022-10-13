@@ -46,6 +46,19 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         ) { clone: Clone ->
             clone.fraction.toString()
         }
+        this += FieldWithParameters(
+            Order.cloneSpecific + 400,
+            "-geneLabel",
+            "Export gene label (i.e. ReliableChain)",
+            FieldWithParameters.CommandArg(
+                "<gene_label>",
+                { _, geneLabel -> geneLabel },
+                { geneLabel -> "Gene Label $geneLabel" },
+                { geneLabel -> "geneLabel$geneLabel" }
+            )
+        ) { clone: Clone, geneLabel ->
+            clone.getGeneLabel(geneLabel)
+        }
         this += FieldParameterless(
             Order.tags + 200,
             "-tagFractions",

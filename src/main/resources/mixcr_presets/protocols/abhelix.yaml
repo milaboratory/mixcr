@@ -1,0 +1,79 @@
+"abhelix-human-bcr-cdr3":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: J
+  align:
+    inheritFrom: align_kaligner2_4.0
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      cloneAssemblerParameters:
+        separateByV: true
+        separateByJ: true
+
+"abhelix-human-bcr-full-length":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: J
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+"abhelix-human-tcr-cdr3":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+  assemble:
+    inheritFrom: assemble_universal
+    overrides:
+      cloneAssemblerParameters:
+        separateByV: true
+        separateByJ: true
+
+"abhelix-human-tcr-full-length":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]

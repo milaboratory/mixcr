@@ -32,6 +32,7 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQc.CommandExportQcMain
 import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign
 import com.milaboratory.mixcr.cli.qc.CommandExportQcChainUsage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage
+import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
@@ -173,6 +174,7 @@ object Main {
                         CommandLine(CommandExportQcMain::class.java)
                             .addSubcommand("align", CommandExportQcAlign::class.java)
                             .addSubcommand("chainUsage", CommandExportQcChainUsage::class.java)
+                            .addSubcommand("tags", CommandExportQcTags::class.java)
                             .addSubcommand("coverage", CommandExportQcCoverage::class.java)
                     )
                     .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
