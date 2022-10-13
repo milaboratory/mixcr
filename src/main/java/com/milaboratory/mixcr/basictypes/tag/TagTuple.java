@@ -111,6 +111,15 @@ public final class TagTuple implements Comparable<TagTuple>, Iterable<TagValue> 
         return new TagTuple(Arrays.copyOf(tags, depth));
     }
 
+    public boolean hasPrefix(TagTuple prefixTuple) {
+        if (prefixTuple.tags.length > size())
+            return false;
+        for (int i = 0; i < prefixTuple.tags.length; i++)
+            if (!tags[i].extractKey().equals(prefixTuple.tags[i]))
+                return false;
+        return true;
+    }
+
     public TagValue get(int idx) {
         return tags[idx];
     }

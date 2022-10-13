@@ -216,6 +216,17 @@ public final class TagCount {
         return uniqueTags.size();
     }
 
+    /** Returns true if all keys in the counter has the provided prefix. */
+    public boolean allTagsHasPrefix(TagTuple prefix) {
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+            if (!it.key().hasPrefix(prefix))
+                return false;
+        }
+        return true;
+    }
+
     public double get(TagTuple tt) {
         if (isSingleton()) {
             if (tt.equals(singletonTuple))
@@ -226,7 +237,10 @@ public final class TagCount {
     }
 
     public boolean containsAll(Set<TagTuple> other) {
-        return tagMap.keySet().containsAll(other);
+        if (singletonTuple != null)
+            return other.size() == 0 || (other.size() == 1 && singletonTuple.equals(other.iterator().next()));
+        else
+            return tagMap.keySet().containsAll(other);
     }
 
     public boolean containsAll(TagCount other) {
@@ -372,17 +386,4 @@ public final class TagCount {
         }
         return sum;
     }
-
-    // public TagCounter toFractions() {
-    //     double sum = sum();
-    //     if (sum == 0)
-    //         return this;
-    //     TObjectDoubleHashMap<TagTuple> result = new TObjectDoubleHashMap<>();
-    //     TObjectDoubleIterator<TagTuple> it = iterator();
-    //     while (it.hasNext()) {
-    //         it.advance();
-    //         result.put(it.key(), it.value() / sum);
-    //     }
-    //     return new TagCounter(result);
-    // }
 }

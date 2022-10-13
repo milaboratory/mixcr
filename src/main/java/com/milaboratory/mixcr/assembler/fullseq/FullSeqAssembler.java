@@ -587,6 +587,8 @@ public final class FullSeqAssembler {
             grps = new TIntHashSet();
             for (int readId = branch.reads.nextSetBit(0); readId >= 0; readId = branch.reads.nextSetBit(readId + 1))
                 grps.add(groups[readId]);
+            if (grps.isEmpty())
+                throw new IllegalArgumentException();
         }
 
         return new BranchSequences(
@@ -1038,8 +1040,6 @@ public final class FullSeqAssembler {
             while (it.hasNext())
                 tagTuples.add(groupToTagTuple.get(it.next()));
             tagCount = tagCount.filter(tagTuples::contains);
-            // if (tagCount.isNoTag())
-            //     throw new IllegalStateException("Can't assign clone tags.");
         }
 
         return new Clone(targets.sequences, hits, tagCount, targets.count, 0, clone.getGroup());

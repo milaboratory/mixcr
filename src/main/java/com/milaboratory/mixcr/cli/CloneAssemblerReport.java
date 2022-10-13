@@ -87,6 +87,9 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("postFilteringReports")
     public final List<KeyedFilterReport> postFilteringReports;
 
+    @JsonProperty("alignmentsFilteredByTagPrefix")
+    public final long alignmentsFilteredByTagPrefix;
+
     @JsonCreator
     public CloneAssemblerReport(@JsonProperty("date") Date date,
                                 @JsonProperty("commandLine") String commandLine,
@@ -115,7 +118,8 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
                                 @JsonProperty("clonalChainUsage") ChainUsageStats clonalChainUsage,
                                 @JsonProperty("clonesFilteredInPostFiltering") int clonesFilteredInPostFiltering,
                                 @JsonProperty("readsFilteredInPostFiltering") double readsFilteredInPostFiltering,
-                                @JsonProperty("postFilteringReports") List<KeyedFilterReport> postFilteringReports) {
+                                @JsonProperty("postFilteringReports") List<KeyedFilterReport> postFilteringReports,
+                                @JsonProperty("alignmentsFilteredByTagPrefix") long alignmentsFilteredByTagPrefix) {
         super(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version);
         this.preCloneAssemblerReport = preCloneAssemblerReport;
         this.totalReadsProcessed = totalReadsProcessed;
@@ -139,6 +143,7 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
         this.clonesFilteredInPostFiltering = clonesFilteredInPostFiltering;
         this.readsFilteredInPostFiltering = readsFilteredInPostFiltering;
         this.postFilteringReports = postFilteringReports;
+        this.alignmentsFilteredByTagPrefix = alignmentsFilteredByTagPrefix;
     }
 
     @Override
@@ -188,7 +193,9 @@ public class CloneAssemblerReport extends AbstractMiXCRCommandReport {
                 .writePercentAndAbsoluteField("Clones dropped in post filtering",
                         clonesFilteredInPostFiltering, clusterizationBase)
                 .writePercentAndAbsoluteField("Reads dropped in post filtering",
-                        readsFilteredInPostFiltering, totalReadsProcessed);
+                        readsFilteredInPostFiltering, totalReadsProcessed)
+                .writePercentAndAbsoluteField("Alignments filtered by tag prefix",
+                        alignmentsFilteredByTagPrefix, totalReadsProcessed);
 
         // Writing distribution by chains
         clonalChainUsage.writeReport(helper);
