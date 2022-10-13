@@ -13,21 +13,21 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
 import io.repseq.core.Chains
-import picocli.CommandLine
+import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.stream.Collectors
-import kotlin.io.path.Path
+import kotlin.io.path.extension
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readLines
@@ -35,9 +35,9 @@ import kotlin.io.path.readLines
 /**
  *
  */
-abstract class CommandPa : AbstractMiXCRCommand() {
+abstract class CommandPa : MiXCRCommandWithOutputs() {
     @Parameters(description = ["cloneset.{clns|clna}... result.json.gz|result.json"], arity = "2..*")
-    var inOut: List<String> = mutableListOf()
+    var inOut: List<Path> = mutableListOf()
 
     @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
@@ -68,7 +68,7 @@ abstract class CommandPa : AbstractMiXCRCommand() {
     var chains: Set<String>? = null
 
     @Option(description = [CommonDescriptions.METADATA], names = ["--metadata"], paramLabel = "metadata")
-    var metadataFile: String? = null
+    var metadataFile: Path? = null
 
     @Option(
         description = ["Metadata categories used to isolate samples into separate groups"],
@@ -77,72 +77,70 @@ abstract class CommandPa : AbstractMiXCRCommand() {
     var isolationGroups: List<String> = mutableListOf()
 
     @Option(description = ["Tabular results output path (path/table.tsv)."], names = ["--tables"])
-    var tablesOut: String? = null
+    var tablesOut: Path? = null
 
     @Option(description = ["Preprocessor summary output path."], names = ["--preproc-tables"])
-    var preprocOut: String? = null
+    var preprocOut: Path? = null
 
     @Option(names = ["-O"], description = ["Overrides default postanalysis settings"])
     var overrides: Map<String, String> = mutableMapOf()
 
-    override fun getInputFiles(): List<String> = inOut.subList(0, inOut.size - 1)
-        .flatMap { file ->
-            val path = Paths.get(file)
-            when {
-                path.isDirectory() -> path.listDirectoryEntries()
-                else -> listOf(path)
+    override val inputFiles: List<Path>
+        get() = inOut.subList(0, inOut.size - 1)
+            .flatMap { path ->
+                when {
+                    path.isDirectory() -> path.listDirectoryEntries()
+                    else -> listOf(path)
+                }
             }
-        }
-        .map { it.toString() }
 
-    override fun getOutputFiles(): List<String> = listOf(inOut.last())
+    override val outputFiles
+        get() = listOf(inOut.last())
 
     protected val tagsInfo: TagsInfo by lazy {
         extractTagsInfo(inputFiles)
     }
 
     override fun validate() {
-        super.validate()
         val out = inOut.last()
-        if (!out.endsWith(".json") && !out.endsWith(".json.gz"))
-            throwValidationExceptionKotlin("Output file name should ends with .json.gz or .json")
+        if (!out.toString().endsWith(".json") && !out.toString().endsWith(".json.gz"))
+            throw ValidationException("Output file name should ends with .json.gz or .json")
         try {
             DownsamplingParameters.parse(defaultDownsampling, tagsInfo, dropOutliers, onlyProductive)
         } catch (t: Throwable) {
-            throwValidationExceptionKotlin(t.message ?: t.javaClass.name)
+            throw ValidationException(t.message ?: t.javaClass.name)
         }
         preprocOut?.let { preprocOut ->
-            if (!preprocOut.endsWith(".tsv") && !preprocOut.endsWith(".csv"))
-                throwValidationExceptionKotlin("--preproc-tables: table name should ends with .csv or .tsv")
-            if (preprocOut.startsWith("."))
-                throwValidationExceptionKotlin("--preproc-tables: cant' start with \".\"")
+            if (preprocOut.extension !in arrayOf("tsv", "csv"))
+                throw ValidationException("--preproc-tables: table name should ends with .csv or .tsv, got $preprocOut")
+            if (preprocOut.toString().startsWith("."))
+                throw ValidationException("--preproc-tables: cant' start with \".\", got $preprocOut")
         }
         tablesOut?.let { tablesOut ->
-            if (!tablesOut.endsWith(".tsv") && !tablesOut.endsWith(".csv"))
-                throwValidationExceptionKotlin("--tables: table name should ends with .csv or .tsv")
-            if (tablesOut.startsWith("."))
-                throwValidationExceptionKotlin("--tables: cant' start with \".\"")
+            if (tablesOut.extension !in arrayOf("tsv", "csv"))
+                throw ValidationException("--tables: table name should ends with .csv or .tsv, got $tablesOut")
+            if (tablesOut.toString().startsWith("."))
+                throw ValidationException("--tables: cant' start with \".\", got $tablesOut")
         }
         metadataFile?.let { metadataFile ->
-            if (!metadataFile.endsWith(".csv") && !metadataFile.endsWith(".tsv"))
-                throwValidationExceptionKotlin("Metadata should be .csv or .tsv")
+            if (metadataFile.extension !in arrayOf("csv", "tsv"))
+                throw ValidationException("Metadata should be .csv or .tsv, got $metadataFile")
         }
         val duplicates = inputFiles
             .groupingBy { it }.eachCount()
             .filterValues { it > 1 }
             .keys
         if (duplicates.isNotEmpty())
-            throwValidationExceptionKotlin("Duplicated samples detected: ${duplicates.joinToString(",")}")
+            throw ValidationException("Duplicated samples detected: ${duplicates.joinToString(",")}")
         metadata?.let { metadata ->
             if (!metadata.containsKey("sample"))
-                throwValidationExceptionKotlin("Metadata must contain 'sample' column")
-            val samples = inputFiles
+                throw ValidationException("Metadata must contain 'sample' column")
+            val samples = inputFiles.map { it.toString() }
             val mapping = StringUtil.matchLists(samples, metadata["sample"]!!.map { it as String })
             if (mapping.size < samples.size || mapping.values.any { it == null }) {
-                throwValidationException(
-                    "Metadata samples does not match input file names: " + samples.stream()
-                        .filter { s: String -> mapping[s] == null }
-                        .collect(Collectors.joining(",")))
+                throw ValidationException("Metadata samples does not match input file names: " + samples
+                    .filter { s -> mapping[s] == null }
+                    .joinToString(","))
             }
         }
     }
@@ -150,24 +148,24 @@ abstract class CommandPa : AbstractMiXCRCommand() {
     private fun outBase(): String {
         val out = inOut.last()
         return when {
-            out.endsWith(".json.gz") -> out.dropLast(8)
-            out.endsWith(".json") -> out.dropLast(5)
+            out.endsWith(".json.gz") -> out.toString().removeSuffix(".json.gz")
+            out.endsWith(".json") -> out.toString().removeSuffix(".json")
             else -> throw IllegalArgumentException("output extension is illegal")
         }
     }
 
-    private fun tablesOut(): String = tablesOut ?: "${outBase()}.tsv"
+    private fun tablesOut(): Path = tablesOut ?: Paths.get("${outBase()}.tsv")
 
-    private fun preprocOut(): String = preprocOut ?: "${outBase()}.preproc.tsv"
+    private fun preprocOut(): Path = preprocOut ?: Paths.get("${outBase()}.preproc.tsv")
 
-    private fun outputPath(): Path = Paths.get(inOut.last()).toAbsolutePath()
+    private fun outputPath(): Path = inOut.last().toAbsolutePath()
 
     /** Map of columns  */
     protected val metadata: Map<String, List<Any>>? by lazy {
         val metadata = metadataFile ?: return@lazy null
-        val content = Paths.get(metadata).toAbsolutePath().readLines()
+        val content = metadata.toAbsolutePath().readLines()
         if (content.isEmpty()) return@lazy null
-        val sep = if (metadata.endsWith(".csv")) "," else "\t"
+        val sep = if (metadata.extension == "csv") "," else "\t"
         val header = content.first().split(sep.toRegex()).dropLastWhile { it.isEmpty() }.map { it.lowercase() }
         val result = mutableMapOf<String, MutableList<String>>()
         for (iRow in 1 until content.size) {
@@ -205,12 +203,12 @@ abstract class CommandPa : AbstractMiXCRCommand() {
     private fun groupSamples(): List<SamplesGroup> {
         val chainsColumn = chainsColumn()
         if (chainsColumn == null && isolationGroups.isEmpty()) {
-            return listOf(SamplesGroup(inputFiles, emptyMap()))
+            return listOf(SamplesGroup(inputFiles.map { it.toString() }, emptyMap()))
         }
         val metadata = metadata!!
         val mSamples = metadata["sample"]!!.map { it as String }
         val qSamples = inputFiles
-        val sample2meta = StringUtil.matchLists(qSamples, mSamples)
+        val sample2meta = StringUtil.matchLists(qSamples.map { it.toString() }, mSamples)
         for ((key, value) in sample2meta) {
             requireNotNull(value) { "Malformed metadata: can't find metadata row for sample $key" }
         }
@@ -233,7 +231,7 @@ abstract class CommandPa : AbstractMiXCRCommand() {
     }
 
     private val chainsToProcess by lazy {
-        val availableChains = ChainsUtil.allChainsFromClnx(inputFiles.map { Path(it) })
+        val availableChains = ChainsUtil.allChainsFromClnx(inputFiles)
         println("The following chains present in the data: $availableChains")
         if (chains == null)
             availableChains
@@ -268,17 +266,15 @@ abstract class CommandPa : AbstractMiXCRCommand() {
 
     abstract fun run(group: IsolationGroup, samples: List<String>): PaResultByGroup
 
-    @CommandLine.Command(
-        name = "postanalysis",
-        separator = " ",
+    @Command(
         description = ["Run postanalysis routines."],
-        subcommands = [CommandLine.HelpCommand::class]
+        synopsisSubcommandLabel = "COMMAND"
     )
     class CommandPostanalysisMain
 
     companion object {
-        fun extractTagsInfo(l: List<String>, check: Boolean = true): TagsInfo {
-            val set = l.map { `in` -> CloneSetIO.extractTagsInfo(Paths.get(`in`)) }.toSet()
+        fun extractTagsInfo(l: List<Path>, check: Boolean = true): TagsInfo {
+            val set = l.map { input -> CloneSetIO.extractTagsInfo(input) }.toSet()
             if (check && set.size != 1)
                 throw IllegalArgumentException("Input files have different tags structure")
             return set.iterator().next()

@@ -21,10 +21,12 @@ import com.milaboratory.mixcr.info.ReferencePointCoverageCollector
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
+import java.nio.file.Path
 import kotlin.math.min
 
 private val targetFeatures = arrayOf(
@@ -56,31 +58,31 @@ private val targetReferencePoints = arrayOf(
     ReferencePoint.FR4End
 )
 
-@CommandLine.Command(
-    name = "alignmentsStat",
-    sortOptions = true,
+@Command(
     hidden = true,
-    separator = " ",
     description = ["Alignments statistics."]
 )
-class CommandAlignmentsStats : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(index = "0", description = ["input_file.vdjca"])
-    lateinit var `in`: String
+class CommandAlignmentsStats : MiXCRCommandWithOutputs() {
+    @Parameters(index = "0", description = ["input_file.vdjca"])
+    lateinit var input: Path
 
-    @CommandLine.Parameters(index = "1", description = ["[output.txt]"], arity = "0..1")
-    var out: String? = null
+    @Parameters(index = "1", description = ["[output.txt]"], arity = "0..1")
+    var out: Path? = null
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    override val inputFiles
+        get() = listOf(input)
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(out)
+    override val outputFiles
+        get() = listOfNotNull(out)
 
     override fun run0() {
         val collectors = targetFeatures.map { GeneFeatureCoverageCollector(it) } +
                 targetReferencePoints.map { ReferencePointCoverageCollector(it, 40, 40) }
 
         val collector = Collector(collectors)
-        VDJCAlignmentsReader(`in`).use { reader ->
-            (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it), 32768)) } ?: System.out).use { output ->
+        VDJCAlignmentsReader(input).use { reader ->
+            (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it.toFile()), 32768)) }
+                ?: System.out).use { output ->
                 SmartProgressReporter.startProgressReport("Analysis", reader)
                 CUtils.processAllInParallel(reader, collector, min(4, Runtime.getRuntime().availableProcessors()))
                 collector.end()

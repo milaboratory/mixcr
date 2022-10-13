@@ -27,8 +27,8 @@ mixcr analyze test-mikelov-et-al-2021-with-contigs \
       umi_ig_data_2_subset_R2.fastq.gz \
       case11-with-contigs
 
-mixcr exportClones -nFeature VDJRegion case11-with-contigs.contigs.clns case11-with-contigs.clns.txt
-mixcr exportClones -nFeature VDJRegion case11-without-contigs.clns case11-without-contigs.clns.txt
+mixcr exportClones --drop-default-fields -nFeature VDJRegion case11-with-contigs.contigs.clns case11-with-contigs.clns.txt
+mixcr exportClones --drop-default-fields -nFeature VDJRegion case11-without-contigs.clns case11-without-contigs.clns.txt
 
 sort case11-with-contigs.clns.txt > case11-with-contigs.clns.txt.s
 sort case11-without-contigs.clns.txt > case11-without-contigs.clns.txt.s

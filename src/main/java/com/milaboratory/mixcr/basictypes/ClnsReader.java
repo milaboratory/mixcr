@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
+import com.milaboratory.mixcr.cli.ApplicationException;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
@@ -78,8 +79,8 @@ public class ClnsReader implements CloneReader, AutoCloseable {
                 case MAGIC:
                     break;
                 default:
-                    throw new RuntimeException("Unsupported file format; .clns file of version " + magicString +
-                            " while you are running MiXCR " + MAGIC);
+                    throw new ApplicationException("Unsupported file format; .clns file of version " + magicString +
+                            " while you are running MiXCR " + MAGIC, false);
             }
         }
 

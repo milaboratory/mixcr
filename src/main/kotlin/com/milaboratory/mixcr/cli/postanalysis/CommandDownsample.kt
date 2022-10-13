@@ -13,8 +13,9 @@ package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mitool.helpers.drainToAndClose
 import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
@@ -24,55 +25,53 @@ import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.toList
 import io.repseq.core.Chains
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.extension
 
-@CommandLine.Command(name = "downsample", separator = " ", description = ["Downsample clonesets."])
-class CommandDownsample : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["cloneset.{clns|clna}..."], arity = "1..*")
-    lateinit var `in`: List<String>
+@Command(description = ["Downsample clonesets."])
+class CommandDownsample : MiXCRCommandWithOutputs() {
+    @Parameters(description = ["cloneset.{clns|clna}..."], arity = "1..*")
+    override val inputFiles: List<Path> = mutableListOf()
 
-    @CommandLine.Option(description = ["Specify chains"], names = ["-c", "--chains"], required = true)
+    @Option(description = ["Specify chains"], names = ["-c", "--chains"], required = true)
     var chains: String? = null
 
-    @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
 
-    @CommandLine.Option(description = [CommonDescriptions.DOWNSAMPLING], names = ["--downsampling"], required = true)
+    @Option(description = [CommonDescriptions.DOWNSAMPLING], names = ["--downsampling"], required = true)
     lateinit var downsampling: String
 
-    @CommandLine.Option(
+    @Option(
         description = ["Write downsampling summary tsv/csv table."],
         names = ["--summary"],
         required = false
     )
-    var summary: String? = null
+    var summary: Path? = null
 
-    @CommandLine.Option(description = ["Suffix to add to output clns file."], names = ["--suffix"])
+    @Option(description = ["Suffix to add to output clns file."], names = ["--suffix"])
     var suffix = "downsampled"
 
-    @CommandLine.Option(description = ["Output path prefix."], names = ["--out"])
-    var out: String? = null
+    @Option(description = ["Output path prefix."], names = ["--out"])
+    var outPath: Path? = null
 
-    private val outPath: Path?
-        get() = out?.let { Paths.get(it) }
-
-    override fun getInputFiles(): List<String> = `in`
-
-    override fun getOutputFiles(): List<String> = inputFiles.map { output(it).toString() }
+    override val outputFiles
+        get() = inputFiles.map { output(it) }
 
     override fun validate() {
-        super.validate()
         summary?.let { summary ->
-            if (!summary.endsWith(".tsv") && !summary.endsWith(".csv"))
-                throwValidationExceptionKotlin("summary table should ends with .csv/.tsv")
+            if (summary.extension !in arrayOf("tsv", "csv"))
+                throw ValidationException("summary table should ends with .csv/.tsv, got $summary")
         }
     }
 
-    private fun output(input: String): Path {
-        val fileNameWithoutExtension = Paths.get(input).fileName.toString()
+    private fun output(input: Path): Path {
+        val fileNameWithoutExtension = input.fileName.toString()
             .replace(".clna", "")
             .replace(".clns", "")
         val outName = "$fileNameWithoutExtension.$chains.$suffix.clns"
@@ -84,12 +83,13 @@ class CommandDownsample : AbstractMiXCRCommand() {
             Files.createDirectories(outPath!!.toAbsolutePath())
         }
         if (summary != null) {
-            Files.createDirectories(Paths.get(summary!!).toAbsolutePath().parent)
+            Files.createDirectories(summary!!.toAbsolutePath().parent)
         }
     }
 
     override fun run0() {
-        val datasets = `in`.map { file -> ClonotypeDataset(file, file, VDJCLibraryRegistry.getDefault()) }
+        val datasets =
+            inputFiles.map { file -> ClonotypeDataset(file.toString(), file, VDJCLibraryRegistry.getDefault()) }
         val preprocessor = DownsamplingParameters
             .parse(downsampling, CommandPa.extractTagsInfo(inputFiles), false, onlyProductive)
             .getPreprocessor(Chains.parse(chains))
@@ -97,7 +97,7 @@ class CommandDownsample : AbstractMiXCRCommand() {
         val results = SetPreprocessor.processDatasets(preprocessor, datasets)
         ensureOutputPathExists()
         for (i in results.indices) {
-            ClnsWriter(output(`in`[i]).toFile()).use { clnsWriter ->
+            ClnsWriter(output(inputFiles[i]).toFile()).use { clnsWriter ->
                 val downsampled = results[i].mkElementsPort().toList()
                 clnsWriter.writeHeader(
                     datasets[i].header,
@@ -113,7 +113,7 @@ class CommandDownsample : AbstractMiXCRCommand() {
         for (i in results.indices) {
             val stat = SetPreprocessorStat.cumulative(summaryStat[i])
             println(
-                `in`[i] + ":" +
+                inputFiles[i] + ":" +
                         " isDropped=" + stat.dropped +
                         " nClonesBefore=" + stat.nElementsBefore +
                         " nClonesAfter=" + stat.nElementsAfter +
@@ -121,12 +121,12 @@ class CommandDownsample : AbstractMiXCRCommand() {
                         " sumWeightAfter=" + stat.sumWeightAfter
             )
         }
-        if (summary != null) {
-            val summaryTable = `in`.withIndex().associate { (i, file) -> file to summaryStat[i] }
+        summary?.let { summary ->
+            val summaryTable = inputFiles.withIndex().associate { (i, file) -> file.toString() to summaryStat[i] }
             SetPreprocessorSummary.toCSV(
-                Paths.get(summary!!).toAbsolutePath(),
+                summary.toAbsolutePath(),
                 SetPreprocessorSummary(summaryTable),
-                if (summary!!.endsWith("csv")) "," else "\t"
+                if (summary.extension == "csv") "," else "\t"
             )
         }
     }

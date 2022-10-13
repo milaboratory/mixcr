@@ -11,14 +11,28 @@
  */
 package com.milaboratory.mixcr.qc
 
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.MiXCRFooter
-import com.milaboratory.mixcr.cli.*
-import io.repseq.core.Chains.*
-import jetbrains.letsPlot.*
+import com.milaboratory.mixcr.cli.ChainUsageStats
+import com.milaboratory.mixcr.cli.ChainUsageStatsRecord
+import io.repseq.core.Chains.IGH
+import io.repseq.core.Chains.IGK
+import io.repseq.core.Chains.IGL
+import io.repseq.core.Chains.TRA
+import io.repseq.core.Chains.TRAD
+import io.repseq.core.Chains.TRB
+import io.repseq.core.Chains.TRD
+import io.repseq.core.Chains.TRG
+import jetbrains.letsPlot.Pos
+import jetbrains.letsPlot.Stat
+import jetbrains.letsPlot.coordFlip
+import jetbrains.letsPlot.elementBlank
+import jetbrains.letsPlot.elementLine
+import jetbrains.letsPlot.elementText
 import jetbrains.letsPlot.geom.geomBar
+import jetbrains.letsPlot.ggplot
+import jetbrains.letsPlot.ggsize
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.label.xlab
@@ -27,6 +41,7 @@ import jetbrains.letsPlot.sampling.samplingNone
 import jetbrains.letsPlot.scale.guideLegend
 import jetbrains.letsPlot.scale.scaleFillManual
 import jetbrains.letsPlot.scale.scaleXDiscrete
+import jetbrains.letsPlot.theme
 import java.nio.file.Path
 
 
@@ -38,7 +53,7 @@ object ChainUsage {
         showNonFunctional: Boolean,
         hw: SizeParameters? = null
     ) = chainUsage(files, percent, showNonFunctional, hw) {
-        it[MiXCRCommand.align].first().chainUsage
+        it[MiXCRCommandDescriptor.align].first().chainUsage
     }
 
     fun chainUsageAssemble(
@@ -48,7 +63,7 @@ object ChainUsage {
         hw: SizeParameters? = null
     ) =
         chainUsage(files, percent, showNonFunctional, hw) {
-            it[MiXCRCommand.assemble].first().clonalChainUsage
+            it[MiXCRCommandDescriptor.assemble].first().clonalChainUsage
         } + ggtitle("Clonal chain usage")
 
     fun chainUsage(

@@ -14,6 +14,8 @@ package com.milaboratory.mixcr.cli;
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.util.ReportBuilder;
 
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
@@ -54,23 +56,22 @@ public abstract class AbstractCommandReportBuilder<T extends AbstractCommandRepo
         return that();
     }
 
-    public T setInputFiles(String... inputFiles) {
-        this.inputFiles = inputFiles;
+    public T setInputFiles(Path... inputFiles) {
+        return setInputFiles(Arrays.asList(inputFiles));
+    }
+
+    public T setInputFiles(Collection<Path> inputFiles) {
+        this.inputFiles = inputFiles.stream().map(Path::toString).toArray(String[]::new);
         return that();
     }
 
-    public T setInputFiles(Collection<String> inputFiles) {
-        this.inputFiles = inputFiles.toArray(new String[0]);
-        return that();
+    public T setOutputFiles(Path... outputFiles) {
+        return setOutputFiles(Arrays.asList(outputFiles));
     }
 
-    public T setOutputFiles(String... outputFiles) {
-        this.outputFiles = outputFiles;
-        return that();
-    }
-
-    public T setOutputFiles(Collection<String> outputFiles) {
-        this.outputFiles = outputFiles.toArray(new String[0]);
+    public T setOutputFiles(Collection<Path> outputFiles) {
+        this.outputFiles = outputFiles.stream().map(Path::toString).toArray(String[]::new);
+        ;
         return that();
     }
 

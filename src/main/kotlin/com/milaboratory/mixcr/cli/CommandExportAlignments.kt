@@ -16,7 +16,7 @@ import cc.redberry.primitives.Filter
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.exhaustive
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -24,6 +24,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.OutputMode
@@ -37,11 +38,11 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
-import java.nio.file.Paths
 
 object CommandExportAlignments {
     const val COMMAND_NAME = "exportAlignments"
@@ -51,7 +52,7 @@ object CommandExportAlignments {
         @JsonProperty("noHeader") val noHeader: Boolean,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
     ) : MiXCRParams {
-        override val command get() = MiXCRCommand.exportAlignments
+        override val command get() = MiXCRCommandDescriptor.exportAlignments
     }
 
     fun Params.mkFilter(): Filter<VDJCAlignments> {
@@ -65,44 +66,40 @@ object CommandExportAlignments {
         }
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
             names = ["-c", "--chains"]
         )
         private var chains: String? = null
 
-        @Option(
-            description = ["Don't print first header line, print only data"],
-            names = ["--no-header"]
-        )
-        private var noHeader = false
+        @Mixin
+        private lateinit var exportDefaults: ExportDefaultOptions
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::exportAlignments) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportAlignments) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
-                Params::noHeader setIfTrue noHeader
-                Params::fields setIfNotEmpty VDJCAlignmentsFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult)
+                Params::noHeader setIfTrue exportDefaults.noHeader
+                Params::fields updateBy exportDefaults.fieldsUpdater(VDJCAlignmentsFieldsExtractorsFactory)
             }
         }
     }
 
     @Command(
-        name = COMMAND_NAME,
-        separator = " ",
-        sortOptions = false,
         description = ["Export V/D/J/C alignments into tab delimited file."]
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
         var outputFile: Path? = null
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOfNotNull(outputFile).map { it.toString() }
+        override val outputFiles
+            get() = listOfNotNull(outputFile)
 
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->
@@ -137,8 +134,8 @@ object CommandExportAlignments {
     ) : AutoCloseable by closeable
 
     @JvmStatic
-    fun openAlignmentsPort(inputFile: String): AlignmentsAndMetaInfo =
-        when (IOUtil.extractFileType(Paths.get(inputFile))) {
+    fun openAlignmentsPort(inputFile: Path): AlignmentsAndMetaInfo =
+        when (IOUtil.extractFileType(inputFile)) {
             IOUtil.MiXCRFileType.VDJCA -> {
                 val vdjcaReader = VDJCAlignmentsReader(
                     inputFile,

@@ -12,17 +12,15 @@
 package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import java.nio.file.Path
 
-@CommandLine.Command(
-    name = "exportTables",
-    sortOptions = false,
-    separator = " ",
+@Command(
     description = ["CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap"]
 )
 class CommandPaExportTables : CommandPaExportTablesBase {
     constructor()
-    constructor(paResult: PaResult, out: String) : super(paResult, out)
+    constructor(paResult: PaResult, out: Path) : super(paResult, out)
 
     override fun run1(result: PaResultByGroup) {
         for (table in result.schema.tables) {

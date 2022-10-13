@@ -22,7 +22,7 @@ import com.milaboratory.mitool.pattern.SequenceSetCollection.loadSequenceSetByAd
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
-import com.milaboratory.mixcr.MiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -38,10 +38,17 @@ import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.hashGrouping
-import com.milaboratory.util.*
+import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.ReportHelper
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
 import gnu.trove.list.array.TIntArrayList
 import org.apache.commons.io.FileUtils
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 import java.util.*
 
 object CommandRefineTagsAndSort {
@@ -55,10 +62,10 @@ object CommandRefineTagsAndSort {
         /** Correction parameters */
         @JsonMerge @JsonProperty("parameters") val parameters: TagCorrectorParameters
     ) : MiXCRParams {
-        override val command get() = MiXCRCommand.refineTagsAndSort
+        override val command get() = MiXCRCommandDescriptor.refineTagsAndSort
     }
 
-    abstract class CmdBase : MiXCRPresetAwareCommand<Params>() {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["Don't correct barcodes, only sort alignments by tags"],
             names = ["--dont-correct"]
@@ -118,7 +125,7 @@ object CommandRefineTagsAndSort {
         )
         private var whitelists: Map<String, String> = mutableMapOf()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(this, MiXCRParamsBundle::refineTagsAndSort) {
+        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::refineTagsAndSort) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::whitelists setIfNotEmpty whitelists
 
@@ -139,17 +146,14 @@ object CommandRefineTagsAndSort {
     }
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = false,
-        separator = " ",
         description = ["Applies error correction algorithm for tag sequences and sorts resulting file by tags."]
     )
     class Cmd : CmdBase() {
         @Parameters(description = ["alignments.vdjca"], index = "0")
-        lateinit var inputFile: String
+        lateinit var inputFile: Path
 
         @Parameters(description = ["alignments.corrected.vdjca"], index = "1")
-        lateinit var outputFile: String
+        lateinit var outputFile: Path
 
         @Option(
             description = ["Use system temp folder for temporary files."],
@@ -157,7 +161,7 @@ object CommandRefineTagsAndSort {
             hidden = true
         )
         fun useSystemTemp(value: Boolean) {
-            warn(
+            logger.warn(
                 "--use-system-temp is deprecated, it is now enabled by default, use --use-local-temp to invert the " +
                         "behaviour and place temporary files in the same folder as the output file."
             )
@@ -177,14 +181,16 @@ object CommandRefineTagsAndSort {
         var memoryBudget = 4 * FileUtils.ONE_GB
 
         @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: String? = null
+        var reportFile: Path? = null
 
         @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: String? = null
+        var jsonReport: Path? = null
 
-        override fun getInputFiles(): List<String> = listOf(inputFile)
+        override val inputFiles
+            get() = listOf(inputFile)
 
-        override fun getOutputFiles(): List<String> = listOf(outputFile)
+        override val outputFiles
+            get() = listOf(outputFile)
 
         override fun run0() {
             val startTimeMillis = System.currentTimeMillis()
@@ -242,7 +248,7 @@ object CommandRefineTagsAndSort {
 
                         // Will read the input stream once and extract all the required information from it
                         corrector.initialize(mainReader, { al -> al.alignmentsIndex }) {
-                            if (it.tagCount.size() != 1) throwExecutionException(
+                            if (it.tagCount.size() != 1) throw ApplicationException(
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
                             )
@@ -337,7 +343,7 @@ object CommandRefineTagsAndSort {
                     writer.writeHeader(
                         header
                             .updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) }
-                            .addStepParams(MiXCRCommand.refineTagsAndSort, cmdParams),
+                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams),
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)
@@ -346,7 +352,7 @@ object CommandRefineTagsAndSort {
                     }
                     refineTagsAndSortReport = RefineTagsAndSortReport(
                         Date(),
-                        commandLineArguments, arrayOf(inputFile), arrayOf(outputFile),
+                        commandLineArguments, arrayOf(inputFile.toString()), arrayOf(outputFile.toString()),
                         System.currentTimeMillis() - startTimeMillis,
                         MiXCRVersionInfo.get().shortestVersionString,
                         mitoolReport
@@ -354,7 +360,7 @@ object CommandRefineTagsAndSort {
                     writer.setFooter(
                         mainReader.footer
                             .withThresholds(thresholds)
-                            .addStepReport(MiXCRCommand.refineTagsAndSort, refineTagsAndSortReport)
+                            .addStepReport(MiXCRCommandDescriptor.refineTagsAndSort, refineTagsAndSortReport)
                     )
                 }
             }

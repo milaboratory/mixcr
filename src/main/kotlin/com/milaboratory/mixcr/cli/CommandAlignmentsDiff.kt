@@ -26,61 +26,63 @@ import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.PrintStream
+import java.nio.file.Path
 
-@CommandLine.Command(
-    name = "alignmentsDiff",
-    sortOptions = false,
-    separator = " ",
+@Command(
     description = ["Calculates the difference between two .vdjca files."]
 )
-class CommandAlignmentsDiff : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["input_file1"], index = "0")
-    lateinit var in1: String
+class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
+    @Parameters(description = ["input_file1"], index = "0")
+    lateinit var in1: Path
 
-    @CommandLine.Parameters(description = ["input_file2"], index = "1")
-    lateinit var in2: String
+    @Parameters(description = ["input_file2"], index = "1")
+    lateinit var in2: Path
 
-    @CommandLine.Parameters(description = ["report"], index = "2", arity = "0..1")
-    var report: String? = null
+    @Parameters(description = ["report"], index = "2", arity = "0..1")
+    var report: Path? = null
 
-    @CommandLine.Option(
+    @Option(
         names = ["-o1", "--only-in-first"], description = ["output for alignments contained only " +
                 "in the first .vdjca file"]
     )
     var onlyFirst: String? = null
 
-    @CommandLine.Option(
+    @Option(
         names = ["-o2", "--only-in-second"], description = ["output for alignments contained only " +
                 "in the second .vdjca file"]
     )
     var onlySecond: String? = null
 
-    @CommandLine.Option(
+    @Option(
         names = ["-d1", "--diff-from-first"], description = ["output for alignments from the first file " +
                 "that are different from those alignments in the second file"]
     )
     var diff1: String? = null
 
-    @CommandLine.Option(
+    @Option(
         names = ["-d2", "--diff-from-second"], description = ["output for alignments from the second file " +
                 "that are different from those alignments in the first file"]
     )
     var diff2: String? = null
 
-    @CommandLine.Option(names = ["-g", "--gene-feature"], description = ["Specifies a gene feature to compare"])
+    @Option(names = ["-g", "--gene-feature"], description = ["Specifies a gene feature to compare"])
     var geneFeatureToMatch = "CDR3"
 
-    @CommandLine.Option(names = ["-l", "--top-hits-level"], description = ["Number of top hits to search for a match"])
+    @Option(names = ["-l", "--top-hits-level"], description = ["Number of top hits to search for a match"])
     var hitsCompareLevel = 1
     val feature: GeneFeature by lazy {
         GeneFeature.parse(geneFeatureToMatch)
     }
 
-    override fun getInputFiles(): List<String> = listOf(in1, in2)
+    override val inputFiles
+        get() = listOf(in1, in2)
 
-    override fun getOutputFiles(): List<String> = listOfNotNull(report)
+    override val outputFiles
+        get() = listOfNotNull(report)
 
     override fun run0() {
         VDJCAlignmentsReader(in1).use { reader1 ->
@@ -89,7 +91,7 @@ class CommandAlignmentsDiff : AbstractMiXCRCommand() {
                     (onlySecond?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { only2 ->
                         (diff1?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { diff1 ->
                             (diff2?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { diff2 ->
-                                (report?.let { PrintStream(it) } ?: System.out).use { report ->
+                                (report?.let { PrintStream(it.toFile()) } ?: System.out).use { report ->
                                     val readerForProgress = when {
                                         reader1.numberOfReads > reader2.numberOfReads -> reader1
                                         else -> reader2

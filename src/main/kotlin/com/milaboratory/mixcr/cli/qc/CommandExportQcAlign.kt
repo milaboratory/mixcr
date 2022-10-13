@@ -13,27 +13,31 @@ package com.milaboratory.mixcr.cli.qc
 
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.qc.AlignmentQC.alignQc
-import picocli.CommandLine
-import java.nio.file.Paths
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 
-@CommandLine.Command(name = "align", separator = " ", description = ["QC plot for alignments."])
+@Command(description = ["QC plot for alignments."])
 class CommandExportQcAlign : CommandExportQc() {
-    @CommandLine.Parameters(description = ["sample1.vdjca ... align.[pdf|eps|png|jpeg]"], arity = "2..*")
-    var `in`: List<String> = mutableListOf()
+    @Parameters(description = ["sample1.vdjca ... align.[pdf|eps|png|jpeg]"], arity = "2..*")
+    var inOut: List<Path> = mutableListOf()
 
-    @CommandLine.Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
+    @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
     var absoluteValues = false
 
-    override fun getInputFiles(): List<String> = `in`.subList(0, `in`.size - 1)
+    override val inputFiles
+        get() = inOut.subList(0, inOut.size - 1)
 
-    override fun getOutputFiles(): List<String> = listOf(`in`.last())
+    override val outputFiles
+        get() = listOf(inOut.last())
 
     override fun run0() {
         val plt = alignQc(
-            inputFiles.map { Paths.get(it) },
+            inputFiles.map { it },
             !absoluteValues,
             sizeParameters
         )
-        writeFile(Paths.get(outputFiles.first()), plt)
+        writeFile(outputFiles.first(), plt)
     }
 }

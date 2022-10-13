@@ -25,7 +25,7 @@ import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCLibraryRegistry;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,8 +59,10 @@ public class OverlapBrowser implements CanReportProgressAndStage {
     }
 
 
-    /** Compute counts for each chain in each sample */
-    public Map<Chains, double[]> computeCountsByChain(List<String> samples) {
+    /**
+     * Compute counts for each chain in each sample
+     */
+    public Map<Chains, double[]> computeCountsByChain(List<Path> samples) {
         Map<Chains, double[]> counts = new HashMap<>();
         AtomicInteger sampleIndex = new AtomicInteger(0);
         pas.setStage("Calculating dataset counts");
@@ -76,7 +78,7 @@ public class OverlapBrowser implements CanReportProgressAndStage {
             }
         });
         for (int i = 0; i < samples.size(); i++) {
-            try (CloneReader reader = CloneSetIO.mkReader(Paths.get(samples.get(i)), VDJCLibraryRegistry.getDefault())) {
+            try (CloneReader reader = CloneSetIO.mkReader(samples.get(i), VDJCLibraryRegistry.getDefault())) {
                 for (Clone cl : CUtils.it(reader.readClones())) {
                     if (!includeClone(cl))
                         continue;

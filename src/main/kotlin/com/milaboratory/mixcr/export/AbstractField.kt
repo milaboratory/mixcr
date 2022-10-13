@@ -13,6 +13,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.cli.logger
 
 abstract class AbstractField<T : Any> : Field<T> {
     protected abstract fun create1(
@@ -26,8 +27,8 @@ abstract class AbstractField<T : Any> : Field<T> {
         headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> {
-        if (deprecation != null) {
-            println("WARNING: $deprecation")
+        deprecation?.let { deprecation ->
+            logger.warn(deprecation)
         }
         return create1(outputMode, headerData, args)
     }

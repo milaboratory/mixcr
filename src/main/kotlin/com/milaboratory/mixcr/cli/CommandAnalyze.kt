@@ -12,22 +12,35 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.*
+import com.milaboratory.mixcr.AnyMiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRPipeline
 import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteExisting
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 
 object CommandAnalyze {
     const val COMMAND_NAME = "analyze"
 
     @Command(
-        name = "analyze",
-        separator = " ",
         description = ["Run full MiXCR pipeline for specific input."],
     )
-    class Cmd : AbstractMiXCRCommand() {
+    class Cmd : MiXCRCommand() {
+        @Option(names = ["-f", "--force-overwrite"], description = ["Force overwrite of output file(s)."])
+        var forceOverwrite = false
+
         @Parameters(
             index = "0",
             arity = "1",
@@ -45,8 +58,29 @@ object CommandAnalyze {
         )
         private var inOut: List<String> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        private var mixins: AllMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
+        var pipelineMixins: PipelineMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
+        var alignMixins: AlignMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
+        var assembleMixins: AssembleMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
+        var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
+        var exportMixins: ExportMiXCRMixins? = null
+
+        @Mixin
+        var genericMixins: GenericMiXCRMixins? = null
+
+        private val mixins: MiXCRMixinCollection
+            get() = MiXCRMixinCollection.combine(
+                pipelineMixins, alignMixins, assembleMixins,
+                assembleContigsMixins, exportMixins, genericMixins
+            )
 
         // @Option(
         //     description = ["Delete all output files of the command if they already exist."],
@@ -77,18 +111,10 @@ object CommandAnalyze {
 
         private val inFiles get() = inOut.dropLast(1)
 
-        private val outSuffix get() = inOut[inOut.size - 1]
-
-        // the following two lines are to implement the AbstractMiXCRCommand interfaces,
-        // analyze is an exception, and it not fully use the functionality of the AbstractMiXCRCommand
-        // TODO maybe it is a good idea to restructure the CLI classes to make "analyze" fit more naturally in the hierarchy
-        override fun getInputFiles() = emptyList<String>() // inFiles
-        override fun getOutputFiles() = emptyList<String>()
+        private val outSuffix get() = inOut.last()
 
         /** Provides access to presets, mixins application, etc.. */
-        private val paramsResolver = object : MiXCRParamsResolver<MiXCRPipeline>(
-            this, MiXCRParamsBundle::pipeline
-        ) {
+        private val paramsResolver = object : MiXCRParamsResolver<MiXCRPipeline>(MiXCRParamsBundle::pipeline) {
             override fun POverridesBuilderOps<MiXCRPipeline>.paramsOverrides() {}
         }
 
@@ -106,7 +132,7 @@ object CommandAnalyze {
                 outputFolder.createDirectories()
 
             // Creating params spec
-            val mixins = mixins?.mixins ?: emptyList()
+            val mixins = mixins.mixins
             val paramsSpec = MiXCRParamsSpec(presetName, mixins)
 
             // Resolving parameters and sorting the pipeline according to the natural command order
@@ -117,15 +143,15 @@ object CommandAnalyze {
                 }
 
             // Creating execution plan
-            if (pipeline[0] != MiXCRCommand.align)
-                throwExecutionExceptionKotlin("Pipeline must stat from the align action.")
+            if (pipeline[0] != MiXCRCommandDescriptor.align)
+                throw ValidationException("Pipeline must stat from the align action.")
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
                 !noReports, !noJsonReports,
                 inFiles
             )
             // Adding "align" step
-            planBuilder.addStep(MiXCRCommand.align,
+            planBuilder.addStep(MiXCRCommandDescriptor.align,
                 listOf("--preset", presetName) + mixins.flatMap { it.cmdArgs })
             // Adding all other steps
             pipeline.drop(1).forEach { cmd ->

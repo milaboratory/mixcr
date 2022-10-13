@@ -14,9 +14,7 @@ package com.milaboratory.mixcr.cli;
 // /**
 //  *
 //  */
-// @Command(name = CommandGroupCells.GROUP_CLONE_COMMAND_NAME,
-//         sortOptions = true,
-//         separator = " ",
+// @Command(
 //         description = "Group clones for single cell data (e.g. alpha-beta / heavy-light chain pairing).")
 // public class CommandGroupCells extends ACommandWithSmartOverwriteWithSingleInputMiXCR {
 //     public static final String GROUP_CLONE_COMMAND_NAME = "groupCells";

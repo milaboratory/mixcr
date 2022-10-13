@@ -16,18 +16,19 @@ import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
-import picocli.CommandLine.*
-import java.io.File
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
+import java.nio.file.Paths
 
 object CommandExportPreset {
-    const val COMMAND_NAME = "exportPreset"
 
     @Command(
-        name = COMMAND_NAME,
-        sortOptions = false,
         description = ["Export a preset file given the preset name and a set of mix-ins"]
     )
-    class Cmd : MiXCRPresetAwareCommand<Unit>() {
+    class Cmd : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Unit> {
         @Parameters(
             arity = "1..2",
             hideParamSyntax = true,
@@ -36,29 +37,48 @@ object CommandExportPreset {
         private val inOut: List<String> = mutableListOf()
 
         private val presetName get() = inOut[0]
-        private val outputFile get() = if (inOut.size == 1) null else inOut[1]
+        private val outputFile get() = if (inOut.size == 1) null else Paths.get(inOut[1])
 
-        override fun getInputFiles() = mutableListOf<String>()
+        override val inputFiles get() = mutableListOf<Path>()
 
-        override fun getOutputFiles() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
+        override val outputFiles get() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
 
-        @ArgGroup(validate = false, heading = "Analysis mix-ins")
-        var mixins: AllMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
+        var pipelineMixins: PipelineMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
+        var alignMixins: AlignMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
+        var assembleMixins: AssembleMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
+        var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
+
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
+        var exportMixins: ExportMiXCRMixins? = null
+
+        @Mixin
+        var genericMixins: GenericMiXCRMixins? = null
 
         override fun run0() {
+            val mixins = MiXCRMixinCollection.combine(
+                pipelineMixins, alignMixins, assembleMixins,
+                assembleContigsMixins, exportMixins, genericMixins
+            )
             val (bundle, _) = paramsResolver.resolve(
-                MiXCRParamsSpec(presetName, mixins = mixins?.mixins ?: emptyList()),
+                MiXCRParamsSpec(presetName, mixins = mixins.mixins),
                 printParameters = false
             )
             val of = outputFile
             if (of != null)
-                K_YAML_OM.writeValue(File(of), bundle)
+                K_YAML_OM.writeValue(of.toFile(), bundle)
             else
                 K_YAML_OM.writeValue(System.out, bundle)
         }
 
         override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
-            get() = object : MiXCRParamsResolver<Unit>(this, MiXCRParamsBundle::exportPreset) {
+            get() = object : MiXCRParamsResolver<Unit>(MiXCRParamsBundle::exportPreset) {
                 override fun POverridesBuilderOps<Unit>.paramsOverrides() {
                 }
             }

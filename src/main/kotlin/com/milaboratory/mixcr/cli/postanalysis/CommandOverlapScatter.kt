@@ -17,7 +17,7 @@ import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.ChainsUtil.name
 import com.milaboratory.mixcr.cli.ChainsUtil.toPath
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
+import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter
@@ -28,45 +28,49 @@ import com.milaboratory.mixcr.postanalysis.preproc.ElementPredicate.IncludeChain
 import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.SmartProgressReporter
-import picocli.CommandLine
-import kotlin.io.path.Path
+import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
+import java.nio.file.Path
 import kotlin.io.path.nameWithoutExtension
 
-@CommandLine.Command(name = "overlapScatterPlot", separator = " ", description = ["Plot overlap scatter-plot."])
-class CommandOverlapScatter : AbstractMiXCRCommand() {
-    @CommandLine.Parameters(description = ["cloneset_1.{clns|clna}..."], index = "0")
-    lateinit var in1: String
+@Command(description = ["Plot overlap scatter-plot."])
+class CommandOverlapScatter : MiXCRCommandWithOutputs() {
+    @Parameters(description = ["cloneset_1.{clns|clna}..."], index = "0")
+    lateinit var in1: Path
 
-    @CommandLine.Parameters(description = ["cloneset_2.{clns|clna}..."], index = "1")
-    lateinit var in2: String
+    @Parameters(description = ["cloneset_2.{clns|clna}..."], index = "1")
+    lateinit var in2: Path
 
-    @CommandLine.Parameters(description = ["output.[pdf|eps|png|jpeg]"], index = "2")
-    lateinit var out: String
+    @Parameters(description = ["output.[pdf|eps|png|jpeg]"], index = "2")
+    lateinit var out: Path
 
-    @CommandLine.Option(description = ["Chains to export"], names = ["--chains"], split = ",")
+    @Option(description = ["Chains to export"], names = ["--chains"], split = ",")
     var chains: Set<String>? = null
 
-    @CommandLine.Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
 
-    @CommandLine.Option(description = [CommonDescriptions.DOWNSAMPLING], names = ["--downsampling"], required = true)
+    @Option(description = [CommonDescriptions.DOWNSAMPLING], names = ["--downsampling"], required = true)
     lateinit var downsampling: String
 
-    @CommandLine.Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
+    @Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
     var overlapCriteria = "CDR3|AA|V|J"
 
-    @CommandLine.Option(
+    @Option(
         description = ["Correlation method to use. Possible value: pearson, kendal, spearman"],
         names = ["--method"]
     )
     var method = "pearson"
 
-    @CommandLine.Option(description = ["Do not apply log10 to clonotype frequencies"], names = ["--no-log"])
+    @Option(description = ["Do not apply log10 to clonotype frequencies"], names = ["--no-log"])
     var noLog = false
 
-    override fun getInputFiles(): List<String> = listOf(in1, in2)
+    override val inputFiles
+        get() = listOf(in1, in2)
 
-    override fun getOutputFiles(): List<String> = listOf(out)
+    override val outputFiles
+        get() = listOf(out)
 
     override fun run0() {
         val parameters = DownsamplingParameters.parse(
@@ -75,7 +79,7 @@ class CommandOverlapScatter : AbstractMiXCRCommand() {
             false, onlyProductive
         )
 
-        var chainsToProcess = ChainsUtil.allChainsFromClnx(listOf(in1, in2).map { Path(it) })
+        var chainsToProcess = ChainsUtil.allChainsFromClnx(listOf(in1, in2))
         chainsToProcess = chains?.let { ChainsFilter.parseChainsList(it) } ?: chainsToProcess
 
         for (chain in chainsToProcess) {
@@ -83,14 +87,14 @@ class CommandOverlapScatter : AbstractMiXCRCommand() {
             val dataset = SetPreprocessor.processDatasets(
                 downsampling.newInstance(),
                 OverlapUtil.overlap(
-                    listOf(in1, in2),
+                    listOf(in1, in2).map { it.toString() },
                     IncludeChains(setOf(chain), false),
                     OverlapUtil.parseCriteria(overlapCriteria).ordering()
                 )
             ).first()
             val plotParameters = OverlapScatter.PlotParameters(
-                Path(in1).nameWithoutExtension,
-                Path(in2).nameWithoutExtension,
+                in1.nameWithoutExtension,
+                in2.nameWithoutExtension,
                 parse(method),
                 !noLog
             )

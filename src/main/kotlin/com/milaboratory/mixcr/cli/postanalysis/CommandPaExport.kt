@@ -12,27 +12,27 @@
 
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mixcr.cli.AbstractMiXCRCommand
+import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.nio.file.Paths
+import java.nio.file.Path
 
 /**
  *
  */
-abstract class CommandPaExport : AbstractMiXCRCommand {
+abstract class CommandPaExport : MiXCRCommand {
     @Parameters(
         description = ["Input file with postanalysis results."],
         index = "0",
     )
-    lateinit var `in`: String
+    lateinit var input: Path
 
     @Option(description = ["Export for specific chains only"], names = ["--chains"])
     var chains: Set<String>? = null
 
     private val parsedPaResultFromInput: PaResult by lazy {
-        PaResult.readJson(Paths.get(`in`).toAbsolutePath())
+        PaResult.readJson(input.toAbsolutePath())
     }
 
     private val paResultFromConstructor: PaResult?
@@ -46,7 +46,8 @@ abstract class CommandPaExport : AbstractMiXCRCommand {
         this.paResultFromConstructor = paResult
     }
 
-    override fun getInputFiles(): List<String> = listOf(`in`)
+    val inputFiles
+        get() = listOf(input)
 
     /**
      * Get full PA result

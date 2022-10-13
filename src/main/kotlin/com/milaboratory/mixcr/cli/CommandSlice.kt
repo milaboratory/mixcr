@@ -49,11 +49,9 @@ import kotlin.io.path.readLines
 
 @Command(
     name = CommandSlice.SLICE_COMMAND_NAME,
-    sortOptions = true,
-    separator = " ",
     description = ["Slice vdjca|clns|clna|shmt file."]
 )
-class CommandSlice : AbstractMiXCRCommand() {
+class CommandSlice : MiXCRCommandWithOutputs() {
     @Parameters(
         description = ["Input data to filter by ids"],
         paramLabel = "data.[vdjca|clns|clna|shmt]",
@@ -97,9 +95,11 @@ class CommandSlice : AbstractMiXCRCommand() {
         result.sorted()
     }
 
-    override fun getInputFiles(): List<String> = listOf(input.toString())
+    override val inputFiles
+        get() = listOf(input)
 
-    override fun getOutputFiles(): List<String> = listOf(out.toString())
+    override val outputFiles
+        get() = listOf(out)
 
     override fun run0() {
         when (IOUtil.extractFileType(input)) {
@@ -113,7 +113,7 @@ class CommandSlice : AbstractMiXCRCommand() {
     private fun sliceVDJCA() {
         val set = TLongHashSet(ids)
         VDJCAlignmentsReader(input).use { reader ->
-            VDJCAlignmentsWriter(out.toFile()).use { writer ->
+            VDJCAlignmentsWriter(out).use { writer ->
                 writer.inheritHeaderAndFooterFrom(reader)
                 for (alignments in reader.it) {
                     if (set.removeAll(alignments.readIds)) writer.write(alignments)

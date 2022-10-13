@@ -24,9 +24,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @Command(
-    name = CommandExportShmTreesNewick.COMMAND_NAME,
-    sortOptions = false,
-    separator = " ",
     description = ["Export SHMTree as newick"]
 )
 class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
@@ -38,7 +35,8 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
     )
     lateinit var out: Path
 
-    override fun getOutputFiles(): List<String> = listOf(out.toString())
+    override val outputFiles
+        get() = listOf(out)
 
     override fun run0() {
         out.createDirectories()
@@ -47,7 +45,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
             it.content.id.toString()
         }
 
-        SHMTreesReader(`in`, VDJCLibraryRegistry.getDefault()).use { reader ->
+        SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             reader.readTrees().forEach { shmTree ->
                 val shmTreeForPostanalysis = shmTree.forPostanalysis(
                     reader.fileNames,
@@ -62,7 +60,4 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
         }
     }
 
-    companion object {
-        const val COMMAND_NAME = "exportShmTreesNewick"
-    }
 }

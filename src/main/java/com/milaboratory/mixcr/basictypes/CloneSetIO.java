@@ -21,16 +21,16 @@ import java.nio.file.Path;
 
 public final class CloneSetIO {
 
-    public static CloneSet read(String file) throws IOException {
-        return read(file, VDJCLibraryRegistry.getDefault());
-    }
-
     public static CloneSet read(File file) throws IOException {
         return read(file, VDJCLibraryRegistry.getDefault());
     }
 
-    public static CloneSet read(String file, VDJCLibraryRegistry libraryRegistry) throws IOException {
-        return read(new File(file), libraryRegistry);
+    public static CloneSet read(Path file) throws IOException {
+        return read(file.toFile());
+    }
+
+    public static CloneSet read(Path file, VDJCLibraryRegistry libraryRegistry) throws IOException {
+        return read(file.toFile(), libraryRegistry);
     }
 
     public static CloneSet read(File file, VDJCLibraryRegistry libraryRegistry) throws IOException {
