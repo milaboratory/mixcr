@@ -3,8 +3,8 @@
     chains: ALL
     fields:
       - field: "-cloneId"
-      - field: "-count"
-      - field: "-fraction"
+      - field: "-readCount"
+      - field: "-readFraction"
       - field: "-targetSequences"
       - field: "-targetQualities"
       - field: "-vHitsWithScore"

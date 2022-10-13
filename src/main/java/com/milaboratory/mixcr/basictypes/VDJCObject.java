@@ -32,6 +32,8 @@ public abstract class VDJCObject {
     protected VDJCPartitionedSequence[] partitionedTargets;
     protected final TagCount tagCount;
     protected final Cache cache = new Cache();
+    // TODO weak/soft link ?
+    private HashMap<String, String> geneLabelsCache = null;
 
     public VDJCObject(EnumMap<GeneType, VDJCHit[]> hits, TagCount tagCount, NSequenceWithQuality... targets) {
         this.targets = targets;
@@ -820,6 +822,38 @@ public abstract class VDJCObject {
         if (nt == null || nt.size() % 3 != 0)
             return true;
         return false;
+    }
+
+    public int getTagDiversity(int level) {
+        return tagCount.getTagDiversity(level);
+    }
+
+    public synchronized String getGeneLabel(String labelName) {
+        if (geneLabelsCache == null)
+            geneLabelsCache = new HashMap<>();
+        // Null values can be present in the cache, so containsKey is the only way to determine cache hit
+        if (geneLabelsCache.containsKey(labelName))
+            return geneLabelsCache.get(labelName);
+        List<String> labelValues = new ArrayList<>();
+        for (VDJCGene gene : getBestHitGenes()) {
+            String labelValue = gene.getLabel(labelName);
+            if (labelValue != null)
+                // Using list as a lean set
+                if (!labelValues.contains(labelValue))
+                    labelValues.add(labelValue);
+        }
+        // Canonicalization
+        Collections.sort(labelValues);
+        String labelValue;
+        if (labelValues.size() == 0)
+            labelValue = null;
+        else if (labelValues.size() == 1)
+            labelValue = labelValues.get(0);
+        else
+            labelValue = String.join(",", labelValues);
+        // Saving to cache
+        geneLabelsCache.put(labelName, labelValue);
+        return labelValue;
     }
 
     @Override

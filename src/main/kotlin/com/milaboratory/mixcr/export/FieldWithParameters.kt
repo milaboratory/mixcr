@@ -55,8 +55,9 @@ abstract class FieldWithParameters<T : Any, P>(
             description: String,
             parameter1: CommandArg<P1>,
             validateArgs: AbstractField<T>.(P1) -> Unit = {},
+            deprecation: String? = null,
             extract: (T, P1) -> String
-        ): Field<T> = object : FieldWithParameters<T, P1>(priority, command, description, 1) {
+        ): Field<T> = object : FieldWithParameters<T, P1>(priority, command, description, 1, deprecation) {
             override val metaVars: String = parameter1.meta
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): P1 {
@@ -82,8 +83,9 @@ abstract class FieldWithParameters<T : Any, P>(
             parameter1: CommandArg<P1>,
             parameter2: CommandArg<P2>,
             validateArgs: AbstractField<T>.(P1, P2) -> Unit = { _, _ -> },
+            deprecation: String? = null,
             extract: (T, P1, P2) -> String
-        ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(priority, command, description, 2) {
+        ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(priority, command, description, 2, deprecation) {
             override val metaVars: String = parameter1.meta + " " + parameter2.meta
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Pair<P1, P2> {
@@ -111,8 +113,9 @@ abstract class FieldWithParameters<T : Any, P>(
             parameter2: CommandArg<P2>,
             parameter3: CommandArg<P3>,
             validateArgs: AbstractField<T>.(P1, P2, P3) -> Unit = { _, _, _ -> },
+            deprecation: String? = null,
             extract: (T, P1, P2, P3) -> String
-        ): Field<T> = object : FieldWithParameters<T, Triple<P1, P2, P3>>(priority, command, description, 3) {
+        ): Field<T> = object : FieldWithParameters<T, Triple<P1, P2, P3>>(priority, command, description, 3, deprecation) {
             override val metaVars: String = parameter1.meta + " " + parameter2.meta + " " + parameter3.meta
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Triple<P1, P2, P3> {

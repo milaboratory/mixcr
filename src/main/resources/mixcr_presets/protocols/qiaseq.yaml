@@ -16,8 +16,12 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 4
+      field: -uniqueTagFraction
       args: [ "UMI" ]
   align:
     inheritFrom: align_default_4.0
@@ -81,8 +85,12 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 4
+      field: -uniqueTagFraction
       args: [ "UMI" ]
   align:
     inheritFrom: align_default_4.0
@@ -140,8 +148,12 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 4
+      field: -uniqueTagFraction
       args: [ "UMI" ]
   align:
     inheritFrom: align_default_4.0
@@ -205,8 +217,12 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 4
+      field: -uniqueTagFraction
       args: [ "UMI" ]
   align:
     inheritFrom: align_default_4.0

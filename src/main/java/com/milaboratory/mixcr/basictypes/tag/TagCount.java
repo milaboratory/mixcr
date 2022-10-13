@@ -189,9 +189,9 @@ public final class TagCount {
      * Reduces tag counts to the specified level, new tag counts will be computed as the number of uniques suffixes.
      */
     public TagCount reduceToLevel(int level) {
-        if (level == depth) {
+        if (level == depth)
             return this;
-        }
+
         TagCountAggregator agg = new TagCountAggregator();
         TObjectDoubleIterator<TagTuple> it = iterator();
         while (it.hasNext()) {
@@ -199,6 +199,21 @@ public final class TagCount {
             agg.add(it.key().prefix(level), 1d);
         }
         return agg.createAndDestroy();
+    }
+
+    /** The same ase reduceToLevel(level).size() */
+    public int getTagDiversity(int level) {
+        if (level == depth)
+            return size();
+
+        Set<TagTuple> uniqueTags = new HashSet<>();
+        TObjectDoubleIterator<TagTuple> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+            uniqueTags.add(it.key().prefix(level));
+        }
+
+        return uniqueTags.size();
     }
 
     public double get(TagTuple tt) {
