@@ -538,7 +538,7 @@ object CommandAlign {
             fun checkFailedReadsOptions(optionPrefix: String, r1: String?, r2: String?) {
                 if (r1 != null) {
                     when {
-                        r2 != null && inputType == PairedEndFastq -> throw ValidationException(
+                        r2 == null && inputType == PairedEndFastq -> throw ValidationException(
                             "Option ${optionPrefix}-R2 is not specified but paired-end input data provided."
                         )
 

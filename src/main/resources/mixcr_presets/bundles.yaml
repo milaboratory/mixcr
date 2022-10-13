@@ -204,7 +204,7 @@
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
       args: [ "UMI" ]
     - type: AddExportClonesField
@@ -226,7 +226,7 @@
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
       args: [ "UMI" ]
     - type: AddExportClonesField
@@ -259,8 +259,12 @@
       features: [ "VDJRegion" ]
     - type: MaterialTypeRNA
     - type: AddExportClonesField
-      insertIndex: 2
+      insertIndex: 3
       field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 4
+      field: -uniqueTagFraction
       args: [ "UMI" ]
     - type: LeftAlignmentBoundaryNoPoint
       floating: false

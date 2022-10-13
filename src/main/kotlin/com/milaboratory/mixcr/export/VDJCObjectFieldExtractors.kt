@@ -534,7 +534,7 @@ object VDJCObjectFieldExtractors {
             }
         }
         this += FieldParameterless(
-            Order.chains + 100,
+            Order.labels + 100,
             "-chains",
             "Chains",
             "Chains",
@@ -543,13 +543,26 @@ object VDJCObjectFieldExtractors {
             vdjcObject.commonChains().toString()
         }
         this += FieldParameterless(
-            Order.chains + 200,
+            Order.labels + 200,
             "-topChains",
             "Top chains",
             "Top chains",
             "topChains"
         ) { vdjcObject: VDJCObject ->
             vdjcObject.commonTopChains().toString()
+        }
+        this += FieldWithParameters(
+            Order.labels + 300,
+            "-geneLabel",
+            "Export gene label (i.e. ReliableChain)",
+            FieldWithParameters.CommandArg(
+                "<gene_label>",
+                { _, geneLabel -> geneLabel },
+                { geneLabel -> "Gene Label $geneLabel" },
+                { geneLabel -> "geneLabel$geneLabel" }
+            )
+        ) { vdjcObject: VDJCObject, geneLabel ->
+            vdjcObject.getGeneLabel(geneLabel)
         }
         this += FieldParameterless(
             Order.tags + 100,
@@ -576,13 +589,13 @@ object VDJCObjectFieldExtractors {
             Order.tags + 400,
             "-uniqueTagCount",
             "Unique tag count",
-            tagParameter("Unique Tag Count ", "uniqueTagCount"),
+            tagParameter("Unique ", "unique", hSuffix = " count", sSuffix = "Count"),
             validateArgs = { (tagName, idx) ->
                 require(idx != -1) { "No tag with name $tagName" }
             }
         ) { vdjcObject: VDJCObject, (_, idx) ->
             val level = idx + 1
-            vdjcObject.tagCount.reduceToLevel(level).size().toString()
+            vdjcObject.getTagDiversity(level).toString()
         }
     }
 }
@@ -840,14 +853,22 @@ private fun VDJCObject.positionOfReferencePoint(
     return sb.toString()
 }
 
-private fun tagParameter(
+internal fun stdDeprecationNote(oldName: String, newName: String, newHeader: Boolean) =
+    "$oldName field is deprecated, please use $newName.${NEW_HEADER_NOTE.takeIf { newHeader } ?: ""}"
+
+internal const val NEW_HEADER_NOTE =
+    " Please also note that the column header name will be different with the new option."
+
+internal fun tagParameter(
     hPrefix: String,
-    sPrefix: String
+    sPrefix: String,
+    hSuffix: String = "",
+    sSuffix: String = ""
 ) = FieldWithParameters.CommandArg(
     "<tag_name>",
     { header, tagName -> tagName to header.tagsInfo.indexOf(tagName) },
-    { (tagName, _) -> hPrefix + tagName },
-    { (tagName, _) -> sPrefix + tagName }
+    { (tagName, _) -> hPrefix + tagName + hSuffix },
+    { (tagName, _) -> sPrefix + tagName + sSuffix }
 )
 
 private fun geneFeatureParam(

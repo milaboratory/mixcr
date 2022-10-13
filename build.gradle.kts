@@ -26,7 +26,7 @@ plugins {
     `maven-publish`
     kotlin("jvm") version "1.7.10"
     id("org.jetbrains.kotlinx.dataframe") version "0.8.1"
-    id("com.palantir.git-version") version "0.13.0" // don't upgrade, latest version that runs on Java 8
+    id("com.palantir.git-version") version "0.15.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.bmuschko.docker-java-application") version "7.4.0"
     id("de.undercouch.download") version "5.1.0"
@@ -100,7 +100,7 @@ repositories {
 val milibVersion = "2.0.0-30-master"
 val repseqioVersion = "1.4.1-30-master"
 val miplotsVersion = "1.0.0-28-master"
-val mitoolVersion = "1.1.0-98-update_milib"
+val mitoolVersion = "1.1.0-99-main"
 val jacksonBomVersion = "2.13.4"
 val redberryPipeVersion = "1.2.0-7-master"
 

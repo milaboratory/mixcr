@@ -33,7 +33,17 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
             "-count",
             "Export clone count",
             "Clone count",
-            "cloneCount"
+            "cloneCount",
+            deprecation = stdDeprecationNote("-count", "-readCount", true),
+        ) { clone: Clone ->
+            clone.count.toString()
+        }
+        this += FieldParameterless(
+            Order.cloneSpecific + 201,
+            "-readCount",
+            "Number of reads assigned to the clonotype",
+            "Read Count",
+            "readCount"
         ) { clone: Clone ->
             clone.count.toString()
         }
@@ -42,34 +52,34 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
             "-fraction",
             "Export clone fraction",
             "Clone fraction",
-            "cloneFraction"
+            "cloneFraction",
+            deprecation = stdDeprecationNote("-fraction", "-readFraction", true),
+        ) { clone: Clone ->
+            clone.fraction.toString()
+        }
+        this += FieldParameterless(
+            Order.cloneSpecific + 301,
+            "-readFraction",
+            "Fraction of reads assigned to the clonotype",
+            "Read fraction",
+            "readFraction"
         ) { clone: Clone ->
             clone.fraction.toString()
         }
         this += FieldWithParameters(
-            Order.cloneSpecific + 400,
-            "-geneLabel",
-            "Export gene label (i.e. ReliableChain)",
-            FieldWithParameters.CommandArg(
-                "<gene_label>",
-                { _, geneLabel -> geneLabel },
-                { geneLabel -> "Gene Label $geneLabel" },
-                { geneLabel -> "geneLabel$geneLabel" }
-            )
-        ) { clone: Clone, geneLabel ->
-            clone.getGeneLabel(geneLabel)
-        }
-        this += FieldParameterless(
-            Order.tags + 200,
-            "-tagFractions",
-            "All tags with fractions",
-            "All tags",
-            "tagFractions"
-        ) { clone: Clone ->
-            clone.tagFractions.toString()
-        }
-        this += FieldParameterless(
             Order.tags + 500,
+            "-uniqueTagFraction",
+            "Fraction of unique tags (UMI, CELL, etc.) the clone or alignment collected.",
+            tagParameter("Unique ", "unique", hSuffix = " fraction", sSuffix = "Fraction"),
+            validateArgs = { (tagName, idx) ->
+                require(idx != -1) { "No tag with name $tagName" }
+            }
+        ) { clone: Clone, (_, idx) ->
+            val level = idx + 1
+            clone.getTagDiversityFraction(level).toString()
+        }
+        this += FieldParameterless(
+            Order.tags + 600,
             "-cellGroup",
             "Cell group",
             "Cell group",
