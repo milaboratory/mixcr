@@ -16,10 +16,10 @@ class CommandExportPresetTest {
         val output = TempFileManager.getTempFile()
         output.delete()
         TestMain.execute(
-            "exportPreset +dna " +
-                    "+appendExportClonesField -aaFeature VDJRegion " +
-                    "+appendExportClonesField -aaFeature VRegion " +
-                    "+appendExportClonesField -aaFeature JRegion " +
+            "exportPreset --dna " +
+                    "--append-export-clones-field -aaFeature VDJRegion " +
+                    "--append-export-clones-field -aaFeature VRegion " +
+                    "--append-export-clones-field -aaFeature JRegion " +
                     "tcr_shotgun ${output.path}"
         )
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
@@ -32,7 +32,7 @@ class CommandExportPresetTest {
     fun `add assemble contig step`() {
         val output = TempFileManager.getTempFile()
         output.delete()
-        TestMain.execute("exportPreset +dna +addStep assembleContigs tcr_shotgun ${output.path}")
+        TestMain.execute("exportPreset --dna --add-step assembleContigs tcr_shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
         result.pipeline!!.steps shouldContain MiXCRCommandDescriptor.assembleContigs
         result.assemble!!.clnaOutput shouldBe true

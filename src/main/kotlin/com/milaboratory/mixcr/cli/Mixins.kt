@@ -74,6 +74,7 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
     }
 }
 
+//copy of PipelineMiXCRMixins but with hidden fields
 class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
     //
     // Pipeline manipulation mixins
@@ -101,20 +102,20 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
 
     @Option(
         description = [CommonDescriptions.SPECIES],
-        names = [SetSpecies.CMD_OPTION]
+        names = [SetSpecies.CMD_OPTION_ALIAS, SetSpecies.CMD_OPTION]
     )
     fun species(species: String) =
         mixIn(SetSpecies(species))
 
     @Option(
         description = ["V/D/J/C gene library"],
-        names = [SetLibrary.CMD_OPTION]
+        names = [SetLibrary.CMD_OPTION_ALIAS, SetLibrary.CMD_OPTION]
     )
     fun library(library: String) =
         mixIn(SetLibrary(library))
 
     @Option(
-        description = ["Maximal number of reads to process"],
+        description = ["Maximal number of reads to process on 'align'"],
         names = [LimitInput.CMD_OPTION],
         paramLabel = "<n>"
     )
@@ -149,7 +150,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         description = [],
         names = [AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION],
         arity = "0..1",
-        paramLabel = "<referencePoint>"
+        paramLabel = "<anchor_point>"
     )
     fun floatingLeftAlignmentBoundary(arg: String?) =
         mixIn(
@@ -163,7 +164,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         description = [],
         names = [AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION],
         arity = "0..1",
-        paramLabel = "<referencePoint>"
+        paramLabel = "<anchor_point>"
     )
     fun rigidLeftAlignmentBoundary(arg: String?) =
         mixIn(
@@ -177,7 +178,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         description = [],
         names = [AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION],
         arity = "1",
-        paramLabel = "<referencePoint>"
+        paramLabel = "<anchor_point>"
     )
     fun floatingRightAlignmentBoundary(arg: String) =
         mixIn(
@@ -197,7 +198,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         description = [],
         names = [AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION],
         arity = "0..1",
-        paramLabel = "<referencePoint>"
+        paramLabel = "<anchor_point>"
     )
     fun rigidRightAlignmentBoundary(arg: String?) =
         mixIn(
@@ -233,7 +234,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Specify gene features used to assemble clonotypes. One may specify any custom gene region (e.g. `FR3+CDR3`); target clonal sequence can even be disjoint. Note that `assemblingFeatures` must cover CDR3"],
         names = [SetClonotypeAssemblingFeatures.CMD_OPTION],
-        paramLabel = "<geneFeatures>"
+        paramLabel = "<gene_features>"
     )
     fun assembleClonotypesBy(gf: String) =
         mixIn(SetClonotypeAssemblingFeatures(GeneFeatures.parse(gf)))
@@ -257,7 +258,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Clones with equal clonal sequence but different gene will not be merged."],
         names = [SetSplitClonesBy.CMD_OPTION_TRUE],
-        paramLabel = "<geneTypes>"
+        paramLabel = "<gene_types>.."
     )
     fun splitClonesBy(geneTypes: List<String>) =
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), true)) }
@@ -265,7 +266,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Clones with equal clonal sequence but different gene will be merged into single clone."],
         names = [SetSplitClonesBy.CMD_OPTION_FALSE],
-        paramLabel = "<geneTypes>"
+        paramLabel = "<gene_types>.."
     )
     fun dontSplitClonesBy(geneTypes: List<String>) =
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(GeneType.parse(geneType), false)) }
@@ -281,7 +282,7 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
                 "nucleotides will be detected in the region, assembling procedure will be limited to the region, " +
                 "and only clonotypes that fully cover the region will be outputted, others will be filtered out."],
         names = [SetContigAssemblingFeatures.CMD_OPTION],
-        paramLabel = "<geneFeatures>"
+        paramLabel = "<gene_features>"
     )
     fun assembleContigsBy(gf: String) =
         mixIn(SetContigAssemblingFeatures(GeneFeatures.parse(gf)))

@@ -46,6 +46,7 @@ import com.milaboratory.mitool.pattern.search.ReadTagShortcut
 import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mitool.use
+import com.milaboratory.mixcr.AlignMixins.LimitInput
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
@@ -130,16 +131,6 @@ object CommandAlign {
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
-        @Option(description = [CommonDescriptions.SPECIES], names = ["-s", "--species"])
-        private var species: String? = null
-
-        @Option(
-            description = ["V/D/J/C gene library"],
-            names = ["-b", "--library"],
-            paramLabel = "library"
-        )
-        private var library: String? = null
-
         @Option(names = ["-O"], description = ["Overrides aligner parameters from the selected preset"])
         private var overrides: Map<String, String> = mutableMapOf()
 
@@ -187,22 +178,11 @@ object CommandAlign {
         )
         private var writeAllResults = false
 
-        private class TagPatternOptions {
-            @Option(
-                description = ["Tag pattern to extract from the read."],
-                names = ["--tag-pattern"]
-            )
-            var tagPatternString: String? = null
-
-            @Option(
-                description = ["Read tag pattern from a file."],
-                names = ["--tag-pattern-file"]
-            )
-            var tagPatternFile: String? = null
-        }
-
-        @ArgGroup(exclusive = true, multiplicity = "0..1")
-        private val tagPattern: TagPatternOptions? = null
+        @Option(
+            description = ["Read tag pattern from a file."],
+            names = ["--tag-pattern-file"]
+        )
+        var tagPatternFile: String? = null
 
         @Option(
             description = ["If paired-end input is used, determines whether to try all combinations of mate-pairs or " +
@@ -224,13 +204,15 @@ object CommandAlign {
         )
         private var saveReads = false
 
-        @Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
+        @set:Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"], hidden = true)
         private var limit: Long? = null
+            set(value) {
+                logger.warn("--limit and -n options are deprecated; use ${LimitInput.CMD_OPTION} instead.")
+                field = value
+            }
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::align) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::species setIfNotNull species
-
                 if (overrides.isNotEmpty()) {
                     // Printing warning message for some common mistakes in parameter overrides
                     for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) logger.warn(
@@ -241,16 +223,12 @@ object CommandAlign {
                     Params::parameters jsonOverrideWith overrides
                 }
 
-                Params::library setIfNotNull library
                 Params::trimmingQualityThreshold setIfNotNull trimmingQualityThreshold
                 Params::trimmingWindowSize setIfNotNull trimmingWindowSize
                 Params::overlapPairedReads resetIfTrue noMerge
                 Params::bamDropNonVDJ setIfTrue dropNonVDJ
                 Params::writeFailedAlignments setIfTrue writeAllResults
-                tagPattern?.apply {
-                    Params::tagPattern setIfNotNull tagPatternString
-                    Params::tagPattern setIfNotNull tagPatternFile?.let { Path(it) }?.readText()
-                }
+                Params::tagPattern setIfNotNull tagPatternFile?.let { Path(it) }?.readText()
                 Params::tagUnstranded setIfTrue tagUnstranded
                 Params::tagMaxBudget setIfNotNull tagMaxBudget
 
