@@ -107,7 +107,7 @@ object CommandExportClones {
                 Params::filterStops setIfTrue filterStops
                 Params::splitByTags setIfNotNull splitByTag
                 Params::noHeader setIfTrue exportDefaults.noHeader
-                Params::fields.updateBy(exportDefaults)
+                Params::fields updateBy exportDefaults
             }
         }
     }

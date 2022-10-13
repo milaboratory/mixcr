@@ -80,7 +80,7 @@ object CommandExportAlignments {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::noHeader setIfTrue exportDefaults.noHeader
-                Params::fields.updateBy(exportDefaults)
+                Params::fields updateBy exportDefaults
             }
         }
     }

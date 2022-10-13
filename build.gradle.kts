@@ -97,10 +97,10 @@ repositories {
     }
 }
 
-val milibVersion = "2.0.0-29-remove_picocli"
-val repseqioVersion = "1.4.1-28-master"
+val milibVersion = "2.0.0-30-master"
+val repseqioVersion = "1.4.1-30-master"
 val miplotsVersion = "1.0.0-28-master"
-val mitoolVersion = "1.1.0-92-update_milib"
+val mitoolVersion = "1.1.0-98-update_milib"
 val jacksonBomVersion = "2.13.4"
 val redberryPipeVersion = "1.2.0-7-master"
 
