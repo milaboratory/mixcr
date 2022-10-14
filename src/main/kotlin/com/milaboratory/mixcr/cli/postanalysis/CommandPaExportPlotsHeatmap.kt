@@ -11,29 +11,37 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.miplots.color.Palettes.parse
+import com.milaboratory.miplots.color.Palettes
 import com.milaboratory.miplots.color.UniversalPalette
+import com.milaboratory.mixcr.cli.TypeCandidates
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 
 abstract class CommandPaExportPlotsHeatmap : CommandPaExportPlots() {
     @Option(
         description = ["Width of horizontal labels. One unit corresponds to the width of one tile."],
-        names = ["--h-labels-size"]
+        names = ["--h-labels-size"],
+        paramLabel = "<d>"
     )
     var hLabelsSize = -1.0
 
     @Option(
         description = ["Height of vertical labels. One unit corresponds to the height of one tile."],
-        names = ["--v-labels-size"]
+        names = ["--v-labels-size"],
+        paramLabel = "<d>"
     )
     var vLabelsSize = -1.0
 
     @Option(
-        description = ["Color palette for heatmap. Available names: diverging, viridis2magma, lime2rose, " +
-                "blue2red, teal2red, softSpectral, sequential, viridis, magma, sunset, rainbow, salinity, density. Default is density."],
-        names = ["--palette"]
+        description = ["Color palette for heatmap. Available names: \${COMPLETION-CANDIDATES}"],
+        names = ["--palette"],
+        paramLabel = "<s>",
+        showDefaultValue = ALWAYS,
+        completionCandidates = PaletteCandidates::class
     )
     var palette = "density"
 
-    fun parsePalette(): UniversalPalette = parse(palette)
+    fun parsePalette(): UniversalPalette = Palettes.parse(palette)
+
+    class PaletteCandidates : TypeCandidates(Palettes.paletteNames)
 }

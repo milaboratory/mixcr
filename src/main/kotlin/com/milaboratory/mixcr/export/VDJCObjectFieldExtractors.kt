@@ -556,7 +556,7 @@ object VDJCObjectFieldExtractors {
             "-geneLabel",
             "Export gene label (i.e. ReliableChain)",
             FieldWithParameters.CommandArg(
-                "<gene_label>",
+                "<label>",
                 { _, geneLabel -> geneLabel },
                 { geneLabel -> "Gene Label $geneLabel" },
                 { geneLabel -> "geneLabel$geneLabel" }

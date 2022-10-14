@@ -17,10 +17,18 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
 abstract class CommandExportQc : MiXCRCommandWithOutputs() {
-    @Option(names = ["--width"], description = ["Plot width"])
+    @Option(
+        names = ["--width"],
+        description = ["Plot width"],
+        paramLabel = "<n>"
+    )
     var width = -1
 
-    @Option(names = ["--height"], description = ["Plot height"])
+    @Option(
+        names = ["--height"],
+        description = ["Plot height"],
+        paramLabel = "<n>"
+    )
     var height = -1
 
     val sizeParameters: SizeParameters?

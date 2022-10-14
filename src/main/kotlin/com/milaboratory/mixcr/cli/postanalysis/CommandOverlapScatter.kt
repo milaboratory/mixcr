@@ -11,12 +11,13 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod.Companion.parse
+import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.ChainsUtil.name
 import com.milaboratory.mixcr.cli.ChainsUtil.toPath
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
@@ -37,22 +38,32 @@ import kotlin.io.path.nameWithoutExtension
 
 @Command(description = ["Plot overlap scatter-plot."])
 class CommandOverlapScatter : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["cloneset_1.(clns|clna)"], index = "0")
+    @Parameters(paramLabel = "cloneset_1.(clns|clna)", index = "0")
     lateinit var in1: Path
 
-    @Parameters(description = ["cloneset_2.(clns|clna)"], index = "1")
+    @Parameters(paramLabel = "cloneset_2.(clns|clna)", index = "1")
     lateinit var in2: Path
 
-    @Parameters(description = ["output.(pdf|eps|png|jpeg)"], index = "2")
+    @Parameters(paramLabel = "output.(pdf|eps|png|jpeg)", index = "2")
     lateinit var out: Path
 
-    @Option(description = ["Chains to export"], names = ["--chains"], split = ",")
+    @Option(
+        description = ["Chains to export"],
+        names = ["--chains"],
+        split = ",",
+        paramLabel = Labels.CHAIN
+    )
     var chains: Set<String>? = null
 
     @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
 
-    @Option(description = [CommonDescriptions.DOWNSAMPLING], names = ["--downsampling"], required = true)
+    @Option(
+        description = [CommonDescriptions.DOWNSAMPLING],
+        names = ["--downsampling"],
+        required = true,
+        paramLabel = "<type>"
+    )
     lateinit var downsampling: String
 
     @Option(
@@ -64,10 +75,12 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     var overlapCriteria = "CDR3|AA|V|J"
 
     @Option(
-        description = ["Correlation method to use. Possible value: pearson, kendal, spearman"],
-        names = ["--method"]
+        description = ["Correlation method to use. Possible value: \${COMPLETION-CANDIDATES}"],
+        names = ["--method"],
+        paramLabel = "<method>",
+        showDefaultValue = ALWAYS
     )
-    var method = "pearson"
+    var method: CorrelationMethod = CorrelationMethod.Pearson
 
     @Option(description = ["Do not apply log10 to clonotype frequencies"], names = ["--no-log"])
     var noLog = false
@@ -101,7 +114,7 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
             val plotParameters = OverlapScatter.PlotParameters(
                 in1.nameWithoutExtension,
                 in2.nameWithoutExtension,
-                parse(method),
+                method,
                 !noLog
             )
             dataset.mkElementsPort().use { port ->

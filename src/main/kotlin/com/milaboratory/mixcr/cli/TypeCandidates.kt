@@ -9,15 +9,8 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis
+package com.milaboratory.mixcr.cli
 
-import picocli.CommandLine.Option
-
-abstract class CommandPaExportPlotsHeatmapWithGroupBy : CommandPaExportPlotsHeatmap() {
-    @Option(
-        description = ["Group heatmaps by specific metadata properties."],
-        names = ["--group-by"],
-        paramLabel = "<s>"
-    )
-    var groupBy: List<String>? = null
-}
+abstract class TypeCandidates(
+    private val candidates: List<String>
+) : Iterable<String> by candidates

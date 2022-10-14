@@ -20,6 +20,7 @@ public class CommonDescriptions {
 
         public static final String ANCHOR_POINT = "<anchor_point>";
 
+        public static final String GENE_FEATURE = "<gene_feature>";
         public static final String GENE_FEATURES = "<gene_features>";
 
         public static final String GENE_TYPE = "<gene_type>";

@@ -19,6 +19,9 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat.Companion.Formatted
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat.Companion.Significance
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.cli.EnumTypes.PValueCorrectionMethodCandidatesWithNone
+import com.milaboratory.mixcr.cli.EnumTypes.PValueCorrectionMethodConverterWithNone
+import com.milaboratory.mixcr.cli.EnumTypes.PlotTypeCandidates
 import com.milaboratory.mixcr.cli.MultipleMetricsInOneFile
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics
@@ -26,45 +29,64 @@ import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.dataFrame
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.plots
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import java.util.*
 
 abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, CommandPaExportPlots() {
     @Option(
-        description = ["Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter, " +
-                "lineplot, lineplot-bindot, lineplot-jitter, " +
-                "violin, violin-bindot, barplot, barplot-stacked, scatter"],
-        names = ["--plot-type"]
+        description = ["Plot type. Possible values: \${COMPLETION-CANDIDATES}"],
+        names = ["--plot-type"],
+        completionCandidates = PlotTypeCandidates::class
     )
     var plotType: PlotType? = null
 
-    @Option(description = ["Primary group"], names = ["-p", "--primary-group"])
+    @Option(
+        description = ["Primary group"],
+        names = ["-p", "--primary-group"],
+        paramLabel = "<s>"
+    )
     var primaryGroup: String? = null
         get() = field?.lowercase()
 
     @Option(
         description = ["List of comma separated primary group values"],
         names = ["-pv", "--primary-group-values"],
-        split = ","
+        split = ",",
+        paramLabel = "<s>"
     )
     var primaryGroupValues: List<String>? = null
 
-    @Option(description = ["Secondary group"], names = ["-s", "--secondary-group"])
+    @Option(
+        description = ["Secondary group"],
+        names = ["-s", "--secondary-group"],
+        paramLabel = "<s>"
+    )
     var secondaryGroup: String? = null
         get() = field?.lowercase()
 
     @Option(
         description = ["List of comma separated secondary group values"],
         names = ["-sv", "--secondary-group-values"],
-        split = ","
+        split = ",",
+        paramLabel = "<s>"
     )
     var secondaryGroupValues: List<String>? = null
 
-    @Option(description = ["Facet by"], names = ["--facet-by"])
+    @Option(
+        description = ["Facet by"],
+        names = ["--facet-by"],
+        paramLabel = "<s>"
+    )
     var facetBy: String? = null
         get() = field?.lowercase()
 
-    @Option(description = ["Select specific metrics to export."], names = ["--metric"], split = ",")
+    @Option(
+        description = ["Select specific metrics to export."],
+        names = ["--metric"],
+        split = ",",
+        paramLabel = "<s>"
+    )
     var metrics: List<String>? = null
 
     @Option(description = ["Hide overall p-value"], names = ["--hide-overall-p-value"])
@@ -87,22 +109,30 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
     var paired = false
 
     @Option(
-        description = ["Test method. Default is Wilcoxon. Available methods: Wilcoxon, ANOVA, TTest, KruskalWallis, KolmogorovSmirnov"],
-        names = ["--method"]
+        description = ["Test method. Available methods: \${COMPLETION-CANDIDATES}"],
+        names = ["--method"],
+        showDefaultValue = ALWAYS,
+        paramLabel = "<method>"
     )
-    var method: String = "Wilcoxon"
+    var method: TestMethod = TestMethod.Wilcoxon
 
     @Option(
-        description = ["Test method for multiple groups comparison. Default is KruskalWallis. Available methods: ANOVA, KruskalWallis, KolmogorovSmirnov"],
-        names = ["--method-multiple-groups"]
+        description = ["Test method for multiple groups comparison. Available methods: \${COMPLETION-CANDIDATES}"],
+        names = ["--method-multiple-groups"],
+        showDefaultValue = ALWAYS,
+        paramLabel = "<method>"
     )
-    var methodForMultipleGroups: String = "KruskalWallis"
+    var methodForMultipleGroups: TestMethod = TestMethod.KruskalWallis
 
     @Option(
-        description = ["Method used to adjust p-values. Default is Holm. Available methods: none, BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm, Hommel"],
-        names = ["--p-adjust-method"]
+        description = ["Method used to adjust p-values. Available methods: \${COMPLETION-CANDIDATES}"],
+        names = ["--p-adjust-method"],
+        showDefaultValue = ALWAYS,
+        completionCandidates = PValueCorrectionMethodCandidatesWithNone::class,
+        converter = [PValueCorrectionMethodConverterWithNone::class],
+        paramLabel = "<method>"
     )
-    var pAdjustMethod: String = "Holm"
+    var pAdjustMethod: PValueCorrection.Method = PValueCorrection.Method.Holm
 
     @Option(description = ["Show significance level instead of p-values"], names = ["--show-significance"])
     var showSignificance = false
@@ -142,9 +172,9 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
             labelFormat,
             labelFormat,
             paired,
-            TestMethod.valueOf(method),
-            TestMethod.valueOf(methodForMultipleGroups),
-            if (pAdjustMethod == "none") null else PValueCorrection.Method.valueOf(pAdjustMethod),
+            method,
+            methodForMultipleGroups,
+            pAdjustMethod,
             CorrelationMethod.Pearson
         )
         val plots = plots(dataFrame, par)

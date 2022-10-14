@@ -63,10 +63,15 @@ private val targetReferencePoints = arrayOf(
     description = ["Alignments statistics."]
 )
 class CommandAlignmentsStats : MiXCRCommandWithOutputs() {
-    @Parameters(index = "0", description = ["input_file.vdjca"])
+    @Parameters(index = "0", paramLabel = "input_file.vdjca", arity = "1")
     lateinit var input: Path
 
-    @Parameters(index = "1", description = ["[output.txt]"], arity = "0..1")
+    @Parameters(
+        description = ["Path where to write statistics. Will write to output if omitted."],
+        index = "1",
+        paramLabel = "output.txt",
+        arity = "0..1"
+    )
     var out: Path? = null
 
     override val inputFiles

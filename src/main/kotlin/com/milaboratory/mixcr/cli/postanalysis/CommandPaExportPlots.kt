@@ -54,7 +54,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     var height = 0
 
     @Option(
-        description = ["Filter by metadata. Possible filters column=value, column>=value etc."],
+        description = ["Filter by metadata. Possible filters: column=value, column>=value etc."],
         names = ["--filter"],
         split = ",",
         paramLabel = "<filter>"

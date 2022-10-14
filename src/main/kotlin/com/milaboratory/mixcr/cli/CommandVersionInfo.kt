@@ -31,7 +31,7 @@ import java.nio.file.Path
     description = ["Output information about MiXCR version which generated the file."]
 )
 class CommandVersionInfo : MiXCRCommand() {
-    @Parameters(description = ["input_file"])
+    @Parameters(paramLabel = "input_file.(vdjca|clns|clna|shmt)")
     lateinit var inputFile: Path
 
     override fun run0() {
