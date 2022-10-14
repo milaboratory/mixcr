@@ -66,7 +66,8 @@ import java.nio.file.Path
 class CommandExportAirr : MiXCRCommandWithOutputs() {
     @Option(
         description = ["Target id (use -1 to export from the target containing CDR3)."],
-        names = ["-t", "--target"]
+        names = ["-t", "--target"],
+        paramLabel = "<n>"
     )
     var targetId = -1
 
@@ -83,15 +84,25 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
     var fromAlignment = false
 
     @Option(
-        description = ["Limit number of filtered alignments; no more " +
-                "than N alignments will be outputted"], names = ["-n", "--limit"]
+        description = ["Limit number of filtered alignments; no more than N alignments will be outputted"],
+        names = ["-n", "--limit"],
+        paramLabel = "<n>"
     )
     var limit: Int? = null
 
-    @Parameters(index = "0", description = ["input_file.[vdjca|clna|clns]"])
+    @Parameters(
+        description = ["Path to input file"],
+        index = "0",
+        paramLabel = "input_file.(vdjca|clna|clns)"
+    )
     lateinit var input: Path
 
-    @Parameters(index = "1", description = ["output.tsv"], arity = "0..1")
+    @Parameters(
+        description = ["Path where to write export. Will write to output if omitted."],
+        index = "1",
+        paramLabel = "output.tsv",
+        arity = "0..1"
+    )
     var out: Path? = null
 
     override val inputFiles

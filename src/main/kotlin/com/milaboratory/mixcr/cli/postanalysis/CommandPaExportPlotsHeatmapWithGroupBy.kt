@@ -16,7 +16,8 @@ import picocli.CommandLine.Option
 abstract class CommandPaExportPlotsHeatmapWithGroupBy : CommandPaExportPlotsHeatmap() {
     @Option(
         description = ["Group heatmaps by specific metadata properties."],
-        names = ["--group-by"]
+        names = ["--group-by"],
+        paramLabel = "<s>"
     )
     var groupBy: List<String>? = null
 }

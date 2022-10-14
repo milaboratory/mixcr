@@ -27,14 +27,30 @@ import java.nio.file.Path
     description = ["Export original reads from vdjca file."]
 )
 class CommandExportReads : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]"], arity = "1..3")
-    var inOut: List<Path> = mutableListOf()
+    @Parameters(
+        description = ["Path to input file with alignments"],
+        index = "0",
+        paramLabel = "input.vdjca",
+        arity = "1"
+    )
+    lateinit var input: Path
+
+    @Parameters(
+        description = [
+            "Path where to write reads from input alignments.",
+            "Will write to output if omitted.",
+            "Will write to single file if specified only one output file.",
+            "Will write paired reads to two files if specified two output files.",
+        ],
+        index = "1",
+        paramLabel = "[output_R1.fastq[.gz] [output_R2.fastq[.gz]]]",
+        hideParamSyntax = true,
+        arity = "0..2"
+    )
+    public override val outputFiles: List<Path> = mutableListOf()
 
     override val inputFiles
-        get() = listOf(inOut.first())
-
-    public override val outputFiles
-        get() = inOut.subList(1, inOut.size)
+        get() = listOf(input)
 
     override fun run0() {
         VDJCAlignmentsReader(inputFiles.first()).use { reader ->

@@ -25,17 +25,29 @@ import java.nio.file.Path
 import kotlin.io.path.outputStream
 
 @Command(
-    name = CommandExportReports.EXPORT_REPORTS_COMMAND_NAME,
     description = ["Export MiXCR reports."]
 )
 class CommandExportReports : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+    @Parameters(
+        description = ["Path to input file."],
+        paramLabel = "data.(vdjca|clns|clna|shmt)",
+        index = "0"
+    )
     private lateinit var inputPath: Path
 
-    @Parameters(description = ["report.[txt|jsonl]"], index = "1", arity = "0..1")
+    @Parameters(
+        description = ["Path where to write reports. Print in stdout if omitted."],
+        paramLabel = "report.(txt|json|yaml)",
+        index = "1",
+        arity = "0..1"
+    )
     private var outputPath: Path? = null
 
-    @Option(names = ["--step"], description = ["Export report only for a specific step"])
+    @Option(
+        names = ["--step"],
+        description = ["Export report only for a specific step"],
+        paramLabel = "<step>"
+    )
     private var step: String? = null
 
     internal class OutputFormatFlags {
@@ -57,8 +69,10 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
 
     override fun run0() {
         val footer = IOUtil.extractFooter(inputPath)
-        (if (outputPath == null) CloseShieldOutputStream.wrap(System.out)
-        else outputPath!!.outputStream()).use { o ->
+        when (outputPath) {
+            null -> CloseShieldOutputStream.wrap(System.out)
+            else -> outputPath!!.outputStream()
+        }.use { o ->
             if (outputFormatFlags?.json == true || outputFormatFlags?.yaml == true) {
                 val tree =
                     if (step != null)
@@ -78,9 +92,5 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
                 }
             }
         }
-    }
-
-    companion object {
-        const val EXPORT_REPORTS_COMMAND_NAME = "exportReports"
     }
 }

@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.export.OutputMode.*
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
 import picocli.CommandLine
+import picocli.CommandLine.Model.ArgGroupSpec
 import java.io.BufferedReader
 import java.io.FileReader
 import java.util.*
@@ -43,8 +44,13 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
     protected abstract fun allAvailableFields(): List<Field<T>>
 
     fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec) {
+        val argGroup = ArgGroupSpec.builder()
+            .heading("Possible fields to export\n")
+            .validate(false)
+            .exclusive(false)
+
         for (field in fields) {
-            spec.addOption(
+            argGroup.addArg(
                 CommandLine.Model.OptionSpec
                     .builder(field.cmdArgName)
                     .description(field.description)
@@ -57,6 +63,7 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
                     .build()
             )
         }
+        spec.addArgGroup(argGroup.build())
     }
 
     /** Creates field extractors from field descriptions */
@@ -183,8 +190,12 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .build()
             )
         }
+        val argGroup = ArgGroupSpec.builder()
+            .heading("Possible fields to export\n")
+            .validate(false)
+            .exclusive(false)
         for (field in fields) {
-            spec.addOption(
+            argGroup.addArg(
                 CommandLine.Model.OptionSpec
                     .builder(field.cmdArgName)
                     .description(field.description)
@@ -197,6 +208,7 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .build()
             )
         }
+        spec.addArgGroup(argGroup.build())
     }
 
     private fun hasField(name: String): Boolean =

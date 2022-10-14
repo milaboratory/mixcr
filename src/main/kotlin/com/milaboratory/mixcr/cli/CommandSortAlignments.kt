@@ -35,10 +35,10 @@ import java.nio.file.Path
     description = ["Sort alignments in vdjca file by read id."]
 )
 class CommandSortAlignments : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["alignments.vdjca"], index = "0")
+    @Parameters(paramLabel = "alignments.vdjca", index = "0")
     lateinit var input: Path
 
-    @Parameters(description = ["alignments.sorted.vdjca"], index = "1")
+    @Parameters(paramLabel = "alignments.sorted.vdjca", index = "1")
     lateinit var out: Path
 
     override val inputFiles

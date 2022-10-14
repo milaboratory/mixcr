@@ -20,8 +20,7 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
     @Parameters(
         index = "0",
         paramLabel = "trees.$shmFileExtension",
-        hideParamSyntax = true,
-        description = ["Input file produced by ${CommandFindShmTrees.COMMAND_NAME}."]
+        description = ["Input file produced by '${CommandFindShmTrees.COMMAND_NAME}' command."]
     )
     lateinit var input: Path
 

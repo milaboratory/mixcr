@@ -21,7 +21,6 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
-import java.nio.file.Paths
 
 object CommandExportPreset {
 
@@ -30,14 +29,19 @@ object CommandExportPreset {
     )
     class Cmd : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Unit> {
         @Parameters(
-            arity = "1..2",
-            hideParamSyntax = true,
-            description = ["preset_name preset_file.(yaml|yml)"]
+            description = ["Preset name to export."],
+            index = "0",
+            arity = "1",
+            paramLabel = "preset_name"
         )
-        private val inOut: List<String> = mutableListOf()
+        lateinit var presetName: String
 
-        private val presetName get() = inOut[0]
-        private val outputFile get() = if (inOut.size == 1) null else Paths.get(inOut[1])
+        @Parameters(
+            description = ["Path where to write preset yaml file. Will write to output if omitted."],
+            arity = "0..1",
+            paramLabel = "preset_file.(yaml|yml)"
+        )
+        private val outputFile: Path? = null
 
         override val inputFiles get() = mutableListOf<Path>()
 

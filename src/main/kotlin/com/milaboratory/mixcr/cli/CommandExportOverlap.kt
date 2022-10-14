@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.FieldExtractor
 import com.milaboratory.mixcr.export.OutputMode
@@ -27,8 +28,9 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
 import picocli.CommandLine.Command
-import picocli.CommandLine.Model
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.FileWriter
@@ -41,10 +43,60 @@ import kotlin.collections.component2
     description = ["Build cloneset overlap and export into tab delimited file."],
 )
 class CommandExportOverlap : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["cloneset.(clns|clna)... output.tsv"])
+    companion object {
+        private const val inputsLabel = "cloneset.(clns|clna)..."
+
+        private const val outputLabel = "output.tsv"
+
+        @JvmStatic
+        fun mkSpec(): CommandLine.Model.CommandSpec {
+            val export = CommandExportOverlap()
+            val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(export)
+                .addPositional(
+                    CommandLine.Model.PositionalParamSpec.builder()
+                        .index("0")
+                        .required(false)
+                        .arity("0..*")
+                        .type(Path::class.java)
+                        .paramLabel(inputsLabel)
+                        .hideParamSyntax(true)
+                        .description("Paths to input files")
+                        .build()
+                )
+                .addPositional(
+                    CommandLine.Model.PositionalParamSpec.builder()
+                        .index("1")
+                        .required(false)
+                        .arity("0..*")
+                        .type(Path::class.java)
+                        .paramLabel(outputLabel)
+                        .hideParamSyntax(true)
+                        .description("Path where to write output export table")
+                        .build()
+                )
+
+            export.spec = spec // inject spec manually
+            CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
+            return spec
+        }
+    }
+
+    @Parameters(
+        index = "0",
+        arity = "2..*",
+        paramLabel = "$inputsLabel $outputLabel",
+        hideParamSyntax = true,
+        //help is covered by mkCommandSpec
+        hidden = true
+    )
     var inOut: List<Path> = mutableListOf()
 
-    @Option(description = ["Chains to export"], names = ["--chains"], split = ",")
+    @Option(
+        description = ["Chains to export"],
+        names = ["--chains"],
+        split = ",",
+        paramLabel = Labels.CHAIN
+    )
     var chains: Set<String>? = null
 
     @Option(
@@ -53,7 +105,12 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
     )
     var onlyProductive = false
 
-    @Option(description = ["Overlap criteria. Default CDR3|AA|V|J"], names = ["--criteria"])
+    @Option(
+        description = ["Overlap criteria."],
+        names = ["--criteria"],
+        showDefaultValue = ALWAYS,
+        paramLabel = "<s>"
+    )
     var overlapCriteria = "CDR3|AA|V|J"
 
     public override val inputFiles
@@ -217,16 +274,5 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
             row.map { clones ->
                 clones.joinToString(",") { clone -> extractor.extractValue(clone) }
             }
-    }
-
-    companion object {
-        @JvmStatic
-        fun mkSpec(): Model.CommandSpec {
-            val export = CommandExportOverlap()
-            val spec = Model.CommandSpec.forAnnotatedObject(export)
-            export.spec = spec // inject spec manually
-            CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
-            return spec
-        }
     }
 }

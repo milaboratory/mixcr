@@ -111,9 +111,9 @@ data class StatOption(
 )
 
 object DefaultMeta {
-    val Isotype = "Isotype"
-    val Abundance = "Abundance"
-    val Alignment = "Alignment"
+    const val Isotype = "Isotype"
+    const val Abundance = "Abundance"
+    const val Alignment = "Alignment"
 }
 
 typealias GGNode = Node<NodeWithClones>
@@ -129,7 +129,7 @@ data class AlignmentOption(
 
 class ShmTreePlotter(
     val shmtFile: Path,
-    val metadataFile: Path? = null,
+    metadataFile: Path? = null,
     /** Filter specific trees */
     val filter: TreeFilter? = null,
     /** Take first N trees (for debug purposes) */

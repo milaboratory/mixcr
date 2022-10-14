@@ -31,33 +31,35 @@ import java.nio.file.Path
     description = ["Calculates the difference between two .clns files."]
 )
 class CommandClonesDiff : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["input1.clns"], index = "0")
+    @Parameters(paramLabel = "input1.clns", index = "0")
     lateinit var in1: Path
 
-    @Parameters(description = ["input2.clns"], index = "1")
+    @Parameters(paramLabel = "input2.clns", index = "1")
     lateinit var in2: Path
 
-    @Parameters(description = ["[report]"], index = "2", arity = "0..1")
+    @Parameters(
+        description = ["Path where to write report. Will write to output if omitted."],
+        paramLabel = "report.txt",
+        index = "2",
+        arity = "0..1"
+    )
     var report: Path? = null
 
     @Option(
         names = ["-v"],
-        description = ["Use V gene in clone comparison (include it as a clone key along with a clone sequence)."],
-        paramLabel = "v"
+        description = ["Use V gene in clone comparison (include it as a clone key along with a clone sequence)."]
     )
     var useV = false
 
     @Option(
         names = ["-j"],
-        description = ["Use J gene in clone comparison (include it as a clone key along with a clone sequence)."],
-        paramLabel = "j"
+        description = ["Use J gene in clone comparison (include it as a clone key along with a clone sequence)."]
     )
     var useJ = false
 
     @Option(
         names = ["-c"],
-        description = ["Use C gene in clone comparison (include it as a clone key along with a clone sequence)."],
-        paramLabel = "c"
+        description = ["Use C gene in clone comparison (include it as a clone key along with a clone sequence)."]
     )
     var useC = false
 

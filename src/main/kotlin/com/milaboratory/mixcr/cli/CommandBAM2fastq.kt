@@ -27,16 +27,36 @@ import java.nio.file.Path
     description = ["Converts BAM/SAM file to paired/unpaired fastq files"]
 )
 class CommandBAM2fastq : MiXCRCommandWithOutputs() {
-    @Option(names = ["-b", "--bam"], description = ["BAM files for conversion."], required = true)
+    @Option(
+        names = ["-b", "--bam"],
+        description = ["BAM files for conversion."],
+        required = true,
+        paramLabel = "<path>"
+    )
     lateinit var bamFiles: Array<Path>
 
-    @Option(names = ["-r1"], description = ["File for first reads."], required = true)
+    @Option(
+        names = ["-r1"],
+        description = ["File for first reads."],
+        required = true,
+        paramLabel = "<path>"
+    )
     lateinit var fastq1: Path
 
-    @Option(names = ["-r2"], description = ["File for second reads."], required = true)
+    @Option(
+        names = ["-r2"],
+        description = ["File for second reads."],
+        required = true,
+        paramLabel = "<path>"
+    )
     lateinit var fastq2: Path
 
-    @Option(names = ["-u"], description = ["File for unpaired reads."], required = true)
+    @Option(
+        names = ["-u"],
+        description = ["File for unpaired reads."],
+        required = true,
+        paramLabel = "<path>"
+    )
     lateinit var fastqUnpaired: Path
 
     @Option(

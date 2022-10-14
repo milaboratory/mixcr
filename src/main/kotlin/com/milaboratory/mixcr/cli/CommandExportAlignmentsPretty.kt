@@ -15,17 +15,18 @@ import cc.redberry.primitives.Filter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.afiltering.AFilter
 import com.milaboratory.mixcr.util.and
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.util.NSequenceWithQualityPrintHelper
-import gnu.trove.set.hash.TIntHashSet
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.BufferedOutputStream
@@ -38,10 +39,19 @@ import java.util.*
     description = ["Export verbose information about alignments."]
 )
 class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
-    @Parameters(index = "0", description = ["alignments.vdjca"])
+    @Parameters(
+        index = "0",
+        paramLabel = "alignments.vdjca",
+        description = ["Path to input file with alignments."]
+    )
     lateinit var input: Path
 
-    @Parameters(index = "1", description = ["output.txt"], arity = "0..1")
+    @Parameters(
+        index = "1",
+        paramLabel = "output.txt",
+        arity = "0..1",
+        description = ["Path where to write export. Will write to output if omitted."]
+    )
     var out: Path? = null
 
     @Option(description = ["Output only top hits"], names = ["-t", "--top"])
@@ -50,52 +60,78 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     @Option(description = ["Output full gene sequence"], names = ["-a", "--gene"])
     var geneSequence = false
 
-    @Option(description = ["Limit number of alignments before filtering"], names = ["-b", "--limit-before"])
+    @Option(
+        description = ["Limit number of alignments before filtering"],
+        names = ["-b", "--limit-before"],
+        paramLabel = "<n>"
+    )
     var limitBefore: Int? = null
 
     @Option(
-        description = ["Limit number of filtered alignments; no more " +
-                "than N alignments will be outputted"], names = ["-n", "--limit"]
+        description = ["Limit number of filtered alignments; no more than N alignments will be outputted"],
+        names = ["-n", "--limit"],
+        paramLabel = "<n>"
     )
     var limitAfter: Int? = null
 
     @Option(
         description = ["Filter export to a specific protein chain gene (e.g. TRA or IGH)."],
-        names = ["-c", "--chains"]
+        names = ["-c", "--chains"],
+        paramLabel = Labels.CHAINS,
+        showDefaultValue = ALWAYS
     )
-    var chain = "ALL"
+    var chains: Chains = Chains.ALL
 
-    @Option(description = ["Number of output alignments to skip"], names = ["-s", "--skip"])
+    @Option(
+        description = ["Number of output alignments to skip"],
+        names = ["-s", "--skip"],
+        paramLabel = "<n>"
+    )
     var skipAfter: Int? = null
 
     @Option(
         description = ["Output only alignments where CDR3 exactly equals to given sequence"],
-        names = ["-e", "--cdr3-equals"]
+        names = ["-e", "--cdr3-equals"],
+        paramLabel = "<seq>"
     )
-    var cdr3Equals: String? = null
+    var cdr3Equals: NucleotideSequence? = null
 
     @Option(
         description = ["Output only alignments which contain a corresponding gene feature"],
-        names = ["-g", "--feature"]
+        names = ["-g", "--feature"],
+        paramLabel = Labels.GENE_FEATURE
     )
-    var feature: String? = null
+    var feature: GeneFeature? = null
 
     @Option(
         description = ["Output only alignments where target read contains a given substring"],
-        names = ["-r", "--read-contains"]
+        names = ["-r", "--read-contains"],
+        paramLabel = "<seq>"
     )
     var readContains: String? = null
 
-    @Option(description = ["Custom filter"], names = ["--filter"])
+    @Option(
+        description = ["Custom filter"],
+        names = ["--filter"],
+        paramLabel = "<s>"
+    )
     var filter: String? = null
 
     @Option(description = ["Print descriptions"], names = ["-d", "--descriptions"])
     var printDescriptions = false
 
-    @Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"])
+    @Option(
+        description = ["List of read ids to export"],
+        names = ["-i", "--read-ids"],
+        paramLabel = "<id>"
+    )
     var readIds: List<Long> = mutableListOf()
 
-    @Option(description = ["List of clone ids to export"], names = ["--clone-ids"])
+    @Option(
+        description = ["List of clone ids to export"],
+        names = ["--clone-ids"],
+        paramLabel = "<id>"
+    )
     var cloneIds: List<Long> = mutableListOf()
 
     override val inputFiles
@@ -109,7 +145,6 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     private fun getCloneIds(): TLongHashSet? = if (cloneIds.isEmpty()) null else TLongHashSet(cloneIds)
 
     private fun mkFilter(): Filter<VDJCAlignments> {
-        val chains = Chains.parse(chain)
         var resultFilter: Filter<VDJCAlignments> = Filter { true }
         if (filter != null) {
             resultFilter = resultFilter.and(AFilter.build(filter))
@@ -130,7 +165,6 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
             resultFilter = resultFilter.and { vdjcAlignments -> cloneIds.contains(vdjcAlignments.cloneIndex) }
         }
         if (feature != null) {
-            val feature = GeneFeature.parse(feature)
             resultFilter = resultFilter.and { vdjcAlignments ->
                 (vdjcAlignments.getFeature(feature)?.size() ?: 0) > 0
             }
@@ -143,9 +177,8 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
             }
         }
         if (cdr3Equals != null) {
-            val seq = NucleotideSequence(cdr3Equals)
             resultFilter = resultFilter.and { vdjcAlignments ->
-                vdjcAlignments.getFeature(CDR3)?.sequence == seq
+                vdjcAlignments.getFeature(CDR3)?.sequence == cdr3Equals
             }
         }
         return resultFilter

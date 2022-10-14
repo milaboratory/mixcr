@@ -13,14 +13,53 @@ package com.milaboratory.mixcr.cli.qc
 
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.qc.AlignmentQC.alignQc
+import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 @Command(description = ["QC plot for alignments."])
 class CommandExportQcAlign : CommandExportQc() {
-    @Parameters(description = ["sample.vdjca... align.(pdf|eps|png|jpeg)"], arity = "2..*")
+    companion object {
+        private const val inputsLabel = "sample.vdjca..."
+
+        private const val outputLabel = "align.(pdf|eps|png|jpeg)"
+
+        fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcAlign::class.java)
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("0")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(inputsLabel)
+                    .hideParamSyntax(true)
+                    .description("Paths to input files with alignments")
+                    .build()
+            )
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("1")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(outputLabel)
+                    .hideParamSyntax(true)
+                    .description("Path where to write output plots")
+                    .build()
+            )
+    }
+
+    @Parameters(
+        index = "0",
+        arity = "2..*",
+        paramLabel = "$inputsLabel $outputLabel",
+        hideParamSyntax = true,
+        //help is covered by mkCommandSpec
+        hidden = true
+    )
     var inOut: List<Path> = mutableListOf()
 
     @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])

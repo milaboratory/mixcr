@@ -18,6 +18,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.primitivio.buffered
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.CanReportProgress
@@ -27,6 +28,7 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -35,41 +37,62 @@ import java.nio.file.Path
     description = ["Filter alignments."]
 )
 class CommandFilterAlignments : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["alignments.vdjca"], index = "0")
+    @Parameters(
+        description = ["Path to input file with alignments."],
+        paramLabel = "alignments.vdjca",
+        index = "0"
+    )
     lateinit var input: Path
 
-    @Parameters(description = ["alignments.filtered.vdjca"], index = "1")
+    @Parameters(
+        description = ["Path where to write filtered alignments."],
+        paramLabel = "alignments.filtered.vdjca",
+        index = "1"
+    )
     lateinit var out: Path
 
     @Option(
         description = ["Specifies immunological protein chain gene for an alignment. If many, " +
-                "separated by ','. Available genes: IGH, IGL, IGK, TRA, TRB, TRG, TRD."], names = ["-c", "--chains"]
+                "separated by ','. Available genes: IGH, IGL, IGK, TRA, TRB, TRG, TRD."],
+        names = ["-c", "--chains"],
+        paramLabel = Labels.CHAINS,
+        showDefaultValue = ALWAYS
     )
-    var chains = "ALL"
+    var chains: Chains = Chains.ALL
 
     @Option(
         description = ["Include only those alignments that contain specified feature."],
-        names = ["-g", "--contains-feature"]
+        names = ["-g", "--contains-feature"],
+        paramLabel = Labels.GENE_FEATURE
     )
-    var containsFeature: String? = null
+    var containsFeature: GeneFeature? = null
 
     @Option(
         description = ["Include only those alignments which CDR3 equals to a specified sequence."],
-        names = ["-e", "--cdr3-equals"]
+        names = ["-e", "--cdr3-equals"],
+        paramLabel = "<seq>"
     )
-    var cdr3Equals: String? = null
+    var cdr3Equals: NucleotideSequence? = null
 
     @Option(description = ["Output only chimeric alignments."], names = ["-x", "--chimeras-only"])
     var chimerasOnly = false
 
-    @set:Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"])
+    @set:Option(
+        description = ["Maximal number of reads to process"],
+        names = ["-n", "--limit"],
+        paramLabel = "<n>"
+    )
     var limit: Long = 0
         set(value) {
             if (value <= 0) throw ValidationException("-n / --limit must be positive.")
             field = value
         }
 
-    @set:Option(description = ["List of read ids to export"], names = ["-i", "--read-ids"], hidden = true)
+    @set:Option(
+        description = ["List of read ids to export"],
+        names = ["-i", "--read-ids"],
+        hidden = true
+    )
     var ids: List<Long>? = null
         set(value) {
             println("-i, --read-ids deprecated, use `mixcr slice -i ... alignments.vdjca alignments.filtered.vdjca` instead")
@@ -91,15 +114,9 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
     private val outputWriter: VDJCAlignmentsWriter
         get() = VDJCAlignmentsWriter(out)
 
-    private val containFeature: GeneFeature?
-        get() = if (containsFeature == null) null else GeneFeature.parse(containsFeature)
-
-    private fun getCdr3Equals(): NucleotideSequence? =
-        if (cdr3Equals == null) null else NucleotideSequence(cdr3Equals)
-
     private val filter: AlignmentsFilter by lazy {
         AlignmentsFilter(
-            containFeature, getCdr3Equals(), Chains.parse(chains),
+            containsFeature, cdr3Equals, chains,
             readIds, chimerasOnly
         )
     }

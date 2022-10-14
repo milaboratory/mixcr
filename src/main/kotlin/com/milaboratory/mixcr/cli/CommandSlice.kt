@@ -54,16 +54,14 @@ import kotlin.io.path.readLines
 class CommandSlice : MiXCRCommandWithOutputs() {
     @Parameters(
         description = ["Input data to filter by ids"],
-        paramLabel = "data.[vdjca|clns|clna|shmt]",
-        hideParamSyntax = true,
+        paramLabel = "data.(vdjca|clns|clna|shmt)",
         index = "0"
     )
     lateinit var input: Path
 
     @Parameters(
         description = ["Output file with filtered data"],
-        paramLabel = "data_sliced",
-        hideParamSyntax = true,
+        paramLabel = "data_sliced.(vdjca|clns|clna|shmt)",
         index = "1"
     )
     lateinit var out: Path
@@ -75,7 +73,8 @@ class CommandSlice : MiXCRCommandWithOutputs() {
         @Option(
             description = ["List of read (for .vdjca) / clone (for .clns/.clna) / tree (for .shmt) ids to export."],
             names = ["-i", "--id"],
-            required = true
+            required = true,
+            paramLabel = "<id>"
         )
         var ids: List<Long>? = null
 
@@ -85,7 +84,8 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                 "Every id on separate line"
             ],
             names = ["--ids-file"],
-            required = true
+            required = true,
+            paramLabel = "<path>"
         )
         var fileWithIds: Path? = null
     }

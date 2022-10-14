@@ -19,7 +19,9 @@ import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
@@ -29,9 +31,43 @@ import java.util.concurrent.atomic.AtomicLong
     description = ["Merge several *.vdjca files with alignments into a single alignments file."]
 )
 class CommandMergeAlignments : MiXCRCommandWithOutputs() {
+    companion object {
+        private const val inputsLabel = "input.vdjca..."
+
+        private const val outputLabel = "output.vdjca"
+
+        fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandMergeAlignments::class.java)
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("0")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(inputsLabel)
+                    .hideParamSyntax(true)
+                    .description("Paths to input files with alignments")
+                    .build()
+            )
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("1")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(outputLabel)
+                    .hideParamSyntax(true)
+                    .description("Path where to write merged alignments")
+                    .build()
+            )
+    }
+
     @Parameters(
-        description = ["input_file.vdjca... output_file.vdjca"],
-        arity = "2..*"
+        index = "0",
+        arity = "2..*",
+        paramLabel = "$inputsLabel $outputLabel",
+        hideParamSyntax = true,
+        //help is covered by mkCommandSpec
+        hidden = true
     )
     var input: List<Path> = mutableListOf()
 
@@ -107,9 +143,5 @@ class CommandMergeAlignments : MiXCRCommandWithOutputs() {
         override fun close() {
             currentInnerReader.close()
         }
-    }
-
-    companion object {
-        const val MERGE_ALIGNMENTS_COMMAND_NAME = "mergeAlignments"
     }
 }

@@ -14,6 +14,8 @@ package com.milaboratory.mixcr.cli
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
+import com.milaboratory.core.sequence.AminoAcidSequence
+import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.mixcr.basictypes.GeneFeatures
@@ -177,22 +179,21 @@ object Main {
                     .addSubcommand(
                         "exportQc",
                         CommandLine(CommandExportQcMain::class.java)
-                            .addSubcommand("align", CommandExportQcAlign::class.java)
-                            .addSubcommand("chainUsage", CommandExportQcChainUsage::class.java)
-                            .addSubcommand("tags", CommandExportQcTags::class.java)
-                            .addSubcommand("coverage", CommandExportQcCoverage::class.java)
+                            .addSubcommand("align", CommandExportQcAlign.mkCommandSpec())
+                            .addSubcommand("chainUsage", CommandExportQcChainUsage.mkCommandSpec())
+                            .addSubcommand("tags", CommandExportQcTags.mkCommandSpec())
+                            .addSubcommand("coverage", CommandExportQcCoverage.mkCommandSpec())
                     )
                     .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
                     .addSubcommand("exportAirr", CommandExportAirr::class.java)
+            )
+            .commandsGroup(
+                CommandsGroup("Util commands")
                     .addSubcommand("exportReadsForClones", CommandExportReadsForClones::class.java)
                     .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones::class.java)
                     .addSubcommand("exportReads", CommandExportReads::class.java)
-            )
-            // Util
-            .commandsGroup(
-                CommandsGroup("Util commands")
                     .addSubcommand("bam2fastq", CommandBAM2fastq::class.java)
-                    .addSubcommand("mergeAlignments", CommandMergeAlignments::class.java)
+                    .addSubcommand("mergeAlignments", CommandMergeAlignments.mkCommandSpec())
                     .addSubcommand("filterAlignments", CommandFilterAlignments::class.java)
                     .addSubcommand("sortAlignments", CommandSortAlignments::class.java)
                     .addSubcommand("sortClones", CommandSortClones::class.java)
@@ -201,7 +202,6 @@ object Main {
                     .addSubcommand("versionInfo", CommandVersionInfo::class.java)
                     .addSubcommand("slice", CommandSlice::class.java)
                     .addSubcommand("exportPreset", CommandExportPreset.Cmd::class.java)
-
                     .addSubcommand("alignmentsStat", CommandAlignmentsStats::class.java)
             )
 
@@ -237,10 +237,13 @@ object Main {
         cmd.registerConverter { GeneFeature.parse(it) }
         cmd.registerConverter { GeneType.parse(it) }
         cmd.registerConverter { Chains.parse(it) }
+        cmd.registerConverter { NucleotideSequence(it) }
+        cmd.registerConverter { AminoAcidSequence(it) }
         cmd.registerConverter { arg ->
             StandardPlots.PlotType.values().find { it.cliName == arg.lowercase() }
                 ?: throw ValidationException("unknown plot type: $arg")
         }
+        cmd.isCaseInsensitiveEnumValuesAllowed = true
         val defaultParameterExceptionHandler = cmd.parameterExceptionHandler
         cmd.setParameterExceptionHandler { ex, args ->
             when (val cause = ex.cause) {

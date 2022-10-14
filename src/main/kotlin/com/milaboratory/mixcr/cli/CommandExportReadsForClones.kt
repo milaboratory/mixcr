@@ -31,23 +31,37 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.stream.IntStream
-import kotlin.streams.asSequence
 
 @Command(
-    description = ["Export reads for particular clones from \"clones & alignments\" (*.clna) file. " +
-            "Output file name will be transformed into '_R1'/'_R2' pair in case of paired end reads. Use cloneId = -1 to " +
-            "export alignments not assigned to any clone (not assembled). If no clone ids are specified (only input " +
-            "and output filenames are specified) all reads assigned to clonotypes will be exported."]
+    description = ["Export reads for particular clones from \"clones & alignments\" (*.clna) file."]
 )
 class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
-    @Parameters(index = "0", description = ["input_file.clna"])
+    @Parameters(
+        description = ["Path to input file"],
+        index = "0",
+        paramLabel = "input_file.clna"
+    )
     lateinit var input: Path
 
-    @Parameters(index = "1", description = ["[output_file(.fastq[.gz]|fasta)]"])
+    @Parameters(
+        description = ["Output file name will be transformed into '_R1'/'_R2' pair in case of paired end reads."],
+        index = "1",
+        paramLabel = "output_file.(fastq[.gz]|fasta)"
+    )
     lateinit var out: Path
 
-    @Option(names = ["--id"], description = ["[cloneId1 [cloneId2 [cloneId3]]]"], arity = "0..*")
-    var ids: List<Int> = mutableListOf()
+    @Option(
+        description = [
+            "Clone ids to export.",
+            "If no clone ids are specified all reads assigned to clonotypes will be exported.",
+            "Use --id -1 to export alignments not assigned to any clone (not assembled)."
+        ],
+        names = ["--id"],
+        paramLabel = "<id>",
+        arity = "0..*"
+    )
+    var cloneIds: List<Int> = mutableListOf()
+
     public override val inputFiles
         get() = listOf(input)
 
@@ -56,11 +70,10 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
 
     @Option(
         description = ["Create separate files for each clone. File or pair of '_R1'/'_R2' files, with '_clnN' suffix, " +
-                "where N is clone index, will be created for each clone index."], names = ["-s", "--separate"]
+                "where N is clone index, will be created for each clone index."],
+        names = ["-s", "--separate"]
     )
     var separate = false
-
-    private val cloneIds: IntArray = ids.toIntArray()
 
     override fun run0() {
         ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
@@ -73,12 +86,12 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
             val cloneIds: () -> IntStream = {
                 when {
                     cloneIds.isEmpty() -> IntStream.range(0, clna.numberOfClones())
-                    else -> IntStream.of(*cloneIds)
+                    else -> cloneIds.stream().mapToInt { it }
                 }
             }
             val totalAlignments = cloneIds()
-                .asSequence()
-                .sumOf { cloneIndex -> clna.numberOfAlignmentsInClone(cloneIndex) }
+                .mapToLong { cloneIndex -> clna.numberOfAlignmentsInClone(cloneIndex) }
+                .sum()
             val alignmentsWritten = AtomicLong()
             val finished = AtomicBoolean(false)
             SmartProgressReporter.startProgressReport("Writing reads", object : CanReportProgress {

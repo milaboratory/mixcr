@@ -21,7 +21,6 @@ import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
-import java.util.stream.Collectors
 
 abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGroupBy() {
     abstract fun group(): String
@@ -46,7 +45,8 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
 
     @Option(
         description = ["Add color key layer to heatmap."],
-        names = ["--color-key"]
+        names = ["--color-key"],
+        paramLabel = "<key>"
     )
     var colorKey: List<String> = mutableListOf()
 
@@ -58,7 +58,8 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
 
     @Option(
         description = ["Facet barplot."],
-        names = ["--facet-by"]
+        names = ["--facet-by"],
+        paramLabel = "<s>"
     )
     var facetBy: String? = null
 
@@ -75,11 +76,7 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
                 HeatmapParameters(
                     !noSamplesDendro,
                     !noGenesDendro,
-                    colorKey.stream().map {
-                        ColorKey(
-                            it!!.lowercase(), Position.Bottom
-                        )
-                    }.collect(Collectors.toList()),
+                    colorKey.map { ColorKey(it.lowercase(), Position.Bottom) },
                     groupBy,
                     hLabelsSize,
                     vLabelsSize,

@@ -40,10 +40,10 @@ import java.nio.file.Path
     description = ["Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows to build overlaps between clonesets."]
 )
 class CommandSortClones : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["clones.[clns|clna]"], index = "0")
+    @Parameters(paramLabel = "clones.(clns|clna)", index = "0")
     lateinit var input: Path
 
-    @Parameters(description = ["clones.sorted.clns"], index = "1")
+    @Parameters(paramLabel = "clones.sorted.clns", index = "1")
     lateinit var out: Path
 
     @Option(

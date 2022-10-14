@@ -28,13 +28,29 @@ import java.nio.file.Path
     description = ["Export alignments for particular clones from \"clones & alignments\" (*.clna) file."]
 )
 class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
-    @Parameters(index = "0", description = ["clones.clna"])
+    @Parameters(
+        description = ["Path to input clna file"],
+        index = "0",
+        paramLabel = "clones.clna"
+    )
     lateinit var input: Path
 
-    @Parameters(index = "1", description = ["alignments.vdjca"])
+    @Parameters(
+        description = ["Path where to write alignments from input file"],
+        index = "1",
+        paramLabel = "alignments.vdjca"
+    )
     lateinit var out: Path
 
-    @Option(names = ["--id"], description = ["[cloneId1 [cloneId2 [cloneId3]]]"], arity = "0..*")
+    @Option(
+        description = [
+            "Clone ids to export.",
+            "If no clone ids are specified all alignments will be exported."
+        ],
+        names = ["--id"],
+        paramLabel = "<id>",
+        arity = "0..*"
+    )
     var ids: List<Int> = mutableListOf()
 
     override val inputFiles
