@@ -32,7 +32,8 @@ import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_CLNS;
  */
 public final class ClnsWriter implements AutoCloseable {
     static final String MAGIC_V14 = MAGIC_CLNS + ".V14";
-    static final String MAGIC = MAGIC_V14;
+    static final String MAGIC_V15 = MAGIC_CLNS + ".V15";
+    static final String MAGIC = MAGIC_V15;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
     /**

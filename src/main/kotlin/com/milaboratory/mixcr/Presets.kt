@@ -121,6 +121,7 @@ object Presets {
         "assemblePartial.yaml",
         "extend.yaml",
         "bundles.yaml",
+        "10x.yaml",
         "refineTagsAndSort.yaml",
         "export.yaml",
         "test.yaml",

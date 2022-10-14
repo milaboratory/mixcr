@@ -15,24 +15,18 @@ import com.milaboratory.mitool.data.CriticalThresholdCollection
 import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mitool.pattern.search.readObject
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
-import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.MiXCRStepParams
-import com.milaboratory.mixcr.MiXCRStepReports
+import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
+import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import com.milaboratory.primitivio.PrimitivI
-import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Serializer
+import com.milaboratory.primitivio.*
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.readObjectOptional
-import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCLibraryId
 import io.repseq.dto.VDJCLibraryData
+import java.security.MessageDigest
 
 interface MiXCRFileInfo {
     /** Returns information from .vdjca/.clna/.clns file header  */
@@ -46,8 +40,11 @@ interface MiXCRFileInfo {
  * This class represents common meta-information stored in the headers of vdjca/clna/clns files.
  * The information that is relevant for the downstream analysis.
  */
-@Serializable(by = MiXCRHeader.SerializerImpl::class)
+@Suppress("DuplicatedCode")
+@Serializable(by = MiXCRHeader.SerializerV2Impl::class)
 data class MiXCRHeader(
+    /** Hash code of input files with raw sequencing data. */
+    val inputHash: String?,
     /** Set by used on align step, used to deduce defaults on all downstream steps  */
     val paramsSpec: MiXCRParamsSpec,
     /** Actual step parameters */
@@ -104,7 +101,7 @@ data class MiXCRHeader(
         }
     }
 
-    class SerializerImpl : BasicSerializer<MiXCRHeader>() {
+    class SerializerV1Impl : BasicSerializer<MiXCRHeader>() {
         override fun write(output: PrimitivO, obj: MiXCRHeader) {
             output.writeObject(obj.paramsSpec)
             output.writeObject(obj.stepParams)
@@ -124,6 +121,41 @@ data class MiXCRHeader(
             val foundAlleles = input.readObjectOptional<FoundAlleles>()
             val allFullyCoveredBy = input.readObjectOptional<GeneFeatures>()
             return MiXCRHeader(
+                null,
+                paramsSpec,
+                stepParams,
+                tagsInfo,
+                alignerParameters,
+                assemblerParameters,
+                foundAlleles,
+                allFullyCoveredBy
+            )
+        }
+    }
+
+    class SerializerV2Impl : BasicSerializer<MiXCRHeader>() {
+        override fun write(output: PrimitivO, obj: MiXCRHeader) {
+            output.writeObject(obj.inputHash)
+            output.writeObject(obj.paramsSpec)
+            output.writeObject(obj.stepParams)
+            output.writeObject(obj.tagsInfo)
+            output.writeObject(obj.alignerParameters)
+            output.writeObject(obj.assemblerParameters)
+            output.writeObject(obj.foundAlleles)
+            output.writeObject(obj.allFullyCoveredBy)
+        }
+
+        override fun read(input: PrimitivI): MiXCRHeader {
+            val inputHash = input.readObjectOptional<String>()
+            val paramsSpec = input.readObjectRequired<MiXCRParamsSpec>()
+            val stepParams = input.readObject<MiXCRStepParams>()
+            val tagsInfo = input.readObjectRequired<TagsInfo>()
+            val alignerParameters = input.readObjectRequired<VDJCAlignerParameters>()
+            val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
+            val foundAlleles = input.readObjectOptional<FoundAlleles>()
+            val allFullyCoveredBy = input.readObjectOptional<GeneFeatures>()
+            return MiXCRHeader(
+                inputHash,
                 paramsSpec,
                 stepParams,
                 tagsInfo,
@@ -137,6 +169,7 @@ data class MiXCRHeader(
 }
 
 class MiXCRHeaderMerger {
+    private var inputHashAccumulator: MessageDigest? = MessageDigest.getInstance("MD5")
     private var upstreamParams = mutableListOf<MiXCRStepParams>()
     private var paramsSpec: MiXCRParamsSpec? = null
     private var tagsInfo: TagsInfo? = null
@@ -146,6 +179,9 @@ class MiXCRHeaderMerger {
     // TODO something seems to be done with alleles here ?
 
     fun add(header: MiXCRHeader) = run {
+        if (header.inputHash == null)
+            inputHashAccumulator = null
+        inputHashAccumulator?.update(header.inputHash!!.encodeToByteArray())
         upstreamParams += header.stepParams
         if (paramsSpec == null) {
             paramsSpec = header.paramsSpec
@@ -170,6 +206,7 @@ class MiXCRHeaderMerger {
 
     fun build() =
         MiXCRHeader(
+            inputHashAccumulator?.digest()?.toHexString(),
             paramsSpec!!,
             MiXCRStepParams.mergeUpstreams(upstreamParams),
             tagsInfo!!,

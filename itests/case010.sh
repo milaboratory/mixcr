@@ -17,20 +17,20 @@ assert() {
 
 set -euxo pipefail
 
-mixcr analyze -f 10x_vdj_bcr \
+mixcr analyze -f 10x-vdj-bcr \
   --species hs \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case10.raw
 
-mixcr analyze -f 10x_vdj_bcr \
+mixcr analyze -f 10x-vdj-bcr \
   --species hs \
   --assemble-contigs-by VDJRegion \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case10.vdjcontigs
 
-assert "cat case10.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "6"
+assert "cat case10.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "7"
 
 mixcr exportReports --yaml case10.vdjcontigs.contigs.clns
 mixcr exportReports case10.vdjcontigs.contigs.clns

@@ -18,7 +18,7 @@ class CommandExportClonesTest {
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
         val output = TempFileManager.getTempFile()
         output.delete()
-        TestMain.execute("${CommandExportClones.COMMAND_NAME} $input ${output.path}")
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files $input ${output.path}")
         val columns = output.readLines().first().split("\t")
         columns shouldContainAll listOf("cloneId", "readCount")
     }
@@ -29,7 +29,7 @@ class CommandExportClonesTest {
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
         val output = TempFileManager.getTempFile()
         output.delete()
-        TestMain.execute("${CommandExportClones.COMMAND_NAME} -nFeature VDJRegion $input ${output.path}")
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files -nFeature VDJRegion $input ${output.path}")
         val columns = output.readLines().first().split("\t")
         columns shouldContainInOrder listOf("cloneId", "readCount", "nSeqVDJRegion")
     }
@@ -40,7 +40,7 @@ class CommandExportClonesTest {
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
         val output = TempFileManager.getTempFile()
         output.delete()
-        TestMain.execute("${CommandExportClones.COMMAND_NAME} -nFeature VDJRegion --prepend-columns $input ${output.path}")
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files -nFeature VDJRegion --prepend-columns $input ${output.path}")
         val columns = output.readLines().first().split("\t")
         columns shouldContainInOrder listOf("nSeqVDJRegion", "cloneId", "readCount")
     }
@@ -51,7 +51,7 @@ class CommandExportClonesTest {
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
         val output = TempFileManager.getTempFile()
         output.delete()
-        TestMain.execute("${CommandExportClones.COMMAND_NAME} --drop-default-fields -nFeature VDJRegion $input ${output.path}")
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -nFeature VDJRegion $input ${output.path}")
         val columns = output.readLines().first().split("\t")
         columns shouldBe listOf("nSeqVDJRegion")
     }

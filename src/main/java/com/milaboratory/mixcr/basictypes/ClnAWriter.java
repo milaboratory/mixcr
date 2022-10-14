@@ -54,8 +54,9 @@ public final class ClnAWriter implements
         AutoCloseable,
         CanReportProgressAndStage {
     static final String MAGIC_V9 = MAGIC_CLNA + ".V09";
-    static final String MAGIC = MAGIC_V9;
-    static final int MAGIC_LENGTH = MAGIC.length(); //14
+    static final String MAGIC_V10 = MAGIC_CLNA + ".V10";
+    static final String MAGIC = MAGIC_V10;
+    static final int MAGIC_LENGTH = MAGIC.length(); // 14
     /** Number of bytes in footer with meta information */
     static final int FOOTER_LENGTH = 8 + 8 + 8 + IOUtil.END_MAGIC_LENGTH;
 

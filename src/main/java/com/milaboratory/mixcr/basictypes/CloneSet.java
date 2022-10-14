@@ -23,6 +23,8 @@ import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCGeneId;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by poslavsky on 10/07/14.
@@ -209,5 +211,26 @@ public final class CloneSet implements Iterable<Clone>, MiXCRFileInfo, HasFeatur
             }
         }
         return new CloneSet(newClones, in.usedGenes, in.header, in.footer, in.ordering);
+    }
+
+    /**
+     * WARNING: current object (in) will be destroyed
+     */
+    public static <T> Map<T, CloneSet> split(CloneSet in, Function<Clone, T> splitter) {
+        Map<T, List<Clone>> clonesMap = new HashMap<>();
+        for (int i = 0; i < in.size(); ++i) {
+            Clone c = in.get(i);
+            T key = splitter.apply(c);
+            List<Clone> cloneList = clonesMap.computeIfAbsent(key, __ -> new ArrayList<>());
+            c.parent = null;
+            cloneList.add(c);
+        }
+
+        return clonesMap.entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> new CloneSet(e.getValue(), in.usedGenes, in.header, in.footer, in.ordering)
+                ));
     }
 }

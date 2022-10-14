@@ -22,4 +22,3 @@ for file in ../../src/test/resources/sequences/big/pa_test_data/* ; do
 done
 
 python3 ../../itests/case016.py
-

@@ -1,6 +1,7 @@
 "export_base":
   exportClones:
     chains: ALL
+    splitFilesBy: [ "geneLabel:ReliableChain" ]
     fields:
       - field: "-cloneId"
       - field: "-readCount"

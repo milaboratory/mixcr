@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.cli.ApplicationException;
+import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
@@ -134,6 +135,8 @@ public final class VDJCAlignmentsReader implements
 
             // SerializersManager serializersManager = input.getSerializersManager();
             switch (magicString) {
+                case MAGIC_V19:
+                    BackwardCompatibilityUtils.register41rc2Serializers(pi.getSerializersManager());
                 case MAGIC:
                     break;
                 default:

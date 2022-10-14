@@ -15,6 +15,7 @@ import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.cli.ApplicationException;
+import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
 import com.milaboratory.util.CanReportProgress;
@@ -92,9 +93,14 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
             byte[] magicBytes = new byte[ClnAWriter.MAGIC_LENGTH];
             ii.readFully(magicBytes);
             magicString = new String(magicBytes, StandardCharsets.US_ASCII);
-            if (!magicString.equals(ClnAWriter.MAGIC))
-                throw new ApplicationException("Unexpected file version of format: found " +
-                        magicString + " expected " + ClnAWriter.MAGIC, false);
+            switch (magicString) {
+                case ClnAWriter.MAGIC_V9: // see below for custom serializers registration
+                case ClnAWriter.MAGIC:
+                    break;
+                default:
+                    throw new ApplicationException("Unexpected file version of format: found " +
+                            magicString + " expected " + ClnAWriter.MAGIC, false);
+            }
 
             // Reading number of clones
             this.numberOfClones = ii.readInt();
@@ -141,6 +147,8 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
         // Returning to the file begin
         try (PrimitivI pi = this.input.beginPrimitivI(true)) {
             switch (magicString) {
+                case ClnAWriter.MAGIC_V9:
+                    BackwardCompatibilityUtils.register41rc2Serializers(pi.getSerializersManager());
                 case ClnAWriter.MAGIC:
                     break;
                 default:

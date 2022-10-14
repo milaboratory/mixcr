@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.cli.ApplicationException;
+import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
@@ -29,8 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC;
-import static com.milaboratory.mixcr.basictypes.ClnsWriter.MAGIC_LENGTH;
+import static com.milaboratory.mixcr.basictypes.ClnsWriter.*;
 
 /**
  *
@@ -73,9 +73,9 @@ public class ClnsReader implements CloneReader, AutoCloseable {
 
             String magicString = new String(magicBytes);
 
-            // SerializersManager serializersManager = input.getSerializersManager();
-
             switch (magicString) {
+                case MAGIC_V14:
+                    BackwardCompatibilityUtils.register41rc2Serializers(i.getSerializersManager());
                 case MAGIC:
                     break;
                 default:
