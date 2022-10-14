@@ -21,11 +21,8 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.ExportDefaultOptions
-import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.OutputMode
+import com.milaboratory.mixcr.export.*
+import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
@@ -33,14 +30,11 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
-import picocli.CommandLine.Model
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.nio.file.Path
 import java.util.*
 import java.util.stream.Stream
+import kotlin.io.path.Path
 
 object CommandExportClones {
     const val COMMAND_NAME = "exportClones"
@@ -51,6 +45,7 @@ object CommandExportClones {
         @JsonProperty("filterStops") val filterStops: Boolean,
         @JsonProperty("chains") val chains: String,
         @JsonProperty("noHeader") val noHeader: Boolean,
+        @JsonProperty("splitFilesBy") val splitFilesBy: List<String>,
         @JsonProperty("fields") val fields: List<ExportFieldDescription>,
     ) : MiXCRParams {
         override val command get() = MiXCRCommandDescriptor.exportClones
@@ -97,6 +92,12 @@ object CommandExportClones {
         @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
         private var splitByTag: String? = null
 
+        @Option(
+            description = ["Split files by (currently the only supported value is \"geneLabel:reliableChain\" etc... )"],
+            names = ["--split-files-by"]
+        )
+        private var splitFilesBy: List<String> = mutableListOf()
+
         @Mixin
         private lateinit var exportDefaults: ExportDefaultOptions
 
@@ -106,6 +107,7 @@ object CommandExportClones {
                 Params::filterOutOfFrames setIfTrue filterOutOfFrames
                 Params::filterStops setIfTrue filterStops
                 Params::splitByTags setIfNotNull splitByTag
+                Params::splitFilesBy setIfNotEmpty splitFilesBy
                 Params::noHeader setIfTrue exportDefaults.noHeader
                 Params::fields updateBy exportDefaults.fieldsUpdater(CloneFieldsExtractorsFactory)
             }
@@ -150,33 +152,58 @@ object CommandExportClones {
                 } else
                     params
             }
-            InfoWriter.create(
-                outputFile,
-                CloneFieldsExtractorsFactory.createExtractors(params.fields, header, OutputMode.ScriptingFriendly),
-                !params.noHeader
-            ).use { writer ->
-                val set = CloneSet.transform(initialSet, params.mkFilter())
-                val exportClones = ExportClones(
-                    set, writer, Long.MAX_VALUE,
-                    if (params.splitByTags == null) 0 else tagsInfo.indexOf(params.splitByTags) + 1
-                )
-                SmartProgressReporter.startProgressReport(exportClones, System.err)
-                exportClones.run()
-                if (initialSet.size() > set.size()) {
-                    val initialCount = initialSet.clones.stream().mapToDouble { obj: Clone -> obj.count }
-                        .sum()
-                    val count = set.clones.stream().mapToDouble { obj: Clone -> obj.count }
-                        .sum()
-                    val di = initialSet.size() - set.size()
-                    val cdi = initialCount - count
-                    val percentageDI = ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size())
-                    logger.warn(
-                        "Filtered ${set.size()} of ${initialSet.size()} clones ($percentageDI%)."
+
+            // Calculating splitting keys
+            val splitFileKeys = params.splitFilesBy
+            val splitFileKeyExtractors: List<CloneSplittingKey> = splitFileKeys.map {
+                when {
+                    it.startsWith("geneLabel:", ignoreCase = true) ->
+                        CloneGeneLabelSplittingKey(it.substring(10))
+
+                    else ->
+                        throw ApplicationException("Unsupported splitting key: $it")
+                }
+            }
+
+            val fieldExtractors = CloneFieldsExtractorsFactory
+                .createExtractors(params.fields, header, OutputMode.ScriptingFriendly)
+
+            val sFileName = SubstitutionHelper.parseFileName(outputFile.toString(), splitFileKeys.size)
+
+
+            CloneSet.split(initialSet) { c -> splitFileKeyExtractors.map { it.getLabel(c) } }.forEach { key, set0 ->
+                val set = CloneSet.transform(set0, params.mkFilter())
+                val fileNameSV = SubstitutionHelper.SubstitutionValues()
+                var i = 1
+                for ((keyValue, keyName) in key.zip(splitFileKeys)) {
+                    fileNameSV.add(keyValue, "$i", keyName)
+                    i++
+                }
+                val keyString = key.joinToString("_")
+                System.err.println("Exporting $keyString")
+                InfoWriter.create(Path(sFileName.render(fileNameSV)), fieldExtractors, !params.noHeader).use { writer ->
+                    val exportClones = ExportClones(
+                        set, writer, Long.MAX_VALUE,
+                        if (params.splitByTags == null) 0 else tagsInfo.indexOf(params.splitByTags) + 1
                     )
-                    val percentageCDI = ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount)
-                    logger.warn(
-                        "Filtered $count of $initialCount reads ($percentageCDI%)."
-                    )
+                    SmartProgressReporter.startProgressReport(exportClones, System.err)
+                    exportClones.run()
+                    if (initialSet.size() > set.size()) {
+                        val initialCount = initialSet.clones.stream().mapToDouble { obj: Clone -> obj.count }
+                            .sum()
+                        val count = set.clones.stream().mapToDouble { obj: Clone -> obj.count }
+                            .sum()
+                        val di = initialSet.size() - set.size()
+                        val cdi = initialCount - count
+                        val percentageDI = ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size())
+                        logger.warn(
+                            "Filtered ${set.size()} of ${initialSet.size()} clones ($percentageDI%)."
+                        )
+                        val percentageCDI = ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount)
+                        logger.warn(
+                            "Filtered $count of $initialCount reads ($percentageCDI%)."
+                        )
+                    }
                 }
             }
         }
@@ -222,6 +249,14 @@ object CommandExportClones {
                 }
             }
         }
+    }
+
+    private sealed interface CloneSplittingKey {
+        fun getLabel(clone: Clone): String
+    }
+
+    private class CloneGeneLabelSplittingKey(private val labelName: String) : CloneSplittingKey {
+        override fun getLabel(clone: Clone) = clone.getGeneLabel(labelName)
     }
 
     @JvmStatic
