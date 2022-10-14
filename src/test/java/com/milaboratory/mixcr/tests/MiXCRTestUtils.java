@@ -35,6 +35,7 @@ import static com.milaboratory.core.alignment.AlignmentTestUtils.assertAlignment
 public class MiXCRTestUtils {
     public static MiXCRHeader dummyHeader() {
         return new MiXCRHeader(
+                "hashA123",
                 new MiXCRParamsSpec("default_4.0"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                 Presets.INSTANCE.resolveParamsBundle("default_4.0").getAlign().getParameters(),
                 null, null, null);

@@ -35,7 +35,8 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
     public static final int DEFAULT_ENCODER_THREADS = 3;
     public static final int DEFAULT_ALIGNMENTS_IN_BLOCK = 1 << 10; // 805-1024 bytes per alignment
     static final String MAGIC_V19 = MAGIC_VDJC + ".V19";
-    static final String MAGIC = MAGIC_V19;
+    static final String MAGIC_V20 = MAGIC_VDJC + ".V20";
+    static final String MAGIC = MAGIC_V20;
     static final int MAGIC_LENGTH = 14;
     static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
 

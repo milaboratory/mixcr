@@ -19,6 +19,7 @@ import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.cli.ApplicationException
+import com.milaboratory.mixcr.util.BackwardCompatibilityUtils
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.readList
 import io.repseq.core.VDJCGene
@@ -49,6 +50,9 @@ class SHMTreesReader(
             val magicBytes = ByteArray(SHMTreesWriter.MAGIC_LENGTH)
             i.readFully(magicBytes)
             when (val magicString = String(magicBytes)) {
+                SHMTreesWriter.MAGIC_V2 ->
+                    BackwardCompatibilityUtils.register41rc2Serializers(i.serializersManager)
+
                 SHMTreesWriter.MAGIC -> {}
                 else -> throw ApplicationException(
                     "Unsupported file format; .shmt file of version " + magicString +

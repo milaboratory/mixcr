@@ -9,7 +9,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.OutputMode
-import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.test.TestUtil.assertJson
 import org.junit.Assert
 import org.junit.Test
@@ -49,6 +48,7 @@ class PresetsTest {
                 TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 1),
             )
             val header = MiXCRHeader(
+                "hashA123",
                 MiXCRParamsSpec(presetName),
                 MiXCRStepParams().add(MiXCRCommandDescriptor.align, bundle.align!!),
                 tagsInfo,
