@@ -324,6 +324,18 @@
                 operator:
                   type: group_operator_cumtop
                   share: 0.99
+        - type: filter_groups
+          groupingKeys:
+            - tag:CELL
+            - clone
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  keys:
+                    - tag:UMI
+              operator:
+                type: group_operator_range
+                lower: 2.0
     inferMinRecordsPerConsensus: false
   assembleContigs:
     ignoreTags: false
