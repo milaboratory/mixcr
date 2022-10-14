@@ -147,3 +147,72 @@
         assemblingRegions: [ "VDJRegion" ]
         postFiltering:
           type: OnlyFullyDefined
+
+#
+# Amplicon presets
+#
+
+"tcr_amplicon":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+"bcr_amplicon":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+#
+# UMI amplicon pipelines
+#
+
+"tcr_amplicon_umi":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+    - tagPattern
+  align:
+    inheritFrom: align_rna-seq_4.0
+
+"bcr_amplicon_umi":
+  inheritFrom: _universal
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+    - tagPattern
+  align:
+    inheritFrom: align_kaligner2_4.0
+
+#
+# Shotgun
+#
+
+"tcr_shotgun":
+  inheritFrom: _universal
+  flags:
+    - materialType
+  pipeline:
+    - align
+    - extend
+    - assemblePartial
+    - assemblePartial
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align_rna-seq_4.0
+    overrides:
+      parameters:
+        allowPartialAlignments: true
+        allowNoCDR3PartAlignments: true
+
