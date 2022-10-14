@@ -181,7 +181,7 @@ class MiXCRHeaderMerger {
     fun add(header: MiXCRHeader) = run {
         if (header.inputHash == null)
             inputHashAccumulator = null
-        inputHashAccumulator?.update(header.inputHash!!.toByte())
+        inputHashAccumulator?.update(header.inputHash!!.encodeToByteArray())
         upstreamParams += header.stepParams
         if (paramsSpec == null) {
             paramsSpec = header.paramsSpec

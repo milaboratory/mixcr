@@ -43,13 +43,13 @@ mixcr findAlleles \
   -o 'alleles/{file_name}.with_alleles.clns' \
   --export-library alleles_library.json \
   --export-alleles-mutations alleles/description.tsv \
-  `ls assemble/*.clns`
+  $(ls assemble/*.clns)
 
 mixcr findShmTrees \
   -j trees/report.json \
   -r trees/report.txt \
   --debugDir trees/debug \
-  `ls alleles/*.clns` trees/result.shmt
+  $(ls alleles/*.clns) trees/result.shmt
 
 mixcr exportShmTrees trees/result.shmt trees/trees.tsv
 
