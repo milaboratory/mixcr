@@ -26,7 +26,11 @@ import java.nio.file.Path
     description = ["List available metrics"]
 )
 class CommandPaListMetrics : MiXCRCommand() {
-    @Parameters(description = ["Input file with PA results"], index = "0")
+    @Parameters(
+        description = ["Input file with PA results"],
+        index = "0",
+        paramLabel = "input.json"
+    )
     lateinit var input: Path
 
     override fun run0() {

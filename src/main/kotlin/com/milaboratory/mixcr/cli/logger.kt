@@ -15,10 +15,18 @@ import picocli.CommandLine.Option
 
 @Suppress("ClassName")
 object logger {
-    @Option(names = ["-nw", "--no-warnings"], description = ["Suppress all warning messages."])
+    @Option(
+        names = ["-nw", "--no-warnings"],
+        description = ["Suppress all warning messages."],
+        order = 1_000_000 - 2
+    )
     var quiet = false
 
-    @Option(description = ["Verbose warning messages."], names = ["--verbose"])
+    @Option(
+        description = ["Verbose warning messages."],
+        names = ["--verbose"],
+        order = 1_000_000 - 1
+    )
     var verbose = false
 
     /** queue of warning messages  */

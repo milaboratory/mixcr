@@ -27,7 +27,7 @@ import java.nio.file.Path
 
 @Command(description = ["Chain usage plot."])
 class CommandExportQcChainUsage : CommandExportQc() {
-    @Parameters(description = ["sample1.[vdjca|clnx] ... usage.[pdf|eps|png|jpeg]"], arity = "2..*")
+    @Parameters(description = ["sample.(vdjca|clns|clna)... usage.(pdf|eps|png|jpeg)"], arity = "2..*")
     var inOut: List<Path> = mutableListOf()
 
     @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])

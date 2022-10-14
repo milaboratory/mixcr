@@ -20,7 +20,7 @@ import java.nio.file.Path
 
 @Command(description = ["QC plot for alignments."])
 class CommandExportQcAlign : CommandExportQc() {
-    @Parameters(description = ["sample1.vdjca ... align.[pdf|eps|png|jpeg]"], arity = "2..*")
+    @Parameters(description = ["sample.vdjca... align.(pdf|eps|png|jpeg)"], arity = "2..*")
     var inOut: List<Path> = mutableListOf()
 
     @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])

@@ -37,6 +37,7 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.primitivio.PipeDataInputReader
 import com.milaboratory.primitivio.PrimitivI
@@ -78,10 +79,17 @@ object CommandAssembleContigs {
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
-        @Option(description = ["Ignore tags (UMIs, cell-barcodes)"], names = ["--ignore-tags"])
+        @Option(
+            description = ["Ignore tags (UMIs, cell-barcodes)"],
+            names = ["--ignore-tags"]
+        )
         private var ignoreTags = false
 
-        @Option(names = ["-O"], description = ["Overrides for the assembler parameters."])
+        @Option(
+            names = ["-O"],
+            description = ["Overrides for the assembler parameters."],
+            paramLabel = Labels.OVERRIDES
+        )
         private var overrides: Map<String, String> = mutableMapOf()
 
         @Mixin
@@ -109,27 +117,28 @@ object CommandAssembleContigs {
         description = ["Assemble full sequences."]
     )
     class Cmd : CmdBase() {
-        @Parameters(description = ["clones.clna"], index = "0")
+        @Parameters(
+            description = ["Path to input clna file"],
+            paramLabel = "clones.clna",
+            index = "0"
+        )
         lateinit var inputFile: Path
 
-        @Parameters(description = ["clones.clns"], index = "1")
+        @Parameters(
+            description = ["Path where to write assembled clones."],
+            paramLabel = "clones.clns",
+            index = "1"
+        )
         lateinit var outputFile: Path
 
-        @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
-        var threads = Runtime.getRuntime().availableProcessors()
-            set(value) {
-                if (value <= 0) throw ValidationException("-t / --threads must be positive")
-                field = value
-            }
+        @Mixin
+        lateinit var threadsOption: ThreadsOption
 
-        @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: Path? = null
+        @Mixin
+        lateinit var reportOptions: ReportOptions
 
         @Option(description = ["Report file."], names = ["--debug-report"], hidden = true)
         var debugReportFile: Path? = null
-
-        @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: Path? = null
 
         override val inputFiles get() = listOf(inputFile)
 
@@ -185,7 +194,7 @@ object CommandAssembleContigs {
                             val cloneAlignmentsPort = reader.clonesAndAlignments()
                             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort)
                             val parallelProcessor = cloneAlignmentsPort.mapInParallelOrdered(
-                                threads,
+                                threadsOption.value,
                                 bufferSize = 1024
                             ) { cloneAlignments: CloneAlignments ->
                                 val clone = when {
@@ -351,8 +360,7 @@ object CommandAssembleContigs {
                 val report = reportBuilder.buildReport()
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)
-                if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-                if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+                reportOptions.appendToFiles(report)
                 writer.setFooter(footer.addStepReport(MiXCRCommandDescriptor.assembleContigs, report))
             }
         }

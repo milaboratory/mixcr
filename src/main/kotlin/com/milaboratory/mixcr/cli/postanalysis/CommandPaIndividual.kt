@@ -22,11 +22,17 @@ import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Model.CommandSpec
 
 @Command(
     description = ["Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype metrics"]
 )
 class CommandPaIndividual : CommandPa() {
+    companion object {
+        fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandPaIndividual::class.java)
+            .addInputsHelp()
+    }
+
     private val parameters: PostanalysisParametersIndividual by lazy {
         val result = PostanalysisParametersPreset.getByNameIndividual("default")
         result.defaultDownsampling = defaultDownsampling

@@ -18,13 +18,13 @@ assert() {
 set -e
 
 mixcr analyze tcr_amplicon \
-  +species hs \
-  +rna \
-  +floatingLeftAlignmentBoundary \
-  +floatingRightAlignmentBoundary C \
-  +addStep assembleContigs \
-  +splitClonesBy V +splitClonesBy J +splitClonesBy C \
-  +M assemble.sortBySequence=true \
+  --species hs \
+  --rna \
+  --floating-left-alignment-boundary \
+  --floating-right-alignment-boundary C \
+  --add-step assembleContigs \
+  --split-clones-by V --split-clones-by J --split-clones-by C \
+  -M assemble.sortBySequence=true \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case9
 
 assert "cat case9.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "237725"

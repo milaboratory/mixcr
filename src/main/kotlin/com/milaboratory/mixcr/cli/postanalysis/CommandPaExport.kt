@@ -12,6 +12,7 @@
 
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import picocli.CommandLine.Option
@@ -24,11 +25,16 @@ import java.nio.file.Path
 abstract class CommandPaExport : MiXCRCommand {
     @Parameters(
         description = ["Input file with postanalysis results."],
+        paramLabel = "file.json",
         index = "0",
     )
     lateinit var input: Path
 
-    @Option(description = ["Export for specific chains only"], names = ["--chains"])
+    @Option(
+        description = ["Export for specific chains only"],
+        names = ["--chains"],
+        paramLabel = Labels.CHAIN
+    )
     var chains: Set<String>? = null
 
     private val parsedPaResultFromInput: PaResult by lazy {

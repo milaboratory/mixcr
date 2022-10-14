@@ -18,14 +18,14 @@ assert() {
 set -euxo pipefail
 
 mixcr analyze -f 10x_vdj_bcr \
-  +species hs \
+  --species hs \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case10.raw
 
 mixcr analyze -f 10x_vdj_bcr \
-  +species hs \
-  +assembleContigsBy VDJRegion \
+  --species hs \
+  --assemble-contigs-by VDJRegion \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case10.vdjcontigs
@@ -39,7 +39,7 @@ mixcr exportReports case10.vdjcontigs.contigs.clns
 #
 #mixcr align -f \
 #  --preset 10x_vdj_bcr \
-#  +species hs \
+#  --species hs \
 #  --report case10.align.report \
 #  single_cell_vdj_t_subset_R1.fastq.gz \
 #  single_cell_vdj_t_subset_R2.fastq.gz \

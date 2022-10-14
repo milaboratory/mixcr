@@ -32,6 +32,7 @@ import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.primitivio.map
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.util.ArraysUtils
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
@@ -40,7 +41,10 @@ import gnu.trove.map.hash.TIntObjectHashMap
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.extension
 
@@ -73,20 +77,30 @@ object CommandAssemble {
         @Option(
             description = ["If tags are present, do assemble pre-clones on the cell level rather than on the molecule level. " +
                     "If there are no molecular tags in the data, but cell tags are present, this option will be used by default. " +
-                    "This option has no effect on the data without tags."], names = ["--cell-level"]
+                    "This option has no effect on the data without tags."],
+            names = ["--cell-level"]
         )
         private var cellLevel = false
 
         @Option(
             description = ["Sort by sequence. Clones in the output file will be sorted by clonal sequence," +
-                    "which allows to build overlaps between clonesets."], names = ["-s", "--sort-by-sequence"]
+                    "which allows to build overlaps between clonesets."],
+            names = ["-s", "--sort-by-sequence"]
         )
         private var sortBySequence = false
 
-        @Option(names = ["-O"], description = ["Overrides default parameter values."])
+        @Option(
+            names = ["-O"],
+            description = ["Overrides default parameter values."],
+            paramLabel = Labels.OVERRIDES
+        )
         private val cloneAssemblerOverrides: Map<String, String> = mutableMapOf()
 
-        @Option(names = ["-P"], description = ["Overrides default pre-clone assembler parameter values."])
+        @Option(
+            names = ["-P"],
+            description = ["Overrides default pre-clone assembler parameter values."],
+            paramLabel = Labels.OVERRIDES
+        )
         private val consensusAssemblerOverrides: Map<String, String> = mutableMapOf()
 
         @Option(
@@ -112,12 +126,21 @@ object CommandAssemble {
         description = ["Assemble clones."]
     )
     class Cmd : CmdBase() {
-        @Parameters(description = ["alignments.vdjca"], index = "0")
+        @Parameters(
+            description = ["Path to input file with alignments."],
+            paramLabel = "alignments.vdjca",
+            index = "0"
+        )
         lateinit var inputFile: Path
 
-        @Parameters(description = ["clones.[clns|clna]"], index = "1")
+        @Parameters(
+            description = ["Path where to write assembled clones."],
+            paramLabel = "clones.[clns|clna]",
+            index = "1"
+        )
         lateinit var outputFile: Path
 
+        @Suppress("unused", "UNUSED_PARAMETER")
         @Option(
             description = ["Use system temp folder for temporary files."],
             names = ["--use-system-temp"],
@@ -132,7 +155,8 @@ object CommandAssemble {
 
         @Option(
             description = ["Store temp files in the same folder as output file."],
-            names = ["--use-local-temp"]
+            names = ["--use-local-temp"],
+            order = 1_000_000 - 5
         )
         var useLocalTemp = false
 
@@ -140,16 +164,20 @@ object CommandAssemble {
             TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp)
         }
 
-        @Option(description = ["Use higher compression for output file."], names = ["--high-compression"])
+        @Option(
+            description = ["Use higher compression for output file."],
+            names = ["--high-compression"]
+        )
         var highCompression = false
 
-        @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: Path? = null
+        @Mixin
+        lateinit var reportOptions: ReportOptions
 
-        @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: Path? = null
-
-        @Option(description = ["Show buffer statistics."], names = ["--buffers"], hidden = true)
+        @Option(
+            description = ["Show buffer statistics."],
+            names = ["--buffers"],
+            hidden = true
+        )
         var reportBuffers = false
 
         override val inputFiles
@@ -364,8 +392,7 @@ object CommandAssemble {
 
                     // Writing report to stout
                     ReportUtil.writeReportToStdout(report)
-                    if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-                    if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+                    reportOptions.appendToFiles(report)
                 }
             }
         }

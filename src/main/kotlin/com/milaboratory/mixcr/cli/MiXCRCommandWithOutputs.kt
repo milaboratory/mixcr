@@ -16,7 +16,11 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 
 abstract class MiXCRCommandWithOutputs : MiXCRCommand() {
-    @Option(names = ["-f", "--force-overwrite"], description = ["Force overwrite of output file(s)."])
+    @Option(
+        names = ["-f", "--force-overwrite"],
+        description = ["Force overwrite of output file(s)."],
+        order = 1_000_000 - 3
+    )
     var forceOverwrite = false
 
     @Suppress("unused")

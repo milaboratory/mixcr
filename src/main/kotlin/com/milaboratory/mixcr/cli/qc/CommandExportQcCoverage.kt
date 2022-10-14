@@ -28,7 +28,7 @@ import java.nio.file.Paths
 
 @Command(description = ["Reads coverage plots."])
 class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["sample1.vdjca ... coverage.[pdf|eps|png|jpeg]"])
+    @Parameters(description = ["sample.vdjca... coverage.(pdf|eps|png|jpeg)"])
     var inOut: List<Path> = mutableListOf()
 
     @Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])

@@ -32,23 +32,40 @@ import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
 abstract class CommandPaExportPlots : CommandPaExport() {
-    @Option(description = [CommonDescriptions.METADATA], names = ["--metadata"])
+    @Option(
+        description = [CommonDescriptions.METADATA],
+        names = ["--metadata"],
+        paramLabel = "<path>"
+    )
     var metadata: Path? = null
 
-    @Option(description = ["Plot width"], names = ["--width"])
+    @Option(
+        description = ["Plot width"],
+        names = ["--width"],
+        paramLabel = "<n>"
+    )
     var width = 0
 
-    @Option(description = ["Plot height"], names = ["--height"])
+    @Option(
+        description = ["Plot height"],
+        names = ["--height"],
+        paramLabel = "<n>"
+    )
     var height = 0
 
     @Option(
         description = ["Filter by metadata. Possible filters column=value, column>=value etc."],
         names = ["--filter"],
-        split = ","
+        split = ",",
+        paramLabel = "<filter>"
     )
     var filterByMetadata: List<String>? = null
 
-    @Parameters(description = ["Output PDF/EPS/PNG/JPEG file name"], index = "1")
+    @Parameters(
+        description = ["Output PDF/EPS/PNG/JPEG file name"],
+        index = "1",
+        paramLabel = "output.(pdf|eps|png|jpeg)"
+    )
     lateinit var out: Path
 
     protected fun <T> DataFrame<T>.filterByMetadata(): DataFrame<T> {

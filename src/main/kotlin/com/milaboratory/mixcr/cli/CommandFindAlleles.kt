@@ -31,6 +31,7 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.primitivio.forEach
@@ -54,6 +55,7 @@ import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
@@ -77,7 +79,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     @Parameters(
         arity = "1..*",
-        paramLabel = "input_file.clns [input_file2.clns ...]",
+        paramLabel = "input_file.clns",
         description = ["Input files for allele search"]
     )
     override val inputFiles: List<Path> = mutableListOf()
@@ -95,14 +97,14 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     var outputTemplate: String? = null
 
     @Option(
-        description = ["Path to write library with found alleles."],
+        description = ["Path where to write library with found alleles."],
         names = ["--export-library"],
         paramLabel = "<path>"
     )
     var libraryOutput: Path? = null
 
     @Option(
-        description = ["Path to write descriptions and stats for all result alleles, existed and new."],
+        description = ["Path where to write descriptions and stats for all result alleles, existed and new."],
         names = ["--export-alleles-mutations"],
         paramLabel = "<path>"
     )
@@ -110,25 +112,23 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     @Option(
         description = ["Put temporary files in the same folder as the output files."],
-        names = ["--use-local-temp"]
+        names = ["--use-local-temp"],
+        order = 1_000_000 - 5
     )
     var useLocalTemp = false
 
-    @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
-    var threads = Runtime.getRuntime().availableProcessors()
-        set(value) {
-            if (value <= 0) throw ValidationException("-t / --threads must be positive")
-            field = value
-        }
+    @Mixin
+    lateinit var threadsOptions: ThreadsOption
 
-    @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
+    @Option(
+        names = ["-O"],
+        description = ["Overrides default build SHM parameter values"],
+        paramLabel = Labels.OVERRIDES
+    )
     var overrides: Map<String, String> = mutableMapOf()
 
-    @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-    var reportFile: Path? = null
-
-    @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-    var jsonReport: Path? = null
+    @Mixin
+    lateinit var reportOptions: ReportOptions
 
     @Option(names = ["--debugDir"], hidden = true)
     var debugDir: Path? = null
@@ -245,8 +245,10 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
         val progressAndStage = ProgressAndStage("Grouping by the same J gene", 0.0)
         SmartProgressReporter.startProgressReport(progressAndStage)
-        val JAlleles = allelesBuilder.searchForAlleles(Joining, emptyMap(), progressAndStage, reportBuilder, threads)
-        val VAlleles = allelesBuilder.searchForAlleles(Variable, JAlleles, progressAndStage, reportBuilder, threads)
+        val JAlleles =
+            allelesBuilder.searchForAlleles(Joining, emptyMap(), progressAndStage, reportBuilder, threadsOptions.value)
+        val VAlleles =
+            allelesBuilder.searchForAlleles(Variable, JAlleles, progressAndStage, reportBuilder, threadsOptions.value)
 
         val alleles = (VAlleles + JAlleles).toMutableMap()
         val usedGenes = collectUsedGenes(cloneReaders, alleles)
@@ -265,7 +267,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 resultLibrary,
                 allelesMapping,
                 allFullyCoveredBy,
-                threads,
+                threadsOptions.value,
                 cloneReader.assemblerParameters,
                 cloneReader.alignerParameters
             )
@@ -308,8 +310,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             )
         }
         ReportUtil.writeReportToStdout(report)
-        if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-        if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+        reportOptions.appendToFiles(report)
     }
 
     private fun printAllelesMutationsOutput(
