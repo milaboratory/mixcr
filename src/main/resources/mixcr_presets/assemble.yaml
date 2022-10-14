@@ -22,7 +22,7 @@
         minAltSeedNormalizedPenalty: 0.35
         altSeedPenaltyTolerance: 0.3
         minRecordSharePerConsensus: 0.2
-        minRecordsPerConsensus: 1
+        minRecordsPerConsensus: 0
         minRecursiveRecordShare: 0.4
         minQualityScore: 0
         maxConsensuses: 3

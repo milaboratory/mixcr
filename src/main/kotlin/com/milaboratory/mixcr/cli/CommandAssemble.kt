@@ -54,7 +54,7 @@ object CommandAssemble {
         @JsonProperty("consensusAssemblerParameters") @JsonMerge val consensusAssemblerParameters: PreCloneAssemblerParameters,
         @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters,
         /** Try automatically infer threshold value for the minimal number of records per consensus from the
-         * filtering metadata of tag-refinement step */
+         * filtering metadata of tag-refinement step. Applied only if corresponding threshold equals to 0. */
         @JsonProperty("inferMinRecordsPerConsensus") val inferMinRecordsPerConsensus: Boolean,
     ) : MiXCRParams {
         override val command = MiXCRCommandDescriptor.assemble
@@ -179,6 +179,14 @@ object CommandAssemble {
                     if (!cp.inferMinRecordsPerConsensus)
                         return@resolve cp
 
+                    if (cp.consensusAssemblerParameters.assembler.minRecordsPerConsensus != 0) {
+                        println(
+                            "WARNING: minRecordsPerConsensus has non default value (not equal to 0), the automatic " +
+                                    "inference of this parameter was canceled."
+                        )
+                        return@resolve cp
+                    }
+
                     val groupingLevel = if (cp.cellLevel) TagType.Cell else TagType.Molecule
                     val groupingTags = (0 until inputHeader.tagsInfo.getDepthFor(groupingLevel))
                         .map { i -> inputHeader.tagsInfo[i].name }
@@ -191,8 +199,7 @@ object CommandAssemble {
                         )
                         cp
                     } else {
-                        println("Value for minRecordsPerConsensus automatically inferred and set to ${threshold.toInt()}")
-                        threshold.toInt()
+                        println("Value for minRecordsPerConsensus was automatically inferred and set to ${threshold.toInt()}")
                         cp.copy(
                             consensusAssemblerParameters = cp.consensusAssemblerParameters
                                 .mapAssembler { it.withMinRecordsPerConsensus(threshold.toInt()) }
