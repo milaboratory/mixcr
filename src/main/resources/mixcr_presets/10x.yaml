@@ -435,6 +435,7 @@
     filterStops: false
     chains: ALL
     noHeader: false
+    splitFilesBy: [ ]
     fields:
       - field: -cloneId
       - field: -tag
@@ -970,6 +971,7 @@
     filterStops: false
     chains: ALL
     noHeader: false
+    splitFilesBy: [ ]
     fields:
       - field: -cloneId
       - field: -tag

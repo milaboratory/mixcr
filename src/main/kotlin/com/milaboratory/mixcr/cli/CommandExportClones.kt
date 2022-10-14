@@ -116,7 +116,7 @@ object CommandExportClones {
                 Params::splitFilesBy setIfNotEmpty splitFilesBy
                 Params::noHeader setIfTrue exportDefaults.noHeader
                 Params::fields updateBy exportDefaults.fieldsUpdater(CloneFieldsExtractorsFactory)
-                if (dontSplitFiles)
+                if (dontSplitFiles || (chains != null && chains != "ALL"))
                     Params::splitFilesBy setTo emptyList()
             }
         }
@@ -176,20 +176,8 @@ object CommandExportClones {
             val fieldExtractors = CloneFieldsExtractorsFactory
                 .createExtractors(params.fields, header, OutputMode.ScriptingFriendly)
 
-            val sFileName = SubstitutionHelper.parseFileName(outputFile.toString(), splitFileKeys.size)
-
-
-            CloneSet.split(initialSet) { c -> splitFileKeyExtractors.map { it.getLabel(c) } }.forEach { key, set0 ->
-                val set = CloneSet.transform(set0, params.mkFilter())
-                val fileNameSV = SubstitutionHelper.SubstitutionValues()
-                var i = 1
-                for ((keyValue, keyName) in key.zip(splitFileKeys)) {
-                    fileNameSV.add(keyValue, "$i", keyName)
-                    i++
-                }
-                val keyString = key.joinToString("_")
-                System.err.println("Exporting $keyString")
-                InfoWriter.create(Path(sFileName.render(fileNameSV)), fieldExtractors, !params.noHeader).use { writer ->
+            fun runExport(set: CloneSet, outFile: Path?) {
+                InfoWriter.create(outFile, fieldExtractors, !params.noHeader).use { writer ->
                     val exportClones = ExportClones(
                         set, writer, Long.MAX_VALUE,
                         if (params.splitByTags == null) 0 else tagsInfo.indexOf(params.splitByTags) + 1
@@ -212,6 +200,27 @@ object CommandExportClones {
                             "Filtered $count of $initialCount reads ($percentageCDI%)."
                         )
                     }
+                }
+            }
+
+            if (outputFile == null)
+                runExport(CloneSet.transform(initialSet, params.mkFilter()), null)
+            else {
+                val sFileName = outputFile!!.let { of ->
+                    SubstitutionHelper.parseFileName(of.toString(), splitFileKeys.size)
+                }
+
+                CloneSet.split(initialSet) { c -> splitFileKeyExtractors.map { it.getLabel(c) } }.forEach { key, set0 ->
+                    val set = CloneSet.transform(set0, params.mkFilter())
+                    val fileNameSV = SubstitutionHelper.SubstitutionValues()
+                    var i = 1
+                    for ((keyValue, keyName) in key.zip(splitFileKeys)) {
+                        fileNameSV.add(keyValue, "$i", keyName)
+                        i++
+                    }
+                    val keyString = key.joinToString("_")
+                    System.err.println("Exporting $keyString")
+                    runExport(set, Path(sFileName.render(fileNameSV)))
                 }
             }
         }
