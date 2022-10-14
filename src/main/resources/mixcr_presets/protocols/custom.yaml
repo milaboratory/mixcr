@@ -1,0 +1,74 @@
+"mikelov-et-al-2021":
+  inheritFrom: _universal
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+    - type: MaterialTypeRNA
+    - type: AddExportClonesField
+      insertIndex: 3
+      field: -uniqueTagCount
+      args: [ "UMI" ]
+    - type: AddExportClonesField
+      insertIndex: 4
+      field: -uniqueTagFraction
+      args: [ "UMI" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryWithPoint
+      floating: false
+      anchorPoint: CBegin(+15)
+  align:
+    inheritFrom: align_kaligner2_4.0
+    overrides:
+      tagPattern: |
+        ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
+        ^(R1F:N{0:2}(C:rggggaagacsgatg)(R1:*)) |
+        ^(R1F:N{0:2}(C:agcgggaagaccttg)(R1:*)) |
+        ^(R1F:N{0:2}(C:tatgatggggaacac)(R1:*)) \
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTACCTGTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTATGCATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCACCATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCAGATTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCCTGTTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGAAATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGTTATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNACGATNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNATTCGNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNCCGTCNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNGATACNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNTACGTNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCACTGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCCATGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCTAGTNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCAAANNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCTGCNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGGATANNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTAACCNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort_universal
+    overrides:
+      parameters:
+        postFilter:
+          type: "filter_groups"
+          groupingKeys:
+            - "UMI"
+          predicates:
+            - metrics:
+                - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0 # don't limit number of bins, use only minBinWidth
+                    minBinWidth: 0.2 # in respect to log10 of the value
+              operator:
+                type: "group_operator_otsu1"
+                logX: true
