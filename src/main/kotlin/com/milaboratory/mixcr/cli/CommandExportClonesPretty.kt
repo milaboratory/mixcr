@@ -16,12 +16,14 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.and
 import gnu.trove.set.hash.TIntHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.BufferedOutputStream
@@ -34,42 +36,68 @@ import java.util.*
     description = ["Export verbose information about clones."]
 )
 class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
-    @Parameters(index = "0", description = ["clones.[clns|clna]"])
+    @Parameters(
+        description = ["Path to input file with clones"],
+        index = "0",
+        paramLabel = "clones.(clns|clna)"
+    )
     lateinit var input: Path
 
-    @Parameters(index = "1", description = ["output.txt"], arity = "0..1")
+    @Parameters(
+        index = "1",
+        paramLabel = "output.txt",
+        arity = "0..1",
+        description = ["Path where to write export. Will write to output if omitted."]
+    )
     var out: Path? = null
 
-    @Option(description = ["Limit number of alignments before filtering"], names = ["-b", "--limitBefore"])
+    @Option(
+        description = ["Limit number of alignments before filtering"],
+        names = ["-b", "--limitBefore"],
+        paramLabel = "<n>"
+    )
     var limitBefore: Int? = null
 
     @Option(
-        description = ["Limit number of filtered alignments; no more " +
-                "than N alignments will be outputted"], names = ["-n", "--limit"]
+        description = ["Limit number of filtered alignments; no more than N alignments will be outputted"],
+        names = ["-n", "--limit"],
+        paramLabel = "<n>"
     )
     var limitAfter: Int? = null
 
-    @Option(description = ["List of clone ids to export"], names = ["-i", "--clone-ids"])
+    @Option(
+        description = ["List of clone ids to export"],
+        names = ["-i", "--clone-ids"],
+        paramLabel = "<id>"
+    )
     var ids: List<Int> = mutableListOf()
 
-    @Option(description = ["Number of output alignments to skip"], names = ["-s", "--skip"])
+    @Option(
+        description = ["Number of output alignments to skip"],
+        names = ["-s", "--skip"],
+        paramLabel = "<n>"
+    )
     var skipAfter: Int? = null
 
     @Option(
         description = ["Filter export to a specific protein chain gene (e.g. TRA or IGH)."],
-        names = ["-c", "--chains"]
+        names = ["-c", "--chains"],
+        paramLabel = Labels.CHAINS,
+        showDefaultValue = ALWAYS
     )
-    var chain = "ALL"
+    var chains: Chains = Chains.ALL
 
     @Option(
         description = ["Only output clones where CDR3 (not whole clonal sequence) exactly equals to given sequence"],
-        names = ["-e", "--cdr3-equals"]
+        names = ["-e", "--cdr3-equals"],
+        paramLabel = "<seq>"
     )
-    var cdr3Equals: String? = null
+    var cdr3Equals: NucleotideSequence? = null
 
     @Option(
         description = ["Only output clones where target clonal sequence contains sub-sequence."],
-        names = ["-r", "--clonal-sequence-contains"]
+        names = ["-r", "--clonal-sequence-contains"],
+        paramLabel = "<seq>"
     )
     var csContain: String? = null
 
@@ -83,7 +111,6 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
         get() = if (ids.isEmpty()) null else TIntHashSet(ids)
 
     private fun mkFilter(): Filter<Clone> {
-        val chains = Chains.parse(chain)
         var resultFilter: Filter<Clone> = Filter { true }
         val cloneIds = cloneIds
         if (cloneIds != null) {
@@ -105,9 +132,8 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
             }
         }
         if (cdr3Equals != null) {
-            val seq = NucleotideSequence(cdr3Equals)
             resultFilter = resultFilter.and { clone: Clone ->
-                clone.getFeature(GeneFeature.CDR3)?.sequence == seq
+                clone.getFeature(GeneFeature.CDR3)?.sequence == cdr3Equals
             }
         }
         return resultFilter

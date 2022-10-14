@@ -17,6 +17,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI.DummyWriter
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus.AlignmentPresentOnlyInFirst
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus.AlignmentPresentOnlyInSecond
@@ -27,6 +28,7 @@ import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.PrintStream
@@ -36,47 +38,63 @@ import java.nio.file.Path
     description = ["Calculates the difference between two .vdjca files."]
 )
 class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["input_file1"], index = "0")
+    @Parameters(paramLabel = "input_file1.vdjca", index = "0")
     lateinit var in1: Path
 
-    @Parameters(description = ["input_file2"], index = "1")
+    @Parameters(paramLabel = "input_file2.vdjca", index = "1")
     lateinit var in2: Path
 
-    @Parameters(description = ["report"], index = "2", arity = "0..1")
+    @Parameters(
+        description = ["Path where to write report. Will write to output if omitted."],
+        paramLabel = "report.txt",
+        index = "2",
+        arity = "0..1"
+    )
     var report: Path? = null
 
     @Option(
-        names = ["-o1", "--only-in-first"], description = ["output for alignments contained only " +
-                "in the first .vdjca file"]
+        names = ["-o1", "--only-in-first"],
+        description = ["output for alignments contained only in the first .vdjca file"],
+        paramLabel = "<path>"
     )
-    var onlyFirst: String? = null
+    var onlyFirst: Path? = null
 
     @Option(
-        names = ["-o2", "--only-in-second"], description = ["output for alignments contained only " +
-                "in the second .vdjca file"]
+        names = ["-o2", "--only-in-second"],
+        description = ["output for alignments contained only in the second .vdjca file"],
+        paramLabel = "<path>"
     )
-    var onlySecond: String? = null
+    var onlySecond: Path? = null
 
     @Option(
-        names = ["-d1", "--diff-from-first"], description = ["output for alignments from the first file " +
-                "that are different from those alignments in the second file"]
+        names = ["-d1", "--diff-from-first"],
+        description = ["output for alignments from the first file that are different from those alignments in the second file"],
+        paramLabel = "<path>"
     )
-    var diff1: String? = null
+    var diff1: Path? = null
 
     @Option(
-        names = ["-d2", "--diff-from-second"], description = ["output for alignments from the second file " +
-                "that are different from those alignments in the first file"]
+        names = ["-d2", "--diff-from-second"],
+        description = ["output for alignments from the second file that are different from those alignments in the first file"],
+        paramLabel = "<path>"
     )
-    var diff2: String? = null
+    var diff2: Path? = null
 
-    @Option(names = ["-g", "--gene-feature"], description = ["Specifies a gene feature to compare"])
-    var geneFeatureToMatch = "CDR3"
+    @Option(
+        names = ["-g", "--gene-feature"],
+        description = ["Specifies a gene feature to compare."],
+        paramLabel = Labels.GENE_FEATURE,
+        defaultValue = "CDR3",
+        showDefaultValue = ALWAYS
+    )
+    lateinit var geneFeatureToMatch: GeneFeature
 
-    @Option(names = ["-l", "--top-hits-level"], description = ["Number of top hits to search for a match"])
+    @Option(
+        names = ["-l", "--top-hits-level"],
+        description = ["Number of top hits to search for a match"],
+        paramLabel = "<n>"
+    )
     var hitsCompareLevel = 1
-    val feature: GeneFeature by lazy {
-        GeneFeature.parse(geneFeatureToMatch)
-    }
 
     override val inputFiles
         get() = listOf(in1, in2)
@@ -126,7 +144,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
         input2.diff.inheritHeaderAndFooterFrom(input2.reader)
         val diffReader = VDJCAlignmentsDifferenceReader(
             input1.reader, input2.reader,
-            feature, hitsCompareLevel
+            geneFeatureToMatch, hitsCompareLevel
         )
         for (diff in CUtils.it(diffReader)) {
             @Suppress("IMPLICIT_CAST_TO_ANY")

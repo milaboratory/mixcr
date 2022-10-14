@@ -9,6 +9,8 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.qc
+package com.milaboratory.mixcr.cli
 
-data class SizeParameters(val width: Int, val height: Int)
+abstract class TypeCandidates(
+    private val candidates: List<String>
+) : Iterable<String> by candidates

@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.cli.ChainUsageStats
 import com.milaboratory.mixcr.cli.ChainUsageStatsRecord
+import com.milaboratory.mixcr.cli.qc.CommandExportQc.SizeParameters
 import io.repseq.core.Chains.IGH
 import io.repseq.core.Chains.IGK
 import io.repseq.core.Chains.IGL

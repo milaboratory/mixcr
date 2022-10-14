@@ -20,7 +20,9 @@ import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.toList
+import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -28,7 +30,45 @@ import java.nio.file.Paths
 
 @Command(description = ["Reads coverage plots."])
 class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["sample.vdjca... coverage.(pdf|eps|png|jpeg)"])
+    companion object {
+        private const val inputsLabel = "sample.vdjca..."
+
+        private const val outputLabel = "coverage.(pdf|eps|png|jpeg)"
+
+        fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcCoverage::class.java)
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("0")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(inputsLabel)
+                    .hideParamSyntax(true)
+                    .description("Paths to input files")
+                    .build()
+            )
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("1")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(outputLabel)
+                    .hideParamSyntax(true)
+                    .description("Path where to write output plots")
+                    .build()
+            )
+    }
+
+
+    @Parameters(
+        index = "0",
+        arity = "2..*",
+        paramLabel = "$inputsLabel $outputLabel",
+        hideParamSyntax = true,
+        //help is covered by mkCommandSpec
+        hidden = true
+    )
     var inOut: List<Path> = mutableListOf()
 
     @Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])

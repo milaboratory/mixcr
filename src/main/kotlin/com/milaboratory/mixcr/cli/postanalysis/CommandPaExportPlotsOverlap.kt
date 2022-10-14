@@ -37,14 +37,18 @@ class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlo
     @Option(
         description = ["Add color key layer; prefix 'x_' (add to the bottom) or 'y_' (add to the left) should be used."],
         names = ["--color-key"],
-        paramLabel = "colorKey"
+        paramLabel = "<key>"
     )
     var colorKeysParam: List<String> = mutableListOf()
 
     @Option(description = ["Fill diagonal line"], names = ["--fill-diagonal"])
     var fillDiagonal = false
 
-    @Option(description = ["Select specific metrics to export."], names = ["--metric"])
+    @Option(
+        description = ["Select specific metrics to export."],
+        names = ["--metric"],
+        paramLabel = "<metric>"
+    )
     var metrics: List<String>? = null
 
     override fun validate() {

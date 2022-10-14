@@ -33,7 +33,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         index = "1",
         arity = "0..1",
         paramLabel = "trees.tsv",
-        description = ["Path to output table. Print in stdout if omitted."]
+        description = ["Path where to write output export table. Print in stdout if omitted."]
     )
     val out: Path? = null
 
@@ -76,7 +76,6 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     }
 
     companion object {
-
         fun mkCommandSpec(): CommandSpec {
             val command = CommandExportShmTreesTableWithNodes()
             val spec = CommandSpec.forAnnotatedObject(command)

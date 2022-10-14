@@ -24,6 +24,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
@@ -56,11 +57,10 @@ object CommandExportAlignments {
     }
 
     fun Params.mkFilter(): Filter<VDJCAlignments> {
-        val chains = Chains.parse(chains)
         return Filter {
             for (gt in GeneType.VJC_REFERENCE) {
                 val bestHit = it.getBestHit(gt)
-                if (bestHit != null && chains.intersects(bestHit.gene.chains)) return@Filter true
+                if (bestHit != null && Chains.parse(chains).intersects(bestHit.gene.chains)) return@Filter true
             }
             false
         }
@@ -69,7 +69,8 @@ object CommandExportAlignments {
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
-            names = ["-c", "--chains"]
+            names = ["-c", "--chains"],
+            paramLabel = Labels.CHAINS
         )
         private var chains: String? = null
 
@@ -89,10 +90,19 @@ object CommandExportAlignments {
         description = ["Export V/D/J/C alignments into tab delimited file."]
     )
     class Cmd : CmdBase() {
-        @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+        @Parameters(
+            description = ["Path to input file"],
+            paramLabel = "data.[vdjca|clns|clna]",
+            index = "0"
+        )
         lateinit var inputFile: Path
 
-        @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
+        @Parameters(
+            description = ["Path where to write export table. Will write to output if omitted."],
+            paramLabel = "table.tsv",
+            index = "1",
+            arity = "0..1"
+        )
         var outputFile: Path? = null
 
         override val inputFiles

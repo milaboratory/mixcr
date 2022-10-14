@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.qc
 
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.cli.qc.CommandExportQc.SizeParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
 import jetbrains.letsPlot.Pos
 import jetbrains.letsPlot.Stat

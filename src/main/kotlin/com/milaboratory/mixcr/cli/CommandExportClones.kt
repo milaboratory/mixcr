@@ -21,6 +21,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.*
 import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.CanReportProgressAndStage
@@ -73,7 +74,8 @@ object CommandExportClones {
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
-            names = ["-c", "--chains"]
+            names = ["-c", "--chains"],
+            paramLabel = Labels.CHAINS
         )
         private var chains: String? = null
 
@@ -89,7 +91,11 @@ object CommandExportClones {
         )
         private var filterStops = false
 
-        @Option(description = ["Split clones by tag values"], names = ["--split-by-tag"])
+        @Option(
+            description = ["Split clones by tag values"],
+            names = ["--split-by-tag"],
+            paramLabel = "<tag>"
+        )
         private var splitByTag: String? = null
 
         @Option(
@@ -126,10 +132,19 @@ object CommandExportClones {
         description = ["Export assembled clones into tab delimited file."]
     )
     class Cmd : CmdBase() {
-        @Parameters(description = ["data.[clns|clna]"], index = "0")
+        @Parameters(
+            description = ["Path to input file with clones"],
+            paramLabel = "data.(clns|clna)",
+            index = "0"
+        )
         lateinit var inputFile: Path
 
-        @Parameters(description = ["table.tsv"], index = "1", arity = "0..1")
+        @Parameters(
+            description = ["Path where to write export table. Will write to output if omitted."],
+            paramLabel = "table.tsv",
+            index = "1",
+            arity = "0..1"
+        )
         var outputFile: Path? = null
 
         override val inputFiles

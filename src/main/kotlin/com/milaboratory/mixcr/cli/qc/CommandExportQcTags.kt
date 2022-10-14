@@ -19,7 +19,9 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.qc.TagRefinementQc
+import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -29,7 +31,45 @@ import kotlin.io.path.nameWithoutExtension
 
 @Command(description = ["Tag refinement statistics plots."])
 class CommandExportQcTags : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["sample.(vdjca|clns|clna)... coverage.(pdf|eps|png|jpeg)"])
+    companion object {
+        private const val inputsLabel = "sample.(vdjca|clns|clna)..."
+
+        private const val outputLabel = "coverage.(pdf|eps|png|jpeg)"
+
+        fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcTags::class.java)
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("0")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(inputsLabel)
+                    .hideParamSyntax(true)
+                    .description("Paths to input files")
+                    .build()
+            )
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("1")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(outputLabel)
+                    .hideParamSyntax(true)
+                    .description("Path where to write output plots")
+                    .build()
+            )
+    }
+
+
+    @Parameters(
+        index = "0",
+        arity = "2..*",
+        paramLabel = "$inputsLabel $outputLabel",
+        hideParamSyntax = true,
+        //help is covered by mkCommandSpec
+        hidden = true
+    )
     var files: List<Path> = mutableListOf()
 
     @Option(names = ["--log"], description = ["Use log10 scale for y-axis"])
