@@ -111,135 +111,135 @@
 # Single-cell pipelines
 #
 
-"10x_vdj":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemblePartial
-    - assemble
-    - assembleContigs
-    - exportClones
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      whitelists:
-        CELL: builtin:737K-august-2016
-      parameters:
-        postFilter:
-          type: "filter_and"
-          operands:
-            - type: "filter_groups"
-              groupingKeys:
-                - "CELL"
-                - "UMI"
-              predicates:
-                - metrics:
-                    - type: "group_metric_sum_weight"
-                      reportHist:
-                        log: true
-                        binNumber: 0 # don't limit number of bins, use only minBinWidth
-                        minBinWidth: 0.2 # in respect to log10 of the value
-                  operator:
-                    type: "group_operator_otsu1"
-                    logX: true
-            - type: "filter_groups"
-              groupingKeys:
-                - "CELL"
-              predicates:
-                - metrics:
-                    - type: "group_metric_nunique"
-                      keys:
-                        - "UMI"
-                      reportHist:
-                        log: true
-                        binNumber: 0 # don't limit number of bins, use only minBinWidth
-                        minBinWidth: 0.2 # in respect to log10 of the value
-                  operator:
-                    type: "group_operator_range"
-                    lower: 2.0
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      inferMinRecordsPerConsensus: false
-      clnaOutput: true
-      cloneAssemblerParameters:
-        postFilters:
-          - type: "filter_in_groups"
-            isolationKeys:
-              - "geneLabel:ReliableChain"
-              - "tag:CELL"
-            nestedFilter:
-              type: "filter_groups"
-              groupingKeys:
-                - "clone"
-              predicates:
-                - metrics:
-                    - type: "group_metric_nunique"
-                      keys:
-                        - "tag:UMI"
-                  operator:
-                    type: "group_operator_cumtop"
-                    share: 0.95
-          - type: "filter_in_groups"
-            isolationKeys:
-              - "tag:CELL"
-            nestedFilter:
-              type: "filter_groups"
-              groupingKeys:
-                - "clone"
-              predicates:
-                - metrics:
-                    - type: "group_metric_nunique"
-                      keys:
-                        - "tag:UMI"
-                  operator:
-                    type: "group_operator_cumtop"
-                    share: 0.99
-
-"10x_vdj_bcr":
-  inheritFrom: 10x_vdj
-  mixins:
-    - type: KeepNonCDR3Alignments
-    - type: SetTagPattern
-      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 1
-      field: -tag
-      args: [ "CELL" ]
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-  align:
-    inheritFrom: align_kaligner2_4.0
-
-"10x_vdj_tcr":
-  inheritFrom: 10x_vdj
-  mixins:
-    - type: KeepNonCDR3Alignments
-    - type: SetTagPattern
-      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 1
-      field: -tag
-      args: [ "CELL" ]
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-  align:
-    inheritFrom: align_rna-seq_4.0
+#"10x_vdj":
+#  inheritFrom: _universal
+#  pipeline:
+#    - align
+#    - refineTagsAndSort
+#    - assemblePartial
+#    - assemble
+#    - assembleContigs
+#    - exportClones
+#  refineTagsAndSort:
+#    inheritFrom: refineTagsAndSort_universal
+#    overrides:
+#      whitelists:
+#        CELL: builtin:737K-august-2016
+#      parameters:
+#        postFilter:
+#          type: "filter_and"
+#          operands:
+#            - type: "filter_groups"
+#              groupingKeys:
+#                - "CELL"
+#                - "UMI"
+#              predicates:
+#                - metrics:
+#                    - type: "group_metric_sum_weight"
+#                      reportHist:
+#                        log: true
+#                        binNumber: 0 # don't limit number of bins, use only minBinWidth
+#                        minBinWidth: 0.2 # in respect to log10 of the value
+#                  operator:
+#                    type: "group_operator_otsu1"
+#                    logX: true
+#            - type: "filter_groups"
+#              groupingKeys:
+#                - "CELL"
+#              predicates:
+#                - metrics:
+#                    - type: "group_metric_nunique"
+#                      keys:
+#                        - "UMI"
+#                      reportHist:
+#                        log: true
+#                        binNumber: 0 # don't limit number of bins, use only minBinWidth
+#                        minBinWidth: 0.2 # in respect to log10 of the value
+#                  operator:
+#                    type: "group_operator_range"
+#                    lower: 2.0
+#  assemble:
+#    inheritFrom: assemble_universal
+#    overrides:
+#      inferMinRecordsPerConsensus: false
+#      clnaOutput: true
+#      cloneAssemblerParameters:
+#        postFilters:
+#          - type: "filter_in_groups"
+#            isolationKeys:
+#              - "geneLabel:ReliableChain"
+#              - "tag:CELL"
+#            nestedFilter:
+#              type: "filter_groups"
+#              groupingKeys:
+#                - "clone"
+#              predicates:
+#                - metrics:
+#                    - type: "group_metric_nunique"
+#                      keys:
+#                        - "tag:UMI"
+#                  operator:
+#                    type: "group_operator_cumtop"
+#                    share: 0.95
+#          - type: "filter_in_groups"
+#            isolationKeys:
+#              - "tag:CELL"
+#            nestedFilter:
+#              type: "filter_groups"
+#              groupingKeys:
+#                - "clone"
+#              predicates:
+#                - metrics:
+#                    - type: "group_metric_nunique"
+#                      keys:
+#                        - "tag:UMI"
+#                  operator:
+#                    type: "group_operator_cumtop"
+#                    share: 0.99
+#
+#"10x_vdj_bcr":
+#  inheritFrom: 10x_vdj
+#  mixins:
+#    - type: KeepNonCDR3Alignments
+#    - type: SetTagPattern
+#      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+#    - type: AddExportClonesField
+#      insertIndex: 3
+#      field: -uniqueTagCount
+#      args: [ "UMI" ]
+#    - type: AddExportClonesField
+#      insertIndex: 1
+#      field: -tag
+#      args: [ "CELL" ]
+#    - type: LeftAlignmentBoundaryNoPoint
+#      floating: false
+#    - type: RightAlignmentBoundaryNoPoint
+#      floating: false
+#      geneType: C
+#  align:
+#    inheritFrom: align_kaligner2_4.0
+#
+#"10x_vdj_tcr":
+#  inheritFrom: 10x_vdj
+#  mixins:
+#    - type: KeepNonCDR3Alignments
+#    - type: SetTagPattern
+#      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+#    - type: AddExportClonesField
+#      insertIndex: 3
+#      field: -uniqueTagCount
+#      args: [ "UMI" ]
+#    - type: AddExportClonesField
+#      insertIndex: 1
+#      field: -tag
+#      args: [ "CELL" ]
+#    - type: LeftAlignmentBoundaryNoPoint
+#      floating: false
+#    - type: RightAlignmentBoundaryNoPoint
+#      floating: false
+#      geneType: C
+#  align:
+#    inheritFrom: align_rna-seq_4.0
 
 #
 # UMI
