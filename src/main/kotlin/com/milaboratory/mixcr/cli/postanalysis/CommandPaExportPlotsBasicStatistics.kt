@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.miplots.StandardPlots.PlotType
 import com.milaboratory.miplots.stat.util.PValueCorrection
 import com.milaboratory.miplots.stat.util.RefGroup
 import com.milaboratory.miplots.stat.util.TestMethod
@@ -22,7 +23,6 @@ import com.milaboratory.mixcr.cli.MultipleMetricsInOneFile
 import com.milaboratory.mixcr.postanalysis.diversity.DiversityMeasure
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.dataFrame
-import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.parsePlotType
 import com.milaboratory.mixcr.postanalysis.plots.BasicStatistics.plots
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import picocli.CommandLine.Command
@@ -36,7 +36,7 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
                 "violin, violin-bindot, barplot, barplot-stacked, scatter"],
         names = ["--plot-type"]
     )
-    var plotType: String? = null
+    var plotType: PlotType? = null
 
     @Option(description = ["Primary group"], names = ["-p", "--primary-group"])
     var primaryGroup: String? = null
@@ -126,7 +126,6 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
             refGroupParam != null -> RefGroup.of(refGroupParam!!)
             else -> null
         }
-        val plotType = parsePlotType(plotType)
         val labelFormat = if (showSignificance) Significance else Formatted()
         val par = BasicStatistics.PlotParameters(
             plotType,

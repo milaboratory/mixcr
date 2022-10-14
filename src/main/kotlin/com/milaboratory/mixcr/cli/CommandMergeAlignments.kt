@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicLong
 )
 class CommandMergeAlignments : MiXCRCommandWithOutputs() {
     @Parameters(
-        description = ["[input_file1.vdjca [input_file2.vdjca ....]] output_file.vdjca"],
+        description = ["input_file.vdjca... output_file.vdjca"],
         arity = "2..*"
     )
     var input: List<Path> = mutableListOf()

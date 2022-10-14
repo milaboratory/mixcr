@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.cli.postanalysis
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneReaderMerger
-import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset
@@ -29,18 +28,32 @@ import com.milaboratory.util.LambdaSemaphore
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.StringUtil
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import java.nio.file.Paths
 
 @Command(description = ["Overlap analysis"])
 class CommandPaOverlap : CommandPa() {
-    @Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
+    companion object {
+        fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandPaOverlap::class.java)
+            .addInputsHelp()
+    }
+
+
+    @Option(
+        description = ["Overlap criteria."],
+        names = ["--criteria"],
+        paramLabel = "<s>",
+        showDefaultValue = ALWAYS
+    )
     var overlapCriteria = "CDR3|AA|V|J"
 
     @Option(
         description = ["Aggregate samples in groups by specified metadata columns"],
         names = ["--factor-by"],
-        split = ","
+        split = ",",
+        paramLabel = "<column>"
     )
     var factoryBy = mutableListOf<String>()
 

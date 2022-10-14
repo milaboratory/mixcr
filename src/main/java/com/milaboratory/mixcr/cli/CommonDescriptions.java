@@ -25,6 +25,7 @@ public class CommonDescriptions {
         public static final String GENE_TYPE = "<gene_type>";
 
         public static final String CHAINS = "<chains>";
+        public static final String CHAIN = "<chain>";
     }
 
     public static final String SPECIES =
@@ -37,13 +38,9 @@ public class CommonDescriptions {
 
     public static final String DOWNSAMPLING = "Choose downsampling. Possible values: \n count-[reads|TAG]-[auto|min|fixed][-<number>]\n top-[reads|TAG]-[<number>]\n cumtop-[reads|TAG]-[percent]";
 
-    public static final String WEIGHT_FUNCTION = "Weight function: [read|TAG]";
-
     public static final String METADATA = "Metadata file (csv/tsv). Must have \"sample\" column.";
 
     public static final String DOWNSAMPLING_DROP_OUTLIERS = "Drop samples which have less abundance than the computed downsampling threshold.";
-
-    public static final String OVERLAP_CRITERIA = "Overlap criteria. Default CDR3|AA|V|J";
 
     public static final String ONLY_PRODUCTIVE = "Filter out-of-frame sequences and sequences with stop-codons";
 }

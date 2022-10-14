@@ -15,13 +15,16 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
 import io.repseq.core.Chains
+import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Files
@@ -36,7 +39,14 @@ import kotlin.io.path.readLines
  *
  */
 abstract class CommandPa : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["cloneset.{clns|clna}... result.json.gz|result.json"], arity = "2..*")
+    @Parameters(
+        index = "0",
+        arity = "2..*",
+        paramLabel = "$inputsLabel $outputLabel",
+        hideParamSyntax = true,
+        //help is covered by mkCommandSpec
+        hidden = true
+    )
     var inOut: List<Path> = mutableListOf()
 
     @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
@@ -48,14 +58,16 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     @Option(
         description = [CommonDescriptions.DOWNSAMPLING],
         names = ["--default-downsampling"],
-        required = true
+        required = true,
+        paramLabel = "<type>"
     )
     lateinit var defaultDownsampling: String
 
     @Option(
-        description = [CommonDescriptions.WEIGHT_FUNCTION],
+        description = ["Weight function"],
         names = ["--default-weight-function"],
-        required = true
+        required = true,
+        paramLabel = "<read|TAG>"
     )
     lateinit var defaultWeightFunction: String
 
@@ -63,26 +75,44 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         description = ["Limit analysis to specific chains (e.g. TRA or IGH) (fractions will be recalculated). " +
                 "Possible values (multiple values allowed): TRA, TRD, TRAD (for human), TRG, IGH, IGK, IGL"],
         names = ["--chains"],
-        split = ","
+        split = ",",
+        paramLabel = Labels.CHAIN
     )
     var chains: Set<String>? = null
 
-    @Option(description = [CommonDescriptions.METADATA], names = ["--metadata"], paramLabel = "metadata")
+    @Option(
+        description = [CommonDescriptions.METADATA],
+        names = ["--metadata"],
+        paramLabel = "<path>"
+    )
     var metadataFile: Path? = null
 
     @Option(
         description = ["Metadata categories used to isolate samples into separate groups"],
-        names = ["--group"]
+        names = ["--group"],
+        paramLabel = "<group>"
     )
     var isolationGroups: List<String> = mutableListOf()
 
-    @Option(description = ["Tabular results output path (path/table.tsv)."], names = ["--tables"])
+    @Option(
+        description = ["Tabular results output path (path/table.tsv)."],
+        names = ["--tables"],
+        paramLabel = "<path>"
+    )
     var tablesOut: Path? = null
 
-    @Option(description = ["Preprocessor summary output path."], names = ["--preproc-tables"])
+    @Option(
+        description = ["Preprocessor summary output path."],
+        names = ["--preproc-tables"],
+        paramLabel = "<path>"
+    )
     var preprocOut: Path? = null
 
-    @Option(names = ["-O"], description = ["Overrides default postanalysis settings"])
+    @Option(
+        names = ["-O"],
+        description = ["Overrides default postanalysis settings"],
+        paramLabel = Labels.OVERRIDES
+    )
     var overrides: Map<String, String> = mutableMapOf()
 
     override val inputFiles: List<Path>
@@ -284,5 +314,33 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         fun getSampleId(file: String): String = Paths.get(file).toAbsolutePath().fileName.toString()
 
         private val CHAINS_COLUMN_NAMES = arrayOf("chain", "chains")
+
+        private const val inputsLabel = "cloneset.(clns|clna)..."
+
+        private const val outputLabel = "result.json[.gz]"
+
+        fun CommandSpec.addInputsHelp(): CommandSpec =
+            addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("0")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(inputsLabel)
+                    .hideParamSyntax(true)
+                    .description("Paths to input clnx files.")
+                    .build()
+            )
+                .addPositional(
+                    CommandLine.Model.PositionalParamSpec.builder()
+                        .index("1")
+                        .required(false)
+                        .arity("0..*")
+                        .type(Path::class.java)
+                        .paramLabel(outputLabel)
+                        .hideParamSyntax(true)
+                        .description("Path where to write postanalysis result.")
+                        .build()
+                )
     }
 }

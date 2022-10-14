@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.milaboratory.milm.MiXCRMain
+import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter
@@ -140,15 +141,14 @@ object Main {
                     .addSubcommand(
                         "postanalysis",
                         CommandLine(CommandPostanalysisMain::class.java)
-                            .addSubcommand("individual", CommandPaIndividual::class.java)
-                            .addSubcommand("overlap", CommandPaOverlap::class.java)
+                            .addSubcommand("individual", CommandPaIndividual.mkCommandSpec())
+                            .addSubcommand("overlap", CommandPaOverlap.mkCommandSpec())
                     )
-                    .addSubcommand("exportTables", CommandPaExportTables::class.java)
-                    .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary::class.java)
             )
-
             .commandsGroup(
                 CommandsGroup("Export commands")
+                    .addSubcommand("exportTables", CommandPaExportTables::class.java)
+                    .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary::class.java)
                     .addSubcommand(
                         "exportPlots",
                         CommandLine(CommandExportPlotsMain::class.java)
@@ -237,6 +237,10 @@ object Main {
         cmd.registerConverter { GeneFeature.parse(it) }
         cmd.registerConverter { GeneType.parse(it) }
         cmd.registerConverter { Chains.parse(it) }
+        cmd.registerConverter { arg ->
+            StandardPlots.PlotType.values().find { it.cliName == arg.lowercase() }
+                ?: throw ValidationException("unknown plot type: $arg")
+        }
         val defaultParameterExceptionHandler = cmd.parameterExceptionHandler
         cmd.setParameterExceptionHandler { ex, args ->
             when (val cause = ex.cause) {

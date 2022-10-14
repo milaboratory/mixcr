@@ -325,7 +325,7 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX],
         parameterConsumer = CloneExportParameterConsumer::class,
         arity = "1..*",
-        paramLabel = "<field [params...]>",
+        paramLabel = "<field> [<param>...]",
         hideParamSyntax = true
     )
     fun prependExportClonesField(data: List<String>) = addExportClonesField(data, true)
@@ -335,7 +335,7 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX],
         parameterConsumer = CloneExportParameterConsumer::class,
         arity = "1..*",
-        paramLabel = "<field [params...]>",
+        paramLabel = "<field> [<param>...]",
         hideParamSyntax = true
     )
     fun appendExportClonesField(data: List<String>) = addExportClonesField(data, false)
@@ -345,7 +345,7 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [AddExportAlignmentsField.CMD_OPTION_PREPEND_PREFIX],
         parameterConsumer = AlignsExportParameterConsumer::class,
         arity = "1..*",
-        paramLabel = "<field [params...]>",
+        paramLabel = "<field> [<param>...]",
         hideParamSyntax = true
     )
     fun prependExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, true)
@@ -355,7 +355,7 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [AddExportAlignmentsField.CMD_OPTION_APPEND_PREFIX],
         parameterConsumer = AlignsExportParameterConsumer::class,
         arity = "1..*",
-        paramLabel = "<field [params...]>",
+        paramLabel = "<field> [<param>...]",
         hideParamSyntax = true
     )
     fun appendExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, false)

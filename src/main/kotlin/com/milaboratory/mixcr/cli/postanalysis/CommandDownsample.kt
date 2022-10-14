@@ -26,6 +26,7 @@ import com.milaboratory.primitivio.toList
 import io.repseq.core.Chains
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Files
@@ -71,9 +72,10 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
     var summary: Path? = null
 
     @Option(
-        description = ["Suffix to add to output clns file. Default: \${DEFAULT-VALUE}"],
+        description = ["Suffix to add to output clns file."],
         names = ["--suffix"],
-        paramLabel = "<s>"
+        paramLabel = "<s>",
+        showDefaultValue = ALWAYS
     )
     var suffix = "downsampled"
 

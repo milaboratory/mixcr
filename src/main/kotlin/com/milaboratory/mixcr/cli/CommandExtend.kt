@@ -42,6 +42,7 @@ import io.repseq.core.Chains
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -117,9 +118,10 @@ object CommandExtend {
         lateinit var outputFile: Path
 
         @Option(
-            description = ["Apply procedure only to alignments with specific immunological-receptor chains. Default: \${DEFAULT-VALUE}"],
+            description = ["Apply procedure only to alignments with specific immunological-receptor chains."],
             names = ["-c", "--chains"],
-            paramLabel = Labels.CHAINS
+            paramLabel = Labels.CHAINS,
+            showDefaultValue = ALWAYS
         )
         var chains: Chains = Chains.TCR
 
@@ -127,9 +129,10 @@ object CommandExtend {
         lateinit var reportOptions: ReportOptions
 
         @Option(
-            description = ["Quality score value to assign imputed sequences. Default: \${DEFAULT-VALUE}"],
+            description = ["Quality score value to assign imputed sequences."],
             names = ["-q", "--quality"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            showDefaultValue = ALWAYS
         )
         var extensionQuality: Byte = 30
 

@@ -165,7 +165,7 @@ object CommandRefineTagsAndSort {
         lateinit var inputFile: Path
 
         @Parameters(
-            description = ["Path to write corrected alignments"],
+            description = ["Path where to write corrected alignments"],
             paramLabel = "alignments.corrected.vdjca",
             index = "1"
         )

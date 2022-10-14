@@ -29,6 +29,7 @@ import com.milaboratory.mixcr.postanalysis.preproc.OverlapPreprocessorAdapter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.SmartProgressReporter
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -36,13 +37,13 @@ import kotlin.io.path.nameWithoutExtension
 
 @Command(description = ["Plot overlap scatter-plot."])
 class CommandOverlapScatter : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["cloneset_1.{clns|clna}..."], index = "0")
+    @Parameters(description = ["cloneset_1.(clns|clna)"], index = "0")
     lateinit var in1: Path
 
-    @Parameters(description = ["cloneset_2.{clns|clna}..."], index = "1")
+    @Parameters(description = ["cloneset_2.(clns|clna)"], index = "1")
     lateinit var in2: Path
 
-    @Parameters(description = ["output.[pdf|eps|png|jpeg]"], index = "2")
+    @Parameters(description = ["output.(pdf|eps|png|jpeg)"], index = "2")
     lateinit var out: Path
 
     @Option(description = ["Chains to export"], names = ["--chains"], split = ",")
@@ -54,7 +55,12 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     @Option(description = [CommonDescriptions.DOWNSAMPLING], names = ["--downsampling"], required = true)
     lateinit var downsampling: String
 
-    @Option(description = [CommonDescriptions.OVERLAP_CRITERIA], names = ["--criteria"])
+    @Option(
+        description = ["Overlap criteria."],
+        names = ["--criteria"],
+        showDefaultValue = ALWAYS,
+        paramLabel = "<s>"
+    )
     var overlapCriteria = "CDR3|AA|V|J"
 
     @Option(

@@ -79,8 +79,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     @Parameters(
         arity = "1..*",
-        paramLabel = "input_file.clns [input_file2.clns ...]",
-        hideParamSyntax = true,
+        paramLabel = "input_file.clns",
         description = ["Input files for allele search"]
     )
     override val inputFiles: List<Path> = mutableListOf()
@@ -98,14 +97,14 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     var outputTemplate: String? = null
 
     @Option(
-        description = ["Path to write library with found alleles."],
+        description = ["Path where to write library with found alleles."],
         names = ["--export-library"],
         paramLabel = "<path>"
     )
     var libraryOutput: Path? = null
 
     @Option(
-        description = ["Path to write descriptions and stats for all result alleles, existed and new."],
+        description = ["Path where to write descriptions and stats for all result alleles, existed and new."],
         names = ["--export-alleles-mutations"],
         paramLabel = "<path>"
     )

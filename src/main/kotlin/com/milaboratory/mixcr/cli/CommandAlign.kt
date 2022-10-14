@@ -160,7 +160,7 @@ object CommandAlign {
                 .type(Path::class.java)
                 .paramLabel(outputLabel)
                 .hideParamSyntax(true)
-                .description("Path to write output alignments")
+                .description("Path where to write output alignments")
                 .build()
         )
 

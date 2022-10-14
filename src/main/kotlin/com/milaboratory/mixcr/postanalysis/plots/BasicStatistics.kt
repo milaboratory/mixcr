@@ -32,7 +32,16 @@ import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
-import org.jetbrains.kotlinx.dataframe.api.*
+import org.jetbrains.kotlinx.dataframe.api.convertToString
+import org.jetbrains.kotlinx.dataframe.api.drop
+import org.jetbrains.kotlinx.dataframe.api.filter
+import org.jetbrains.kotlinx.dataframe.api.first
+import org.jetbrains.kotlinx.dataframe.api.groupBy
+import org.jetbrains.kotlinx.dataframe.api.isEmpty
+import org.jetbrains.kotlinx.dataframe.api.replace
+import org.jetbrains.kotlinx.dataframe.api.rows
+import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import org.jetbrains.kotlinx.dataframe.api.with
 
 /**
  * DataFrame row for single statistical char group
@@ -125,13 +134,6 @@ object BasicStatistics {
         val pAdjustMethod: PValueCorrection.Method? = PValueCorrection.Method.Bonferroni,
         val correlationMethod: CorrelationMethod = CorrelationMethod.Pearson,
     )
-
-    fun parsePlotType(str: String?) =
-        if (str == null)
-            null
-        else
-            PlotType.values().find { it.cliName.lowercase() == str.lowercase() }
-                ?: throw IllegalArgumentException("unknown plot type: $str")
 
     private fun isCategorical(t: PlotType) = when (t) {
         Scatter -> false

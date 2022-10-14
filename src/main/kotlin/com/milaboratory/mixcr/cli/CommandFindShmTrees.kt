@@ -65,7 +65,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     companion object {
         const val COMMAND_NAME = "findShmTrees"
 
-        private const val inputsLabel = "input_file1.clns [input_file2.clns ....]"
+        private const val inputsLabel = "input_file.clns..."
 
         private const val outputLabel = "output_file.$shmFileExtension"
 
@@ -92,7 +92,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                     .type(Path::class.java)
                     .paramLabel(outputLabel)
                     .hideParamSyntax(true)
-                    .description("Path to write output trees")
+                    .description("Path where to write output trees")
                     .build()
             )
     }

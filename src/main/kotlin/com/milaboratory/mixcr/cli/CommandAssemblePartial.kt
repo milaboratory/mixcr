@@ -97,7 +97,7 @@ object CommandAssemblePartial {
         lateinit var inputFile: Path
 
         @Parameters(
-            description = ["Path to write recovered alignments."],
+            description = ["Path where to write recovered alignments."],
             paramLabel = "alignments.recovered.vdjca",
             index = "1"
         )
