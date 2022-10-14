@@ -18,7 +18,7 @@ cd pa_test || exit 1
 pip3 install numpy==1.22.3 pandas==1.4.2 scipy==1.7.3
 
 for file in ../../src/test/resources/sequences/big/pa_test_data/* ; do
-  ln -s ${file} $(basename ${file})
+  ln -s "${file}" "$(basename "${file}")"
 done
 
 python3 ../../itests/case016.py

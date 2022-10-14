@@ -48,12 +48,12 @@ def test_table_format(table):
 def vj_usage(table, downsampling):
     table['v'] = table['allVHitsWithScore'].apply(lambda x: x.split('*')[0]+'*00')
     table['j'] = table['allJHitsWithScore'].apply(lambda x: x.split('*')[0]+'*00')
-    table = table[['cloneCount', 'cloneFraction', 'v', 'j', 'sampleId']]
-    v_usage = table.groupby(['v', 'sampleId'], as_index=False)['cloneFraction'].sum()
-    v_usage_pivoted = v_usage.pivot_table(index='sampleId', columns='v', values='cloneFraction')
-    j_usage = table.groupby(['j', 'sampleId'], as_index=False)['cloneFraction'].sum()
-    j_usage_pivoted = j_usage.pivot_table(index='sampleId', columns='j', values='cloneFraction')
-    table_vj = table.groupby(['sampleId', 'v', 'j'], as_index=False)['cloneFraction'].sum()
+    table = table[['readCount', 'readFraction', 'v', 'j', 'sampleId']]
+    v_usage = table.groupby(['v', 'sampleId'], as_index=False)['readFraction'].sum()
+    v_usage_pivoted = v_usage.pivot_table(index='sampleId', columns='v', values='readFraction')
+    j_usage = table.groupby(['j', 'sampleId'], as_index=False)['readFraction'].sum()
+    j_usage_pivoted = j_usage.pivot_table(index='sampleId', columns='j', values='readFraction')
+    table_vj = table.groupby(['sampleId', 'v', 'j'], as_index=False)['readFraction'].sum()
     table_vj.set_index('sampleId', inplace=True)
     table_vj.columns = ['VGene', 'JGene', 'Value']
     v_table = test_table_format(v_usage_pivoted)
@@ -98,22 +98,22 @@ def addedNucleotides(row):
     else:
         vd = int(row['refPoints'].split(':')[12]) - int(row['refPoints'].split(':')[11])
         dj = int(row['refPoints'].split(':')[16]) - int(row['refPoints'].split(':')[15])
-        return (vd + dj) * row['cloneFraction']
+        return (vd + dj) * row['readFraction']
 
 
 def biophysics(table, downsampling):
     table = table[table['allVHitsWithScore'].str.contains('TRBV')]
     table['cdr3aa_len'] = table['aaSeqCDR3'].str.len()
-    table['aaLengthOfCDR3'] = table['cdr3aa_len'] * table['cloneFraction']
-    table['ntLengthOfCDR3'] = table['nSeqCDR3'].str.len() * table['cloneFraction']
-    table['ntLengthOfVJJunction'] = np.where(table['nSeqVJJunction'].isna(), 0, table['nSeqVJJunction'].str.len()) * table['cloneFraction']
+    table['aaLengthOfCDR3'] = table['cdr3aa_len'] * table['readFraction']
+    table['ntLengthOfCDR3'] = table['nSeqCDR3'].str.len() * table['readFraction']
+    table['ntLengthOfVJJunction'] = np.where(table['nSeqVJJunction'].isna(), 0, table['nSeqVJJunction'].str.len()) * table['readFraction']
     table['cdr3-center-5'] = table.apply(lambda x: extractCdr3AAcenter(x["aaSeqCDR3"], x["cdr3aa_len"]), axis=1)
     aapropsN2_dict = aaprops_dict('aaprops.csv')
     for props, prop in aapropsN2_dict.items():
-        table[props] = np.vectorize(calcProp)(table['cdr3-center-5'], prop) * table['cloneFraction']
+        table[props] = np.vectorize(calcProp)(table['cdr3-center-5'], prop) * table['readFraction']
     table['AddedNucleotides'] = table.apply(addedNucleotides, axis=1)
-    table = table[['cloneFraction', 'cloneCount', 'sampleId', 'ntLengthOfCDR3', 'aaLengthOfCDR3', 'ntLengthOfVJJunction', 'AddedNucleotides', 'n2strength', 'n2hydrophobicity', 'n2volume', 'n2surface', 'charge']]
-    table.columns = ['cloneFraction', 'cloneCount', 'sampleId', 'ntLengthOfCDR3', 'aaLengthOfCDR3',
+    table = table[['readFraction', 'readCount', 'sampleId', 'ntLengthOfCDR3', 'aaLengthOfCDR3', 'ntLengthOfVJJunction', 'AddedNucleotides', 'n2strength', 'n2hydrophobicity', 'n2volume', 'n2surface', 'charge']]
+    table.columns = ['readFraction', 'readCount', 'sampleId', 'ntLengthOfCDR3', 'aaLengthOfCDR3',
                    'ntLengthOfVJJunction', 'AddedNucleotides', 'N2StrengthofCDR3', 'N2HydrophobicityofCDR3', 'N2VolumeofCDR3', 'N2SurfaceofCDR3', 'ChargeofCDR3']
     biophysics = table.groupby('sampleId', as_index=False).sum()
     biophysics = biophysics[['sampleId', 'ntLengthOfCDR3', 'aaLengthOfCDR3', 'ntLengthOfVJJunction', 'AddedNucleotides', 'N2StrengthofCDR3', 'N2HydrophobicityofCDR3', 'N2VolumeofCDR3', 'N2SurfaceofCDR3', 'ChargeofCDR3']]
@@ -134,20 +134,20 @@ def biophysics(table, downsampling):
 
 
 def chao1(table):
-    singletons = table[table['cloneCount']==1.]['cloneFraction'].count()
-    doubletons = table[table['cloneCount']==2.]['cloneFraction'].count()
+    singletons = table[table['readCount']==1.]['readFraction'].count()
+    doubletons = table[table['readCount']==2.]['readFraction'].count()
     f0 = singletons * (singletons - 1) / 2 / (doubletons + 1)
-    observed = table['cloneCount'].count()
+    observed = table['readCount'].count()
     chao1 = observed + f0
     return chao1
 
 
 def d50_df(table):
     table['clonotype_number'] = np.arange(table.shape[0]) + 1
-    if any(np.isclose(table['cloneFraction'].cumsum(), 0.5)):
-        return pd.DataFrame(table[np.isclose(table['cloneFraction'].cumsum(), 0.5)], columns=table.columns)
+    if any(np.isclose(table['readFraction'].cumsum(), 0.5)):
+        return pd.DataFrame(table[np.isclose(table['readFraction'].cumsum(), 0.5)], columns=table.columns)
     else:
-        return pd.DataFrame(table[table['cloneFraction'].cumsum() >= 0.5].head(1), columns=table.columns)
+        return pd.DataFrame(table[table['readFraction'].cumsum() >= 0.5].head(1), columns=table.columns)
 
 
 def efronThisted(table):
@@ -155,7 +155,7 @@ def efronThisted(table):
         h = np.zeros(depth)
         nx = np.zeros(depth)
         for y in range(1, depth+1):
-            nx[y-1] = len(table[table['cloneCount'] == y].index)
+            nx[y-1] = len(table[table['readCount'] == y].index)
             for x in range(1, y+1):
                 coeff = binom(y-1, x-1)
                 if x % 2 == 1:
@@ -181,10 +181,10 @@ def diversity(table, downsampling):
     for sample in samples:
         temp_table = table[table['sampleId']==sample]
         observed_diversity = len(temp_table.index)
-        shannonWienerIndex = -(temp_table['cloneFraction'] * np.log(temp_table['cloneFraction'])).sum()
+        shannonWienerIndex = -(temp_table['readFraction'] * np.log(temp_table['readFraction'])).sum()
         shannonWiener = np.exp(shannonWienerIndex)
         normalizedShannonWiener = shannonWienerIndex / np.log(len(temp_table.index))
-        inverseSimpson = 1 / (temp_table['cloneFraction'] * temp_table['cloneFraction']).sum()
+        inverseSimpson = 1 / (temp_table['readFraction'] * temp_table['readFraction']).sum()
         gini = 1 - (-1 / inverseSimpson)
         chao1_estimate = chao1(temp_table)
         df_d50 = d50_df(temp_table)
@@ -221,8 +221,8 @@ def overlap(files_list, intersect_type):
         table_1['J'] = table_1['allJHitsWithScore'].apply(lambda x: x.split('*')[0])
         table_2['V'] = table_2['allVHitsWithScore'].apply(lambda x: x.split('*')[0])
         table_2['J'] = table_2['allJHitsWithScore'].apply(lambda x: x.split('*')[0])
-        table_1_grouped = table_1.groupby(intersect_dict[intersect_type], as_index=False)['cloneFraction'].sum()
-        table_2_grouped = table_2.groupby(intersect_dict[intersect_type], as_index=False)['cloneFraction'].sum()
+        table_1_grouped = table_1.groupby(intersect_dict[intersect_type], as_index=False)['readFraction'].sum()
+        table_2_grouped = table_2.groupby(intersect_dict[intersect_type], as_index=False)['readFraction'].sum()
         table_merged = pd.merge(table_1_grouped, table_2_grouped, on=intersect_dict[intersect_type], how='inner', suffixes=['_1', '_2'])
         if len(table_merged.index) == 0:
             sharedClonotypes = 0
@@ -233,10 +233,10 @@ def overlap(files_list, intersect_type):
             Jaccard = 0
         else:
             sharedClonotypes = len(table_merged.index)
-            corr = linregress(table_merged.cloneFraction_1, table_merged.cloneFraction_2).rvalue
+            corr = linregress(table_merged.readFraction_1, table_merged.readFraction_2).rvalue
             D = len(table_merged.index) / len(table_1_grouped.index) / len(table_2_grouped.index)
-            F1 = np.sqrt(table_merged.cloneFraction_1.sum() * table_merged.cloneFraction_2.sum())
-            F2 = (np.sqrt(table_merged.cloneFraction_1 * table_merged.cloneFraction_2)).sum()
+            F1 = np.sqrt(table_merged.readFraction_1.sum() * table_merged.readFraction_2.sum())
+            F2 = (np.sqrt(table_merged.readFraction_1 * table_merged.readFraction_2)).sum()
             Jaccard = len(table_merged.index) / (len(table_1_grouped.index) + len(table_2_grouped.index) - len(table_merged.index))
         metric_list.append((sample_id_1, sample_id_2, sharedClonotypes, corr, D, F1, F2, Jaccard))
     intersect_table = pd.DataFrame(metric_list, columns=['1_sample_id', '2_sample_id', 'SharedClonotypes', 'Pearson', 'RelativeDiversity', 'F1Index', 'F2Index', 'JaccardIndex'])
