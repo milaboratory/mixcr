@@ -98,6 +98,12 @@ object CommandExportClones {
         )
         private var splitFilesBy: List<String> = mutableListOf()
 
+        @Option(
+            description = ["Don't split files."],
+            names = ["--dont-split-files"]
+        )
+        private var dontSplitFiles = false
+
         @Mixin
         private lateinit var exportDefaults: ExportDefaultOptions
 
@@ -110,6 +116,8 @@ object CommandExportClones {
                 Params::splitFilesBy setIfNotEmpty splitFilesBy
                 Params::noHeader setIfTrue exportDefaults.noHeader
                 Params::fields updateBy exportDefaults.fieldsUpdater(CloneFieldsExtractorsFactory)
+                if (dontSplitFiles)
+                    Params::splitFilesBy setTo emptyList()
             }
         }
     }
