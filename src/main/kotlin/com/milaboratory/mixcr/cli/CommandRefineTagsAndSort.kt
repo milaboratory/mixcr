@@ -40,12 +40,12 @@ import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.hashGrouping
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.ReportHelper
-import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import gnu.trove.list.array.TIntArrayList
 import org.apache.commons.io.FileUtils
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -76,44 +76,51 @@ object CommandRefineTagsAndSort {
             description = ["This parameter determines how thorough the procedure should eliminate variants looking like errors. " +
                     "Smaller value leave less erroneous variants at the cost of accidentally correcting true variants. " +
                     "This value approximates the fraction of erroneous variants the algorithm will miss (type II errors). "],
-            names = ["-p", "--power"]
+            names = ["-p", "--power"],
+            paramLabel = "<d>"
         )
         private var power: Double? = null
 
         @Option(
             description = ["Expected background non-sequencing-related substitution rate"],
-            names = ["-s", "--substitution-rate"]
+            names = ["-s", "--substitution-rate"],
+            paramLabel = "<d>"
         )
         private var backgroundSubstitutionRate: Double? = null
 
         @Option(
             description = ["Expected background non-sequencing-related indel rate"],
-            names = ["-i", "--indel-rate"]
+            names = ["-i", "--indel-rate"],
+            paramLabel = "<d>"
         )
         private var backgroundIndelRate: Double? = null
 
         @Option(
             description = ["Minimal quality score for the tag. " +
                     "Tags having positions with lower quality score will be discarded, if not corrected"],
-            names = ["-q", "--min-quality"]
+            names = ["-q", "--min-quality"],
+            paramLabel = "<n>"
         )
         private var minQuality: Int? = null
 
         @Option(
             description = ["Maximal number of substitutions to search for"],
-            names = ["--max-substitutions"]
+            names = ["--max-substitutions"],
+            paramLabel = "<n>"
         )
         private var maxSubstitutions: Int? = null
 
         @Option(
             description = ["Maximal number of indels to search for"],
-            names = ["--max-indels"]
+            names = ["--max-indels"],
+            paramLabel = "<n>"
         )
         private var maxIndels: Int? = null
 
         @Option(
             description = ["Maximal number of substitutions and indels combined to search for"],
-            names = ["--max-errors"]
+            names = ["--max-errors"],
+            paramLabel = "<n>"
         )
         private var maxTotalErrors: Int? = null
 
@@ -121,7 +128,8 @@ object CommandRefineTagsAndSort {
             names = ["-w", "--whitelist"],
             description = ["Use whitelist-driven correction for one of the tags. Usage: " +
                     "--whitelist CELL=preset:737K-august-2016 or -w UMI=file:my_umi_whitelist.txt. If not specified mixcr will set " +
-                    "correct whitelists if --tag-preset was used on align step."]
+                    "correct whitelists if --tag-preset was used on align step."],
+            paramLabel = "<tag=value>"
         )
         private var whitelists: Map<String, String> = mutableMapOf()
 
@@ -149,18 +157,27 @@ object CommandRefineTagsAndSort {
         description = ["Applies error correction algorithm for tag sequences and sorts resulting file by tags."]
     )
     class Cmd : CmdBase() {
-        @Parameters(description = ["alignments.vdjca"], index = "0")
+        @Parameters(
+            description = ["Path to input alignments"],
+            paramLabel = "alignments.vdjca",
+            index = "0"
+        )
         lateinit var inputFile: Path
 
-        @Parameters(description = ["alignments.corrected.vdjca"], index = "1")
+        @Parameters(
+            description = ["Path where to write corrected alignments"],
+            paramLabel = "alignments.corrected.vdjca",
+            index = "1"
+        )
         lateinit var outputFile: Path
 
+        @Suppress("unused", "UNUSED_PARAMETER")
         @Option(
             description = ["Use system temp folder for temporary files."],
             names = ["--use-system-temp"],
             hidden = true
         )
-        fun useSystemTemp(value: Boolean) {
+        fun useSystemTemp(ignored: Boolean) {
             logger.warn(
                 "--use-system-temp is deprecated, it is now enabled by default, use --use-local-temp to invert the " +
                         "behaviour and place temporary files in the same folder as the output file."
@@ -169,7 +186,8 @@ object CommandRefineTagsAndSort {
 
         @Option(
             description = ["Store temp files in the same folder as output file."],
-            names = ["--use-local-temp"]
+            names = ["--use-local-temp"],
+            order = 1_000_000 - 5
         )
         var useLocalTemp = false
 
@@ -177,14 +195,15 @@ object CommandRefineTagsAndSort {
             TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp)
         }
 
-        @Option(description = ["Memory budget"], names = ["--memory-budget"])
+        @Option(
+            description = ["Memory budget in bytes. Default: 4Gb"],
+            names = ["--memory-budget"],
+            paramLabel = "<n>"
+        )
         var memoryBudget = 4 * FileUtils.ONE_GB
 
-        @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: Path? = null
-
-        @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: Path? = null
+        @Mixin
+        lateinit var reportOptions: ReportOptions
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -365,8 +384,7 @@ object CommandRefineTagsAndSort {
                 }
             }
             refineTagsAndSortReport.writeReport(ReportHelper.STDOUT)
-            if (reportFile != null) ReportUtil.appendReport(reportFile, refineTagsAndSortReport)
-            if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, refineTagsAndSortReport)
+            reportOptions.appendToFiles(refineTagsAndSortReport)
         }
     }
 }

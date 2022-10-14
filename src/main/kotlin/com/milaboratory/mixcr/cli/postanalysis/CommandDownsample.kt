@@ -26,6 +26,7 @@ import com.milaboratory.primitivio.toList
 import io.repseq.core.Chains
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Files
@@ -35,29 +36,54 @@ import kotlin.io.path.extension
 
 @Command(description = ["Downsample clonesets."])
 class CommandDownsample : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["cloneset.{clns|clna}..."], arity = "1..*")
+    @Parameters(
+        description = ["Paths to input files."],
+        paramLabel = "cloneset.{clns|clna}",
+        arity = "1..*"
+    )
     override val inputFiles: List<Path> = mutableListOf()
 
-    @Option(description = ["Specify chains"], names = ["-c", "--chains"], required = true)
-    var chains: String? = null
+    @Option(
+        description = ["Specify chains"],
+        names = ["-c", "--chains"],
+        required = true
+    )
+    var chains: Chains? = null
 
-    @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    @Option(
+        description = [CommonDescriptions.ONLY_PRODUCTIVE],
+        names = ["--only-productive"]
+    )
     var onlyProductive = false
 
-    @Option(description = [CommonDescriptions.DOWNSAMPLING], names = ["--downsampling"], required = true)
+    @Option(
+        description = [CommonDescriptions.DOWNSAMPLING],
+        names = ["--downsampling"],
+        required = true,
+        paramLabel = "<type>"
+    )
     lateinit var downsampling: String
 
     @Option(
         description = ["Write downsampling summary tsv/csv table."],
         names = ["--summary"],
-        required = false
+        paramLabel = "<path>"
     )
     var summary: Path? = null
 
-    @Option(description = ["Suffix to add to output clns file."], names = ["--suffix"])
+    @Option(
+        description = ["Suffix to add to output clns file."],
+        names = ["--suffix"],
+        paramLabel = "<s>",
+        showDefaultValue = ALWAYS
+    )
     var suffix = "downsampled"
 
-    @Option(description = ["Output path prefix."], names = ["--out"])
+    @Option(
+        description = ["Output path prefix."],
+        names = ["--out"],
+        paramLabel = "<path_prefix>"
+    )
     var outPath: Path? = null
 
     override val outputFiles
@@ -92,7 +118,7 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
             inputFiles.map { file -> ClonotypeDataset(file.toString(), file, VDJCLibraryRegistry.getDefault()) }
         val preprocessor = DownsamplingParameters
             .parse(downsampling, CommandPa.extractTagsInfo(inputFiles), false, onlyProductive)
-            .getPreprocessor(Chains.parse(chains))
+            .getPreprocessor(chains)
             .newInstance()
         val results = SetPreprocessor.processDatasets(preprocessor, datasets)
         ensureOutputPathExists()

@@ -16,6 +16,7 @@ import com.milaboratory.miplots.writeFile
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.qc.TagRefinementQc
 import picocli.CommandLine.Command
@@ -28,7 +29,7 @@ import kotlin.io.path.nameWithoutExtension
 
 @Command(description = ["Tag refinement statistics plots."])
 class CommandExportQcTags : MiXCRCommandWithOutputs() {
-    @Parameters(description = ["sample1.(vdjca|clns|clna|shmt) ... coverage.[pdf|eps|png|jpeg]"])
+    @Parameters(description = ["sample.(vdjca|clns|clna)... coverage.(pdf|eps|png|jpeg)"])
     var files: List<Path> = mutableListOf()
 
     @Option(names = ["--log"], description = ["Use log10 scale for y-axis"])
@@ -47,7 +48,7 @@ class CommandExportQcTags : MiXCRCommandWithOutputs() {
             val info = IOUtil.extractFileInfo(file)
             val report = info.footer.reports[MiXCRCommandDescriptor.refineTagsAndSort]
             if (report.isEmpty()) {
-                println("No tag refinement report for $file; did you run refineTagsAndSort command?")
+                println("No tag refinement report for $file; did you run ${CommandRefineTagsAndSort.COMMAND_NAME} command?")
                 null
             } else
                 file to TagRefinementQc.tagRefinementQc(info)

@@ -23,6 +23,7 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.CloneWithDatasetId
@@ -45,7 +46,10 @@ import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
@@ -58,24 +62,57 @@ import kotlin.io.path.extension
     description = ["Builds SHM trees."]
 )
 class CommandFindShmTrees : MiXCRCommandWithOutputs() {
+    companion object {
+        const val COMMAND_NAME = "findShmTrees"
+
+        private const val inputsLabel = "input_file.clns..."
+
+        private const val outputLabel = "output_file.$shmFileExtension"
+
+
+        fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandFindShmTrees::class.java)
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("0")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(inputsLabel)
+                    .hideParamSyntax(true)
+                    .description(
+                        "Paths to clns files that was processed by '${CommandFindAlleles.COMMAND_NAME}' command"
+                    )
+                    .build()
+            )
+            .addPositional(
+                CommandLine.Model.PositionalParamSpec.builder()
+                    .index("1")
+                    .required(false)
+                    .arity("0..*")
+                    .type(Path::class.java)
+                    .paramLabel(outputLabel)
+                    .hideParamSyntax(true)
+                    .description("Path where to write output trees")
+                    .build()
+            )
+    }
+
     data class Params(val dummy: Boolean = true) : MiXCRParams {
         override val command get() = MiXCRCommandDescriptor.findShmTrees
     }
 
     @Parameters(
+        index = "0",
         arity = "2..*",
-        description = ["Paths to clns files that was processed by command ${CommandFindAlleles.COMMAND_NAME} and path to output file"],
-        paramLabel = "input_file.clns [input_file2.clns ....] output_file.$shmFileExtension",
-        hideParamSyntax = true
+        paramLabel = "$inputsLabel $outputLabel",
+        hideParamSyntax = true,
+        //help is covered by mkCommandSpec
+        hidden = true
     )
     lateinit var inOut: List<Path>
 
-    @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
-    var threads = Runtime.getRuntime().availableProcessors()
-        set(value) {
-            if (value <= 0) throw ValidationException("-t / --threads must be positive")
-            field = value
-        }
+    @Mixin
+    lateinit var threads: ThreadsOption
 
     public override val inputFiles
         get() = inOut.dropLast(1)
@@ -88,30 +125,41 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     private val outputTreesPath: Path
         get() = inOut.last()
 
-    @Option(names = ["-O"], description = ["Overrides default build SHM parameter values"])
+    @Option(
+        names = ["-O"],
+        description = ["Overrides default build SHM parameter values"],
+        paramLabel = Labels.OVERRIDES
+    )
     var overrides: Map<String, String> = mutableMapOf()
 
-    @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-    var reportFile: Path? = null
+    @Mixin
+    lateinit var reportOptions: ReportOptions
 
-    @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-    var jsonReport: Path? = null
-
-    @Option(description = ["List of VGene names to filter clones"], names = ["--v-gene-names"])
+    @Option(
+        description = ["List of VGene names to filter clones"],
+        names = ["--v-gene-names"],
+        paramLabel = "<gene_name>"
+    )
     var VGenesToFilter: Set<String> = mutableSetOf()
 
-    @Option(description = ["List of JGene names to filter clones"], names = ["--j-gene-names"])
+    @Option(
+        description = ["List of JGene names to filter clones"],
+        names = ["--j-gene-names"],
+        paramLabel = "<gene_name>"
+    )
     var JGenesToFilter: Set<String> = mutableSetOf()
 
     @Option(
         description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
-        names = ["--cdr3-lengths"]
+        names = ["--cdr3-lengths"],
+        paramLabel = "<n>"
     )
     var CDR3LengthToFilter: Set<Int> = mutableSetOf()
 
     @Option(
         description = ["Filter clones with counts great or equal to that parameter"],
-        names = ["--min-count"]
+        names = ["--min-count"],
+        paramLabel = "<n>"
     )
     var minCountForClone: Int? = null
 
@@ -133,13 +181,15 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             "fileName - file name as was used in command line to search for clone,",
             "cloneId - clone id in the specified file"
         ],
-        names = ["-bf", "--build-from"]
+        names = ["-bf", "--build-from"],
+        paramLabel = "<path>"
     )
     var buildFrom: Path? = null
 
     @Option(
         description = ["Put temporary files in the same folder as the output files."],
-        names = ["--use-local-temp"]
+        names = ["--use-local-temp"],
+        order = 1_000_000 - 5
     )
     var useLocalTemp = false
 
@@ -250,7 +300,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             minCountForClone
         )
         buildFrom?.let { buildFrom ->
-            val result = shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom.toFile()), threads)
+            val result = shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom.toFile()), threads.value)
             writeResults(reportBuilder, result, cloneReaders, scoringSet, generateGlobalTreeIds = false)
             return
         }
@@ -261,7 +311,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 //                    warn("Single cell tags will not be used, but it's possible on this data")
                 }
                 is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
-                    shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads) {
+                    shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) {
                         writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
                     }
                     return
@@ -270,14 +320,13 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
         val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
         SmartProgressReporter.startProgressReport(progressAndStage)
-        shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads) {
+        shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads.value) {
             writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
         }
         progressAndStage.finish()
         val report = reportBuilder.buildReport()
         ReportUtil.writeReportToStdout(report)
-        if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-        if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+        reportOptions.appendToFiles(report)
     }
 
     private fun readUserInput(userInputFile: File): Map<CloneWithDatasetId.ID, Int> {
@@ -350,10 +399,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             clnsFileNames.map { it.toString() },
             usedGenes
         )
-    }
-
-    companion object {
-        const val COMMAND_NAME = "findShmTrees"
     }
 }
 

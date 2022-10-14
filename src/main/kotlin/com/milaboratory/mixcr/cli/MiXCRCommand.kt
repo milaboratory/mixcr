@@ -16,11 +16,6 @@ import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Spec
 
 abstract class MiXCRCommand : Runnable {
-//    @Suppress("unused", "UNUSED_PARAMETER")
-//    @Option(names = ["-h", "--help"], usageHelp = true, description = ["Show this help message and exit."])
-//    fun requestHelp(b: Boolean) {
-//    }
-
     // injected by picocli
     @Spec
     lateinit var spec: CommandSpec

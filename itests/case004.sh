@@ -4,11 +4,11 @@ set -euxo pipefail
 
 # Checking generic pipeline with relatively big input files
 mixcr analyze tcr_amplicon \
-  +species hs \
-  +rna \
-  +floatingLeftAlignmentBoundary \
-  +floatingRightAlignmentBoundary J \
-  +addStep assembleContigs \
+  --species hs \
+  --rna \
+  --floating-left-alignment-boundary \
+  --floating-right-alignment-boundary J \
+  --add-step assembleContigs \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case4
 
 # Checking AIRR export on big files

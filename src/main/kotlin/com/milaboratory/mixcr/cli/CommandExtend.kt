@@ -30,6 +30,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCObject
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VDJCObjectExtender
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -41,6 +42,8 @@ import io.repseq.core.Chains
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Visibility.ALWAYS
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -58,22 +61,38 @@ object CommandExtend {
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
-        @Option(description = ["V extension anchor point."], names = ["--v-anchor"])
-        private var vAnchorPoint: String? = null
+        @Option(
+            description = ["V extension anchor point."],
+            names = ["--v-anchor"],
+            paramLabel = Labels.ANCHOR_POINT
+        )
+        private var vAnchorPoint: ReferencePoint? = null
 
-        @Option(description = ["J extension anchor point."], names = ["--j-anchor"])
-        private var jAnchorPoint: String? = null
+        @Option(
+            description = ["J extension anchor point."],
+            names = ["--j-anchor"],
+            paramLabel = Labels.ANCHOR_POINT
+        )
+        private var jAnchorPoint: ReferencePoint? = null
 
-        @Option(description = ["Minimal V hit score to perform left extension."], names = ["--min-v-score"])
+        @Option(
+            description = ["Minimal V hit score to perform left extension."],
+            names = ["--min-v-score"],
+            paramLabel = "<n>"
+        )
         private var minimalVScore: Int? = null
 
-        @Option(description = ["Minimal J hit score to perform right extension."], names = ["--min-j-score"])
+        @Option(
+            description = ["Minimal J hit score to perform right extension."],
+            names = ["--min-j-score"],
+            paramLabel = "<n>"
+        )
         private var minimalJScore: Int? = null
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::extend) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::vAnchor setIfNotNull vAnchorPoint?.let(ReferencePoint::parse)
-                Params::jAnchor setIfNotNull jAnchorPoint?.let(ReferencePoint::parse)
+                Params::vAnchor setIfNotNull vAnchorPoint
+                Params::jAnchor setIfNotNull jAnchorPoint
                 Params::minimalVScore setIfNotNull minimalVScore
                 Params::minimalJScore setIfNotNull minimalJScore
             }
@@ -84,33 +103,41 @@ object CommandExtend {
         description = ["Impute alignments or clones with germline sequences."]
     )
     class Cmd : CmdBase() {
-        @Parameters(description = ["data.[vdjca|clns|clna]"], index = "0")
+        @Parameters(
+            description = ["Path to input file."],
+            paramLabel = "data.[vdjca|clns|clna]",
+            index = "0"
+        )
         lateinit var inputFile: Path
 
-        @Parameters(description = ["extendeed.[vdjca|clns|clna]"], index = "1")
+        @Parameters(
+            description = ["Path where to write output. Will have the same file type."],
+            paramLabel = "extendeed.[vdjca|clns|clna]",
+            index = "1"
+        )
         lateinit var outputFile: Path
 
         @Option(
             description = ["Apply procedure only to alignments with specific immunological-receptor chains."],
-            names = ["-c", "--chains"]
+            names = ["-c", "--chains"],
+            paramLabel = Labels.CHAINS,
+            showDefaultValue = ALWAYS
         )
-        var chains = "TCR"
+        var chains: Chains = Chains.TCR
 
-        @Option(description = [CommonDescriptions.REPORT], names = ["-r", "--report"])
-        var reportFile: Path? = null
+        @Mixin
+        lateinit var reportOptions: ReportOptions
 
-        @Option(description = [CommonDescriptions.JSON_REPORT], names = ["-j", "--json-report"])
-        var jsonReport: Path? = null
-
-        @Option(description = ["Quality score value to assign imputed sequences"], names = ["-q", "--quality"])
+        @Option(
+            description = ["Quality score value to assign imputed sequences."],
+            names = ["-q", "--quality"],
+            paramLabel = "<n>",
+            showDefaultValue = ALWAYS
+        )
         var extensionQuality: Byte = 30
 
-        @set:Option(description = ["Processing threads"], names = ["-t", "--threads"])
-        var threads = Runtime.getRuntime().availableProcessors()
-            set(value) {
-                if (value <= 0) throw ValidationException("-t / --threads must be positive")
-                field = value
-            }
+        @Mixin
+        lateinit var threadsOption: ThreadsOption
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -188,13 +215,13 @@ object CommandExtend {
             val (_, cmdParams) = paramsResolver.resolve(paramsSpec)
 
             val extender = VDJCObjectExtender<T>(
-                Chains.parse(chains), extensionQuality,
+                chains, extensionQuality,
                 alignerParameters.vAlignerParameters.scoring,
                 alignerParameters.jAlignerParameters.scoring,
                 cmdParams.minimalVScore, cmdParams.minimalJScore,
                 cmdParams.vAnchor, cmdParams.jAnchor
             )
-            val output = ParallelProcessor(input, extender, threads)
+            val output = ParallelProcessor(input, extender, threadsOption.value)
             extender.setStartMillis(System.currentTimeMillis())
             extender.setInputFiles(inputFile)
             extender.setOutputFiles(outputFile)
@@ -212,8 +239,7 @@ object CommandExtend {
                 val report = reportBuilder.buildReport()!!
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)
-                if (reportFile != null) ReportUtil.appendReport(reportFile, report)
-                if (jsonReport != null) ReportUtil.appendJsonReport(jsonReport, report)
+                reportOptions.appendToFiles(report)
                 return report
             }
         }

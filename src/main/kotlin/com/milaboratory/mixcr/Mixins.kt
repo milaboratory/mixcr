@@ -114,7 +114,7 @@ data class GenericMixin(
     }
 
     companion object {
-        const val CMD_OPTION = "+M"
+        const val CMD_OPTION = "-M"
     }
 }
 
@@ -132,7 +132,8 @@ object AlignMixins {
         override val cmdArgs get() = listOf(CMD_OPTION, species)
 
         companion object {
-            const val CMD_OPTION = "+species"
+            const val CMD_OPTION_ALIAS = "-s"
+            const val CMD_OPTION = "--species"
         }
     }
 
@@ -149,7 +150,8 @@ object AlignMixins {
         override val cmdArgs get() = listOf(CMD_OPTION, library)
 
         companion object {
-            const val CMD_OPTION = "+library"
+            const val CMD_OPTION_ALIAS = "-b"
+            const val CMD_OPTION = "--library"
         }
     }
 
@@ -171,7 +173,7 @@ object AlignMixins {
 
         override val cmdArgs get() = listOf(CMD_OPTION)
 
-        const val CMD_OPTION = "+dna"
+        const val CMD_OPTION = "--dna"
     }
 
     @JsonTypeName("MaterialTypeRNA")
@@ -184,7 +186,7 @@ object AlignMixins {
 
         override val cmdArgs get() = listOf(CMD_OPTION)
 
-        const val CMD_OPTION = "+rna"
+        const val CMD_OPTION = "--rna"
     }
 
     @JsonTypeName("LimitInput")
@@ -201,15 +203,15 @@ object AlignMixins {
         }
 
         companion object {
-            const val CMD_OPTION = "+limitInput"
+            const val CMD_OPTION = "--limit-input"
         }
     }
 
     object AlignmentBoundaryConstants {
-        const val LEFT_FLOATING_CMD_OPTION = "+floatingLeftAlignmentBoundary"
-        const val LEFT_RIGID_CMD_OPTION = "+rigidLeftAlignmentBoundary"
-        const val RIGHT_FLOATING_CMD_OPTION = "+floatingRightAlignmentBoundary"
-        const val RIGHT_RIGID_CMD_OPTION = "+rigidRightAlignmentBoundary"
+        const val LEFT_FLOATING_CMD_OPTION = "--floating-left-alignment-boundary"
+        const val LEFT_RIGID_CMD_OPTION = "--rigid-left-alignment-boundary"
+        const val RIGHT_FLOATING_CMD_OPTION = "--floating-right-alignment-boundary"
+        const val RIGHT_RIGID_CMD_OPTION = "--rigid-right-alignment-boundary"
     }
 
     //
@@ -409,7 +411,7 @@ object AlignMixins {
         override val cmdArgs get() = listOf(CMD_OPTION, tagPattern)
 
         companion object {
-            const val CMD_OPTION = "+tagPattern"
+            const val CMD_OPTION = "--tag-pattern"
         }
     }
 
@@ -427,7 +429,7 @@ object AssembleMixins {
             }
         }
 
-        const val CMD_OPTION = "+keepNonCDR3Alignments"
+        const val CMD_OPTION = "--keep-non-CDR3-alignments"
     }
 
     @JsonTypeName("DropNonCDR3Alignments")
@@ -441,7 +443,7 @@ object AssembleMixins {
             }
         }
 
-        const val CMD_OPTION = "+dropNonCDR3Alignments"
+        const val CMD_OPTION = "--drop-non-CDR3-alignments"
     }
 
     @JsonTypeName("SetClonotypeAssemblingFeatures")
@@ -459,7 +461,7 @@ object AssembleMixins {
         override val cmdArgs get() = listOf(CMD_OPTION, features.encode())
 
         companion object {
-            const val CMD_OPTION = "+assembleClonotypesBy"
+            const val CMD_OPTION = "--assemble-clonotypes-by"
         }
     }
 
@@ -489,8 +491,8 @@ object AssembleMixins {
             )
 
         companion object {
-            const val CMD_OPTION_TRUE = "+splitClonesBy"
-            const val CMD_OPTION_FALSE = "+dontSplitClonesBy"
+            const val CMD_OPTION_TRUE = "--split-clones-by"
+            const val CMD_OPTION_FALSE = "--dont-split-clones-by"
         }
     }
 }
@@ -514,7 +516,7 @@ object AssembleContigsMixins {
         override val cmdArgs get() = listOf(CMD_OPTION, features.encode())
 
         companion object {
-            const val CMD_OPTION = "+assembleContigsBy"
+            const val CMD_OPTION = "--assemble-contigs-by"
         }
     }
 }
@@ -540,7 +542,7 @@ object PipelineMixins {
         override val cmdArgs get() = listOf(CMD_OPTION, step)
 
         companion object {
-            const val CMD_OPTION = "+addStep"
+            const val CMD_OPTION = "--add-step"
         }
     }
 
@@ -564,7 +566,7 @@ object PipelineMixins {
         override val cmdArgs get() = listOf(CMD_OPTION, step)
 
         companion object {
-            const val CMD_OPTION = "+removeStep"
+            const val CMD_OPTION = "--remove-step"
         }
     }
 }
@@ -603,7 +605,7 @@ object ExportMixins {
         override fun modifyFields(fields: List<ExportFieldDescription>) =
             fields.map { fd -> fd.copy(field = imputeFieldTransform(fd.field)) }
 
-        const val CMD_OPTION = "+imputeGermlineOnExport"
+        const val CMD_OPTION = "--impute-germline-on-export"
     }
 
     @JsonTypeName("DontImputeGermlineOnExport")
@@ -613,7 +615,7 @@ object ExportMixins {
         override fun modifyFields(fields: List<ExportFieldDescription>) =
             fields.map { fd -> fd.copy(field = dontImputeFieldTransform(fd.field)) }
 
-        const val CMD_OPTION = "+dontImputeGermlineOnExport"
+        const val CMD_OPTION = "--dont-impute-germline-on-export"
     }
 
     sealed class AddExportField(
@@ -666,8 +668,8 @@ object ExportMixins {
             ) + args
 
         companion object {
-            const val CMD_OPTION_PREPEND_PREFIX = "+prependExportAlignmentsField"
-            const val CMD_OPTION_APPEND_PREFIX = "+appendExportAlignmentsField"
+            const val CMD_OPTION_PREPEND_PREFIX = "--prepend-export-alignments-field"
+            const val CMD_OPTION_APPEND_PREFIX = "--append-export-alignments-field"
         }
     }
 
@@ -688,8 +690,8 @@ object ExportMixins {
             ) + args
 
         companion object {
-            const val CMD_OPTION_PREPEND_PREFIX = "+prependExportClonesField"
-            const val CMD_OPTION_APPEND_PREFIX = "+appendExportClonesField"
+            const val CMD_OPTION_PREPEND_PREFIX = "--prepend-export-clones-field"
+            const val CMD_OPTION_APPEND_PREFIX = "--append-export-clones-field"
         }
     }
 }

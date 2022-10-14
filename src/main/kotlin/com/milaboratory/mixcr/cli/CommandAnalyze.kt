@@ -17,10 +17,11 @@ import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRPipeline
-import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
+import picocli.CommandLine.Model.CommandSpec
+import picocli.CommandLine.Model.PositionalParamSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
@@ -34,6 +35,34 @@ import kotlin.io.path.isDirectory
 object CommandAnalyze {
     const val COMMAND_NAME = "analyze"
 
+    private const val inputsLabel = "input_R1.fastq[.gz] [input_R2.fastq[.gz]]"
+
+    private const val outputLabel = "output_prefix"
+
+    fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(Cmd::class.java)
+        .addPositional(
+            PositionalParamSpec.builder()
+                .index("1")
+                .required(false)
+                .arity("0..*")
+                .type(Path::class.java)
+                .paramLabel(inputsLabel)
+                .hideParamSyntax(true)
+                .description("Paths of input files with sequencing data")
+                .build()
+        )
+        .addPositional(
+            PositionalParamSpec.builder()
+                .index("2")
+                .required(false)
+                .arity("0..*")
+                .type(String::class.java)
+                .paramLabel(outputLabel)
+                .hideParamSyntax(true)
+                .description("Path prefix telling mixcr where to put all output files")
+                .build()
+        )
+
     @Command(
         description = ["Run full MiXCR pipeline for specific input."],
     )
@@ -44,7 +73,7 @@ object CommandAnalyze {
         @Parameters(
             index = "0",
             arity = "1",
-            paramLabel = "preset_name",
+            paramLabel = "<preset_name>",
             description = ["Name of the analysis preset."]
         )
         private lateinit var presetName: String
@@ -52,9 +81,9 @@ object CommandAnalyze {
         @Parameters(
             index = "1",
             arity = "2..3",
-            paramLabel = "input_R1.fastq[.gz] [input_R2.fastq[.gz]] output_prefix",
-            description = ["Paths of input files with sequencing data and path prefix ",
-                "telling mixcr where to put all output files"]
+            paramLabel = "$inputsLabel $outputLabel",
+            //help is covered by mkCommandSpec
+            hidden = true
         )
         private var inOut: List<String> = mutableListOf()
 
@@ -186,9 +215,8 @@ object CommandAnalyze {
                     println("====================")
                     println("Running:")
                     println(executionStep)
-                    val cmd = executionStep.command.createCommand()
-                    CommandLine(cmd).parseArgs(*executionStep.args.toTypedArray())
-                    cmd.run()
+                    val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
+                    Main.mkCmd().execute(*actualArgs)
                 }
             }
         }
@@ -233,7 +261,8 @@ object CommandAnalyze {
                         }
 
                 executionPlan += ExecutionStep(
-                    cmd, round,
+                    cmd.command,
+                    round,
                     arguments,
                     extraArgs,
                     nextInputs,
@@ -245,7 +274,7 @@ object CommandAnalyze {
         }
 
         data class ExecutionStep(
-            val command: AnyMiXCRCommand,
+            val command: String,
             val round: Int,
             val arguments: List<String>,
             val extraArgs: List<String>,
@@ -253,7 +282,7 @@ object CommandAnalyze {
             val output: List<String>
         ) {
             val args get() = arguments + extraArgs + inputs + output
-            override fun toString() = (listOf("mixcr", command.command) + args).joinToString(" ")
+            override fun toString() = (listOf("mixcr", command) + args).joinToString(" ")
         }
     }
 }

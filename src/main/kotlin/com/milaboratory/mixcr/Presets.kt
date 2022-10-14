@@ -21,6 +21,11 @@ import com.milaboratory.cli.Resolver
 import com.milaboratory.cli.apply
 import com.milaboratory.mitool.helpers.KObjectMapperProvider
 import com.milaboratory.mitool.helpers.K_YAML_OM
+import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
+import com.milaboratory.mixcr.AlignMixins.MaterialTypeDNA
+import com.milaboratory.mixcr.AlignMixins.MaterialTypeRNA
+import com.milaboratory.mixcr.AlignMixins.SetSpecies
+import com.milaboratory.mixcr.AlignMixins.SetTagPattern
 import com.milaboratory.mixcr.cli.CommandAlign
 import com.milaboratory.mixcr.cli.CommandAssemble
 import com.milaboratory.mixcr.cli.CommandAssembleContigs
@@ -74,24 +79,24 @@ object Flags {
     val flagMessages = mapOf(
         Species to
                 "This preset requires to specify species, \n" +
-                "please use the following mix-in: +species [name]",
+                "please use the following mix-in: ${SetSpecies.CMD_OPTION} <name>",
         MaterialType to
                 "This preset requires to specify material type, \n" +
-                "please use one of the following mix-ins: +dna, +rna",
+                "please use one of the following mix-ins: ${MaterialTypeDNA.CMD_OPTION}, ${MaterialTypeRNA.CMD_OPTION}",
         LeftAlignmentMode to
                 "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
                 "please use one of the following mix-ins: \n" +
-                "+floatingLeftAlignmentBoundary [optional_anchor_point]\n" +
-                "+rigidLeftAlignmentBoundary [optional_anchor_point]",
+                "${AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION} [<anchor_point>]\n" +
+                "${AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION} [<anchor_point>]",
         RightAlignmentMode to
                 "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
                 "please use one of the following mix-ins: \n" +
-                "+floatingRightAlignmentBoundary [optional_anchor_point]\n" +
-                "+rigidRightAlignmentBoundary [optional_anchor_point]",
+                "${AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} <anchor_point>\n" +
+                "${AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [<anchor_point>]",
 
         TagPattern to
                 "This preset requires to specify tag pattern, \n" +
-                "please use +tagPattern mix-in to set it."
+                "please use ${SetTagPattern.CMD_OPTION} mix-in to set it."
     )
 }
 

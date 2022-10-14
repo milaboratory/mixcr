@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.milaboratory.milm.MiXCRMain
+import com.milaboratory.miplots.StandardPlots
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter
 import com.milaboratory.mixcr.cli.postanalysis.CommandPa.CommandPostanalysisMain
@@ -36,6 +38,10 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
+import io.repseq.core.Chains
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.seqbase.SequenceResolvers
 import picocli.CommandLine
@@ -119,8 +125,8 @@ object Main {
 
         val cmd = CommandLine(CommandMain::class.java)
             .setCommandName(command)
-            .addSubcommand(CommandAnalyze.COMMAND_NAME, CommandAnalyze.Cmd::class.java) // Core command sequence
-            .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.Cmd::class.java)
+            .addSubcommand(CommandAnalyze.COMMAND_NAME, CommandAnalyze.mkCommandSpec())
+            .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.mkCommandSpec())
             .addSubcommand(CommandRefineTagsAndSort.COMMAND_NAME, CommandRefineTagsAndSort.Cmd::class.java)
             .addSubcommand(CommandAssemblePartial.COMMAND_NAME, CommandAssemblePartial.Cmd::class.java)
             .addSubcommand(CommandExtend.COMMAND_NAME, CommandExtend.Cmd::class.java)
@@ -128,22 +134,21 @@ object Main {
             // .addSubcommand("groupCells", CommandGroupCells.class)
             .addSubcommand(CommandAssembleContigs.COMMAND_NAME, CommandAssembleContigs.Cmd::class.java)
             .addSubcommand(CommandFindAlleles.COMMAND_NAME, CommandFindAlleles::class.java)
-            .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees::class.java)
+            .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees.mkCommandSpec())
             .addSubcommand("downsample", CommandDownsample::class.java)
             .commandsGroup(
                 CommandsGroup("Postanalysis commands")
                     .addSubcommand(
                         "postanalysis",
                         CommandLine(CommandPostanalysisMain::class.java)
-                            .addSubcommand("individual", CommandPaIndividual::class.java)
-                            .addSubcommand("overlap", CommandPaOverlap::class.java)
+                            .addSubcommand("individual", CommandPaIndividual.mkCommandSpec())
+                            .addSubcommand("overlap", CommandPaOverlap.mkCommandSpec())
                     )
-                    .addSubcommand("exportTables", CommandPaExportTables::class.java)
-                    .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary::class.java)
             )
-
             .commandsGroup(
                 CommandsGroup("Export commands")
+                    .addSubcommand("exportTables", CommandPaExportTables::class.java)
+                    .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary::class.java)
                     .addSubcommand(
                         "exportPlots",
                         CommandLine(CommandExportPlotsMain::class.java)
@@ -227,6 +232,15 @@ object Main {
         }
 
         cmd.separator = " "
+        cmd.registerConverter { ReferencePoint.parse(it) }
+        cmd.registerConverter { GeneFeatures.parse(it) }
+        cmd.registerConverter { GeneFeature.parse(it) }
+        cmd.registerConverter { GeneType.parse(it) }
+        cmd.registerConverter { Chains.parse(it) }
+        cmd.registerConverter { arg ->
+            StandardPlots.PlotType.values().find { it.cliName == arg.lowercase() }
+                ?: throw ValidationException("unknown plot type: $arg")
+        }
         val defaultParameterExceptionHandler = cmd.parameterExceptionHandler
         cmd.setParameterExceptionHandler { ex, args ->
             when (val cause = ex.cause) {
@@ -252,6 +266,16 @@ object Main {
         }
 
         return cmd
+    }
+
+    private inline fun <reified T : Any> CommandLine.registerConverter(noinline function: (String) -> T): CommandLine {
+        registerConverter(T::class.java) { arg ->
+            when {
+                arg.isNullOrBlank() -> null
+                else -> function(arg)
+            }
+        }
+        return this
     }
 
     private fun CommandLine.handleValidationException(exception: ValidationException): Int {

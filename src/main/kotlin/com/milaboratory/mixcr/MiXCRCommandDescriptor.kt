@@ -40,7 +40,6 @@ import com.milaboratory.mixcr.cli.CommandExtend
 import com.milaboratory.mixcr.cli.CommandFindAlleles
 import com.milaboratory.mixcr.cli.CommandFindShmTrees
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
-import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.mixcr.cli.RefineTagsAndSortReport
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport
@@ -77,8 +76,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
     abstract fun jsonReportName(prefix: String, params: P, round: Int): String?
 
     abstract fun extractFromBundle(bundle: MiXCRParamsBundle): P?
-
-    abstract fun createCommand(): MiXCRCommand
 
     fun outputName(prefix: String, bundle: MiXCRParamsBundle, round: Int) =
         outputName(
@@ -123,8 +120,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
             "${prefix.dotIfNotBlank()}align.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.align
-
-        override fun createCommand() = CommandAlign.Cmd()
     }
 
     object refineTagsAndSort : MiXCRCommandDescriptor<CommandRefineTagsAndSort.Params, RefineTagsAndSortReport>() {
@@ -145,8 +140,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
             "${prefix.dotIfNotBlank()}refine.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.refineTagsAndSort
-
-        override fun createCommand() = CommandRefineTagsAndSort.Cmd()
     }
 
     object exportAlignments : MiXCRCommandDescriptor<CommandExportAlignments.Params, NoReport>() {
@@ -164,8 +157,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override fun jsonReportName(prefix: String, params: CommandExportAlignments.Params, round: Int) = null
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.exportAlignments
-
-        override fun createCommand() = CommandExportAlignments.Cmd()
     }
 
     object extend : MiXCRCommandDescriptor<CommandExtend.Params, VDJCObjectExtenderReport>() {
@@ -186,8 +177,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
             "${prefix.dotIfNotBlank()}extend.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.extend
-
-        override fun createCommand() = CommandExtend.Cmd()
     }
 
     object assemblePartial : MiXCRCommandDescriptor<CommandAssemblePartial.Params, PartialAlignmentsAssemblerReport>() {
@@ -209,8 +198,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
             "${prefix.dotIfNotBlank()}assemblePartial.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.assemblePartial
-
-        override fun createCommand() = CommandAssemblePartial.Cmd()
     }
 
     object assemble : MiXCRCommandDescriptor<CommandAssemble.Params, CloneAssemblerReport>() {
@@ -231,8 +218,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
             "${prefix.dotIfNotBlank()}assemble.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.assemble
-
-        override fun createCommand() = CommandAssemble.Cmd()
     }
 
     object assembleContigs : MiXCRCommandDescriptor<CommandAssembleContigs.Params, FullSeqAssemblerReport>() {
@@ -253,8 +238,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
             "${prefix.dotIfNotBlank()}assembleContigs.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.assembleContigs
-
-        override fun createCommand() = CommandAssembleContigs.Cmd()
     }
 
     object exportClones : MiXCRCommandDescriptor<CommandExportClones.Params, NoReport>() {
@@ -272,8 +255,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override fun jsonReportName(prefix: String, params: CommandExportClones.Params, round: Int) = null
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.exportClones
-
-        override fun createCommand() = CommandExportClones.Cmd()
     }
 
     object findAlleles : MiXCRCommandDescriptor<CommandFindAlleles.Params, FindAllelesReport>() {
@@ -290,8 +271,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override fun jsonReportName(prefix: String, params: CommandFindAlleles.Params, round: Int) = TODO()
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = TODO()
-
-        override fun createCommand() = TODO()
     }
 
     object findShmTrees : MiXCRCommandDescriptor<CommandFindShmTrees.Params, BuildSHMTreeReport>() {
@@ -308,8 +287,6 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override fun jsonReportName(prefix: String, params: CommandFindShmTrees.Params, round: Int) = TODO()
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = TODO()
-
-        override fun createCommand() = TODO()
     }
 
     companion object {
