@@ -118,6 +118,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     )
     var useLocalTemp = false
 
+    @Mixin
     lateinit var threadsOptions: ThreadsOption
 
     @Option(
