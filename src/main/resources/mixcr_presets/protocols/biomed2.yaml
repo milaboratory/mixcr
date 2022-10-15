@@ -1,52 +1,40 @@
 "biomed2-human-bcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner2-v1-base
   mixins:
     - type: SetSpecies
       species: hs
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
+    - type: SetTagPattern
+      tagPattern: ^N{32}(R1:*)\^N{26}(R2:*)
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: false
       geneType: J
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^N{32}(R1:*)\^N{26}(R2:*)
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "biomed2-human-bcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner2-v1-base
   mixins:
     - type: SetSpecies
       species: hs
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "{CDR1Begin:CDR3End}" ]
+    - type: SetTagPattern
+      tagPattern: ^N{32}(R1:*)\^N{26}(R2:*)
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: false
       geneType: J
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^N{32}(R1:*)\^N{26}(R2:*)
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
+
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:CDR3End}" ]
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true

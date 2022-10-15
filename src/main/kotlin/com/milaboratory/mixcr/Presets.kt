@@ -112,7 +112,7 @@ object Presets {
         "blocks/06-assemble.yaml",
         "blocks/07-assembleContigs.yaml",
         "blocks/08-exportClones.yaml",
-        "blocks/20-block-bundles.yaml",
+        "blocks/20-bundles-base.yaml",
         "protocols/10x.yaml",
         "protocols/custom.yaml",
         "protocols/takara.yaml",

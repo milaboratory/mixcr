@@ -1,4 +1,4 @@
-"refineTagsAndSort_universal":
+"refineTagsAndSort-base":
   abstract: true
   refineTagsAndSort:
     runCorrection: true
@@ -10,3 +10,24 @@
       maxSubstitutions: 2
       maxIndels: 2
       maxTotalErrors: 3
+
+"refineTagsAndSort-umi-universal":
+  abstract: true
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: "filter_groups"
+          groupingKeys:
+            - "UMI"
+          predicates:
+            - metrics:
+                - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0 # don't limit number of bins, use only minBinWidth
+                    minBinWidth: 0.2 # in respect to log10 of the value
+              operator:
+                type: "group_operator_otsu1"
+                logX: true

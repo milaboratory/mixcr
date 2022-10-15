@@ -1,59 +1,19 @@
-"tcr-amplicon":
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  inheritFrom: _universal
-  flags:
-    - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
-  align:
-    inheritFrom: align_rna-seq_4.0
+#
+# Bulk amplicon pipelines
+#
 
-"bcr-amplicon":
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  inheritFrom: _universal
-  flags:
-    - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
-  align:
-    inheritFrom: align_kaligner2_4.0
+"generic-tcr-amplicon":
+  inheritFrom: bundle-kaligner1-v1-base
+
+"generic-bcr-amplicon":
+  inheritFrom: bundle-kaligner2-v1-base
 
 #
 # UMI amplicon pipelines
 #
 
-"tcr-amplicon-umi":
-  inheritFrom: _universal
-  flags:
-    - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
-    - tagPattern
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
-  align:
-    inheritFrom: align_rna-seq_4.0
+"generic-tcr-amplicon-umi":
+  inheritFrom: bundle-umi-kaligner1-v1-base
 
-"bcr-amplicon-umi":
-  inheritFrom: _universal
-  flags:
-    - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
-    - tagPattern
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
-  align:
-    inheritFrom: align_kaligner2_4.0
+"generic-bcr-amplicon-umi":
+  inheritFrom: bundle-umi-kaligner2-v1-base

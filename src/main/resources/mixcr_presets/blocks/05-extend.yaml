@@ -1,4 +1,4 @@
-"extend_universal":
+"extend-universal":
   abstract: true
   extend:
     vAnchor: CDR3Begin

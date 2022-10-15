@@ -1,263 +1,79 @@
-"qiaseq-human-tcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+"qiaseq-human-tcr-abstract":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
     - type: SetSpecies
       species: hs
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
+    - type: SetTagPattern
       tagPattern: |
-        ^N{:4}cagcgacctcgggtgggaaca(R1:*)|
-        ^N{:4}cagcgaccttgggtgggaaca(R1:*)|
-        ^N{:4}cggcagggtcagggttctggatat(R1:*)|
-        ^N{:4}cggcagggtcaggcttctggatat(R1:*)|
-        ^N{:4}ttctgatggctcaaacacagcgacct(R1:*)|
-        ^N{:4}gggagatctctgcttctgatggctcaa(R1:*)|
-        ^N{:4}cagccttctggagctttgtttcagcaat(R1:*)|
-        ^N{:4}aaacggatggtttggtatgaggctgactt(R1:*)|
-        ^N{:4}ggatttagagtctctcagctggtacacgg(R1:*)|
-        ^N{:4}acagacttgtcactggatttagagtctctc(R1:*)|
-        ^N{:4}gcaatcgaaggaagaaaaatagtgggcttgg(R1:*)|
-        ^N{:4}cttctggagctttgtttcagcaattgaaggaag(R1:*)|
-        ^N{:4}cagacaagcgacatttgttccatttttcatgac(R1:*)|
-        ^N{:4}cttctggagttttgtttcagcaatcgaaggaag(R1:*)|
+        ^N{:4}cagcgacctcgggtgggaaca(R1:*) |
+        ^N{:4}cagcgaccttgggtgggaaca(R1:*) |
+        ^N{:4}cggcagggtcagggttctggatat(R1:*) |
+        ^N{:4}cggcagggtcaggcttctggatat(R1:*) |
+        ^N{:4}ttctgatggctcaaacacagcgacct(R1:*) |
+        ^N{:4}gggagatctctgcttctgatggctcaa(R1:*) |
+        ^N{:4}cagccttctggagctttgtttcagcaat(R1:*) |
+        ^N{:4}aaacggatggtttggtatgaggctgactt(R1:*) |
+        ^N{:4}ggatttagagtctctcagctggtacacgg(R1:*) |
+        ^N{:4}acagacttgtcactggatttagagtctctc(R1:*) |
+        ^N{:4}gcaatcgaaggaagaaaaatagtgggcttgg(R1:*) |
+        ^N{:4}cttctggagctttgtttcagcaattgaaggaag(R1:*) |
+        ^N{:4}cagacaagcgacatttgttccatttttcatgac(R1:*) |
+        ^N{:4}cttctggagttttgtttcagcaatcgaaggaag(R1:*) |
         ^N{:4}ttccatttttcatgacaaaaacggatggtttggt(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+"qiaseq-human-tcr-cdr3":
+  inheritFrom: qiaseq-human-tcr-abstract
+  mixins:
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "qiaseq-human-tcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: qiaseq-human-tcr-abstract
   mixins:
-    - type: SetSpecies
-      species: hs
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
+
+"qiaseq-mouse-tcr-abstract":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner1-global-c
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetTagPattern
       tagPattern: |
-        ^N{:4}cagcgacctcgggtgggaaca(R1:*)|
-        ^N{:4}cagcgaccttgggtgggaaca(R1:*)|
-        ^N{:4}cggcagggtcagggttctggatat(R1:*)|
-        ^N{:4}cggcagggtcaggcttctggatat(R1:*)|
-        ^N{:4}ttctgatggctcaaacacagcgacct(R1:*)|
-        ^N{:4}gggagatctctgcttctgatggctcaa(R1:*)|
-        ^N{:4}cagccttctggagctttgtttcagcaat(R1:*)|
-        ^N{:4}aaacggatggtttggtatgaggctgactt(R1:*)|
-        ^N{:4}ggatttagagtctctcagctggtacacgg(R1:*)|
-        ^N{:4}acagacttgtcactggatttagagtctctc(R1:*)|
-        ^N{:4}gcaatcgaaggaagaaaaatagtgggcttgg(R1:*)|
-        ^N{:4}cttctggagctttgtttcagcaattgaaggaag(R1:*)|
-        ^N{:4}cagacaagcgacatttgttccatttttcatgac(R1:*)|
-        ^N{:4}cttctggagttttgtttcagcaatcgaaggaag(R1:*)|
-        ^N{:4}ttccatttttcatgacaaaaacggatggtttggt(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
+        ^N{:4}tacacagcaggttctgggttctggatg(R1:*) |
+        ^N{:4}ggtaggtcccagccttatggagatttgtt(R1:*) |
+        ^N{:4}catgatgaaaacagatggtttggccggag(R1:*) |
+        ^N{:4}gaccttgggtggagtcacatttctcagatc(R1:*) |
+        ^N{:4}cgagggtagccttttgtttgtttgcaatct(R1:*) |
+        ^N{:4}cagcagcagaaggaaggaaaatagtaggct(R1:*) |
+        ^N{:4}tgtcctgagaccgaggatcttttaactggta(R1:*) |
+        ^N{:4}caatctctgcttttgatggctcaaacaaggag(R1:*) |
+        ^N{:4}gtttcagcaacagaaggaaggaaaatagtggg(R1:*) |
+        ^N{:4}tcccagtcttatggagatttgtttcagcaaca(R1:*) |
+        ^N{:4}gaggatcttttaactggtacacagcaggttct(R1:*) |
+        ^N{:4}cagcaacagaaggaagaaaaatagtgggcttg(R1:*) |
+        ^N{:4}gacacaaaggtatgtcccagtcttatggagatt(R1:*) |
+        ^N{:4}ggaaaatagtaggcttgggagaaaagtctgagtc(R1:*) |
+        ^N{:4}cacctctttagggtagaaatctttcaccagacaag(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
 
 "qiaseq-mouse-tcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: qiaseq-mouse-tcr-abstract
   mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
-      tagPattern: |
-        ^N{:4}tacacagcaggttctgggttctggatg(R1:*)|
-        ^N{:4}ggtaggtcccagccttatggagatttgtt(R1:*)|
-        ^N{:4}catgatgaaaacagatggtttggccggag(R1:*)|
-        ^N{:4}gaccttgggtggagtcacatttctcagatc(R1:*)|
-        ^N{:4}cgagggtagccttttgtttgtttgcaatct(R1:*)|
-        ^N{:4}cagcagcagaaggaaggaaaatagtaggct(R1:*)|
-        ^N{:4}tgtcctgagaccgaggatcttttaactggta(R1:*)|
-        ^N{:4}caatctctgcttttgatggctcaaacaaggag(R1:*)|
-        ^N{:4}gtttcagcaacagaaggaaggaaaatagtggg(R1:*)|
-        ^N{:4}tcccagtcttatggagatttgtttcagcaaca(R1:*)|
-        ^N{:4}gaggatcttttaactggtacacagcaggttct(R1:*)|
-        ^N{:4}cagcaacagaaggaagaaaaatagtgggcttg(R1:*)|
-        ^N{:4}gacacaaaggtatgtcccagtcttatggagatt(R1:*)|
-        ^N{:4}ggaaaatagtaggcttgggagaaaagtctgagtc(R1:*)|
-        ^N{:4}cacctctttagggtagaaatctttcaccagacaag(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "qiaseq-mouse-tcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: qiaseq-mouse-tcr-abstract
   mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
-      tagPattern: |
-        ^N{:4}tacacagcaggttctgggttctggatg(R1:*)|
-        ^N{:4}ggtaggtcccagccttatggagatttgtt(R1:*)|
-        ^N{:4}catgatgaaaacagatggtttggccggag(R1:*)|
-        ^N{:4}gaccttgggtggagtcacatttctcagatc(R1:*)|
-        ^N{:4}cgagggtagccttttgtttgtttgcaatct(R1:*)|
-        ^N{:4}cagcagcagaaggaaggaaaatagtaggct(R1:*)|
-        ^N{:4}tgtcctgagaccgaggatcttttaactggta(R1:*)|
-        ^N{:4}caatctctgcttttgatggctcaaacaaggag(R1:*)|
-        ^N{:4}gtttcagcaacagaaggaaggaaaatagtggg(R1:*)|
-        ^N{:4}tcccagtcttatggagatttgtttcagcaaca(R1:*)|
-        ^N{:4}gaggatcttttaactggtacacagcaggttct(R1:*)|
-        ^N{:4}cagcaacagaaggaagaaaaatagtgggcttg(R1:*)|
-        ^N{:4}gacacaaaggtatgtcccagtcttatggagatt(R1:*)|
-        ^N{:4}ggaaaatagtaggcttgggagaaaagtctgagtc(R1:*)|
-        ^N{:4}cacctctttagggtagaaatctttcaccagacaag(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true

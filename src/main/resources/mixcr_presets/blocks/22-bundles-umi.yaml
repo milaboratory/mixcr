@@ -1,0 +1,91 @@
+#
+# UMI
+#
+
+"bundle-umi-kaligner1-v1-base":
+  abstract: true
+  inheritFrom: bundle-kaligner1-v1-base
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  flags:
+    - tagPattern
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-umi-universal
+  assemble:
+    inheritFrom: assemble-umi-base
+  exportClones:
+    inheritFrom: exportClones-umi-full
+
+"bundle-umi-kaligner2-v1-base":
+  abstract: true
+  inheritFrom: bundle-kaligner2-v1-base
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  flags:
+    - tagPattern
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-umi-universal
+  assemble:
+    inheritFrom: assemble-umi-base
+  exportClones:
+    inheritFrom: exportClones-umi-full
+
+#
+# Bases for protocols with UMIs starting from RNA with all artificial parts stripped off in
+# tag parsing, so that global alignment can be used for all the genes, terminating at J or C gene
+# depending on the sub-variant below
+#
+
+"bundle-umi-rna-kaligner1-global-x":
+  abstract: true
+  inheritFrom: bundle-umi-kaligner1-v1-base
+  mixins:
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+
+"bundle-umi-rna-kaligner1-global-c":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner1-global-x
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+
+"bundle-umi-rna-kaligner1-global-j":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner1-global-x
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: J
+
+"bundle-umi-rna-kaligner2-global-x":
+  abstract: true
+  inheritFrom: bundle-umi-kaligner2-v1-base
+  mixins:
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+
+"bundle-umi-rna-kaligner2-global-c":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner2-global-x
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+
+"bundle-umi-rna-kaligner2-global-j":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner2-global-x
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: J

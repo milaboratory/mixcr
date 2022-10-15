@@ -1,426 +1,122 @@
 "nebnext-human-bcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner2-global-c
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
+      species: hs
+    - type: SetTagPattern
       tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
-        separateByC: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "nebnext-human-bcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner2-global-c
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
+      species: hs
+    - type: SetTagPattern
+      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByC: true
-
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "nebnext-human-tcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
+      species: hs
+    - type: SetTagPattern
       tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "nebnext-human-tcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
+      species: hs
+    - type: SetTagPattern
+      tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})(R2:*)
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
-      tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
+    # FIXME no splits ?
 
 "nebnext-mouse-bcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner2-global-c
   mixins:
     - type: SetSpecies
       species: mmu
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
+    - type: SetTagPattern
       tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
-        separateByC: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "nebnext-mouse-bcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner2-global-c
   mixins:
     - type: SetSpecies
       species: mmu
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
+    - type: SetTagPattern
+      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByC: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "nebnext-mouse-tcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
     - type: SetSpecies
       species: mmu
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
+    - type: SetTagPattern
       tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
-        separateByC: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "nebnext-mouse-tcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
     - type: SetSpecies
       species: mmu
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
+    - type: SetTagPattern
+      tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})(R2:*)
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
-      tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByC: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true

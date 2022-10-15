@@ -1,0 +1,34 @@
+"bundle-kaligner1-v1-base":
+  abstract: true
+  inheritFrom: bundle-base
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+  align:
+    inheritFrom: align-kaligner1-base-v1
+
+"bundle-kaligner1-shotgun-base":
+  abstract: true
+  inheritFrom: bundle-base
+  flags:
+    - materialType
+  pipeline:
+    - align
+    - assemblePartial
+    - assemblePartial
+    - extend
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-kaligner1-shotgun-v1
+
+"bundle-kaligner2-v1-base":
+  abstract: true
+  inheritFrom: bundle-base
+  flags:
+    - materialType
+    - leftSideAmplificationPrimer
+    - rightSideAmplificationPrimer
+  align:
+    inheritFrom: align-kaligner2-base-v1

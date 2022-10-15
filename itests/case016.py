@@ -344,7 +344,7 @@ def compare_tables(analysis='individual', metric=None, downsampling=None, criter
 
 
 def mixcr_align(fastq_file):
-    mixcr_align_args = ['mixcr', 'align', '-p','default_4.0', '-f', '-s', 'hs',
+    mixcr_align_args = ['mixcr', 'align', '-p','legacy-4.0-default', '-f', '-s', 'hs',
                         fastq_file, fastq_file.split("_R2")[0] + '.vdjca']
     mixcr_alignment = subprocess.Popen(mixcr_align_args, stdout=None, stderr=None)
     mixcr_alignment.wait()

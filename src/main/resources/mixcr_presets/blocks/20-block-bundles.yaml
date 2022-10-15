@@ -1,6 +1,0 @@
-"export_base":
-  abstract: true
-  exportAlignments:
-    inheritFrom: exportAlignments-base
-  exportClones:
-    inheritFrom: exportClones-base

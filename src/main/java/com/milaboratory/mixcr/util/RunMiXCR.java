@@ -118,7 +118,7 @@ public final class RunMiXCR {
 
             CloneSet cloneSet = assemblerRunner.getCloneSet(new MiXCRHeader(
                     null,
-                    new MiXCRParamsSpec("default_4.0"),
+                    new MiXCRParamsSpec("legacy-4.0-default"),
                     new MiXCRStepParams(),
                     align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                     align.parameters.alignerParameters,
@@ -190,7 +190,7 @@ public final class RunMiXCR {
                 align.usedGenes,
                 new MiXCRHeader(
                         null,
-                        new MiXCRParamsSpec("default_4.0"),
+                        new MiXCRParamsSpec("legacy-4.0-default"),
                         new MiXCRStepParams(),
                         align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters,
@@ -327,7 +327,7 @@ public final class RunMiXCR {
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
                     MiXCRHeader info = new MiXCRHeader(
                             null,
-                            new MiXCRParamsSpec("default_4.0"),
+                            new MiXCRParamsSpec("legacy-4.0-default"),
                             new MiXCRStepParams(),
                             tagsInfo != null ? tagsInfo : TagsInfo.NO_TAGS,
                             aligner.getParameters(),

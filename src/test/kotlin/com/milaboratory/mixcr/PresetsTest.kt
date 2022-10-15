@@ -28,8 +28,8 @@ class PresetsTest {
 
     @Test
     fun test3() {
-        // val bundle = Presets.resolveParamsBundle("assemblePartial_universal")
-        // val bundle = Presets.resolveParamsBundle("_universal")
+        // val bundle = Presets.resolveParamsBundle("assemblePartial-universal")
+        // val bundle = Presets.resolveParamsBundle("simple-base")
         // val bundle = Presets.resolveParamsBundle("_10x_vdj")
         val bundle = Presets.resolveParamsBundle("test-subCloningRegions")
         Presets.assembleContigs("test-subCloningRegions")

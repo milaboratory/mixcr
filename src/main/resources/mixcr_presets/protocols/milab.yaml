@@ -1,287 +1,117 @@
 "milab-human-bcr-multiplex-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner2-global-c
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
+      species: hs
+    - type: SetTagPattern
       tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
-        separateByC: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "milab-human-bcr-multiplex-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner2-global-c
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
+      species: hs
+    - type: SetTagPattern
+      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByC: true
+
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "milab-human-tcr-rna-race-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-kaligner1-v1-base
   mixins:
     - type: SetSpecies
-      species: hsa
+      species: hs
+    - type: SetTagPattern
+      tagPattern: ^(R1:*) \ ^tggtatcaacgcagagt(UMI:N{14})(R2:*)
+
+    - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
-      tagPattern: ^(R1:*) \ ^tggtatcaacgcagagt(UMI:N{14})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "milab-human-tcr-rna-race-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-kaligner1-v1-base
   mixins:
     - type: SetSpecies
-      species: hsa
+      species: hs
+    - type: SetTagPattern
+      tagPattern: ^(R1:*) \ ^tggtatcaacgcagagt(UMI:N{14})(R2:*)
+
+    - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
-      tagPattern: ^(R1:*) \ ^tggtatcaacgcagagt(UMI:N{14})(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "milab-human-tcr-rna-multiplex-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
+      species: hs
+    - type: SetTagPattern
       tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{21}(R1:*) \ ^N{20}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+    # FIXME ?
+    # - type: SetSplitClonesBy
+    #   geneType: C
+    #   value: true
 
 "milab-human-tcr-dna-multiplex-cdr3":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
-      species: hsa
+      species: hs
+
     - type: MaterialTypeDNA
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
     - type: RightAlignmentBoundaryNoPoint
-      floating: false
+      floating: false # FIXME ? correct ?
       geneType: J
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true

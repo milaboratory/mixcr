@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-mixcr analyze tcr_shotgun \
+mixcr analyze test-tcr-shotgun \
     --species hs \
     --rna \
     --add-step assembleContigs \

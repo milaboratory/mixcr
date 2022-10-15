@@ -1,4 +1,4 @@
-"assemblePartial_universal":
+"assemblePartial-universal":
   abstract: true
   assemblePartial:
     overlappedOnly: false
