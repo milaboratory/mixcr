@@ -132,7 +132,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         names = [MaterialTypeDNA.CMD_OPTION],
         arity = "0"
     )
-    fun dna(f: Boolean) =
+    fun dna(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(MaterialTypeDNA)
 
     @Option(
@@ -140,7 +140,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         names = [MaterialTypeRNA.CMD_OPTION],
         arity = "0"
     )
-    fun rna(f: Boolean) =
+    fun rna(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(MaterialTypeRNA)
 
     //
