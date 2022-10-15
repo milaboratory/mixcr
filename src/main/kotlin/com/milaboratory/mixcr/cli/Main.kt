@@ -145,6 +145,7 @@ object Main {
                         CommandLine(CommandPostanalysisMain::class.java)
                             .addSubcommand("individual", CommandPaIndividual.mkCommandSpec())
                             .addSubcommand("overlap", CommandPaOverlap.mkCommandSpec())
+                            .addSubcommand("help", DeprecatedHelp::class.java)
                     )
             )
             .commandsGroup(
@@ -166,6 +167,7 @@ object Main {
                             .addSubcommand("vjUsage", CommandPaExportPlotsVJUsage::class.java)
                             .addSubcommand("overlap", CommandPaExportPlotsOverlap::class.java)
                             .addSubcommand("shmTrees", CommandExportShmTreesPlots::class.java)
+                            .addSubcommand("help", DeprecatedHelp::class.java)
                     )
                     .addSubcommand("overlapScatterPlot", CommandOverlapScatter::class.java)
                     .addSubcommand(CommandExportAlignments.COMMAND_NAME, CommandExportAlignments.mkSpec())
@@ -183,6 +185,7 @@ object Main {
                             .addSubcommand("chainUsage", CommandExportQcChainUsage.mkCommandSpec())
                             .addSubcommand("tags", CommandExportQcTags.mkCommandSpec())
                             .addSubcommand("coverage", CommandExportQcCoverage.mkCommandSpec())
+                            .addSubcommand("help", DeprecatedHelp::class.java)
                     )
                     .addSubcommand("exportClonesOverlap", CommandExportOverlap.mkSpec())
                     .addSubcommand("exportAirr", CommandExportAirr::class.java)
@@ -208,6 +211,8 @@ object Main {
             //hidden
             .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones::class.java)
             .addSubcommand("listLibraries", CommandListLibraries::class.java)
+            .addSubcommand("help", DeprecatedHelp::class.java)
+            .addSubcommand("exportHelp", CommandExportHelp::class.java)
 
 
         cmd.helpSectionMap.remove(SECTION_KEY_COMMAND_LIST_HEADING)
