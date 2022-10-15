@@ -212,6 +212,7 @@ object Main {
             .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones::class.java)
             .addSubcommand("listLibraries", CommandListLibraries::class.java)
             .addSubcommand("help", DeprecatedHelp::class.java)
+            .addSubcommand("exportHelp", CommandExportHelp::class.java)
 
 
         cmd.helpSectionMap.remove(SECTION_KEY_COMMAND_LIST_HEADING)
