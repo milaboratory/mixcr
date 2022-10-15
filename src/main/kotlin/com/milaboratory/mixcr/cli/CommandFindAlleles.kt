@@ -222,13 +222,17 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         ensureParametersInitialized()
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val cloneReaders = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
-        require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
+        val usedLibraries = cloneReaders.flatMap { it.usedGenes }.map { it.id.libraryId }.distinct()
+        ValidationException.require(usedLibraries.count() == 1) {
+            "input files must be aligned on the same library, got $usedLibraries"
+        }
+        ValidationException.require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
-        require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
+        ValidationException.require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
+        ValidationException.require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
         }
 

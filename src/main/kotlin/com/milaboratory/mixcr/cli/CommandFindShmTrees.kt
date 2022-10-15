@@ -255,30 +255,30 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val cloneReaders = clnsFileNames.map { path ->
             CloneSetIO.mkReader(path, vdjcLibraryRegistry)
         }
-        require(cloneReaders.isNotEmpty()) { "there is no files to process" }
-        require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
+        ValidationException.require(cloneReaders.isNotEmpty()) { "there is no files to process" }
+        ValidationException.require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
         for (geneType in GeneType.VJ_REFERENCE) {
-            require(cloneReaders
+            ValidationException.require(cloneReaders
                 .map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
                 .distinct().count() == 1) {
                 "input files must have the same $geneType scoring"
             }
         }
-        require(cloneReaders.all { it.header.foundAlleles != null }) {
+        ValidationException.require(cloneReaders.all { it.header.foundAlleles != null }) {
             "Input files must be processed by ${CommandFindAlleles.COMMAND_NAME}"
         }
-        require(cloneReaders.map { it.header.foundAlleles }.distinct().count() == 1) {
+        ValidationException.require(cloneReaders.map { it.header.foundAlleles }.distinct().count() == 1) {
             "All input files must be assembled with the same alleles"
         }
-        require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
+        ValidationException.require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
+        ValidationException.require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
             "Input files must be cut by the same geneFeature"
         }
-        require(cloneReaders.map { it.header.tagsInfo }.distinct().count() == 1) {
+        ValidationException.require(cloneReaders.map { it.header.tagsInfo }.distinct().count() == 1) {
             "Input files with different tags are not supported yet"
         }
         val allFullyCoveredBy = cloneReaders.first().header.allFullyCoveredBy!!
