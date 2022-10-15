@@ -1,4 +1,5 @@
 "assemble_universal":
+  abstract: true
   assemble:
     sortBySequence: false
     clnaOutput: false

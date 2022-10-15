@@ -159,33 +159,13 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.exportAlignments
     }
 
-    object extend : MiXCRCommandDescriptor<CommandExtend.Params, VDJCObjectExtenderReport>() {
-        override val paramClass get() = CommandExtend.Params::class
-        override val reportClass get() = VDJCObjectExtenderReport::class
-
-        @get:JsonValue
-        override val command get() = CommandExtend.COMMAND_NAME
-        override val order get() = 3
-
-        override fun outputName(prefix: String, params: CommandExtend.Params, round: Int) =
-            "${prefix.ifBlank { "alignments" }}.extended.vdjca"
-
-        override fun reportName(prefix: String, params: CommandExtend.Params, round: Int) =
-            "${prefix.dotIfNotBlank()}extend.report.txt"
-
-        override fun jsonReportName(prefix: String, params: CommandExtend.Params, round: Int) =
-            "${prefix.dotIfNotBlank()}extend.report.json"
-
-        override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.extend
-    }
-
     object assemblePartial : MiXCRCommandDescriptor<CommandAssemblePartial.Params, PartialAlignmentsAssemblerReport>() {
         override val paramClass get() = CommandAssemblePartial.Params::class
         override val reportClass get() = PartialAlignmentsAssemblerReport::class
 
         @get:JsonValue
         override val command get() = CommandAssemblePartial.COMMAND_NAME
-        override val order get() = 4
+        override val order get() = 3
         override val allowMultipleRounds: Boolean get() = true
 
         override fun outputName(prefix: String, params: CommandAssemblePartial.Params, round: Int) =
@@ -198,6 +178,26 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
             "${prefix.dotIfNotBlank()}assemblePartial.report.json"
 
         override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.assemblePartial
+    }
+
+    object extend : MiXCRCommandDescriptor<CommandExtend.Params, VDJCObjectExtenderReport>() {
+        override val paramClass get() = CommandExtend.Params::class
+        override val reportClass get() = VDJCObjectExtenderReport::class
+
+        @get:JsonValue
+        override val command get() = CommandExtend.COMMAND_NAME
+        override val order get() = 4
+
+        override fun outputName(prefix: String, params: CommandExtend.Params, round: Int) =
+            "${prefix.ifBlank { "alignments" }}.extended.vdjca"
+
+        override fun reportName(prefix: String, params: CommandExtend.Params, round: Int) =
+            "${prefix.dotIfNotBlank()}extend.report.txt"
+
+        override fun jsonReportName(prefix: String, params: CommandExtend.Params, round: Int) =
+            "${prefix.dotIfNotBlank()}extend.report.json"
+
+        override fun extractFromBundle(bundle: MiXCRParamsBundle) = bundle.extend
     }
 
     object assemble : MiXCRCommandDescriptor<CommandAssemble.Params, CloneAssemblerReport>() {

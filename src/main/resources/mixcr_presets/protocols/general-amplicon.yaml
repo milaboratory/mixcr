@@ -29,31 +29,31 @@
 #
 
 "tcr-amplicon-umi":
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
   inheritFrom: _universal
   flags:
     - materialType
     - leftSideAmplificationPrimer
     - rightSideAmplificationPrimer
     - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
   align:
     inheritFrom: align_rna-seq_4.0
 
 "bcr-amplicon-umi":
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
   inheritFrom: _universal
   flags:
     - materialType
     - leftSideAmplificationPrimer
     - rightSideAmplificationPrimer
     - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
   align:
     inheritFrom: align_kaligner2_4.0

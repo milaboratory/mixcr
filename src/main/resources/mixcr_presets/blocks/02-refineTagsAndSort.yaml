@@ -1,4 +1,5 @@
 "refineTagsAndSort_universal":
+  abstract: true
   refineTagsAndSort:
     runCorrection: true
     parameters:

@@ -1,4 +1,5 @@
 "extend_universal":
+  abstract: true
   extend:
     vAnchor: CDR3Begin
     jAnchor: CDR3End

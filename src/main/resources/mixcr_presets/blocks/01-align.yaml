@@ -1,4 +1,5 @@
 "align_default_4.0":
+  abstract: true
   align:
     species: ""
     trimmingQualityThreshold: 0
@@ -122,6 +123,7 @@
       smartForceEdgeAlignments: true
 
 "align_rna-seq_4.0":
+  abstract: true
   align:
     species: ""
     trimmingQualityThreshold: 0
@@ -245,6 +247,7 @@
       smartForceEdgeAlignments: true
 
 "align_kaligner2_4.0":
+  abstract: true
   align:
     species: ""
     trimmingQualityThreshold: 0

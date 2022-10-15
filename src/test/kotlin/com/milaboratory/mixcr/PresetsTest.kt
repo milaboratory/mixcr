@@ -16,7 +16,7 @@ import org.junit.Test
 class PresetsTest {
     @Test
     fun test1() {
-        for (presetName in Presets.allPresetNames) {
+        for (presetName in Presets.nonAbstractPresetNames) {
             println(presetName)
             val bundle = Presets.resolveParamsBundle(presetName)
             assertJson(K_OM, bundle, true)
@@ -38,7 +38,7 @@ class PresetsTest {
 
     @Test
     fun testExport2() {
-        for (presetName in Presets.allPresetNames) {
+        for (presetName in Presets.nonAbstractPresetNames) {
             val bundle = Presets.resolveParamsBundle(presetName)
             if (bundle.align == null)
                 continue

@@ -1,4 +1,5 @@
 "pipeline_base":
+  abstract: true
   pipeline:
     - align
     - assemble
