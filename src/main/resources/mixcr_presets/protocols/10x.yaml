@@ -1,8 +1,22 @@
+"align-kaligner1-10x":
+  abstract: true
+  align:
+    inheritFrom: align-kaligner1-single-cell-v1
+    overrides:
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+
+"align-kaligner2-10x":
+  abstract: true
+  align:
+    inheritFrom: align-kaligner2-single-cell-v1
+    overrides:
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+
 "10x-vdj-tcr":
   pipeline:
     inheritFrom: pipeline-single-cell-shotgun
   align:
-    inheritFrom: align-kaligner1-single-cell-v1
+    inheritFrom: align-kaligner1-10x
   refineTagsAndSort:
     whitelists:
       CELL: builtin:737K-august-2016
@@ -115,7 +129,7 @@
   pipeline:
     inheritFrom: pipeline-single-cell-shotgun
   align:
-    inheritFrom: align-kaligner2-single-cell-v1
+    inheritFrom: align-kaligner2-10x
   refineTagsAndSort:
     whitelists:
       CELL: builtin:737K-august-2016

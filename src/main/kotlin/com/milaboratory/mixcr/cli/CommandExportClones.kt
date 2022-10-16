@@ -23,11 +23,7 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.ExportDefaultOptions
-import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.OutputMode
+import com.milaboratory.mixcr.export.*
 import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
@@ -36,11 +32,7 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
-import picocli.CommandLine.Model
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.nio.file.Path
 import java.util.*
 import java.util.stream.Stream
@@ -249,18 +241,22 @@ object CommandExportClones {
                     SubstitutionHelper.parseFileName(of.toString(), splitFileKeys.size)
                 }
 
-                CloneSet.split(initialSet) { c -> splitFileKeyExtractors.map { it.getLabel(c) } }.forEach { key, set0 ->
-                    val set = CloneSet.transform(set0, params.mkFilter())
-                    val fileNameSV = SubstitutionHelper.SubstitutionValues()
-                    var i = 1
-                    for ((keyValue, keyName) in key.zip(splitFileKeys)) {
-                        fileNameSV.add(keyValue, "$i", keyName)
-                        i++
+                CloneSet
+                    .split(initialSet) { c ->
+                        splitFileKeyExtractors.map { it.getLabel(c) }
                     }
-                    val keyString = key.joinToString("_")
-                    System.err.println("Exporting $keyString")
-                    runExport(set, Path(sFileName.render(fileNameSV)))
-                }
+                    .forEach { (key, set0) ->
+                        val set = CloneSet.transform(set0, params.mkFilter())
+                        val fileNameSV = SubstitutionHelper.SubstitutionValues()
+                        var i = 1
+                        for ((keyValue, keyName) in key.zip(splitFileKeys)) {
+                            fileNameSV.add(keyValue, "$i", keyName)
+                            i++
+                        }
+                        val keyString = key.joinToString("_")
+                        System.err.println("Exporting $keyString")
+                        runExport(set, Path(sFileName.render(fileNameSV)))
+                    }
             }
         }
 

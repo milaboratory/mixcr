@@ -126,52 +126,6 @@
         postFiltering:
           type: OnlyFullyDefined
 
-##
-## Amplicon presets
-##
-#
-#"generic-tcr-amplicon":
-#  inheritFrom: bundle-base
-#  flags:
-#    - materialType
-#    - leftAlignmentMode
-#    - rightAlignmentMode
-#  align:
-#    inheritFrom: align-legacy-4.0-rna-seq
-#
-#"bcr_amplicon":
-#  inheritFrom: bundle-base
-#  flags:
-#    - materialType
-#    - leftAlignmentMode
-#    - rightAlignmentMode
-#  align:
-#    inheritFrom: align-legacy-4.0-kaligner2
-#
-##
-## UMI amplicon pipelines
-##
-#
-#"generic-tcr-amplicon_umi":
-#  inheritFrom: bundle-base
-#  flags:
-#    - materialType
-#    - leftAlignmentMode
-#    - rightAlignmentMode
-#    - tagPattern
-#  align:
-#    inheritFrom: align-legacy-4.0-rna-seq
-#
-#"bcr_amplicon_umi":
-#  inheritFrom: bundle-base
-#  flags:
-#    - materialType
-#    - leftAlignmentMode
-#    - rightAlignmentMode
-#    - tagPattern
-#  align:
-#    inheritFrom: align-legacy-4.0-kaligner2
-
 #
 # Shotgun
 #
