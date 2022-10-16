@@ -197,14 +197,25 @@ object Presets {
         @JsonProperty("assembleContigs") val assembleContigs: RawParams<CommandAssembleContigs.Params>? = null,
         @JsonProperty("exportAlignments") val exportAlignments: RawParams<CommandExportAlignments.Params>?,
         @JsonProperty("exportClones") val exportClones: RawParams<CommandExportClones.Params>?,
-    ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw>
+    ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw> {
+        val rawParent by lazy { inheritFrom?.let { rawResolve(it) } }
+
+        // flags and mixins are aggregated and applied on the very step of resolution process
+
+        val resolvedFlags: Set<String> by lazy {
+            (flags ?: emptySet()) + (rawParent?.resolvedFlags ?: emptySet())
+        }
+        val resolvedMixins: List<MiXCRMixin> by lazy {
+            (mixins ?: emptyList()) + (rawParent?.resolvedMixins ?: emptyList())
+        }
+    }
 
     fun resolveParamsBundle(presetName: String): MiXCRParamsBundle {
         val raw = rawResolve(presetName)
         if (raw.abstract)
             throw ApplicationException("Preset $presetName is abstract and not intended to be used directly.")
         val bundle = MiXCRParamsBundle(
-            flags = raw.flags ?: emptySet(),
+            flags = raw.resolvedFlags,
             pipeline = pipeline(presetName),
             align = align(presetName),
             refineTagsAndSort = refineTagsAndSort(presetName),
@@ -215,7 +226,6 @@ object Presets {
             exportAlignments = exportAlignments(presetName),
             exportClones = exportClones(presetName),
         )
-        val mixins = raw.mixins ?: emptyList()
-        return mixins.apply(bundle)
+        return raw.resolvedMixins.apply(bundle)
     }
 }

@@ -19,7 +19,16 @@ class PresetsTest {
         for (presetName in Presets.nonAbstractPresetNames) {
             println(presetName)
             val bundle = Presets.resolveParamsBundle(presetName)
-            assertJson(K_OM, bundle, true)
+            assertJson(K_OM, bundle, false)
+            println(bundle.flags)
+            println()
+            Assert.assertNotNull("pipeline must be set for all non-abstract presets ($presetName)", bundle.pipeline)
+            for (step in bundle.pipeline!!.steps) {
+                Assert.assertNotNull(
+                    "params for all pipeline steps must be set in non-abstract bundle ($step)",
+                    step.extractFromBundle(bundle)
+                )
+            }
             bundle.flags.forEach {
                 Assert.assertTrue("Flag = $it", Flags.flagMessages.containsKey(it))
             }

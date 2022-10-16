@@ -5,7 +5,7 @@
       species: hs
     - type: SetTagPattern
       tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
-
+      
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint

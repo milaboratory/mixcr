@@ -1,5 +1,5 @@
 "rnaseq-tcr-cdr3":
-  inheritFrom: align-kaligner1-shotgun-v1
+  inheritFrom: bundle-kaligner1-shotgun-base
   mixins:
     - type: MaterialTypeRNA
 
