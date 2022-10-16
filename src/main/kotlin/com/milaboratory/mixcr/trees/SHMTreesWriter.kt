@@ -87,9 +87,8 @@ class SHMTreesWriter(
     }
 
     companion object {
-        const val MAGIC_V2 = "$MAGIC_SHMT.V02"
-        const val MAGIC_V3 = "$MAGIC_SHMT.V03"
-        const val MAGIC = MAGIC_V3
+        const val MAGIC_V4 = "$MAGIC_SHMT.V04"
+        const val MAGIC = MAGIC_V4
         const val MAGIC_LENGTH = 14
         val MAGIC_BYTES = MAGIC.toByteArray(StandardCharsets.US_ASCII)
 
