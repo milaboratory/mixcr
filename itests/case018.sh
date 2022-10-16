@@ -74,8 +74,8 @@ assert "cat alleles/report.json | head -n 1 | jq -r .clonesCountWithNegativeScor
 assert "grep 'IGHV2-70' alleles/description.tsv | awk '{print \$6}'" "ST311G\nSG170AST259CST311GSA335T"
 assert "grep 'IGHJ6' alleles/description.tsv | awk '{print \$6}'" "SG37TSG38AST39CSC55A"
 
-assert "grep 'Total trees count:' trees/report.txt | head -n 1" "Total trees count: 101"
-assert "grep 'Total clones count in trees:' trees/report.txt | head -n 1" "Total clones count in trees: 260"
+assert "grep 'Total trees count:' trees/report.txt | head -n 1" "Total trees count: 115"
+assert "grep 'Total clones count in trees:' trees/report.txt | head -n 1" "Total clones count in trees: 312"
 
 # biggest tree
 # `tail +2` - skip first line with column names
