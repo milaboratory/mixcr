@@ -24,6 +24,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
@@ -68,7 +69,10 @@ object CommandExportAlignments {
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
-            description = ["Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)"],
+            description = [
+                "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-c", "--chains"],
             paramLabel = Labels.CHAINS
         )

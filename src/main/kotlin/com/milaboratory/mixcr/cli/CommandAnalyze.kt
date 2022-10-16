@@ -64,10 +64,14 @@ object CommandAnalyze {
         )
 
     @Command(
-        description = ["Run full MiXCR pipeline for specific input."],
+        description = ["Run full MiXCR pipeline for specific input."]
     )
     class Cmd : MiXCRCommand() {
-        @Option(names = ["-f", "--force-overwrite"], description = ["Force overwrite of output file(s)."])
+        @Option(
+            names = ["-f", "--force-overwrite"],
+            description = ["Force overwrite of output file(s)."],
+            order = 1_000_000 - 3
+        )
         var forceOverwrite = false
 
         @Parameters(

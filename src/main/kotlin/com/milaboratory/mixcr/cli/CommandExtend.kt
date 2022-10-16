@@ -30,6 +30,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCObject
+import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VDJCObjectExtender
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
@@ -62,28 +63,28 @@ object CommandExtend {
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
-            description = ["V extension anchor point."],
+            description = ["V extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--v-anchor"],
             paramLabel = Labels.ANCHOR_POINT
         )
         private var vAnchorPoint: ReferencePoint? = null
 
         @Option(
-            description = ["J extension anchor point."],
+            description = ["J extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--j-anchor"],
             paramLabel = Labels.ANCHOR_POINT
         )
         private var jAnchorPoint: ReferencePoint? = null
 
         @Option(
-            description = ["Minimal V hit score to perform left extension."],
+            description = ["Minimal V hit score to perform left extension.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--min-v-score"],
             paramLabel = "<n>"
         )
         private var minimalVScore: Int? = null
 
         @Option(
-            description = ["Minimal J hit score to perform right extension."],
+            description = ["Minimal J hit score to perform right extension.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--min-j-score"],
             paramLabel = "<n>"
         )

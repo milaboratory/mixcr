@@ -22,7 +22,11 @@ import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.io.CompressionType
-import com.milaboratory.core.io.sequence.*
+import com.milaboratory.core.io.sequence.ConcatenatingSingleReader
+import com.milaboratory.core.io.sequence.PairedReader
+import com.milaboratory.core.io.sequence.SequenceRead
+import com.milaboratory.core.io.sequence.SequenceReaderCloseable
+import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
@@ -35,32 +39,72 @@ import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.mitool.helpers.mapUnchunked
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.mitool.pattern.search.*
+import com.milaboratory.mitool.pattern.search.ReadSearchMode
+import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
+import com.milaboratory.mitool.pattern.search.ReadSearchSettings
+import com.milaboratory.mitool.pattern.search.ReadTagShortcut
+import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mitool.use
-import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.AlignMixins.LimitInput
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParams
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.mixcr.basictypes.*
-import com.milaboratory.mixcr.basictypes.tag.*
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.*
+import com.milaboratory.mixcr.basictypes.MiXCRFooter
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.SequenceHistory
+import com.milaboratory.mixcr.basictypes.VDJCAlignments
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
+import com.milaboratory.mixcr.basictypes.VDJCHit
+import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
+import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.SingleEndFastq
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.Good
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotAligned
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotParsed
+import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.primitivio.*
-import com.milaboratory.util.*
+import com.milaboratory.primitivio.buffered
+import com.milaboratory.primitivio.chunked
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.mapChunksInParallel
+import com.milaboratory.primitivio.ordered
+import com.milaboratory.primitivio.unchunked
+import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.LightFileDescriptor
+import com.milaboratory.util.ReportHelper
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
-import io.repseq.core.GeneFeature.*
+import io.repseq.core.GeneFeature.VRegion
+import io.repseq.core.GeneFeature.VRegionWithP
+import io.repseq.core.GeneFeature.encode
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.FileInputStream
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -133,14 +177,21 @@ object CommandAlign {
         private var overrides: Map<String, String> = mutableMapOf()
 
         @Option(
-            description = ["Read pre-processing: trimming quality threshold"],
+            description = [
+                "Read pre-processing: trimming quality threshold.",
+                "Zero value can be used to skip trimming.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--trimming-quality-threshold"],
             paramLabel = "<n>"
         )
         private var trimmingQualityThreshold: Byte? = null
 
         @Option(
-            description = ["Read pre-processing: trimming window size"],
+            description = [
+                "Read pre-processing: trimming window size",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--trimming-window-size"],
             paramLabel = "<n>"
         )
@@ -159,47 +210,73 @@ object CommandAlign {
         }
 
         @Option(
-            description = ["Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)"],
+            description = [
+                "Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--drop-non-vdj"],
             hidden = true
         )
         private var dropNonVDJ = false
 
         @Option(
-            description = ["Write alignment results for all input reads (even if alignment failed)."],
+            description = [
+                "Write alignment results for all input reads (even if alignment failed).",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--write-all"]
         )
         private var writeAllResults = false
 
         @Option(
-            description = ["Read tag pattern from a file."],
+            description = [
+                "Read tag pattern from a file.",
+                "  Default tag pattern determined by the preset."
+            ],
             names = ["--tag-pattern-file"],
             paramLabel = "<path>"
         )
         var tagPatternFile: Path? = null
 
         @Option(
-            description = ["If paired-end input is used, determines whether to try all combinations of mate-pairs or " +
-                    "only match reads to the corresponding pattern sections (i.e. first file to first section, etc...)"],
+            description = [
+                "If paired-end input is used, determines whether to try all combinations of mate-pairs or " +
+                        "only match reads to the corresponding pattern sections (i.e. first file to first section, etc...).",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--tag-parse-unstranded"]
         )
         private var tagUnstranded = false
 
         @Option(
-            description = ["Maximal bit budget, higher values allows more substitutions in small letters."],
+            description = [
+                "Maximal bit budget, higher values allows more substitutions in small letters.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--tag-max-budget"],
             paramLabel = "<n>"
         )
         private var tagMaxBudget: Double? = null
 
         @Option(
-            description = ["Copy original reads (sequences + qualities + descriptions) to .vdjca file."],
+            description = [
+                "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-g", "--save-reads"],
             hidden = true
         )
         private var saveReads = false
 
-        @set:Option(description = ["Maximal number of reads to process"], names = ["-n", "--limit"], hidden = true)
+        @set:Option(
+            description = [
+                "Maximal number of reads to process",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
+            names = ["-n", "--limit"],
+            paramLabel = "<n>",
+            hidden = true
+        )
         private var limit: Long? = null
             set(value) {
                 logger.warn("--limit and -n options are deprecated; use ${LimitInput.CMD_OPTION} instead.")
