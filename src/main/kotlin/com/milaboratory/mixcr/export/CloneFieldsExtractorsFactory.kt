@@ -16,9 +16,10 @@ import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 
 object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
     override fun allAvailableFields(): List<Field<Clone>> =
-        VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) + cloneFields()
+        VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) +
+                cloneFields(forTreesExport = false)
 
-    fun cloneFields(): List<Field<Clone>> = buildList {
+    fun cloneFields(forTreesExport: Boolean): List<Field<Clone>> = buildList {
         this += FieldParameterless(
             Order.cloneSpecific + 100,
             "-cloneId",
@@ -47,24 +48,26 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         ) { clone: Clone ->
             clone.count.toString()
         }
-        this += FieldParameterless(
-            Order.cloneSpecific + 300,
-            "-fraction",
-            "Export clone fraction",
-            "Clone fraction",
-            "cloneFraction",
-            deprecation = stdDeprecationNote("-fraction", "-readFraction", true),
-        ) { clone: Clone ->
-            clone.fraction.toString()
-        }
-        this += FieldParameterless(
-            Order.cloneSpecific + 301,
-            "-readFraction",
-            "Fraction of reads assigned to the clonotype",
-            "Read fraction",
-            "readFraction"
-        ) { clone: Clone ->
-            clone.fraction.toString()
+        if (!forTreesExport) {
+            this += FieldParameterless(
+                Order.cloneSpecific + 300,
+                "-fraction",
+                "Export clone fraction",
+                "Clone fraction",
+                "cloneFraction",
+                deprecation = stdDeprecationNote("-fraction", "-readFraction", true),
+            ) { clone: Clone ->
+                clone.fraction.toString()
+            }
+            this += FieldParameterless(
+                Order.cloneSpecific + 301,
+                "-readFraction",
+                "Fraction of reads assigned to the clonotype",
+                "Read fraction",
+                "readFraction"
+            ) { clone: Clone ->
+                clone.fraction.toString()
+            }
         }
         this += FieldWithParameters(
             Order.tags + 500,
