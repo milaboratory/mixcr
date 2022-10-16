@@ -55,7 +55,7 @@ cd yf_sample_data
 #  --impute-germline-on-export --json-report "{}" \
 #  "{}_L001_R1.fastq.gz" "{}_L001_R2.fastq.gz" "{}" ::: Ig-2_S2 Ig-3_S3 Ig-4_S4 Ig-5_S5 Ig1_S1 Ig2_S2 Ig3_S3 Ig4_S4 Ig5_S5
 
-parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze bcr_amplicon -f \
+parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze generic-bcr-amplicon -f \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

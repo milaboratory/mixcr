@@ -17,7 +17,7 @@ assert() {
 
 set -e
 
-mixcr analyze tcr_amplicon \
+mixcr analyze generic-tcr-amplicon \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

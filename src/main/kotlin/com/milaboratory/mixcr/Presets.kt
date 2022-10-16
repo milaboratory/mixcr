@@ -24,6 +24,8 @@ import com.milaboratory.mixcr.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.AlignMixins.SetTagPattern
 import com.milaboratory.mixcr.cli.*
 import com.milaboratory.primitivio.annotations.Serializable
+import org.apache.commons.io.IOUtils
+import java.nio.charset.Charset
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.reflect.KProperty1
@@ -60,8 +62,8 @@ object Flags {
 
     const val Species = "species"
     const val MaterialType = "materialType"
-    const val LeftAlignmentMode = "leftSideAmplificationPrimer"
-    const val RightAlignmentMode = "rightSideAmplificationPrimer"
+    const val LeftAlignmentMode = "leftAlignmentMode"
+    const val RightAlignmentMode = "rightAlignmentMode"
 
     const val TagPattern = "tagPattern"
 
@@ -102,36 +104,12 @@ object Presets {
         }
     }
 
-    private val files = listOf(
-        "blocks/00-pipeline.yaml",
-        "blocks/01-align.yaml",
-        "blocks/02-refineTagsAndSort.yaml",
-        "blocks/03-exportAlignments.yaml",
-        "blocks/04-assemblePartial.yaml",
-        "blocks/05-extend.yaml",
-        "blocks/06-assemble.yaml",
-        "blocks/07-assembleContigs.yaml",
-        "blocks/08-exportClones.yaml",
-        "blocks/20-bundles-base.yaml",
-        "blocks/21-bundles-generic.yaml",
-        "blocks/22-bundles-umi.yaml",
-        "protocols/10x.yaml",
-        "protocols/custom.yaml",
-        "protocols/takara.yaml",
-        "protocols/neb.yaml",
-        "protocols/abhelix.yaml",
-        "protocols/biomed2.yaml",
-        "protocols/qiaseq.yaml",
-        "protocols/milab.yaml",
-        "protocols/illumina.yaml",
-        "protocols/thermofisher.yaml",
-        "protocols/rnaseq.yaml",
-        "protocols/irepertoire.yaml",
-        "protocols/general-amplicon.yaml",
-        "test.yaml",
-    )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
         val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
+        val files = (Presets.javaClass.getResourceAsStream("/mixcr_presets/file_list.txt")
+            ?: throw IllegalStateException("No preset file list")).use { stream ->
+            IOUtils.readLines(stream, Charset.defaultCharset())
+        }
         files.flatMap { file ->
             (Presets.javaClass.getResourceAsStream("/mixcr_presets/$file") ?: throw IllegalStateException("No $file"))
                 .use { stream -> K_YAML_OM.readValue<Map<String, MiXCRParamsBundleRaw>>(stream) }
@@ -157,9 +135,9 @@ object Presets {
                         return K_YAML_OM.readValue(presetPath.toFile())
                 }
             }
-            throw IllegalArgumentException("Can't find local preset with name \"$name\"")
+            throw ApplicationException("Can't find local preset with name \"$name\"")
         } else
-            return presetCollection[name] ?: throw IllegalArgumentException("No preset with name \"$name\"")
+            return presetCollection[name] ?: throw ApplicationException("No preset with name \"$name\"")
     }
 
     private fun <T : Any> getResolver(prop: KProperty1<MiXCRParamsBundleRaw, RawParams<T>?>): Resolver<T> =

@@ -152,12 +152,12 @@
 ## Amplicon presets
 ##
 #
-#"tcr_amplicon":
+#"generic-tcr-amplicon":
 #  inheritFrom: bundle-base
 #  flags:
 #    - materialType
-#    - leftSideAmplificationPrimer
-#    - rightSideAmplificationPrimer
+#    - leftAlignmentMode
+#    - rightAlignmentMode
 #  align:
 #    inheritFrom: align-legacy-4.0-rna-seq
 #
@@ -165,8 +165,8 @@
 #  inheritFrom: bundle-base
 #  flags:
 #    - materialType
-#    - leftSideAmplificationPrimer
-#    - rightSideAmplificationPrimer
+#    - leftAlignmentMode
+#    - rightAlignmentMode
 #  align:
 #    inheritFrom: align-legacy-4.0-kaligner2
 #
@@ -174,12 +174,12 @@
 ## UMI amplicon pipelines
 ##
 #
-#"tcr_amplicon_umi":
+#"generic-tcr-amplicon_umi":
 #  inheritFrom: bundle-base
 #  flags:
 #    - materialType
-#    - leftSideAmplificationPrimer
-#    - rightSideAmplificationPrimer
+#    - leftAlignmentMode
+#    - rightAlignmentMode
 #    - tagPattern
 #  align:
 #    inheritFrom: align-legacy-4.0-rna-seq
@@ -188,8 +188,8 @@
 #  inheritFrom: bundle-base
 #  flags:
 #    - materialType
-#    - leftSideAmplificationPrimer
-#    - rightSideAmplificationPrimer
+#    - leftAlignmentMode
+#    - rightAlignmentMode
 #    - tagPattern
 #  align:
 #    inheritFrom: align-legacy-4.0-kaligner2

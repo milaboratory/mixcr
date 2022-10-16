@@ -3,8 +3,8 @@
   inheritFrom: bundle-base
   flags:
     - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
+    - leftAlignmentMode
+    - rightAlignmentMode
   align:
     inheritFrom: align-kaligner1-base-v1
 
@@ -28,7 +28,7 @@
   inheritFrom: bundle-base
   flags:
     - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
+    - leftAlignmentMode
+    - rightAlignmentMode
   align:
     inheritFrom: align-kaligner2-base-v1
