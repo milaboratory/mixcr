@@ -173,7 +173,7 @@
                       - UMI
                 operator:
                   type: group_operator_range
-                  lower: 2.0
+                  lower: 3.0
   assemblePartial:
     inheritFrom: assemblePartial-universal
   assemble:
