@@ -24,12 +24,12 @@ interface Field<in T : Any> {
 }
 
 fun <T : Any, R : Any> Field<T>.fromProperty(
-    headerMapper: (String) -> String = { it },
+    descriptionMapper: (String) -> String = { it },
     property: R.() -> T?
 ): Field<R> = object : Field<R> {
     override val priority: Int = this@fromProperty.priority
     override val cmdArgName: String = this@fromProperty.cmdArgName
-    override val description: String = this@fromProperty.description
+    override val description: String = descriptionMapper(this@fromProperty.description)
     override val deprecation: String? = this@fromProperty.deprecation
     override val nArguments: Int = this@fromProperty.nArguments
     override val metaVars: String = this@fromProperty.metaVars
@@ -41,7 +41,7 @@ fun <T : Any, R : Any> Field<T>.fromProperty(
     ): FieldExtractor<R> {
         val delegate = this@fromProperty.create(outputMode, headerData, args)
         return object : FieldExtractor<R> {
-            override val header: String = headerMapper(delegate.header)
+            override val header: String = delegate.header
             override fun extractValue(obj: R): String {
                 val propertyVal = property(obj) ?: return NULL
                 return delegate.extractValue(propertyVal)

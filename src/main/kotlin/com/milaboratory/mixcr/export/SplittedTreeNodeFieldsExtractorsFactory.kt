@@ -23,7 +23,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
             FieldCommandArgs("-distance", "germline"),
             FieldCommandArgs("-cloneId"),
             FieldCommandArgs("-fileName"),
-            FieldCommandArgs("-count"),
+            FieldCommandArgs("-readCount"),
             FieldCommandArgs("-vHit"),
             FieldCommandArgs("-dHit"),
             FieldCommandArgs("-jHit"),
@@ -39,7 +39,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
             FieldCommandArgs("-distance", "germline"),
             FieldCommandArgs("-cloneId"),
             FieldCommandArgs("-fileName"),
-            FieldCommandArgs("-count"),
+            FieldCommandArgs("-readCount"),
             FieldCommandArgs("-targetSequences"),
             FieldCommandArgs("-targetQualities"),
             FieldCommandArgs("-vHitsWithScore"),
@@ -75,7 +75,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
         this += SHMTreeNodeFieldsExtractor.nodeFields().map { it.fromProperty { node } }
         this += (VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = true) + CloneFieldsExtractorsFactory.cloneFields())
             .map { field ->
-                field.fromProperty(headerMapper = { "$it (only for nodes with clones)" }) { node.clone?.clone }
+                field.fromProperty(descriptionMapper = { "$it (only for nodes with clones)" }) { node.clone?.clone }
             }
     }
 
