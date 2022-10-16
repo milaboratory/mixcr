@@ -114,6 +114,7 @@ object GeneUsage {
         df,
         y = GeneUsageRow::weight.name,
         primaryGroup = GeneUsageRow::sample.name,
+        secondaryGroup = GeneUsageRow::gene.name,
         facetBy = facetBy
     ).plot
 }
