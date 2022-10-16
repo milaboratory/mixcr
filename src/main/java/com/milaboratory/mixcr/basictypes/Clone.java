@@ -19,7 +19,8 @@ import com.milaboratory.primitivio.annotations.Serializable;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.GeneType;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.Objects;
 
 @Serializable(by = IO.CloneSerializer.class)
 public final class Clone extends VDJCObject {
@@ -136,7 +137,7 @@ public final class Clone extends VDJCObject {
         if (!super.equals(o)) return false;
         Clone clone = (Clone) o;
         return Double.compare(clone.count, count) == 0 &&
-                id == clone.id && group == clone.group;
+                id == clone.id && Objects.equals(group, clone.group);
     }
 
     @Override
