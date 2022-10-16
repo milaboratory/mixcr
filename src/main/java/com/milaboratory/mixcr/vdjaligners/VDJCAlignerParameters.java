@@ -50,10 +50,10 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
     private boolean smartForceEdgeAlignments;
 
     @JsonCreator
-    public VDJCAlignerParameters(@JsonProperty("vParameters") KGeneAlignmentParameters vParameters,
-                                 @JsonProperty("dParameters") DAlignerParameters dParameters,
-                                 @JsonProperty("jParameters") KGeneAlignmentParameters jParameters,
-                                 @JsonProperty("cParameters") KGeneAlignmentParameters cParameters,
+    public VDJCAlignerParameters(@JsonMerge @JsonProperty("vParameters") KGeneAlignmentParameters vParameters,
+                                 @JsonMerge @JsonProperty("dParameters") DAlignerParameters dParameters,
+                                 @JsonMerge @JsonProperty("jParameters") KGeneAlignmentParameters jParameters,
+                                 @JsonMerge @JsonProperty("cParameters") KGeneAlignmentParameters cParameters,
                                  @JsonProperty("vjAlignmentOrder") VJAlignmentOrder vjAlignmentOrder,
                                  @JsonProperty("libraryStructure") VDJCLibraryStructure libraryStructure,
                                  @JsonProperty("includeDScore") boolean includeDScore,
@@ -127,21 +127,25 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
         return this;
     }
 
+    @JsonProperty("vParameters") // fallback for readerForUpdating
     public VDJCAlignerParameters setVAlignmentParameters(KGeneAlignmentParameters parameters) {
         setGeneAlignerParameters(GeneType.Variable, parameters);
         return this;
     }
 
+    @JsonProperty("dParameters") // fallback for readerForUpdating
     public VDJCAlignerParameters setDAlignmentParameters(DAlignerParameters parameters) {
         setGeneAlignerParameters(GeneType.Diversity, parameters);
         return this;
     }
 
+    @JsonProperty("jParameters") // fallback for readerForUpdating
     public VDJCAlignerParameters setJAlignmentParameters(KGeneAlignmentParameters parameters) {
         setGeneAlignerParameters(GeneType.Joining, parameters);
         return this;
     }
 
+    @JsonProperty("cParameters") // fallback for readerForUpdating
     public VDJCAlignerParameters setCAlignmentParameters(KGeneAlignmentParameters parameters) {
         setGeneAlignerParameters(GeneType.Constant, parameters);
         return this;

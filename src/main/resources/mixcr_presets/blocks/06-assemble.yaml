@@ -82,14 +82,15 @@
           minQualityScore: 0
           maxConsensuses: 3
         minTagSuffixShare: 0
-      cloneClusteringParameters:
-        searchDepth: 2
-        allowedMutationsInNRegions: 1
-        searchParameters: twoMismatchesOrIndels
-        minimalTagSetOverlap: -1
-        clusteringFilter:
-          type: relativeConcentration
-          specificMutationProbability: 1E-4
+      cloneAssemblerParameters:
+        cloneClusteringParameters:
+          searchDepth: 2
+          allowedMutationsInNRegions: 1
+          searchParameters: twoMismatchesOrIndels
+          minimalTagSetOverlap: -1
+          clusteringFilter:
+            type: relativeConcentration
+            specificMutationProbability: 1E-4
 
 "assemble-umi-base":
   abstract: true

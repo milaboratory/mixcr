@@ -132,6 +132,7 @@
   abstract: true
   exportClones:
     chains: ALL
+    splitFilesBy: []
     fields:
       - field: "-cloneId"
       - field: "-tag"

@@ -113,6 +113,8 @@ object Presets {
         "blocks/07-assembleContigs.yaml",
         "blocks/08-exportClones.yaml",
         "blocks/20-bundles-base.yaml",
+        "blocks/21-bundles-generic.yaml",
+        "blocks/22-bundles-umi.yaml",
         "protocols/10x.yaml",
         "protocols/custom.yaml",
         "protocols/takara.yaml",
@@ -126,13 +128,12 @@ object Presets {
         "protocols/rnaseq.yaml",
         "protocols/irepertoire.yaml",
         "protocols/general-amplicon.yaml",
-        "bundles.yaml",
         "test.yaml",
     )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
         val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
         files.flatMap { file ->
-            Presets.javaClass.getResourceAsStream("/mixcr_presets/$file")!!
+            (Presets.javaClass.getResourceAsStream("/mixcr_presets/$file") ?: throw IllegalStateException("No $file"))
                 .use { stream -> K_YAML_OM.readValue<Map<String, MiXCRParamsBundleRaw>>(stream) }
                 .toList()
         }.forEach { (k, v) ->
