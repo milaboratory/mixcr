@@ -24,6 +24,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters
@@ -50,20 +51,29 @@ object CommandAssemblePartial {
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
-            description = ["Write only overlapped sequences (needed for testing)."],
+            description = [
+                "Write only overlapped sequences (needed for testing).",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-o", "--overlapped-only"]
         )
         private var overlappedOnly = false
 
         @Option(
-            description = ["Drop partial sequences which were not assembled. Can be used to reduce output file " +
-                    "size if no additional rounds of 'assemblePartial' are required."],
+            description = [
+                "Drop partial sequences which were not assembled. Can be used to reduce output file " +
+                        "size if no additional rounds of 'assemblePartial' are required.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-d", "--drop-partial"]
         )
         private var dropPartial = false
 
         @Option(
-            description = ["Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes"],
+            description = [
+                "Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--cell-level"]
         )
         private var cellLevel = false

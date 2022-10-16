@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.ValidationException
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
@@ -19,7 +20,7 @@ import picocli.CommandLine.Spec.Target.MIXEE
 
 class ExportDefaultOptions {
     @Option(
-        description = ["Don't print first header line, print only data"],
+        description = ["Don't print first header line, print only data", DEFAULT_VALUE_FROM_PRESET],
         names = ["--no-header"]
     )
     var noHeader = false

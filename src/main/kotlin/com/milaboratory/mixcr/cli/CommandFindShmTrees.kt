@@ -204,7 +204,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         result
     }
 
-    private fun ensureParametersInitialized() {
+
+    override fun initialize() {
         shmTreeBuilderParameters
         debugDirectoryPath
     }
@@ -250,7 +251,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             .setOutputFiles(outputFiles)
             .setStartMillis(System.currentTimeMillis())
 
-        ensureParametersInitialized()
         val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
         val cloneReaders = clnsFileNames.map { path ->
             CloneSetIO.mkReader(path, vdjcLibraryRegistry)
