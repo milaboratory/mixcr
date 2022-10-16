@@ -1,4 +1,5 @@
-"assembleContigs_universal":
+"assembleContigs-universal":
+  abstract: true
   assembleContigs:
     ignoreTags: false
     parameters:

@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.vdjaligners;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.alignment.AlignmentScoring;
 import com.milaboratory.core.alignment.kaligner1.AbstractKAlignerParameters;
@@ -32,7 +33,7 @@ public final class KGeneAlignmentParameters extends GeneAlignmentParametersAbstr
             @JsonProperty("geneFeatureToAlign") GeneFeature geneFeatureToAlign,
             @JsonProperty("minSumScore") Integer minSumScore,
             @JsonProperty("relativeMinScore") Float relativeMinScore,
-            @JsonProperty("parameters") AbstractKAlignerParameters parameters) {
+            @JsonMerge @JsonProperty("parameters") AbstractKAlignerParameters parameters) {
         super(geneFeatureToAlign, relativeMinScore  == null ? 0.87f : relativeMinScore.floatValue());
         this.minSumScore = minSumScore == null ? 40 : minSumScore.intValue();
         this.parameters = parameters;

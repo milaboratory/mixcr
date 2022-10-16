@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-mixcr align -p default_4.0 -s hs \
+mixcr align -p legacy-4.0-default --species hs \
             --dna \
             -OsaveOriginalReads=true \
             test_R1.fastq test_R2.fastq case1.vdjca

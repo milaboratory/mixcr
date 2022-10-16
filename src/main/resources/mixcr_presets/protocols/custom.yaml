@@ -1,5 +1,5 @@
 "mikelov-et-al-2021":
-  inheritFrom: _universal
+  inheritFrom: bundle-base
   pipeline:
     - align
     - refineTagsAndSort
@@ -25,7 +25,7 @@
       floating: false
       anchorPoint: CBegin(+15)
   align:
-    inheritFrom: align_kaligner2_4.0
+    inheritFrom: align-legacy-4.0-kaligner2
     overrides:
       tagPattern: |
         ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
@@ -55,20 +55,4 @@
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
   refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
+    inheritFrom: refineTagsAndSort-umi-universal

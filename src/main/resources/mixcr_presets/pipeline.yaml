@@ -1,5 +1,0 @@
-"pipeline_base":
-  pipeline:
-    - align
-    - assemble
-    - exportClones

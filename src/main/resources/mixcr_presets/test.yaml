@@ -1,5 +1,5 @@
 "test-mikelov-et-al-2021-without-contigs":
-  inheritFrom: _universal
+  inheritFrom: bundle-base
   pipeline:
     - align
     - refineTagsAndSort
@@ -24,7 +24,7 @@
       floating: false
       anchorPoint: CBegin(+15)
   align:
-    inheritFrom: align_kaligner2_4.0
+    inheritFrom: align-legacy-4.0-kaligner2
     overrides:
       tagPattern: |
         ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
@@ -55,7 +55,7 @@
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
 
 "test-mikelov-et-al-2021-with-contigs":
-  inheritFrom: _universal
+  inheritFrom: bundle-base
   pipeline:
     - align
     - refineTagsAndSort
@@ -80,7 +80,7 @@
       floating: false
       anchorPoint: CBegin(+15)
   align:
-    inheritFrom: align_kaligner2_4.0
+    inheritFrom: align-legacy-4.0-kaligner2
     overrides:
       tagPattern: |
         ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
@@ -111,15 +111,15 @@
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
 
 "test-airr-long-ig-base":
-  inheritFrom: _universal
+  inheritFrom: bundle-base
   align:
-    inheritFrom: align_kaligner2_4.0
+    inheritFrom: align-legacy-4.0-kaligner2
     overrides:
       species: hsa
       parameters:
         saveOriginalReads: true
   assemble:
-    inheritFrom: assemble_universal
+    inheritFrom: assemble-base
     overrides:
       cloneAssemblerParameters:
         maxBadPointsPercent: 0
@@ -131,16 +131,16 @@
             specificMutationProbability: 1E-3
 
 "test-generic":
-  inheritFrom: _universal
+  inheritFrom: bundle-base
   align:
-    inheritFrom: align_default_4.0
+    inheritFrom: align-legacy-4.0-default
 
 "test-subCloningRegions":
-  inheritFrom: _universal
+  inheritFrom: bundle-base
   align:
-    inheritFrom: align_default_4.0
+    inheritFrom: align-legacy-4.0-default
   assembleContigs:
-    inheritFrom: _universal
+    inheritFrom: bundle-base
     overrides:
       parameters:
         subCloningRegions: [ "VDJRegion" ]
@@ -148,58 +148,58 @@
         postFiltering:
           type: OnlyFullyDefined
 
+##
+## Amplicon presets
+##
 #
-# Amplicon presets
+#"generic-tcr-amplicon":
+#  inheritFrom: bundle-base
+#  flags:
+#    - materialType
+#    - leftAlignmentMode
+#    - rightAlignmentMode
+#  align:
+#    inheritFrom: align-legacy-4.0-rna-seq
 #
-
-"tcr_amplicon":
-  inheritFrom: _universal
-  flags:
-    - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
-  align:
-    inheritFrom: align_rna-seq_4.0
-
-"bcr_amplicon":
-  inheritFrom: _universal
-  flags:
-    - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
-  align:
-    inheritFrom: align_kaligner2_4.0
-
+#"bcr_amplicon":
+#  inheritFrom: bundle-base
+#  flags:
+#    - materialType
+#    - leftAlignmentMode
+#    - rightAlignmentMode
+#  align:
+#    inheritFrom: align-legacy-4.0-kaligner2
 #
-# UMI amplicon pipelines
+##
+## UMI amplicon pipelines
+##
 #
-
-"tcr_amplicon_umi":
-  inheritFrom: _universal
-  flags:
-    - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
-    - tagPattern
-  align:
-    inheritFrom: align_rna-seq_4.0
-
-"bcr_amplicon_umi":
-  inheritFrom: _universal
-  flags:
-    - materialType
-    - leftSideAmplificationPrimer
-    - rightSideAmplificationPrimer
-    - tagPattern
-  align:
-    inheritFrom: align_kaligner2_4.0
+#"generic-tcr-amplicon_umi":
+#  inheritFrom: bundle-base
+#  flags:
+#    - materialType
+#    - leftAlignmentMode
+#    - rightAlignmentMode
+#    - tagPattern
+#  align:
+#    inheritFrom: align-legacy-4.0-rna-seq
+#
+#"bcr_amplicon_umi":
+#  inheritFrom: bundle-base
+#  flags:
+#    - materialType
+#    - leftAlignmentMode
+#    - rightAlignmentMode
+#    - tagPattern
+#  align:
+#    inheritFrom: align-legacy-4.0-kaligner2
 
 #
 # Shotgun
 #
 
-"tcr_shotgun":
-  inheritFrom: _universal
+"test-tcr-shotgun":
+  inheritFrom: bundle-base
   flags:
     - materialType
   pipeline:
@@ -210,7 +210,7 @@
     - assemble
     - exportClones
   align:
-    inheritFrom: align_rna-seq_4.0
+    inheritFrom: align-legacy-4.0-rna-seq
     overrides:
       parameters:
         allowPartialAlignments: true

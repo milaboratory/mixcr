@@ -14,11 +14,7 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.cli.AbstractPresetBundleRaw
-import com.milaboratory.cli.ParamsBundleSpec
-import com.milaboratory.cli.RawParams
-import com.milaboratory.cli.Resolver
-import com.milaboratory.cli.apply
+import com.milaboratory.cli.*
 import com.milaboratory.mitool.helpers.KObjectMapperProvider
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
@@ -26,15 +22,10 @@ import com.milaboratory.mixcr.AlignMixins.MaterialTypeDNA
 import com.milaboratory.mixcr.AlignMixins.MaterialTypeRNA
 import com.milaboratory.mixcr.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.AlignMixins.SetTagPattern
-import com.milaboratory.mixcr.cli.CommandAlign
-import com.milaboratory.mixcr.cli.CommandAssemble
-import com.milaboratory.mixcr.cli.CommandAssembleContigs
-import com.milaboratory.mixcr.cli.CommandAssemblePartial
-import com.milaboratory.mixcr.cli.CommandExportAlignments
-import com.milaboratory.mixcr.cli.CommandExportClones
-import com.milaboratory.mixcr.cli.CommandExtend
-import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
+import com.milaboratory.mixcr.cli.*
 import com.milaboratory.primitivio.annotations.Serializable
+import org.apache.commons.io.IOUtils
+import java.nio.charset.Charset
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.reflect.KProperty1
@@ -71,8 +62,8 @@ object Flags {
 
     const val Species = "species"
     const val MaterialType = "materialType"
-    const val LeftAlignmentMode = "leftSideAmplificationPrimer"
-    const val RightAlignmentMode = "rightSideAmplificationPrimer"
+    const val LeftAlignmentMode = "leftAlignmentMode"
+    const val RightAlignmentMode = "rightAlignmentMode"
 
     const val TagPattern = "tagPattern"
 
@@ -113,35 +104,14 @@ object Presets {
         }
     }
 
-    private val files = listOf(
-        "pipeline.yaml",
-        "align.yaml",
-        "assemble.yaml",
-        "assembleContigs.yaml",
-        "assemblePartial.yaml",
-        "extend.yaml",
-        "bundles.yaml",
-        "refineTagsAndSort.yaml",
-        "export.yaml",
-        "test.yaml",
-        "protocols/10x.yaml",
-        "protocols/custom.yaml",
-        "protocols/takara.yaml",
-        "protocols/neb.yaml",
-        "protocols/abhelix.yaml",
-        "protocols/biomed2.yaml",
-        "protocols/qiaseq.yaml",
-        "protocols/milab.yaml",
-        "protocols/illumina.yaml",
-        "protocols/thermofisher.yaml",
-        "protocols/rnaseq.yaml",
-        "protocols/irepertoire.yaml",
-        "protocols/general-amplicon.yaml"
-    )
     private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
         val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
+        val files = (Presets.javaClass.getResourceAsStream("/mixcr_presets/file_list.txt")
+            ?: throw IllegalStateException("No preset file list")).use { stream ->
+            IOUtils.readLines(stream, Charset.defaultCharset())
+        }
         files.flatMap { file ->
-            Presets.javaClass.getResourceAsStream("/mixcr_presets/$file")!!
+            (Presets.javaClass.getResourceAsStream("/mixcr_presets/$file") ?: throw IllegalStateException("No $file"))
                 .use { stream -> K_YAML_OM.readValue<Map<String, MiXCRParamsBundleRaw>>(stream) }
                 .toList()
         }.forEach { (k, v) ->
@@ -153,6 +123,8 @@ object Presets {
 
     val allPresetNames = presetCollection.keys
 
+    val nonAbstractPresetNames = presetCollection.filter { !it.value.abstract }.keys
+
     private fun rawResolve(name: String): MiXCRParamsBundleRaw {
         if (name.startsWith("local:")) {
             val lName = name.removePrefix("local:")
@@ -163,9 +135,9 @@ object Presets {
                         return K_YAML_OM.readValue(presetPath.toFile())
                 }
             }
-            throw IllegalArgumentException("Can't find local preset with name \"$name\"")
+            throw ApplicationException("Can't find local preset with name \"$name\"")
         } else
-            return presetCollection[name] ?: throw IllegalArgumentException("No preset with name \"$name\"")
+            return presetCollection[name] ?: throw ApplicationException("No preset with name \"$name\"")
     }
 
     private fun <T : Any> getResolver(prop: KProperty1<MiXCRParamsBundleRaw, RawParams<T>?>): Resolver<T> =
@@ -190,6 +162,7 @@ object Presets {
     internal val exportClones = getResolver(MiXCRParamsBundleRaw::exportClones)
 
     private class MiXCRParamsBundleRaw(
+        @JsonProperty("abstract") val abstract: Boolean = false,
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
         @JsonProperty("mixins") val mixins: List<MiXCRMixin>?,
         @JsonProperty("flags") val flags: Set<String>?,
@@ -202,12 +175,25 @@ object Presets {
         @JsonProperty("assembleContigs") val assembleContigs: RawParams<CommandAssembleContigs.Params>? = null,
         @JsonProperty("exportAlignments") val exportAlignments: RawParams<CommandExportAlignments.Params>?,
         @JsonProperty("exportClones") val exportClones: RawParams<CommandExportClones.Params>?,
-    ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw>
+    ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw> {
+        val rawParent by lazy { inheritFrom?.let { rawResolve(it) } }
+
+        // flags and mixins are aggregated and applied on the very step of resolution process
+
+        val resolvedFlags: Set<String> by lazy {
+            (flags ?: emptySet()) + (rawParent?.resolvedFlags ?: emptySet())
+        }
+        val resolvedMixins: List<MiXCRMixin> by lazy {
+            (mixins ?: emptyList()) + (rawParent?.resolvedMixins ?: emptyList())
+        }
+    }
 
     fun resolveParamsBundle(presetName: String): MiXCRParamsBundle {
         val raw = rawResolve(presetName)
+        if (raw.abstract)
+            throw ApplicationException("Preset $presetName is abstract and not intended to be used directly.")
         val bundle = MiXCRParamsBundle(
-            flags = raw.flags ?: emptySet(),
+            flags = raw.resolvedFlags,
             pipeline = pipeline(presetName),
             align = align(presetName),
             refineTagsAndSort = refineTagsAndSort(presetName),
@@ -218,7 +204,6 @@ object Presets {
             exportAlignments = exportAlignments(presetName),
             exportClones = exportClones(presetName),
         )
-        val mixins = raw.mixins ?: emptyList()
-        return mixins.apply(bundle)
+        return raw.resolvedMixins.apply(bundle)
     }
 }

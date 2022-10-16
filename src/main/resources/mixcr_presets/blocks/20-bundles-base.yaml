@@ -1,0 +1,36 @@
+#
+# Partial bundles
+#
+
+"export-base":
+  abstract: true
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  exportClones:
+    inheritFrom: exportClones-base
+
+#
+# Full bundles
+#
+
+"bundle-base":
+  abstract: true
+  flags:
+    - species
+  pipeline:
+    inheritFrom: pipeline-base
+  exportAlignments:
+    inheritFrom: export-base
+  assemblePartial:
+    inheritFrom: assemblePartial-universal
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+  extend:
+    inheritFrom: extend-universal
+  assemble:
+    inheritFrom: assemble-base
+  assembleContigs:
+    inheritFrom: assembleContigs-universal
+  exportClones:
+    inheritFrom: export-base
+

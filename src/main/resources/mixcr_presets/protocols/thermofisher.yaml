@@ -1,68 +1,31 @@
-"oncomine-tcrb-lr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+"oncomine-tcrb-lr-cdr3-base":
+  abstract: true
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
       species: hs
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: false
       geneType: J
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+"oncomine-tcrb-lr-cdr3":
+  inheritFrom: oncomine-tcrb-lr-cdr3-base
 
 "oncomine-tcrb-lr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: oncomine-tcrb-lr-cdr3-base
   mixins:
-    - type: SetSpecies
-      species: hs
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: J
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
 
 "oncomine-tcrb-sr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: J
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+  inheritFrom: oncomine-tcrb-lr-cdr3-base

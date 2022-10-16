@@ -1,68 +1,43 @@
 "ampliseq-tcrb-plus-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
       species: hs
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: false
       geneType: J
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "ampliseq-tcrb-plus-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
       species: hs
+
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: J
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
       geneType: J
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+      value: true
 
 "ampliseq-tcrb-sr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: J
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+  inheritFrom: ampliseq-tcrb-plus-cdr3

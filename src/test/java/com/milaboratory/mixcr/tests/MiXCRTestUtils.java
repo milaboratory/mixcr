@@ -36,8 +36,8 @@ public class MiXCRTestUtils {
     public static MiXCRHeader dummyHeader() {
         return new MiXCRHeader(
                 "hashA123",
-                new MiXCRParamsSpec("default_4.0"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
-                Presets.INSTANCE.resolveParamsBundle("default_4.0").getAlign().getParameters(),
+                new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
+                Presets.INSTANCE.resolveParamsBundle("legacy-4.0-default").getAlign().getParameters(),
                 null, null, null);
     }
 

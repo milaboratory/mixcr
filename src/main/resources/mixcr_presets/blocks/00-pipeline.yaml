@@ -1,0 +1,15 @@
+"pipeline-base":
+  abstract: true
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+"pipeline-single-cell-shotgun":
+  abstract: true
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - assemble
+    - assembleContigs
+    - exportClones

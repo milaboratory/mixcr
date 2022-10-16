@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
+import com.milaboratory.mixcr.AlignMixins.DropNonCDR3Alignments
+import com.milaboratory.mixcr.AlignMixins.KeepNonCDR3Alignments
 import com.milaboratory.mixcr.AlignMixins.LeftAlignmentBoundaryNoPoint
 import com.milaboratory.mixcr.AlignMixins.LeftAlignmentBoundaryWithPoint
 import com.milaboratory.mixcr.AlignMixins.LimitInput
@@ -23,8 +25,6 @@ import com.milaboratory.mixcr.AlignMixins.SetLibrary
 import com.milaboratory.mixcr.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.AlignMixins.SetTagPattern
 import com.milaboratory.mixcr.AssembleContigsMixins.SetContigAssemblingFeatures
-import com.milaboratory.mixcr.AssembleMixins.DropNonCDR3Alignments
-import com.milaboratory.mixcr.AssembleMixins.KeepNonCDR3Alignments
 import com.milaboratory.mixcr.AssembleMixins.SetClonotypeAssemblingFeatures
 import com.milaboratory.mixcr.AssembleMixins.SetSplitClonesBy
 import com.milaboratory.mixcr.ExportMixins.AddExportAlignmentsField
@@ -75,7 +75,7 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
     }
 }
 
-//copy of PipelineMiXCRMixins but with hidden fields
+// copy of PipelineMiXCRMixins but with hidden fields
 class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
     //
     // Pipeline manipulation mixins
@@ -134,7 +134,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         names = [MaterialTypeDNA.CMD_OPTION],
         arity = "0"
     )
-    fun dna(f: Boolean) =
+    fun dna(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(MaterialTypeDNA)
 
     @Option(
@@ -142,7 +142,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         names = [MaterialTypeRNA.CMD_OPTION],
         arity = "0"
     )
-    fun rna(f: Boolean) =
+    fun rna(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(MaterialTypeRNA)
 
     //
@@ -253,12 +253,13 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
     fun assembleClonotypesBy(gf: GeneFeatures) =
         mixIn(SetClonotypeAssemblingFeatures(gf))
 
+
     @Option(
         description = ["Preserve alignments that do not cover CDR3 region or cover it only partially in the .vdjca file."],
         names = [KeepNonCDR3Alignments.CMD_OPTION],
         arity = "0"
     )
-    fun keepNonCDR3Alignments(ignored: Boolean) =
+    fun keepNonCDR3Alignments(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
         mixIn(KeepNonCDR3Alignments)
 
     @Option(
@@ -266,7 +267,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
         names = [DropNonCDR3Alignments.CMD_OPTION],
         arity = "0"
     )
-    fun dropNonCDR3Alignments(ignored: Boolean) =
+    fun dropNonCDR3Alignments(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
         mixIn(DropNonCDR3Alignments)
 
     @Option(
@@ -312,7 +313,7 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [ImputeGermlineOnExport.CMD_OPTION],
         arity = "0"
     )
-    fun imputeGermlineOnExport(ignored: Boolean) =
+    fun imputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
         mixIn(ImputeGermlineOnExport)
 
     @Option(
@@ -320,7 +321,7 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
         names = [DontImputeGermlineOnExport.CMD_OPTION],
         arity = "0"
     )
-    fun dontImputeGermlineOnExport(ignored: Boolean) =
+    fun dontImputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
         mixIn(DontImputeGermlineOnExport)
 
     private fun addExportClonesField(args: List<String>, prepend: Boolean) {

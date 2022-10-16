@@ -1,9 +1,5 @@
 "irepertoire-human-tcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
       species: hs
@@ -16,11 +12,7 @@
       geneType: C
 
 "irepertoire-human-tcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
       species: hs

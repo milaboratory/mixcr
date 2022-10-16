@@ -5,6 +5,7 @@ import com.palantir.gradle.gitversion.VersionDetails
 import de.undercouch.gradle.tasks.download.Download
 import groovy.lang.Closure
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import java.net.InetAddress
 
 gradle.startParameter.excludedTaskNames += listOf(
@@ -100,7 +101,7 @@ repositories {
 val milibVersion = "2.0.0-31-master"
 val repseqioVersion = "1.4.1-30-master"
 val miplotsVersion = "1.0.0-28-master"
-val mitoolVersion = "1.1.0-100-main"
+val mitoolVersion = "1.1.0-101-main"
 val jacksonBomVersion = "2.13.4"
 val redberryPipeVersion = "1.2.0-7-master"
 
@@ -140,6 +141,7 @@ dependencies {
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
+    group = "build"
     outputFile = file("${sourceSets.main.get().output.resourcesDir}/${project.name}-build.properties")
     property("version", version)
     property("name", "MiXCR")
@@ -150,8 +152,27 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("timestamp", System.currentTimeMillis())
 }
 
+val generatePresetFileList by tasks.registering {
+    group = "build"
+    val outputFile = file("${sourceSets.main.get().output.resourcesDir}/mixcr_presets/file_list.txt")
+    doLast {
+        val yamls = layout.files({
+            file("src/main/resources/mixcr_presets").walk()
+                .filter { it.extension == "yaml" }
+                .map { it.relativeTo(file("src/main/resources/mixcr_presets")) }
+                .toList()
+        })
+        outputFile.ensureParentDirsCreated()
+        outputFile.writeText(yamls
+            .map { relativePath(it) }
+            .sorted()
+            .joinToString("\n"))
+    }
+}
+
 tasks.processResources {
     dependsOn(writeBuildProperties)
+    dependsOn(generatePresetFileList)
 }
 
 val shadowJar = tasks.withType<ShadowJar> {

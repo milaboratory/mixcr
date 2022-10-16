@@ -28,12 +28,7 @@ import com.milaboratory.mixcr.assembler.ReadToCloneMapping.DROPPED_WITH_CLONE_MA
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
-import com.milaboratory.mixcr.basictypes.ClnAWriter
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.mixcr.basictypes.VDJCSProperties
+import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
@@ -47,10 +42,7 @@ import gnu.trove.map.hash.TIntObjectHashMap
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.nio.file.Path
 import kotlin.io.path.extension
 
@@ -61,7 +53,7 @@ object CommandAssemble {
         @JsonProperty("sortBySequence") val sortBySequence: Boolean,
         @JsonProperty("clnaOutput") val clnaOutput: Boolean,
         @JsonProperty("cellLevel") val cellLevel: Boolean,
-        @JsonProperty("consensusAssemblerParameters") @JsonMerge val consensusAssemblerParameters: PreCloneAssemblerParameters,
+        @JsonProperty("consensusAssemblerParameters") @JsonMerge val consensusAssemblerParameters: PreCloneAssemblerParameters?,
         @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters,
         /** Try automatically infer threshold value for the minimal number of records per consensus from the
          * filtering metadata of tag-refinement step. Applied only if corresponding threshold equals to 0. */
@@ -225,7 +217,7 @@ object CommandAssemble {
                 numberOfAlignments = alignmentsReader.numberOfAlignments
 
                 cmdParam = paramsResolver.resolve(inputHeader.paramsSpec.addMixins(mixinsToAdd)) { cp ->
-                    if (!cp.inferMinRecordsPerConsensus)
+                    if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
                         return@resolve cp
 
                     if (cp.consensusAssemblerParameters.assembler.minRecordsPerConsensus != 0) {
@@ -299,6 +291,12 @@ object CommandAssemble {
                             inputHeader.tagsInfo.hasTagsWithType(TagType.Cell) ||
                             inputHeader.tagsInfo.hasTagsWithType(TagType.Molecule)
                         ) {
+                            if (cmdParam.consensusAssemblerParameters == null)
+                                throw ValidationException(
+                                    "Current preset has no consensus assembler parameters, " +
+                                            "while molecular or cell barcodes are used in the data."
+                                )
+
                             val preClonesFile = tempDest.resolvePath("preclones.pc")
 
                             val groupingLevel = if (cmdParam.cellLevel) TagType.Cell else TagType.Molecule

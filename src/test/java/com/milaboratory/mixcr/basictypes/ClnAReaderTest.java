@@ -84,7 +84,7 @@ public class ClnAReaderTest {
                 .collect(Collectors.toList());
         CloneSet newCloneSet = new CloneSet(
                 modifyClones.apply(newClones), align.usedGenes,
-                new MiXCRHeader("hashA123", new MiXCRParamsSpec("default_4.0"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
+                new MiXCRHeader("hashA123", new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
                 emptyFooter(),
@@ -131,7 +131,7 @@ public class ClnAReaderTest {
         File file = TempFileManager.getTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
-                new MiXCRHeader(null, new MiXCRParamsSpec("default_4.0"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
+                new MiXCRHeader(null, new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters, CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
                 emptyFooter(),

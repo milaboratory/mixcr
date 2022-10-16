@@ -5,7 +5,7 @@ set -euxo pipefail
 touch empty_R1.fastq
 touch empty_R2.fastq
 
-mixcr analyze tcr_amplicon \
+mixcr analyze generic-tcr-amplicon \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

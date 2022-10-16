@@ -11,26 +11,14 @@
  */
 package com.milaboratory.mixcr
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonTypeName
-import com.milaboratory.cli.Mixin
-import com.milaboratory.cli.POverride
-import com.milaboratory.cli.POverridesBuilderDsl
-import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.cli.POverridesBuilderOpsAbstract
+import com.milaboratory.cli.*
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
 import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.cli.CommandAlign
-import com.milaboratory.mixcr.cli.CommandAssemble
-import com.milaboratory.mixcr.cli.CommandAssembleContigs
-import com.milaboratory.mixcr.cli.CommandExportAlignments
-import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.cli.*
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractorsFactoryNew
@@ -39,9 +27,7 @@ import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import io.repseq.core.GeneType.Constant
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.Variable
+import io.repseq.core.GeneType.*
 import io.repseq.core.ReferencePoint
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -297,18 +283,18 @@ object AlignMixins {
                     }
 
                 Constant ->
-                modifyAlignmentParams {
-                    // Checking mixin assumptions
-                    if (jAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.FR4End)
-                        throw RuntimeException(
-                            "Incompatible J gene right alignment feature boundary for the mix-in: " +
-                                    "${jAlignerParameters.geneFeatureToAlign.lastPoint}"
-                        )
-                    if (cAlignerParameters == null)
-                        throw RuntimeException(
-                            "Wrong application of mixin \"${cmdArgs.joinToString(" ")}\", " +
-                                    "underlying parameter set has no alignment parameters for C gene"
-                        )
+                    modifyAlignmentParams {
+                        // Checking mixin assumptions
+                        if (jAlignerParameters.geneFeatureToAlign.lastPoint != ReferencePoint.FR4End)
+                            throw RuntimeException(
+                                "Incompatible J gene right alignment feature boundary for the mix-in: " +
+                                        "${jAlignerParameters.geneFeatureToAlign.lastPoint}"
+                            )
+                        if (cAlignerParameters == null)
+                            throw RuntimeException(
+                                "Wrong application of mixin \"${cmdArgs.joinToString(" ")}\", " +
+                                        "underlying parameter set has no alignment parameters for C gene"
+                            )
 
                         // And setting strict alignment mode for the J gene
                         jAlignerParameters.parameters.isFloatingRightBound = false
@@ -415,9 +401,6 @@ object AlignMixins {
         }
     }
 
-}
-
-object AssembleMixins {
     @JsonTypeName("KeepNonCDR3Alignments")
     object KeepNonCDR3Alignments : MiXCRMixinBase(10) {
         override val cmdArgs get() = listOf(CMD_OPTION)
@@ -445,7 +428,9 @@ object AssembleMixins {
 
         const val CMD_OPTION = "--drop-non-CDR3-alignments"
     }
+}
 
+object AssembleMixins {
     @JsonTypeName("SetClonotypeAssemblingFeatures")
     data class SetClonotypeAssemblingFeatures(
         @JsonProperty("features") val features: GeneFeatures

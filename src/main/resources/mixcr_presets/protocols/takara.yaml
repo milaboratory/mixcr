@@ -1,336 +1,186 @@
 "takara-human-bcr-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-kaligner2-v1-base
   mixins:
     - type: SetSpecies
       species: hs
+    - type: SetTagPattern
+      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
-      floating: true
+      floating: true # FIXME correct?
       geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
-        separateByC: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "takara-human-bcr-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-kaligner2-v1-base
   mixins:
     - type: SetSpecies
       species: hs
+    - type: SetTagPattern
+      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
-      floating: true
+      floating: true # FIXME correct?
       geneType: C
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByC: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "takara-human-tcr-V2-cdr3":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
-  mixins:
-    - type: SetSpecies
-      species: hsa
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_default_4.0
-    overrides:
-      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByV: true
-        separateByJ: true
-
-"takara-human-tcr-V2-full-length":
-  inheritFrom: _universal
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-kaligner1-v1-base
   mixins:
     - type: SetSpecies
       species: hs
+    - type: SetTagPattern
+      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+"takara-human-tcr-V2-full-length":
+  inheritFrom: bundle-umi-kaligner1-v1-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetTagPattern
+      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-  align:
-    inheritFrom: align_kaligner2_4.0
-    overrides:
-      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort_universal
-    overrides:
-      parameters:
-        postFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "UMI"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
-              operator:
-                type: "group_operator_otsu1"
-                logX: true
+
+    # FIXME no split by C ?
 
 "takara-human-tcr-V1-cdr3":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
+      species: hs
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "takara-human-tcr-V1-full-length":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
-      species: hsa
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
+      species: hs
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
 
 
 "takara-mouse-bcr-cdr3":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner2-v1-base
   mixins:
     - type: SetSpecies
       species: mmu
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
-  align:
-    inheritFrom: align_kaligner2_4.0
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "takara-mouse-bcr-full-length":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner2-v1-base
   mixins:
     - type: SetSpecies
       species: mmu
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
-  align:
-    inheritFrom: align_kaligner2_4.0
+
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
 
 "takara-mouse-tcr-cdr3":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
       species: mmu
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "CDR3" ]
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
-  assemble:
-    inheritFrom: assemble_universal
-    overrides:
-      cloneAssemblerParameters:
-        separateByJ: true
-        separateByV: true
+
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "takara-mouse-tcr-full-length":
-  inheritFrom: default_4.0
-  pipeline:
-    - align
-    - assemble
-    - exportClones
+  inheritFrom: bundle-kaligner1-v1-base
   mixins:
     - type: SetSpecies
       species: mmu
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
+
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
 
-
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]

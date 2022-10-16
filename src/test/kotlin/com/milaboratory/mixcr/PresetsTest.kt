@@ -16,10 +16,19 @@ import org.junit.Test
 class PresetsTest {
     @Test
     fun test1() {
-        for (presetName in Presets.allPresetNames) {
+        for (presetName in Presets.nonAbstractPresetNames) {
             println(presetName)
             val bundle = Presets.resolveParamsBundle(presetName)
-            assertJson(K_OM, bundle, true)
+            assertJson(K_OM, bundle, false)
+            println(bundle.flags)
+            println()
+            Assert.assertNotNull("pipeline must be set for all non-abstract presets ($presetName)", bundle.pipeline)
+            for (step in bundle.pipeline!!.steps) {
+                Assert.assertNotNull(
+                    "params for all pipeline steps must be set in non-abstract bundle ($step)",
+                    step.extractFromBundle(bundle)
+                )
+            }
             bundle.flags.forEach {
                 Assert.assertTrue("Flag = $it", Flags.flagMessages.containsKey(it))
             }
@@ -28,8 +37,8 @@ class PresetsTest {
 
     @Test
     fun test3() {
-        // val bundle = Presets.resolveParamsBundle("assemblePartial_universal")
-        // val bundle = Presets.resolveParamsBundle("_universal")
+        // val bundle = Presets.resolveParamsBundle("assemblePartial-universal")
+        // val bundle = Presets.resolveParamsBundle("simple-base")
         // val bundle = Presets.resolveParamsBundle("_10x_vdj")
         val bundle = Presets.resolveParamsBundle("test-subCloningRegions")
         Presets.assembleContigs("test-subCloningRegions")
@@ -38,7 +47,7 @@ class PresetsTest {
 
     @Test
     fun testExport2() {
-        for (presetName in Presets.allPresetNames) {
+        for (presetName in Presets.nonAbstractPresetNames) {
             val bundle = Presets.resolveParamsBundle(presetName)
             if (bundle.align == null)
                 continue
