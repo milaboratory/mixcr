@@ -5,6 +5,7 @@ import com.palantir.gradle.gitversion.VersionDetails
 import de.undercouch.gradle.tasks.download.Download
 import groovy.lang.Closure
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import java.net.InetAddress
 
 gradle.startParameter.excludedTaskNames += listOf(
@@ -161,6 +162,7 @@ val generatePresetFileList by tasks.registering {
                 .map { it.relativeTo(file("src/main/resources/mixcr_presets")) }
                 .toList()
         })
+        outputFile.ensureParentDirsCreated()
         outputFile.writeText(yamls
             .map { relativePath(it) }
             .sorted()
