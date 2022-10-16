@@ -1,32 +1,10 @@
 "mikelov-et-al-2021":
-  inheritFrom: bundle-base
-  pipeline:
-    - align
-    - refineTagsAndSort
-    - assemble
-    - exportClones
+  inheritFrom: bundle-umi-kaligner2-v1-base
   mixins:
     - type: SetSpecies
       species: hs
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
-    - type: MaterialTypeRNA
-    - type: AddExportClonesField
-      insertIndex: 3
-      field: -uniqueTagCount
-      args: [ "UMI" ]
-    - type: AddExportClonesField
-      insertIndex: 4
-      field: -uniqueTagFraction
-      args: [ "UMI" ]
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryWithPoint
-      floating: false
-      anchorPoint: CBegin(+15)
-  align:
-    inheritFrom: align-legacy-4.0-kaligner2
-    overrides:
+
+    - type: SetTagPattern
       tagPattern: |
         ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
         ^(R1F:N{0:2}(C:rggggaagacsgatg)(R1:*)) |
@@ -54,5 +32,13 @@
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*)) |
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
         ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort-umi-universal
+
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryWithPoint
+      floating: false
+      anchorPoint: CBegin(+15)
+
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]

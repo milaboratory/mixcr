@@ -3,12 +3,14 @@
 set -euxo pipefail
 
 mixcr align --preset test-airr-long-ig-base -f \
+      --species hs \
       -OvParameters.geneFeatureToAlign="{FR1Begin:VEnd}" \
       long_ig_R1.fastq \
       long_ig_R2.fastq \
       case13_full.vdjca
 
 mixcr align --preset test-airr-long-ig-base -f \
+      --species hs \
       -OvParameters.geneFeatureToAlign="{CDR1Begin:VEnd}" \
       long_ig_R1.fastq \
       long_ig_R2.fastq \
