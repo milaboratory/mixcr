@@ -45,8 +45,8 @@
                     keys:
                       - UMI
                 operator:
-                  type: group_operator_range
-                  lower: 2.0
+                  type: group_operator_otsu1
+                  logX: true
   assemblePartial:
     inheritFrom: assemblePartial-universal
   assemble:
