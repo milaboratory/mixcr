@@ -18,7 +18,7 @@ import java.nio.file.Path
 
 class ReportOptions {
     @Option(
-        description = [CommonDescriptions.REPORT],
+        description = ["Report file (human readable version, see -j / --json-report for machine readable report)."],
         names = ["-r", "--report"],
         paramLabel = "<path>",
         order = 1_000_000 - 7
@@ -26,7 +26,7 @@ class ReportOptions {
     private var plain: Path? = null
 
     @Option(
-        description = [CommonDescriptions.JSON_REPORT],
+        description = ["JSON formatted report file."],
         names = ["-j", "--json-report"],
         paramLabel = "<path>",
         order = 1_000_000 - 6

@@ -37,6 +37,7 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.primitivio.PipeDataInputReader
@@ -80,7 +81,10 @@ object CommandAssembleContigs {
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
-            description = ["Ignore tags (UMIs, cell-barcodes)"],
+            description = [
+                "Ignore tags (UMIs, cell-barcodes)",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--ignore-tags"]
         )
         private var ignoreTags = false

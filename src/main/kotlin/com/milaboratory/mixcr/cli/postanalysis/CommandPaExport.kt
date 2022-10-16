@@ -60,12 +60,10 @@ abstract class CommandPaExport : MiXCRCommand {
      */
     protected fun getPaResult(): PaResult = paResultFromConstructor ?: parsedPaResultFromInput
 
-    private val chainsToProcess by lazy { chains?.run { ChainsFilter.parseChainsList(chains) } }
-
     override fun run0() {
-        val chains = chainsToProcess
+        val chainsToProcess = chains?.run { ChainsFilter.parseChainsList(chains) }
         for (r in getPaResult().results) {
-            if (chains == null || chains.contains(r.group.chains)) {
+            if (chainsToProcess == null || chainsToProcess.contains(r.group.chains)) {
                 run(r)
             }
         }

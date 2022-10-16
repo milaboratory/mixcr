@@ -31,6 +31,7 @@ import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.primitivio.map
 import com.milaboratory.util.ArraysUtils
@@ -66,22 +67,29 @@ object CommandAssemble {
             description = ["If this option is specified, output file will be written in \"Clones & " +
                     "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
                     "This file then can be used to build wider contigs for clonal sequence or extract original " +
-                    "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage)."],
+                    "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage).",
+                DEFAULT_VALUE_FROM_PRESET],
             names = ["-a", "--write-alignments"]
         )
         private var isClnaOutput = false
 
         @Option(
-            description = ["If tags are present, do assemble pre-clones on the cell level rather than on the molecule level. " +
-                    "If there are no molecular tags in the data, but cell tags are present, this option will be used by default. " +
-                    "This option has no effect on the data without tags."],
+            description = [
+                "If tags are present, do assemble pre-clones on the cell level rather than on the molecule level.",
+                "If there are no molecular tags in the data, but cell tags are present, this option will be used by default.",
+                "This option has no effect on the data without tags.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--cell-level"]
         )
         private var cellLevel = false
 
         @Option(
-            description = ["Sort by sequence. Clones in the output file will be sorted by clonal sequence," +
-                    "which allows to build overlaps between clonesets."],
+            description = [
+                "Sort by sequence. Clones in the output file will be sorted by clonal sequence," +
+                        "which allows to build overlaps between clonesets.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-s", "--sort-by-sequence"]
         )
         private var sortBySequence = false
@@ -101,10 +109,18 @@ object CommandAssemble {
         private val consensusAssemblerOverrides: Map<String, String> = mutableMapOf()
 
         @Option(
-            description = ["Turns off automatic inference of minRecordsPerConsensus parameter."],
+            description = [
+                "Turns off automatic inference of minRecordsPerConsensus parameter.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--dont-infer-threshold"]
         )
         private var dontInferThreshold = false
+
+        @Mixin
+        private var mixins: AssembleMiXCRMixins? = null
+
+        protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemble) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
@@ -200,7 +216,7 @@ object CommandAssemble {
                 val inputFooter = alignmentsReader.footer
                 numberOfAlignments = alignmentsReader.numberOfAlignments
 
-                cmdParam = paramsResolver.resolve(inputHeader.paramsSpec) { cp ->
+                cmdParam = paramsResolver.resolve(inputHeader.paramsSpec.addMixins(mixinsToAdd)) { cp ->
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
                         return@resolve cp
 
@@ -275,9 +291,11 @@ object CommandAssemble {
                             inputHeader.tagsInfo.hasTagsWithType(TagType.Cell) ||
                             inputHeader.tagsInfo.hasTagsWithType(TagType.Molecule)
                         ) {
-                            if(cmdParam.consensusAssemblerParameters == null)
-                                throw ValidationException("Current preset has no consensus assembler parameters, " +
-                                        "while molecular or cell barcodes are used in the data.")
+                            if (cmdParam.consensusAssemblerParameters == null)
+                                throw ValidationException(
+                                    "Current preset has no consensus assembler parameters, " +
+                                            "while molecular or cell barcodes are used in the data."
+                                )
 
                             val preClonesFile = tempDest.resolvePath("preclones.pc")
 

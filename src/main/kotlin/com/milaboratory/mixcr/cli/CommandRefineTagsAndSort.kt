@@ -33,6 +33,7 @@ import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
@@ -67,58 +68,82 @@ object CommandRefineTagsAndSort {
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
-            description = ["Don't correct barcodes, only sort alignments by tags"],
+            description = [
+                "Don't correct barcodes, only sort alignments by tags",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--dont-correct"]
         )
         private var dontCorrect = false
 
         @Option(
-            description = ["This parameter determines how thorough the procedure should eliminate variants looking like errors. " +
-                    "Smaller value leave less erroneous variants at the cost of accidentally correcting true variants. " +
-                    "This value approximates the fraction of erroneous variants the algorithm will miss (type II errors). "],
+            description = [
+                "This parameter determines how thorough the procedure should eliminate variants looking like errors.",
+                "Smaller value leave less erroneous variants at the cost of accidentally correcting true variants.",
+                "This value approximates the fraction of erroneous variants the algorithm will miss (type II errors).",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-p", "--power"],
             paramLabel = "<d>"
         )
         private var power: Double? = null
 
         @Option(
-            description = ["Expected background non-sequencing-related substitution rate"],
+            description = [
+                "Expected background non-sequencing-related substitution rate",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-s", "--substitution-rate"],
             paramLabel = "<d>"
         )
         private var backgroundSubstitutionRate: Double? = null
 
         @Option(
-            description = ["Expected background non-sequencing-related indel rate"],
+            description = [
+                "Expected background non-sequencing-related indel rate",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-i", "--indel-rate"],
             paramLabel = "<d>"
         )
         private var backgroundIndelRate: Double? = null
 
         @Option(
-            description = ["Minimal quality score for the tag. " +
-                    "Tags having positions with lower quality score will be discarded, if not corrected"],
+            description = [
+                "Minimal quality score for the tag.",
+                "Tags having positions with lower quality score will be discarded, if not corrected",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["-q", "--min-quality"],
             paramLabel = "<n>"
         )
         private var minQuality: Int? = null
 
         @Option(
-            description = ["Maximal number of substitutions to search for"],
+            description = [
+                "Maximal number of substitutions to search for",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--max-substitutions"],
             paramLabel = "<n>"
         )
         private var maxSubstitutions: Int? = null
 
         @Option(
-            description = ["Maximal number of indels to search for"],
+            description = [
+                "Maximal number of indels to search for",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--max-indels"],
             paramLabel = "<n>"
         )
         private var maxIndels: Int? = null
 
         @Option(
-            description = ["Maximal number of substitutions and indels combined to search for"],
+            description = [
+                "Maximal number of substitutions and indels combined to search for",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             names = ["--max-errors"],
             paramLabel = "<n>"
         )
@@ -126,9 +151,12 @@ object CommandRefineTagsAndSort {
 
         @Option(
             names = ["-w", "--whitelist"],
-            description = ["Use whitelist-driven correction for one of the tags. Usage: " +
-                    "--whitelist CELL=preset:737K-august-2016 or -w UMI=file:my_umi_whitelist.txt. If not specified mixcr will set " +
-                    "correct whitelists if --tag-preset was used on align step."],
+            description = [
+                "Use whitelist-driven correction for one of the tags.",
+                "Usage: --whitelist CELL=preset:737K-august-2016 or -w UMI=file:my_umi_whitelist.txt.",
+                "If not specified mixcr will set correct whitelists if --tag-preset was used on align step.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
             paramLabel = "<tag=value>"
         )
         private var whitelists: Map<String, String> = mutableMapOf()
