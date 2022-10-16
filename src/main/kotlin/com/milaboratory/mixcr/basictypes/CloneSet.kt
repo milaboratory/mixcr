@@ -12,202 +12,118 @@
 package com.milaboratory.mixcr.basictypes
 
 import cc.redberry.primitives.Filter
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
-import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import io.repseq.core.GeneFeature
-import io.repseq.core.GeneType
 import io.repseq.core.VDJCGene
-import io.repseq.core.VDJCGeneId
 import java.util.*
 import java.util.function.Function
-import java.util.stream.Collectors
 
 /**
  * Created by poslavsky on 10/07/14.
  */
-class CloneSet : Iterable<Clone?>, MiXCRFileInfo, HasFeatureToAlign {
-    @JvmField
-    var versionInfo: String? = null
-
-    @JvmField
-    override val header: MiXCRHeader?
-
-    @JvmField
-    override val footer: MiXCRFooter?
-
-    @JvmField
-    val ordering: CloneOrdering
-    val usedGenes: List<VDJCGene>
-    val clones: MutableList<Clone>
-    val totalCount: Double
-    val totalTagCounts: TagCount?
-
-    /** Total number of unique tag combinations on each level  */
-    private val tagDiversity: IntArray?
+class CloneSet private constructor(
+    val usedGenes: List<VDJCGene>,
+    val clones: List<Clone>,
+    val ordering: CloneOrdering,
+    val cloneSetInfo: CloneSetInfoWithoutClones
+) : CloneSetInfo by cloneSetInfo, Iterable<Clone> by clones, HasFeatureToAlign {
 
     constructor(
-        clones: List<Clone>, usedGenes: Collection<VDJCGene>?,
-        header: MiXCRHeader?, footer: MiXCRFooter?,
+        clones: List<Clone>,
+        usedGenes: Collection<VDJCGene>,
+        header: MiXCRHeader,
+        footer: MiXCRFooter,
         ordering: CloneOrdering
-    ) {
-        val list = ArrayList(clones)
-        list.sort(ordering.comparator())
-        this.header = header
-        this.footer = footer
-        this.ordering = ordering
-        this.usedGenes = Collections.unmodifiableList(ArrayList(usedGenes))
-        this.clones = Collections.unmodifiableList(list)
-        var totalCount: Long = 0
-        val tagDiversity = IntArray(header!!.tagsInfo.size + 1)
-        val tagCountAggregator = TagCountAggregator()
-        for (clone in clones) {
-            totalCount += clone.count.toLong()
-            clone.parentCloneSet = this
-            require(clone.tagCount.depth() == header.tagsInfo.size) { "Conflict in tags info and clone tag counter." }
-            tagCountAggregator.add(clone.tagCount)
-            for (d in tagDiversity.indices) tagDiversity[d] += clone.getTagCount().getTagDiversity(d)
-        }
-        totalTagCounts = if (clones.size == 0) null else tagCountAggregator.createAndDestroy()
-        this.tagDiversity = tagDiversity
-        this.totalCount = totalCount.toDouble()
-    }
+    ) : this(
+        Collections.unmodifiableList(ArrayList(usedGenes)),
+        clones.sortedWith(ordering.comparator()),
+        ordering,
+        buildCloneSetInfo(clones, header, footer)
+    )
 
-    /** To be used in tests only  */
-    constructor(clones: List<Clone>) {
-        this.clones = Collections.unmodifiableList(ArrayList(clones))
-        var totalCount: Long = 0
-        val genes = HashMap<VDJCGeneId, VDJCGene>()
-        val alignedFeatures = EnumMap<GeneType, GeneFeature>(GeneType::class.java)
-        val tagCountAggregator = TagCountAggregator()
-        for (clone in clones) {
-            totalCount += clone.count.toLong()
-            tagCountAggregator.add(clone.tagCount)
-            clone.parentCloneSet = this
-            for (geneType in GeneType.values()) for (hit in clone.getHits(geneType)) {
-                val gene = hit.gene
-                genes[gene.id] = gene
-                val alignedFeature = hit.alignedFeature
-                val f = alignedFeatures.put(geneType, alignedFeature)
-                require(!(f != null && f != alignedFeature)) { "Different aligned feature for clones." }
-            }
-        }
-        totalTagCounts = if (clones.size == 0) null else tagCountAggregator.createAndDestroy()
-        header = null
-        footer = null
-        tagDiversity = null
-        ordering = CloneOrdering()
-        usedGenes = Collections.unmodifiableList(ArrayList(genes.values))
-        this.totalCount = totalCount.toDouble()
-    }
+    operator fun get(i: Int): Clone = clones[i]
 
-    fun getClones(): List<Clone> {
-        return clones
-    }
+    fun size(): Int = clones.size
 
-    operator fun get(i: Int): Clone {
-        return clones[i]
-    }
-
-    fun size(): Int {
-        return clones.size
-    }
-
-    val isHeaderAvailable: Boolean
-        get() = header != null
-
-    override fun getHeader(): MiXCRHeader? {
-        return Objects.requireNonNull(header)
-    }
-
-    val isFooterAvailable: Boolean
-        get() = footer != null
-
-    override fun getFooter(): MiXCRFooter? {
-        return Objects.requireNonNull(footer)
-    }
-
-    fun withHeader(header: MiXCRHeader?): CloneSet {
-        return CloneSet(clones, usedGenes, header, footer, ordering)
-    }
-
-    fun withFooter(footer: MiXCRFooter?): CloneSet {
-        return CloneSet(clones, usedGenes, header, footer, ordering)
-    }
-
-    val assemblingFeatures: Array<GeneFeature>
-        get() = header!!.assemblerParameters!!.assemblingFeatures
-    val assemblerParameters: CloneAssemblerParameters?
-        get() = header!!.assemblerParameters
     val alignmentParameters: VDJCAlignerParameters
-        get() = header!!.alignerParameters
+        get() = header.alignerParameters
+
     val tagsInfo: TagsInfo
-        get() = header!!.tagsInfo
-
-    override fun getFeatureToAlign(geneType: GeneType): GeneFeature {
-        return header!!.alignerParameters.getFeatureToAlign(geneType)
-    }
-
-    fun getTagDiversity(level: Int): Int {
-        return tagDiversity!![level]
-    }
-
-    override fun iterator(): MutableIterator<Clone> {
-        return clones.iterator()
-    }
+        get() = header.tagsInfo
 
     companion object {
         /**
          * WARNING: current object (in) will be destroyed
          */
-        fun reorder(`in`: CloneSet, newOrdering: CloneOrdering): CloneSet {
-            val newClones = ArrayList(`in`.clones)
-            newClones.sort(newOrdering.comparator())
+        fun reorder(input: CloneSet, newOrdering: CloneOrdering): CloneSet {
+            val newClones = input.clones.sortedWith(newOrdering.comparator())
             for (nc in newClones) nc.parent = null
-            return CloneSet(newClones, `in`.usedGenes, `in`.header, `in`.footer, newOrdering)
+            return CloneSet(newClones, input.usedGenes, input.header, input.footer, newOrdering)
         }
 
         /**
          * WARNING: current object (in) will be destroyed
          */
-        fun transform(`in`: CloneSet, filter: Filter<Clone?>): CloneSet {
-            val newClones: MutableList<Clone> = ArrayList(`in`.size())
-            for (i in 0 until `in`.size()) {
-                val c = `in`[i]
+        fun transform(input: CloneSet, filter: Filter<Clone>): CloneSet {
+            val newClones: MutableList<Clone> = ArrayList(input.size())
+            for (i in 0 until input.size()) {
+                val c = input[i]
                 if (filter.accept(c)) {
                     c.parent = null
                     newClones.add(c)
                 }
             }
-            return CloneSet(newClones, `in`.usedGenes, `in`.header, `in`.footer, `in`.ordering)
+            return CloneSet(newClones, input.usedGenes, input.header, input.footer, input.ordering)
         }
 
         /**
          * WARNING: current object (in) will be destroyed
          */
-        fun <T> split(`in`: CloneSet, splitter: Function<Clone?, T>): Map<T, CloneSet> {
+        fun <T> split(input: CloneSet, splitter: Function<Clone, T>): Map<T, CloneSet> {
             val clonesMap: MutableMap<T, MutableList<Clone>> = HashMap()
-            for (i in 0 until `in`.size()) {
-                val c = `in`[i]
+            for (i in 0 until input.size()) {
+                val c = input[i]
                 val key = splitter.apply(c)
-                val cloneList = clonesMap.computeIfAbsent(key) { __: T -> ArrayList() }
+                val cloneList = clonesMap.computeIfAbsent(key) { ArrayList() }
                 c.parent = null
                 cloneList.add(c)
             }
-            return clonesMap.entries
-                .stream()
-                .collect(
-                    Collectors.toMap<Map.Entry<T, List<Clone>>, T, CloneSet>(
-                        Function<Map.Entry<T, List<Clone>>, T> { (key, value) -> java.util.Map.Entry.key },
-                        Function { (_, value): Map.Entry<T, List<Clone>> ->
-                            CloneSet(
-                                value, `in`.usedGenes, `in`.header, `in`.footer, `in`.ordering
-                            )
-                        }
-                    ))
+            return clonesMap
+                .mapValuesTo(hashMapOf()) { (_, value) ->
+                    CloneSet(
+                        value, input.usedGenes, input.header, input.footer, input.ordering
+                    )
+                }
         }
     }
+}
+
+private fun buildCloneSetInfo(
+    clones: List<Clone>,
+    header: MiXCRHeader,
+    footer: MiXCRFooter,
+): CloneSetInfoWithoutClones {
+    var totalCount: Long = 0
+    val tagDiversity = IntArray(header.tagsInfo.size + 1)
+    val tagCountAggregator = TagCountAggregator()
+    for (clone in clones) {
+        totalCount += clone.count.toLong()
+        require(clone.tagCount.depth() == header.tagsInfo.size) { "Conflict in tags info and clone tag counter." }
+        tagCountAggregator.add(clone.tagCount)
+        for (d in tagDiversity.indices) tagDiversity[d] += clone.getTagCount().getTagDiversity(d)
+    }
+    val result = CloneSetInfoWithoutClones(
+        totalCount.toDouble(),
+        if (clones.isEmpty()) null else tagCountAggregator.createAndDestroy(),
+        header,
+        footer,
+        tagDiversity
+    )
+    for (clone in clones) {
+        totalCount += clone.count.toLong()
+        clone.parentCloneSet = result
+    }
+    return result
 }

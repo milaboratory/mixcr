@@ -106,8 +106,7 @@ public final class ClnsWriter implements AutoCloseable {
         for (Clone clone : cloneSet)
             cloneIP.put(clone);
         cloneIP.put(null);
-        if (cloneSet.isFooterAvailable())
-            setFooter(cloneSet.footer);
+        setFooter(cloneSet.getFooter());
     }
 
     /**

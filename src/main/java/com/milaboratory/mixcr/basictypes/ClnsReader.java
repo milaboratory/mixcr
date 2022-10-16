@@ -126,13 +126,15 @@ public class ClnsReader implements CloneReader, AutoCloseable {
         return input.beginRandomAccessPrimitivIBlocks(Clone.class, clonesPosition);
     }
 
-    public CloneSet getCloneSet() {
+    public CloneSet readCloneSet() {
         List<Clone> clones = new ArrayList<>();
         for (Clone clone : CUtils.it(readClones()))
             clones.add(clone);
-        CloneSet cloneSet = new CloneSet(clones, usedGenes, header, footer, ordering);
-        cloneSet.versionInfo = versionInfo;
-        return cloneSet;
+        return new CloneSet(clones, usedGenes, header, footer, ordering);
+    }
+
+    public String getVersionInfo() {
+        return versionInfo;
     }
 
     @Override

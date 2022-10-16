@@ -18,8 +18,7 @@ import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
-import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
 import com.milaboratory.mixcr.basictypes.tag.TagType
@@ -237,6 +236,11 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                 logger.warn("argument --debugDir will not be used with --build-from")
             }
         }
+        inputFiles.forEach { input ->
+            ValidationException.require(input.extension == "clns") {
+                "Command use only clns as input, got $input"
+            }
+        }
     }
 
     private val tempDest: TempFileDest by lazy {
@@ -253,16 +257,17 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
         val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
         val cloneReaders = clnsFileNames.map { path ->
-            CloneSetIO.mkReader(path, vdjcLibraryRegistry)
+            ClnsReader(path, vdjcLibraryRegistry)
         }
         ValidationException.require(cloneReaders.isNotEmpty()) { "there is no files to process" }
         ValidationException.require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
         for (geneType in GeneType.VJ_REFERENCE) {
-            ValidationException.require(cloneReaders
+            val differentScores = cloneReaders
                 .map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
-                .distinct().count() == 1) {
+                .distinct()
+            ValidationException.require(differentScores.count() == 1) {
                 "input files must have the same $geneType scoring"
             }
         }
@@ -347,7 +352,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     private fun writeResults(
         reportBuilder: BuildSHMTreeReport.Builder,
         result: OutputPort<TreeWithMetaBuilder>,
-        cloneReaders: List<CloneReader>,
+        cloneReaders: List<ClnsReader>,
         scoringSet: ScoringSet,
         generateGlobalTreeIds: Boolean
     ) {
@@ -385,18 +390,19 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
     }
 
-    private fun SHMTreesWriter.writeHeader(cloneReaders: List<CloneReader>, params: Params) {
+    private fun SHMTreesWriter.writeHeader(cloneReaders: List<ClnsReader>, params: Params) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
-        val headers = cloneReaders.map { it.header }
-        require(headers.map { it.alignerParameters }.distinct().size == 1) {
+        val headers = cloneReaders.map { it.readCloneSet().cloneSetInfo }
+        require(headers.map { it.header.alignerParameters }.distinct().size == 1) {
             "alignerParameters must be the same"
         }
+        cloneReaders.map { it.readCloneSet() }
         writeHeader(
-            headers,
             headers
-                .fold(MiXCRHeaderMerger()) { m, h -> m.add(h) }.build()
+                .fold(MiXCRHeaderMerger()) { m, cloneSetInfo -> m.add(cloneSetInfo.header) }.build()
                 .addStepParams(MiXCRCommandDescriptor.findShmTrees, params),
             clnsFileNames.map { it.toString() },
+            headers,
             usedGenes
         )
     }

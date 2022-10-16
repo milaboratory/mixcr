@@ -68,7 +68,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
                         assemblingFeatures,
                         Variable, Joining
                     )
-                    writer.writeCloneSet(CloneSet.reorder(reader.cloneSet, ordering))
+                    writer.writeCloneSet(CloneSet.reorder(reader.readCloneSet(), ordering))
                     writer.setFooter(reader.footer)
                 }
             }

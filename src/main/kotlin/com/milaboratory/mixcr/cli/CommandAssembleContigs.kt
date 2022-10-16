@@ -334,7 +334,7 @@ object CommandAssembleContigs {
                         reportBuilder.finalCloneCount >= reportBuilder.initialCloneCount
             )
             var cloneId = 0
-            val clones = arrayOfNulls<Clone>(totalClonesCount)
+            val clones = mutableListOf<Clone>()
             PrimitivI(BufferedInputStream(FileInputStream(outputFile.toFile()))).use { tmpIn ->
                 IOUtil.registerGeneReferences(tmpIn, genes, header.alignerParameters)
                 var i = 0
@@ -353,7 +353,7 @@ object CommandAssembleContigs {
             })
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
 
-            val cloneSet = CloneSet(listOf(*clones), genes, resultHeader, footer, ordering)
+            val cloneSet = CloneSet(clones, genes, resultHeader, footer, ordering)
             ClnsWriter(outputFile).use { writer ->
                 writer.writeCloneSet(cloneSet)
                 reportBuilder.setStartMillis(beginTimestamp)

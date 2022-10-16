@@ -140,11 +140,11 @@ public final class ClnAWriter implements
                         .getVersionString(AppVersionInfo.OutputType.ToFile));
 
                 // Writing header meta-info
-                o.writeObject(Objects.requireNonNull(cloneSet.header));
+                o.writeObject(Objects.requireNonNull(cloneSet.getHeader()));
                 featureToAlignProvider = cloneSet.getAlignmentParameters();
 
                 // Writing clone-set ordering
-                o.writeObject(cloneSet.ordering);
+                o.writeObject(cloneSet.getOrdering());
 
                 // During deserialization, the same procedure (in the same order) will be applied to
                 // the PrimitivI object, so that correct singleton objects (GeneFeature objects and sequences) will be

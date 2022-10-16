@@ -23,7 +23,10 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         this += FieldParameterless(
             Order.cloneSpecific + 100,
             "-cloneId",
-            "Unique clone identifier",
+            when {
+                forTreesExport -> "Unique clone identifier in source sample file"
+                else -> "Unique clone identifier"
+            },
             "Clone ID",
             "cloneId"
         ) { clone: Clone ->
@@ -32,7 +35,10 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         this += FieldParameterless(
             Order.cloneSpecific + 200,
             "-count",
-            "Export clone count",
+            when {
+                forTreesExport -> "Export clone count in source sample file"
+                else -> "Export clone count"
+            },
             "Clone count",
             "cloneCount",
             deprecation = stdDeprecationNote("-count", "-readCount", true),
@@ -42,32 +48,39 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         this += FieldParameterless(
             Order.cloneSpecific + 201,
             "-readCount",
-            "Number of reads assigned to the clonotype",
+            when {
+                forTreesExport -> "Number of reads assigned to the clonotype in source sample file"
+                else -> "Number of reads assigned to the clonotype"
+            },
             "Read Count",
             "readCount"
         ) { clone: Clone ->
             clone.count.toString()
         }
-        if (!forTreesExport) {
-            this += FieldParameterless(
-                Order.cloneSpecific + 300,
-                "-fraction",
-                "Export clone fraction",
-                "Clone fraction",
-                "cloneFraction",
-                deprecation = stdDeprecationNote("-fraction", "-readFraction", true),
-            ) { clone: Clone ->
-                clone.fraction.toString()
-            }
-            this += FieldParameterless(
-                Order.cloneSpecific + 301,
-                "-readFraction",
-                "Fraction of reads assigned to the clonotype",
-                "Read fraction",
-                "readFraction"
-            ) { clone: Clone ->
-                clone.fraction.toString()
-            }
+        this += FieldParameterless(
+            Order.cloneSpecific + 300,
+            "-fraction",
+            when {
+                forTreesExport -> "Export clone fraction in source sample file"
+                else -> "Export clone fraction"
+            },
+            "Clone fraction",
+            "cloneFraction",
+            deprecation = stdDeprecationNote("-fraction", "-readFraction", true),
+        ) { clone: Clone ->
+            clone.fraction.toString()
+        }
+        this += FieldParameterless(
+            Order.cloneSpecific + 301,
+            "-readFraction",
+            when {
+                forTreesExport -> "Fraction of reads assigned to the clonotype in source sample file"
+                else -> "Fraction of reads assigned to the clonotype"
+            },
+            "Read fraction",
+            "readFraction"
+        ) { clone: Clone ->
+            clone.fraction.toString()
         }
         this += FieldWithParameters(
             Order.tags + 500,

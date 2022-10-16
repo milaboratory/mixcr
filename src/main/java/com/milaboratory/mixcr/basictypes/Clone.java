@@ -19,13 +19,14 @@ import com.milaboratory.primitivio.annotations.Serializable;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import io.repseq.core.GeneType;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.Objects;
 
 @Serializable(by = IO.CloneSerializer.class)
 public final class Clone extends VDJCObject {
     final double count;
     final int id;
-    CloneSet parent = null;
+    CloneSetInfo parent = null;
     final Integer group;
 
     public Clone(NSequenceWithQuality[] targets, EnumMap<GeneType, VDJCHit[]> hits, TagCount tagCount, double count, int id, Integer group) {
@@ -58,13 +59,13 @@ public final class Clone extends VDJCObject {
         return new Clone(targets, hits, tagCount, count, id, group);
     }
 
-    public void setParentCloneSet(CloneSet set) {
+    public void setParentCloneSet(CloneSetInfo set) {
         if (this.parent != null)
             throw new IllegalStateException("Parent is already set.");
         this.parent = set;
     }
 
-    public CloneSet getParentCloneSet() {
+    public CloneSetInfo getParentCloneSet() {
         return parent;
     }
 

@@ -28,13 +28,13 @@ class CloneOrFoundAncestor(
     class SerializerImpl : BasicSerializer<CloneOrFoundAncestor>() {
         override fun write(output: PrimitivO, obj: CloneOrFoundAncestor) {
             output.writeInt(obj.id)
-            output.writeCollection(obj.clones)
+            output.writeCollection(obj.clones, PrimitivO::writeObject)
             output.writeObject(obj.mutationsSet)
         }
 
         override fun read(input: PrimitivI): CloneOrFoundAncestor {
             val id = input.readInt()
-            val clones = input.readList<CloneWithDatasetId>()
+            val clones = input.readList<CloneWithDatasetId>(PrimitivI::readObjectRequired)
             val mutationsSet = input.readObjectRequired<MutationsSet>()
             return CloneOrFoundAncestor(
                 id,

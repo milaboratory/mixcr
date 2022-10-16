@@ -14,14 +14,18 @@ package com.milaboratory.mixcr.trees
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mitool.pattern.search.readObject
+import com.milaboratory.mixcr.basictypes.CloneSetInfoWithoutClones
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.cli.ApplicationException
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils
+import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
+import com.milaboratory.primitivio.onEach
 import com.milaboratory.primitivio.readList
+import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCLibraryId
 import io.repseq.core.VDJCLibraryRegistry
@@ -33,7 +37,7 @@ class SHMTreesReader(
     val libraryRegistry: VDJCLibraryRegistry
 ) : AutoCloseable by input, MiXCRFileInfo {
     val fileNames: List<String>
-    val originHeaders: List<MiXCRHeader>
+    val cloneSetInfos: List<CloneSetInfoWithoutClones>
     override val header: MiXCRHeader
     val userGenes: List<VDJCGene>
     override val footer: MiXCRFooter
@@ -72,11 +76,11 @@ class SHMTreesReader(
 
         input.beginPrimitivI(true).use { i ->
             versionInfo = i.readUTF()
-            originHeaders = i.readList()
-            header = i.readObject()
-            fileNames = i.readList()
+            header = i.readObjectRequired()
+            fileNames = i.readList(PrimitivI::readObjectRequired)
+            cloneSetInfos = i.readList(PrimitivI::readObjectRequired)
 
-            val libraries = originHeaders.mapNotNull { it.foundAlleles }
+            val libraries = cloneSetInfos.mapNotNull { it.header.foundAlleles }
             libraries.forEach { (name, libraryData) ->
                 val alreadyRegistered = libraryRegistry.loadedLibraries.stream()
                     .anyMatch {
@@ -100,5 +104,11 @@ class SHMTreesReader(
 
     fun readTrees(): OutputPortCloseable<SHMTreeResult> =
         input.beginRandomAccessPrimitivIBlocks(SHMTreeResult::class.java, treesPosition)
-
+            .onEach { tree ->
+                tree.tree.allNodes().forEach { (_, node) ->
+                    node.content.clones.forEach { (clone, datasetId) ->
+                        clone.parentCloneSet = cloneSetInfos[datasetId]
+                    }
+                }
+            }
 }

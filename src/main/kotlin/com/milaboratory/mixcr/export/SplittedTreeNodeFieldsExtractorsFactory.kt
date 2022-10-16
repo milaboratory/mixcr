@@ -40,6 +40,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
             FieldCommandArgs("-cloneId"),
             FieldCommandArgs("-fileName"),
             FieldCommandArgs("-readCount"),
+            FieldCommandArgs("-readFraction"),
             FieldCommandArgs("-targetSequences"),
             FieldCommandArgs("-targetQualities"),
             FieldCommandArgs("-vHitsWithScore"),

@@ -13,11 +13,13 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.InputPort
 import com.milaboratory.cli.AppVersionInfo
+import com.milaboratory.mixcr.basictypes.CloneSetInfoWithoutClones
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_SHMT
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
+import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid
 import com.milaboratory.primitivio.writeCollection
 import io.repseq.core.VDJCGene
@@ -31,10 +33,14 @@ class SHMTreesWriter(
 
     constructor(file: Path) : this(PrimitivOHybrid(file))
 
+    fun copyHeaderFrom(
+        reader: SHMTreesReader
+    ) = writeHeader(reader.header, reader.fileNames, reader.cloneSetInfos, reader.userGenes)
+
     fun writeHeader(
-        originHeaders: List<MiXCRHeader>,
         header: MiXCRHeader,
         fileNames: List<String>,
+        cloneSetInfos: List<CloneSetInfoWithoutClones>,
         genes: List<VDJCGene>
     ) {
         output.beginPrimitivO(true).use { o ->
@@ -44,9 +50,9 @@ class SHMTreesWriter(
             // Writing version information
             o.writeUTF(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile))
 
-            o.writeCollection(originHeaders)
             o.writeObject(header)
-            o.writeCollection(fileNames)
+            o.writeCollection(fileNames, PrimitivO::writeObject)
+            o.writeCollection(cloneSetInfos, PrimitivO::writeObject)
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, header.alignerParameters)
         }
     }

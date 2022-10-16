@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
-import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
@@ -41,10 +41,8 @@ class CommandVersionInfo : MiXCRCommand() {
                 println("MagicBytes = " + reader.magic)
                 println(reader.versionInfo)
             }
-            CLNS -> {
-                val cs = CloneSetIO.read(inputFile.toFile())
-                println(cs.versionInfo)
-            }
+            CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
+                .use { reader -> println(reader.versionInfo) }
             CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
                 .use { reader -> println(reader.versionInfo) }
             SHMT -> SHMTreesReader(inputFile, VDJCLibraryRegistry.getDefault())
