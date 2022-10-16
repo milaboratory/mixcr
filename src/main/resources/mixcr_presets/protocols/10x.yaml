@@ -52,6 +52,7 @@
   assemble:
     inheritFrom: assemble-base-with-consensus
     overrides:
+      clnaOutput: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -164,6 +165,7 @@
   assemble:
     inheritFrom: assemble-base-with-consensus
     overrides:
+      clnaOutput: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
