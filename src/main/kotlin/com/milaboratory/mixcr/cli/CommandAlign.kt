@@ -179,6 +179,7 @@ object CommandAlign {
         @Option(
             description = [
                 "Read pre-processing: trimming quality threshold.",
+                "Zero value can be used to skip trimming.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--trimming-quality-threshold"],
@@ -230,7 +231,7 @@ object CommandAlign {
         @Option(
             description = [
                 "Read tag pattern from a file.",
-                DEFAULT_VALUE_FROM_PRESET
+                "  Default tag pattern determined by the preset."
             ],
             names = ["--tag-pattern-file"],
             paramLabel = "<path>"

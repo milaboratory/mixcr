@@ -71,7 +71,7 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
         mixIn(RemovePipelineStep(step))
 
     companion object {
-        const val DESCRIPTION = "Params to change pipeline steps\n"
+        const val DESCRIPTION = "Params to change pipeline steps:%n"
     }
 }
 
@@ -102,14 +102,16 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     //
 
     @Option(
-        description = [CommonDescriptions.SPECIES],
+        description = [
+            "Species (organism). Possible values: `hsa` (or HomoSapiens), `mmu` (or MusMusculus), `rat`, `spalax`, `alpaca`, `lamaGlama`, `mulatta` (_Macaca Mulatta_), `fascicularis` (_Macaca Fascicularis_) or any species from IMGT ® library."
+        ],
         names = [SetSpecies.CMD_OPTION_ALIAS, SetSpecies.CMD_OPTION]
     )
     fun species(species: String) =
         mixIn(SetSpecies(species))
 
     @Option(
-        description = ["V/D/J/C gene library"],
+        description = ["V/D/J/C gene library. By default, the `default` MiXCR reference library is used. One can also use external libraries"],
         names = [SetLibrary.CMD_OPTION_ALIAS, SetLibrary.CMD_OPTION]
     )
     fun library(library: String) =
@@ -128,7 +130,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     //
 
     @Option(
-        description = ["Mark that sample material is DNA"],
+        description = ["For DNA starting material. Setups V gene feature to align to `VGeneWithP` (full intron) and also instructs MiXCR to skip C gene alignment since it is too far from CDR3 in DNA data."],
         names = [MaterialTypeDNA.CMD_OPTION],
         arity = "0"
     )
@@ -136,7 +138,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         mixIn(MaterialTypeDNA)
 
     @Option(
-        description = ["Mark that sample material is RNA"],
+        description = ["For RNA starting material; setups `VTranscriptWithP` (full exon) gene feature to align for V gene and `CExon1` for C gene."],
         names = [MaterialTypeRNA.CMD_OPTION],
         arity = "0"
     )
@@ -148,7 +150,9 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     //
 
     @Option(
-        description = [],
+        description = ["Configures aligners to use semi-local alignment at reads 5'-end. " +
+                "Typically used with V gene single primer / multiplex protocols, or if there are non-trimmed adapter sequences at 5'-end. " +
+                "Optional <anchor_point> may be specified to instruct MiXCR where the primer is located and strip V feature to align accordingly, resulting in a more precise alignments."],
         names = [AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION],
         arity = "0..1",
         paramLabel = Labels.ANCHOR_POINT
@@ -162,7 +166,9 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         )
 
     @Option(
-        description = [],
+        description = ["Configures aligners to use global alignment at reads 5'-end. " +
+                "Typically used for 5'RACE with template switch oligo or a like protocols. " +
+                "Optional <anchor_point> may be specified to instruct MiXCR how to strip V feature to align."],
         names = [AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION],
         arity = "0..1",
         paramLabel = Labels.ANCHOR_POINT
@@ -176,10 +182,13 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         )
 
     @Option(
-        description = [],
+        description = ["Configures aligners to use semi-local alignment at reads 3'-end. " +
+                "Typically used with J or C gene single primer / multiplex protocols, or if there are non-trimmed adapter sequences at 3'-end. " +
+                "Requires either gene type (`J` for J primers / `C` for C primers) or <anchor_point> to be specified. " +
+                "In latter case MiXCR will additionally strip feature to align accordingly."],
         names = [AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION],
         arity = "1",
-        paramLabel = Labels.ANCHOR_POINT
+        paramLabel = "(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})"
     )
     fun floatingRightAlignmentBoundary(arg: String) =
         mixIn(
@@ -196,10 +205,12 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         )
 
     @Option(
-        description = [],
+        description = ["Configures aligners to use global alignment at reads 3'-end. " +
+                "Typically used for J-C intron single primer / multiplex protocols. " +
+                "Optional <gene_type> (`J` for J primers / `C` for C primers) or <anchor_point> may be specified to instruct MiXCR where how to strip J or C feature to align."],
         names = [AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION],
         arity = "0..1",
-        paramLabel = Labels.ANCHOR_POINT
+        paramLabel = "(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})"
     )
     fun rigidRightAlignmentBoundary(arg: String?) =
         mixIn(
@@ -219,7 +230,7 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         )
 
     @Option(
-        description = ["Tag pattern to extract from the read."],
+        description = ["Specify tag pattern for barcoded data."],
         names = [SetTagPattern.CMD_OPTION],
         paramLabel = "<pattern>"
     )
@@ -227,13 +238,15 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         mixIn(SetTagPattern(pattern))
 
     companion object {
-        const val DESCRIPTION = "Params for ${CommandAlign.COMMAND_NAME} command\n"
+        const val DESCRIPTION = "Params for ${CommandAlign.COMMAND_NAME} command:%n"
     }
 }
 
 class AssembleMiXCRMixins : MiXCRMixinCollector() {
     @Option(
-        description = ["Specify gene features used to assemble clonotypes. One may specify any custom gene region (e.g. `FR3+CDR3`); target clonal sequence can even be disjoint. Note that `assemblingFeatures` must cover CDR3"],
+        description = ["Specify gene features used to assemble clonotypes. " +
+                "One may specify any custom gene region (e.g. `FR3+CDR3`); target clonal sequence can even be disjoint. " +
+                "Note that `assemblingFeatures` must cover CDR3"],
         names = [SetClonotypeAssemblingFeatures.CMD_OPTION],
         paramLabel = Labels.GENE_FEATURES
     )
@@ -241,7 +254,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
         mixIn(SetClonotypeAssemblingFeatures(gf))
 
     @Option(
-        description = [],
+        description = ["Preserve alignments that do not cover CDR3 region or cover it only partially in the .vdjca file."],
         names = [KeepNonCDR3Alignments.CMD_OPTION],
         arity = "0"
     )
@@ -249,7 +262,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
         mixIn(KeepNonCDR3Alignments)
 
     @Option(
-        description = [],
+        description = ["Drop all alignments that do not cover CDR3 region or cover it only partially."],
         names = [DropNonCDR3Alignments.CMD_OPTION],
         arity = "0"
     )
@@ -273,7 +286,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(geneType, false)) }
 
     companion object {
-        const val DESCRIPTION = "Params for ${CommandAssemble.COMMAND_NAME} command\n"
+        const val DESCRIPTION = "Params for ${CommandAssemble.COMMAND_NAME} command:%n"
     }
 }
 
@@ -289,7 +302,7 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
         mixIn(SetContigAssemblingFeatures(gf))
 
     companion object {
-        const val DESCRIPTION = "Params for ${CommandAssembleContigs.COMMAND_NAME} command\n"
+        const val DESCRIPTION = "Params for ${CommandAssembleContigs.COMMAND_NAME} command:%n"
     }
 }
 
@@ -361,7 +374,7 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
     fun appendExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, false)
 
     companion object {
-        const val DESCRIPTION = "Params for export commands\n"
+        const val DESCRIPTION = "Params for export commands:%n"
 
         abstract class ExportParameterConsumer(private val fieldsFactory: FieldExtractorsFactoryNew<*>) :
             IParameterConsumer {

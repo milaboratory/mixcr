@@ -29,10 +29,6 @@ public class CommonDescriptions {
         public static final String CHAIN = "<chain>";
     }
 
-    public static final String SPECIES =
-            "Species (organism), as specified in library file or taxon id.%n" +
-                    "Possible values: hs, HomoSapiens, musmusculus, mmu, hsa, 9606, 10090 etc.";
-
     public static final String DOWNSAMPLING = "Choose downsampling. Possible values: \n count-[reads|TAG]-[auto|min|fixed][-<number>]\n top-[reads|TAG]-[<number>]\n cumtop-[reads|TAG]-[percent]";
 
     public static final String METADATA = "Metadata file (csv/tsv). Must have \"sample\" column.";

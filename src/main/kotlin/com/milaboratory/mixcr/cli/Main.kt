@@ -47,8 +47,10 @@ import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.seqbase.SequenceResolvers
 import picocli.CommandLine
+import picocli.CommandLine.IHelpSectionRenderer
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADING
+import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -214,9 +216,20 @@ object Main {
             .addSubcommand("help", DeprecatedHelp::class.java)
             .addSubcommand("exportHelp", CommandExportHelp::class.java)
 
+        cmd.setHelpSectionRenderRecursively(SECTION_KEY_SYNOPSIS) { help ->
+            when {
+                !help.commandSpec().usageMessage().customSynopsis().isNullOrEmpty() -> help.customSynopsis()
+                help.commandSpec().usageMessage().abbreviateSynopsis() -> help.abbreviatedSynopsis()
+                else -> help.detailedSynopsis(
+                    help.synopsisHeadingLength(),
+                    Comparator.comparing { it.order() },
+                    false
+                )
+            }
+        }
 
         cmd.helpSectionMap.remove(SECTION_KEY_COMMAND_LIST_HEADING)
-        cmd.helpSectionMap[SECTION_KEY_COMMAND_LIST] = CommandLine.IHelpSectionRenderer { help ->
+        cmd.helpSectionMap[SECTION_KEY_COMMAND_LIST] = IHelpSectionRenderer { help ->
             var result = help.createHeading("Base commands:\n")
             val groupedCommands = groups.map { it.second }.flatten().toSet()
             result += help.commandList(help.subcommands().filterKeys { it !in groupedCommands })
@@ -274,6 +287,11 @@ object Main {
         }
 
         return cmd
+    }
+
+    private fun CommandLine.setHelpSectionRenderRecursively(name: String, renderer: IHelpSectionRenderer) {
+        helpSectionMap[name] = renderer
+        subcommands.values.forEach { it.setHelpSectionRenderRecursively(name, renderer) }
     }
 
     private inline fun <reified T : Any> CommandLine.registerConverter(noinline function: (String) -> T): CommandLine {
