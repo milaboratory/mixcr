@@ -14,11 +14,11 @@ package com.milaboratory.mixcr.trees
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mitool.pattern.search.readObject
-import com.milaboratory.mixcr.basictypes.CloneSetInfoWithoutClones
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.VirtualCloneSet
 import com.milaboratory.mixcr.cli.ApplicationException
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
@@ -36,7 +36,7 @@ class SHMTreesReader(
     val libraryRegistry: VDJCLibraryRegistry
 ) : AutoCloseable by input, MiXCRFileInfo {
     val fileNames: List<String>
-    val cloneSetInfos: List<CloneSetInfoWithoutClones>
+    val cloneSetInfos: List<VirtualCloneSet>
     override val header: MiXCRHeader
     val userGenes: List<VDJCGene>
     override val footer: MiXCRFooter

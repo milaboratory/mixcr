@@ -13,11 +13,11 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.InputPort
 import com.milaboratory.cli.AppVersionInfo
-import com.milaboratory.mixcr.basictypes.CloneSetInfoWithoutClones
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_SHMT
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.VirtualCloneSet
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid
@@ -40,7 +40,7 @@ class SHMTreesWriter(
     fun writeHeader(
         header: MiXCRHeader,
         fileNames: List<String>,
-        cloneSetInfos: List<CloneSetInfoWithoutClones>,
+        cloneSetInfos: List<VirtualCloneSet>,
         genes: List<VDJCGene>
     ) {
         output.beginPrimitivO(true).use { o ->

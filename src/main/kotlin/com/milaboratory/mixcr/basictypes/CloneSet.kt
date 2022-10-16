@@ -27,7 +27,7 @@ class CloneSet private constructor(
     val usedGenes: List<VDJCGene>,
     val clones: List<Clone>,
     val ordering: CloneOrdering,
-    val cloneSetInfo: CloneSetInfoWithoutClones
+    val cloneSetInfo: VirtualCloneSet
 ) : CloneSetInfo by cloneSetInfo, Iterable<Clone> by clones, HasFeatureToAlign {
 
     constructor(
@@ -104,7 +104,7 @@ private fun buildCloneSetInfo(
     clones: List<Clone>,
     header: MiXCRHeader,
     footer: MiXCRFooter,
-): CloneSetInfoWithoutClones {
+): VirtualCloneSet {
     var totalCount: Long = 0
     val tagDiversity = IntArray(header.tagsInfo.size + 1)
     val tagCountAggregator = TagCountAggregator()
@@ -114,7 +114,7 @@ private fun buildCloneSetInfo(
         tagCountAggregator.add(clone.tagCount)
         for (d in tagDiversity.indices) tagDiversity[d] += clone.getTagCount().getTagDiversity(d)
     }
-    val result = CloneSetInfoWithoutClones(
+    val result = VirtualCloneSet(
         totalCount.toDouble(),
         if (clones.isEmpty()) null else tagCountAggregator.createAndDestroy(),
         header,

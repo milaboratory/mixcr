@@ -21,8 +21,8 @@ import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeIntArray
 
-@Serializable(by = CloneSetInfoWithoutClones.SerializerImpl::class)
-class CloneSetInfoWithoutClones(
+@Serializable(by = VirtualCloneSet.SerializerImpl::class)
+class VirtualCloneSet(
     override val totalCount: Double,
     override val totalTagCounts: TagCount?,
     override val header: MiXCRHeader,
@@ -31,8 +31,8 @@ class CloneSetInfoWithoutClones(
 ) : CloneSetInfo {
     override fun getTagDiversity(level: Int): Int = tagDiversity[level]
 
-    class SerializerImpl : BasicSerializer<CloneSetInfoWithoutClones>() {
-        override fun write(output: PrimitivO, obj: CloneSetInfoWithoutClones) {
+    class SerializerImpl : BasicSerializer<VirtualCloneSet>() {
+        override fun write(output: PrimitivO, obj: VirtualCloneSet) {
             output.writeDouble(obj.totalCount)
             output.writeObject(obj.totalTagCounts)
             output.writeObject(obj.header)
@@ -40,13 +40,13 @@ class CloneSetInfoWithoutClones(
             output.writeIntArray(obj.tagDiversity)
         }
 
-        override fun read(input: PrimitivI): CloneSetInfoWithoutClones {
+        override fun read(input: PrimitivI): VirtualCloneSet {
             val totalCount = input.readDouble()
             val totalTagCounts = input.readObjectOptional<TagCount>()
             val header = input.readObjectRequired<MiXCRHeader>()
             val footer = input.readObjectRequired<MiXCRFooter>()
             val tagDiversity = input.readIntArray()
-            return CloneSetInfoWithoutClones(
+            return VirtualCloneSet(
                 totalCount,
                 totalTagCounts,
                 header,
