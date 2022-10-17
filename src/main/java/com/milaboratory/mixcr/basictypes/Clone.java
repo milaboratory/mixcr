@@ -137,7 +137,7 @@ public final class Clone extends VDJCObject {
         if (!super.equals(o)) return false;
         Clone clone = (Clone) o;
         return Double.compare(clone.count, count) == 0 &&
-                id == clone.id && group == clone.group;
+                id == clone.id && Objects.equals(group, clone.group);
     }
 
     @Override
