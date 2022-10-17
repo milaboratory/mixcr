@@ -49,6 +49,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     var metadata: Path? = null
         set(value) {
             ValidationException.requireXSV(value)
+            //TODO validate content
             field = value
         }
 
