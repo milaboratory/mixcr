@@ -29,11 +29,11 @@ public class CommonDescriptions {
         public static final String CHAIN = "<chain>";
     }
 
-    public static final String DOWNSAMPLING = "Choose downsampling. Possible values: \n count-[reads|TAG]-[auto|min|fixed][-<number>]\n top-[reads|TAG]-[<number>]\n cumtop-[reads|TAG]-[percent]";
+    public static final String DOWNSAMPLING = "Default downsampling applied to normalize the clonesets. Possible values: %ncount-[reads|TAG]-[auto|min|fixed][-<number>]%n top-[reads|TAG]-[<number>]%n cumtop-[reads|TAG]-[percent]";
 
-    public static final String METADATA = "Metadata file (csv/tsv). Must have \"sample\" column.";
+    public static final String METADATA = "Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form. Must contain `sample` column which matches names of input files.";
 
-    public static final String DOWNSAMPLING_DROP_OUTLIERS = "Drop samples which have less abundance than the computed downsampling threshold.";
+    public static final String DOWNSAMPLING_DROP_OUTLIERS = "Drop samples which are below downsampling value as computed according to specified default downsampling option.";
 
     public static final String ONLY_PRODUCTIVE = "Filter out-of-frame sequences and sequences with stop-codons.";
 

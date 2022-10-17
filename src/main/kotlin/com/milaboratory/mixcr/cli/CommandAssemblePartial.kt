@@ -62,7 +62,7 @@ object CommandAssemblePartial {
         @Option(
             description = [
                 "Drop partial sequences which were not assembled. Can be used to reduce output file " +
-                        "size if no additional rounds of 'assemblePartial' are required.",
+                        "size if no additional rounds of `assemblePartial` are required.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-d", "--drop-partial"]
@@ -71,7 +71,7 @@ object CommandAssemblePartial {
 
         @Option(
             description = [
-                "Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes",
+                "Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--cell-level"]
@@ -81,7 +81,8 @@ object CommandAssemblePartial {
         @Option(
             names = ["-O"],
             description = ["Overrides default parameter values."],
-            paramLabel = Labels.OVERRIDES
+            paramLabel = Labels.OVERRIDES,
+            order = 10_000
         )
         private var overrides: Map<String, String> = mutableMapOf()
 

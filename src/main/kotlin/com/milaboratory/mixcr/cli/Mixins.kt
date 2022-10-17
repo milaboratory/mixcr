@@ -400,7 +400,8 @@ class GenericMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Overrides preset parameters"],
         names = [GenericMixin.CMD_OPTION],
-        paramLabel = Labels.OVERRIDES
+        paramLabel = Labels.OVERRIDES,
+        order = 10_000 + 100
     )
     fun genericMixin(fieldAndOverrides: Map<String, String>) {
         fieldAndOverrides.forEach { (field, override) ->

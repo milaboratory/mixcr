@@ -59,15 +59,15 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         description = [CommonDescriptions.DOWNSAMPLING],
         names = ["--default-downsampling"],
         required = true,
-        paramLabel = "<type>"
+        paramLabel = "(<type>|none)"
     )
     lateinit var defaultDownsampling: String
 
     @Option(
-        description = ["Weight function"],
+        description = ["Default clonotype weight function"],
         names = ["--default-weight-function"],
         required = true,
-        paramLabel = "<read|TAG>"
+        paramLabel = "(<read>|<Tag>|none)"
     )
     lateinit var defaultWeightFunction: String
 
@@ -81,7 +81,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     var chains: Set<String>? = null
 
     @set:Option(
-        description = [CommonDescriptions.METADATA],
+        description = [CommonDescriptions.METADATA + " Optionally may have `chains` column."],
         names = ["--metadata"],
         paramLabel = "<path>"
     )
@@ -92,7 +92,9 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         }
 
     @Option(
-        description = ["Metadata categories used to isolate samples into separate groups"],
+        description = ["Metadata column used to group samples into isolation groups; " +
+                "postanalysis will be performed in each of the groups separately. " +
+                "It is possible to specify several isolation groups."],
         names = ["--group"],
         paramLabel = "<group>"
     )
@@ -113,7 +115,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         }
 
     @set:Option(
-        description = ["Preprocessor summary output path."],
+        description = ["Output path for the preprocessing summary tables (filtering and downsampling)"],
         names = ["--preproc-tables"],
         paramLabel = "<path>"
     )
@@ -129,7 +131,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     @Option(
         names = ["-O"],
         description = ["Overrides default postanalysis settings"],
-        paramLabel = Labels.OVERRIDES
+        paramLabel = Labels.OVERRIDES,
+        order = 10_000
     )
     var overrides: Map<String, String> = mutableMapOf()
 

@@ -82,7 +82,7 @@ object CommandAssembleContigs {
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = [
-                "Ignore tags (UMIs, cell-barcodes)",
+                "Ignore tags (UMIs, cell-barcodes).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--ignore-tags"]
@@ -92,7 +92,8 @@ object CommandAssembleContigs {
         @Option(
             names = ["-O"],
             description = ["Overrides for the assembler parameters."],
-            paramLabel = Labels.OVERRIDES
+            paramLabel = Labels.OVERRIDES,
+            order = 10_000
         )
         private var overrides: Map<String, String> = mutableMapOf()
 
