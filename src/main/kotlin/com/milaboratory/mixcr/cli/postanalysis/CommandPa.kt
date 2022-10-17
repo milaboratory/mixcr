@@ -80,12 +80,16 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     )
     var chains: Set<String>? = null
 
-    @Option(
+    @set:Option(
         description = [CommonDescriptions.METADATA],
         names = ["--metadata"],
         paramLabel = "<path>"
     )
     var metadataFile: Path? = null
+        set(value) {
+            ValidationException.requireXSV(value)
+            field = value
+        }
 
     @Option(
         description = ["Metadata categories used to isolate samples into separate groups"],
@@ -94,19 +98,33 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     )
     var isolationGroups: List<String> = mutableListOf()
 
-    @Option(
+    @set:Option(
         description = ["Tabular results output path (path/table.tsv)."],
         names = ["--tables"],
         paramLabel = "<path>"
     )
     var tablesOut: Path? = null
+        set(value) {
+            ValidationException.requireXSV(value)
+            ValidationException.require(value == null || !value.toString().startsWith(".")) {
+                """cant' start with ".""""
+            }
+            field = value
+        }
 
-    @Option(
+    @set:Option(
         description = ["Preprocessor summary output path."],
         names = ["--preproc-tables"],
         paramLabel = "<path>"
     )
     var preprocOut: Path? = null
+        set(value) {
+            ValidationException.requireXSV(value)
+            ValidationException.require(value == null || !value.toString().startsWith(".")) {
+                """cant' start with ".""""
+            }
+            field = value
+        }
 
     @Option(
         names = ["-O"],
@@ -139,22 +157,6 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
             DownsamplingParameters.parse(defaultDownsampling, tagsInfo, dropOutliers, onlyProductive)
         } catch (t: Throwable) {
             throw ValidationException(t.message ?: t.javaClass.name)
-        }
-        preprocOut?.let { preprocOut ->
-            if (preprocOut.extension !in arrayOf("tsv", "csv"))
-                throw ValidationException("--preproc-tables: table name should ends with .csv or .tsv, got $preprocOut")
-            if (preprocOut.toString().startsWith("."))
-                throw ValidationException("--preproc-tables: cant' start with \".\", got $preprocOut")
-        }
-        tablesOut?.let { tablesOut ->
-            if (tablesOut.extension !in arrayOf("tsv", "csv"))
-                throw ValidationException("--tables: table name should ends with .csv or .tsv, got $tablesOut")
-            if (tablesOut.toString().startsWith("."))
-                throw ValidationException("--tables: cant' start with \".\", got $tablesOut")
-        }
-        metadataFile?.let { metadataFile ->
-            if (metadataFile.extension !in arrayOf("csv", "tsv"))
-                throw ValidationException("Metadata should be .csv or .tsv, got $metadataFile")
         }
         val duplicates = inputFiles
             .groupingBy { it }.eachCount()

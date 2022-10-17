@@ -21,7 +21,10 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters;
 import com.milaboratory.mixcr.assembler.CloneFactory;
-import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.Clone;
+import com.milaboratory.mixcr.basictypes.GeneFeatures;
+import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.cli.CommandExportClonesPretty;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
@@ -270,7 +273,7 @@ public class FullSeqAssemblerTest {
                 align.alignments.stream().filter(a -> a.getFeature(GeneFeature.CDR3) != null).collect(Collectors.toList())
         ));
 
-        List<Clone> clns = new ArrayList<>(new CloneSet(Arrays.asList(agg.callVariants(prep))).getClones());
+        List<Clone> clns = Arrays.asList(agg.callVariants(prep));
         clns.sort(Comparator.comparingDouble(Clone::getCount).reversed());
 
         System.out.println("# Clones: " + clns.size());
@@ -353,7 +356,7 @@ public class FullSeqAssemblerTest {
         Assert.assertEquals(40, uniq1);
         Assert.assertEquals(60, uniq2);
 
-        for (Clone clone : new CloneSet(Arrays.asList(agg.callVariants(prep))).getClones()) {
+        for (Clone clone : agg.callVariants(prep)) {
             CommandExportClonesPretty.outputCompact(System.out, clone);
             System.out.println();
             System.out.println(" ================================================ ");
@@ -454,7 +457,7 @@ public class FullSeqAssemblerTest {
                 align.usedGenes, align.parameters.alignerParameters.getFeaturesToAlignMap());
         FullSeqAssembler agg = new FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, initialClone, align.parameters.alignerParameters);
         FullSeqAssembler.RawVariantsData prep = agg.calculateRawData(() -> CUtils.asOutputPort(alignments));
-        List<Clone> clones = new ArrayList<>(new CloneSet(Arrays.asList(agg.callVariants(prep))).getClones());
+        List<Clone> clones = Arrays.asList(agg.callVariants(prep));
         clones.sort(Comparator.comparingDouble(Clone::getCount).reversed());
         for (Clone clone : clones) {
             CommandExportClonesPretty.outputCompact(System.out, clone);

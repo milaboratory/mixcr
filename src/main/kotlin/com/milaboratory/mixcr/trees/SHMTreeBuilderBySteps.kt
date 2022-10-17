@@ -47,6 +47,7 @@ import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.mapInParallelOrdered
 import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.readList
+import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.ProgressAndStage
@@ -709,11 +710,11 @@ internal class SHMTreeBuilderBySteps(
     ) {
         class SerializerImpl : BasicSerializer<Cluster>() {
             override fun write(output: PrimitivO, obj: Cluster) {
-                output.writeCollection(obj.clones)
+                output.writeCollection(obj.clones, PrimitivO::writeObject)
             }
 
             override fun read(input: PrimitivI): Cluster {
-                val clones = input.readList<CloneWrapper>()
+                val clones = input.readList<CloneWrapper>(PrimitivI::readObjectRequired)
                 return Cluster(clones)
             }
         }

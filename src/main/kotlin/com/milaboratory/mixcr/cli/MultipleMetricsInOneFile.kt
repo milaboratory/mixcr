@@ -15,11 +15,10 @@ import java.nio.file.Path
 import kotlin.io.path.extension
 
 interface MultipleMetricsInOneFile {
-    fun validateNonPdf(out: Path, metrics: List<String>?) = run {
+    fun validateNonPdf(out: Path, metrics: List<String>?) {
         if (out.extension != "pdf" && metrics.isNullOrEmpty()) {
             val ext = out.extension
-            "For export in $ext Use --metric option to specify only one metric to export. Or use PDF format for export."
-        } else
-            null
+            throw ValidationException("For export in $ext Use --metric option to specify only one metric to export. Or use PDF format for export.")
+        }
     }
 }

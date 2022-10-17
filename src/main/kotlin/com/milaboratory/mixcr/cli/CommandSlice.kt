@@ -165,7 +165,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
         ClnsReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             ClnsWriter(out.toFile()).use { writer ->
                 // Getting full clone set
-                val cloneSet = reader.cloneSet
+                val cloneSet = reader.readCloneSet()
 
                 // Creating new cloneset
                 val clones = mutableListOf<Clone>()
@@ -184,7 +184,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
     private fun sliceShmt() {
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             SHMTreesWriter(out).use { writer ->
-                writer.writeHeader(reader.originHeaders, reader.header, reader.fileNames, reader.userGenes)
+                writer.copyHeaderFrom(reader)
 
                 val treesWriter = writer.treesWriter()
                 reader.readTrees()

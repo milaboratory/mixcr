@@ -157,7 +157,7 @@ object CommandExtend {
 
         private fun processClns() {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
-                val cloneSet = reader.cloneSet
+                val cloneSet = reader.readCloneSet()
                 val outputPort = cloneSet.port
                 val process = processWrapper(outputPort, reader.header.paramsSpec, cloneSet.alignmentParameters)
 

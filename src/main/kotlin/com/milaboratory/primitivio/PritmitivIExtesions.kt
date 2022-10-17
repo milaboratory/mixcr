@@ -47,24 +47,27 @@ inline fun <reified T : Any> PrimitivI.readObjectRequired(): T {
 inline fun <reified K : Any, reified V : Any> PrimitivI.readMap(): Map<K, V> =
     Util.readMap(this, K::class.java, V::class.java)
 
-inline fun <reified T : Any> PrimitivI.readList(): List<T> = readCollection { mutableListOf() }
+fun <T : Any> PrimitivI.readList(reader: PrimitivI.() -> T): List<T> = readCollection(::ArrayList, reader)
 
-inline fun <reified T : Any> PrimitivI.readSet(): Set<T> = readCollection { mutableSetOf() }
+fun <T : Any> PrimitivI.readSet(reader: PrimitivI.() -> T): Set<T> = readCollection(::HashSet, reader)
 
-fun PrimitivO.writeCollection(collection: Collection<*>) {
+fun <T> PrimitivO.writeCollection(collection: Collection<T>, writer: PrimitivO.(T) -> Unit) {
     this.writeInt(collection.size)
     collection.forEach {
-        this.writeObject(it)
+        writer(it)
     }
 }
 
-inline fun <reified T : Any, C : MutableCollection<T>> PrimitivI.readCollection(supplier: (size: Int) -> C): C {
+private fun <T : Any, C : MutableCollection<T>> PrimitivI.readCollection(
+    supplier: (size: Int) -> C,
+    reader: PrimitivI.() -> T
+): C {
     val size = this.readInt()
-    val list = supplier(size)
+    val collection = supplier(size)
     repeat(size) {
-        list.add(this.readObjectRequired())
+        collection.add(reader())
     }
-    return list
+    return collection
 }
 
 fun PrimitivO.writeMap(map: Map<*, *>) = Util.writeMap(map, this)
@@ -74,8 +77,17 @@ fun <T : Any> PrimitivO.writeArray(array: Array<T>) {
     for (o in array) this.writeObject(o)
 }
 
+fun PrimitivO.writeIntArray(array: IntArray) {
+    this.writeInt(array.size)
+    for (o in array) this.writeInt(o)
+}
+
 inline fun <reified T : Any> PrimitivI.readArray(): Array<T> = Array(readInt()) {
     readObject(T::class.java)
+}
+
+fun PrimitivI.readIntArray(): IntArray = IntArray(readInt()) {
+    readInt()
 }
 
 operator fun <T : Any, E : T, R : Any> Processor<T, R>.invoke(input: E): R = process(input)
@@ -88,7 +100,7 @@ inline operator fun <T : Any, reified R : Any> Processor<T, R>.invoke(chunk: Chu
 val <T : Any> Iterable<T>.port: OutputPort<T>
     get() = CUtils.asOutputPort(this)
 
-fun <T : Any, R : Any> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
+fun <T : Any, R : Any> OutputPort<T>.map(function: (T) -> R): OutputPortCloseable<R> = CUtils.wrap(this, function)
 
 fun <T : Any, R : Any> OutputPort<T>.mapInParallelOrdered(
     threads: Int,
@@ -156,7 +168,7 @@ fun <T : Any> OutputPort<T>.limit(limit: Long): OutputPortCloseable<T> = object 
 fun <T : Any> OutputPort<T>.forEach(action: (element: T) -> Unit): Unit =
     CUtils.it(this).forEach(action)
 
-fun <T : Any> OutputPort<T>.onEach(action: (element: T) -> Unit): OutputPort<T> =
+fun <T : Any> OutputPort<T>.onEach(action: (element: T) -> Unit): OutputPortCloseable<T> =
     map {
         action(it)
         it

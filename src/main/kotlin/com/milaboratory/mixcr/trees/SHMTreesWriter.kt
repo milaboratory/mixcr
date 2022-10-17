@@ -17,7 +17,9 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_SHMT
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.VirtualCloneSet
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
+import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.blocks.PrimitivOHybrid
 import com.milaboratory.primitivio.writeCollection
 import io.repseq.core.VDJCGene
@@ -31,10 +33,14 @@ class SHMTreesWriter(
 
     constructor(file: Path) : this(PrimitivOHybrid(file))
 
+    fun copyHeaderFrom(
+        reader: SHMTreesReader
+    ) = writeHeader(reader.header, reader.fileNames, reader.cloneSetInfos, reader.userGenes)
+
     fun writeHeader(
-        originHeaders: List<MiXCRHeader>,
         header: MiXCRHeader,
         fileNames: List<String>,
+        cloneSetInfos: List<VirtualCloneSet>,
         genes: List<VDJCGene>
     ) {
         output.beginPrimitivO(true).use { o ->
@@ -44,9 +50,9 @@ class SHMTreesWriter(
             // Writing version information
             o.writeUTF(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile))
 
-            o.writeCollection(originHeaders)
             o.writeObject(header)
-            o.writeCollection(fileNames)
+            o.writeCollection(fileNames, PrimitivO::writeObject)
+            o.writeCollection(cloneSetInfos, PrimitivO::writeObject)
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, header.alignerParameters)
         }
     }
@@ -81,9 +87,8 @@ class SHMTreesWriter(
     }
 
     companion object {
-        const val MAGIC_V2 = "$MAGIC_SHMT.V02"
-        const val MAGIC_V3 = "$MAGIC_SHMT.V03"
-        const val MAGIC = MAGIC_V3
+        const val MAGIC_V4 = "$MAGIC_SHMT.V04"
+        const val MAGIC = MAGIC_V4
         const val MAGIC_LENGTH = 14
         val MAGIC_BYTES = MAGIC.toByteArray(StandardCharsets.US_ASCII)
 

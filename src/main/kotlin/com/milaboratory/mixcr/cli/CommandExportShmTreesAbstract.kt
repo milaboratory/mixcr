@@ -14,7 +14,6 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
-import kotlin.io.path.extension
 
 abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
     @Parameters(
@@ -28,8 +27,6 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
         get() = listOf(input)
 
     override fun validate() {
-        ValidationException.require(input.extension == shmFileExtension) {
-            "Input file should have extension $shmFileExtension. Given $input"
-        }
+        ValidationException.requireExtension("Input file should have", input, shmFileExtension)
     }
 }

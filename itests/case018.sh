@@ -55,7 +55,11 @@ mixcr exportShmTrees trees/result.shmt trees/trees.tsv
 
 mixcr exportShmTreesWithNodes trees/result.shmt trees/trees_with_nodes.tsv
 
+assert "mixcr exportShmTreesWithNodes -readFraction trees/result.shmt | grep -c 'NaN'" "0"
+
 mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
+
+[[ -f trees/plots.pdf ]] || exit 1
 
 FILES=`ls trees_samples/*_R1.fastq.gz`
 for filename in $FILES; do

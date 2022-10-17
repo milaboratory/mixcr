@@ -244,7 +244,7 @@ object VDJCObjectFieldExtractors {
                 "-${l.lowercaseChar()}Alignment",
                 "Export best $l alignment",
                 "Best $l alignment",
-                "best" + l + "Alignment"
+                "best${l}Alignment"
             ) { vdjcObject: VDJCObject ->
                 val bestHit = vdjcObject.getBestHit(type) ?: return@FieldParameterless NULL
                 val sb = StringBuilder()
@@ -268,7 +268,7 @@ object VDJCObjectFieldExtractors {
                 "-${l.lowercaseChar()}Alignments",
                 "Export all $l alignments",
                 "All $l alignments",
-                "all" + l + "Alignments"
+                "all${l}Alignments"
             ) { vdjcObject: VDJCObject ->
                 val hits = vdjcObject.getHits(type)
                 if (hits.isEmpty()) return@FieldParameterless NULL

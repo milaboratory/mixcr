@@ -333,13 +333,12 @@ object CommandAssembleContigs {
                         cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyAssembled ||
                         reportBuilder.finalCloneCount >= reportBuilder.initialCloneCount
             )
-            var cloneId = 0
-            val clones = arrayOfNulls<Clone>(totalClonesCount)
+            val clones: MutableList<Clone> = ArrayList(totalClonesCount)
             PrimitivI(BufferedInputStream(FileInputStream(outputFile.toFile()))).use { tmpIn ->
                 IOUtil.registerGeneReferences(tmpIn, genes, header.alignerParameters)
-                var i = 0
+                var cloneId = 0
                 PipeDataInputReader(Clone::class.java, tmpIn, totalClonesCount.toLong()).forEach { clone ->
-                    clones[i++] = clone.setId(cloneId++)
+                    clones += clone.setId(cloneId++)
                 }
             }
             val resultHeader = (if (
@@ -353,7 +352,7 @@ object CommandAssembleContigs {
             })
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
 
-            val cloneSet = CloneSet(listOf(*clones), genes, resultHeader, footer, ordering)
+            val cloneSet = CloneSet(clones, genes, resultHeader, footer, ordering)
             ClnsWriter(outputFile).use { writer ->
                 writer.writeCloneSet(cloneSet)
                 reportBuilder.setStartMillis(beginTimestamp)

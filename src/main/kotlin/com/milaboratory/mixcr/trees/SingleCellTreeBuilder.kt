@@ -369,14 +369,14 @@ class CellGroup(
 
     class SerializerImpl : BasicSerializer<CellGroup>() {
         override fun write(output: PrimitivO, obj: CellGroup) {
-            output.writeCollection(obj.heavy)
-            output.writeCollection(obj.light)
+            output.writeCollection(obj.heavy, PrimitivO::writeObject)
+            output.writeCollection(obj.light, PrimitivO::writeObject)
             output.writeObject(obj.cellBarcode)
         }
 
         override fun read(input: PrimitivI): CellGroup {
-            val heavy = input.readList<Clone>()
-            val light = input.readList<Clone>()
+            val heavy = input.readList<Clone>(PrimitivI::readObjectRequired)
+            val light = input.readList<Clone>(PrimitivI::readObjectRequired)
             val cellBarcode = input.readObjectRequired<CellBarcodeWithDatasetId>()
             return CellGroup(
                 heavy,
@@ -422,12 +422,12 @@ class GroupOfCells(
     class SerializerImpl : BasicSerializer<GroupOfCells>() {
         override fun write(output: PrimitivO, obj: GroupOfCells) {
             output.writeObject(obj.chainPairKey)
-            output.writeCollection(obj.cellBarcodes)
+            output.writeCollection(obj.cellBarcodes, PrimitivO::writeObject)
         }
 
         override fun read(input: PrimitivI): GroupOfCells {
             val chainPairKey = input.readObjectRequired<ChainPairKey>()
-            val cellBarcodes = input.readList<CellBarcodeWithDatasetId>()
+            val cellBarcodes = input.readList<CellBarcodeWithDatasetId>(PrimitivI::readObjectRequired)
             return GroupOfCells(
                 chainPairKey,
                 cellBarcodes

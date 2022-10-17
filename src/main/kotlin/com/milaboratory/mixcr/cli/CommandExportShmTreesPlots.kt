@@ -26,7 +26,6 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
-import kotlin.io.path.extension
 
 @Command(
     description = ["Visualize SHM tree and save in PDF format"]
@@ -39,26 +38,42 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     )
     lateinit var out: Path
 
-    @Option(
+    @set:Option(
         names = ["--metadata", "-m"],
-        description = ["Path to metadata file"],
+        description = [
+            "Path to metadata file",
+            "Metadata should be a .tsv or .csv file with a column named 'sample' with filenames of .clns files used in findShmTrees"
+        ],
         paramLabel = "<path>"
     )
     var metadata: Path? = null
+        set(value) {
+            ValidationException.requireXSV(value)
+            //TODO validate content
+            field = value
+        }
 
-    @Option(
+    @set:Option(
         names = ["--filter-min-nodes"],
         description = ["Minimal number of nodes in tree"],
         paramLabel = "<n>"
     )
     var minNodes: Int? = null
+        set(value) {
+            ValidationException.require(value == null || value > 0) { "value must be greater then 0" }
+            field = value
+        }
 
-    @Option(
+    @set:Option(
         names = ["--filter-min-height"],
         description = ["Minimal height of the tree "],
         paramLabel = "<n>"
     )
     var minHeight: Int? = null
+        set(value) {
+            ValidationException.require(value == null || value > 0) { "value must be greater then 0" }
+            field = value
+        }
 
     @Option(
         names = ["--ids"],
@@ -113,13 +128,17 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     )
     var patternOptions: PatternOptions? = null
 
-    @Option(
+    @set:Option(
         names = ["--limit"],
         description = ["Take first N trees (for debug purposes)"],
         hidden = true,
         paramLabel = "<n>"
     )
     var limit: Int? = null
+        set(value) {
+            ValidationException.require(value == null || value > 0) { "value must be greater then 0" }
+            field = value
+        }
 
     @Option(
         names = ["--node-color"],
@@ -170,13 +189,15 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     )
     var noAlignmentFill: Boolean = false
 
+    override val inputFiles: List<Path>
+        get() = listOfNotNull(input, metadata)
+
     override val outputFiles
         get() = listOf(out)
 
     override fun validate() {
         super.validate()
-        if (out.extension != "pdf")
-            throw ValidationException("Output file must have .pdf extension")
+        ValidationException.requireExtension("Output file should have", out, "pdf")
     }
 
     val alignment by lazy {
@@ -223,9 +244,6 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         ).plots
 
         out.toAbsolutePath().parent.createDirectories()
-        writePDF(
-            out.toAbsolutePath(),
-            plots
-        )
+        writePDF(out.toAbsolutePath(), plots)
     }
 }

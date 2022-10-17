@@ -82,15 +82,15 @@ class CloneWrapper(
 
     class SerializerImpl : BasicSerializer<CloneWrapper>() {
         override fun write(output: PrimitivO, obj: CloneWrapper) {
-            output.writeCollection(obj.clones)
+            output.writeCollection(obj.clones, PrimitivO::writeObject)
             output.writeObject(obj.VJBase)
-            output.writeCollection(obj.candidateVJBases)
+            output.writeCollection(obj.candidateVJBases, PrimitivO::writeObject)
         }
 
         override fun read(input: PrimitivI): CloneWrapper {
-            val clones = input.readList<CloneWithDatasetId>()
+            val clones = input.readList<CloneWithDatasetId>(PrimitivI::readObjectRequired)
             val VJBase = input.readObjectRequired<VJBase>()
-            val candidateVJBases = input.readList<VJBase>()
+            val candidateVJBases = input.readList<VJBase>(PrimitivI::readObjectRequired)
             return CloneWrapper(
                 clones,
                 VJBase,

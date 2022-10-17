@@ -41,7 +41,7 @@ public final class CloneSetIO {
                 }
             case CLNS:
                 try (ClnsReader r = new ClnsReader(file.toPath(), libraryRegistry)) {
-                    return r.getCloneSet();
+                    return r.readCloneSet();
                 }
             default:
                 throw new RuntimeException("Unsupported file type");

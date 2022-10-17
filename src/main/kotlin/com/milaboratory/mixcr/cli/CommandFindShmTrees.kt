@@ -18,8 +18,7 @@ import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
-import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
 import com.milaboratory.mixcr.basictypes.tag.TagType
@@ -55,7 +54,6 @@ import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
-import kotlin.io.path.extension
 
 
 @Command(
@@ -172,7 +170,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         result
     }
 
-    @Option(
+    @set:Option(
         description = [
             "If specified, trees will be build from data in the file. Main logic of command will be omitted.",
             "File must be formatted as tsv and have 3 columns: treeId, fileName, cloneId",
@@ -185,6 +183,10 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         paramLabel = "<path>"
     )
     var buildFrom: Path? = null
+        set(value) {
+            ValidationException.requireExtension("Require", value, "tsv")
+            field = value
+        }
 
     @Option(
         description = ["Put temporary files in the same folder as the output files."],
@@ -211,16 +213,11 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        if (outputTreesPath.extension != shmFileExtension) {
-            throw ValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
-        }
+        ValidationException.requireExtension("Output file should have", outputTreesPath, shmFileExtension)
         if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
             throw ValidationException("First step must be BuildingInitialTrees")
         }
         if (buildFrom != null) {
-            if (buildFrom!!.extension != "tsv") {
-                throw ValidationException("--build-from must be .tsv, got $buildFrom")
-            }
             if (VGenesToFilter.isNotEmpty()) {
                 throw ValidationException("--v-gene-names must be empty if --build-from is specified")
             }
@@ -236,6 +233,9 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             if (debugDir != null) {
                 logger.warn("argument --debugDir will not be used with --build-from")
             }
+        }
+        inputFiles.forEach { input ->
+            ValidationException.requireExtension("Input should have", input, "clns")
         }
     }
 
@@ -253,16 +253,17 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
         val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
         val cloneReaders = clnsFileNames.map { path ->
-            CloneSetIO.mkReader(path, vdjcLibraryRegistry)
+            ClnsReader(path, vdjcLibraryRegistry)
         }
         ValidationException.require(cloneReaders.isNotEmpty()) { "there is no files to process" }
         ValidationException.require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
             "input files must have the same aligner parameters"
         }
         for (geneType in GeneType.VJ_REFERENCE) {
-            ValidationException.require(cloneReaders
+            val differentScores = cloneReaders
                 .map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
-                .distinct().count() == 1) {
+                .distinct()
+            ValidationException.require(differentScores.count() == 1) {
                 "input files must have the same $geneType scoring"
             }
         }
@@ -347,7 +348,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     private fun writeResults(
         reportBuilder: BuildSHMTreeReport.Builder,
         result: OutputPort<TreeWithMetaBuilder>,
-        cloneReaders: List<CloneReader>,
+        cloneReaders: List<ClnsReader>,
         scoringSet: ScoringSet,
         generateGlobalTreeIds: Boolean
     ) {
@@ -385,18 +386,19 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
     }
 
-    private fun SHMTreesWriter.writeHeader(cloneReaders: List<CloneReader>, params: Params) {
+    private fun SHMTreesWriter.writeHeader(cloneReaders: List<ClnsReader>, params: Params) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
-        val headers = cloneReaders.map { it.header }
-        require(headers.map { it.alignerParameters }.distinct().size == 1) {
+        val headers = cloneReaders.map { it.readCloneSet().cloneSetInfo }
+        require(headers.map { it.header.alignerParameters }.distinct().size == 1) {
             "alignerParameters must be the same"
         }
+        cloneReaders.map { it.readCloneSet() }
         writeHeader(
-            headers,
             headers
-                .fold(MiXCRHeaderMerger()) { m, h -> m.add(h) }.build()
+                .fold(MiXCRHeaderMerger()) { m, cloneSetInfo -> m.add(cloneSetInfo.header) }.build()
                 .addStepParams(MiXCRCommandDescriptor.findShmTrees, params),
             clnsFileNames.map { it.toString() },
+            headers,
             usedGenes
         )
     }

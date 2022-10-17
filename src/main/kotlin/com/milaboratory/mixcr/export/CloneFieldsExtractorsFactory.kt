@@ -16,13 +16,17 @@ import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 
 object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
     override fun allAvailableFields(): List<Field<Clone>> =
-        VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) + cloneFields()
+        VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) +
+                cloneFields(forTreesExport = false)
 
-    fun cloneFields(): List<Field<Clone>> = buildList {
+    fun cloneFields(forTreesExport: Boolean): List<Field<Clone>> = buildList {
         this += FieldParameterless(
             Order.cloneSpecific + 100,
             "-cloneId",
-            "Unique clone identifier",
+            when {
+                forTreesExport -> "Unique clone identifier in source sample file"
+                else -> "Unique clone identifier"
+            },
             "Clone ID",
             "cloneId"
         ) { clone: Clone ->
@@ -31,7 +35,10 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         this += FieldParameterless(
             Order.cloneSpecific + 200,
             "-count",
-            "Export clone count",
+            when {
+                forTreesExport -> "Export clone count in source sample file"
+                else -> "Export clone count"
+            },
             "Clone count",
             "cloneCount",
             deprecation = stdDeprecationNote("-count", "-readCount", true),
@@ -41,7 +48,10 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         this += FieldParameterless(
             Order.cloneSpecific + 201,
             "-readCount",
-            "Number of reads assigned to the clonotype",
+            when {
+                forTreesExport -> "Number of reads assigned to the clonotype in source sample file"
+                else -> "Number of reads assigned to the clonotype"
+            },
             "Read Count",
             "readCount"
         ) { clone: Clone ->
@@ -50,7 +60,10 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         this += FieldParameterless(
             Order.cloneSpecific + 300,
             "-fraction",
-            "Export clone fraction",
+            when {
+                forTreesExport -> "Export clone fraction in source sample file"
+                else -> "Export clone fraction"
+            },
             "Clone fraction",
             "cloneFraction",
             deprecation = stdDeprecationNote("-fraction", "-readFraction", true),
@@ -60,7 +73,10 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         this += FieldParameterless(
             Order.cloneSpecific + 301,
             "-readFraction",
-            "Fraction of reads assigned to the clonotype",
+            when {
+                forTreesExport -> "Fraction of reads assigned to the clonotype in source sample file"
+                else -> "Fraction of reads assigned to the clonotype"
+            },
             "Read fraction",
             "readFraction"
         ) { clone: Clone ->

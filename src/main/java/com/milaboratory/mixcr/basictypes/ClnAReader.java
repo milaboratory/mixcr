@@ -245,7 +245,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
     /**
      * Read clone set completely
      */
-    public CloneSet readCloneSet() throws IOException {
+    public CloneSet readCloneSet() {
         // Reading clones
         int count = numberOfClones();
         List<Clone> clones = new ArrayList<>(count);
