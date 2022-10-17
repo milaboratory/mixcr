@@ -22,7 +22,7 @@ interface CloneSetInfo : MiXCRFileInfo, HasFeatureToAlign {
 
     fun getTagDiversity(level: Int): Int
 
-    override fun getFeatureToAlign(geneType: GeneType): GeneFeature =
+    override fun getFeatureToAlign(geneType: GeneType): GeneFeature? =
         header.alignerParameters.getFeatureToAlign(geneType)
 
     val assemblingFeatures: Array<GeneFeature>

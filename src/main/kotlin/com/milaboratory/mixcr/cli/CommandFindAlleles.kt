@@ -143,7 +143,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private val outputClnsFiles: List<Path> by lazy {
         val template = outputTemplate ?: return@lazy emptyList()
         if (!template.endsWith(".clns")) {
-            throw ValidationException("Wrong template: command produces only clns $template")
+            throw ValidationException("Wrong template: command produces only clns, got $template")
         }
         val clnsFiles = inputFiles
             .map { it.toAbsolutePath() }

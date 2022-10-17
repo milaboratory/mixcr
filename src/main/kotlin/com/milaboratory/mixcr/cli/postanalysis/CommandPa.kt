@@ -106,7 +106,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     var tablesOut: Path? = null
         set(value) {
             ValidationException.requireXSV(value)
-            ValidationException.require(value == null || value.toString().startsWith(".")) {
+            ValidationException.require(value == null || !value.toString().startsWith(".")) {
                 """cant' start with ".""""
             }
             field = value
@@ -120,7 +120,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     var preprocOut: Path? = null
         set(value) {
             ValidationException.requireXSV(value)
-            ValidationException.require(value == null || value.toString().startsWith(".")) {
+            ValidationException.require(value == null || !value.toString().startsWith(".")) {
                 """cant' start with ".""""
             }
             field = value

@@ -17,6 +17,7 @@ import com.milaboratory.util.TempFileManager;
 import org.junit.Before;
 import org.junit.Test;
 import picocli.CommandLine;
+import picocli.CommandLine.ParameterException;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -94,19 +95,19 @@ public class CommandFindAllelesTest {
 
     @Test
     public void libraryMustBeJson() {
-        CommandLine.ParseResult p = Main.parseArgs(
-                CommandFindAlleles.COMMAND_NAME,
-                "--export-library", "/output/folder/library.txt",
-                "-o", "/output/folder/{file_name}_with_alleles.clns",
-                file1.toString(),
-                file2.toString()
-        ).getParseResult();
-        CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
         try {
+            CommandLine.ParseResult p = Main.parseArgs(
+                    CommandFindAlleles.COMMAND_NAME,
+                    "--export-library", "/output/folder/library.txt",
+                    "-o", "/output/folder/{file_name}_with_alleles.clns",
+                    file1.toString(),
+                    file2.toString()
+            ).getParseResult();
+            CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
             command.validate();
             fail();
-        } catch (ValidationException e) {
-            assertEquals("--export-library must be json: /output/folder/library.txt", e.getMessage());
+        } catch (ParameterException e) {
+            assertEquals("Require .json file extension, got /output/folder/library.txt", e.getCause().getMessage());
         }
     }
 
@@ -140,7 +141,7 @@ public class CommandFindAllelesTest {
             command.getOutputFiles();
             fail();
         } catch (ValidationException e) {
-            assertEquals("Wrong template: command produces only clns /output/folder/{file_name}.clna", e.getMessage());
+            assertEquals("Wrong template: command produces only clns, got /output/folder/{file_name}.clna", e.getMessage());
         }
     }
 }

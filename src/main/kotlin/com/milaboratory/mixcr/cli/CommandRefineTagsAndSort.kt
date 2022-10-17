@@ -69,7 +69,7 @@ object CommandRefineTagsAndSort {
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = [
-                "Don't correct barcodes, only sort alignments by tags",
+                "Don't correct barcodes, only sort alignments by tags.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--dont-correct"]
@@ -90,7 +90,7 @@ object CommandRefineTagsAndSort {
 
         @Option(
             description = [
-                "Expected background non-sequencing-related substitution rate",
+                "Expected background non-sequencing-related substitution rate.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-s", "--substitution-rate"],
@@ -100,7 +100,7 @@ object CommandRefineTagsAndSort {
 
         @Option(
             description = [
-                "Expected background non-sequencing-related indel rate",
+                "Expected background non-sequencing-related indel rate.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-i", "--indel-rate"],
@@ -111,7 +111,7 @@ object CommandRefineTagsAndSort {
         @Option(
             description = [
                 "Minimal quality score for the tag.",
-                "Tags having positions with lower quality score will be discarded, if not corrected",
+                "Tags having positions with lower quality score will be discarded, if not corrected.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-q", "--min-quality"],
@@ -121,7 +121,7 @@ object CommandRefineTagsAndSort {
 
         @Option(
             description = [
-                "Maximal number of substitutions to search for",
+                "Maximal number of substitutions to search for.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--max-substitutions"],
@@ -131,7 +131,7 @@ object CommandRefineTagsAndSort {
 
         @Option(
             description = [
-                "Maximal number of indels to search for",
+                "Maximal number of indels to search for.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--max-indels"],
@@ -141,7 +141,7 @@ object CommandRefineTagsAndSort {
 
         @Option(
             description = [
-                "Maximal number of substitutions and indels combined to search for",
+                "Maximal number of substitutions and indels combined to search for.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--max-errors"],
