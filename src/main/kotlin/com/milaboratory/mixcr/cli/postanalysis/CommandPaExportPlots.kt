@@ -32,12 +32,16 @@ import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
 abstract class CommandPaExportPlots : CommandPaExport() {
-    @Option(
+    @set:Option(
         description = [CommonDescriptions.METADATA],
         names = ["--metadata"],
         paramLabel = "<path>"
     )
     var metadata: Path? = null
+        set(value) {
+            ValidationException.requireXSV(value)
+            field = value
+        }
 
     @Option(
         description = ["Plot width"],
@@ -93,9 +97,6 @@ abstract class CommandPaExportPlots : CommandPaExport() {
             throw ValidationException("Unsupported file extension (possible: pdf, eps, svg, png): $out")
         }
         metadata?.let { metadata ->
-            if (metadata.extension !in arrayOf("csv", "tsv"))
-                throw ValidationException("Metadata should be .csv or .tsv, got $metadata")
-
             if (!metadataDf!!.containsColumn("sample"))
                 throw ValidationException("Metadata must contain 'sample' column")
             val samples = inputFiles

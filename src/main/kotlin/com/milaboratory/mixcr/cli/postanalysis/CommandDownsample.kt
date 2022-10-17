@@ -64,12 +64,16 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
     )
     lateinit var downsampling: String
 
-    @Option(
+    @set:Option(
         description = ["Write downsampling summary tsv/csv table."],
         names = ["--summary"],
         paramLabel = "<path>"
     )
     var summary: Path? = null
+        set(value) {
+            ValidationException.requireXSV(value)
+            field = value
+        }
 
     @Option(
         description = ["Suffix to add to output clns file."],
@@ -88,13 +92,6 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
 
     override val outputFiles
         get() = inputFiles.map { output(it) }
-
-    override fun validate() {
-        summary?.let { summary ->
-            if (summary.extension !in arrayOf("tsv", "csv"))
-                throw ValidationException("summary table should ends with .csv/.tsv, got $summary")
-        }
-    }
 
     private fun output(input: Path): Path {
         val fileNameWithoutExtension = input.fileName.toString()

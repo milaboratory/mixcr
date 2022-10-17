@@ -32,8 +32,7 @@ abstract class CommandPaExportTablesBase : CommandPaExport {
     }
 
     override fun validate() {
-        if (out.extension !in arrayOf("tsv", "csv"))
-            throw ValidationException("Output file must have .tsv or .csv extension, got $out")
+        ValidationException.requireExtension("Output file must have", out, "tsv", "csv")
     }
 
     protected fun outDir(): Path = out.toAbsolutePath().parent

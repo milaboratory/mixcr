@@ -54,7 +54,6 @@ import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
-import kotlin.io.path.extension
 
 
 @Command(
@@ -171,7 +170,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         result
     }
 
-    @Option(
+    @set:Option(
         description = [
             "If specified, trees will be build from data in the file. Main logic of command will be omitted.",
             "File must be formatted as tsv and have 3 columns: treeId, fileName, cloneId",
@@ -184,6 +183,10 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         paramLabel = "<path>"
     )
     var buildFrom: Path? = null
+        set(value) {
+            ValidationException.requireExtension("Require", value, "tsv")
+            field = value
+        }
 
     @Option(
         description = ["Put temporary files in the same folder as the output files."],
@@ -210,16 +213,11 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        if (outputTreesPath.extension != shmFileExtension) {
-            throw ValidationException("Output file should have extension $shmFileExtension. Given $outputTreesPath")
-        }
+        ValidationException.requireExtension("Output file should have", outputTreesPath, shmFileExtension)
         if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
             throw ValidationException("First step must be BuildingInitialTrees")
         }
         if (buildFrom != null) {
-            if (buildFrom!!.extension != "tsv") {
-                throw ValidationException("--build-from must be .tsv, got $buildFrom")
-            }
             if (VGenesToFilter.isNotEmpty()) {
                 throw ValidationException("--v-gene-names must be empty if --build-from is specified")
             }
@@ -237,9 +235,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             }
         }
         inputFiles.forEach { input ->
-            ValidationException.require(input.extension == "clns") {
-                "Command use only clns as input, got $input"
-            }
+            ValidationException.requireExtension("Input should have", input, "clns")
         }
     }
 

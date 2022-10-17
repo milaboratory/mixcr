@@ -66,7 +66,6 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.io.path.createDirectories
-import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
 @Command(
@@ -96,19 +95,27 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     )
     var outputTemplate: String? = null
 
-    @Option(
+    @set:Option(
         description = ["Path where to write library with found alleles."],
         names = ["--export-library"],
         paramLabel = "<path>"
     )
     var libraryOutput: Path? = null
+        set(value) {
+            ValidationException.requireJson(value)
+            field = value
+        }
 
-    @Option(
+    @set:Option(
         description = ["Path where to write descriptions and stats for all result alleles, existed and new."],
         names = ["--export-alleles-mutations"],
         paramLabel = "<path>"
     )
     var allelesMutationsOutput: Path? = null
+        set(value) {
+            ValidationException.requireXSV(value)
+            field = value
+        }
 
     @Option(
         description = ["Put temporary files in the same folder as the output files."],
@@ -173,16 +180,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        libraryOutput?.let { libraryOutput ->
-            if (libraryOutput.extension != "json") {
-                throw ValidationException("--export-library must be json: $libraryOutput")
-            }
-        }
-        allelesMutationsOutput?.let { allelesMutationsOutput ->
-            if (allelesMutationsOutput.extension !in arrayOf("tsv", "csv")) {
-                throw ValidationException("--export-alleles-mutations must be csv: $allelesMutationsOutput")
-            }
-        }
         if (listOfNotNull(outputTemplate, libraryOutput, allelesMutationsOutput).isEmpty()) {
             throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
         }

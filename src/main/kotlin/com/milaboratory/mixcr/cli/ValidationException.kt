@@ -11,14 +11,30 @@
  */
 package com.milaboratory.mixcr.cli
 
+import java.nio.file.Path
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.io.path.extension
 
 class ValidationException(
     override val message: String,
     val printHelp: Boolean = false
 ) : RuntimeException() {
     companion object {
+        fun requireXSV(path: Path?) {
+            requireExtension("Require", path, "tsv", "csv")
+        }
+
+        fun requireJson(path: Path?) {
+            requireExtension("Require", path, "json")
+        }
+
+        fun requireExtension(prefix: String, path: Path?, vararg extension: String) {
+            require(path == null || path.extension in extension) {
+                "$prefix ${extension.joinToString(" or ") { ".$it" }} file extension, got $path"
+            }
+        }
+
         @OptIn(ExperimentalContracts::class)
         inline fun require(value: Boolean, printHelp: Boolean = false, lazyMessage: () -> Any) {
             contract {

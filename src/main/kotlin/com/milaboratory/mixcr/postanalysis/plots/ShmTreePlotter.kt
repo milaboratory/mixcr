@@ -25,6 +25,7 @@ import com.milaboratory.miplots.dendro.withAlignmentLayer
 import com.milaboratory.miplots.dendro.withLabels
 import com.milaboratory.miplots.dendro.withTextLayer
 import com.milaboratory.miplots.stat.util.TestMethod
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithClones
@@ -128,7 +129,7 @@ data class AlignmentOption(
 )
 
 class ShmTreePlotter(
-    val shmtFile: Path,
+    private val shmtFile: Path,
     metadataFile: Path? = null,
     /** Filter specific trees */
     val filter: TreeFilter? = null,
@@ -157,14 +158,17 @@ class ShmTreePlotter(
             val df = readMetadata(metadataFile)
             val fileNames = SHMTreesReader(shmtFile, VDJCLibraryRegistry.getDefault()).use { it.fileNames }
 
-            val sampleColumn = df.columnNames().first { it.equals("sample", true) }
+            val sampleColumn = df.columnNames().find { it.equals("sample", true) }
+                ?: throw ValidationException("Metadata file should contains column with name 'sample'")
             val idsInMeta = df[sampleColumn].toList().map { it.toString() }.distinct()
             val matched = StringUtil.matchLists(idsInMeta, fileNames)
 
             val fileNames2id = fileNames.mapIndexed { i, n -> n to i }.toMap()
-            this.metadata = df.rows().map {
-                fileNames2id[matched[it[sampleColumn]].toString()]!! to it.toMap().mapValues { r -> r.value!! }
-            }.toMap()
+            this.metadata = df.rows().associate {
+                val fileName = it[sampleColumn]
+                val datasetId = matched[fileName] ?: throw ValidationException("sample $fileName not found in metadata")
+                fileNames2id[datasetId]!! to it.toMap().mapValues { r -> r.value!! }
+            }
         } else {
             this.metadata = null
         }
@@ -319,9 +323,9 @@ class ShmTreePlotter(
                 title += " " + pValue(tree, stat)
             }
         }
-        dendro.plusAssign(ggtitle(title))
+        dendro += ggtitle(title)
 
-        dendro.plusAssign(guides(size = "none"))
+        dendro += guides(size = "none")
 
         var plt = dendro.plot
 
