@@ -75,7 +75,7 @@ class CommandExportHelp : Runnable {
                         .replace(Regex(""": +"""), ": ")
                         .replace(Regex("""\n {15,50}"""), " ")
                         .replace(" ", " ")
-                        .replace(Regex(""" {5,15}"""), "\n\n")
+                        .replace(Regex(""" {3,15}"""), "\n\n")
                 }
             }
             subcommandHelp.commandSpec().commandLine().usage(PrintStream(output.toFile()))

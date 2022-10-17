@@ -44,29 +44,29 @@ abstract class CommandPaExportPlots : CommandPaExport() {
         }
 
     @Option(
-        description = ["Plot width"],
+        description = ["Plot width."],
         names = ["--width"],
         paramLabel = "<n>"
     )
     var width = 0
 
     @Option(
-        description = ["Plot height"],
+        description = ["Plot height."],
         names = ["--height"],
         paramLabel = "<n>"
     )
     var height = 0
 
     @Option(
-        description = ["Filter by metadata. Possible filters: column=value, column>=value etc."],
+        description = ["Filter samples to put on a plot by their metadata values. Filter allows equality (`species=cat`) or arithmetic comparison (`age>=10`) etc."],
         names = ["--filter"],
         split = ",",
-        paramLabel = "<filter>"
+        paramLabel = "<meta(|>|>=|=|<=|<)value>"
     )
     var filterByMetadata: List<String>? = null
 
     @Parameters(
-        description = ["Output PDF/EPS/PNG/JPEG file name"],
+        description = ["Output PDF/EPS/PNG/JPEG file name."],
         index = "1",
         paramLabel = "output.(pdf|eps|png|jpeg)"
     )

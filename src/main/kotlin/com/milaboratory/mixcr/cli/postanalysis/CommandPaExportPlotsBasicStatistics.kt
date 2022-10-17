@@ -19,6 +19,7 @@ import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat.Companion.Formatted
 import com.milaboratory.miplots.stat.xdiscrete.LabelFormat.Companion.Significance
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.cli.EnumTypes
 import com.milaboratory.mixcr.cli.EnumTypes.PValueCorrectionMethodCandidatesWithNone
 import com.milaboratory.mixcr.cli.EnumTypes.PValueCorrectionMethodConverterWithNone
 import com.milaboratory.mixcr.cli.EnumTypes.PlotTypeCandidates
@@ -42,90 +43,86 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
     var plotType: PlotType? = null
 
     @Option(
-        description = ["Primary group"],
+        description = ["Specify metadata column used to group datasets."],
         names = ["-p", "--primary-group"],
-        paramLabel = "<s>"
+        paramLabel = "<meta>"
     )
     var primaryGroup: String? = null
         get() = field?.lowercase()
 
     @Option(
-        description = ["List of comma separated primary group values"],
+        description = ["List of comma separated primary group values."],
         names = ["-pv", "--primary-group-values"],
         split = ",",
-        paramLabel = "<s>"
+        paramLabel = "<value>"
     )
     var primaryGroupValues: List<String>? = null
 
     @Option(
-        description = ["Secondary group"],
+        description = ["Secondary group."],
         names = ["-s", "--secondary-group"],
-        paramLabel = "<s>"
+        paramLabel = "<meta>"
     )
     var secondaryGroup: String? = null
         get() = field?.lowercase()
 
     @Option(
-        description = ["List of comma separated secondary group values"],
+        description = ["List of comma separated secondary group values."],
         names = ["-sv", "--secondary-group-values"],
         split = ",",
-        paramLabel = "<s>"
+        paramLabel = "<value>"
     )
     var secondaryGroupValues: List<String>? = null
 
     @Option(
-        description = ["Facet by"],
+        description = ["Specify metadata column to use for plotting facets."],
         names = ["--facet-by"],
-        paramLabel = "<s>"
+        paramLabel = "<meta>"
     )
     var facetBy: String? = null
         get() = field?.lowercase()
 
-    @Option(
-        description = ["Select specific metrics to export."],
-        names = ["--metric"],
-        split = ",",
-        paramLabel = "<s>"
-    )
-    var metrics: List<String>? = null
+    abstract var metrics: List<String>?
 
-    @Option(description = ["Hide overall p-value"], names = ["--hide-overall-p-value"])
+    @Option(description = ["Hide overall p-value."], names = ["--hide-overall-p-value"])
     var hideOverallPValue = false
 
-    @Option(description = ["Show pairwise p-value comparisons"], names = ["--pairwise-comparisons"])
+    @Option(description = ["Show pairwise p-value comparisons."], names = ["--pairwise-comparisons"])
     var pairwiseComparisons = false
 
     @Option(
-        description = ["Reference group. Can be \"all\" or some specific value."],
+        description = ["Reference group for compare means statistics. Can be 'all' or some specific value."],
         names = ["--ref-group"],
-        paramLabel = "refGroup"
+        paramLabel = "<refGroup>"
     )
     var refGroupParam: String? = null
 
-    @Option(description = ["Hide non-significant observations"], names = ["--hide-non-significant"])
+    @Option(description = ["Hide non-significant observations."], names = ["--hide-non-significant"])
     var hideNS = false
 
     @Option(description = ["Do paired analysis"], names = ["--paired"])
     var paired = false
 
     @Option(
-        description = ["Test method. Available methods: \${COMPLETION-CANDIDATES}"],
+        description = ["Statistical test method. Available methods: \${COMPLETION-CANDIDATES}."],
         names = ["--method"],
         showDefaultValue = ALWAYS,
-        paramLabel = "<method>"
+        paramLabel = "<method>",
+        completionCandidates = EnumTypes.TestMethodCandidates::class
     )
     var method: TestMethod = TestMethod.Wilcoxon
 
     @Option(
-        description = ["Test method for multiple groups comparison. Available methods: \${COMPLETION-CANDIDATES}"],
+        description = ["Test method for multiple groups comparison. Available methods: \${COMPLETION-CANDIDATES}."],
         names = ["--method-multiple-groups"],
         showDefaultValue = ALWAYS,
-        paramLabel = "<method>"
+        paramLabel = "<method>",
+        completionCandidates = EnumTypes.TestMethodCandidates::class
     )
     var methodForMultipleGroups: TestMethod = TestMethod.KruskalWallis
 
     @Option(
-        description = ["Method used to adjust p-values. Available methods: \${COMPLETION-CANDIDATES}"],
+        description = ["Method used to adjust p-values. Available methods: \${COMPLETION-CANDIDATES}."],
         names = ["--p-adjust-method"],
         showDefaultValue = ALWAYS,
         completionCandidates = PValueCorrectionMethodCandidatesWithNone::class,
@@ -134,7 +131,10 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
     )
     var pAdjustMethod: PValueCorrection.Method = PValueCorrection.Method.Holm
 
-    @Option(description = ["Show significance level instead of p-values"], names = ["--show-significance"])
+    @Option(
+        description = ["Show significance levels instead of p-values ( `ns` for p-value >= 0.05, `***` for p-value < 0.0001,  `**` for p-value < 0.001, `*` in other case)."],
+        names = ["--show-significance"]
+    )
     var showSignificance = false
 
     abstract fun group(): String
@@ -185,6 +185,22 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
         description = ["Export CDR3 metrics"]
     )
     class ExportCDR3Metrics : CommandPaExportPlotsBasicStatistics() {
+        class MetricValues @JvmOverloads constructor(
+            private val candidates: List<String> = listOf(*PostanalysisParametersIndividual.SUPPORTED_CDR3_METRICS)
+        ) : Iterable<String> by candidates
+
+        @Option(
+            description = [
+                "Output only specified list of metrics.",
+                "Possible values are: \${COMPLETION-CANDIDATES}"
+            ],
+            names = ["--metric"],
+            split = ",",
+            paramLabel = "<metric>",
+            completionCandidates = MetricValues::class
+        )
+        override var metrics: List<String>? = null
+
         override fun group(): String = PostanalysisParametersIndividual.CDR3Metrics
 
         override fun metricsFilter(): (String) -> Boolean {
@@ -203,32 +219,49 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
         description = ["Export diversity metrics"]
     )
     class ExportDiversity : CommandPaExportPlotsBasicStatistics() {
+        class MetricValues @JvmOverloads constructor(
+            private val candidates: Collection<String> = possibleMetrics().keys
+        ) : Iterable<String> by candidates
+
+        @Option(
+            description = [
+                "Output only specified list of metrics.",
+                "Possible values are: \${COMPLETION-CANDIDATES}"
+            ],
+            names = ["--metric"],
+            split = ",",
+            paramLabel = "<metric>",
+            completionCandidates = MetricValues::class
+        )
+        override var metrics: List<String>? = null
+
         override fun group(): String = PostanalysisParametersIndividual.Diversity
 
         override fun metricsFilter(): (String) -> Boolean {
             val metrics = metrics
             if (metrics.isNullOrEmpty()) return { true }
-            val map = buildMap {
-                put("chao1".lowercase(Locale.getDefault()), DiversityMeasure.Chao1.name)
-                put("efronThisted".lowercase(Locale.getDefault()), DiversityMeasure.EfronThisted.name)
-                put("inverseSimpsonIndex".lowercase(Locale.getDefault()), DiversityMeasure.InverseSimpsonIndex.name)
-                put("giniIndex".lowercase(Locale.getDefault()), DiversityMeasure.GiniIndex.name)
-                put("observed".lowercase(Locale.getDefault()), DiversityMeasure.Observed.name)
-                put("shannonWiener".lowercase(Locale.getDefault()), DiversityMeasure.ShannonWiener.name)
-                put(
-                    "normalizedShannonWienerIndex".lowercase(Locale.getDefault()),
-                    DiversityMeasure.NormalizedShannonWienerIndex.name
-                )
-                put("d50", "d50")
-            }
+            val possibleMetrics = possibleMetrics().mapKeys { it.key.lowercase(Locale.getDefault()) }
             for (m in metrics) {
-                require(m.lowercase(Locale.getDefault()) in map) { "Unknown metric: $m" }
+                require(m.lowercase(Locale.getDefault()) in possibleMetrics) { "Unknown metric: $m" }
             }
             val metricsAsSet = metrics
                 .map { it.lowercase(Locale.getDefault()) }
-                .map { key -> map[key] }
+                .map { key -> possibleMetrics[key] }
                 .toSet()
             return { it in metricsAsSet }
+        }
+
+        companion object {
+            private fun possibleMetrics(): Map<String, String> = buildMap {
+                put("observed", DiversityMeasure.Observed.name)
+                put("shannonWiener", DiversityMeasure.ShannonWiener.name)
+                put("chao1", DiversityMeasure.Chao1.name)
+                put("normalizedShannonWienerIndex", DiversityMeasure.NormalizedShannonWienerIndex.name)
+                put("inverseSimpsonIndex", DiversityMeasure.InverseSimpsonIndex.name)
+                put("giniIndex", DiversityMeasure.GiniIndex.name)
+                put("d50", "d50")
+                put("efronThisted", DiversityMeasure.EfronThisted.name)
+            }
         }
     }
 }
