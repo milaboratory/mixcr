@@ -53,6 +53,7 @@ import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADI
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.system.exitProcess
 
 object Main {
     private var initialized = false
@@ -72,7 +73,7 @@ object Main {
         if (args.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", args[1])
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
-        mkCmd().execute(*args)
+        exitProcess(mkCmd().execute(*args))
     }
 
     private fun assertionsDisabled(): Boolean {
