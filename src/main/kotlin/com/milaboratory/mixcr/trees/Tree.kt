@@ -35,6 +35,12 @@ class Tree<T : Any>(
     fun <R : Any> map(mapper: (T?, T) -> R): Tree<R> =
         Tree(root.map(null, mapper))
 
+    fun <R : Any> splitLeafs(mapper: (T?, T) -> Collection<R>): Tree<R> {
+        val mappedRoot = root.splitLeafs(null, mapper)
+        require(mappedRoot.size == 1)
+        return Tree(mappedRoot.first())
+    }
+
     class Node<T> {
         val content: T
         private val children: MutableList<NodeLink<T>>
@@ -85,6 +91,20 @@ class Tree<T : Any>(
                     child.node.map(content, mapper),
                     child.distance
                 )
+            }
+            return result
+        }
+
+        fun <R> splitLeafs(parentContent: T?, mapper: (T?, T) -> Collection<R>): List<Node<R>> {
+            val result = mapper(parentContent, content).map { Node(it) }
+            if (children.isNotEmpty()) {
+                require(result.size == 1)
+                children.forEach { child ->
+                    val children = child.node.splitLeafs(content, mapper)
+                    children.forEach {
+                        result.first().addChild(it, child.distance)
+                    }
+                }
             }
             return result
         }

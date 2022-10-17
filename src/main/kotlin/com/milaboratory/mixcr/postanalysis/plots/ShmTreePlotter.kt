@@ -28,7 +28,7 @@ import com.milaboratory.miplots.stat.util.TestMethod
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
-import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithClones
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.Tree
 import com.milaboratory.mixcr.trees.forPostanalysis
@@ -117,7 +117,7 @@ object DefaultMeta {
     const val Alignment = "Alignment"
 }
 
-typealias GGNode = Node<NodeWithClones>
+typealias GGNode = Node<SplittedNode>
 
 data class AlignmentOption(
     /** Gene feature to align */
@@ -192,7 +192,7 @@ class ShmTreePlotter(
                     if (limit != null && c > limit)
                         break
 
-                    list += plot(tree)
+                    list += plot(tree.meta.treeId, tree.tree.splitLeafs { _, node -> node.split() })
 
                     ++c
                 }
@@ -202,18 +202,17 @@ class ShmTreePlotter(
         }
     }
 
-    private fun toGGNode(node: Tree.Node<NodeWithClones>) =
+    private fun toGGNode(node: Tree.Node<SplittedNode>) =
         toGGNode(node, 0.0)
 
     private fun toGGNode(
-        node: Tree.Node<NodeWithClones>,
+        node: Tree.Node<SplittedNode>,
         distanceToParent: Double
     ): GGNode = run {
 
-        val clones = node.content.clones
         val nodeMetadata = mutableMapOf<String, Any?>()
-        if (clones.size == 1) { // TODO implement for multiple clones
-            val cloneWrapper = clones[0]
+        val cloneWrapper = node.content.clone
+        if (cloneWrapper != null) {
             val isotype = cloneWrapper.clone.getBestHit(GeneType.Constant)?.gene?.familyName
             if (isotype != null)
                 nodeMetadata[DefaultMeta.Isotype] = isotype[3]
@@ -262,18 +261,18 @@ class ShmTreePlotter(
     }
 
     private fun pValue(
-        tree: SHMTreeForPostanalysis,
+        tree: Tree<SplittedNode>,
         stat: StatOption
     ): Double = run {
-        val leafs = tree.tree.allLeafs()
+        val leafs = tree.allLeafs()
 
         val data = leafs
-            .flatMap {
-                it.node.content.clones.map { c ->
-                    val height = it.node.content.distanceFrom(Base.germline) ?: 0.0
-                    val metaValue = metadata?.get(c.datasetId)?.get(stat.metadataColumn)
-                    metadataRanks[stat.metadataColumn]!![metaValue]!! to height
-                }
+            .filter { it.node.content.clone != null }
+            .map {
+                val datasetId = it.node.content.clone!!.datasetId
+                val height = it.node.content.distanceFrom(Base.germline) ?: 0.0
+                val metaValue = metadata?.get(datasetId)?.get(stat.metadataColumn)
+                metadataRanks[stat.metadataColumn]!![metaValue]!! to height
             }
 
         val x = data.map { it.first }.toList().toDoubleArray()
@@ -285,7 +284,7 @@ class ShmTreePlotter(
             stat.method.pValue(x, y, paired = true)
     }
 
-    fun plot(tree: SHMTreeForPostanalysis) = run {
+    fun plot(treeId: Int, tree: Tree<SplittedNode>) = run {
 
         val fixedLineColor = if (this@ShmTreePlotter.lineColor == null) "#555555" else null
         val fixedNodeColor = if (this@ShmTreePlotter.nodeColor == null) "#555555" else null
@@ -293,7 +292,7 @@ class ShmTreePlotter(
         val fixedNodeAlpha = if (this@ShmTreePlotter.nodeSize == null) 0.8 else 0.5
         val colorAes = this@ShmTreePlotter.nodeColor ?: this@ShmTreePlotter.lineColor
 
-        val dendroTree = toGGNode(tree.tree.root)
+        val dendroTree = toGGNode(tree.root)
 
         val dendro = GGDendroPlot(
             dendroTree,
@@ -317,7 +316,7 @@ class ShmTreePlotter(
             else
                 dendro.withTextLayer(DefaultMeta.Alignment, leafsOnly = true)
 
-        var title = "Id: ${tree.meta.treeId}"
+        var title = "Id: $treeId"
         if (stats.isNotEmpty()) {
             for (stat in stats) {
                 title += " " + pValue(tree, stat)
