@@ -93,7 +93,7 @@ object CommandAssembleContigs {
             names = ["-O"],
             description = ["Overrides for the assembler parameters."],
             paramLabel = Labels.OVERRIDES,
-            order = 10_000
+            order = 100_000
         )
         private var overrides: Map<String, String> = mutableMapOf()
 

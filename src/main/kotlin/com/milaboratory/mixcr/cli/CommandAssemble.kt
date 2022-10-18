@@ -106,7 +106,7 @@ object CommandAssemble {
             names = ["-O"],
             description = ["Overrides default parameter values."],
             paramLabel = Labels.OVERRIDES,
-            order = 10_000
+            order = 100_000
         )
         private val cloneAssemblerOverrides: Map<String, String> = mutableMapOf()
 
@@ -114,7 +114,7 @@ object CommandAssemble {
             names = ["-P"],
             description = ["Overrides default pre-clone assembler parameter values."],
             paramLabel = Labels.OVERRIDES,
-            order = 10_000 + 1
+            order = 100_000 + 1
         )
         private val consensusAssemblerOverrides: Map<String, String> = mutableMapOf()
 
