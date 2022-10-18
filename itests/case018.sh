@@ -40,7 +40,7 @@ mixcr findAlleles \
   -j alleles/report.json \
   -r alleles/report.txt \
   --debugDir alleles/debug \
-  -o 'alleles/{file_name}.with_alleles.clns' \
+  --output-template 'alleles/{file_name}.with_alleles.clns' \
   --export-library alleles_library.json \
   --export-alleles-mutations alleles/description.tsv \
   $(ls assemble/*.clns)
