@@ -46,14 +46,16 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     @Option(
         description = ["Plot width."],
         names = ["--width"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = 10_000 + 1
     )
     var width = 0
 
     @Option(
         description = ["Plot height."],
         names = ["--height"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = 10_000 + 2
     )
     var height = 0
 

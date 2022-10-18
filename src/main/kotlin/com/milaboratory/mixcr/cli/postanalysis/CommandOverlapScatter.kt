@@ -48,7 +48,7 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     lateinit var out: Path
 
     @Option(
-        description = ["Chains to export"],
+        description = ["Chains to export."],
         names = ["--chains"],
         split = ",",
         paramLabel = Labels.CHAIN
@@ -59,15 +59,15 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     var onlyProductive = false
 
     @Option(
-        description = [CommonDescriptions.DOWNSAMPLING],
+        description = ["Choose ${CommonDescriptions.DOWNSAMPLING}"],
         names = ["--downsampling"],
         required = true,
-        paramLabel = "<type>"
+        paramLabel = "(<type>|none)"
     )
     lateinit var downsampling: String
 
     @Option(
-        description = ["Overlap criteria."],
+        description = ["Overlap criteria. Defines the rules to treat clones as equal."],
         names = ["--criteria"],
         showDefaultValue = ALWAYS,
         paramLabel = "<s>"
@@ -75,14 +75,14 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     var overlapCriteria = "CDR3|AA|V|J"
 
     @Option(
-        description = ["Correlation method to use. Possible value: \${COMPLETION-CANDIDATES}"],
+        description = ["Correlation method to use. Possible value: \${COMPLETION-CANDIDATES}."],
         names = ["--method"],
         paramLabel = "<method>",
         showDefaultValue = ALWAYS
     )
     var method: CorrelationMethod = CorrelationMethod.Pearson
 
-    @Option(description = ["Do not apply log10 to clonotype frequencies"], names = ["--no-log"])
+    @Option(description = ["Do not apply log10 to clonotype frequencies."], names = ["--no-log"])
     var noLog = false
 
     override val inputFiles

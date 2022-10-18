@@ -57,7 +57,7 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
     var onlyProductive = false
 
     @Option(
-        description = [CommonDescriptions.DOWNSAMPLING],
+        description = ["Choose ${CommonDescriptions.DOWNSAMPLING}"],
         names = ["--downsampling"],
         required = true,
         paramLabel = "<type>"

@@ -23,7 +23,11 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.export.*
+import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.ExportDefaultOptions
+import com.milaboratory.mixcr.export.ExportFieldDescription
+import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
@@ -32,7 +36,11 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Model
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.util.*
 import java.util.stream.Stream
@@ -75,7 +83,7 @@ object CommandExportClones {
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
         @Option(
             description = [
-                "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
+                "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-c", "--chains"],
@@ -85,7 +93,7 @@ object CommandExportClones {
 
         @Option(
             description = [
-                "Exclude clones with out-of-frame clone sequences (fractions will be recalculated)",
+                "Exclude clones with out-of-frame clone sequences (fractions will be recalculated).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-o", "--filter-out-of-frames"]
@@ -94,7 +102,7 @@ object CommandExportClones {
 
         @Option(
             description = [
-                "Exclude sequences containing stop codons (fractions will be recalculated)",
+                "Exclude sequences containing stop codons (fractions will be recalculated).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-t", "--filter-stops"]
@@ -103,7 +111,7 @@ object CommandExportClones {
 
         @Option(
             description = [
-                "Split clones by tag values",
+                "Split clones by tag values.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--split-by-tag"],
@@ -113,7 +121,7 @@ object CommandExportClones {
 
         @Option(
             description = [
-                "Split files by (currently the only supported value is \"geneLabel:reliableChain\" etc... )",
+                "Split files by (currently the only supported value is \"geneLabel:reliableChain\" etc... ).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--split-files-by"]

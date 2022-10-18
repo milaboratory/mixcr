@@ -27,7 +27,6 @@ import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
-import java.util.stream.Collectors
 
 @Command(description = ["Export overlap heatmaps"])
 class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlotsHeatmapWithGroupBy() {
@@ -35,9 +34,9 @@ class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlo
     var noDendro = false
 
     @Option(
-        description = ["Add color key layer; prefix 'x_' (add to the bottom) or 'y_' (add to the left) should be used."],
+        description = ["Add color key layer to the heatmap. One may write `--color-key x_meta` to draw color key horizontally (default) or `--color-key y_meta` to draw vertically."],
         names = ["--color-key"],
-        paramLabel = "<key>"
+        paramLabel = "<meta>"
     )
     var colorKeysParam: List<String> = mutableListOf()
 
@@ -45,11 +44,14 @@ class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlo
     var fillDiagonal = false
 
     @Option(
-        description = ["Select specific metrics to export."],
+        description = [
+            "Select specific metrics to export.",
+            "Possible values are: \${COMPLETION-CANDIDATES}"
+        ],
         names = ["--metric"],
         paramLabel = "<metric>"
     )
-    var metrics: List<String>? = null
+    var metrics: List<OverlapType>? = null
 
     override fun validate() {
         super.validate()
@@ -67,17 +69,11 @@ class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlo
         return result
     }
 
-    private fun metricsFilter(): List<OverlapType>? {
-        return if (metrics == null || metrics!!.isEmpty()) null else metrics!!.stream()
-            .map { name: String? -> OverlapType.byNameOrThrow(name) }
-            .collect(Collectors.toList())
-    }
-
     override fun run(result: PaResultByGroup) {
         val ch = result.schema.getGroup<Clone>(PostanalysisParametersOverlap.Overlap)
         val df: DataFrame<OverlapRow> = dataFrame(
             result.result.forGroup(ch),
-            metricsFilter(),
+            metrics,
             fillDiagonal,
             metadataDf
         ).filterOverlapByMetadata()

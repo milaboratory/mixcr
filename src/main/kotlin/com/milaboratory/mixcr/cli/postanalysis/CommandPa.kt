@@ -56,7 +56,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     var dropOutliers = false
 
     @Option(
-        description = [CommonDescriptions.DOWNSAMPLING],
+        description = ["Default ${CommonDescriptions.DOWNSAMPLING}"],
         names = ["--default-downsampling"],
         required = true,
         paramLabel = "(<type>|none)"
