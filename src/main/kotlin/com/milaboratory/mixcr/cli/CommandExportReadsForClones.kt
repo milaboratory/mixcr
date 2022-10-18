@@ -33,20 +33,23 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.stream.IntStream
 
 @Command(
-    description = ["Export reads for particular clones from \"clones & alignments\" (*.clna) file."]
+    description = [
+        "Export reads for particular clones from \"clones & alignments\" (*.clna) file.",
+        "Note that such export is possible only from `.clna` files, produced by MiXCR `assemble` command with option `--write-alignments`."
+    ]
 )
 class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
     @Parameters(
         description = ["Path to input file"],
         index = "0",
-        paramLabel = "input_file.clna"
+        paramLabel = "input.clna"
     )
     lateinit var input: Path
 
     @Parameters(
-        description = ["Output file name will be transformed into '_R1'/'_R2' pair in case of paired end reads."],
+        description = ["Output file name will be transformed into `_R1`/`_R2` pair in case of paired end reads."],
         index = "1",
-        paramLabel = "output_file.(fastq[.gz]|fasta)"
+        paramLabel = "output.(fastq[.gz]|fasta)"
     )
     lateinit var out: Path
 
@@ -69,7 +72,7 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
         get() = listOf(out)
 
     @Option(
-        description = ["Create separate files for each clone. File or pair of '_R1'/'_R2' files, with '_clnN' suffix, " +
+        description = ["Create separate files for each clone. File or pair of `_R1`/`_R2` files, with `_clnN` suffix, " +
                 "where N is clone index, will be created for each clone index."],
         names = ["-s", "--separate"]
     )

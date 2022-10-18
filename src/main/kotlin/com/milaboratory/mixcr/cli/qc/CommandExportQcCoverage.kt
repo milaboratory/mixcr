@@ -28,7 +28,12 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.nio.file.Paths
 
-@Command(description = ["Reads coverage plots."])
+@Command(
+    description = [
+        "Exports anchor points coverage by the library.",
+        "It separately plots coverage for R1, R2 and overlapping reads."
+    ]
+)
 class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
     companion object {
         private const val inputsLabel = "sample.vdjca..."

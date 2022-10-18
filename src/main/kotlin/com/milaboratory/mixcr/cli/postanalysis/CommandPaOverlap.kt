@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli.postanalysis
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneReaderMerger
+import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset
@@ -42,9 +43,7 @@ class CommandPaOverlap : CommandPa() {
 
 
     @Option(
-        description = ["Overlap criteria. " +
-                "It allows to specify gene feature for overlap (nucleotide or amino acid), and optionally use V and J hits. " +
-                "Examples: `CDR3|AA|V|J` (overlap by a.a. CDR3 and V and J), `VDJRegion|AA` (overlap by a.a. `VDJRegion`), `CDR3|NT|V` (overlap by nt CDR3 and V)."],
+        description = [CommonDescriptions.OVERLAP_CRITERIA],
         names = ["--criteria"],
         paramLabel = "<s>",
         showDefaultValue = ALWAYS

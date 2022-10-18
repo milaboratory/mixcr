@@ -66,18 +66,18 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
     var limitAfter: Int? = null
 
     @Option(
-        description = ["List of clone ids to export"],
-        names = ["-i", "--clone-ids"],
-        paramLabel = "<id>"
-    )
-    var ids: List<Int> = mutableListOf()
-
-    @Option(
         description = ["Number of output alignments to skip"],
         names = ["-s", "--skip"],
         paramLabel = "<n>"
     )
     var skipAfter: Int? = null
+
+    @Option(
+        description = ["List of clone ids to export"],
+        names = ["-i", "--clone-ids"],
+        paramLabel = "<id>"
+    )
+    var ids: List<Int> = mutableListOf()
 
     @Option(
         description = ["Filter export to a specific protein chain gene (e.g. TRA or IGH)."],

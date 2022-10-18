@@ -93,7 +93,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
     @Parameters(
         description = ["Path to input file"],
         index = "0",
-        paramLabel = "input_file.(vdjca|clna|clns)"
+        paramLabel = "input.(vdjca|clna|clns)"
     )
     lateinit var input: Path
 
