@@ -54,6 +54,7 @@ import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData
 import io.repseq.dto.VDJCLibraryData
+import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -83,17 +84,32 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     )
     override val inputFiles: List<Path> = mutableListOf()
 
-    @Option(
-        description = [
-            "Output template may contain {file_name} and {file_dir_path},",
-            "outputs for '-o /output/folder/{file_name}_with_alleles.clns input_file.clns input_file2.clns' will be /output/folder/input_file_with_alleles.clns and /output/folder/input_file2_with_alleles.clns,",
-            "outputs for '-o {file_dir_path}/{file_name}_with_alleles.clns /some/folder1/input_file.clns /some/folder2/input_file2.clns' will be /seme/folder1/input_file_with_alleles.clns and /some/folder2/input_file2_with_alleles.clns",
-            "Resulted outputs must be uniq"
-        ],
-        names = ["--output-template", "-o"],
-        paramLabel = "<template.clns>"
-    )
-    var outputTemplate: String? = null
+    class OutputClnsOptions {
+        @Option(
+            description = [
+                "Output template may contain {file_name} and {file_dir_path},",
+                "outputs for '-o /output/folder/{file_name}_with_alleles.clns input_file.clns input_file2.clns' will be /output/folder/input_file_with_alleles.clns and /output/folder/input_file2_with_alleles.clns,",
+                "outputs for '-o {file_dir_path}/{file_name}_with_alleles.clns /some/folder1/input_file.clns /some/folder2/input_file2.clns' will be /seme/folder1/input_file_with_alleles.clns and /some/folder2/input_file2_with_alleles.clns",
+                "Resulted outputs must be uniq"
+            ],
+            names = ["--output-template"],
+            paramLabel = "<template.clns>",
+            required = true
+        )
+        var outputTemplate: String? = null
+
+        @Suppress("unused")
+        @Option(
+            description = ["Command will not realign input clns files. Must be specified if `--output-template` is omitted."],
+            names = ["--no-clns-output"],
+            required = true,
+            arity = "0"
+        )
+        var noClnsOutput: Boolean = false
+    }
+
+    @ArgGroup(exclusive = true, multiplicity = "1")
+    lateinit var outputClnsOptions: OutputClnsOptions
 
     @set:Option(
         description = ["Path where to write library with found alleles."],
@@ -142,7 +158,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     var debugDir: Path? = null
 
     private val outputClnsFiles: List<Path> by lazy {
-        val template = outputTemplate ?: return@lazy emptyList()
+        val template = outputClnsOptions.outputTemplate ?: return@lazy emptyList()
         if (!template.endsWith(".clns")) {
             throw ValidationException("Wrong template: command produces only clns, got $template")
         }
@@ -181,7 +197,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        if (listOfNotNull(outputTemplate, libraryOutput, allelesMutationsOutput).isEmpty()) {
+        if (listOfNotNull(outputClnsOptions.outputTemplate, libraryOutput, allelesMutationsOutput).isEmpty()) {
             throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
         }
     }
@@ -281,7 +297,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 ) { clones ->
                     cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
                 }
-                if (outputTemplate != null) {
+                if (outputClnsOptions.outputTemplate != null) {
                     withRecalculatedScores.port.withProgress(
                         cloneReader.numberOfClones().toLong(),
                         progressAndStage,

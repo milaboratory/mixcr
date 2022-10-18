@@ -199,7 +199,6 @@ object Main {
                     .addSubcommand("exportReadsForClones", CommandExportReadsForClones::class.java)
                     .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones::class.java)
                     .addSubcommand("exportReads", CommandExportReads::class.java)
-                    .addSubcommand("bam2fastq", CommandBAM2fastq::class.java)
                     .addSubcommand("mergeAlignments", CommandMergeAlignments.mkCommandSpec())
                     .addSubcommand("filterAlignments", CommandFilterAlignments::class.java)
                     .addSubcommand("sortAlignments", CommandSortAlignments::class.java)
@@ -209,10 +208,11 @@ object Main {
                     .addSubcommand("versionInfo", CommandVersionInfo::class.java)
                     .addSubcommand("slice", CommandSlice::class.java)
                     .addSubcommand("exportPreset", CommandExportPreset.Cmd::class.java)
-                    .addSubcommand("alignmentsStat", CommandAlignmentsStats::class.java)
             )
 
             //hidden
+            .addSubcommand("alignmentsStat", CommandAlignmentsStats::class.java)
+            .addSubcommand("bam2fastq", CommandBAM2fastq::class.java)
             .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones::class.java)
             .addSubcommand("listLibraries", CommandListLibraries::class.java)
             .addSubcommand("help", DeprecatedHelp::class.java)

@@ -46,7 +46,7 @@ public class CommandFindAllelesTest {
     public void outputsWrittenToCommonDirectory() {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.COMMAND_NAME,
-                "-o", "/output/folder/{file_name}_with_alleles.clns",
+                "--output-template", "/output/folder/{file_name}_with_alleles.clns",
                 file1.toString(),
                 file2.toString()
         ).getParseResult();
@@ -64,7 +64,7 @@ public class CommandFindAllelesTest {
     public void outputsWrittenToOriginalDirectory() {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.COMMAND_NAME,
-                "-o", "{file_dir_path}/{file_name}_with_alleles.clns",
+                "--output-template", "{file_dir_path}/{file_name}_with_alleles.clns",
                 file1.toString(),
                 file2.toString()
         ).getParseResult();
@@ -78,7 +78,7 @@ public class CommandFindAllelesTest {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.COMMAND_NAME,
                 "--export-library", "/output/folder/library.json",
-                "-o", "/output/folder/{file_name}_with_alleles.clns",
+                "--output-template", "/output/folder/{file_name}_with_alleles.clns",
                 file1.toString(),
                 file2.toString()
         ).getParseResult();
@@ -96,15 +96,13 @@ public class CommandFindAllelesTest {
     @Test
     public void libraryMustBeJson() {
         try {
-            CommandLine.ParseResult p = Main.parseArgs(
+            Main.parseArgs(
                     CommandFindAlleles.COMMAND_NAME,
                     "--export-library", "/output/folder/library.txt",
-                    "-o", "/output/folder/{file_name}_with_alleles.clns",
+                    "--output-template", "/output/folder/{file_name}_with_alleles.clns",
                     file1.toString(),
                     file2.toString()
             ).getParseResult();
-            CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
-            command.validate();
             fail();
         } catch (ParameterException e) {
             assertEquals("Require .json file extension, got /output/folder/library.txt", e.getCause().getMessage());
@@ -115,7 +113,7 @@ public class CommandFindAllelesTest {
     public void outputsMustBeUniq() {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.COMMAND_NAME,
-                "-o", "/output/folder/{file_name}.clns",
+                "--output-template", "/output/folder/{file_name}.clns",
                 file1.toString(),
                 file3.toString()
         ).getParseResult();
@@ -132,7 +130,7 @@ public class CommandFindAllelesTest {
     public void templateMustBeClns() {
         CommandLine.ParseResult p = Main.parseArgs(
                 CommandFindAlleles.COMMAND_NAME,
-                "-o", "/output/folder/{file_name}.clna",
+                "--output-template", "/output/folder/{file_name}.clna",
                 file1.toString(),
                 file2.toString()
         ).getParseResult();
@@ -143,5 +141,33 @@ public class CommandFindAllelesTest {
         } catch (ValidationException e) {
             assertEquals("Wrong template: command produces only clns, got /output/folder/{file_name}.clna", e.getMessage());
         }
+    }
+
+    @Test
+    public void shouldFailIfNoOutputTemplate() {
+        try {
+            Main.parseArgs(
+                    CommandFindAlleles.COMMAND_NAME,
+                    "--export-library", "/output/folder/library.json",
+                    file1.toString(),
+                    file2.toString()
+            ).getParseResult();
+            fail();
+        } catch (ParameterException e) {
+            assertEquals("Error: Missing required argument (specify one of these): (--output-template <template.clns> | --no-clns-output)", e.getMessage());
+        }
+    }
+
+    @Test
+    public void shouldNotFailIfSpecifiedNoClnsOutput() {
+        CommandLine.ParseResult p = Main.parseArgs(
+                CommandFindAlleles.COMMAND_NAME,
+                "--no-clns-output",
+                "--export-library", "/output/folder/library.json",
+                file1.toString(),
+                file2.toString()
+        ).getParseResult();
+        CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
+        command.validate();
     }
 }
