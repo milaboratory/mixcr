@@ -26,12 +26,15 @@ import com.milaboratory.miplots.dendro.withLabels
 import com.milaboratory.miplots.dendro.withTextLayer
 import com.milaboratory.miplots.stat.util.TestMethod
 import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Abundance
+import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Alignment
+import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Isotype
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.Tree
-import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.mixcr.trees.forPostanalysisSplitted
 import com.milaboratory.util.StringUtil
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -78,7 +81,7 @@ class TreeFilter(
     /** filter specific trees by pattern */
     val seqPattern: SeqPattern? = null,
 ) {
-    fun match(tree: SHMTreeForPostanalysis): Boolean {
+    fun match(tree: SHMTreeForPostanalysis<*>): Boolean {
         if (minNodes != null && tree.tree.allNodes().count() < minNodes)
             return false
         if (minHeight != null && tree.tree.root.height() < minHeight)
@@ -181,7 +184,7 @@ class ShmTreePlotter(
             it.readTrees().use { reader ->
                 var c = 0
                 for (t in CUtils.it(reader)) {
-                    val tree = t.forPostanalysis(
+                    val tree = t.forPostanalysisSplitted(
                         it.fileNames,
                         it.alignerParameters,
                         VDJCLibraryRegistry.getDefault()
@@ -192,7 +195,7 @@ class ShmTreePlotter(
                     if (limit != null && c > limit)
                         break
 
-                    list += plot(tree.meta.treeId, tree.tree.splitLeafs { _, node -> node.split() })
+                    list += plot(t.treeId, tree.tree)
 
                     ++c
                 }
@@ -215,8 +218,8 @@ class ShmTreePlotter(
         if (cloneWrapper != null) {
             val isotype = cloneWrapper.clone.getBestHit(GeneType.Constant)?.gene?.familyName
             if (isotype != null)
-                nodeMetadata[DefaultMeta.Isotype] = isotype[3]
-            nodeMetadata[DefaultMeta.Abundance] = ln(cloneWrapper.clone.count)
+                nodeMetadata[Isotype] = isotype[3]
+            nodeMetadata[Abundance] = ln(cloneWrapper.clone.fraction)
 
             if (alignment != null) {
                 val mutationsDescription = node.content.mutationsFromGermline()
@@ -225,7 +228,7 @@ class ShmTreePlotter(
                     else -> mutationsDescription.nAlignment(alignment.gf)
                 }
                 if (alignmentForFeature != null) {
-                    nodeMetadata[DefaultMeta.Alignment] = alignmentForFeature.alignmentHelper.seq2String
+                    nodeMetadata[Alignment] = alignmentForFeature.alignmentHelper.seq2String
                 }
             }
 
@@ -312,9 +315,9 @@ class ShmTreePlotter(
 
         if (alignment != null)
             if (alignment.fill)
-                dendro.withAlignmentLayer(DefaultMeta.Alignment, leafsOnly = true)
+                dendro.withAlignmentLayer(Alignment, leafsOnly = true)
             else
-                dendro.withTextLayer(DefaultMeta.Alignment, leafsOnly = true)
+                dendro.withTextLayer(Alignment, leafsOnly = true)
 
         var title = "Id: $treeId"
         if (stats.isNotEmpty()) {

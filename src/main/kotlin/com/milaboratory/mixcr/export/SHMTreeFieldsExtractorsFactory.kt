@@ -23,7 +23,7 @@ import java.util.*
 import kotlin.collections.set
 import kotlin.math.log2
 
-object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostanalysis>() {
+object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostanalysis<*>>() {
     override val presets: Map<String, List<FieldCommandArgs>> = buildMap {
         this["full"] = listOf(
             FieldCommandArgs("-treeId"),
@@ -44,9 +44,9 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
 
     override val defaultPreset: String = "full"
 
-    override fun allAvailableFields(): List<Field<SHMTreeForPostanalysis>> = treeFields(true)
+    override fun allAvailableFields(): List<Field<SHMTreeForPostanalysis<*>>> = treeFields(true)
 
-    fun treeFields(withTargetFeatures: Boolean): List<Field<SHMTreeForPostanalysis>> =
+    fun treeFields(withTargetFeatures: Boolean): List<Field<SHMTreeForPostanalysis<*>>> =
         buildList {
             this += FieldParameterless(
                 Order.treeMainParams + 100,

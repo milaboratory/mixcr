@@ -16,6 +16,9 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.BaseNode
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithClones
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -29,8 +32,8 @@ import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibraryRegistry
 import java.util.*
 
-data class SHMTreeForPostanalysis(
-    val tree: Tree<NodeWithClones>,
+data class SHMTreeForPostanalysis<T : BaseNode>(
+    val tree: Tree<T>,
     val meta: Meta,
     val root: MutationsDescription,
     val mrca: MutationsDescription
@@ -60,7 +63,7 @@ data class SHMTreeForPostanalysis(
         mostRecentCommonAncestor: MutationsDescription,
         main: MutationsDescription,
         parent: MutationsDescription?,
-        val clones: List<CloneWithDatasetId>
+        override val clones: List<CloneWithDatasetId>
     ) : BaseNode(
         id = id,
         parentId = parentId,
@@ -115,7 +118,10 @@ data class SHMTreeForPostanalysis(
         mostRecentCommonAncestor = mostRecentCommonAncestor,
         main = main,
         parent = parent,
-    )
+    ) {
+        override val clones: List<CloneWithDatasetId>
+            get() = listOfNotNull(clone)
+    }
 
     sealed class BaseNode(
         val id: Int,
@@ -126,6 +132,7 @@ data class SHMTreeForPostanalysis(
         protected val main: MutationsDescription,
         protected val parent: MutationsDescription?,
     ) {
+        abstract val clones: List<CloneWithDatasetId>
         fun distanceFrom(base: Base): Double? = when (base) {
             Base.germline -> main.distanceFrom(root)
             Base.mrca -> when (parent) {
@@ -164,21 +171,16 @@ data class SHMTreeForPostanalysis(
     }
 }
 
-fun SHMTreeResult.forPostanalysis(
+fun SHMTreeResult.forPostanalysisSplitted(
     fileNames: List<String>,
     alignerParameters: VDJCAlignerParameters,
     libraryRegistry: VDJCLibraryRegistry
-): SHMTreeForPostanalysis {
-    val meta = SHMTreeForPostanalysis.Meta(
-        rootInfo,
-        treeId,
-        fileNames,
-        alignerParameters
-    ) { geneId -> libraryRegistry.getGene(geneId) }
+): SHMTreeForPostanalysis<SplittedNode> {
+    val meta = createMeta(fileNames, alignerParameters, libraryRegistry)
 
     val root = tree.root.content.mutationsSet.asMutationsDescription(meta)
     val mrca = mostRecentCommonAncestor.mutationsSet.asMutationsDescription(meta)
-    val mappedRoot = tree.root.map(
+    val (mappedRoot) = tree.root.mapSplitted(
         meta,
         null,
         root,
@@ -186,7 +188,119 @@ fun SHMTreeResult.forPostanalysis(
     )
 
     return SHMTreeForPostanalysis(
-        Tree(mappedRoot.first),
+        Tree(mappedRoot),
+        meta,
+        root,
+        mrca
+    )
+}
+
+private fun SHMTreeResult.createMeta(
+    fileNames: List<String>,
+    alignerParameters: VDJCAlignerParameters,
+    libraryRegistry: VDJCLibraryRegistry
+): SHMTreeForPostanalysis.Meta {
+    val meta = SHMTreeForPostanalysis.Meta(
+        rootInfo,
+        treeId,
+        fileNames,
+        alignerParameters
+    ) { geneId -> libraryRegistry.getGene(geneId) }
+    return meta
+}
+
+private fun Tree.Node<CloneOrFoundAncestor>.mapSplitted(
+    meta: SHMTreeForPostanalysis.Meta,
+    parent: Tree.Node<CloneOrFoundAncestor>?,
+    root: MutationsDescription,
+    mrca: MutationsDescription
+): Pair<Tree.Node<SplittedNode>, Double?> {
+    val main = content.mutationsSet.asMutationsDescription(meta)
+    val mappedParent = parent?.content?.mutationsSet?.asMutationsDescription(meta)
+    val distanceFromParent = mappedParent?.let { main.distanceFrom(it) }
+    val clonesInThisNode = links.filter { it.distance == 0.0 }
+        .flatMap { nodeLink ->
+            nodeLink.node.content.clones.map { (clone, datasetId) ->
+                SHMTreeForPostanalysis.CloneWithDatasetId(
+                    clone,
+                    datasetId,
+                    meta.fileNames[datasetId]
+                )
+            }
+        }
+    val result: Tree.Node<SplittedNode>
+    if (clonesInThisNode.size > 1) {
+        result = Tree.Node(
+            SplittedNode(
+                content.id,
+                parent?.content?.id,
+                meta,
+                main = main,
+                root = root,
+                mostRecentCommonAncestor = mrca,
+                parent = mappedParent,
+                clone = null
+            )
+        )
+        clonesInThisNode.forEach { leftClone ->
+            result.addChild(
+                Tree.Node(
+                    SplittedNode(
+                        content.id,
+                        parent?.content?.id,
+                        meta,
+                        main = main,
+                        root = root,
+                        mostRecentCommonAncestor = mrca,
+                        parent = mappedParent,
+                        clone = leftClone
+                    )
+                ),
+                0.0
+            )
+        }
+    } else {
+        result = Tree.Node(
+            SplittedNode(
+                content.id,
+                parent?.content?.id,
+                meta,
+                main = main,
+                root = root,
+                mostRecentCommonAncestor = mrca,
+                parent = mappedParent,
+                clone = clonesInThisNode.firstOrNull()
+            )
+        )
+    }
+    links
+        .filter { it.distance != 0.0 }
+        .forEach {
+            require(it.node.content.clones.isEmpty())
+            val (mappedChild, fromParent) = it.node.mapSplitted(meta, parent = this, root = root, mrca = mrca)
+            result.addChild(mappedChild, fromParent!!)
+        }
+    return result to distanceFromParent
+}
+
+fun SHMTreeResult.forPostanalysis(
+    fileNames: List<String>,
+    alignerParameters: VDJCAlignerParameters,
+    libraryRegistry: VDJCLibraryRegistry
+): SHMTreeForPostanalysis<NodeWithClones> {
+    val meta = createMeta(fileNames, alignerParameters, libraryRegistry)
+
+    val root = tree.root.content.mutationsSet.asMutationsDescription(meta)
+    val mrca = mostRecentCommonAncestor.mutationsSet.asMutationsDescription(meta)
+    val (mappedRoot) = tree.root.map(
+        meta,
+        null,
+        root,
+        mrca
+    )
+
+    return SHMTreeForPostanalysis(
+        Tree(mappedRoot),
         meta,
         root,
         mrca
@@ -198,12 +312,12 @@ private fun Tree.Node<CloneOrFoundAncestor>.map(
     parent: Tree.Node<CloneOrFoundAncestor>?,
     root: MutationsDescription,
     mrca: MutationsDescription
-): Pair<Tree.Node<SHMTreeForPostanalysis.NodeWithClones>, Double?> {
+): Pair<Tree.Node<NodeWithClones>, Double?> {
     val main = content.mutationsSet.asMutationsDescription(meta)
     val mappedParent = parent?.content?.mutationsSet?.asMutationsDescription(meta)
     val distanceFromParent = mappedParent?.let { main.distanceFrom(it) }
     val result = Tree.Node(
-        SHMTreeForPostanalysis.NodeWithClones(
+        NodeWithClones(
             content.id,
             parent?.content?.id,
             meta,
