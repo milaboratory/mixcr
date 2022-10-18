@@ -25,7 +25,10 @@ import java.nio.file.Path
  *
  */
 @Command(
-    description = ["Export alignments for particular clones from \"clones & alignments\" (*.clna) file."]
+    description = [
+        "Export alignments for particular clones from \"clones & alignments\" (*.clna) file.",
+        "Note that such export is possible only from `.clna` files, produced by MiXCR `assemble` command with option `--write-alignments`."
+    ]
 )
 class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
     @Parameters(

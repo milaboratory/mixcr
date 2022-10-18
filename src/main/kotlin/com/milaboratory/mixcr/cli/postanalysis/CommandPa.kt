@@ -181,10 +181,10 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     }
 
     private fun outBase(): String {
-        val out = inOut.last()
+        val out = inOut.last().toString()
         return when {
-            out.endsWith(".json.gz") -> out.toString().removeSuffix(".json.gz")
-            out.endsWith(".json") -> out.toString().removeSuffix(".json")
+            out.endsWith(".json.gz") -> out.removeSuffix(".json.gz")
+            out.endsWith(".json") -> out.removeSuffix(".json")
             else -> throw IllegalArgumentException("output extension is illegal")
         }
     }
