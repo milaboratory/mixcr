@@ -63,6 +63,9 @@ jobs:
         buildIMGTDockerImage
       dist-docker-image-name: mixcr
 
+      # Release configuration
+      release-github-draft: true
+
       # Send notifications
       notify-telegram: true
 
