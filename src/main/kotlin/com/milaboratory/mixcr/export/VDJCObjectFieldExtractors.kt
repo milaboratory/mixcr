@@ -569,7 +569,7 @@ object VDJCObjectFieldExtractors {
             "-tagCounts",
             "All tags with counts",
             "All tags counts",
-            "taqCounts"
+            "tagCounts"
         ) { vdjcObject: VDJCObject ->
             vdjcObject.tagCount.toString()
         }
