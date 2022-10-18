@@ -22,7 +22,8 @@ abstract class CommandExportQc : MiXCRCommandWithOutputs() {
             names = ["--width"],
             description = ["Plot width"],
             paramLabel = "<n>",
-            required = true
+            required = true,
+            order = 10_000 + 1
         )
         var width = -1
 
@@ -30,7 +31,8 @@ abstract class CommandExportQc : MiXCRCommandWithOutputs() {
             names = ["--height"],
             description = ["Plot height"],
             paramLabel = "<n>",
-            required = true
+            required = true,
+            order = 10_000 + 2
         )
         var height = -1
     }

@@ -67,7 +67,7 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     lateinit var downsampling: String
 
     @Option(
-        description = ["Overlap criteria. Defines the rules to treat clones as equal."],
+        description = [CommonDescriptions.OVERLAP_CRITERIA],
         names = ["--criteria"],
         showDefaultValue = ALWAYS,
         paramLabel = "<s>"

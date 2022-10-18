@@ -23,7 +23,7 @@ import java.nio.file.Path
 @Command(description = ["QC plot for alignments."])
 class CommandExportQcAlign : CommandExportQc() {
     companion object {
-        private const val inputsLabel = "sample.vdjca..."
+        private const val inputsLabel = "sample.(vdjca|clns|clna)..."
 
         private const val outputLabel = "align.(pdf|eps|png|jpeg)"
 

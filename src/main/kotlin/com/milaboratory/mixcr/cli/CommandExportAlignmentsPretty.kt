@@ -75,19 +75,19 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     var limitAfter: Int? = null
 
     @Option(
+        description = ["Number of output alignments to skip"],
+        names = ["-s", "--skip"],
+        paramLabel = "<n>"
+    )
+    var skipAfter: Int? = null
+
+    @Option(
         description = ["Filter export to a specific protein chain gene (e.g. TRA or IGH)."],
         names = ["-c", "--chains"],
         paramLabel = Labels.CHAINS,
         showDefaultValue = ALWAYS
     )
     var chains: Chains = Chains.ALL
-
-    @Option(
-        description = ["Number of output alignments to skip"],
-        names = ["-s", "--skip"],
-        paramLabel = "<n>"
-    )
-    var skipAfter: Int? = null
 
     @Option(
         description = ["Output only alignments where CDR3 exactly equals to given sequence"],
@@ -117,7 +117,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     )
     var filter: String? = null
 
-    @Option(description = ["Print descriptions"], names = ["-d", "--descriptions"])
+    @Option(description = ["Print read descriptions"], names = ["-d", "--descriptions"])
     var printDescriptions = false
 
     @Option(

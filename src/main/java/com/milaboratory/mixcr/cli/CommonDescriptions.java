@@ -29,6 +29,8 @@ public class CommonDescriptions {
         public static final String CHAIN = "<chain>";
     }
 
+    public static final String OVERLAP_CRITERIA = "Overlap criteria. Defines the rules to treat clones as equal. It allows to specify gene feature for overlap (nucleotide or amino acid), and optionally use V and J hits.%nExamples: `CDR3|AA|V|J` (overlap by a.a. CDR3 and V and J), `VDJRegion|AA` (overlap by a.a. `VDJRegion`), `CDR3|NT|V` (overlap by nt CDR3 and V).";
+
     public static final String DOWNSAMPLING = "downsampling applied to normalize the clonesets. Possible values: %ncount-[reads|TAG]-[auto|min|fixed][-<number>]%n top-[reads|TAG]-[<number>]%n cumtop-[reads|TAG]-[percent]";
 
     public static final String METADATA = "Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form. Must contain `sample` column which matches names of input files.";

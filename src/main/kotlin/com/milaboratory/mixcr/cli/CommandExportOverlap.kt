@@ -92,7 +92,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
     var inOut: List<Path> = mutableListOf()
 
     @Option(
-        description = ["Chains to export"],
+        description = ["Output overlap for specified chains only; if multiple chains are specified, results per each chains will be exported in separate files."],
         names = ["--chains"],
         split = ",",
         paramLabel = Labels.CHAIN
@@ -100,18 +100,18 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
     var chains: Set<String>? = null
 
     @Option(
-        description = ["Filter out-of-frame sequences and clonotypes with stop-codons"],
-        names = ["--only-productive"]
-    )
-    var onlyProductive = false
-
-    @Option(
-        description = ["Overlap criteria."],
+        description = [CommonDescriptions.OVERLAP_CRITERIA],
         names = ["--criteria"],
         showDefaultValue = ALWAYS,
         paramLabel = "<s>"
     )
     var overlapCriteria = "CDR3|AA|V|J"
+
+    @Option(
+        description = ["Filter out-of-frame sequences and clonotypes with stop-codons"],
+        names = ["--only-productive"]
+    )
+    var onlyProductive = false
 
     public override val inputFiles
         get() = inOut.subList(0, inOut.size - 1)
