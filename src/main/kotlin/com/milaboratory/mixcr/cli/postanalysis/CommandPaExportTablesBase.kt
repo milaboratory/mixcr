@@ -19,7 +19,7 @@ import kotlin.io.path.extension
 
 abstract class CommandPaExportTablesBase : CommandPaExport {
     @Parameters(
-        description = ["Path for output file"],
+        description = ["Path for output file."],
         index = "1",
         paramLabel = "table.tsv"
     )

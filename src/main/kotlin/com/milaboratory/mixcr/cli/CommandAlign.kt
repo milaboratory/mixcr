@@ -172,7 +172,8 @@ object CommandAlign {
         @Option(
             names = ["-O"],
             description = ["Overrides aligner parameters from the selected preset"],
-            paramLabel = Labels.OVERRIDES
+            paramLabel = Labels.OVERRIDES,
+            order = 10_000
         )
         private var overrides: Map<String, String> = mutableMapOf()
 

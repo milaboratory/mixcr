@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wrapper
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
 
 object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>() {
     override val presets: Map<String, List<FieldCommandArgs>> = buildMap {
@@ -82,7 +83,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
     }
 
     data class Wrapper(
-        val tree: SHMTreeForPostanalysis,
-        val node: SHMTreeForPostanalysis.SplittedNode
+        val tree: SHMTreeForPostanalysis<*>,
+        val node: SplittedNode
     )
 }

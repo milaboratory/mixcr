@@ -28,7 +28,12 @@ import com.milaboratory.mixcr.assembler.ReadToCloneMapping.DROPPED_WITH_CLONE_MA
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
-import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.ClnAWriter
+import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.VDJCAlignments
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
@@ -42,7 +47,10 @@ import gnu.trove.map.hash.TIntObjectHashMap
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.extension
 
@@ -75,7 +83,7 @@ object CommandAssemble {
 
         @Option(
             description = [
-                "If tags are present, do assemble pre-clones on the cell level rather than on the molecule level.",
+                "If tags are present, do assemble pre-clones on the cell level rather than on the molecular level.",
                 "If there are no molecular tags in the data, but cell tags are present, this option will be used by default.",
                 "This option has no effect on the data without tags.",
                 DEFAULT_VALUE_FROM_PRESET
@@ -97,14 +105,16 @@ object CommandAssemble {
         @Option(
             names = ["-O"],
             description = ["Overrides default parameter values."],
-            paramLabel = Labels.OVERRIDES
+            paramLabel = Labels.OVERRIDES,
+            order = 10_000
         )
         private val cloneAssemblerOverrides: Map<String, String> = mutableMapOf()
 
         @Option(
             names = ["-P"],
             description = ["Overrides default pre-clone assembler parameter values."],
-            paramLabel = Labels.OVERRIDES
+            paramLabel = Labels.OVERRIDES,
+            order = 10_000 + 1
         )
         private val consensusAssemblerOverrides: Map<String, String> = mutableMapOf()
 

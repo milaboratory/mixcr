@@ -37,7 +37,7 @@ class Tree<T : Any>(
 
     class Node<T> {
         val content: T
-        private val children: MutableList<NodeLink<T>>
+        val children: MutableList<NodeLink<T>>
 
         constructor(content: T) {
             this.content = content

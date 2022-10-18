@@ -18,7 +18,7 @@ import java.nio.file.Path
 
 class ReportOptions {
     @Option(
-        description = ["Report file (human readable version, see -j / --json-report for machine readable report)."],
+        description = ["Report file (human readable version, see `-j / --json-report` for machine readable report)."],
         names = ["-r", "--report"],
         paramLabel = "<path>",
         order = 1_000_000 - 7

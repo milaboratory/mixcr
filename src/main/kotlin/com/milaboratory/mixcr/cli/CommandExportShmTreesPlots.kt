@@ -157,9 +157,10 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     @Option(
         names = ["--node-size"],
         description = ["Size nodes with given metadata column. Predefined columns: \"${DefaultMeta.Abundance}\"."],
-        paramLabel = "<column>"
+        paramLabel = "<column>",
+        showDefaultValue = ALWAYS
     )
-    var nodeSize: String? = null
+    var nodeSize: String = DefaultMeta.Abundance
 
     @Option(
         names = ["--node-label"],

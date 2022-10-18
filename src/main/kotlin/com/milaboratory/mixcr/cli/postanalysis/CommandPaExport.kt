@@ -25,13 +25,13 @@ import java.nio.file.Path
 abstract class CommandPaExport : MiXCRCommand {
     @Parameters(
         description = ["Input file with postanalysis results."],
-        paramLabel = "file.json",
+        paramLabel = "pa.json[.gz]",
         index = "0",
     )
     lateinit var input: Path
 
     @Option(
-        description = ["Export for specific chains only"],
+        description = ["Export only for specified immunological chains."],
         names = ["--chains"],
         paramLabel = Labels.CHAIN
     )

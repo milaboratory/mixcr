@@ -26,12 +26,15 @@ import com.milaboratory.miplots.dendro.withLabels
 import com.milaboratory.miplots.dendro.withTextLayer
 import com.milaboratory.miplots.stat.util.TestMethod
 import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Abundance
+import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Alignment
+import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Isotype
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
-import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithClones
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.Tree
-import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.mixcr.trees.forPostanalysisSplitted
 import com.milaboratory.util.StringUtil
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -78,7 +81,7 @@ class TreeFilter(
     /** filter specific trees by pattern */
     val seqPattern: SeqPattern? = null,
 ) {
-    fun match(tree: SHMTreeForPostanalysis): Boolean {
+    fun match(tree: SHMTreeForPostanalysis<*>): Boolean {
         if (minNodes != null && tree.tree.allNodes().count() < minNodes)
             return false
         if (minHeight != null && tree.tree.root.height() < minHeight)
@@ -117,7 +120,7 @@ object DefaultMeta {
     const val Alignment = "Alignment"
 }
 
-typealias GGNode = Node<NodeWithClones>
+typealias GGNode = Node<SplittedNode>
 
 data class AlignmentOption(
     /** Gene feature to align */
@@ -181,7 +184,7 @@ class ShmTreePlotter(
             it.readTrees().use { reader ->
                 var c = 0
                 for (t in CUtils.it(reader)) {
-                    val tree = t.forPostanalysis(
+                    val tree = t.forPostanalysisSplitted(
                         it.fileNames,
                         it.alignerParameters,
                         VDJCLibraryRegistry.getDefault()
@@ -192,7 +195,7 @@ class ShmTreePlotter(
                     if (limit != null && c > limit)
                         break
 
-                    list += plot(tree)
+                    list += plot(t.treeId, tree.tree)
 
                     ++c
                 }
@@ -202,22 +205,21 @@ class ShmTreePlotter(
         }
     }
 
-    private fun toGGNode(node: Tree.Node<NodeWithClones>) =
+    private fun toGGNode(node: Tree.Node<SplittedNode>) =
         toGGNode(node, 0.0)
 
     private fun toGGNode(
-        node: Tree.Node<NodeWithClones>,
+        node: Tree.Node<SplittedNode>,
         distanceToParent: Double
     ): GGNode = run {
 
-        val clones = node.content.clones
         val nodeMetadata = mutableMapOf<String, Any?>()
-        if (clones.size == 1) { // TODO implement for multiple clones
-            val cloneWrapper = clones[0]
+        val cloneWrapper = node.content.clone
+        if (cloneWrapper != null) {
             val isotype = cloneWrapper.clone.getBestHit(GeneType.Constant)?.gene?.familyName
             if (isotype != null)
-                nodeMetadata[DefaultMeta.Isotype] = isotype[3]
-            nodeMetadata[DefaultMeta.Abundance] = ln(cloneWrapper.clone.count)
+                nodeMetadata[Isotype] = isotype[3]
+            nodeMetadata[Abundance] = ln(cloneWrapper.clone.fraction)
 
             if (alignment != null) {
                 val mutationsDescription = node.content.mutationsFromGermline()
@@ -226,7 +228,7 @@ class ShmTreePlotter(
                     else -> mutationsDescription.nAlignment(alignment.gf)
                 }
                 if (alignmentForFeature != null) {
-                    nodeMetadata[DefaultMeta.Alignment] = alignmentForFeature.alignmentHelper.seq2String
+                    nodeMetadata[Alignment] = alignmentForFeature.alignmentHelper.seq2String
                 }
             }
 
@@ -262,18 +264,18 @@ class ShmTreePlotter(
     }
 
     private fun pValue(
-        tree: SHMTreeForPostanalysis,
+        tree: Tree<SplittedNode>,
         stat: StatOption
     ): Double = run {
-        val leafs = tree.tree.allLeafs()
+        val leafs = tree.allLeafs()
 
         val data = leafs
-            .flatMap {
-                it.node.content.clones.map { c ->
-                    val height = it.node.content.distanceFrom(Base.germline) ?: 0.0
-                    val metaValue = metadata?.get(c.datasetId)?.get(stat.metadataColumn)
-                    metadataRanks[stat.metadataColumn]!![metaValue]!! to height
-                }
+            .filter { it.node.content.clone != null }
+            .map {
+                val datasetId = it.node.content.clone!!.datasetId
+                val height = it.node.content.distanceFrom(Base.germline) ?: 0.0
+                val metaValue = metadata?.get(datasetId)?.get(stat.metadataColumn)
+                metadataRanks[stat.metadataColumn]!![metaValue]!! to height
             }
 
         val x = data.map { it.first }.toList().toDoubleArray()
@@ -285,7 +287,7 @@ class ShmTreePlotter(
             stat.method.pValue(x, y, paired = true)
     }
 
-    fun plot(tree: SHMTreeForPostanalysis) = run {
+    fun plot(treeId: Int, tree: Tree<SplittedNode>) = run {
 
         val fixedLineColor = if (this@ShmTreePlotter.lineColor == null) "#555555" else null
         val fixedNodeColor = if (this@ShmTreePlotter.nodeColor == null) "#555555" else null
@@ -293,7 +295,7 @@ class ShmTreePlotter(
         val fixedNodeAlpha = if (this@ShmTreePlotter.nodeSize == null) 0.8 else 0.5
         val colorAes = this@ShmTreePlotter.nodeColor ?: this@ShmTreePlotter.lineColor
 
-        val dendroTree = toGGNode(tree.tree.root)
+        val dendroTree = toGGNode(tree.root)
 
         val dendro = GGDendroPlot(
             dendroTree,
@@ -313,11 +315,11 @@ class ShmTreePlotter(
 
         if (alignment != null)
             if (alignment.fill)
-                dendro.withAlignmentLayer(DefaultMeta.Alignment, leafsOnly = true)
+                dendro.withAlignmentLayer(Alignment, leafsOnly = true)
             else
-                dendro.withTextLayer(DefaultMeta.Alignment, leafsOnly = true)
+                dendro.withTextLayer(Alignment, leafsOnly = true)
 
-        var title = "Id: ${tree.meta.treeId}"
+        var title = "Id: $treeId"
         if (stats.isNotEmpty()) {
             for (stat in stats) {
                 title += " " + pValue(tree, stat)

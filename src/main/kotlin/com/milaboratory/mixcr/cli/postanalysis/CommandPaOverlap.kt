@@ -42,7 +42,9 @@ class CommandPaOverlap : CommandPa() {
 
 
     @Option(
-        description = ["Overlap criteria."],
+        description = ["Overlap criteria. " +
+                "It allows to specify gene feature for overlap (nucleotide or amino acid), and optionally use V and J hits. " +
+                "Examples: `CDR3|AA|V|J` (overlap by a.a. CDR3 and V and J), `VDJRegion|AA` (overlap by a.a. `VDJRegion`), `CDR3|NT|V` (overlap by nt CDR3 and V)."],
         names = ["--criteria"],
         paramLabel = "<s>",
         showDefaultValue = ALWAYS
@@ -50,10 +52,10 @@ class CommandPaOverlap : CommandPa() {
     var overlapCriteria = "CDR3|AA|V|J"
 
     @Option(
-        description = ["Aggregate samples in groups by specified metadata columns"],
+        description = ["Pools samples with the same values of specified metadata columns and performs overlap between such pooled samples"],
         names = ["--factor-by"],
         split = ",",
-        paramLabel = "<column>"
+        paramLabel = "<meta>"
     )
     var factoryBy = mutableListOf<String>()
 

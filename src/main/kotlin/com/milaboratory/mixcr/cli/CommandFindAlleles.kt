@@ -130,7 +130,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     @Option(
         names = ["-O"],
         description = ["Overrides default build SHM parameter values"],
-        paramLabel = Labels.OVERRIDES
+        paramLabel = Labels.OVERRIDES,
+        order = 10_000
     )
     var overrides: Map<String, String> = mutableMapOf()
 

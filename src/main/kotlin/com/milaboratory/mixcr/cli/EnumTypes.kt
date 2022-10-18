@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.miplots.stat.util.PValueCorrection
+import com.milaboratory.miplots.stat.util.TestMethod
 import picocli.CommandLine
 
 private inline fun <reified T : Enum<T>> candidatesByField(cliName: (T) -> String): List<String> =
@@ -33,6 +34,8 @@ object EnumTypes {
     }
 
     class PlotTypeCandidates : TypeCandidates(candidatesByField<StandardPlots.PlotType> { it.cliName })
+
+    class TestMethodCandidates : TypeCandidates(candidatesByField<TestMethod> { it.name })
 
     class PValueCorrectionMethodCandidatesWithNone : TypeCandidates(candidatesWithNone<PValueCorrection.Method>())
 
