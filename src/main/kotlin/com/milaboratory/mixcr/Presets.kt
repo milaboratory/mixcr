@@ -14,7 +14,11 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.cli.*
+import com.milaboratory.cli.AbstractPresetBundleRaw
+import com.milaboratory.cli.ParamsBundleSpec
+import com.milaboratory.cli.RawParams
+import com.milaboratory.cli.Resolver
+import com.milaboratory.cli.apply
 import com.milaboratory.mitool.helpers.KObjectMapperProvider
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
@@ -22,7 +26,16 @@ import com.milaboratory.mixcr.AlignMixins.MaterialTypeDNA
 import com.milaboratory.mixcr.AlignMixins.MaterialTypeRNA
 import com.milaboratory.mixcr.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.AlignMixins.SetTagPattern
-import com.milaboratory.mixcr.cli.*
+import com.milaboratory.mixcr.cli.ApplicationException
+import com.milaboratory.mixcr.cli.CommandAlign
+import com.milaboratory.mixcr.cli.CommandAssemble
+import com.milaboratory.mixcr.cli.CommandAssembleContigs
+import com.milaboratory.mixcr.cli.CommandAssemblePartial
+import com.milaboratory.mixcr.cli.CommandExportAlignments
+import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.cli.CommandExtend
+import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.primitivio.annotations.Serializable
 import org.apache.commons.io.IOUtils
 import java.nio.charset.Charset
@@ -77,13 +90,13 @@ object Flags {
         LeftAlignmentMode to
                 "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
                 "please use one of the following mix-ins: \n" +
-                "${AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION} [<anchor_point>]\n" +
-                "${AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION} [<anchor_point>]",
+                "${AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION} [${Labels.ANCHOR_POINT}]\n" +
+                "${AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION} [${Labels.ANCHOR_POINT}]",
         RightAlignmentMode to
                 "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
                 "please use one of the following mix-ins: \n" +
-                "${AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} <anchor_point>\n" +
-                "${AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [<anchor_point>]",
+                "${AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} (${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})\n" +
+                "${AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})]",
 
         TagPattern to
                 "This preset requires to specify tag pattern, \n" +

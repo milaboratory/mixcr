@@ -15,7 +15,7 @@ import java.nio.file.Path
 import kotlin.io.path.extension
 
 interface MultipleMetricsInOneFile {
-    fun validateNonPdf(out: Path, metrics: List<String>?) {
+    fun validateNonPdf(out: Path, metrics: List<Any>?) {
         if (out.extension != "pdf" && metrics.isNullOrEmpty()) {
             val ext = out.extension
             throw ValidationException("For export in $ext Use --metric option to specify only one metric to export. Or use PDF format for export.")

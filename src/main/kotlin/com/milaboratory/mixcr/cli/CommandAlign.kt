@@ -173,7 +173,7 @@ object CommandAlign {
             names = ["-O"],
             description = ["Overrides aligner parameters from the selected preset"],
             paramLabel = Labels.OVERRIDES,
-            order = 10_000
+            order = 100_000
         )
         private var overrides: Map<String, String> = mutableMapOf()
 
@@ -190,7 +190,7 @@ object CommandAlign {
 
         @Option(
             description = [
-                "Read pre-processing: trimming window size",
+                "Read pre-processing: trimming window size.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--trimming-window-size"],

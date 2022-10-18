@@ -96,7 +96,7 @@ object CommandExportAlignments {
     class Cmd : CmdBase() {
         @Parameters(
             description = ["Path to input file"],
-            paramLabel = "data.[vdjca|clns|clna]",
+            paramLabel = "data.(vdjca|clns|clna)",
             index = "0"
         )
         lateinit var inputFile: Path

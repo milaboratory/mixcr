@@ -16,6 +16,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_OPTION_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_PARAMETER_LIST
+import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import picocli.CommandLine.Spec
@@ -54,6 +55,17 @@ class CommandExportHelp : Runnable {
             if (md) {
                 subcommandHelp.commandSpec().commandLine().usageHelpLongOptionsMaxWidth = 200
 
+                val originalSynopsisRender =
+                    subcommandHelp.commandSpec().commandLine().helpSectionMap[SECTION_KEY_SYNOPSIS]!!
+
+                subcommandHelp.commandSpec().commandLine().helpSectionMap.put(SECTION_KEY_SYNOPSIS) { help ->
+                    originalSynopsisRender.render(help)
+                        .replace(Regex("""((\[|\[\(| )-)""")) { "\n${it.groups[1]!!.value}" }
+                        .replace("|\n --", "| --")
+                        .replace(Regex("""\n {5,50}\n"""), "\n")
+                        .replace(Regex("""\n {5,50}"""), " ")
+                }
+
                 val originalParametersRender =
                     subcommandHelp.commandSpec().commandLine().helpSectionMap[SECTION_KEY_PARAMETER_LIST]!!
                 subcommandHelp.commandSpec().commandLine().helpSectionMap.put(SECTION_KEY_PARAMETER_LIST) { help ->
@@ -61,7 +73,7 @@ class CommandExportHelp : Runnable {
                         .replace(Regex(""" {2,15}(\S+)\n? {3,15}([\S ]+)""")) {
                             "\n`${it.groups[1]!!.value}`\n: ${it.groups[2]!!.value}"
                         }
-                        .replace(Regex(""": +"""), ": ")
+                        .replace(Regex(": +"), ": ")
                         .replace(Regex("""\n {15,50}"""), " ")
                 }
 
@@ -69,13 +81,13 @@ class CommandExportHelp : Runnable {
                     subcommandHelp.commandSpec().commandLine().helpSectionMap[SECTION_KEY_OPTION_LIST]!!
                 subcommandHelp.commandSpec().commandLine().helpSectionMap.put(SECTION_KEY_OPTION_LIST) { help ->
                     originalOptionsRender.render(help)
-                        .replace(Regex(""" {2,10}(-\S+(, {1,2}\S+)?( {1,2}\(?(<\S+>\|?|none)+\)?(\[\S+])?)?)\n? {3,10}(.+)""")) {
-                            "\n`${it.groups[1]!!.value}`\n: ${it.groups[6]!!.value}"
+                        .replace(Regex(""" {2,10}(-\S+.*) {3,50}(.+)""")) {
+                            "\n`${it.groups[1]!!.value}`\n: ${it.groups[2]!!.value}"
                         }
+                        .replace(Regex(" +`\n"), "`\n")
                         .replace(Regex(""": +"""), ": ")
                         .replace(Regex("""\n {15,50}"""), " ")
-                        .replace(" ", " ")
-                        .replace(Regex(""" {3,15}"""), "\n\n")
+                        .replace(Regex(""" {2,50}"""), " ")
                 }
             }
             subcommandHelp.commandSpec().commandLine().usage(PrintStream(output.toFile()))

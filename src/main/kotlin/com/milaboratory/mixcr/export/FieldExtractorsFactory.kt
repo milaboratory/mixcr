@@ -17,6 +17,7 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
 import picocli.CommandLine
 import picocli.CommandLine.Model.ArgGroupSpec
+import picocli.CommandLine.Model.OptionSpec
 import java.io.BufferedReader
 import java.io.FileReader
 import java.util.*
@@ -46,12 +47,13 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
     fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec) {
         val argGroup = ArgGroupSpec.builder()
             .heading("Possible fields to export\n")
+            .order(50_000)
             .validate(false)
             .exclusive(false)
 
-        for (field in fields) {
+        fields.forEachIndexed { index, field ->
             argGroup.addArg(
-                CommandLine.Model.OptionSpec
+                OptionSpec
                     .builder(field.cmdArgName)
                     .description(field.description)
                     .required(false)
@@ -60,6 +62,7 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
                     .paramLabel(field.metaVars)
                     .hideParamSyntax(true)
                     .hidden(field.deprecation != null)
+                    .order(50_000 + index)
                     .build()
             )
         }
@@ -155,7 +158,7 @@ abstract class FieldExtractorsFactory<T : Any> {
         if (addPresetOptions) {
             val possibleValues = presets.keys.joinToString(", ") { "'$it'" }
             spec.addOption(
-                CommandLine.Model.OptionSpec
+                OptionSpec
                     .builder("-p", "--preset")
                     .description("Specify preset of export fields (possible values: $possibleValues; '$defaultPreset' by default)")
                     .required(false)
@@ -165,7 +168,7 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .build()
             )
             spec.addOption(
-                CommandLine.Model.OptionSpec
+                OptionSpec
                     .builder("-pf", "--preset-file")
                     .description("Specify preset file of export fields")
                     .required(false)
@@ -175,11 +178,11 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .build()
             )
             spec.addArgGroup(
-                CommandLine.Model.ArgGroupSpec
+                ArgGroupSpec
                     .builder()
                     .addArg(
-                        CommandLine.Model.OptionSpec
-                            .builder("--no-headers")
+                        OptionSpec
+                            .builder("--no-header")
                             .description("Don't print column names")
                             .required(true)
                             .type(Boolean::class.java)
@@ -192,11 +195,12 @@ abstract class FieldExtractorsFactory<T : Any> {
         }
         val argGroup = ArgGroupSpec.builder()
             .heading("Possible fields to export\n")
+            .order(50_000)
             .validate(false)
             .exclusive(false)
-        for (field in fields) {
+        fields.forEachIndexed { index, field ->
             argGroup.addArg(
-                CommandLine.Model.OptionSpec
+                OptionSpec
                     .builder(field.cmdArgName)
                     .description(field.description)
                     .required(false)
@@ -205,6 +209,7 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .paramLabel(field.metaVars)
                     .hideParamSyntax(true)
                     .hidden(field.deprecation != null)
+                    .order(50_000 + index)
                     .build()
             )
         }

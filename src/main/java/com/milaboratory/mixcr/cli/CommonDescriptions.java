@@ -29,7 +29,7 @@ public class CommonDescriptions {
         public static final String CHAIN = "<chain>";
     }
 
-    public static final String DOWNSAMPLING = "Default downsampling applied to normalize the clonesets. Possible values: %ncount-[reads|TAG]-[auto|min|fixed][-<number>]%n top-[reads|TAG]-[<number>]%n cumtop-[reads|TAG]-[percent]";
+    public static final String DOWNSAMPLING = "downsampling applied to normalize the clonesets. Possible values: %ncount-[reads|TAG]-[auto|min|fixed][-<number>]%n top-[reads|TAG]-[<number>]%n cumtop-[reads|TAG]-[percent]";
 
     public static final String METADATA = "Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form. Must contain `sample` column which matches names of input files.";
 

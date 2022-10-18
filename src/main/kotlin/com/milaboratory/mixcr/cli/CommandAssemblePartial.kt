@@ -82,7 +82,7 @@ object CommandAssemblePartial {
             names = ["-O"],
             description = ["Overrides default parameter values."],
             paramLabel = Labels.OVERRIDES,
-            order = 10_000
+            order = 100_000
         )
         private var overrides: Map<String, String> = mutableMapOf()
 

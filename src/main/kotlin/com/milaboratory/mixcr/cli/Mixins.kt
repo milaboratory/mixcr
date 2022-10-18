@@ -57,7 +57,8 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Add a step to pipeline"],
         names = [AddPipelineStep.CMD_OPTION],
-        paramLabel = "<step>"
+        paramLabel = "<step>",
+        order = 10_000 + 10
     )
     fun addPipelineStep(step: String) =
         mixIn(AddPipelineStep(step))
@@ -65,7 +66,8 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Remove a step from pipeline"],
         names = [RemovePipelineStep.CMD_OPTION],
-        paramLabel = "<step>"
+        paramLabel = "<step>",
+        order = 10_000 + 20
     )
     fun removePipelineStep(step: String) =
         mixIn(RemovePipelineStep(step))
@@ -105,25 +107,19 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         description = [
             "Species (organism). Possible values: `hsa` (or HomoSapiens), `mmu` (or MusMusculus), `rat`, `spalax`, `alpaca`, `lamaGlama`, `mulatta` (_Macaca Mulatta_), `fascicularis` (_Macaca Fascicularis_) or any species from IMGT ® library."
         ],
-        names = [SetSpecies.CMD_OPTION_ALIAS, SetSpecies.CMD_OPTION]
+        names = [SetSpecies.CMD_OPTION_ALIAS, SetSpecies.CMD_OPTION],
+        order = 11_000 + 10
     )
     fun species(species: String) =
         mixIn(SetSpecies(species))
 
     @Option(
         description = ["V/D/J/C gene library. By default, the `default` MiXCR reference library is used. One can also use external libraries"],
-        names = [SetLibrary.CMD_OPTION_ALIAS, SetLibrary.CMD_OPTION]
+        names = [SetLibrary.CMD_OPTION_ALIAS, SetLibrary.CMD_OPTION],
+        order = 11_000 + 20
     )
     fun library(library: String) =
         mixIn(SetLibrary(library))
-
-    @Option(
-        description = ["Maximal number of reads to process on 'align'"],
-        names = [LimitInput.CMD_OPTION],
-        paramLabel = "<n>"
-    )
-    fun limitInput(number: Long) =
-        mixIn(LimitInput(number))
 
     //
     // Material type
@@ -132,7 +128,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["For DNA starting material. Setups V gene feature to align to `VGeneWithP` (full intron) and also instructs MiXCR to skip C gene alignment since it is too far from CDR3 in DNA data."],
         names = [MaterialTypeDNA.CMD_OPTION],
-        arity = "0"
+        arity = "0",
+        order = 11_000 + 40
     )
     fun dna(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(MaterialTypeDNA)
@@ -140,7 +137,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["For RNA starting material; setups `VTranscriptWithP` (full exon) gene feature to align for V gene and `CExon1` for C gene."],
         names = [MaterialTypeRNA.CMD_OPTION],
-        arity = "0"
+        arity = "0",
+        order = 11_000 + 50
     )
     fun rna(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(MaterialTypeRNA)
@@ -155,7 +153,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
                 "Optional <anchor_point> may be specified to instruct MiXCR where the primer is located and strip V feature to align accordingly, resulting in a more precise alignments."],
         names = [AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION],
         arity = "0..1",
-        paramLabel = Labels.ANCHOR_POINT
+        paramLabel = Labels.ANCHOR_POINT,
+        order = 11_000 + 60
     )
     fun floatingLeftAlignmentBoundary(arg: ReferencePoint?) =
         mixIn(
@@ -171,7 +170,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
                 "Optional <anchor_point> may be specified to instruct MiXCR how to strip V feature to align."],
         names = [AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION],
         arity = "0..1",
-        paramLabel = Labels.ANCHOR_POINT
+        paramLabel = Labels.ANCHOR_POINT,
+        order = 11_000 + 70
     )
     fun rigidLeftAlignmentBoundary(arg: ReferencePoint?) =
         mixIn(
@@ -188,7 +188,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
                 "In latter case MiXCR will additionally strip feature to align accordingly."],
         names = [AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION],
         arity = "1",
-        paramLabel = "(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})"
+        paramLabel = "(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})",
+        order = 11_000 + 80
     )
     fun floatingRightAlignmentBoundary(arg: String) =
         mixIn(
@@ -210,7 +211,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
                 "Optional <gene_type> (`J` for J primers / `C` for C primers) or <anchor_point> may be specified to instruct MiXCR where how to strip J or C feature to align."],
         names = [AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION],
         arity = "0..1",
-        paramLabel = "(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})"
+        paramLabel = "(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})",
+        order = 11_000 + 90
     )
     fun rigidRightAlignmentBoundary(arg: String?) =
         mixIn(
@@ -232,10 +234,39 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Specify tag pattern for barcoded data."],
         names = [SetTagPattern.CMD_OPTION],
-        paramLabel = "<pattern>"
+        paramLabel = "<pattern>",
+        order = 11_000 + 100
     )
     fun tagPattern(pattern: String) =
         mixIn(SetTagPattern(pattern))
+
+    @Option(
+        description = ["Preserve alignments that do not cover CDR3 region or cover it only partially in the .vdjca file."],
+        names = [KeepNonCDR3Alignments.CMD_OPTION],
+        arity = "0",
+        order = 11_000 + 110
+    )
+    fun keepNonCDR3Alignments(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+        mixIn(KeepNonCDR3Alignments)
+
+    @Option(
+        description = ["Drop all alignments that do not cover CDR3 region or cover it only partially."],
+        names = [DropNonCDR3Alignments.CMD_OPTION],
+        arity = "0",
+        order = 11_000 + 120
+    )
+    fun dropNonCDR3Alignments(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+        mixIn(DropNonCDR3Alignments)
+
+    @Option(
+        description = ["Maximal number of reads to process on `align`"],
+        names = [LimitInput.CMD_OPTION],
+        paramLabel = "<n>",
+        order = 11_000 + 130
+    )
+    fun limitInput(number: Long) =
+        mixIn(LimitInput(number))
+
 
     companion object {
         const val DESCRIPTION = "Params for ${CommandAlign.COMMAND_NAME} command:%n"
@@ -248,32 +279,18 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
                 "One may specify any custom gene region (e.g. `FR3+CDR3`); target clonal sequence can even be disjoint. " +
                 "Note that `assemblingFeatures` must cover CDR3"],
         names = [SetClonotypeAssemblingFeatures.CMD_OPTION],
-        paramLabel = Labels.GENE_FEATURES
+        paramLabel = Labels.GENE_FEATURES,
+        order = 12_000 + 10
     )
     fun assembleClonotypesBy(gf: GeneFeatures) =
         mixIn(SetClonotypeAssemblingFeatures(gf))
 
 
     @Option(
-        description = ["Preserve alignments that do not cover CDR3 region or cover it only partially in the .vdjca file."],
-        names = [KeepNonCDR3Alignments.CMD_OPTION],
-        arity = "0"
-    )
-    fun keepNonCDR3Alignments(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
-        mixIn(KeepNonCDR3Alignments)
-
-    @Option(
-        description = ["Drop all alignments that do not cover CDR3 region or cover it only partially."],
-        names = [DropNonCDR3Alignments.CMD_OPTION],
-        arity = "0"
-    )
-    fun dropNonCDR3Alignments(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
-        mixIn(DropNonCDR3Alignments)
-
-    @Option(
         description = ["Clones with equal clonal sequence but different gene will not be merged."],
         names = [SetSplitClonesBy.CMD_OPTION_TRUE],
-        paramLabel = Labels.GENE_TYPE
+        paramLabel = Labels.GENE_TYPE,
+        order = 12_000 + 20
     )
     fun splitClonesBy(geneTypes: List<GeneType>) =
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(geneType, true)) }
@@ -281,7 +298,8 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Clones with equal clonal sequence but different gene will be merged into single clone."],
         names = [SetSplitClonesBy.CMD_OPTION_FALSE],
-        paramLabel = Labels.GENE_TYPE
+        paramLabel = Labels.GENE_TYPE,
+        order = 12_000 + 30
     )
     fun dontSplitClonesBy(geneTypes: List<GeneType>) =
         geneTypes.forEach { geneType -> mixIn(SetSplitClonesBy(geneType, false)) }
@@ -297,7 +315,8 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
                 "nucleotides will be detected in the region, assembling procedure will be limited to the region, " +
                 "and only clonotypes that fully cover the region will be outputted, others will be filtered out."],
         names = [SetContigAssemblingFeatures.CMD_OPTION],
-        paramLabel = Labels.GENE_FEATURES
+        paramLabel = Labels.GENE_FEATURES,
+        order = 13_000 + 10
     )
     fun assembleContigsBy(gf: GeneFeatures) =
         mixIn(SetContigAssemblingFeatures(gf))
@@ -311,7 +330,8 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Export nucleotide sequences using letters from germline (marked lowercase) for uncovered regions"],
         names = [ImputeGermlineOnExport.CMD_OPTION],
-        arity = "0"
+        arity = "0",
+        order = 14_000 + 10
     )
     fun imputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
         mixIn(ImputeGermlineOnExport)
@@ -319,7 +339,8 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = ["Export nucleotide sequences only from covered region"],
         names = [DontImputeGermlineOnExport.CMD_OPTION],
-        arity = "0"
+        arity = "0",
+        order = 14_000 + 20
     )
     fun dontImputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
         mixIn(DontImputeGermlineOnExport)
@@ -335,42 +356,46 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
     }
 
     @Option(
-        description = ["Add clones export column before other columns. First param is field name as it is in '${CommandExportClones.COMMAND_NAME}' command, left params are params of the field"],
+        description = ["Add clones export column before other columns. First param is field name as it is in `${CommandExportClones.COMMAND_NAME}` command, left params are params of the field"],
         names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX],
         parameterConsumer = CloneExportParameterConsumer::class,
         arity = "1..*",
         paramLabel = "<field> [<param>...]",
-        hideParamSyntax = true
+        hideParamSyntax = true,
+        order = 14_000 + 30
     )
     fun prependExportClonesField(data: List<String>) = addExportClonesField(data, true)
 
     @Option(
-        description = ["Add clones export column after other columns. First param is field name as it is in '${CommandExportClones.COMMAND_NAME}' command, left params are params of the field"],
+        description = ["Add clones export column after other columns. First param is field name as it is in `${CommandExportClones.COMMAND_NAME}` command, left params are params of the field"],
         names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX],
         parameterConsumer = CloneExportParameterConsumer::class,
         arity = "1..*",
         paramLabel = "<field> [<param>...]",
-        hideParamSyntax = true
+        hideParamSyntax = true,
+        order = 14_000 + 40
     )
     fun appendExportClonesField(data: List<String>) = addExportClonesField(data, false)
 
     @Option(
-        description = ["Add clones export column before other columns. First param is field name as it is in '${CommandExportAlignments.COMMAND_NAME}' command, left params are params of the field"],
+        description = ["Add clones export column before other columns. First param is field name as it is in `${CommandExportAlignments.COMMAND_NAME}` command, left params are params of the field"],
         names = [AddExportAlignmentsField.CMD_OPTION_PREPEND_PREFIX],
         parameterConsumer = AlignsExportParameterConsumer::class,
         arity = "1..*",
         paramLabel = "<field> [<param>...]",
-        hideParamSyntax = true
+        hideParamSyntax = true,
+        order = 14_000 + 50
     )
     fun prependExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, true)
 
     @Option(
-        description = ["Add clones export column after other columns. First param is field name as it is in '${CommandExportAlignments.COMMAND_NAME}' command, left params are params of the field"],
+        description = ["Add clones export column after other columns. First param is field name as it is in `${CommandExportAlignments.COMMAND_NAME}` command, left params are params of the field"],
         names = [AddExportAlignmentsField.CMD_OPTION_APPEND_PREFIX],
         parameterConsumer = AlignsExportParameterConsumer::class,
         arity = "1..*",
         paramLabel = "<field> [<param>...]",
-        hideParamSyntax = true
+        hideParamSyntax = true,
+        order = 14_000 + 60
     )
     fun appendExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, false)
 
@@ -401,7 +426,7 @@ class GenericMiXCRMixins : MiXCRMixinCollector() {
         description = ["Overrides preset parameters"],
         names = [GenericMixin.CMD_OPTION],
         paramLabel = Labels.OVERRIDES,
-        order = 10_000 + 100
+        order = 100_000 + 100
     )
     fun genericMixin(fieldAndOverrides: Map<String, String>) {
         fieldAndOverrides.forEach { (field, override) ->

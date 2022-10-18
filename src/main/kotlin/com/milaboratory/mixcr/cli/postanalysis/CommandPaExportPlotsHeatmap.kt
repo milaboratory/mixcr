@@ -19,27 +19,30 @@ import picocli.CommandLine.Option
 
 abstract class CommandPaExportPlotsHeatmap : CommandPaExportPlots() {
     @Option(
+        description = ["Color palette for heatmap. Available names: \${COMPLETION-CANDIDATES}."],
+        names = ["--palette"],
+        paramLabel = "<s>",
+        showDefaultValue = ALWAYS,
+        completionCandidates = PaletteCandidates::class,
+        order = 10_000 + 100
+    )
+    var palette = "density"
+
+    @Option(
         description = ["Width of horizontal labels. One unit corresponds to the width of one tile."],
         names = ["--h-labels-size"],
-        paramLabel = "<d>"
+        paramLabel = "<d>",
+        order = 10_000 + 101
     )
     var hLabelsSize = -1.0
 
     @Option(
         description = ["Height of vertical labels. One unit corresponds to the height of one tile."],
         names = ["--v-labels-size"],
-        paramLabel = "<d>"
+        paramLabel = "<d>",
+        order = 10_000 + 102
     )
     var vLabelsSize = -1.0
-
-    @Option(
-        description = ["Color palette for heatmap. Available names: \${COMPLETION-CANDIDATES}"],
-        names = ["--palette"],
-        paramLabel = "<s>",
-        showDefaultValue = ALWAYS,
-        completionCandidates = PaletteCandidates::class
-    )
-    var palette = "density"
 
     fun parsePalette(): UniversalPalette = Palettes.parse(palette)
 

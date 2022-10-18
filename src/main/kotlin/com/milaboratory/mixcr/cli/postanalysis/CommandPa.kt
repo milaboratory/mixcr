@@ -56,7 +56,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     var dropOutliers = false
 
     @Option(
-        description = [CommonDescriptions.DOWNSAMPLING],
+        description = ["Default ${CommonDescriptions.DOWNSAMPLING}"],
         names = ["--default-downsampling"],
         required = true,
         paramLabel = "(<type>|none)"
@@ -132,7 +132,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         names = ["-O"],
         description = ["Overrides default postanalysis settings"],
         paramLabel = Labels.OVERRIDES,
-        order = 10_000
+        order = 100_000
     )
     var overrides: Map<String, String> = mutableMapOf()
 

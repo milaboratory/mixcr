@@ -87,14 +87,14 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         class PatternChoice {
             @Option(
                 names = ["--filter-aa-pattern"],
-                description = ["Filter specific trees by aa pattern"],
+                description = ["Filter specific trees by aa pattern."],
                 paramLabel = "<pattern>"
             )
             var seqAa: String? = null
 
             @Option(
                 names = ["--filter-nt-pattern"],
-                description = ["Filter specific trees by nt pattern"],
+                description = ["Filter specific trees by nt pattern."],
                 paramLabel = "<pattern>"
             )
             var seqNt: String? = null
@@ -105,7 +105,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
         @Option(
             names = ["--filter-in-feature"],
-            description = ["Match pattern inside specified gene feature"],
+            description = ["Match pattern inside specified gene feature."],
             paramLabel = Labels.GENE_FEATURE,
             defaultValue = "CDR3",
             showDefaultValue = ALWAYS
@@ -114,7 +114,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
         @Option(
             names = ["--pattern-max-errors"],
-            description = ["Max allowed subs & indels"],
+            description = ["Max allowed subs & indels."],
             paramLabel = "<n>",
             showDefaultValue = ALWAYS,
             defaultValue = "0"
@@ -143,21 +143,21 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     @Option(
         names = ["--node-color"],
         description = ["Color nodes with given metadata column"],
-        paramLabel = "<color>"
+        paramLabel = "<meta>"
     )
     var nodeColor: String? = null
 
     @Option(
         names = ["--line-color"],
         description = ["Color lines with given metadata column"],
-        paramLabel = "<color>"
+        paramLabel = "<meta>"
     )
     var lineColor: String? = null
 
     @Option(
         names = ["--node-size"],
         description = ["Size nodes with given metadata column. Predefined columns: \"${DefaultMeta.Abundance}\"."],
-        paramLabel = "<column>",
+        paramLabel = "<meta>",
         showDefaultValue = ALWAYS
     )
     var nodeSize: String = DefaultMeta.Abundance
@@ -165,7 +165,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     @Option(
         names = ["--node-label"],
         description = ["Label nodes with given metadata column. Predefined columns: \"${DefaultMeta.Isotype}\""],
-        paramLabel = "<column>"
+        paramLabel = "<meta>"
     )
     var nodeLabel: String? = null
 

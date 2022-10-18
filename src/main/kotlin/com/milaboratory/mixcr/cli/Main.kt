@@ -48,6 +48,7 @@ import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.seqbase.SequenceResolvers
 import picocli.CommandLine
 import picocli.CommandLine.IHelpSectionRenderer
+import picocli.CommandLine.Model.OptionSpec
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADING
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
@@ -218,14 +219,48 @@ object Main {
             .addSubcommand("exportHelp", CommandExportHelp::class.java)
 
         cmd.setHelpSectionRenderRecursively(SECTION_KEY_SYNOPSIS) { help ->
+            val commandSpec = help.commandSpec()
             when {
-                !help.commandSpec().usageMessage().customSynopsis().isNullOrEmpty() -> help.customSynopsis()
-                help.commandSpec().usageMessage().abbreviateSynopsis() -> help.abbreviatedSynopsis()
-                else -> help.detailedSynopsis(
+                !commandSpec.usageMessage().customSynopsis().isNullOrEmpty() -> help.customSynopsis()
+                commandSpec.usageMessage().abbreviateSynopsis() -> help.abbreviatedSynopsis()
+                commandSpec.subcommands().isNotEmpty() -> help.detailedSynopsis(
                     help.synopsisHeadingLength(),
-                    Comparator.comparing { it.order() },
+                    Comparator.comparing { option: OptionSpec -> option.required() }.reversed()
+                        .thenComparing { option: OptionSpec -> option.order() },
                     false
                 )
+                else -> {
+                    //try to use long names for options. It's too expensive to rewrite picocli code, so temporary remove short aliases from options
+                    val optionsToConvert = commandSpec.options().toList()
+                        .filter {
+                            try {
+                                commandSpec.remove(it)
+                                true
+                            } catch (e: java.lang.UnsupportedOperationException) {
+                                check(e.message == "Cannot remove ArgSpec that is part of an ArgGroup")
+                                //can't remove option from argGroup
+                                false
+                            }
+                        }
+                    //rebuild options with only longest names
+                    val withLongNames = optionsToConvert
+                        .map { optionSpec ->
+                            OptionSpec.builder(optionSpec)
+                                .names(optionSpec.longestName())
+                                .build()
+                        }
+                    withLongNames.forEach { commandSpec.add(it) }
+                    val result = help.detailedSynopsis(
+                        help.synopsisHeadingLength(),
+                        Comparator.comparing { option: OptionSpec -> option.required() }.reversed()
+                            .thenComparing { option: OptionSpec -> option.order() },
+                        false
+                    )
+                    //return original options
+                    withLongNames.forEach { commandSpec.remove(it) }
+                    optionsToConvert.forEach { commandSpec.add(it) }
+                    result
+                }
             }
         }
 
