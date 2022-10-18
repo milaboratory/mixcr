@@ -15,6 +15,7 @@ import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.miplots.toPDF
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
+import jetbrains.letsPlot.ggsize
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.api.rows
@@ -110,22 +111,40 @@ object GeneUsage {
     fun plotBarPlot(
         df: DataFrame<GeneUsageRow>,
         facetBy: String?,
-    ) = StandardPlots.PlotType.BarPlot.plot(
-        df,
-        y = GeneUsageRow::weight.name,
-        primaryGroup = GeneUsageRow::gene.name,
-        secondaryGroup = GeneUsageRow::sample.name,
-        facetBy = facetBy
-    ).plot
+        width: Int,
+        height: Int
+    ) = run {
+        var plt = StandardPlots.PlotType.BarPlot.plot(
+            df,
+            y = GeneUsageRow::weight.name,
+            primaryGroup = GeneUsageRow::gene.name,
+            secondaryGroup = GeneUsageRow::sample.name,
+            facetBy = facetBy
+        ).plot
+
+        if (width > 0 && height > 0)
+            plt += ggsize(width, height)
+
+        plt
+    }
 
     fun plotBarPlotBySample(
         df: DataFrame<GeneUsageRow>,
         facetBy: String?,
-    ) = StandardPlots.PlotType.BarPlot.plot(
-        df,
-        y = GeneUsageRow::weight.name,
-        primaryGroup = GeneUsageRow::sample.name,
-        secondaryGroup = GeneUsageRow::gene.name,
-        facetBy = facetBy
-    ).plot
+        width: Int,
+        height: Int
+    ) = run {
+        var plt = StandardPlots.PlotType.BarPlot.plot(
+            df,
+            y = GeneUsageRow::weight.name,
+            primaryGroup = GeneUsageRow::sample.name,
+            secondaryGroup = GeneUsageRow::gene.name,
+            facetBy = facetBy
+        ).plot
+
+        if (width > 0 && height > 0)
+            plt += ggsize(width, height)
+
+        plt
+    }
 }

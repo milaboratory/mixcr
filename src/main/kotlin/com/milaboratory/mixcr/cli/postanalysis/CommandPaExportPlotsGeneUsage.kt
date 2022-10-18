@@ -76,9 +76,9 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
         if (df.rowsCount() == 0) return
 
         val plot = if (barPlot)
-            plotBarPlot(df, facetBy)
+            plotBarPlot(df, facetBy, width, height)
         else if (barPlotBySamples)
-            plotBarPlotBySample(df, facetBy)
+            plotBarPlotBySample(df, facetBy, width, height)
         else
             plot(
                 df,
