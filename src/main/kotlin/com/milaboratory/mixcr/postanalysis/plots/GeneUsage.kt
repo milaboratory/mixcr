@@ -113,6 +113,17 @@ object GeneUsage {
     ) = StandardPlots.PlotType.BarPlot.plot(
         df,
         y = GeneUsageRow::weight.name,
+        primaryGroup = GeneUsageRow::gene.name,
+        secondaryGroup = GeneUsageRow::sample.name,
+        facetBy = facetBy
+    ).plot
+
+    fun plotBarPlotBySample(
+        df: DataFrame<GeneUsageRow>,
+        facetBy: String?,
+    ) = StandardPlots.PlotType.BarPlot.plot(
+        df,
+        y = GeneUsageRow::weight.name,
         primaryGroup = GeneUsageRow::sample.name,
         secondaryGroup = GeneUsageRow::gene.name,
         facetBy = facetBy

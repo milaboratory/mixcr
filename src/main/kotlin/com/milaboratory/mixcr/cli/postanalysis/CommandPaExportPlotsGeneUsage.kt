@@ -17,6 +17,7 @@ import com.milaboratory.mixcr.postanalysis.plots.ColorKey
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.dataFrame
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.plot
 import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.plotBarPlot
+import com.milaboratory.mixcr.postanalysis.plots.GeneUsage.plotBarPlotBySample
 import com.milaboratory.mixcr.postanalysis.plots.HeatmapParameters
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import picocli.CommandLine.Command
@@ -57,6 +58,12 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
     var barPlot = false
 
     @Option(
+        description = ["Export bar plot groupped by sample."],
+        names = ["--bar-plot-by-sample"]
+    )
+    var barPlotBySamples = false
+
+    @Option(
         description = ["Facet barplot."],
         names = ["--facet-by"],
         paramLabel = "<s>"
@@ -70,6 +77,8 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
 
         val plot = if (barPlot)
             plotBarPlot(df, facetBy)
+        else if (barPlotBySamples)
+            plotBarPlotBySample(df, facetBy)
         else
             plot(
                 df,
