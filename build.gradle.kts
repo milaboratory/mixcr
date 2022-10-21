@@ -101,7 +101,7 @@ repositories {
 val milibVersion = "2.1.0"
 val repseqioVersion = "1.5.0"
 val miplotsVersion = "1.1.0"
-val mitoolVersion = "1.2.0"
+val mitoolVersion = "1.2.0-1-optional_validation"
 val jacksonBomVersion = "2.13.4"
 val redberryPipeVersion = "1.3.0"
 
@@ -133,6 +133,8 @@ dependencies {
     implementation("com.itextpdf:layout:7.2.1")
     implementation("com.github.samtools:htsjdk:2.24.1")
     implementation("org.slf4j:slf4j-nop:1.7.36")
+    implementation("com.github.victools:jsonschema-generator:4.27.0")
+    implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))

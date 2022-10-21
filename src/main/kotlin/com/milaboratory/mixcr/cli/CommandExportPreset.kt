@@ -22,69 +22,66 @@ import picocli.CommandLine.Mixin
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
-object CommandExportPreset {
-
-    @Command(
-        description = ["Export a preset file given the preset name and a set of mix-ins"]
+@Command(
+    description = ["Export a preset file given the preset name and a set of mix-ins"]
+)
+class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Unit> {
+    @Parameters(
+        description = ["Preset name to export."],
+        index = "0",
+        arity = "1",
+        paramLabel = "preset_name"
     )
-    class Cmd : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Unit> {
-        @Parameters(
-            description = ["Preset name to export."],
-            index = "0",
-            arity = "1",
-            paramLabel = "preset_name"
+    lateinit var presetName: String
+
+    @Parameters(
+        description = ["Path where to write preset yaml file. Will write to output if omitted."],
+        arity = "0..1",
+        paramLabel = "preset_file.(yaml|yml)"
+    )
+    private val outputFile: Path? = null
+
+    override val inputFiles get() = mutableListOf<Path>()
+
+    override val outputFiles get() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
+
+    @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
+    var pipelineMixins: PipelineMiXCRMixins? = null
+
+    @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
+    var alignMixins: AlignMiXCRMixins? = null
+
+    @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
+    var assembleMixins: AssembleMiXCRMixins? = null
+
+    @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
+    var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
+
+    @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
+    var exportMixins: ExportMiXCRMixins? = null
+
+    @Mixin
+    var genericMixins: GenericMiXCRMixins? = null
+
+    override fun run0() {
+        val mixins = MiXCRMixinCollection.combine(
+            pipelineMixins, alignMixins, assembleMixins,
+            assembleContigsMixins, exportMixins, genericMixins
         )
-        lateinit var presetName: String
-
-        @Parameters(
-            description = ["Path where to write preset yaml file. Will write to output if omitted."],
-            arity = "0..1",
-            paramLabel = "preset_file.(yaml|yml)"
+        val (bundle, _) = paramsResolver.resolve(
+            MiXCRParamsSpec(presetName, mixins = mixins.mixins),
+            printParameters = false
         )
-        private val outputFile: Path? = null
-
-        override val inputFiles get() = mutableListOf<Path>()
-
-        override val outputFiles get() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
-
-        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
-        var pipelineMixins: PipelineMiXCRMixins? = null
-
-        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
-        var alignMixins: AlignMiXCRMixins? = null
-
-        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
-        var assembleMixins: AssembleMiXCRMixins? = null
-
-        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
-        var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
-
-        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
-        var exportMixins: ExportMiXCRMixins? = null
-
-        @Mixin
-        var genericMixins: GenericMiXCRMixins? = null
-
-        override fun run0() {
-            val mixins = MiXCRMixinCollection.combine(
-                pipelineMixins, alignMixins, assembleMixins,
-                assembleContigsMixins, exportMixins, genericMixins
-            )
-            val (bundle, _) = paramsResolver.resolve(
-                MiXCRParamsSpec(presetName, mixins = mixins.mixins),
-                printParameters = false
-            )
-            val of = outputFile
-            if (of != null)
-                K_YAML_OM.writeValue(of.toFile(), bundle)
-            else
-                K_YAML_OM.writeValue(System.out, bundle)
-        }
-
-        override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
-            get() = object : MiXCRParamsResolver<Unit>(MiXCRParamsBundle::exportPreset) {
-                override fun POverridesBuilderOps<Unit>.paramsOverrides() {
-                }
-            }
+        val of = outputFile
+        if (of != null)
+            K_YAML_OM.writeValue(of.toFile(), bundle)
+        else
+            K_YAML_OM.writeValue(System.out, bundle)
     }
+
+    override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
+        get() = object : MiXCRParamsResolver<Unit>(MiXCRParamsBundle::exportPreset) {
+            override fun POverridesBuilderOps<Unit>.paramsOverrides() {
+            }
+        }
 }

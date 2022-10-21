@@ -20,6 +20,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import java.io.ByteArrayOutputStream
 import java.util.*
+import kotlin.math.roundToInt
 
 interface MiXCRCommandReport : MiXCRReport {
     val date: Date?
@@ -84,12 +85,12 @@ interface MiXCRCommandReport : MiXCRReport {
         companion object {
             fun from(statistics: SummaryStatistics): StandardStats = StandardStats(
                 size = statistics.n,
-                sum = statistics.sum,
+                sum = statistics.sum.round(),
                 min = statistics.min,
                 max = statistics.max,
-                avg = statistics.sum / statistics.n,
-                quadraticMean = statistics.quadraticMean,
-                stdDeviation = statistics.standardDeviation
+                avg = statistics.mean.round(),
+                quadraticMean = statistics.quadraticMean.round(),
+                stdDeviation = statistics.standardDeviation.round()
             )
         }
     }
@@ -117,15 +118,15 @@ interface MiXCRCommandReport : MiXCRReport {
                 data.forEach { statistics.addValue(it) }
                 return StatsWithQuantiles(
                     size = statistics.n,
-                    sum = statistics.sum,
+                    sum = statistics.sum.round(),
                     min = statistics.min,
                     max = statistics.max,
-                    avg = statistics.sum / statistics.n,
-                    quadraticMean = statistics.quadraticMean,
-                    stdDeviation = statistics.standardDeviation,
-                    percentile25 = statistics.getPercentile(25.0),
-                    percentile50 = statistics.getPercentile(50.0),
-                    percentile75 = statistics.getPercentile(75.0)
+                    avg = statistics.mean.round(),
+                    quadraticMean = statistics.quadraticMean.round(),
+                    stdDeviation = statistics.standardDeviation.round(),
+                    percentile25 = statistics.getPercentile(25.0).round(),
+                    percentile50 = statistics.getPercentile(50.0).round(),
+                    percentile75 = statistics.getPercentile(75.0).round()
                 )
             }
         }
@@ -146,4 +147,9 @@ interface MiXCRCommandReport : MiXCRReport {
             writeField("\tpercentile 75", stats.percentile75)
         }
     }
+}
+
+private fun Double.round(): Double = when {
+    isNaN() -> Double.Companion.NaN
+    else -> (this * 100_000).roundToInt() / 100_000.0
 }

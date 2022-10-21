@@ -207,7 +207,7 @@ object Main {
                     .addSubcommand("clonesDiff", CommandClonesDiff::class.java)
                     .addSubcommand("versionInfo", CommandVersionInfo::class.java)
                     .addSubcommand("slice", CommandSlice::class.java)
-                    .addSubcommand("exportPreset", CommandExportPreset.Cmd::class.java)
+                    .addSubcommand("exportPreset", CommandExportPreset::class.java)
             )
 
             //hidden
@@ -217,6 +217,8 @@ object Main {
             .addSubcommand("listLibraries", CommandListLibraries::class.java)
             .addSubcommand("help", DeprecatedHelp::class.java)
             .addSubcommand("exportHelp", CommandExportHelp::class.java)
+            .addSubcommand("exportAllPresets", CommandExportAllPresets::class.java)
+            .addSubcommand("exportSchemas", CommandExportSchemas::class.java)
 
         cmd.setHelpSectionRenderRecursively(SECTION_KEY_SYNOPSIS) { help ->
             val commandSpec = help.commandSpec()
