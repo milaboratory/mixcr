@@ -262,7 +262,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = FindAllelesReport::class
 
         @get:JsonValue
-        override val command get() = CommandExportClones.COMMAND_NAME
+        override val command get() = CommandFindAlleles.COMMAND_NAME
         override val order get() = 8
 
         override fun outputName(prefix: String, params: CommandFindAlleles.Params, round: Int) = TODO()
