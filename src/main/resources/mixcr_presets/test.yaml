@@ -148,3 +148,173 @@
         allowPartialAlignments: true
         allowNoCDR3PartAlignments: true
 
+#
+# 10x tests
+#
+
+"10x-vdj-tcr-multi-barcode-test":
+  pipeline:
+    inheritFrom: pipeline-single-cell-shotgun
+  align:
+    inheritFrom: align-kaligner1-single-cell-v1
+    overrides:
+      tagPattern: ^(CELL1:N{8})(CELL2:N{8})(UMI1:N{5})(UMI2:N{5})\^(R2:*)
+  refineTagsAndSort:
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_and
+        operands:
+          - type: filter_groups
+            groupingKeys:
+              - CELL1
+              - CELL2
+              - UMI1
+              - UMI2
+            predicates:
+              - metrics:
+                  - type: group_metric_sum_weight
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                operator:
+                  type: group_operator_otsu1
+                  logX: true
+          - type: filter_groups
+            groupingKeys:
+              - CELL1
+              - CELL2
+            predicates:
+              - metrics:
+                  - type: group_metric_nunique
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                    keys:
+                      - UMI1
+                      - UMI2
+                operator:
+                  type: group_operator_range
+                  lower: 3.0
+  assemblePartial:
+    inheritFrom: assemblePartial-universal
+  assemble:
+    inheritFrom: assemble-base-with-consensus
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - tag:CELL1
+              - tag:CELL2
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - tag:UMI1
+                        - tag:UMI2
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+          - type: filter_in_groups
+            isolationKeys:
+              - tag:CELL1
+              - tag:CELL2
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - tag:UMI1
+                        - tag:UMI2
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+  assembleContigs:
+    inheritFrom: assembleContigs-universal
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ ]
+    fields:
+      - field: "-cloneId"
+      - field: "-tag"
+        args: [ "CELL1" ]
+      - field: "-tag"
+        args: [ "CELL2" ]
+      - field: "-readCount"
+      - field: "-uniqueTagCount"
+        args: [ "UMI2" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-nFeature"
+        args: [ "FR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR1" ]
+      - field: "-nFeature"
+        args: [ "CDR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR1" ]
+      - field: "-nFeature"
+        args: [ "FR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR2" ]
+      - field: "-nFeature"
+        args: [ "CDR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR2" ]
+      - field: "-nFeature"
+        args: [ "FR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR3" ]
+      - field: "-nFeature"
+        args: [ "CDR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR3" ]
+      - field: "-nFeature"
+        args: [ "FR4" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR4" ]
+      - field: "-aaFeature"
+        args: [ "FR1" ]
+      - field: "-aaFeature"
+        args: [ "CDR1" ]
+      - field: "-aaFeature"
+        args: [ "FR2" ]
+      - field: "-aaFeature"
+        args: [ "CDR2" ]
+      - field: "-aaFeature"
+        args: [ "FR3" ]
+      - field: "-aaFeature"
+        args: [ "CDR3" ]
+      - field: "-aaFeature"
+        args: [ "FR4" ]
+      - field: "-defaultAnchorPoints"
+
