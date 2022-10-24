@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
 
 class OverallAllelesStatistics(
-    val clonesFilter: AllelesBuilder.ClonesFilter
+    private val clonesFilter: AllelesBuilder.ClonesFilter
 ) {
     private val genesTotalCount: MutableMap<String, LongAdder> = ConcurrentHashMap()
     private val alleles: MutableMap<VDJCGeneId, AlleleStatistics> = ConcurrentHashMap()

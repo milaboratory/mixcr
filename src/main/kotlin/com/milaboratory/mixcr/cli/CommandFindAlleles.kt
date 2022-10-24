@@ -28,10 +28,13 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.ClonesSupplier
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.primitivio.forEach
@@ -202,7 +205,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         }
     }
 
-    private fun ensureParametersInitialized() {
+    override fun initialize() {
         findAllelesParameters
         if (debugDir != null) {
             debugDir?.toFile()?.mkdirs()
@@ -233,30 +236,47 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .setInputFiles(inputFiles)
             .setOutputFiles(outputFiles)
             .setStartMillis(System.currentTimeMillis())
-        ensureParametersInitialized()
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
-        val cloneReaders = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
-        val usedLibraries = cloneReaders.flatMap { it.usedGenes }.map { it.id.libraryId }.distinct()
-        ValidationException.require(usedLibraries.count() == 1) {
-            "input files must be aligned on the same library, got $usedLibraries"
-        }
-        ValidationException.require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
-            "input files must have the same aligner parameters"
-        }
-        ValidationException.require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
+        val datasets = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
+        ValidationException.require(datasets.isNotEmpty()) { "there is no files to process" }
+        ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        ValidationException.require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
+        ValidationException.requireDistinct(datasets.map { it.header.allFullyCoveredBy }) {
             "Input files must be cut by the same geneFeature"
         }
+        val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
 
-        val allFullyCoveredBy = cloneReaders.first().header.allFullyCoveredBy!!
+        ValidationException.requireDistinct(datasets.flatMap { it.usedGenes }.map { it.id.libraryId }) {
+            "input files must be aligned on the same library"
+        }
+        val originalLibrary = datasets.first().usedGenes.first().parentLibrary
+
+        for (geneType in VJ_REFERENCE) {
+            val scores =
+                datasets.map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
+            ValidationException.requireDistinct(scores) {
+                "Require the same ${geneType.letter} scoring for all input files"
+            }
+        }
+        val scoring = VJPair(
+            V = datasets.first().assemblerParameters.cloneFactoryParameters.vParameters.scoring,
+            J = datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
+        )
+
+        ValidationException.requireDistinct(datasets.map { it.alignerParameters.featuresToAlignMap }) {
+            "Require the same features to align for all input files"
+        }
+        val featureToAlign = HasFeatureToAlign(datasets.first().alignerParameters.featuresToAlignMap)
 
         val allelesBuilder = AllelesBuilder.create(
             findAllelesParameters,
             clonesFilter,
             tempDest,
-            cloneReaders,
+            datasets,
+            scoring,
+            datasets.flatMap { it.usedGenes }.distinct(),
+            featureToAlign,
             allFullyCoveredBy,
             debugDir
         )
@@ -269,9 +289,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             allelesBuilder.searchForAlleles(Variable, JAlleles, progressAndStage, reportBuilder, threadsOptions.value)
 
         val alleles = (VAlleles + JAlleles).toMutableMap()
-        val usedGenes = collectUsedGenes(cloneReaders, alleles)
+        val usedGenes = collectUsedGenes(datasets, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
-        val resultLibrary = buildLibrary(libraryRegistry, cloneReaders, usedGenes)
+        val resultLibrary = buildLibrary(libraryRegistry, usedGenes, originalLibrary)
         libraryOutput?.let { libraryOutput ->
             libraryOutput.toAbsolutePath().parent.createDirectories()
             GlobalObjectMappers.getOneLine().writeValue(libraryOutput.toFile(), arrayOf(resultLibrary.data))
@@ -280,14 +300,14 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             geneDatum.map { resultLibrary[it.name].id }
         }
         val writerCloseCallbacks = mutableListOf<(FindAllelesReport) -> Unit>()
-        cloneReaders.forEachIndexed { i, cloneReader ->
+        datasets.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
                 resultLibrary,
                 allelesMapping,
                 allFullyCoveredBy,
                 threadsOptions.value,
-                cloneReader.assemblerParameters,
-                cloneReader.alignerParameters
+                cloneReader.assemblerParameters.cloneFactoryParameters,
+                cloneReader.alignerParameters.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
                 val withRecalculatedScores = port.withProgress(
@@ -416,10 +436,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     private fun buildLibrary(
         libraryRegistry: VDJCLibraryRegistry,
-        cloneReaders: List<CloneReader>,
-        usedGenes: Map<String, VDJCGeneData>
+        usedGenes: Map<String, VDJCGeneData>,
+        originalLibrary: VDJCLibrary
     ): VDJCLibrary {
-        val originalLibrary = cloneReaders.first().usedGenes.first().parentLibrary
         val resultLibrary = VDJCLibrary(
             VDJCLibraryData(originalLibrary.data, ArrayList(usedGenes.values)),
             originalLibrary.name + "_with_found_alleles",
@@ -445,7 +464,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     private fun collectUsedGenes(
-        cloneReaders: List<CloneReader>,
+        cloneReaders: List<ClonesSupplier>,
         alleles: Map<String, List<VDJCGeneData>>
     ): Map<String, VDJCGeneData> {
         val usedGenes = mutableMapOf<String, VDJCGeneData>()
