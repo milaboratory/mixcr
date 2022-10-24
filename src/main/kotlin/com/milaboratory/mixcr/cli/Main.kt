@@ -315,6 +315,9 @@ object Main {
                     if (ex.printHelp) {
                         commandLine.printHelp()
                     }
+                    if (logger.verbose) {
+                        ex.printStackTrace()
+                    }
                     commandLine.commandSpec.exitCodeOnExecutionException()
                 }
                 else -> throw CommandLine.ExecutionException(
@@ -346,6 +349,9 @@ object Main {
         printErrorMessage(exception.message)
         if (exception.printHelp) {
             printHelp()
+        }
+        if (logger.verbose) {
+            exception.printStackTrace()
         }
         return commandSpec.exitCodeOnInvalidInput()
     }

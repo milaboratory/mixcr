@@ -14,14 +14,12 @@ package com.milaboratory.mixcr.postanalysis.overlap;
 import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.LambdaSemaphore;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -122,7 +120,7 @@ public final class OverlapUtil {
     public static CloneReader mkCheckedReader(Path path,
                                               Predicate<Clone> filter,
                                               LambdaSemaphore concurrencyLimiter) throws IOException {
-        ClnsReader inner = new ClnsReader(
+        CloneReader inner = CloneSetIO.mkReader(
                 path,
                 VDJCLibraryRegistry.getDefault(),
                 concurrencyLimiter);

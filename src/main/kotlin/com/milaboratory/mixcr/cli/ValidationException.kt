@@ -25,6 +25,10 @@ class ValidationException(
             requireExtension("Require", path, "tsv", "csv")
         }
 
+        fun requireTSV(path: Path?) {
+            requireExtension("Require", path, "tsv")
+        }
+
         fun requireJson(path: Path?) {
             requireExtension("Require", path, "json")
         }

@@ -91,6 +91,7 @@ ln -s ../src/test/resources/sequences/big/CD4M1_test_R2.fastq.gz ${dir}/test_tar
 ln -s ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R1.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R1.fastq.gz
 ln -s ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R2.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R2.fastq.gz
 ln -s ../src/test/resources/sequences/big/trees_samples ${dir}/test_target/trees_samples
+ln -s ../src/test/resources/sequences/big/regression ${dir}/test_target/regression
 ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R1.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R1.fastq.gz
 ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R2.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R2.fastq.gz
 ln -s ../src/test/resources/bam/unsorted.bam ${dir}/test_target/unsorted.bam

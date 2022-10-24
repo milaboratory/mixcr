@@ -96,18 +96,22 @@ object CommandExportAlignments {
     class Cmd : CmdBase() {
         @Parameters(
             description = ["Path to input file"],
-            paramLabel = "data.(vdjca|clns|clna)",
+            paramLabel = "data.(vdjca|clna)",
             index = "0"
         )
         lateinit var inputFile: Path
 
-        @Parameters(
+        @set:Parameters(
             description = ["Path where to write export table. Will write to output if omitted."],
             paramLabel = "table.tsv",
             index = "1",
             arity = "0..1"
         )
         var outputFile: Path? = null
+            set(value) {
+                ValidationException.requireTSV(value)
+                field = value
+            }
 
         override val inputFiles
             get() = listOf(inputFile)
