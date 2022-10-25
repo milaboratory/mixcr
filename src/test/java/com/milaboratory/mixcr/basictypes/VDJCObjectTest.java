@@ -12,13 +12,12 @@
 package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.mixcr.cli.CommandAlign;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.cli.CommandExportAlignmentsPretty;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.RelativePointSide;
-import io.repseq.core.SequencePartitioning;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -160,10 +159,10 @@ public class VDJCObjectTest {
             VDJCAlignments al = align.alignments.get(i);
             for (int tIdx = 0; tIdx < al.numberOfTargets(); tIdx++) {
                 VDJCPartitionedSequence pt = al.getPartitionedTarget(tIdx);
-                if(pt == null)
+                if (pt == null)
                     continue;
                 TargetPartitioning partitioning = pt.getPartitioning();
-                if(partitioning.isAvailable(CDR3)){
+                if (partitioning.isAvailable(CDR3)) {
                     Assert.assertEquals(RelativePointSide.MatchOrInside,
                             partitioning.getRelativeSide(CDR3Begin));
                     Assert.assertEquals(RelativePointSide.MatchOrInside,
@@ -171,13 +170,36 @@ public class VDJCObjectTest {
                     Assert.assertEquals(RelativePointSide.Left,
                             partitioning.getRelativeSide(FR1Begin));
                 }
-                if(partitioning.isAvailable(FR1Begin)){
+                if (partitioning.isAvailable(FR1Begin)) {
                     Assert.assertEquals(RelativePointSide.Right,
                             partitioning.getRelativeSide(CDR3End));
                     Assert.assertEquals(RelativePointSide.Right,
                             partitioning.getRelativeSide(CDR3Begin));
                 }
             }
+        }
+    }
+
+    @Test
+    public void test7() throws Exception {
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+                RunMiXCR.class.getResource("/sequences/test_R1.fastq").getFile(),
+                RunMiXCR.class.getResource("/sequences/test_R2.fastq").getFile());
+
+        params.alignerParameters.getVAlignerParameters().setGeneFeatureToAlign(VTranscriptWithP);
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+        RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
+
+        for (int i = 0; i < assemble.cloneSet.size(); i++) {
+
+            VDJCObject cl = assemble.cloneSet.get(i);
+            VDJCObject.CaseSensitiveNucleotideSequence f = cl.getIncompleteFeature(L2);
+            if (f == null)
+                continue;
+
+            NucleotideSequence lSeq = f.seq[0];
+            NucleotideSequence germ = cl.getBestHit(GeneType.Variable).getGene().getFeature(L2);
+            assertEquals(germ, lSeq);
         }
     }
 }

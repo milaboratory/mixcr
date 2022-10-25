@@ -9,16 +9,23 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.basictypes
 
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
 
 /**
  * Parameters that can return gene features used in alignments for different gene types.
  *
- * <p>Parent of parameters of assemblers and VDJ aligners.</p>
+ *
+ * Parent of parameters of assemblers and VDJ aligners.
  */
-public interface HasFeatureToAlign {
-    GeneFeature getFeatureToAlign(GeneType geneType);
+interface HasFeatureToAlign {
+    fun getFeatureToAlign(geneType: GeneType): GeneFeature?
+
+    companion object {
+        operator fun invoke(featuresToAlign: Map<GeneType, GeneFeature>) = object : HasFeatureToAlign {
+            override fun getFeatureToAlign(geneType: GeneType): GeneFeature? = featuresToAlign[geneType]
+        }
+    }
 }

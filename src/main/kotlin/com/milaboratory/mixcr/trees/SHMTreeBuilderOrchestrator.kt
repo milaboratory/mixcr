@@ -19,8 +19,9 @@ import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.ClonesSupplier
 import com.milaboratory.mixcr.basictypes.GeneFeatures
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
@@ -41,7 +42,9 @@ import java.nio.file.Path
 class SHMTreeBuilderOrchestrator(
     private val parameters: SHMTreeBuilderParameters,
     private val scoringSet: ScoringSet,
-    private val datasets: List<CloneReader>,
+    private val datasets: List<ClonesSupplier>,
+    private val featureToAlign: HasFeatureToAlign,
+    private val usedGenes: Collection<VDJCGene>,
     private val assemblingFeatures: GeneFeatures,
     private val tempDest: TempFileDest,
     private val debugDirectory: Path,
@@ -72,7 +75,7 @@ class SHMTreeBuilderOrchestrator(
     ): OutputPort<TreeWithMetaBuilder> {
         val treeBuilder = TreeBuilderByUserData(
             tempDest,
-            datasets.constructStateBuilder(),
+            featureToAlign.constructStateBuilder(usedGenes),
             assemblingFeatures,
             SHMTreeBuilder
         )
@@ -91,7 +94,7 @@ class SHMTreeBuilderOrchestrator(
             "tagsInfo must be the same for all files"
         }
         val tagsInfo = datasets.first().tagsInfo
-        val stateBuilder = datasets.constructStateBuilder()
+        val stateBuilder = featureToAlign.constructStateBuilder(usedGenes)
 
         val treeBuilder = SingleCellTreeBuilder(
             singleCellParams,
@@ -121,7 +124,7 @@ class SHMTreeBuilderOrchestrator(
             clonesFilter,
             relatedAllelesMutations(),
             datasets.sumOf { it.numberOfClones() }.toLong(),
-            datasets.constructStateBuilder(),
+            featureToAlign.constructStateBuilder(usedGenes),
             tempDest
         )
         val debugs = parameters.steps.indices.map {
@@ -159,8 +162,7 @@ class SHMTreeBuilderOrchestrator(
      * For every gene make a list of mutations to alleles of the gene.
      * Empty list if no alleles for the gene.
      */
-    private fun relatedAllelesMutations(): Map<VDJCGeneId, List<Mutations<NucleotideSequence>>> = datasets
-        .flatMap { it.usedGenes }
+    private fun relatedAllelesMutations(): Map<VDJCGeneId, List<Mutations<NucleotideSequence>>> = usedGenes
         .groupBy { it.geneName }
         .values
         .flatMap { allelesGenes ->

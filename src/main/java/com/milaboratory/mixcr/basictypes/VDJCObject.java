@@ -483,14 +483,7 @@ public abstract class VDJCObject {
                 if (leftParts.isEmpty() && rightParts.isEmpty() && lHit == rHit) {
                     // the feature is not covered by any target and
                     // there are no targets in between :=> take everything from germline
-                    int
-                            lAbs = lHit.getGene().getPartitioning().getAbsolutePosition(lHit.getAlignedFeature(), lPositionInRef),
-                            rAbs = lHit.getGene().getPartitioning().getAbsolutePosition(lHit.getAlignedFeature(), rPositionInRef);
-                    // the only correct case
-                    NucleotideSequence germline = lHit
-                            .getGene()
-                            .getSequenceProvider()
-                            .getRegion(new Range(lAbs, rAbs));
+                    NucleotideSequence germline = lHit.getGene().getFeature(primitiveFeature);
                     if (germline == null)
                         return null;
                     builder.add(germline, true);
