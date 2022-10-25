@@ -376,7 +376,7 @@ internal class SHMTreeBuilderBySteps(
                 hasVJPairThatCloseToGermline(it.cloneWrapper, clusterizationAlgorithm.commonMutationsCountForClustering)
             }
             .filter { it.mutations.VJMutationsCount >= clusterizationAlgorithm.commonMutationsCountForClustering }
-            .sortedWith(CloneWithMutationsFromVJGermline.comparatorByMutationsCount)
+            .sortedWith(CloneWithMutationsFromVJGermline.comparatorByMutationsCount.reversed())
             .toList()
         if (rebasedClones.isEmpty()) return StepResult.empty
         val clusterPredictor = ClustersBuilder.ClusterPredictorForOneChain(

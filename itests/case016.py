@@ -438,7 +438,7 @@ def test_case2():
     for criteria in criteria_list:
         print('\n')
         print(f'Intersect type - {criteria}')
-        overlap_pipeline(glob.glob('*_beta.txt'), criteria)
+        overlap_pipeline(glob.glob('*_beta.tsv'), criteria)
         print('done')
         postanalys_overlap('none', criteria)
         compare_tables(analysis='overlap', criteria=criteria)
