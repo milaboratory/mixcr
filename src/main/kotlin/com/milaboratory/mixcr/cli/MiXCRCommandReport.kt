@@ -87,7 +87,7 @@ interface MiXCRCommandReport : MiXCRReport {
                 sum = statistics.sum,
                 min = statistics.min,
                 max = statistics.max,
-                avg = statistics.sum / statistics.n,
+                avg = statistics.mean,
                 quadraticMean = statistics.quadraticMean,
                 stdDeviation = statistics.standardDeviation
             )
@@ -120,7 +120,7 @@ interface MiXCRCommandReport : MiXCRReport {
                     sum = statistics.sum,
                     min = statistics.min,
                     max = statistics.max,
-                    avg = statistics.sum / statistics.n,
+                    avg = statistics.mean,
                     quadraticMean = statistics.quadraticMean,
                     stdDeviation = statistics.standardDeviation,
                     percentile25 = statistics.getPercentile(25.0),

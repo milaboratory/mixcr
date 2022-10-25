@@ -80,3 +80,16 @@ if [[ ! -d trees_test_data ]]; then
   curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz
   cd ../
 fi
+
+if [[ ! -d regression ]]; then
+  mkdir -p regression
+  cd regression
+  curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/regression/V04_baseBuldTrees.shmt
+  curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/regression/V10_baseSingleCell_vdjcontigs.clna
+  curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/regression/V10_case3.clna
+  curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/regression/V15_baseSingleCell_vdjcontigs.clns
+  curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/regression/V15_case3.clns
+  curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/regression/V20_baseSingleCell_vdjcontigs.vdjca
+  curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/regression/V20_case3.vdjca
+  cd ../
+fi

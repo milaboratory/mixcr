@@ -18,7 +18,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause;
 import com.milaboratory.util.ReportHelper;
 
 import java.util.Date;
-import java.util.Map;
+import java.util.SortedMap;
 
 public final class AlignerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("trimmingReport")
@@ -34,7 +34,7 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
     public final long notAligned;
 
     @JsonProperty("notAlignedReasons")
-    public final Map<VDJCAlignmentFailCause, Long> notAlignedReasons;
+    public final SortedMap<VDJCAlignmentFailCause, Long> notAlignedReasons;
 
     @JsonProperty("chimeras")
     public final long chimeras;
@@ -92,7 +92,7 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
                          @JsonProperty("totalReadsProcessed") long totalReadsProcessed,
                          @JsonProperty("aligned") long aligned,
                          @JsonProperty("notAligned") long notAligned,
-                         @JsonProperty("notAlignedReasons") Map<VDJCAlignmentFailCause, Long> notAlignedReasons,
+                         @JsonProperty("notAlignedReasons") SortedMap<VDJCAlignmentFailCause, Long> notAlignedReasons,
                          @JsonProperty("chimeras") long chimeras,
                          @JsonProperty("overlapped") long overlapped,
                          @JsonProperty("alignmentAidedOverlaps") long alignmentAidedOverlaps,

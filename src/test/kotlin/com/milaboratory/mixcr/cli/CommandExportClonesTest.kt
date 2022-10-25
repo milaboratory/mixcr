@@ -16,7 +16,7 @@ class CommandExportClonesTest {
     fun `check default export columns`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -27,7 +27,7 @@ class CommandExportClonesTest {
     fun `append export field`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files -nFeature VDJRegion $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -38,7 +38,7 @@ class CommandExportClonesTest {
     fun `prepend export field`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files -nFeature VDJRegion --prepend-columns $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -49,10 +49,19 @@ class CommandExportClonesTest {
     fun `no default fields`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -nFeature VDJRegion $input ${output.path}")
         val columns = output.readLines().first().split("\t")
         columns shouldBe listOf("nSeqVDJRegion")
+    }
+
+    @Test
+    fun `export detailed mutations`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} -mutationsDetailed VRegion $input ${output.path}")
     }
 }

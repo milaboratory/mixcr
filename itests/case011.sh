@@ -27,11 +27,11 @@ mixcr analyze test-mikelov-et-al-2021-with-contigs \
       umi_ig_data_2_subset_R2.fastq.gz \
       case11-with-contigs
 
-mixcr exportClones --drop-default-fields -nFeature VDJRegion case11-with-contigs.contigs.clns case11-with-contigs.clns.txt
-mixcr exportClones --drop-default-fields -nFeature VDJRegion case11-without-contigs.clns case11-without-contigs.clns.txt
+mixcr exportClones --drop-default-fields -nFeature VDJRegion case11-with-contigs.contigs.clns case11-with-contigs.clns.tsv
+mixcr exportClones --drop-default-fields -nFeature VDJRegion case11-without-contigs.clns case11-without-contigs.clns.tsv
 
-sort case11-with-contigs.clns_IGH.txt > case11-with-contigs.clns.txt.s
-sort case11-without-contigs.clns_IGH.txt > case11-without-contigs.clns.txt.s
+sort case11-with-contigs.clns_IGH.tsv > case11-with-contigs.clns.tsv.s
+sort case11-without-contigs.clns_IGH.tsv > case11-without-contigs.clns.tsv.s
 
-[[ $(cat case11-with-contigs.clns.txt.s | wc -l) -eq 4 ]] || exit 1
-cmp case11-with-contigs.clns.txt.s case11-without-contigs.clns.txt.s
+[[ $(cat case11-with-contigs.clns.tsv.s | wc -l) -eq 4 ]] || exit 1
+cmp case11-with-contigs.clns.tsv.s case11-without-contigs.clns.tsv.s

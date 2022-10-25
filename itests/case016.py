@@ -26,7 +26,7 @@ def create_folder(downsampling):
 
 def read_tables(downsampling):
     table_list = []
-    for files in glob.glob(f'downsampled_{downsampling}/*.txt'):
+    for files in glob.glob(f'downsampled_{downsampling}/*.tsv'):
         name = basename(files).split('.')[0]
         table = pd.read_table(files, sep='\t')
         table['sampleId'] = name
@@ -277,7 +277,7 @@ def mixcr_tables_format(table):
 
 
 def filterCloneTables():
-    files = glob.glob('*.txt')
+    files = glob.glob('*.tsv')
     cloneTables = [file for file in files if file.split('.') != 'metadata']
     return cloneTables
 
@@ -359,10 +359,10 @@ def mixcr_assemble(vdjca_file):
 def mixcr_exportClones(clns_file, txt_file = None):
     if txt_file == None:
         mixcr_exportClones_args = ['mixcr', 'exportClones', '-f', '-t', '-o', '-c', 'TRB', '-nFeature', 'VJJunction',
-                                   clns_file + '.clns', clns_file + '.txt']
+                                   clns_file + '.clns', clns_file + '.tsv']
     else:
         mixcr_exportClones_args = ['mixcr', 'exportClones', '-f', '-t', '-o', '-c', 'TRB', '-nFeature', 'VJJunction',
-                                   clns_file + '.clns', txt_file + '.txt']
+                                   clns_file + '.clns', txt_file + '.tsv']
     mixcr_exportClones = subprocess.Popen(mixcr_exportClones_args)
     mixcr_exportClones.wait()
 
@@ -438,7 +438,7 @@ def test_case2():
     for criteria in criteria_list:
         print('\n')
         print(f'Intersect type - {criteria}')
-        overlap_pipeline(glob.glob('*_beta.txt'), criteria)
+        overlap_pipeline(glob.glob('*_beta.tsv'), criteria)
         print('done')
         postanalys_overlap('none', criteria)
         compare_tables(analysis='overlap', criteria=criteria)

@@ -21,7 +21,7 @@ abstract class CommandPaExportTablesBase : CommandPaExport {
     @Parameters(
         description = ["Path for output file."],
         index = "1",
-        paramLabel = "table.tsv"
+        paramLabel = "table.(tsv|csv)"
     )
     lateinit var out: Path
 

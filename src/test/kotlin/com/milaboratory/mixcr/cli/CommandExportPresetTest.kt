@@ -13,14 +13,14 @@ import org.junit.Test
 class CommandExportPresetTest {
     @Test
     fun `add several export fields`() {
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
             "exportPreset --species hs --dna " +
                     "--append-export-clones-field -aaFeature VDJRegion " +
                     "--append-export-clones-field -aaFeature VRegion " +
                     "--append-export-clones-field -aaFeature JRegion " +
-                    "test-tcr-shotgun ${output.path}"
+                    "--preset-name test-tcr-shotgun ${output.path}"
         )
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
         result.exportClones!!.fields
@@ -30,9 +30,9 @@ class CommandExportPresetTest {
 
     @Test
     fun `add assemble contig step`() {
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
-        TestMain.execute("exportPreset --species hs --dna --add-step assembleContigs test-tcr-shotgun ${output.path}")
+        TestMain.execute("exportPreset --species hs --dna --add-step assembleContigs --preset-name test-tcr-shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
         result.pipeline!!.steps shouldContain MiXCRCommandDescriptor.assembleContigs
         result.assemble!!.clnaOutput shouldBe true

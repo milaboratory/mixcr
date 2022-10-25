@@ -371,12 +371,12 @@ internal class SHMTreeBuilderBySteps(
     private fun buildTreeTopParts(clones: Sequence<CloneWithMutationsFromVJGermline>): StepResult {
         val clusterizationAlgorithm = initialStep.algorithm
         //use only clones that are at long distance from any germline
-        val temp = clones.toList()
-        val rebasedClones = temp
+        val rebasedClones = clones.toList()
             .filterNot {
                 hasVJPairThatCloseToGermline(it.cloneWrapper, clusterizationAlgorithm.commonMutationsCountForClustering)
             }
             .filter { it.mutations.VJMutationsCount >= clusterizationAlgorithm.commonMutationsCountForClustering }
+            .sortedWith(CloneWithMutationsFromVJGermline.comparatorByMutationsCount.reversed())
             .toList()
         if (rebasedClones.isEmpty()) return StepResult.empty
         val clusterPredictor = ClustersBuilder.ClusterPredictorForOneChain(

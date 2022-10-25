@@ -41,13 +41,13 @@ class FindAllelesReport(
     outputFiles: Array<String>,
     executionTimeMillis: Long?,
     version: String,
-    private val searchHistoryForBCells: Map<String, SearchHistoryForBCells>,
+    private val searchHistoryForBCells: SortedMap<String, SearchHistoryForBCells>,
     private val clonesCountWithNoChangeOfScore: Long,
     private val clonesCountWithNegativeScoreChange: Long,
     private val clonesScoreDeltaStats: MiXCRCommandReport.StandardStats,
     private val foundAlleles: Int,
-    private val zygotes: Map<Int, Int>,
-    private val allelesScoreChange: Map<String, MiXCRCommandReport.StandardStats>
+    private val zygotes: SortedMap<Int, Int>,
+    private val allelesScoreChange: SortedMap<String, MiXCRCommandReport.StandardStats>
 ) : AbstractMiXCRCommandReport(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version) {
     override fun command(): String = CommandFindAlleles.COMMAND_NAME
 
@@ -176,7 +176,7 @@ class FindAllelesReport(
             outputFiles,
             executionTimeMillis,
             version,
-            searchHistoryForBCells.mapValues { (_, history) ->
+            searchHistoryForBCells.mapValuesTo(TreeMap()) { (_, history) ->
                 SearchHistoryForBCells(
                     alleles = SearchHistoryForBCells.Alleles(
                         addedKnownAllele = history.alleles.addedKnownAllele?.asMutations()?.encode(","),
@@ -200,11 +200,12 @@ class FindAllelesReport(
             clonesCountWithNegativeScoreChange.sum(),
             MiXCRCommandReport.StandardStats.from(clonesScoreDeltaStats),
             foundAlleles.get(),
-            zygotes.mapValues { it.value.toInt() },
+            zygotes.mapValuesTo(TreeMap()) { it.value.toInt() },
             overallAllelesStatistics.stats
                 .mapKeys { it.key.name }
                 .mapValues { MiXCRCommandReport.StandardStats.from(it.value.scoreDelta) }
                 .filterValues { it.size != 0L }
+                .toSortedMap()
         )
 
         override fun that() = this

@@ -40,7 +40,13 @@ class CloneWithMutationsFromReconstructedRoot(
 class CloneWithMutationsFromVJGermline(
     val mutations: MutationsFromVJGermline,
     val cloneWrapper: CloneWrapper
-)
+) {
+    companion object {
+        val comparatorByMutationsCount: Comparator<CloneWithMutationsFromVJGermline> = Comparator
+            .comparingInt { clone: CloneWithMutationsFromVJGermline -> clone.mutations.VJMutationsCount }
+            .thenBy(CloneWrapper.comparatorMaxFractionFirst) { it.cloneWrapper }
+    }
+}
 
 /**
  * Represent all mutations as `MutationsFromVJGermline`

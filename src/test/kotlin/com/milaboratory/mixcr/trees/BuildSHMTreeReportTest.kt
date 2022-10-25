@@ -1,23 +1,14 @@
 package com.milaboratory.mixcr.trees
 
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
-import com.milaboratory.util.GlobalObjectMappers
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.instanceOf
-import org.junit.Before
 import org.junit.Test
 import java.util.*
 
 class BuildSHMTreeReportTest {
-    @Before
-    fun setUp() {
-        GlobalObjectMappers.addModifier {
-            it.registerModule(kotlinModule())
-        }
-    }
-
     @Test
     fun serialization() {
         val report = BuildSHMTreeReport(
@@ -43,16 +34,13 @@ class BuildSHMTreeReportTest {
                     statsSample(),
                     statsSample(),
                     statsSample(),
-                    statsSample(),
-                    statsSample(),
-                    statsSample(),
                     statsSample()
                 )
             )
         )
 
-        val asJson = GlobalObjectMappers.getOneLine().writeValueAsString(report)
-        val deserialized = GlobalObjectMappers.getOneLine().readValue<BuildSHMTreeReport>(asJson)
+        val asJson = K_OM.writeValueAsString(report)
+        val deserialized = K_OM.readValue<BuildSHMTreeReport>(asJson)
         deserialized.commandLine shouldBe "from test"
         deserialized.stepResults.first().step shouldBe instanceOf<BuildSHMTreeStep.BuildingInitialTrees>()
         deserialized.stepResults.first().clonesCountInTrees.size shouldBe 10L

@@ -718,7 +718,7 @@ private fun <R : Any> VDJCObject.extractMutations(
     for (i in 0 until hit.numberOfTargets()) {
         val alignment = hit.getAlignment(i)
         if (alignment == null || !alignment.sequence1Range.contains(smallTargetRange)) continue
-        val mutations = if (geneFeature != relativeTo) {
+        val mutations = if (geneFeature == relativeTo) {
             alignment.absoluteMutations.extractRelativeMutationsForRange(smallTargetRange)
         } else {
             val mutations = alignment.absoluteMutations.extractAbsoluteMutationsForRange(smallTargetRange)
