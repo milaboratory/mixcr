@@ -277,7 +277,7 @@ def mixcr_tables_format(table):
 
 
 def filterCloneTables():
-    files = glob.glob('*.txt')
+    files = glob.glob('*.tsv')
     cloneTables = [file for file in files if file.split('.') != 'metadata']
     return cloneTables
 

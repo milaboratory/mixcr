@@ -34,9 +34,6 @@ class BuildSHMTreeReportTest {
                     statsSample(),
                     statsSample(),
                     statsSample(),
-                    statsSample(),
-                    statsSample(),
-                    statsSample(),
                     statsSample()
                 )
             )
