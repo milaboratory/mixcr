@@ -16,6 +16,7 @@ package com.milaboratory.mixcr.trees
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.cli.AbstractCommandReportBuilder
@@ -25,7 +26,6 @@ import com.milaboratory.mixcr.cli.MiXCRCommandReport.StatsWithQuantiles
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportHelper
 import java.util.*
-import kotlin.math.abs
 import kotlin.math.log2
 
 @JsonAutoDetect(
@@ -72,6 +72,11 @@ class BuildSHMTreeReport(
         isGetterVisibility = NONE,
         getterVisibility = NONE
     )
+    @JsonIgnoreProperties(
+        "mutationsRateDifferences",
+        "minMutationsRateDifferences",
+        "maxMutationsRateDifferences",
+    )
     class StepResult(
         val step: BuildSHMTreeStep,
         val clonesWasAdded: Int,
@@ -82,10 +87,7 @@ class BuildSHMTreeReport(
         val wildcardsScore: StatsWithQuantiles,
         val wildcardsScoreForRoots: StatsWithQuantiles,
         val maxNDNsWildcardsScoreInTree: StatsWithQuantiles,
-        val surenessOfDecisions: StatsWithQuantiles,
-        val mutationsRateDifferences: StatsWithQuantiles,
-        val minMutationsRateDifferences: StatsWithQuantiles,
-        val maxMutationsRateDifferences: StatsWithQuantiles,
+        val surenessOfDecisions: StatsWithQuantiles
     )
 
     class Builder : AbstractCommandReportBuilder<Builder>() {
@@ -166,11 +168,6 @@ class BuildSHMTreeReport(
                     (maxMetric - minMetric) / maxMetric
                 }
                 .values
-            val mutationRatesDifferences = debugInfosAfterDecisions
-                .filter { it["parentId"] != null }
-                .filter { it["NDN"] != null }
-                .groupBy({ it.treeId() }) { it.mutationsRateDifference() }
-                .values
 
             return StepResult(
                 step = step,
@@ -182,10 +179,7 @@ class BuildSHMTreeReport(
                 wildcardsScore = StatsWithQuantiles.from(averageNDNWildcardsScore),
                 wildcardsScoreForRoots = StatsWithQuantiles.from(NDNsWildcardsScoreForRoots),
                 maxNDNsWildcardsScoreInTree = StatsWithQuantiles.from(maxNDNsWildcardsScoreInTree),
-                surenessOfDecisions = StatsWithQuantiles.from(surenessOfDecisions),
-                mutationsRateDifferences = StatsWithQuantiles.from(mutationRatesDifferences.flatten()),
-                minMutationsRateDifferences = StatsWithQuantiles.from(mutationRatesDifferences.map { it.minOrNull()!! }),
-                maxMutationsRateDifferences = StatsWithQuantiles.from(mutationRatesDifferences.map { it.maxOrNull()!! })
+                surenessOfDecisions = StatsWithQuantiles.from(surenessOfDecisions)
             )
         }
 
@@ -202,22 +196,6 @@ class BuildSHMTreeReport(
                 .distinct()
                 .count()
     }
-}
-
-private fun Map<String, String?>.mutationsRateDifference(): Double {
-    val VMutations = getMutations("VMutationsFromParent")
-    val VLength = (this["VRangeWithoutCDR3"]!!.split(",") + this["VRangeInCDR3"]!!)
-        .map { DebugInfo.decodeRange(it) }
-        .sumOf { it.length() }
-    val JMutations = getMutations("JMutationsFromParent")
-    val JLength = (this["JRangeWithoutCDR3"]!!.split(",") + this["JRangeInCDR3"]!!)
-        .map { DebugInfo.decodeRange(it) }
-        .sumOf { it.length() }
-    val NDNMutations = getMutations("NDNMutationsFromParent")
-    val NDNLength = getNucleotideSequence("NDN").size()
-    val VJMutationsRate = (VMutations.size() + JMutations.size()) / (VLength + JLength).toDouble()
-    val NDNMutationsRate = NDNMutations.size() / NDNLength.toDouble()
-    return abs(VJMutationsRate - NDNMutationsRate)
 }
 
 private fun Map<String, String?>.getNucleotideSequence(columnName: String): NucleotideSequence =

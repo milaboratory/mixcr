@@ -109,6 +109,12 @@ class CloneWrapper(
                 Comparator.comparingDouble<Clone> { (it.getBestHit(Variable).score + it.getBestHit(Joining).score).toDouble() }
                     .thenComparingDouble { it.count }
             )!!
+
+        val comparatorMaxFractionFirst: Comparator<CloneWrapper> = Comparator
+            .comparingDouble { cloneWrapper: CloneWrapper -> cloneWrapper.clones.maxOf { it.clone.fraction } }
+            .reversed()
+            //just for reproducible order
+            .thenComparingInt { cloneWrapper: CloneWrapper -> cloneWrapper.clones.sumOf { it.clone.id } }
     }
 }
 

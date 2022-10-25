@@ -64,7 +64,10 @@ class SHMTreeBuilder(
                     clone.cloneWrapper
                 )
             }
-            .sortedBy { score(rootInfo, it.mutationsSet) }
+            .sortedWith(Comparator
+                .comparingInt<CloneWithMutationsFromReconstructedRoot> { score(rootInfo, it.mutationsSet) }
+                .thenBy(CloneWrapper.comparatorMaxFractionFirst) { it.clone }
+            )
             .toList()
         val alignFeatures = cluster.first().mutations.mutations.map { it.keys.sorted() }
         val treeBuilder = createTreeBuilder(rootInfo, alignFeatures)
@@ -103,7 +106,7 @@ class SHMTreeBuilder(
     }
 
     private fun List<CloneWithMutationsFromVJGermline>.buildRootInfo(): RootInfo {
-        val rootBasedOn = first()
+        val rootBasedOn = minWith(CloneWithMutationsFromVJGermline.comparatorByMutationsCount)
 
         val sequence1 = VJPair(
             rootBasedOn.cloneWrapper.getHit(Variable).getAlignment(0).sequence1,
