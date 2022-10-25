@@ -144,17 +144,19 @@ class TreeWithMetaBuilder(
             fun makeDecision(chooses: Map<VJBase, ZeroStepDecisionInfo>): VJBase {
                 //group by the same origin VJ pair - group decisions by related alleles
                 //and choose VJ pair that close to germline
-                val filteredByAlleles =
-                    chooses.entries
-                        .groupBy { (_, value) ->
-                            value.VGeneName to value.JGeneName
-                        }
-                        .values
-                        .mapNotNull { withTheSameGeneBase ->
-                            withTheSameGeneBase.minByOrNull { (_, value) -> value.commonMutationsCount }
-                        }
-                        .map { (key, _) -> key }
-                        .toSet()
+                val filteredByAlleles = chooses.entries
+                    .groupBy { (_, value) ->
+                        value.VGeneName to value.JGeneName
+                    }
+                    .values
+                    .mapNotNull { withTheSameGeneBase ->
+                        withTheSameGeneBase.minWithOrNull(Comparator
+                            .comparingInt { (_, value): Map.Entry<VJBase, ZeroStepDecisionInfo> -> value.commonMutationsCount }
+                            .thenComparing { (key, _): Map.Entry<VJBase, ZeroStepDecisionInfo> -> key.geneIds.toString() }
+                        )
+                    }
+                    .map { (key, _) -> key }
+                    .toSet()
                 //for every VJ pair (already without allele variants) choose best score
                 return filteredByAlleles
                     .maxWithOrNull(Comparator

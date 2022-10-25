@@ -114,7 +114,9 @@ class CloneWrapper(
             .comparingDouble { cloneWrapper: CloneWrapper -> cloneWrapper.clones.maxOf { it.clone.fraction } }
             .reversed()
             //just for reproducible order
-            .thenComparingInt { cloneWrapper: CloneWrapper -> cloneWrapper.clones.sumOf { it.clone.id } }
+            .thenComparingInt { cloneWrapper: CloneWrapper ->
+                cloneWrapper.clones.map { it.clone.id }.reduce { acc, i -> acc * i }
+            }
     }
 }
 
