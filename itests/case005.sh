@@ -17,18 +17,18 @@ mixcr analyze generic-tcr-amplicon \
   --split-clones-by V --split-clones-by J --split-clones-by C \
   case5_R1.fastq case5_R2.fastq case5
 
-mixcr exportAlignments -f --drop-default-fields -readIds -cloneIdWithMappingType case5.clna case5.als.txt
+mixcr exportAlignments -f --drop-default-fields -readIds -cloneIdWithMappingType case5.clna case5.als.tsv
 
-sort -t $'\t' --key=1 -n case5.als.txt | tail -n +2 > case5.als.sorted.txt
+sort -t $'\t' --key=1 -n case5.als.tsv | tail -n +2 > case5.als.sorted.tsv
 
-lines=$(cat case5.als.sorted.txt | wc -l)
+lines=$(cat case5.als.sorted.tsv | wc -l)
 
-head -n $((lines/2)) case5.als.sorted.txt | cut -f2 > case5.als.sorted.1.txt
-tail -n $((lines/2)) case5.als.sorted.txt | cut -f2 > case5.als.sorted.2.txt
+head -n $((lines/2)) case5.als.sorted.tsv | cut -f2 > case5.als.sorted.1.tsv
+tail -n $((lines/2)) case5.als.sorted.tsv | cut -f2 > case5.als.sorted.2.tsv
 
-if cmp case5.als.sorted.1.txt case5.als.sorted.2.txt; then
+if cmp case5.als.sorted.1.tsv case5.als.sorted.2.tsv; then
   echo "All good"
 else
   echo "Results are different"
-  diff case5.als.sorted.1.txt case5.als.sorted.2.txt
+  diff case5.als.sorted.1.tsv case5.als.sorted.2.tsv
 fi

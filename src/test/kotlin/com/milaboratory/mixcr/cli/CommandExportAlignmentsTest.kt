@@ -17,7 +17,7 @@ class CommandExportAlignmentsTest {
     fun `check default export columns`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -29,7 +29,7 @@ class CommandExportAlignmentsTest {
     fun `append export field`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} -readHistory $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -40,7 +40,7 @@ class CommandExportAlignmentsTest {
     fun `prepend export field`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} -readHistory --prepend-columns $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -51,7 +51,7 @@ class CommandExportAlignmentsTest {
     fun `no default fields`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} -readHistory --drop-default-fields $input ${output.path}")
         val columns = output.readLines().first().split("\t")

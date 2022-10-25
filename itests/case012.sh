@@ -27,11 +27,11 @@ mixcr analyze test-mikelov-et-al-2021-with-contigs \
       umi_single_read_R2.fastq \
       case12-with-contigs
 
-mixcr exportClones --dont-split-files --drop-default-fields -nFeature VDJRegion case12-with-contigs.contigs.clns case12-with-contigs.clns.txt
-mixcr exportClones --dont-split-files --drop-default-fields -nFeature VDJRegion case12-without-contigs.clns case12-without-contigs.clns.txt
+mixcr exportClones --dont-split-files --drop-default-fields -nFeature VDJRegion case12-with-contigs.contigs.clns case12-with-contigs.clns.tsv
+mixcr exportClones --dont-split-files --drop-default-fields -nFeature VDJRegion case12-without-contigs.clns case12-without-contigs.clns.tsv
 
-sort case12-with-contigs.clns.txt > case12-with-contigs.clns.txt.s
-sort case12-without-contigs.clns.txt > case12-without-contigs.clns.txt.s
+sort case12-with-contigs.clns.tsv > case12-with-contigs.clns.tsv.s
+sort case12-without-contigs.clns.tsv > case12-without-contigs.clns.tsv.s
 
-[[ $(cat case12-with-contigs.clns.txt.s | wc -l) -eq 2 ]] || exit 1
-cmp case12-with-contigs.clns.txt.s case12-without-contigs.clns.txt.s
+[[ $(cat case12-with-contigs.clns.tsv.s | wc -l) -eq 2 ]] || exit 1
+cmp case12-with-contigs.clns.tsv.s case12-without-contigs.clns.tsv.s
