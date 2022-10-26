@@ -23,22 +23,22 @@ import java.util.*
 import kotlin.collections.set
 import kotlin.math.log2
 
-object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostanalysis<*>>() {
-    override val presets: Map<String, List<FieldCommandArgs>> = buildMap {
+object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTreeForPostanalysis<*>>() {
+    override val presets: Map<String, List<ExportFieldDescription>> = buildMap {
         this["full"] = listOf(
-            FieldCommandArgs("-treeId"),
-            FieldCommandArgs("-uniqClonesCount"),
-            FieldCommandArgs("-totalClonesCount"),
-            FieldCommandArgs("-vHit"),
-            FieldCommandArgs("-jHit"),
-            FieldCommandArgs("-nFeature", "CDR3", "mrca"),
-            FieldCommandArgs("-aaFeature", "CDR3", "mrca")
+            ExportFieldDescription("-treeId"),
+            ExportFieldDescription("-uniqClonesCount"),
+            ExportFieldDescription("-totalClonesCount"),
+            ExportFieldDescription("-vHit"),
+            ExportFieldDescription("-jHit"),
+            ExportFieldDescription("-nFeature", "CDR3", "mrca"),
+            ExportFieldDescription("-aaFeature", "CDR3", "mrca")
         )
 
         this["min"] = listOf(
-            FieldCommandArgs("-treeId"),
-            FieldCommandArgs("-vHit"),
-            FieldCommandArgs("-jHit"),
+            ExportFieldDescription("-treeId"),
+            ExportFieldDescription("-vHit"),
+            ExportFieldDescription("-jHit"),
         )
     }
 
@@ -137,8 +137,8 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
         }
 }
 
-private fun baseGeneFeatureArg(sPrefix: String): CommandArg<GeneFeature> =
-    CommandArg(
+private fun baseGeneFeatureArg(sPrefix: String): CommandArgRequired<GeneFeature> =
+    CommandArgRequired(
         "<gene_feature>",
         { _, arg ->
             GeneFeature.parse(arg).also {
@@ -151,7 +151,7 @@ private fun baseGeneFeatureArg(sPrefix: String): CommandArg<GeneFeature> =
 
 private fun baseArg(
     sPrefix: (Base) -> String = { base -> "Of${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
-): CommandArg<Base> = CommandArg(
+): CommandArgRequired<Base> = CommandArgRequired(
     "<${Base.germline}|${Base.mrca}>",
     { _, arg ->
         require(arg in arrayOf(Base.germline.name, Base.mrca.name)) {

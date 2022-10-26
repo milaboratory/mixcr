@@ -15,15 +15,22 @@ import com.milaboratory.mitool.data.CriticalThresholdCollection
 import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mitool.pattern.search.readObject
-import com.milaboratory.mixcr.*
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParams
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRStepParams
+import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
-import com.milaboratory.primitivio.*
+import com.milaboratory.primitivio.PrimitivI
+import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
-import io.repseq.core.GeneFeature
+import com.milaboratory.primitivio.readObjectOptional
+import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.VDJCLibraryId
 import io.repseq.dto.VDJCLibraryData
 import java.security.MessageDigest
@@ -68,9 +75,6 @@ data class MiXCRHeader(
 
     fun withAssemblerParameters(assemblerParameters: CloneAssemblerParameters): MiXCRHeader =
         copy(assemblerParameters = assemblerParameters)
-
-    fun withAllClonesCutBy(allClonesAlignedBy: Array<GeneFeature>) =
-        copy(allFullyCoveredBy = GeneFeatures(allClonesAlignedBy.toList()))
 
     fun <P : MiXCRParams> addStepParams(cmd: MiXCRCommandDescriptor<P, *>, params: P) =
         copy(stepParams = stepParams.add(cmd, params))

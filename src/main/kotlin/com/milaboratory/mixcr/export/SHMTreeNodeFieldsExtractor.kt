@@ -75,7 +75,7 @@ object SHMTreeNodeFieldsExtractor {
             "Export nucleotide sequence of specified gene feature.\n" +
                     "If second arg is 'node', then feature will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
             baseGeneFeatureArg("nSeq"),
-            baseOrNodeArg()
+            baseOrArgOptional()
         ) { node, geneFeature, what ->
             node.mutationsFromGermlineTo(what)
                 ?.targetNSequence(geneFeature)
@@ -88,7 +88,7 @@ object SHMTreeNodeFieldsExtractor {
             "Export amino acid sequence of specified gene feature.\n" +
                     "If second arg is 'node', than feature will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
             baseGeneFeatureArg("aaSeq"),
-            baseOrNodeArg()
+            baseOrArgOptional()
         ) { node, geneFeature, what ->
             node.mutationsFromGermlineTo(what)
                 ?.targetAASequence(geneFeature)
@@ -209,7 +209,7 @@ object SHMTreeNodeFieldsExtractor {
     }
 }
 
-private fun baseGeneFeatureArg(sPrefix: String): CommandArg<GeneFeature> = CommandArg(
+private fun baseGeneFeatureArg(sPrefix: String): CommandArgRequired<GeneFeature> = CommandArgRequired(
     "<gene_feature>",
     { _, arg ->
         GeneFeature.parse(arg).also {
@@ -220,7 +220,7 @@ private fun baseGeneFeatureArg(sPrefix: String): CommandArg<GeneFeature> = Comma
     }
 ) { sPrefix + GeneFeature.encode(it) }
 
-private fun relativeGeneFeatureArg(): CommandArg<GeneFeature> = CommandArg(
+private fun relativeGeneFeatureArg(): CommandArgRequired<GeneFeature> = CommandArgRequired(
     "<relative_to_gene_feature>",
     { _, arg ->
         GeneFeature.parse(arg).also {
@@ -233,10 +233,10 @@ private fun relativeGeneFeatureArg(): CommandArg<GeneFeature> = CommandArg(
 
 private fun baseOnArg(
     sPrefix: (Base) -> String = { base -> "BasedOn${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
-): CommandArg<Base> = CommandArg(
+): CommandArgRequired<Base> = CommandArgRequired(
     "<${Base.germline}|${Base.mrca}|${Base.parent}>",
     { _, arg ->
-        require(arg in arrayOf(Base.germline.name, Base.mrca.name, Base.germline.name, "node")) {
+        require(arg in arrayOf(Base.germline.name, Base.mrca.name, Base.germline.name)) {
             "$cmdArgName: unexpected arg $arg, expecting ${Base.germline} or ${Base.mrca}"
         }
         Base.valueOf(arg)
@@ -244,10 +244,13 @@ private fun baseOnArg(
     sPrefix
 )
 
-private fun baseOrNodeArg(
+private fun baseOrArgOptional(
     sPrefix: (Base?) -> String = { base -> "of${(base?.name ?: "node").replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
-): CommandArg<Base?> = CommandArg(
-    "<${Base.germline}|${Base.mrca}|${Base.parent}|node>",
+): CommandArgOptional<Base?> = CommandArgOptional(
+    "<${Base.germline}|${Base.mrca}|${Base.parent}>",
+    { arg ->
+        arg in arrayOf(Base.germline.name, Base.mrca.name, Base.germline.name, "node")
+    },
     { _, arg ->
         require(arg in arrayOf(Base.germline.name, Base.mrca.name, Base.germline.name, "node")) {
             "$cmdArgName: unexpected arg $arg, expecting ${Base.germline} or ${Base.mrca}"

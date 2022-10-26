@@ -33,7 +33,7 @@ import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.FieldExtractorsFactoryNew
+import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -630,8 +630,8 @@ object ExportMixins {
         @get:JsonIgnore
         val fieldDescr get() = ExportFieldDescription(field, args)
 
-        private fun checkFor(exf: FieldExtractorsFactoryNew<*>) {
-            val nArgsExpected = exf.getNArgsForField(field)
+        private fun checkFor(exf: FieldExtractorsFactory<*>) {
+            val nArgsExpected = exf.getMaxNArgsForField(field)
             check(args.size == nArgsExpected) {
                 "Unexpected number of arguments for field $field. Expected $nArgsExpected but found ${args.size} " +
                         "(${args.joinToString(", ")})"

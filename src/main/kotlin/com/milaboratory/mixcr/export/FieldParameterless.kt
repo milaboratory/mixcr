@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import picocli.CommandLine.Range
 
 class FieldParameterless<T : Any>(
     override val priority: Int,
@@ -21,7 +22,7 @@ class FieldParameterless<T : Any>(
     override val deprecation: String? = null,
     private val extract: (T) -> String
 ) : Field<T>() {
-    override val nArguments: Int = 0
+    override val arity: Range = Range.valueOf("0")
 
     override fun create(
         headerData: MiXCRHeader,

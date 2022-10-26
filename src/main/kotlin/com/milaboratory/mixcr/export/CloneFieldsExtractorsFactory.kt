@@ -12,9 +12,8 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 
-object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
+object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
     override fun allAvailableFields(): List<FieldsCollection<Clone>> =
         VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) +
                 cloneFields(forTreesExport = false)

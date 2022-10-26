@@ -62,10 +62,13 @@ class CommandExportAlignmentsTest {
     fun `export all nFeatures equal to export by one`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
+        val outputCompositeDefaults = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
+        outputCompositeDefaults.delete()
         val outputComposite = TempFileManager.getTempDir().toPath().resolve("output1.tsv").toFile()
         outputComposite.delete()
         val outputByOne = TempFileManager.getTempDir().toPath().resolve("output2.tsv").toFile()
         outputComposite.delete()
+        TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --drop-default-fields -allNFeatures $input ${outputCompositeDefaults.path}")
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --drop-default-fields -allNFeatures FR1Begin FR4End $input ${outputComposite.path}")
         TestMain.execute(
             "${CommandExportAlignments.COMMAND_NAME} --drop-default-fields " +
@@ -78,8 +81,10 @@ class CommandExportAlignmentsTest {
                     "-nFeature FR4 " +
                     "$input ${outputByOne.path}"
         )
+        val columnsCompositeDefaults = outputCompositeDefaults.readLines().first().split("\t")
         val columnsComposite = outputComposite.readLines().first().split("\t")
         val columnsByOne = outputByOne.readLines().first().split("\t")
+        columnsCompositeDefaults shouldBe columnsComposite
         columnsComposite shouldBe columnsByOne
         outputComposite.readLines() shouldBe outputByOne.readLines()
     }

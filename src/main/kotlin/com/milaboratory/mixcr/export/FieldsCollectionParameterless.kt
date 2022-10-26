@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import picocli.CommandLine
 
 class FieldsCollectionParameterless<T : Any>(
     override val priority: Int,
@@ -21,7 +22,7 @@ class FieldsCollectionParameterless<T : Any>(
     override val deprecation: String? = null,
     private val argsSupplier: MiXCRHeader.() -> List<Array<String>>
 ) : FieldsCollection<T> {
-    override val nArguments: Int = 0
+    override val arity: CommandLine.Range = CommandLine.Range.valueOf("0")
 
     override fun createFields(
         headerData: MiXCRHeader,

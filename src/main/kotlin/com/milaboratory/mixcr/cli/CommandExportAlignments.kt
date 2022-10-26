@@ -78,13 +78,13 @@ object CommandExportAlignments {
         private var chains: String? = null
 
         @Mixin
-        private lateinit var exportDefaults: ExportDefaultOptions
+        lateinit var exportDefaults: ExportDefaultOptions
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportAlignments) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::noHeader setIfTrue exportDefaults.noHeader
-                Params::fields updateBy exportDefaults.fieldsUpdater(VDJCAlignmentsFieldsExtractorsFactory)
+                Params::fields updateBy exportDefaults
             }
         }
     }
@@ -180,7 +180,7 @@ object CommandExportAlignments {
         val cmd = Cmd()
         val spec = Model.CommandSpec.forAnnotatedObject(cmd)
         cmd.spec = spec // inject spec manually
-        VDJCAlignmentsFieldsExtractorsFactory.addOptionsToSpec(spec)
+        VDJCAlignmentsFieldsExtractorsFactory.addOptionsToSpec(cmd.exportDefaults.addedFields, spec)
         return spec
     }
 }

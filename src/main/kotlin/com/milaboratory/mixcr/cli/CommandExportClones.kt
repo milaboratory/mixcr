@@ -134,7 +134,7 @@ object CommandExportClones {
         private var dontSplitFiles = false
 
         @Mixin
-        private lateinit var exportDefaults: ExportDefaultOptions
+        lateinit var exportDefaults: ExportDefaultOptions
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
@@ -144,7 +144,7 @@ object CommandExportClones {
                 Params::splitByTags setIfNotNull splitByTag
                 Params::splitFilesBy setIfNotEmpty splitFilesBy
                 Params::noHeader setIfTrue exportDefaults.noHeader
-                Params::fields updateBy exportDefaults.fieldsUpdater(CloneFieldsExtractorsFactory)
+                Params::fields updateBy exportDefaults
                 if (dontSplitFiles || (chains != null && chains != "ALL"))
                     Params::splitFilesBy setTo emptyList()
             }
@@ -326,7 +326,7 @@ object CommandExportClones {
         val cmd = Cmd()
         val spec = Model.CommandSpec.forAnnotatedObject(cmd)
         cmd.spec = spec // inject spec manually
-        CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
+        CloneFieldsExtractorsFactory.addOptionsToSpec(cmd.exportDefaults.addedFields, spec)
         return spec
     }
 }

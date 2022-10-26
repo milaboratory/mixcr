@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import picocli.CommandLine.Range
 
 abstract class Field<in T : Any> : FieldsCollection<T> {
     abstract fun create(headerData: MiXCRHeader, args: Array<String>): FieldExtractor<T>
@@ -25,33 +26,40 @@ interface FieldsCollection<in T : Any> {
     val cmdArgName: String
     val description: String
     val deprecation: String?
-    val nArguments: Int
+    val arity: Range
     val metaVars: String
+    fun consumableArgs(args: List<String>): Int = arity.max()
+
     fun createFields(headerData: MiXCRHeader, args: Array<String>): List<FieldExtractor<T>>
 }
 
 fun <T : Any, R : Any> FieldsCollection<T>.fromProperty(
     descriptionMapper: (String) -> String = { it },
     property: R.() -> T?
-): FieldsCollection<R> = object : FieldsCollection<R> {
-    override val priority: Int = this@fromProperty.priority
-    override val cmdArgName: String = this@fromProperty.cmdArgName
-    override val description: String = descriptionMapper(this@fromProperty.description)
-    override val deprecation: String? = this@fromProperty.deprecation
-    override val nArguments: Int = this@fromProperty.nArguments
-    override val metaVars: String = this@fromProperty.metaVars
+): FieldsCollection<R> {
+    val that = this@fromProperty
+    return object : FieldsCollection<R> {
+        override val priority = that.priority
+        override val cmdArgName = that.cmdArgName
+        override val description = descriptionMapper(that.description)
+        override val deprecation = that.deprecation
+        override val arity = that.arity
+        override val metaVars = that.metaVars
 
-    override fun createFields(
-        headerData: MiXCRHeader,
-        args: Array<String>
-    ): List<FieldExtractor<R>> {
-        val delegates = this@fromProperty.createFields(headerData, args)
-        return delegates.map { delegate ->
-            object : FieldExtractor<R> {
-                override val header: String = delegate.header
-                override fun extractValue(obj: R): String {
-                    val propertyVal = property(obj) ?: return NULL
-                    return delegate.extractValue(propertyVal)
+        override fun consumableArgs(args: List<String>) = that.consumableArgs(args)
+
+        override fun createFields(
+            headerData: MiXCRHeader,
+            args: Array<String>
+        ): List<FieldExtractor<R>> {
+            val delegates = that.createFields(headerData, args)
+            return delegates.map { delegate ->
+                object : FieldExtractor<R> {
+                    override val header: String = delegate.header
+                    override fun extractValue(obj: R): String {
+                        val propertyVal = property(obj) ?: return NULL
+                        return delegate.extractValue(propertyVal)
+                    }
                 }
             }
         }

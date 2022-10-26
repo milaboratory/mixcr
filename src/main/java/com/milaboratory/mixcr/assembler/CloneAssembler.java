@@ -355,8 +355,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         return new CloneSet(
                 Arrays.asList(realClones),
                 usedGenes.values(),
-                header.withAssemblerParameters(parameters)
-                        .withAllClonesCutBy(parameters.assemblingFeatures),
+                header.withAssemblerParameters(parameters),
                 footer,
                 new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())
         );

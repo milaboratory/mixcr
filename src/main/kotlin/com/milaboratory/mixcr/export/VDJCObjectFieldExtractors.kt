@@ -17,14 +17,38 @@ import com.milaboratory.core.mutations.MutationsUtil
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.TranslationParameters
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCObject
-import com.milaboratory.mixcr.export.FieldExtractorsFactory.FieldCommandArgs
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetween
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.referencePointsToExport
 import gnu.trove.map.hash.TObjectFloatHashMap
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint
+import io.repseq.core.ReferencePoint.CDR1Begin
+import io.repseq.core.ReferencePoint.CDR2Begin
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.DBegin
+import io.repseq.core.ReferencePoint.DBeginTrimmed
+import io.repseq.core.ReferencePoint.DEnd
+import io.repseq.core.ReferencePoint.DEndTrimmed
+import io.repseq.core.ReferencePoint.DefaultReferencePoints
+import io.repseq.core.ReferencePoint.FR1Begin
+import io.repseq.core.ReferencePoint.FR2Begin
+import io.repseq.core.ReferencePoint.FR3Begin
+import io.repseq.core.ReferencePoint.FR4Begin
+import io.repseq.core.ReferencePoint.FR4End
+import io.repseq.core.ReferencePoint.JBegin
+import io.repseq.core.ReferencePoint.JBeginTrimmed
+import io.repseq.core.ReferencePoint.L1Begin
+import io.repseq.core.ReferencePoint.L1End
+import io.repseq.core.ReferencePoint.L2Begin
+import io.repseq.core.ReferencePoint.VEnd
+import io.repseq.core.ReferencePoint.VEndTrimmed
+import io.repseq.core.ReferencePoint.encode
+import io.repseq.core.ReferencePoint.parse
 import io.repseq.core.SequencePartitioning
 import java.text.DecimalFormat
 import java.util.*
@@ -33,38 +57,38 @@ private val SCORE_FORMAT = DecimalFormat("#.#")
 private const val MAX_SHIFTED_TRIPLETS = 3
 
 object VDJCObjectFieldExtractors {
-    val presets: Map<String, List<FieldCommandArgs>> = buildMap {
+    val presets: Map<String, List<ExportFieldDescription>> = buildMap {
         this["min"] = listOf(
-            FieldCommandArgs("-vHit"),
-            FieldCommandArgs("-dHit"),
-            FieldCommandArgs("-jHit"),
-            FieldCommandArgs("-cHit"),
-            FieldCommandArgs("-nFeature", "CDR3")
+            ExportFieldDescription("-vHit"),
+            ExportFieldDescription("-dHit"),
+            ExportFieldDescription("-jHit"),
+            ExportFieldDescription("-cHit"),
+            ExportFieldDescription("-nFeature", "CDR3")
         )
 
         this["full"] = listOf(
-            FieldCommandArgs("-targetSequences"),
-            FieldCommandArgs("-targetQualities"),
-            FieldCommandArgs("-vHitsWithScore"),
-            FieldCommandArgs("-dHitsWithScore"),
-            FieldCommandArgs("-jHitsWithScore"),
-            FieldCommandArgs("-cHitsWithScore"),
-            FieldCommandArgs("-vAlignments"),
-            FieldCommandArgs("-dAlignments"),
-            FieldCommandArgs("-jAlignments"),
-            FieldCommandArgs("-cAlignments"),
-            FieldCommandArgs("-allNFeatures", "FR1Begin", "FR4End"),
-            FieldCommandArgs("-allMinFeaturesQuality", "FR1Begin", "FR4End"),
-            FieldCommandArgs("-allAaFeatures", "FR1Begin", "FR4End"),
-            FieldCommandArgs("-defaultAnchorPoints"),
-            FieldCommandArgs("-allTags"),
-            FieldCommandArgs("-allUniqueTagsCount")
+            ExportFieldDescription("-targetSequences"),
+            ExportFieldDescription("-targetQualities"),
+            ExportFieldDescription("-vHitsWithScore"),
+            ExportFieldDescription("-dHitsWithScore"),
+            ExportFieldDescription("-jHitsWithScore"),
+            ExportFieldDescription("-cHitsWithScore"),
+            ExportFieldDescription("-vAlignments"),
+            ExportFieldDescription("-dAlignments"),
+            ExportFieldDescription("-jAlignments"),
+            ExportFieldDescription("-cAlignments"),
+            ExportFieldDescription("-allNFeatures"),
+            ExportFieldDescription("-allMinFeaturesQuality"),
+            ExportFieldDescription("-allAaFeatures"),
+            ExportFieldDescription("-defaultAnchorPoints"),
+            ExportFieldDescription("-allTags"),
+            ExportFieldDescription("-allUniqueTagsCount")
         )
 
         this["fullImputed"] = this.getValue("full").map { fieldData ->
             when (fieldData.field) {
-                "-allNFeatures" -> FieldCommandArgs("-allNFeaturesImputed", fieldData.args)
-                "-allAaFeature" -> FieldCommandArgs("-allAaFeaturesImputed", fieldData.args)
+                "-allNFeatures" -> ExportFieldDescription("-allNFeaturesImputed", fieldData.args)
+                "-allAaFeature" -> ExportFieldDescription("-allAaFeaturesImputed", fieldData.args)
                 else -> fieldData
             }
         }
@@ -281,8 +305,8 @@ object VDJCObjectFieldExtractors {
                 "Export nucleotide sequences for all gene features between specified reference points (in separate columns).%n" +
                         "For example, `-allNFeatures FR3Begin FR4End` will export `-nFeature FR3`, `-nFeature CDR3` and `-nFeature FR4`",
                 nFeatureField,
-                referencePointParam("<from_reference_point>"),
-                referencePointParam("<to_reference_point>"),
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
             ) { from, to ->
                 geneFeaturesBetween(from, to)
             }
@@ -302,8 +326,8 @@ object VDJCObjectFieldExtractors {
             "Export quality string for all gene features between specified reference points (in separate columns).%n" +
                     "For example, `-allQFeatures FR3Begin FR4End` will export `-qFeature FR3`, `-qFeature CDR3` and `-qFeature FR4`",
             qFeatureField,
-            referencePointParam("<from_reference_point>"),
-            referencePointParam("<to_reference_point>"),
+            referencePointParamOptional("<from_reference_point>"),
+            referencePointParamOptional("<to_reference_point>"),
         ) { from, to ->
             geneFeaturesBetween(from, to)
         }
@@ -333,8 +357,8 @@ object VDJCObjectFieldExtractors {
                 "Export amino acid sequence for all gene features between specified reference points (in separate columns).%n" +
                         "For example, `-allAaFeatures FR3Begin FR4End` will export `-aaFeature FR3`, `-aaFeature CDR3` and `-aaFeature FR4`",
                 aaFeatureField,
-                referencePointParam("<from_reference_point>"),
-                referencePointParam("<to_reference_point>"),
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
             ) { from, to ->
                 geneFeaturesBetween(from, to)
             }
@@ -354,8 +378,8 @@ object VDJCObjectFieldExtractors {
             "Export nucleotide sequence using letters from germline (marked lowercase) for uncovered regions for all gene features between specified reference points (in separate columns).%n" +
                     "For example, `-allNFeaturesImputed FR3Begin FR4End` will export `-nFeatureImputed FR3`, `-nFeatureImputed CDR3` and `-nFeatureImputed FR4`",
             nFeatureImputedField,
-            referencePointParam("<from_reference_point>"),
-            referencePointParam("<to_reference_point>"),
+            referencePointParamOptional("<from_reference_point>"),
+            referencePointParamOptional("<to_reference_point>"),
         ) { from, to ->
             geneFeaturesBetween(from, to)
         }
@@ -375,8 +399,8 @@ object VDJCObjectFieldExtractors {
             "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions for all gene features between specified reference points (in separate columns).%n" +
                     "For example, `-allAaFeaturesImputed FR3Begin FR4End` will export `-aaFeatureImputed FR3`, `-aaFeatureImputed CDR3` and `-aaFeatureImputed FR4`",
             aaFeatureImputedField,
-            referencePointParam("<from_reference_point>"),
-            referencePointParam("<to_reference_point>"),
+            referencePointParamOptional("<from_reference_point>"),
+            referencePointParamOptional("<to_reference_point>"),
         ) { from, to ->
             geneFeaturesBetween(from, to)
         }
@@ -396,8 +420,8 @@ object VDJCObjectFieldExtractors {
             "Export minimal quality for all gene features between specified reference points (in separate columns).%n" +
                     "For example, `-allMinFeaturesQuality FR3Begin FR4End` will export `-minFeatureQuality FR3`, `-minFeatureQuality CDR3` and `-minFeatureQuality FR4`",
             minFeatureQualityField,
-            referencePointParam("<from_reference_point>"),
-            referencePointParam("<to_reference_point>"),
+            referencePointParamOptional("<from_reference_point>"),
+            referencePointParamOptional("<to_reference_point>"),
         ) { from, to ->
             geneFeaturesBetween(from, to)
         }
@@ -417,8 +441,8 @@ object VDJCObjectFieldExtractors {
             "Export average quality for all gene features between specified reference points (in separate columns).%n" +
                     "For example, `-allAvrgFeaturesQuality FR3Begin FR4End` will export `-avrgFeatureQuality FR3`, `-avrgFeatureQuality CDR3` and `-avrgFeatureQuality FR4`",
             avrgFeatureQualityField,
-            referencePointParam("<from_reference_point>"),
-            referencePointParam("<to_reference_point>"),
+            referencePointParamOptional("<from_reference_point>"),
+            referencePointParamOptional("<to_reference_point>"),
         ) { from, to ->
             geneFeaturesBetween(from, to)
         }
@@ -439,8 +463,8 @@ object VDJCObjectFieldExtractors {
                 "Export length for all gene features between specified reference points (in separate columns).%n" +
                         "For example, `-allLengthOf FR3Begin FR4End` will export `-lengthOf FR3`, `-lengthOf CDR3` and `-lengthOf FR4`",
                 avrgFeatureQualityField,
-                referencePointParam("<from_reference_point>"),
-                referencePointParam("<to_reference_point>"),
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
             ) { from, to ->
                 geneFeaturesBetween(from, to)
             }
@@ -461,8 +485,8 @@ object VDJCObjectFieldExtractors {
                 "Extract nucleotide mutations relative to germline sequence for all gene features between specified reference points (in separate columns).%n" +
                         "For example, `-allNMutations FR3Begin FR4End` will export `-nMutations FR3`, `-nMutations CDR3` and `-nMutations FR4`",
                 nMutationsField,
-                referencePointParam("<from_reference_point>"),
-                referencePointParam("<to_reference_point>"),
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
             ) { from, to ->
                 geneFeaturesBetween(from, to)
             }
@@ -493,8 +517,8 @@ object VDJCObjectFieldExtractors {
                 "Extract amino acid nucleotide mutations relative to germline sequence for all gene features between specified reference points (in separate columns).%n" +
                         "For example, `-allAaMutations FR3Begin FR4End` will export `-aaMutations FR3`, `-aaMutations CDR3` and `-aaMutations FR4`",
                 aaMutationsFiled,
-                referencePointParam("<from_reference_point>"),
-                referencePointParam("<to_reference_point>"),
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
             ) { from, to ->
                 geneFeaturesBetween(from, to)
             }
@@ -529,8 +553,8 @@ object VDJCObjectFieldExtractors {
                 "Detailed list of nucleotide and corresponding amino acid mutations for all gene features between specified reference points (in separate columns).%n" +
                         "For example, `-allMutationsDetailed FR3Begin FR4End` will export `-mutationsDetailed FR3`, `-mutationsDetailed CDR3` and `-mutationsDetailed FR4`",
                 mutationsDetailedField,
-                referencePointParam("<from_reference_point>"),
-                referencePointParam("<to_reference_point>"),
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
             ) { from, to ->
                 geneFeaturesBetween(from, to)
             }
@@ -561,8 +585,8 @@ object VDJCObjectFieldExtractors {
             "Export position inside reference sequences (clonal sequence / read sequence) for all reference between specified reference points (in separate columns).%n" +
                     "For example, `-allPositionsInReferenceOf FR3Begin FR4End` will export `-positionInReferenceOf FR3Begin`, `-positionInReferenceOf CDR3Begin`, `-positionInReferenceOf CDR3End` and `-positionInReferenceOf FR4End`",
             positionInReferenceOfField,
-            referencePointParam("<from_reference_point>"),
-            referencePointParam("<to_reference_point>"),
+            referencePointParamOptional("<from_reference_point>"),
+            referencePointParamOptional("<to_reference_point>"),
         ) { from, to ->
             referencePointsToExport(from, to)
         }
@@ -582,8 +606,8 @@ object VDJCObjectFieldExtractors {
             "Export position inside target sequences (clonal sequence / read sequence) for all reference between specified reference points (in separate columns).%n" +
                     "For example, `-allPositionsOf FR3Begin FR4End` will export `-positionOf FR3Begin`, `-positionOf CDR3Begin`, `-positionOf CDR3End` and `-positionOf FR4End`",
             positionOfField,
-            referencePointParam("<from_reference_point>"),
-            referencePointParam("<to_reference_point>"),
+            referencePointParamOptional("<from_reference_point>"),
+            referencePointParamOptional("<to_reference_point>"),
         ) { from, to ->
             referencePointsToExport(from, to)
         }
@@ -682,7 +706,7 @@ object VDJCObjectFieldExtractors {
             Order.labels + 300,
             "-geneLabel",
             "Export gene label (i.e. ReliableChain)",
-            CommandArg(
+            CommandArgRequired(
                 "<label>",
                 { _, geneLabel -> geneLabel }
             ) { geneLabel -> "geneLabel$geneLabel" }
@@ -901,33 +925,33 @@ private fun VDJCObject.extractRefPoints(): String {
         val partitioning: SequencePartitioning = getPartitionedTarget(i).partitioning
         var j = 0
         while (true) {
-            val refPoint = ReferencePoint.DefaultReferencePoints[j]
+            val refPoint = DefaultReferencePoints[j]
 
             // Processing special cases for number of deleted / P-segment nucleotides
-            if (refPoint == ReferencePoint.VEnd) sb.append(
+            if (refPoint == VEnd) sb.append(
                 trimmedPosition(
                     bestVHit,
                     i,
-                    ReferencePoint.VEndTrimmed,
-                    ReferencePoint.VEnd
+                    VEndTrimmed,
+                    VEnd
                 )
-            ) else if (refPoint == ReferencePoint.DBegin) sb.append(
-                trimmedPosition(bestDHit, i, ReferencePoint.DBeginTrimmed, ReferencePoint.DBegin)
-            ) else if (refPoint == ReferencePoint.DEnd) sb.append(
+            ) else if (refPoint == DBegin) sb.append(
+                trimmedPosition(bestDHit, i, DBeginTrimmed, DBegin)
+            ) else if (refPoint == DEnd) sb.append(
                 trimmedPosition(
                     bestDHit,
                     i,
-                    ReferencePoint.DEndTrimmed,
-                    ReferencePoint.DEnd
+                    DEndTrimmed,
+                    DEnd
                 )
-            ) else if (refPoint == ReferencePoint.JBegin) sb.append(
-                trimmedPosition(bestJHit, i, ReferencePoint.JBeginTrimmed, ReferencePoint.JBegin)
+            ) else if (refPoint == JBegin) sb.append(
+                trimmedPosition(bestJHit, i, JBeginTrimmed, JBegin)
             ) else {
                 // Normal points
                 val referencePointPosition = partitioning.getPosition(refPoint)
                 if (referencePointPosition >= 0) sb.append(referencePointPosition)
             }
-            if (j == ReferencePoint.DefaultReferencePoints.size - 1) break
+            if (j == DefaultReferencePoints.size - 1) break
             sb.append(":")
             j++
         }
@@ -1005,17 +1029,17 @@ internal const val NEW_HEADER_NOTE =
 internal fun tagParameter(
     sPrefix: String,
     sSuffix: String = ""
-) = CommandArg(
+) = CommandArgRequired(
     "<tag_name>",
     { header, tagName -> tagName to header.tagsInfo.indexOf(tagName) }
 ) { (tagName, _) -> sPrefix + tagName + sSuffix }
 
-private fun geneFeatureParam(sPrefix: String): CommandArg<GeneFeature> = CommandArg(
+private fun geneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeature> = CommandArgRequired(
     "<gene_feature>",
     { _, arg -> GeneFeature.parse(arg) }
 ) { sPrefix + GeneFeature.encode(it) }
 
-private fun relativeGeneFeatureParam(): CommandArg<GeneFeature> = CommandArg(
+private fun relativeGeneFeatureParam(): CommandArgRequired<GeneFeature> = CommandArgRequired(
     "<relative_to_gene_feature>",
     { _, arg -> GeneFeature.parse(arg) }
 ) { "Relative" + GeneFeature.encode(it) }
@@ -1023,43 +1047,72 @@ private fun relativeGeneFeatureParam(): CommandArg<GeneFeature> = CommandArg(
 private fun referencePointParam(
     meta: String = "<reference_point>",
     sPrefix: (String) -> String = { it }
-): CommandArg<ReferencePoint> = CommandArg(
+): CommandArgRequired<ReferencePoint> = CommandArgRequired(
     meta,
-    { _, arg -> ReferencePoint.parse(arg) },
-    { sPrefix(ReferencePoint.encode(it, true)) }
+    { _, arg -> parse(arg) },
+    { sPrefix(encode(it, true)) }
 )
 
-private fun geneFeaturesBetween(
-    from: ReferencePoint,
-    to: ReferencePoint
-): List<Array<String>> = referencePointsBetween(from, to)
-    .zipWithNext { a, b -> GeneFeature(a, b) }
-    .map { arrayOf(GeneFeature.encode(it)) }
+private fun referencePointParamOptional(
+    meta: String = "<reference_point>",
+    sPrefix: (String) -> String = { it }
+): CommandArgOptional<ReferencePoint?> = CommandArgOptional(
+    meta,
+    { arg ->
+        try {
+            parse(arg)
+            true
+        } catch (e: java.lang.IllegalArgumentException) {
+            false
+        }
+    },
+    { _, arg -> parse(arg) },
+    { sPrefix(encode(it, true)) }
+)
 
-private fun referencePointsToExport(
-    from: ReferencePoint,
-    to: ReferencePoint
-): List<Array<String>> = referencePointsBetween(from, to).map { arrayOf(ReferencePoint.encode(it, true)) }
+private object GeneFeaturesRangeUtil {
+    fun MiXCRHeader.geneFeaturesBetween(
+        from: ReferencePoint?,
+        to: ReferencePoint?
+    ): List<Array<String>> = referencePointsBetweenOrDefault(from, to)
+        .zipWithNext { a, b -> GeneFeature(a, b) }
+        .map { arrayOf(GeneFeature.encode(it)) }
 
-private fun referencePointsBetween(
-    from: ReferencePoint,
-    to: ReferencePoint
-): List<ReferencePoint> {
-    val referencePointsBetween = referencePointsToExport
-        .filter { from < it && it < to }
-    return listOf(from) + referencePointsBetween + to
+    fun MiXCRHeader.referencePointsToExport(
+        from: ReferencePoint?,
+        to: ReferencePoint?
+    ): List<Array<String>> = referencePointsBetweenOrDefault(from, to).map { arrayOf(encode(it, true)) }
+
+    private fun MiXCRHeader.referencePointsBetweenOrDefault(
+        from: ReferencePoint?,
+        to: ReferencePoint?
+    ): List<ReferencePoint> = when {
+        from != null && to != null -> referencePointsBetween(from, to)
+        allFullyCoveredBy != null -> allFullyCoveredBy.features
+            .flatMap { referencePointsBetween(it.firstPoint, it.lastPoint) }
+        else -> referencePointsBetween(FR1Begin, FR4End)
+    }
+
+    private fun referencePointsBetween(
+        from: ReferencePoint,
+        to: ReferencePoint
+    ): List<ReferencePoint> {
+        val referencePointsBetween = referencePointsToExport
+            .filter { from < it && it < to }
+        return listOf(from) + referencePointsBetween + to
+    }
+
+    private val referencePointsToExport = arrayOf(
+        L1Begin,
+        L1End,
+        L2Begin,
+        FR1Begin,
+        CDR1Begin,
+        FR2Begin,
+        CDR2Begin,
+        FR3Begin,
+        CDR3Begin,
+        FR4Begin,
+        FR4End
+    )
 }
-
-private val referencePointsToExport = arrayOf(
-    ReferencePoint.L1Begin,
-    ReferencePoint.L1End,
-    ReferencePoint.L2Begin,
-    ReferencePoint.FR1Begin,
-    ReferencePoint.CDR1Begin,
-    ReferencePoint.FR2Begin,
-    ReferencePoint.CDR2Begin,
-    ReferencePoint.FR3Begin,
-    ReferencePoint.CDR3Begin,
-    ReferencePoint.FR4Begin,
-    ReferencePoint.FR4End
-)

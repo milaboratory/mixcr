@@ -12,12 +12,13 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import picocli.CommandLine
 
 abstract class FieldWithParameters<T : Any, P> private constructor(
     override val priority: Int,
     override val cmdArgName: String,
     override val description: String,
-    override val nArguments: Int,
+    override val arity: CommandLine.Range,
     override val deprecation: String? = null
 ) : Field<T>() {
     protected abstract fun getParameters(headerData: MiXCRHeader, args: Array<String>): P
@@ -28,8 +29,8 @@ abstract class FieldWithParameters<T : Any, P> private constructor(
         headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> {
-        require(args.size == nArguments) {
-            "$cmdArgName requires $nArguments arguments, got ${args.joinToString(" ")}"
+        require(arity.min() <= args.size && args.size <= arity.max()) {
+            "$cmdArgName requires $arity arguments, got ${args.joinToString(" ")}"
         }
         val params = getParameters(headerData, args)
         return object : FieldExtractor<T> {
@@ -39,15 +40,16 @@ abstract class FieldWithParameters<T : Any, P> private constructor(
     }
 
     companion object {
-        operator fun <T : Any, P1> invoke(
+        operator fun <T : Any, P1 : Any> invoke(
             priority: Int,
             command: String,
             description: String,
-            parameter1: CommandArg<P1>,
+            parameter1: CommandArgRequired<P1>,
             validateArgs: Field<T>.(P1) -> Unit = {},
             deprecation: String? = null,
             extract: (T, P1) -> String
-        ): Field<T> = object : FieldWithParameters<T, P1>(priority, command, description, 1, deprecation) {
+        ): Field<T> = object :
+            FieldWithParameters<T, P1>(priority, command, description, CommandLine.Range.valueOf("1"), deprecation) {
             override val metaVars: String = parameter1.meta
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): P1 {
@@ -62,16 +64,22 @@ abstract class FieldWithParameters<T : Any, P> private constructor(
             override fun getHeader(parameters: P1): String = parameter1.sPrefix(parameters)
         }
 
-        operator fun <T : Any, P1, P2> invoke(
+        operator fun <T : Any, P1 : Any, P2 : Any> invoke(
             priority: Int,
             command: String,
             description: String,
-            parameter1: CommandArg<P1>,
-            parameter2: CommandArg<P2>,
+            parameter1: CommandArgRequired<P1>,
+            parameter2: CommandArgRequired<P2>,
             validateArgs: Field<T>.(P1, P2) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: (T, P1, P2) -> String
-        ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(priority, command, description, 2, deprecation) {
+        ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(
+            priority,
+            command,
+            description,
+            CommandLine.Range.valueOf("2"),
+            deprecation
+        ) {
             override val metaVars: String = parameter1.meta + " " + parameter2.meta
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Pair<P1, P2> {
@@ -88,18 +96,64 @@ abstract class FieldWithParameters<T : Any, P> private constructor(
                 parameter1.sPrefix(parameters.first) + parameter2.sPrefix(parameters.second)
         }
 
-        operator fun <T : Any, P1, P2, P3> invoke(
+        operator fun <T : Any, P1 : Any, P2 : Any> invoke(
             priority: Int,
             command: String,
             description: String,
-            parameter1: CommandArg<P1>,
-            parameter2: CommandArg<P2>,
-            parameter3: CommandArg<P3>,
+            parameter1: CommandArgRequired<P1>,
+            parameter2: CommandArgOptional<P2?>,
+            validateArgs: Field<T>.(P1, P2?) -> Unit = { _, _ -> },
+            deprecation: String? = null,
+            extract: (T, P1, P2?) -> String
+        ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2?>>(
+            priority,
+            command,
+            description,
+            CommandLine.Range.valueOf("1..2"),
+            deprecation
+        ) {
+            override val metaVars: String = parameter1.meta + " [" + parameter2.meta + "]"
+
+            override fun consumableArgs(args: List<String>): Int = when (args.size) {
+                1 -> 1
+                else -> when {
+                    !parameter2.canConsumeArg(args[1]) -> 1
+                    else -> 2
+                }
+            }
+
+            override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Pair<P1, P2?> {
+                val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
+                val arg2 = args.getOrNull(1)?.let { arg -> parameter2.decodeAndValidate(this, headerData, arg) }
+                validateArgs(arg1, arg2)
+                return arg1 to arg2
+            }
+
+            override fun extractValue(`object`: T, parameters: Pair<P1, P2?>): String =
+                extract(`object`, parameters.first, parameters.second)
+
+            override fun getHeader(parameters: Pair<P1, P2?>): String =
+                parameter1.sPrefix(parameters.first) + parameter2.sPrefix(parameters.second)
+        }
+
+        operator fun <T : Any, P1 : Any, P2 : Any, P3 : Any> invoke(
+            priority: Int,
+            command: String,
+            description: String,
+            parameter1: CommandArgRequired<P1>,
+            parameter2: CommandArgRequired<P2>,
+            parameter3: CommandArgRequired<P3>,
             validateArgs: Field<T>.(P1, P2, P3) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: (T, P1, P2, P3) -> String
         ): Field<T> =
-            object : FieldWithParameters<T, Triple<P1, P2, P3>>(priority, command, description, 3, deprecation) {
+            object : FieldWithParameters<T, Triple<P1, P2, P3>>(
+                priority,
+                command,
+                description,
+                CommandLine.Range.valueOf("3"),
+                deprecation
+            ) {
                 override val metaVars: String = parameter1.meta + " " + parameter2.meta + " " + parameter3.meta
 
                 override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Triple<P1, P2, P3> {

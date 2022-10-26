@@ -12,10 +12,9 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.util.GlobalObjectMappers
 
-object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactoryNew<VDJCAlignments>() {
+object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignments>() {
     override fun allAvailableFields(): List<FieldsCollection<VDJCAlignments>> =
         VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) + vdjcAlignmentsFields()
 
