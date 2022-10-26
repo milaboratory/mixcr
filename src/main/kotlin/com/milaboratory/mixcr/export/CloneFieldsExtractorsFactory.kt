@@ -27,7 +27,6 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
                 forTreesExport -> "Unique clone identifier in source sample file"
                 else -> "Unique clone identifier"
             },
-            "Clone ID",
             "cloneId"
         ) { clone: Clone ->
             clone.id.toString()
@@ -39,7 +38,6 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
                 forTreesExport -> "Export clone count in source sample file"
                 else -> "Export clone count"
             },
-            "Clone count",
             "cloneCount",
             deprecation = stdDeprecationNote("-count", "-readCount", true),
         ) { clone: Clone ->
@@ -52,7 +50,6 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
                 forTreesExport -> "Number of reads assigned to the clonotype in source sample file"
                 else -> "Number of reads assigned to the clonotype"
             },
-            "Read Count",
             "readCount"
         ) { clone: Clone ->
             clone.count.toString()
@@ -64,7 +61,6 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
                 forTreesExport -> "Export clone fraction in source sample file"
                 else -> "Export clone fraction"
             },
-            "Clone fraction",
             "cloneFraction",
             deprecation = stdDeprecationNote("-fraction", "-readFraction", true),
         ) { clone: Clone ->
@@ -77,7 +73,6 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
                 forTreesExport -> "Fraction of reads assigned to the clonotype in source sample file"
                 else -> "Fraction of reads assigned to the clonotype"
             },
-            "Read fraction",
             "readFraction"
         ) { clone: Clone ->
             clone.fraction.toString()
@@ -86,7 +81,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
             Order.tags + 500,
             "-uniqueTagFraction",
             "Fraction of unique tags (UMI, CELL, etc.) the clone or alignment collected.",
-            tagParameter("Unique ", "unique", hSuffix = " fraction", sSuffix = "Fraction"),
+            tagParameter("unique", sSuffix = "Fraction"),
             validateArgs = { (tagName, idx) ->
                 require(idx != -1) { "No tag with name $tagName" }
             }
@@ -97,7 +92,6 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
         this += FieldParameterless(
             Order.tags + 600,
             "-cellGroup",
-            "Cell group",
             "Cell group",
             "cellGroup"
         ) { clone: Clone ->

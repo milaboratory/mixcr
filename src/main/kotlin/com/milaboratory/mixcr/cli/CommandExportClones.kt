@@ -27,7 +27,6 @@ import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
@@ -216,8 +215,7 @@ object CommandExportClones {
                 }
             }
 
-            val fieldExtractors = CloneFieldsExtractorsFactory
-                .createExtractors(params.fields, header, OutputMode.ScriptingFriendly)
+            val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, header)
 
             fun runExport(set: CloneSet, outFile: Path?) {
                 InfoWriter.create(outFile, fieldExtractors, !params.noHeader).use { writer ->

@@ -16,7 +16,6 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.FieldExtractor
-import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
@@ -168,8 +167,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         val fieldExtractors: List<FieldExtractor<Clone>> =
             CloneSetIO.mkReader(samples[0], VDJCLibraryRegistry.getDefault()).use { cReader ->
                 CloneFieldsExtractorsFactory.createExtractors(
-                    CloneFieldsExtractorsFactory
-                        .parsePicocli(spec.commandLine().parseResult), cReader.header, OutputMode.ScriptingFriendly
+                    CloneFieldsExtractorsFactory.parsePicocli(spec.commandLine().parseResult),
+                    cReader.header
                 )
             }
         extractors += fieldExtractors.map { ExtractorPerSample(it) }

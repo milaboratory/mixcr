@@ -52,7 +52,6 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
                 Order.treeMainParams + 100,
                 "-treeId",
                 "SHM tree id",
-                "Tree id",
                 "treeId"
             ) { it.meta.treeId.toString() }
 
@@ -60,7 +59,6 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
                 Order.treeMainParams + 200,
                 "-uniqClonesCount",
                 "Number of uniq clones in the SHM tree",
-                "Uniq clones count",
                 "uniqClonesCount"
             ) { shmTree ->
                 shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
@@ -70,7 +68,6 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
                 Order.treeMainParams + 300,
                 "-totalClonesCount",
                 "Total sum of counts of clones in the SHM tree",
-                "Total clones count",
                 "totalClonesCount"
             ) { shmTree ->
                 shmTree.tree.allNodes().sumOf { (_, node) -> node.content.clones.sumOf { it.clone.count } }.toString()
@@ -82,7 +79,6 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
                     Order.orderForBestHit(type),
                     "-${l.lowercaseChar()}Hit",
                     "Export best $l hit",
-                    "Best $l hit",
                     "best${l}Hit"
                 ) {
                     it.meta.rootInfo.VJBase.geneIds[type].name
@@ -94,7 +90,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
                     Order.`-nFeature`,
                     "-nFeature",
                     "Export nucleotide sequence of specified gene feature of specified node type.",
-                    baseGeneFeatureArg("N. Seq. ", "nSeq"),
+                    baseGeneFeatureArg("nSeq"),
                     baseArg()
                 ) { tree, geneFeature, what ->
                     when (what) {
@@ -110,7 +106,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
                     Order.`-aaFeature`,
                     "-aaFeature",
                     "Export amino acid sequence of specified gene feature of specified node type",
-                    baseGeneFeatureArg("AA. Seq. ", "aaSeq"),
+                    baseGeneFeatureArg("aaSeq"),
                     baseArg()
                 ) { tree, geneFeature, what ->
                     when (what) {
@@ -127,7 +123,6 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
                 Order.treeStats + 100,
                 "-wildcardsScore",
                 "Count of possible nucleotide sequences of CDR3 in MRCA",
-                "Wildcards score",
                 "wildcardsScore",
                 deprecation = "-wildcardsScore used only for debug"
             ) { shmTree ->
@@ -142,7 +137,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
         }
 }
 
-private fun baseGeneFeatureArg(hPrefix: String, sPrefix: String): FieldWithParameters.CommandArg<GeneFeature> =
+private fun baseGeneFeatureArg(sPrefix: String): FieldWithParameters.CommandArg<GeneFeature> =
     FieldWithParameters.CommandArg(
         "<gene_feature>",
         { _, arg ->
@@ -151,13 +146,10 @@ private fun baseGeneFeatureArg(hPrefix: String, sPrefix: String): FieldWithParam
                     "$cmdArgName doesn't support composite features"
                 }
             }
-        },
-        { hPrefix + GeneFeature.encode(it) },
-        { sPrefix + GeneFeature.encode(it) }
-    )
+        }
+    ) { sPrefix + GeneFeature.encode(it) }
 
 private fun baseArg(
-    hPrefix: (Base) -> String = { "of $it" },
     sPrefix: (Base) -> String = { base -> "Of${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
 ): FieldWithParameters.CommandArg<Base> = FieldWithParameters.CommandArg(
     "<${Base.germline}|${Base.mrca}>",
@@ -167,6 +159,5 @@ private fun baseArg(
         }
         Base.valueOf(arg)
     },
-    hPrefix,
     sPrefix
 )

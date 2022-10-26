@@ -12,8 +12,6 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
-import com.milaboratory.mixcr.export.OutputMode.HumanFriendly
-import com.milaboratory.mixcr.export.OutputMode.ScriptingFriendly
 
 abstract class FieldWithParameters<T : Any, P>(
     override val priority: Int,
@@ -23,11 +21,10 @@ abstract class FieldWithParameters<T : Any, P>(
     override val deprecation: String? = null
 ) : AbstractField<T>() {
     protected abstract fun getParameters(headerData: MiXCRHeader, args: Array<String>): P
-    protected abstract fun getHeader(outputMode: OutputMode, parameters: P): String
+    protected abstract fun getHeader(parameters: P): String
     protected abstract fun extractValue(`object`: T, parameters: P): String
 
     override fun create1(
-        outputMode: OutputMode,
         headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> {
@@ -36,7 +33,7 @@ abstract class FieldWithParameters<T : Any, P>(
         }
         val params = getParameters(headerData, args)
         return object : FieldExtractor<T> {
-            override val header = getHeader(outputMode, params)
+            override val header = getHeader(params)
             override fun extractValue(obj: T): String = this@FieldWithParameters.extractValue(obj, params)
         }
     }
@@ -44,7 +41,6 @@ abstract class FieldWithParameters<T : Any, P>(
     class CommandArg<T>(
         val meta: String,
         val decodeAndValidate: AbstractField<*>.(MiXCRHeader, String) -> T,
-        val hPrefix: (T) -> String,
         val sPrefix: (T) -> String
     )
 
@@ -69,11 +65,7 @@ abstract class FieldWithParameters<T : Any, P>(
             override fun extractValue(`object`: T, parameters: P1): String =
                 extract(`object`, parameters)
 
-            override fun getHeader(outputMode: OutputMode, parameters: P1): String =
-                when (outputMode) {
-                    HumanFriendly -> parameter1.hPrefix(parameters)
-                    ScriptingFriendly -> parameter1.sPrefix(parameters)
-                }
+            override fun getHeader(parameters: P1): String = parameter1.sPrefix(parameters)
         }
 
         operator fun <T : Any, P1, P2> invoke(
@@ -98,11 +90,8 @@ abstract class FieldWithParameters<T : Any, P>(
             override fun extractValue(`object`: T, parameters: Pair<P1, P2>): String =
                 extract(`object`, parameters.first, parameters.second)
 
-            override fun getHeader(outputMode: OutputMode, parameters: Pair<P1, P2>): String =
-                when (outputMode) {
-                    HumanFriendly -> parameter1.hPrefix(parameters.first) + " " + parameter2.hPrefix(parameters.second)
-                    ScriptingFriendly -> parameter1.sPrefix(parameters.first) + parameter2.sPrefix(parameters.second)
-                }
+            override fun getHeader(parameters: Pair<P1, P2>): String =
+                parameter1.sPrefix(parameters.first) + parameter2.sPrefix(parameters.second)
         }
 
         operator fun <T : Any, P1, P2, P3> invoke(
@@ -115,30 +104,26 @@ abstract class FieldWithParameters<T : Any, P>(
             validateArgs: AbstractField<T>.(P1, P2, P3) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: (T, P1, P2, P3) -> String
-        ): Field<T> = object : FieldWithParameters<T, Triple<P1, P2, P3>>(priority, command, description, 3, deprecation) {
-            override val metaVars: String = parameter1.meta + " " + parameter2.meta + " " + parameter3.meta
+        ): Field<T> =
+            object : FieldWithParameters<T, Triple<P1, P2, P3>>(priority, command, description, 3, deprecation) {
+                override val metaVars: String = parameter1.meta + " " + parameter2.meta + " " + parameter3.meta
 
-            override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Triple<P1, P2, P3> {
-                val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
-                val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
-                val arg3 = parameter3.decodeAndValidate(this, headerData, args[2])
-                validateArgs(arg1, arg2, arg3)
-                return Triple(arg1, arg2, arg3)
-            }
+                override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Triple<P1, P2, P3> {
+                    val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
+                    val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
+                    val arg3 = parameter3.decodeAndValidate(this, headerData, args[2])
+                    validateArgs(arg1, arg2, arg3)
+                    return Triple(arg1, arg2, arg3)
+                }
 
-            override fun extractValue(`object`: T, parameters: Triple<P1, P2, P3>): String =
-                extract(`object`, parameters.first, parameters.second, parameters.third)
+                override fun extractValue(`object`: T, parameters: Triple<P1, P2, P3>): String =
+                    extract(`object`, parameters.first, parameters.second, parameters.third)
 
-            override fun getHeader(outputMode: OutputMode, parameters: Triple<P1, P2, P3>): String =
-                when (outputMode) {
-                    HumanFriendly -> parameter1.hPrefix(parameters.first) +
-                            " " + parameter2.hPrefix(parameters.second) +
-                            " " + parameter3.hPrefix(parameters.third)
-                    ScriptingFriendly -> parameter1.sPrefix(parameters.first) +
+                override fun getHeader(parameters: Triple<P1, P2, P3>): String =
+                    parameter1.sPrefix(parameters.first) +
                             parameter2.sPrefix(parameters.second) +
                             parameter3.sPrefix(parameters.third)
-                }
-        }
+            }
     }
 
 }

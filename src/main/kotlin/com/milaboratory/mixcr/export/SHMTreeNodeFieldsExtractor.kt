@@ -27,7 +27,6 @@ object SHMTreeNodeFieldsExtractor {
             Order.treeNodeSpecific + 100,
             "-nodeId",
             "Node id in SHM tree",
-            "Node id",
             "nodeId"
         ) {
             it.id.toString()
@@ -37,7 +36,6 @@ object SHMTreeNodeFieldsExtractor {
             Order.treeNodeSpecific + 150,
             "-isObserved",
             "Is node have clones. All other nodes are reconstructed by algorithm",
-            "Is observed",
             "isObserved"
         ) {
             when {
@@ -49,7 +47,6 @@ object SHMTreeNodeFieldsExtractor {
             Order.treeNodeSpecific + 200,
             "-parentId",
             "Parent node id in SHM tree",
-            "Parent id",
             "parentId"
         ) {
             it.parentId?.toString() ?: NULL
@@ -59,10 +56,7 @@ object SHMTreeNodeFieldsExtractor {
             Order.treeNodeSpecific + 300,
             "-distance",
             "Distance from another node",
-            baseOnArg(
-                hPrefix = { "Distance from $it" },
-                sPrefix = { base -> "DistanceFrom${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
-            )
+            baseOnArg { base -> "DistanceFrom${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
         ) { node, base ->
             node.distanceFrom(base)?.toString() ?: NULL
         }
@@ -71,7 +65,6 @@ object SHMTreeNodeFieldsExtractor {
             Order.cloneSpecific + 50,
             "-fileName",
             "Name of clns file with sample",
-            "File name",
             "fileName"
         ) {
             it.clone?.fileName ?: NULL
@@ -82,7 +75,7 @@ object SHMTreeNodeFieldsExtractor {
             "-nFeature",
             "Export nucleotide sequence of specified gene feature.\n" +
                     "If second arg is 'node', then feature will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
-            baseGeneFeatureArg("N. Seq. ", "nSeq"),
+            baseGeneFeatureArg("nSeq"),
             baseOrNodeArg()
         ) { node, geneFeature, what ->
             node.mutationsFromGermlineTo(what)
@@ -95,7 +88,7 @@ object SHMTreeNodeFieldsExtractor {
             "-aaFeature",
             "Export amino acid sequence of specified gene feature.\n" +
                     "If second arg is 'node', than feature will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
-            baseGeneFeatureArg("AA. Seq. ", "aaSeq"),
+            baseGeneFeatureArg("aaSeq"),
             baseOrNodeArg()
         ) { node, geneFeature, what ->
             node.mutationsFromGermlineTo(what)
@@ -108,7 +101,7 @@ object SHMTreeNodeFieldsExtractor {
             "-lengthOf",
             "Export length of specified gene feature.\n" +
                     "If second arg is 'node', than feature length will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}",
-            baseGeneFeatureArg("Length of ", "lengthOf")
+            baseGeneFeatureArg("lengthOf")
         ) { node, geneFeature ->
             node.mutationsFromGermline()
                 .targetNSequence(geneFeature)?.size()
@@ -119,7 +112,7 @@ object SHMTreeNodeFieldsExtractor {
             Order.`-nMutations`,
             "-nMutations",
             "Extract nucleotide mutations from specific node for specific gene feature.",
-            baseGeneFeatureArg("N. Mutations in ", "nMutations"),
+            baseGeneFeatureArg("nMutations"),
             baseOnArg(),
             validateArgs = { feature, _ ->
                 checkFeaturesForAlignment(feature)
@@ -135,7 +128,7 @@ object SHMTreeNodeFieldsExtractor {
             Order.`-nMutationsRelative`,
             "-nMutationsRelative",
             "Extract nucleotide mutations from specific node for specific gene feature relative to another feature.",
-            baseGeneFeatureArg("N. Mutations in ", "nMutationsIn"),
+            baseGeneFeatureArg("nMutationsIn"),
             relativeGeneFeatureArg(),
             baseOnArg(),
             validateArgs = { feature, relativeTo, _ ->
@@ -153,7 +146,7 @@ object SHMTreeNodeFieldsExtractor {
             Order.`-aaMutations`,
             "-aaMutations",
             "Extract amino acid mutations from specific node for specific gene feature",
-            baseGeneFeatureArg("AA. Mutations in ", "aaMutations"),
+            baseGeneFeatureArg("aaMutations"),
             baseOnArg(),
             validateArgs = { feature, _ ->
                 checkFeaturesForAlignment(feature)
@@ -168,7 +161,7 @@ object SHMTreeNodeFieldsExtractor {
             Order.`-aaMutationsRelative`,
             "-aaMutationsRelative",
             "Extract amino acid mutations from specific node for specific gene feature relative to another feature.",
-            baseGeneFeatureArg("AA. Mutations in ", "aaMutations"),
+            baseGeneFeatureArg("aaMutations"),
             relativeGeneFeatureArg(),
             baseOnArg(),
             validateArgs = { feature, relativeTo, _ ->
@@ -188,7 +181,7 @@ object SHMTreeNodeFieldsExtractor {
             Order.`-mutationsDetailed`,
             "-mutationsDetailed",
             "Detailed list of nucleotide and corresponding amino acid mutations from specific node. $detailedMutationsFormat",
-            baseGeneFeatureArg("Detailed mutations in ", "mutationsDetailedIn"),
+            baseGeneFeatureArg("mutationsDetailedIn"),
             baseOnArg(),
             validateArgs = { feature, _ ->
                 checkFeaturesForAlignment(feature)
@@ -203,7 +196,7 @@ object SHMTreeNodeFieldsExtractor {
             Order.`-mutationsDetailedRelative`,
             "-mutationsDetailedRelative",
             "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. $detailedMutationsFormat",
-            baseGeneFeatureArg("Detailed mutations in ", "mutationsDetailedIn"),
+            baseGeneFeatureArg("mutationsDetailedIn"),
             relativeGeneFeatureArg(),
             baseOnArg(),
             validateArgs = { feature, relativeTo, _ ->
@@ -217,7 +210,7 @@ object SHMTreeNodeFieldsExtractor {
     }
 }
 
-private fun baseGeneFeatureArg(hPrefix: String, sPrefix: String): CommandArg<GeneFeature> = CommandArg(
+private fun baseGeneFeatureArg(sPrefix: String): CommandArg<GeneFeature> = CommandArg(
     "<gene_feature>",
     { _, arg ->
         GeneFeature.parse(arg).also {
@@ -225,10 +218,8 @@ private fun baseGeneFeatureArg(hPrefix: String, sPrefix: String): CommandArg<Gen
                 "$cmdArgName doesn't support composite features"
             }
         }
-    },
-    { hPrefix + GeneFeature.encode(it) },
-    { sPrefix + GeneFeature.encode(it) }
-)
+    }
+) { sPrefix + GeneFeature.encode(it) }
 
 private fun relativeGeneFeatureArg(): CommandArg<GeneFeature> = CommandArg(
     "<relative_to_gene_feature>",
@@ -238,13 +229,10 @@ private fun relativeGeneFeatureArg(): CommandArg<GeneFeature> = CommandArg(
                 "$cmdArgName doesn't support composite features"
             }
         }
-    },
-    { "relative to " + GeneFeature.encode(it) },
-    { "Relative" + GeneFeature.encode(it) }
-)
+    }
+) { "Relative" + GeneFeature.encode(it) }
 
 private fun baseOnArg(
-    hPrefix: (Base) -> String = { "based on $it" },
     sPrefix: (Base) -> String = { base -> "BasedOn${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
 ): CommandArg<Base> = CommandArg(
     "<${Base.germline}|${Base.mrca}|${Base.parent}>",
@@ -254,12 +242,10 @@ private fun baseOnArg(
         }
         Base.valueOf(arg)
     },
-    hPrefix,
     sPrefix
 )
 
 private fun baseOrNodeArg(
-    hPrefix: (Base?) -> String = { base -> " of ${base?.name ?: "node"}" },
     sPrefix: (Base?) -> String = { base -> "of${(base?.name ?: "node").replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
 ): CommandArg<Base?> = CommandArg(
     "<${Base.germline}|${Base.mrca}|${Base.parent}|node>",
@@ -272,7 +258,6 @@ private fun baseOrNodeArg(
             else -> Base.valueOf(arg)
         }
     },
-    hPrefix,
     sPrefix
 )
 

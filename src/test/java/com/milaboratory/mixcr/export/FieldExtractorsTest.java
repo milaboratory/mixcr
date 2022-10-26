@@ -13,14 +13,12 @@ package com.milaboratory.mixcr.export;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.Util;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.tests.TargetBuilder;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import io.repseq.core.*;
 import org.apache.commons.math3.random.Well44497b;
@@ -28,12 +26,10 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ListIterator;
 
-import static com.milaboratory.mixcr.export.OutputMode.HumanFriendly;
 import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
 
 public class FieldExtractorsTest {
@@ -62,7 +58,7 @@ public class FieldExtractorsTest {
                 Arrays.stream(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE.getFields())
                         .filter(it -> it.getCmdArgName().equals("-defaultAnchorPoints"))
                         .findFirst()
-                        .map(it -> it.create(HumanFriendly, dummyHeader(), new String[0]))
+                        .map(it -> it.create(dummyHeader(), new String[0]))
                         .orElseThrow(IllegalArgumentException::new);
 
         F6 goAssert = new F6() {

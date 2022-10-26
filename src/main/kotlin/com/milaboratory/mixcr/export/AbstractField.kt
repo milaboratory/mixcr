@@ -17,19 +17,17 @@ import com.milaboratory.mixcr.cli.logger
 
 abstract class AbstractField<T : Any> : Field<T> {
     protected abstract fun create1(
-        outputMode: OutputMode,
         headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T>
 
     final override fun create(
-        outputMode: OutputMode,
         headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> {
         deprecation?.let { deprecation ->
             logger.warn(deprecation)
         }
-        return create1(outputMode, headerData, args)
+        return create1(headerData, args)
     }
 }

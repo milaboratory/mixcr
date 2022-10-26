@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
-import com.milaboratory.mixcr.export.OutputMode.*
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
 import picocli.CommandLine
@@ -72,8 +71,7 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
     /** Creates field extractors from field descriptions */
     fun createExtractors(
         fields: List<ExportFieldDescription>,
-        header: MiXCRHeader,
-        mode: OutputMode
+        header: MiXCRHeader
     ): List<FieldExtractor<T>> =
         fields.map { fieldDescr ->
             val eField = fieldsMap[fieldDescr.field.lowercase()]
@@ -86,12 +84,12 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
                                 (fieldDescr.args.size == 1 &&
                                         (fieldDescr.args[0].lowercase() in arrayOf("true", "false")))
                     )
-                    eField.create(mode, header, emptyArray())
+                    eField.create(header, emptyArray())
                 }
 
                 else -> {
                     require(fieldDescr.args.size == eField.nArguments)
-                    eField.create(mode, header, fieldDescr.args.toTypedArray())
+                    eField.create(header, fieldDescr.args.toTypedArray())
                 }
             }
         }
@@ -151,7 +149,7 @@ abstract class FieldExtractorsFactory<T : Any> {
         if (fields.isEmpty()) {
             fields = presets[defaultPreset]!!
         }
-        return fields.flatMap { fieldData -> extract(fieldData, header, ScriptingFriendly) }
+        return fields.flatMap { fieldData -> extract(fieldData, header) }
     }
 
     fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec, addPresetOptions: Boolean) {
@@ -221,8 +219,7 @@ abstract class FieldExtractorsFactory<T : Any> {
 
     fun extract(
         cmd: FieldCommandArgs,
-        header: MiXCRHeader,
-        mode: OutputMode
+        header: MiXCRHeader
     ): List<FieldExtractor<T>> {
         val field = fields.firstOrNull { f -> cmd.field == f.cmdArgName }
         field ?: throw IllegalArgumentException("illegal field: " + cmd.field)
@@ -231,13 +228,13 @@ abstract class FieldExtractorsFactory<T : Any> {
                 require(
                     cmd.args.isEmpty() || (cmd.args.size == 1 && (cmd.args[0].lowercase() in arrayOf("true", "false")))
                 )
-                listOf(field.create(mode, header, emptyArray()))
+                listOf(field.create(header, emptyArray()))
             }
 
             else -> buildList {
                 var i = 0
                 while (i < cmd.args.size) {
-                    add(field.create(mode, header, cmd.args.copyOfRange(i, i + field.nArguments)))
+                    add(field.create(header, cmd.args.copyOfRange(i, i + field.nArguments)))
                     i += field.nArguments
                 }
             }

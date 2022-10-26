@@ -12,14 +12,11 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
-import com.milaboratory.mixcr.export.OutputMode.HumanFriendly
-import com.milaboratory.mixcr.export.OutputMode.ScriptingFriendly
 
 abstract class FieldParameterless<T : Any> protected constructor(
     override val priority: Int,
     override val cmdArgName: String,
     override val description: String,
-    private val hHeader: String,
     private val sHeader: String,
     override val deprecation: String? = null
 ) : AbstractField<T>() {
@@ -27,17 +24,11 @@ abstract class FieldParameterless<T : Any> protected constructor(
 
     protected abstract fun extract(`object`: T): String
 
-    fun getHeader(outputMode: OutputMode): String = when (outputMode) {
-        HumanFriendly -> hHeader
-        ScriptingFriendly -> sHeader
-    }
-
     override fun create1(
-        outputMode: OutputMode,
         headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> = object : FieldExtractor<T> {
-        override val header = getHeader(outputMode)
+        override val header = sHeader
         override fun extractValue(obj: T): String = extract(obj)
     }
 
@@ -48,15 +39,13 @@ abstract class FieldParameterless<T : Any> protected constructor(
             priority: Int,
             command: String,
             description: String,
-            hHeader: String,
             sHeader: String,
             deprecation: String? = null,
             extractValue: (T) -> String
-        ) = object : FieldParameterless<T>(
+        ): FieldParameterless<T> = object : FieldParameterless<T>(
             priority,
             command,
             description,
-            hHeader,
             sHeader,
             deprecation
         ) {

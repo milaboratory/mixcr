@@ -29,7 +29,6 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.primitivio.filter
@@ -126,11 +125,7 @@ object CommandExportAlignments {
 
                 InfoWriter.create(
                     outputFile,
-                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
-                        params.fields,
-                        info,
-                        OutputMode.ScriptingFriendly
-                    ),
+                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(params.fields, info),
                     !params.noHeader
                 ).use { writer ->
                     val reader = data.port

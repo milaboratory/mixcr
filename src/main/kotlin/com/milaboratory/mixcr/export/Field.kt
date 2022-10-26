@@ -20,7 +20,7 @@ interface Field<in T : Any> {
     val deprecation: String?
     val nArguments: Int
     val metaVars: String
-    fun create(outputMode: OutputMode, headerData: MiXCRHeader, args: Array<String>): FieldExtractor<T>
+    fun create(headerData: MiXCRHeader, args: Array<String>): FieldExtractor<T>
 }
 
 fun <T : Any, R : Any> Field<T>.fromProperty(
@@ -35,11 +35,10 @@ fun <T : Any, R : Any> Field<T>.fromProperty(
     override val metaVars: String = this@fromProperty.metaVars
 
     override fun create(
-        outputMode: OutputMode,
         headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<R> {
-        val delegate = this@fromProperty.create(outputMode, headerData, args)
+        val delegate = this@fromProperty.create(headerData, args)
         return object : FieldExtractor<R> {
             override val header: String = delegate.header
             override fun extractValue(obj: R): String {
