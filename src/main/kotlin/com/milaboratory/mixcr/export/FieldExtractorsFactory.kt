@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
 import picocli.CommandLine
@@ -22,7 +23,7 @@ import java.io.FileReader
 import java.util.*
 
 abstract class FieldExtractorsFactoryNew<T : Any> {
-    val fields: Array<Field<T>> by lazy {
+    val fields: Array<FieldsCollection<T>> by lazy {
         val initialized = allAvailableFields()
         check(initialized.map { it.priority }.distinct().size == initialized.size) {
             initialized.groupBy { it.priority }.values
@@ -41,7 +42,7 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
     fun getNArgsForField(fieldName: String) =
         (fieldsMap[fieldName.lowercase()] ?: throw IllegalArgumentException("No such field: $fieldName")).nArguments
 
-    protected abstract fun allAvailableFields(): List<Field<T>>
+    protected abstract fun allAvailableFields(): List<FieldsCollection<T>>
 
     fun addOptionsToSpec(spec: CommandLine.Model.CommandSpec) {
         val argGroup = ArgGroupSpec.builder()
@@ -73,9 +74,13 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
         fields: List<ExportFieldDescription>,
         header: MiXCRHeader
     ): List<FieldExtractor<T>> =
-        fields.map { fieldDescr ->
+        fields.flatMap { fieldDescr ->
             val eField = fieldsMap[fieldDescr.field.lowercase()]
                 ?: throw IllegalArgumentException("No field ${fieldDescr.field}.")
+
+            eField.deprecation?.let { deprecation ->
+                logger.warn(deprecation)
+            }
 
             when (eField.nArguments) {
                 0 -> {
@@ -84,12 +89,12 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
                                 (fieldDescr.args.size == 1 &&
                                         (fieldDescr.args[0].lowercase() in arrayOf("true", "false")))
                     )
-                    eField.create(header, emptyArray())
+                    eField.createFields(header, emptyArray())
                 }
 
                 else -> {
                     require(fieldDescr.args.size == eField.nArguments)
-                    eField.create(header, fieldDescr.args.toTypedArray())
+                    eField.createFields(header, fieldDescr.args.toTypedArray())
                 }
             }
         }
@@ -121,7 +126,7 @@ abstract class FieldExtractorsFactoryNew<T : Any> {
 }
 
 abstract class FieldExtractorsFactory<T : Any> {
-    val fields: Array<Field<T>> by lazy {
+    val fields: Array<FieldsCollection<T>> by lazy {
         val initialized = allAvailableFields()
         check(initialized.map { it.priority }.distinct().size == initialized.size) {
             initialized.groupBy { it.priority }.values
@@ -137,7 +142,7 @@ abstract class FieldExtractorsFactory<T : Any> {
 
     protected abstract val defaultPreset: String
 
-    protected abstract fun allAvailableFields(): List<Field<T>>
+    protected abstract fun allAvailableFields(): List<FieldsCollection<T>>
 
     fun createExtractors(
         header: MiXCRHeader,
@@ -223,18 +228,22 @@ abstract class FieldExtractorsFactory<T : Any> {
     ): List<FieldExtractor<T>> {
         val field = fields.firstOrNull { f -> cmd.field == f.cmdArgName }
         field ?: throw IllegalArgumentException("illegal field: " + cmd.field)
+
+        field.deprecation?.let { deprecation ->
+            logger.warn(deprecation)
+        }
         return when (field.nArguments) {
             0 -> {
                 require(
                     cmd.args.isEmpty() || (cmd.args.size == 1 && (cmd.args[0].lowercase() in arrayOf("true", "false")))
                 )
-                listOf(field.create(header, emptyArray()))
+                field.createFields(header, emptyArray())
             }
 
             else -> buildList {
                 var i = 0
                 while (i < cmd.args.size) {
-                    add(field.create(header, cmd.args.copyOfRange(i, i + field.nArguments)))
+                    addAll(field.createFields(header, cmd.args.copyOfRange(i, i + field.nArguments)))
                     i += field.nArguments
                 }
             }

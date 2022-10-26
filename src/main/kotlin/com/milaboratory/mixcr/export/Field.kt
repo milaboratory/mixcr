@@ -13,20 +13,27 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 
-interface Field<in T : Any> {
+abstract class Field<in T : Any> : FieldsCollection<T> {
+    abstract fun create(headerData: MiXCRHeader, args: Array<String>): FieldExtractor<T>
+
+    final override fun createFields(headerData: MiXCRHeader, args: Array<String>): List<FieldExtractor<T>> =
+        listOf(create(headerData, args))
+}
+
+interface FieldsCollection<in T : Any> {
     val priority: Int
     val cmdArgName: String
     val description: String
     val deprecation: String?
     val nArguments: Int
     val metaVars: String
-    fun create(headerData: MiXCRHeader, args: Array<String>): FieldExtractor<T>
+    fun createFields(headerData: MiXCRHeader, args: Array<String>): List<FieldExtractor<T>>
 }
 
-fun <T : Any, R : Any> Field<T>.fromProperty(
+fun <T : Any, R : Any> FieldsCollection<T>.fromProperty(
     descriptionMapper: (String) -> String = { it },
     property: R.() -> T?
-): Field<R> = object : Field<R> {
+): FieldsCollection<R> = object : FieldsCollection<R> {
     override val priority: Int = this@fromProperty.priority
     override val cmdArgName: String = this@fromProperty.cmdArgName
     override val description: String = descriptionMapper(this@fromProperty.description)
@@ -34,16 +41,18 @@ fun <T : Any, R : Any> Field<T>.fromProperty(
     override val nArguments: Int = this@fromProperty.nArguments
     override val metaVars: String = this@fromProperty.metaVars
 
-    override fun create(
+    override fun createFields(
         headerData: MiXCRHeader,
         args: Array<String>
-    ): FieldExtractor<R> {
-        val delegate = this@fromProperty.create(headerData, args)
-        return object : FieldExtractor<R> {
-            override val header: String = delegate.header
-            override fun extractValue(obj: R): String {
-                val propertyVal = property(obj) ?: return NULL
-                return delegate.extractValue(propertyVal)
+    ): List<FieldExtractor<R>> {
+        val delegates = this@fromProperty.createFields(headerData, args)
+        return delegates.map { delegate ->
+            object : FieldExtractor<R> {
+                override val header: String = delegate.header
+                override fun extractValue(obj: R): String {
+                    val propertyVal = property(obj) ?: return NULL
+                    return delegate.extractValue(propertyVal)
+                }
             }
         }
     }

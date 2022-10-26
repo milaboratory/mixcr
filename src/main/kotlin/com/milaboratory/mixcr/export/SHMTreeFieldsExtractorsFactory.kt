@@ -137,8 +137,8 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactory<SHMTreeForPostana
         }
 }
 
-private fun baseGeneFeatureArg(sPrefix: String): FieldWithParameters.CommandArg<GeneFeature> =
-    FieldWithParameters.CommandArg(
+private fun baseGeneFeatureArg(sPrefix: String): CommandArg<GeneFeature> =
+    CommandArg(
         "<gene_feature>",
         { _, arg ->
             GeneFeature.parse(arg).also {
@@ -151,7 +151,7 @@ private fun baseGeneFeatureArg(sPrefix: String): FieldWithParameters.CommandArg<
 
 private fun baseArg(
     sPrefix: (Base) -> String = { base -> "Of${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
-): FieldWithParameters.CommandArg<Base> = FieldWithParameters.CommandArg(
+): CommandArg<Base> = CommandArg(
     "<${Base.germline}|${Base.mrca}>",
     { _, arg ->
         require(arg in arrayOf(Base.germline.name, Base.mrca.name)) {

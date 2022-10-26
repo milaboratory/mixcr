@@ -15,7 +15,6 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.mutations.MutationsUtil
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
-import com.milaboratory.mixcr.export.FieldWithParameters.CommandArg
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
@@ -261,7 +260,7 @@ private fun baseOrNodeArg(
     sPrefix
 )
 
-private fun AbstractField<*>.checkFeaturesForAlignment(
+private fun Field<*>.checkFeaturesForAlignment(
     feature: GeneFeature,
     relativeTo: GeneFeature = feature
 ) {

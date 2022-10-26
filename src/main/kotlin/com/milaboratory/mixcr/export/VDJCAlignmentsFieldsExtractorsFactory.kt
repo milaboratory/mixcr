@@ -16,10 +16,10 @@ import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.util.GlobalObjectMappers
 
 object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactoryNew<VDJCAlignments>() {
-    override fun allAvailableFields(): List<Field<VDJCAlignments>> =
+    override fun allAvailableFields(): List<FieldsCollection<VDJCAlignments>> =
         VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) + vdjcAlignmentsFields()
 
-    private fun vdjcAlignmentsFields(): List<Field<VDJCAlignments>> = buildList {
+    private fun vdjcAlignmentsFields(): List<FieldsCollection<VDJCAlignments>> = buildList {
         this += FieldParameterless(
             Order.readIds + 100,
             "-readId",

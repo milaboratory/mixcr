@@ -13,22 +13,21 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 
-class FieldParameterless<T : Any>(
+class FieldsCollectionParameterless<T : Any>(
     override val priority: Int,
     override val cmdArgName: String,
     override val description: String,
-    private val sHeader: String,
+    private val delegate: Field<T>,
     override val deprecation: String? = null,
-    private val extract: (T) -> String
-) : Field<T>() {
+    private val argsSupplier: MiXCRHeader.() -> List<Array<String>>
+) : FieldsCollection<T> {
     override val nArguments: Int = 0
 
-    override fun create(
+    override fun createFields(
         headerData: MiXCRHeader,
         args: Array<String>
-    ): FieldExtractor<T> = object : FieldExtractor<T> {
-        override val header = sHeader
-        override fun extractValue(obj: T): String = extract(obj)
+    ): List<FieldExtractor<T>> = argsSupplier(headerData).map { argsForDelegate ->
+        delegate.create(headerData, argsForDelegate)
     }
 
     override val metaVars: String = ""

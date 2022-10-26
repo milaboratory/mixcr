@@ -13,18 +13,18 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 
-abstract class FieldWithParameters<T : Any, P>(
+abstract class FieldWithParameters<T : Any, P> private constructor(
     override val priority: Int,
     override val cmdArgName: String,
     override val description: String,
     override val nArguments: Int,
     override val deprecation: String? = null
-) : AbstractField<T>() {
+) : Field<T>() {
     protected abstract fun getParameters(headerData: MiXCRHeader, args: Array<String>): P
     protected abstract fun getHeader(parameters: P): String
     protected abstract fun extractValue(`object`: T, parameters: P): String
 
-    override fun create1(
+    override fun create(
         headerData: MiXCRHeader,
         args: Array<String>
     ): FieldExtractor<T> {
@@ -38,19 +38,13 @@ abstract class FieldWithParameters<T : Any, P>(
         }
     }
 
-    class CommandArg<T>(
-        val meta: String,
-        val decodeAndValidate: AbstractField<*>.(MiXCRHeader, String) -> T,
-        val sPrefix: (T) -> String
-    )
-
     companion object {
         operator fun <T : Any, P1> invoke(
             priority: Int,
             command: String,
             description: String,
             parameter1: CommandArg<P1>,
-            validateArgs: AbstractField<T>.(P1) -> Unit = {},
+            validateArgs: Field<T>.(P1) -> Unit = {},
             deprecation: String? = null,
             extract: (T, P1) -> String
         ): Field<T> = object : FieldWithParameters<T, P1>(priority, command, description, 1, deprecation) {
@@ -74,7 +68,7 @@ abstract class FieldWithParameters<T : Any, P>(
             description: String,
             parameter1: CommandArg<P1>,
             parameter2: CommandArg<P2>,
-            validateArgs: AbstractField<T>.(P1, P2) -> Unit = { _, _ -> },
+            validateArgs: Field<T>.(P1, P2) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: (T, P1, P2) -> String
         ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(priority, command, description, 2, deprecation) {
@@ -101,7 +95,7 @@ abstract class FieldWithParameters<T : Any, P>(
             parameter1: CommandArg<P1>,
             parameter2: CommandArg<P2>,
             parameter3: CommandArg<P3>,
-            validateArgs: AbstractField<T>.(P1, P2, P3) -> Unit = { _, _, _ -> },
+            validateArgs: Field<T>.(P1, P2, P3) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: (T, P1, P2, P3) -> String
         ): Field<T> =

@@ -72,7 +72,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>
 
     override val defaultPreset: String = "full"
 
-    override fun allAvailableFields(): List<Field<Wrapper>> = buildList {
+    override fun allAvailableFields(): List<FieldsCollection<Wrapper>> = buildList {
         this += SHMTreeFieldsExtractorsFactory.treeFields(false).map { it.fromProperty { tree } }
         this += SHMTreeNodeFieldsExtractor.nodeFields().map { it.fromProperty { node } }
         this += (VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = true) +
