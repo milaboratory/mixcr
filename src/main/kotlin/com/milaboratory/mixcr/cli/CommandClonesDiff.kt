@@ -31,10 +31,10 @@ import java.nio.file.Path
     description = ["Calculates the difference between two .clns files."]
 )
 class CommandClonesDiff : MiXCRCommandWithOutputs() {
-    @Parameters(paramLabel = "input1.clns", index = "0")
+    @Parameters(paramLabel = "input1.(clns|clna)", index = "0")
     lateinit var in1: Path
 
-    @Parameters(paramLabel = "input2.clns", index = "1")
+    @Parameters(paramLabel = "input2.(clns|clna)", index = "1")
     lateinit var in2: Path
 
     @Parameters(
@@ -84,6 +84,11 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
 
     override val outputFiles
         get() = listOfNotNull(report)
+
+    override fun validate() {
+        ValidationException.requireFileType(in1, InputFileType.CLNX)
+        ValidationException.requireFileType(in2, InputFileType.CLNX)
+    }
 
     override fun run0() {
         (report?.let { PrintStream(it.toFile()) } ?: System.out).use { report ->

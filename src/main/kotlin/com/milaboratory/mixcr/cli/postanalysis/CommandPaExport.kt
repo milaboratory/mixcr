@@ -13,7 +13,9 @@
 package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommand
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -59,6 +61,10 @@ abstract class CommandPaExport : MiXCRCommand {
      * Get full PA result
      */
     protected fun getPaResult(): PaResult = paResultFromConstructor ?: parsedPaResultFromInput
+
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.JSON, InputFileType.JSON_GZ)
+    }
 
     override fun run0() {
         val chainsToProcess = chains?.run { ChainsFilter.parseChainsList(chains) }

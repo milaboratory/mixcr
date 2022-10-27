@@ -22,7 +22,11 @@ import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.io.CompressionType
-import com.milaboratory.core.io.sequence.*
+import com.milaboratory.core.io.sequence.ConcatenatingSingleReader
+import com.milaboratory.core.io.sequence.PairedReader
+import com.milaboratory.core.io.sequence.SequenceRead
+import com.milaboratory.core.io.sequence.SequenceReaderCloseable
+import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
@@ -35,33 +39,72 @@ import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.mitool.helpers.mapUnchunked
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.mitool.pattern.search.*
+import com.milaboratory.mitool.pattern.search.ReadSearchMode
+import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
+import com.milaboratory.mitool.pattern.search.ReadSearchSettings
+import com.milaboratory.mitool.pattern.search.ReadTagShortcut
+import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mitool.use
-import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.AlignMixins.LimitInput
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParams
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.mixcr.basictypes.*
-import com.milaboratory.mixcr.basictypes.tag.*
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.*
+import com.milaboratory.mixcr.basictypes.MiXCRFooter
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.SequenceHistory
+import com.milaboratory.mixcr.basictypes.VDJCAlignments
+import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
+import com.milaboratory.mixcr.basictypes.VDJCHit
+import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
+import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.SingleEndFastq
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.Good
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotAligned
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotParsed
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.primitivio.*
-import com.milaboratory.util.*
+import com.milaboratory.primitivio.buffered
+import com.milaboratory.primitivio.chunked
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.mapChunksInParallel
+import com.milaboratory.primitivio.ordered
+import com.milaboratory.primitivio.unchunked
+import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.LightFileDescriptor
+import com.milaboratory.util.ReportHelper
+import com.milaboratory.util.ReportUtil
+import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
-import io.repseq.core.GeneFeature.*
+import io.repseq.core.GeneFeature.VRegion
+import io.repseq.core.GeneFeature.VRegionWithP
+import io.repseq.core.GeneFeature.encode
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
+import picocli.CommandLine.Model.PositionalParamSpec
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.FileInputStream
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -93,13 +136,29 @@ object CommandAlign {
         override val command get() = MiXCRCommandDescriptor.align
     }
 
-    private const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
+    fun checkInputs(paths: List<Path>) {
+        when (paths.size) {
+            1 -> ValidationException.requireFileType(
+                paths[0],
+                InputFileType.FASTQ,
+                InputFileType.FASTA,
+                InputFileType.BAM
+            )
+            2 -> {
+                ValidationException.requireFileType(paths[0], InputFileType.FASTQ)
+                ValidationException.requireFileType(paths[1], InputFileType.FASTQ)
+            }
+            else -> throw ValidationException("Required 1 or 2 input files, got $paths")
+        }
+    }
+
+    const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
 
     private const val outputLabel = "alignments.vdjca"
 
     fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(Cmd::class.java)
         .addPositional(
-            CommandLine.Model.PositionalParamSpec.builder()
+            PositionalParamSpec.builder()
                 .index("0")
                 .required(false)
                 .arity("0..*")
@@ -114,7 +173,7 @@ object CommandAlign {
                 .build()
         )
         .addPositional(
-            CommandLine.Model.PositionalParamSpec.builder()
+            PositionalParamSpec.builder()
                 .index("1")
                 .required(false)
                 .arity("0..*")
@@ -324,9 +383,11 @@ object CommandAlign {
         )
         private val inOut: List<Path> = mutableListOf()
 
+        private val outputFile get() = inOut.last()
+
         override val inputFiles get() = inOut.dropLast(1)
 
-        override val outputFiles get() = inOut.takeLast(1)
+        override val outputFiles get() = listOf(outputFile)
 
         @Option(
             description = ["Size of buffer for FASTQ readers in bytes. Default: 4Mb"],
@@ -440,24 +501,20 @@ object CommandAlign {
             BAM(true, false)
         }
 
-        private val fastqRegex = Regex("\\.f(?:ast)?q(?:\\.gz)?$", RegexOption.IGNORE_CASE)
-        private val fastaRegex = Regex("\\.f(?:ast)?a$", RegexOption.IGNORE_CASE)
-        private val bamRegex = Regex("\\.[bs]am$", RegexOption.IGNORE_CASE)
-
         private val inputType: InputType by lazy {
             val first = inputFilesExpanded.first()
             if (first.size == 1) {
-                val f0 = first[0].name
+                val f0 = first[0]
                 when {
-                    f0.contains(fastqRegex) -> SingleEndFastq
-                    f0.contains(fastaRegex) -> Fasta
-                    f0.contains(bamRegex) -> BAM
+                    f0.matches(InputFileType.FASTQ) -> SingleEndFastq
+                    f0.matches(InputFileType.FASTA) -> Fasta
+                    f0.matches(InputFileType.BAM) -> BAM
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
             } else if (first.size == 2) {
-                val f0 = first[0].name
-                val f1 = first[0].name
-                if (f0.contains(fastqRegex) && f1.contains(fastqRegex))
+                val f0 = first[0]
+                val f1 = first[0]
+                if (f0.matches(InputFileType.FASTQ) && f0.matches(InputFileType.FASTQ))
                     PairedEndFastq
                 else
                     throw ValidationException("Only fastq supports paired end input, can't recognise: $f0 + $f1")
@@ -547,6 +604,9 @@ object CommandAlign {
         override fun validate() {
             if (inOut.size > 3) throw ValidationException("Too many input files.")
             if (inOut.size < 2) throw ValidationException("Output file not specified.")
+
+            checkInputs(inputFiles)
+            ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
 
             fun checkFailedReadsOptions(optionPrefix: String, r1: Path?, r2: Path?) {
                 if (r1 != null) {
@@ -664,7 +724,6 @@ object CommandAlign {
 
             // Attaching report to aligner
             aligner.setEventsListener(reportBuilder)
-            val outputFile = outputFiles[0]
             use(
                 createReader(),
                 alignedWriter(outputFile),

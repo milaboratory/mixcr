@@ -34,6 +34,10 @@ class CommandVersionInfo : MiXCRCommand() {
     @Parameters(paramLabel = "input_file.(vdjca|clns|clna|shmt)")
     lateinit var inputFile: Path
 
+    override fun validate() {
+        ValidationException.requireFileType(inputFile, InputFileType.VDJCA, InputFileType.CLNX, InputFileType.SHMT)
+    }
+
     override fun run0() {
         when (IOUtil.extractFileType(inputFile)) {
             VDJCA -> VDJCAlignmentsReader(inputFile).use { reader ->

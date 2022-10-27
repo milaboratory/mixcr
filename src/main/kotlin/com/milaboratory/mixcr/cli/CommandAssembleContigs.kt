@@ -149,6 +149,11 @@ object CommandAssembleContigs {
 
         override val outputFiles get() = listOf(outputFile)
 
+        override fun validate() {
+            ValidationException.requireFileType(inputFile, InputFileType.CLNA)
+            ValidationException.requireFileType(outputFile, InputFileType.CLNS)
+        }
+
         override fun run0() {
             val beginTimestamp = System.currentTimeMillis()
 

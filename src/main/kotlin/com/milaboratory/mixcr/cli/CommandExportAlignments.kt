@@ -109,7 +109,7 @@ object CommandExportAlignments {
         )
         var outputFile: Path? = null
             set(value) {
-                ValidationException.requireTSV(value)
+                ValidationException.requireFileType(value, InputFileType.TSV)
                 field = value
             }
 
@@ -118,6 +118,10 @@ object CommandExportAlignments {
 
         override val outputFiles
             get() = listOfNotNull(outputFile)
+
+        override fun validate() {
+            ValidationException.requireFileType(inputFile, InputFileType.VDJCA, InputFileType.CLNA)
+        }
 
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->

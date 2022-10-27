@@ -43,7 +43,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
     @Parameters(paramLabel = "clones.(clns|clna)", index = "0")
     lateinit var input: Path
 
-    @Parameters(paramLabel = "clones.sorted.clns", index = "1")
+    @Parameters(paramLabel = "clones.sorted.(clns|clna)", index = "1")
     lateinit var out: Path
 
     @Option(
@@ -57,6 +57,13 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
 
     override val outputFiles
         get() = listOf(out)
+
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.CLNX)
+        val fileType = arrayOf(InputFileType.CLNS, InputFileType.CLNA).first { input.matches(it) }
+        ValidationException.requireFileType(out, fileType)
+    }
+
 
     override fun run0() {
         when (IOUtil.extractFileType(input)) {

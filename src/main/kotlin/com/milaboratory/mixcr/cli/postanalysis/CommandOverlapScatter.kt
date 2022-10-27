@@ -18,7 +18,9 @@ import com.milaboratory.mixcr.cli.ChainsUtil.name
 import com.milaboratory.mixcr.cli.ChainsUtil.toPath
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter
@@ -44,7 +46,7 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     @Parameters(paramLabel = "cloneset_2.(clns|clna)", index = "1")
     lateinit var in2: Path
 
-    @Parameters(paramLabel = "output.(pdf|eps|png|jpeg)", index = "2")
+    @Parameters(paramLabel = "output.${InputFileType.exportTypesLabel}", index = "2")
     lateinit var out: Path
 
     @Option(
@@ -90,6 +92,12 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
 
     override val outputFiles
         get() = listOf(out)
+
+    override fun validate() {
+        ValidationException.requireFileType(in1, InputFileType.CLNX)
+        ValidationException.requireFileType(in2, InputFileType.CLNX)
+        ValidationException.requireFileType(out, InputFileType.exportTypes)
+    }
 
     override fun run0() {
         val parameters = DownsamplingParameters.parse(

@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.io.path.extension
@@ -31,6 +32,28 @@ class ValidationException(
 
         fun requireJson(path: Path?) {
             requireExtension("Require", path, "json")
+        }
+
+        fun requireFileType(path: Path?, fileType: InputFileType, vararg additional: InputFileType) {
+            requireFileType(path, arrayOf(fileType) + additional)
+        }
+
+        fun requireFileType(path: Path?, fileTypes: Array<InputFileType>) {
+            require(path == null || fileTypes.any { path.matches(it) }) {
+                if (fileTypes.size == 1) {
+                    "Require ${fileTypes.first().name.lowercase()} file type, got $path"
+                } else {
+                    "Require one of ${fileTypes.joinToString(", ") { it.name.lowercase() }} file types, got $path"
+                }
+            }
+        }
+
+        fun requireNoExtension(input: String?) {
+            if (input == null) return
+            val asPath = Paths.get(input)
+            require(InputFileType.values().none { asPath.matches(it) }) {
+                "Must be without extension, got $input"
+            }
         }
 
         fun requireExtension(prefix: String, path: Path?, vararg extension: String) {

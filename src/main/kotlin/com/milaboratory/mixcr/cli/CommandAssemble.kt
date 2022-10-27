@@ -214,6 +214,11 @@ object CommandAssemble {
          */
         private val reportBuilder = CloneAssemblerReportBuilder()
 
+        override fun validate() {
+            ValidationException.requireFileType(inputFile, InputFileType.VDJCA)
+            ValidationException.requireFileType(outputFile, InputFileType.CLNX)
+        }
+
         override fun run0() {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()

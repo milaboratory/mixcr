@@ -26,6 +26,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteExisting
@@ -35,7 +36,7 @@ import kotlin.io.path.isDirectory
 object CommandAnalyze {
     const val COMMAND_NAME = "analyze"
 
-    private const val inputsLabel = "input_R1.fastq[.gz] [input_R2.fastq[.gz]]"
+    private const val inputsLabel = CommandAlign.inputsLabel
 
     private const val outputLabel = "output_prefix"
 
@@ -149,6 +150,17 @@ object CommandAnalyze {
         /** Provides access to presets, mixins application, etc.. */
         private val paramsResolver = object : MiXCRParamsResolver<MiXCRPipeline>(MiXCRParamsBundle::pipeline) {
             override fun POverridesBuilderOps<MiXCRPipeline>.paramsOverrides() {}
+        }
+
+        override fun validate() {
+            val inputs = inFiles.map { Paths.get(it) }
+            inputs.forEach { input ->
+                if (!input.exists()) {
+                    throw ValidationException("Input file $input doesn't exist.")
+                }
+            }
+            CommandAlign.checkInputs(inputs)
+            ValidationException.requireNoExtension(outSuffix)
         }
 
         override fun run0() {

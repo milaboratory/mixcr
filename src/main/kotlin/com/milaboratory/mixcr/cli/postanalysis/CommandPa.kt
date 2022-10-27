@@ -16,8 +16,10 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.cli.matches
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
@@ -48,6 +50,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         hidden = true
     )
     var inOut: List<Path> = mutableListOf()
+
+    private val output get() = inOut.last()
 
     @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
     var onlyProductive = false
@@ -87,7 +91,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     )
     var metadataFile: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
+            ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
 
@@ -107,7 +111,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     )
     var tablesOut: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
+            ValidationException.requireFileType(value, InputFileType.XSV)
             ValidationException.require(value == null || !value.toString().startsWith(".")) {
                 """cant' start with ".""""
             }
@@ -121,7 +125,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     )
     var preprocOut: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
+            ValidationException.requireFileType(value, InputFileType.XSV)
             ValidationException.require(value == null || !value.toString().startsWith(".")) {
                 """cant' start with ".""""
             }
@@ -137,7 +141,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     var overrides: Map<String, String> = mutableMapOf()
 
     override val inputFiles: List<Path>
-        get() = inOut.subList(0, inOut.size - 1)
+        get() = inOut.dropLast(1)
             .flatMap { path ->
                 when {
                     path.isDirectory() -> path.listDirectoryEntries()
@@ -146,16 +150,17 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
             }
 
     override val outputFiles
-        get() = listOf(inOut.last())
+        get() = listOf(output)
 
     protected val tagsInfo: TagsInfo by lazy {
         extractTagsInfo(inputFiles)
     }
 
     override fun validate() {
-        val out = inOut.last()
-        if (!out.toString().endsWith(".json") && !out.toString().endsWith(".json.gz"))
-            throw ValidationException("Output file name should ends with .json.gz or .json")
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.CLNX)
+        }
+        ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.JSON_GZ)
         try {
             DownsamplingParameters.parse(defaultDownsampling, tagsInfo, dropOutliers, onlyProductive)
         } catch (t: Throwable) {
@@ -180,20 +185,15 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         }
     }
 
-    private fun outBase(): String {
-        val out = inOut.last().toString()
-        return when {
-            out.endsWith(".json.gz") -> out.removeSuffix(".json.gz")
-            out.endsWith(".json") -> out.removeSuffix(".json")
-            else -> throw IllegalArgumentException("output extension is illegal")
-        }
+    private fun outBase(): String = when {
+        output.matches(InputFileType.JSON_GZ) -> output.toString().removeSuffix(".json.gz")
+        output.matches(InputFileType.JSON) -> output.toString().removeSuffix(".json")
+        else -> throw ValidationException("output extension is illegal")
     }
 
     private fun tablesOut(): Path = tablesOut ?: Paths.get("${outBase()}.tsv")
 
     private fun preprocOut(): Path = preprocOut ?: Paths.get("${outBase()}.preproc.tsv")
-
-    private fun outputPath(): Path = inOut.last().toAbsolutePath()
 
     /** Map of columns  */
     protected val metadata: Map<String, List<Any>>? by lazy {
@@ -286,8 +286,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
             }
         }
         val result = PaResult(metadata, isolationGroups, results)
-        Files.createDirectories(outputPath().parent)
-        result.writeJson(outputPath())
+        Files.createDirectories(output.toAbsolutePath().parent)
+        result.writeJson(output)
 
         // export tables & preprocessing summary
         CommandPaExportTables(result, tablesOut()).run0()

@@ -171,7 +171,7 @@ object CommandExportClones {
         )
         var outputFile: Path? = null
             set(value) {
-                ValidationException.requireTSV(value)
+                ValidationException.requireFileType(value, InputFileType.TSV)
                 field = value
             }
 
@@ -180,6 +180,10 @@ object CommandExportClones {
 
         override val outputFiles
             get() = listOfNotNull(outputFile)
+
+        override fun validate() {
+            ValidationException.requireFileType(inputFile, InputFileType.CLNX)
+        }
 
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())

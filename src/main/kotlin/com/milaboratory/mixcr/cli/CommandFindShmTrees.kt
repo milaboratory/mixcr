@@ -122,6 +122,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
     private val clnsFileNames: List<Path>
         get() = inOut.dropLast(1)
+
     private val outputTreesPath: Path
         get() = inOut.last()
 
@@ -216,7 +217,10 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        ValidationException.requireExtension("Output file should have", outputTreesPath, shmFileExtension)
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.CLNS)
+        }
+        ValidationException.requireFileType(outputTreesPath, InputFileType.SHMT)
         if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
             throw ValidationException("First step must be BuildingInitialTrees")
         }
@@ -236,9 +240,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             if (debugDir != null) {
                 logger.warn("argument --debugDir will not be used with --build-from")
             }
-        }
-        inputFiles.forEach { input ->
-            ValidationException.requireExtension("Input should have", input, "clns")
         }
     }
 

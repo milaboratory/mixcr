@@ -146,6 +146,13 @@ object CommandExtend {
         override val outputFiles
             get() = listOf(outputFile)
 
+        override fun validate() {
+            val possibleFileTypes = arrayOf(InputFileType.VDJCA, InputFileType.CLNS, InputFileType.CLNA)
+            ValidationException.requireFileType(inputFile, possibleFileTypes)
+            val fileType = possibleFileTypes.first { inputFile.matches(it) }
+            ValidationException.requireFileType(outputFile, fileType)
+        }
+
         override fun run0() {
             when (IOUtil.extractFileType(inputFile)) {
                 VDJCA -> processVDJCA()

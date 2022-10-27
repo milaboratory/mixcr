@@ -14,7 +14,9 @@ package com.milaboratory.mixcr.cli.qc
 import com.milaboratory.miplots.ExportType
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.miplots.writePDF
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.qc.Coverage.coveragePlot
 import com.milaboratory.primitivio.flatten
 import com.milaboratory.primitivio.mapInParallelOrdered
@@ -38,7 +40,7 @@ class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
     companion object {
         private const val inputsLabel = "sample.vdjca..."
 
-        private const val outputLabel = "coverage.(pdf|eps|png|jpeg)"
+        private const val outputLabel = "coverage.${InputFileType.exportTypesLabel}"
 
         fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcCoverage::class.java)
             .addPositional(
@@ -79,11 +81,20 @@ class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
     @Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])
     var showAlignmentBoundaries = false
 
+    private val output get() = inOut.last()
+
     override val inputFiles
-        get() = inOut.subList(0, inOut.size - 1)
+        get() = inOut.dropLast(1)
 
     override val outputFiles
-        get() = listOf(inOut.last())
+        get() = listOf(output)
+
+    override fun validate() {
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.VDJCA)
+        }
+        ValidationException.requireFileType(output, InputFileType.exportTypes)
+    }
 
     override fun run0() {
         val inputFiles = inputFiles.map { it }
@@ -93,12 +104,11 @@ class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
             }
             .flatten()
             .toList()
-        val out = outputFiles.first()
-        if (ExportType.determine(out) === ExportType.PDF) {
-            writePDF(out, plots)
+        if (ExportType.determine(output) === ExportType.PDF) {
+            writePDF(output, plots)
         } else {
             plots.forEachIndexed { i, plt ->
-                var outStr = outputFiles.first().toString()
+                var outStr = output.toString()
                 val l = outStr.lastIndexOf(".")
                 val suffix = if (i < 3) "R$i" else "Overlap"
                 outStr = "${outStr.substring(0, l)}_$suffix${outStr.substring(l)}"

@@ -65,6 +65,11 @@ class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
     private val cloneIds: IntArray
         get() = ids.sorted().toIntArray()
 
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.CLNA)
+        ValidationException.requireFileType(out, InputFileType.VDJCA)
+    }
+
     override fun run0() {
         ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             VDJCAlignmentsWriter(out).use { writer ->

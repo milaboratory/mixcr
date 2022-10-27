@@ -48,10 +48,14 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         @Option(
             names = ["--mixcr-file"],
             description = ["File that was processed by MiXCR."],
-            paramLabel = "input.(vdjca|clns|clna)>",
+            paramLabel = "<input.(vdjca|clns|clna)>",
             required = true
         )
         var input: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.VDJCA, InputFileType.CLNX)
+                field = value
+            }
     }
 
     @ArgGroup(exclusive = true, multiplicity = "1")
@@ -64,13 +68,13 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     )
     private var outputFile: Path? = null
         set(value) {
-            ValidationException.requireExtension("Output path require", value, "yaml", "yml")
+            ValidationException.requireFileType(value, InputFileType.YAML)
             field = value
         }
 
     override val inputFiles get() = mutableListOf<Path>()
 
-    override val outputFiles get() = outputFile?.let { mutableListOf(it) } ?: mutableListOf()
+    override val outputFiles get() = listOfNotNull(outputFile)
 
     @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
     var pipelineMixins: PipelineMiXCRMixins? = null

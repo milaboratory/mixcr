@@ -48,7 +48,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     )
     var metadata: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
+            ValidationException.requireFileType(value, InputFileType.XSV)
             //TODO validate content
             field = value
         }
@@ -198,7 +198,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     override fun validate() {
         super.validate()
-        ValidationException.requireExtension("Output file should have", out, "pdf")
+        ValidationException.requireFileType(out, InputFileType.PDF)
     }
 
     val alignment by lazy {

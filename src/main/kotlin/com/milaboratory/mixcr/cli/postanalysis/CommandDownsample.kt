@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli.postanalysis
 import com.milaboratory.mitool.helpers.drainToAndClose
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
@@ -71,7 +72,7 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
     )
     var summary: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
+            ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
 
@@ -108,6 +109,13 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         if (summary != null) {
             Files.createDirectories(summary!!.toAbsolutePath().parent)
         }
+    }
+
+    override fun validate() {
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.CLNX)
+        }
+        ValidationException.requireNoExtension(outPath?.toString())
     }
 
     override fun run0() {

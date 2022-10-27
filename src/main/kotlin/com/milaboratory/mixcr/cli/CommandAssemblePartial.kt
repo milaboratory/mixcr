@@ -123,6 +123,11 @@ object CommandAssemblePartial {
         override val outputFiles
             get() = listOf(outputFile)
 
+        override fun validate() {
+            ValidationException.requireFileType(inputFile, InputFileType.VDJCA)
+            ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
+        }
+
         override fun run0() {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()

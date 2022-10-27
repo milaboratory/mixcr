@@ -52,33 +52,49 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     )
     var report: Path? = null
 
-    @Option(
+    @set:Option(
         names = ["-o1", "--only-in-first"],
         description = ["output for alignments contained only in the first .vdjca file"],
         paramLabel = "<path>"
     )
     var onlyFirst: Path? = null
+        set(value) {
+            ValidationException.requireFileType(value, InputFileType.VDJCA)
+            field = value
+        }
 
-    @Option(
+    @set:Option(
         names = ["-o2", "--only-in-second"],
         description = ["output for alignments contained only in the second .vdjca file"],
         paramLabel = "<path>"
     )
     var onlySecond: Path? = null
+        set(value) {
+            ValidationException.requireFileType(value, InputFileType.VDJCA)
+            field = value
+        }
 
-    @Option(
+    @set:Option(
         names = ["-d1", "--diff-from-first"],
         description = ["output for alignments from the first file that are different from those alignments in the second file"],
         paramLabel = "<path>"
     )
     var diff1: Path? = null
+        set(value) {
+            ValidationException.requireFileType(value, InputFileType.VDJCA)
+            field = value
+        }
 
-    @Option(
+    @set:Option(
         names = ["-d2", "--diff-from-second"],
         description = ["output for alignments from the second file that are different from those alignments in the first file"],
         paramLabel = "<path>"
     )
     var diff2: Path? = null
+        set(value) {
+            ValidationException.requireFileType(value, InputFileType.VDJCA)
+            field = value
+        }
 
     @Option(
         names = ["-g", "--gene-feature"],
@@ -101,6 +117,11 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
 
     override val outputFiles
         get() = listOfNotNull(report)
+
+    override fun validate() {
+        ValidationException.requireFileType(in1, InputFileType.VDJCA)
+        ValidationException.requireFileType(in2, InputFileType.VDJCA)
+    }
 
     override fun run0() {
         VDJCAlignmentsReader(in1).use { reader1 ->

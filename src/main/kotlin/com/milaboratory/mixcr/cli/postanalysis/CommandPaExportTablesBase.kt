@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.ValidationException
 import picocli.CommandLine.Parameters
 import java.nio.file.Files
@@ -32,7 +33,8 @@ abstract class CommandPaExportTablesBase : CommandPaExport {
     }
 
     override fun validate() {
-        ValidationException.requireExtension("Output file must have", out, "tsv", "csv")
+        super.validate()
+        ValidationException.requireFileType(out, InputFileType.XSV)
     }
 
     protected fun outDir(): Path = out.toAbsolutePath().parent

@@ -113,20 +113,24 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
     )
     var onlyProductive = false
 
+    private val output get() = inOut.last()
+
     public override val inputFiles
         get() = inOut.subList(0, inOut.size - 1)
 
     override val outputFiles
-        get() = listOf(inOut.last())
+        get() = listOf(output)
 
     private fun getOut(chains: Chains): Path {
-        val out = inOut.last().toAbsolutePath()
-        var fName = out.fileName.toString()
-        fName = when {
-            fName.endsWith(".tsv") -> "${fName.replace("tsv", "")}${chains}.tsv"
-            else -> "${fName}_${chains}"
+        val fName = output.fileName.toString().replace("tsv", "${chains}.tsv")
+        return output.toAbsolutePath().parent.resolve(fName)
+    }
+
+    override fun validate() {
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.CLNX)
         }
-        return out.parent.resolve(fName)
+        ValidationException.requireFileType(output, InputFileType.TSV)
     }
 
     override fun run0() {
