@@ -13,27 +13,36 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.cli.ValidationException
-import picocli.CommandLine.Range
+import picocli.CommandLine
 
-abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
-    override val priority: Int,
-    override val cmdArgName: String,
-    override val description: String,
-    override val arity: Range,
-    private val delegate: Field<T>,
-    override val deprecation: String? = null
-) : FieldsCollection<T> {
-    protected abstract fun getParameters(headerData: MiXCRHeader, args: Array<String>): P
-    protected abstract fun argsSupplier(headerData: MiXCRHeader, parameters: P): List<Array<String>>
+interface FieldsCollection<in T : Any> {
+    val priority: Int
+    val cmdArgName: String
+    val description: String
+    val deprecation: String?
+    val arity: CommandLine.Range
+    val metaVars: String
+    fun consumableArgs(args: List<String>): Int = arity.max()
 
-    override fun createFields(
-        headerData: MiXCRHeader,
-        args: Array<String>
-    ): List<FieldExtractor<T>> = argsSupplier(headerData, getParameters(headerData, args)).map { argsForDelegate ->
-        delegate.create(headerData, argsForDelegate)
-    }
+    fun createFields(headerData: MiXCRHeader, args: Array<String>): List<FieldExtractor<T>>
 
     companion object {
+        operator fun <T : Any> invoke(
+            priority: Int,
+            command: String,
+            description: String,
+            delegate: Field<T>,
+            deprecation: String? = null,
+            extract: MiXCRHeader.() -> List<Array<String>>
+        ): FieldsCollection<T> = FieldsCollectionParameterless(
+            priority,
+            command,
+            description,
+            delegate,
+            deprecation,
+            extract
+        )
+
         operator fun <T : Any, P1 : Any> invoke(
             priority: Int,
             command: String,
@@ -47,7 +56,7 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
             priority,
             command,
             description,
-            Range.valueOf("1"),
+            CommandLine.Range.valueOf("1"),
             delegate,
             deprecation
         ) {
@@ -76,7 +85,7 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
             priority,
             command,
             description,
-            Range.valueOf("0..1"),
+            CommandLine.Range.valueOf("0..1"),
             delegate,
             deprecation
         ) {
@@ -106,7 +115,7 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
             priority,
             command,
             description,
-            Range.valueOf("2"),
+            CommandLine.Range.valueOf("2"),
             delegate,
             deprecation
         ) {
@@ -137,7 +146,7 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
             priority,
             command,
             description,
-            Range.valueOf("0..2"),
+            CommandLine.Range.valueOf("0..2"),
             delegate,
             deprecation
         ) {
@@ -180,7 +189,7 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
             priority,
             command,
             description,
-            Range.valueOf("1..3"),
+            CommandLine.Range.valueOf("1..3"),
             delegate,
             deprecation
         ) {
@@ -209,5 +218,77 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
                 extract(headerData, parameters.first, parameters.second, parameters.third)
         }
     }
+}
 
+private abstract class FieldsCollectionWithParameters<T : Any, P>(
+    override val priority: Int,
+    override val cmdArgName: String,
+    override val description: String,
+    override val arity: CommandLine.Range,
+    private val delegate: Field<T>,
+    override val deprecation: String? = null
+) : FieldsCollection<T> {
+    protected abstract fun getParameters(headerData: MiXCRHeader, args: Array<String>): P
+    protected abstract fun argsSupplier(headerData: MiXCRHeader, parameters: P): List<Array<String>>
+
+    override fun createFields(
+        headerData: MiXCRHeader,
+        args: Array<String>
+    ): List<FieldExtractor<T>> = argsSupplier(headerData, getParameters(headerData, args)).map { argsForDelegate ->
+        delegate.create(headerData, argsForDelegate)
+    }
+}
+
+private class FieldsCollectionParameterless<T : Any>(
+    override val priority: Int,
+    override val cmdArgName: String,
+    override val description: String,
+    private val delegate: Field<T>,
+    override val deprecation: String? = null,
+    private val argsSupplier: MiXCRHeader.() -> List<Array<String>>
+) : FieldsCollection<T> {
+    override val arity: CommandLine.Range = CommandLine.Range.valueOf("0")
+
+    override fun createFields(
+        headerData: MiXCRHeader,
+        args: Array<String>
+    ): List<FieldExtractor<T>> = argsSupplier(headerData).map { argsForDelegate ->
+        delegate.create(headerData, argsForDelegate)
+    }
+
+    override val metaVars: String = ""
+}
+
+
+fun <T : Any, R : Any> FieldsCollection<T>.fromProperty(
+    descriptionMapper: (String) -> String = { it },
+    property: R.() -> T?
+): FieldsCollection<R> {
+    val that = this@fromProperty
+    return object : FieldsCollection<R> {
+        override val priority = that.priority
+        override val cmdArgName = that.cmdArgName
+        override val description = descriptionMapper(that.description)
+        override val deprecation = that.deprecation
+        override val arity = that.arity
+        override val metaVars = that.metaVars
+
+        override fun consumableArgs(args: List<String>) = that.consumableArgs(args)
+
+        override fun createFields(
+            headerData: MiXCRHeader,
+            args: Array<String>
+        ): List<FieldExtractor<R>> {
+            val delegates = that.createFields(headerData, args)
+            return delegates.map { delegate ->
+                object : FieldExtractor<R> {
+                    override val header: String = delegate.header
+                    override fun extractValue(obj: R): String {
+                        val propertyVal = property(obj) ?: return NULL
+                        return delegate.extractValue(propertyVal)
+                    }
+                }
+            }
+        }
+    }
 }

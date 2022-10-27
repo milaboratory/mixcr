@@ -16,17 +16,18 @@ package com.milaboratory.mixcr.export
 import com.milaboratory.core.mutations.MutationsUtil
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetween
+import com.milaboratory.mixcr.export.ParametersFactory.nodeTypeParam
+import com.milaboratory.mixcr.export.ParametersFactory.nodeTypeParamOptional
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
-import java.util.*
 
 object SHMTreeNodeFieldsExtractor {
     private fun nodeParamDescription(subject: String) =
-        "If second arg omitted, than $subject will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}"
+        "If second arg is omitted, than $subject will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}"
 
     fun nodeFields(): List<FieldsCollection<SHMTreeForPostanalysis.SplittedNode>> = buildList {
-        this += FieldParameterless(
+        this += Field(
             Order.treeNodeSpecific + 100,
             "-nodeId",
             "Node id in SHM tree",
@@ -35,7 +36,7 @@ object SHMTreeNodeFieldsExtractor {
             it.id.toString()
         }
 
-        this += FieldParameterless(
+        this += Field(
             Order.treeNodeSpecific + 150,
             "-isObserved",
             "Is node have clones. All other nodes are reconstructed by algorithm",
@@ -46,7 +47,7 @@ object SHMTreeNodeFieldsExtractor {
                 else -> "false"
             }
         }
-        this += FieldParameterless(
+        this += Field(
             Order.treeNodeSpecific + 200,
             "-parentId",
             "Parent node id in SHM tree",
@@ -55,16 +56,16 @@ object SHMTreeNodeFieldsExtractor {
             it.parentId?.toString() ?: NULL
         }
 
-        this += FieldWithParameters(
+        this += Field(
             Order.treeNodeSpecific + 300,
             "-distance",
             "Distance from another node",
-            baseOnParam { base -> "DistanceFrom${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
+            nodeTypeParam("DistanceFrom")
         ) { node, base ->
             node.distanceFrom(base)?.toString() ?: NULL
         }
 
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 50,
             "-fileName",
             "Name of clns file with sample",
@@ -73,24 +74,24 @@ object SHMTreeNodeFieldsExtractor {
             it.clone?.fileName ?: NULL
         }
 
-        val nFeatureField = FieldWithParameters(
+        val nFeatureField = Field(
             Order.`-nFeature`,
             "-nFeature",
             "Export nucleotide sequence of specified gene feature.%n${nodeParamDescription("feature")}",
             baseGeneFeatureParam("nSeq"),
-            baseOrParamOptional()
+            nodeTypeParamOptional("Of")
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
             node.mutationsFromGermlineTo(what)
                 ?.targetNSequence(geneFeature)
                 ?.toString() ?: NULL
         }
         this += nFeatureField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.`-nFeature` + 1,
             "-allNFeatures",
             "Export nucleotide sequences for all covered gene features.%n${nodeParamDescription("feature")}",
             nFeatureField,
-            baseOrParamOptional()
+            nodeTypeParamOptional("Of")
         ) { base ->
             val geneFeaturesBetween = geneFeaturesBetween(null, null)
             when {
@@ -100,24 +101,24 @@ object SHMTreeNodeFieldsExtractor {
         }
 
 
-        val aaFeatureField = FieldWithParameters(
+        val aaFeatureField = Field(
             Order.`-aaFeature`,
             "-aaFeature",
             "Export amino acid sequence of specified gene feature.%n${nodeParamDescription("feature")}",
             baseGeneFeatureParam("aaSeq"),
-            baseOrParamOptional()
+            nodeTypeParamOptional("Of")
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
             node.mutationsFromGermlineTo(what)
                 ?.targetAASequence(geneFeature)
                 ?.toString() ?: NULL
         }
         this += aaFeatureField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.`-aaFeature` + 1,
             "-allAaFeatures",
             "Export amino acid sequences for all covered gene features.%n${nodeParamDescription("feature")}",
             aaFeatureField,
-            baseOrParamOptional()
+            nodeTypeParamOptional("Of")
         ) { base ->
             val geneFeaturesBetween = geneFeaturesBetween(null, null)
             when {
@@ -126,24 +127,24 @@ object SHMTreeNodeFieldsExtractor {
             }
         }
 
-        val lengthOfField = FieldWithParameters(
+        val lengthOfField = Field(
             Order.`-lengthOf`,
             "-lengthOf",
             "Export length of specified gene feature.%n${nodeParamDescription("length")}",
             baseGeneFeatureParam("lengthOf"),
-            baseOrParamOptional()
+            nodeTypeParamOptional("Of")
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
             node.mutationsFromGermlineTo(what)
                 ?.targetNSequence(geneFeature)?.size()
                 ?.toString() ?: NULL
         }
         this += lengthOfField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.`-lengthOf` + 1,
             "-allLengthOf",
             "Export lengths for all covered gene features.%n${nodeParamDescription("feature")}",
             lengthOfField,
-            baseOrParamOptional()
+            nodeTypeParamOptional("Of")
         ) { base ->
             val geneFeaturesBetween = geneFeaturesBetween(null, null)
             when {
@@ -152,12 +153,12 @@ object SHMTreeNodeFieldsExtractor {
             }
         }
 
-        val nMutationsField = FieldWithParameters(
+        val nMutationsField = Field(
             Order.`-nMutations`,
             "-nMutations",
             "Extract nucleotide mutations from specific node for specific gene feature.",
             baseGeneFeatureParam("nMutations"),
-            baseOnParam(),
+            nodeTypeParam("BasedOn"),
             validateArgs = { feature, _ ->
                 checkFeaturesForAlignment(feature)
             }
@@ -168,23 +169,23 @@ object SHMTreeNodeFieldsExtractor {
                 ?.encode() ?: "-"
         }
         this += nMutationsField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.`-nMutations` + 1,
             "-allNMutations",
             "Extract nucleotide mutations from specific node for all covered gene features.",
             nMutationsField,
-            baseOnParam()
+            nodeTypeParam("BasedOn")
         ) { base ->
             geneFeaturesBetween(null, null).map { it + base.name }
         }
 
-        this += FieldWithParameters(
+        this += Field(
             Order.`-nMutationsRelative`,
             "-nMutationsRelative",
             "Extract nucleotide mutations from specific node for specific gene feature relative to another feature.",
             baseGeneFeatureParam("nMutationsIn"),
             relativeGeneFeatureParam(),
-            baseOnParam(),
+            nodeTypeParam("BasedOn"),
             validateArgs = { feature, relativeTo, _ ->
                 checkFeaturesForAlignment(feature, relativeTo)
             }
@@ -196,12 +197,12 @@ object SHMTreeNodeFieldsExtractor {
         }
 
 
-        val aaMutationsField = FieldWithParameters(
+        val aaMutationsField = Field(
             Order.`-aaMutations`,
             "-aaMutations",
             "Extract amino acid mutations from specific node for specific gene feature",
             baseGeneFeatureParam("aaMutations"),
-            baseOnParam(),
+            nodeTypeParam("BasedOn"),
             validateArgs = { feature, _ ->
                 checkFeaturesForAlignment(feature)
             }
@@ -211,23 +212,23 @@ object SHMTreeNodeFieldsExtractor {
                 ?.absoluteMutations?.encode(",") ?: "-"
         }
         this += aaMutationsField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.`-aaMutations` + 1,
             "-allAaMutations",
             "Extract amino acid mutations from specific node for all covered gene features.",
             aaMutationsField,
-            baseOnParam()
+            nodeTypeParam("BasedOn")
         ) { base ->
             geneFeaturesBetween(null, null).map { it + base.name }
         }
 
-        this += FieldWithParameters(
+        this += Field(
             Order.`-aaMutationsRelative`,
             "-aaMutationsRelative",
             "Extract amino acid mutations from specific node for specific gene feature relative to another feature.",
             baseGeneFeatureParam("aaMutations"),
             relativeGeneFeatureParam(),
-            baseOnParam(),
+            nodeTypeParam("BasedOn"),
             validateArgs = { feature, relativeTo, _ ->
                 checkFeaturesForAlignment(feature, relativeTo)
             }
@@ -241,12 +242,12 @@ object SHMTreeNodeFieldsExtractor {
             "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
                     "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
                     "mutation combining effect from all other. WARNING: format may change in following versions."
-        val mutationsDetailedField = FieldWithParameters(
+        val mutationsDetailedField = Field(
             Order.`-mutationsDetailed`,
             "-mutationsDetailed",
             "Detailed list of nucleotide and corresponding amino acid mutations from specific node. $detailedMutationsFormat",
             baseGeneFeatureParam("mutationsDetailedIn"),
-            baseOnParam(),
+            nodeTypeParam("BasedOn"),
             validateArgs = { feature, _ ->
                 checkFeaturesForAlignment(feature)
             }
@@ -256,23 +257,23 @@ object SHMTreeNodeFieldsExtractor {
                 ?.encode(",") ?: "-"
         }
         this += mutationsDetailedField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.`-mutationsDetailed` + 1,
             "-allMutationsDetailed",
             "Detailed list of nucleotide and corresponding amino acid mutations from specific node for all covered gene features.",
             mutationsDetailedField,
-            baseOnParam()
+            nodeTypeParam("BasedOn")
         ) { base ->
             geneFeaturesBetween(null, null).map { it + base.name }
         }
 
-        this += FieldWithParameters(
+        this += Field(
             Order.`-mutationsDetailedRelative`,
             "-mutationsDetailedRelative",
             "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. $detailedMutationsFormat",
             baseGeneFeatureParam("mutationsDetailedIn"),
             relativeGeneFeatureParam(),
-            baseOnParam(),
+            nodeTypeParam("BasedOn"),
             validateArgs = { feature, relativeTo, _ ->
                 checkFeaturesForAlignment(feature, relativeTo)
             }
@@ -305,38 +306,6 @@ private fun relativeGeneFeatureParam(): CommandArgRequired<GeneFeature> = Comman
         }
     }
 ) { "Relative" + GeneFeature.encode(it) }
-
-private fun baseOnParam(
-    sPrefix: (Base) -> String = { base -> "BasedOn${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
-): CommandArgRequired<Base> = CommandArgRequired(
-    "<${Base.germline}|${Base.mrca}|${Base.parent}>",
-    { _, arg ->
-        require(arg in arrayOf(Base.germline.name, Base.mrca.name, Base.germline.name)) {
-            "$cmdArgName: unexpected arg $arg, expecting ${Base.germline} or ${Base.mrca}"
-        }
-        Base.valueOf(arg)
-    },
-    sPrefix
-)
-
-private fun baseOrParamOptional(
-    sPrefix: (Base?) -> String = { base -> "of${(base?.name ?: "node").replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
-): CommandArgOptional<Base?> = CommandArgOptional(
-    "<${Base.germline}|${Base.mrca}|${Base.parent}>",
-    { arg ->
-        arg in arrayOf(Base.germline.name, Base.mrca.name, Base.germline.name, "node")
-    },
-    { _, arg ->
-        require(arg in arrayOf(Base.germline.name, Base.mrca.name, Base.germline.name, "node")) {
-            "$cmdArgName: unexpected arg $arg, expecting ${Base.germline} or ${Base.mrca}"
-        }
-        when (arg) {
-            "node" -> null
-            else -> Base.valueOf(arg)
-        }
-    },
-    sPrefix
-)
 
 private fun Field<*>.checkFeaturesForAlignment(
     feature: GeneFeature,

@@ -12,7 +12,8 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.export.ParametersFactory.tagParameter
+import com.milaboratory.mixcr.export.ParametersFactory.tagParam
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
 
 object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
     override fun allAvailableFields(): List<FieldsCollection<Clone>> =
@@ -20,7 +21,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
                 cloneFields(forTreesExport = false)
 
     fun cloneFields(forTreesExport: Boolean): List<FieldsCollection<Clone>> = buildList {
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 100,
             "-cloneId",
             when {
@@ -31,7 +32,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
         ) { clone: Clone ->
             clone.id.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 200,
             "-count",
             when {
@@ -43,7 +44,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
         ) { clone: Clone ->
             clone.count.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 201,
             "-readCount",
             when {
@@ -54,7 +55,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
         ) { clone: Clone ->
             clone.count.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 300,
             "-fraction",
             when {
@@ -66,7 +67,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
         ) { clone: Clone ->
             clone.fraction.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 301,
             "-readFraction",
             when {
@@ -77,11 +78,11 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
         ) { clone: Clone ->
             clone.fraction.toString()
         }
-        val uniqueTagFractionField = FieldWithParameters(
+        val uniqueTagFractionField = Field(
             Order.tags + 500,
             "-uniqueTagFraction",
             "Fraction of unique tags (UMI, CELL, etc.) the clone or alignment collected.",
-            tagParameter("unique", sSuffix = "Fraction"),
+            tagParam("unique", sSuffix = "Fraction"),
             validateArgs = { (tagName, idx) ->
                 require(idx != -1) { "No tag with name $tagName" }
             }
@@ -90,17 +91,18 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             clone.getTagDiversityFraction(level).toString()
         }
         this += uniqueTagFractionField
-        this += FieldsCollectionParameterless(
+        this += FieldsCollection(
             Order.tags + 501,
             "-allUniqueTagFractions",
-            "Fractions of unique tags (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.",
-            uniqueTagFractionField
-        ) {
-            tagsInfo.map { arrayOf(it.name) }
+            "Fractions of unique tags (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.%n$tagTypeDescription",
+            uniqueTagFractionField,
+            ParametersFactory.tagTypeParamOptional()
+        ) { tagType ->
+            tagsInfo.filter { tagType == null || it.type == tagType }.map { arrayOf(it.name) }
         }
 
 
-        this += FieldParameterless(
+        this += Field(
             Order.tags + 600,
             "-cellGroup",
             "Cell group",

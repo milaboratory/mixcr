@@ -28,7 +28,9 @@ import com.milaboratory.mixcr.export.ParametersFactory.geneFeatureParam
 import com.milaboratory.mixcr.export.ParametersFactory.referencePointParam
 import com.milaboratory.mixcr.export.ParametersFactory.referencePointParamOptional
 import com.milaboratory.mixcr.export.ParametersFactory.relativeGeneFeatureParam
-import com.milaboratory.mixcr.export.ParametersFactory.tagParameter
+import com.milaboratory.mixcr.export.ParametersFactory.tagParam
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParamOptional
 import gnu.trove.map.hash.TObjectFloatHashMap
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -89,7 +91,7 @@ object VDJCObjectFieldExtractors {
 
     fun vdjcObjectFields(forTreesExport: Boolean): List<FieldsCollection<VDJCObject>> = buildList {
         // Number of targets
-        this += FieldParameterless(
+        this += Field(
             Order.targetsCount + 100,
             "-targets",
             "Export number of targets",
@@ -100,13 +102,13 @@ object VDJCObjectFieldExtractors {
         GeneType.values().forEach { type ->
             if (!forTreesExport || type !in GeneType.VJ_REFERENCE) {
                 val l = type.letter
-                this += FieldParameterless(
+                this += Field(
                     Order.orderForBestHit(type),
                     "-${l.lowercaseChar()}Hit",
                     "Export best $l hit",
                     "best${l}Hit"
                 ) { vdjcObject: VDJCObject ->
-                    val bestHit = vdjcObject.getBestHit(type) ?: return@FieldParameterless NULL
+                    val bestHit = vdjcObject.getBestHit(type) ?: return@Field NULL
                     bestHit.gene.name
                 }
             }
@@ -115,13 +117,13 @@ object VDJCObjectFieldExtractors {
         // Best gene
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.hits + 200 + index,
                 "-${l.lowercaseChar()}Gene",
                 "Export best $l hit gene name (e.g. TRBV12-3 for TRBV12-3*00)",
                 "best${l}Gene"
             ) { vdjcObject: VDJCObject ->
-                val bestHit = vdjcObject.getBestHit(type) ?: return@FieldParameterless NULL
+                val bestHit = vdjcObject.getBestHit(type) ?: return@Field NULL
                 bestHit.gene.geneName
             }
         }
@@ -129,13 +131,13 @@ object VDJCObjectFieldExtractors {
         // Best family
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.hits + 300 + index,
                 "-${l.lowercaseChar()}Family",
                 "Export best $l hit family name (e.g. TRBV12 for TRBV12-3*00)",
                 "best${l}Family"
             ) { vdjcObject: VDJCObject ->
-                val bestHit = vdjcObject.getBestHit(type) ?: return@FieldParameterless NULL
+                val bestHit = vdjcObject.getBestHit(type) ?: return@Field NULL
                 bestHit.gene.familyName
             }
         }
@@ -143,13 +145,13 @@ object VDJCObjectFieldExtractors {
         // Best hit score
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.hits + 400 + index,
                 "-${l.lowercaseChar()}HitScore",
                 "Export score for best $l hit",
                 "best${l}HitScore"
             ) { vdjcObject: VDJCObject ->
-                val bestHit = vdjcObject.getBestHit(type) ?: return@FieldParameterless NULL
+                val bestHit = vdjcObject.getBestHit(type) ?: return@Field NULL
                 bestHit.score.toString()
             }
         }
@@ -157,14 +159,14 @@ object VDJCObjectFieldExtractors {
         // All hits
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.hits + 500 + index,
                 "-${l.lowercaseChar()}HitsWithScore",
                 "Export all $l hits with score",
                 "all${l}HitsWithScore"
             ) { vdjcObject: VDJCObject ->
                 val hits = vdjcObject.getHits(type)
-                if (hits.isEmpty()) return@FieldParameterless NULL
+                if (hits.isEmpty()) return@Field NULL
                 val sb = StringBuilder()
                 var i = 0
                 while (true) {
@@ -182,14 +184,14 @@ object VDJCObjectFieldExtractors {
         // All hits without score
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.hits + 600 + index,
                 "-${l.lowercaseChar()}Hits",
                 "Export all $l hits",
                 "all${l}Hits"
             ) { vdjcObject: VDJCObject ->
                 val hits = vdjcObject.getHits(type)
-                if (hits.isEmpty()) return@FieldParameterless NULL
+                if (hits.isEmpty()) return@Field NULL
                 val sb = StringBuilder()
                 var i = 0
                 while (true) {
@@ -205,7 +207,7 @@ object VDJCObjectFieldExtractors {
         // All gene names
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.hits + 700 + index,
                 "-${l.lowercaseChar()}Genes",
                 "Export all $l gene names (e.g. TRBV12-3 for TRBV12-3*00)",
@@ -218,7 +220,7 @@ object VDJCObjectFieldExtractors {
         // All families
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.hits + 800 + index,
                 "-${l.lowercaseChar()}Families",
                 "Export all $l gene family anmes (e.g. TRBV12 for TRBV12-3*00)",
@@ -231,13 +233,13 @@ object VDJCObjectFieldExtractors {
         // Best alignment
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.alignments + 100 + index,
                 "-${l.lowercaseChar()}Alignment",
                 "Export best $l alignment",
                 "best${l}Alignment"
             ) { vdjcObject: VDJCObject ->
-                val bestHit = vdjcObject.getBestHit(type) ?: return@FieldParameterless NULL
+                val bestHit = vdjcObject.getBestHit(type) ?: return@Field NULL
                 val sb = StringBuilder()
                 var i = 0
                 while (true) {
@@ -254,14 +256,14 @@ object VDJCObjectFieldExtractors {
         // All alignments
         GeneType.values().forEachIndexed { index, type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.alignments + 200 + index,
                 "-${l.lowercaseChar()}Alignments",
                 "Export all $l alignments",
                 "all${l}Alignments"
             ) { vdjcObject: VDJCObject ->
                 val hits = vdjcObject.getHits(type)
-                if (hits.isEmpty()) return@FieldParameterless NULL
+                if (hits.isEmpty()) return@Field NULL
                 val sb = StringBuilder()
                 var j = 0
                 while (true) {
@@ -281,18 +283,17 @@ object VDJCObjectFieldExtractors {
             }
         }
         if (!forTreesExport) {
-            val nFeatureField = FieldWithParameters(
+            val nFeatureField = Field(
                 Order.`-nFeature`,
                 "-nFeature",
                 "Export nucleotide sequence of specified gene feature",
                 geneFeatureParam("nSeq")
             ) { vdjcObject: VDJCObject, feature ->
-                vdjcObject.getFeature(GeneFeature.L1)
                 vdjcObject.getFeature(feature)?.sequence?.toString() ?: NULL
             }
             this += nFeatureField
 
-            this += FieldsCollectionWithParameters(
+            this += FieldsCollection(
                 Order.`-nFeature` + 1,
                 "-allNFeatures",
                 "Export nucleotide sequences ${commonDescriptionForFeatures("-allNFeatures", nFeatureField)}",
@@ -303,7 +304,7 @@ object VDJCObjectFieldExtractors {
                 geneFeaturesBetween(from, to)
             }
         }
-        val qFeatureField = FieldWithParameters(
+        val qFeatureField = Field(
             Order.features + 200,
             "-qFeature",
             "Export quality string of specified gene feature",
@@ -312,7 +313,7 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getFeature(feature)?.quality?.toString() ?: NULL
         }
         this += qFeatureField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.features + 201,
             "-allQFeatures",
             "Export quality string ${commonDescriptionForFeatures("-allQFeatures", qFeatureField)}",
@@ -324,25 +325,25 @@ object VDJCObjectFieldExtractors {
         }
 
         if (!forTreesExport) {
-            val aaFeatureField = FieldWithParameters(
+            val aaFeatureField = Field(
                 Order.`-aaFeature`,
                 "-aaFeature",
                 "Export amino acid sequence of specified gene feature",
                 geneFeatureParam("aaSeq")
             ) { vdjcObject: VDJCObject, geneFeature ->
-                val feature = vdjcObject.getFeature(geneFeature) ?: return@FieldWithParameters NULL
+                val feature = vdjcObject.getFeature(geneFeature) ?: return@Field NULL
                 val targetId = vdjcObject.getTargetContainingFeature(geneFeature)
                 val tr = if (targetId == -1) {
                     TranslationParameters.FromLeftWithIncompleteCodon
                 } else {
                     vdjcObject.getPartitionedTarget(targetId).partitioning.getTranslationParameters(geneFeature)
                 }
-                if (tr == null) return@FieldWithParameters NULL
+                if (tr == null) return@Field NULL
                 AminoAcidSequence.translate(feature.sequence, tr).toString()
             }
             this += aaFeatureField
 
-            this += FieldsCollectionWithParameters(
+            this += FieldsCollection(
                 Order.`-aaFeature` + 1,
                 "-allAaFeatures",
                 "Export amino acid sequence ${commonDescriptionForFeatures("-allAaFeatures", aaFeatureField)}",
@@ -353,7 +354,7 @@ object VDJCObjectFieldExtractors {
                 geneFeaturesBetween(from, to)
             }
         }
-        val nFeatureImputedField = FieldWithParameters(
+        val nFeatureImputedField = Field(
             Order.features + 400,
             "-nFeatureImputed",
             "Export nucleotide sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
@@ -362,7 +363,7 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getIncompleteFeature(geneFeature)?.toString() ?: NULL
         }
         this += nFeatureImputedField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.features + 401,
             "-allNFeaturesImputed",
             "Export nucleotide sequence using letters from germline (marked lowercase) for uncovered regions " +
@@ -374,7 +375,7 @@ object VDJCObjectFieldExtractors {
             geneFeaturesBetween(from, to)
         }
 
-        val aaFeatureImputedField = FieldWithParameters(
+        val aaFeatureImputedField = Field(
             Order.features + 500,
             "-aaFeatureImputed",
             "Export amino acid sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
@@ -383,7 +384,7 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getIncompleteFeature(geneFeature)?.toAminoAcidString() ?: NULL
         }
         this += aaFeatureImputedField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.features + 501,
             "-allAaFeaturesImputed",
             "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions " +
@@ -395,7 +396,7 @@ object VDJCObjectFieldExtractors {
             geneFeaturesBetween(from, to)
         }
 
-        val minFeatureQualityField = FieldWithParameters(
+        val minFeatureQualityField = Field(
             Order.features + 600,
             "-minFeatureQuality",
             "Export minimal quality of specified gene feature",
@@ -404,7 +405,7 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getFeature(feature)?.quality?.minValue()?.toString() ?: NULL
         }
         this += minFeatureQualityField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.features + 601,
             "-allMinFeaturesQuality",
             "Export minimal quality ${commonDescriptionForFeatures("-allMinFeaturesQuality", minFeatureQualityField)}",
@@ -415,7 +416,7 @@ object VDJCObjectFieldExtractors {
             geneFeaturesBetween(from, to)
         }
 
-        val avrgFeatureQualityField = FieldWithParameters(
+        val avrgFeatureQualityField = Field(
             Order.features + 700,
             "-avrgFeatureQuality",
             "Export average quality of specified gene feature",
@@ -424,7 +425,7 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getFeature(feature)?.quality?.meanValue()?.toString() ?: NULL
         }
         this += avrgFeatureQualityField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.features + 701,
             "-allAvrgFeaturesQuality",
             "Export average quality " +
@@ -437,7 +438,7 @@ object VDJCObjectFieldExtractors {
         }
 
         if (!forTreesExport) {
-            val lengthOf = FieldWithParameters(
+            val lengthOf = Field(
                 Order.`-lengthOf`,
                 "-lengthOf",
                 "Export length of specified gene feature.",
@@ -446,7 +447,7 @@ object VDJCObjectFieldExtractors {
                 vdjcObject.getFeature(feature)?.size()?.toString() ?: NULL
             }
             this += lengthOf
-            this += FieldsCollectionWithParameters(
+            this += FieldsCollection(
                 Order.`-lengthOf` + 1,
                 "-allLengthOf",
                 "Export length ${commonDescriptionForFeatures("-allLengthOf", lengthOf)}",
@@ -457,7 +458,7 @@ object VDJCObjectFieldExtractors {
                 geneFeaturesBetween(from, to)
             }
 
-            val nMutationsField = FieldWithParameters(
+            val nMutationsField = Field(
                 Order.`-nMutations`,
                 "-nMutations",
                 "Extract nucleotide mutations for specific gene feature; relative to germline sequence.",
@@ -467,7 +468,7 @@ object VDJCObjectFieldExtractors {
                 obj.nMutations(geneFeature)?.encode(",") ?: "-"
             }
             this += nMutationsField
-            this += FieldsCollectionWithParameters(
+            this += FieldsCollection(
                 Order.`-nMutations` + 1,
                 "-allNMutations",
                 "Extract nucleotide mutations relative to germline sequence " +
@@ -479,7 +480,7 @@ object VDJCObjectFieldExtractors {
                 geneFeaturesBetween(from, to)
             }
 
-            this += FieldWithParameters(
+            this += Field(
                 Order.`-nMutationsRelative`,
                 "-nMutationsRelative",
                 "Extract nucleotide mutations for specific gene feature relative to another feature.",
@@ -489,7 +490,7 @@ object VDJCObjectFieldExtractors {
             ) { obj: VDJCObject, geneFeature, relativeTo ->
                 obj.nMutations(geneFeature, relativeTo)?.encode(",") ?: "-"
             }
-            val aaMutationsFiled = FieldWithParameters(
+            val aaMutationsFiled = Field(
                 Order.`-aaMutations`,
                 "-aaMutations",
                 "Extract amino acid mutations for specific gene feature",
@@ -499,7 +500,7 @@ object VDJCObjectFieldExtractors {
                 obj.aaMutations(geneFeature)?.encode(",") ?: "-"
             }
             this += aaMutationsFiled
-            this += FieldsCollectionWithParameters(
+            this += FieldsCollection(
                 Order.`-aaMutations` + 1,
                 "-allAaMutations",
                 "Extract amino acid nucleotide mutations relative to germline sequence " +
@@ -511,7 +512,7 @@ object VDJCObjectFieldExtractors {
                 geneFeaturesBetween(from, to)
             }
 
-            this += FieldWithParameters(
+            this += Field(
                 Order.`-aaMutationsRelative`,
                 "-aaMutationsRelative",
                 "Extract amino acid mutations for specific gene feature relative to another feature.",
@@ -525,7 +526,7 @@ object VDJCObjectFieldExtractors {
                 "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
                         "mutation given no other mutations have occurred, and <aa_mutation_cumulative> amino acid mutation is the observed amino acid " +
                         "mutation combining effect from all other. WARNING: format may change in following versions."
-            val mutationsDetailedField = FieldWithParameters(
+            val mutationsDetailedField = Field(
                 Order.`-mutationsDetailed`,
                 "-mutationsDetailed",
                 "Detailed list of nucleotide and corresponding amino acid mutations. $detailedMutationsFormat",
@@ -535,7 +536,7 @@ object VDJCObjectFieldExtractors {
                 obj.mutationsDetailed(geneFeature) ?: "-"
             }
             this += mutationsDetailedField
-            this += FieldsCollectionWithParameters(
+            this += FieldsCollection(
                 Order.`-mutationsDetailed` + 1,
                 "-allMutationsDetailed",
                 "Detailed list of nucleotide and corresponding amino acid mutations " +
@@ -547,7 +548,7 @@ object VDJCObjectFieldExtractors {
                 geneFeaturesBetween(from, to)
             }
 
-            this += FieldWithParameters(
+            this += Field(
                 Order.`-mutationsDetailedRelative`,
                 "-mutationsDetailedRelative",
                 "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. $detailedMutationsFormat",
@@ -558,16 +559,16 @@ object VDJCObjectFieldExtractors {
                 obj.mutationsDetailed(geneFeature, relativeTo) ?: "-"
             }
         }
-        val positionInReferenceOfField = FieldWithParameters(
+        val positionInReferenceOfField = Field(
             Order.positions + 100,
             "-positionInReferenceOf",
             "Export position of specified reference point inside reference sequences (clonal sequence / read sequence).",
-            referencePointParam { "positionInReferenceOf$it" }
+            referencePointParam("positionInReferenceOf")
         ) { obj: VDJCObject, refPoint ->
             obj.positionOfReferencePoint(refPoint, true)
         }
         this += positionInReferenceOfField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.positions + 101,
             "-allPositionsInReferenceOf",
             "Export position inside reference sequences (clonal sequence / read sequence) ${
@@ -583,16 +584,16 @@ object VDJCObjectFieldExtractors {
             referencePointsToExport(from, to)
         }
 
-        val positionOfField = FieldWithParameters(
+        val positionOfField = Field(
             Order.positions + 200,
             "-positionOf",
             "Export position of specified reference point inside target sequences (clonal sequence / read sequence).",
-            referencePointParam { "positionOf$it" }
+            referencePointParam("positionOf")
         ) { obj: VDJCObject, refPoint ->
             obj.positionOfReferencePoint(refPoint, false)
         }
         this += positionOfField
-        this += FieldsCollectionWithParameters(
+        this += FieldsCollection(
             Order.positions + 201,
             "-allPositionsOf",
             "Export position inside target sequences (clonal sequence / read sequence) ${
@@ -608,7 +609,7 @@ object VDJCObjectFieldExtractors {
             referencePointsToExport(from, to)
         }
 
-        this += FieldParameterless(
+        this += Field(
             Order.positions + 300,
             "-defaultAnchorPoints",
             "Outputs a list of default reference points (like CDR2Begin, FR4End, etc. " +
@@ -617,7 +618,7 @@ object VDJCObjectFieldExtractors {
         ) { obj: VDJCObject ->
             obj.extractRefPoints()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.targets + 100,
             "-targetSequences",
             "Export aligned sequences (targets), separated with comma",
@@ -633,7 +634,7 @@ object VDJCObjectFieldExtractors {
             }
             sb.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.targets + 200,
             "-targetQualities",
             "Export aligned sequence (target) qualities, separated with comma",
@@ -651,14 +652,14 @@ object VDJCObjectFieldExtractors {
         }
         GeneType.values().forEachIndexed { index, type ->
             val c = type.letter.lowercaseChar().toString() + "IdentityPercents"
-            this += FieldParameterless(
+            this += Field(
                 Order.identityPercents + 100 + index,
                 "-$c",
                 type.letter.toString() + " alignment identity percents",
                 c
             ) { vdjcObject: VDJCObject ->
                 val hits = vdjcObject.getHits(type)
-                if (hits.isEmpty()) return@FieldParameterless NULL
+                if (hits.isEmpty()) return@Field NULL
                 val sb = StringBuilder()
                 var i = 0
                 while (true) {
@@ -672,17 +673,17 @@ object VDJCObjectFieldExtractors {
         }
         GeneType.values().forEachIndexed { index, type ->
             val c = type.letter.lowercaseChar().toString() + "BestIdentityPercent"
-            this += FieldParameterless(
+            this += Field(
                 Order.identityPercents + 200 + index,
                 "-$c",
                 type.letter.toString() + " best alignment identity percent",
                 c
             ) { vdjcObject: VDJCObject ->
-                val hit = vdjcObject.getBestHit(type) ?: return@FieldParameterless NULL
+                val hit = vdjcObject.getBestHit(type) ?: return@Field NULL
                 hit.identity.toString()
             }
         }
-        this += FieldParameterless(
+        this += Field(
             Order.labels + 100,
             "-chains",
             "Chains",
@@ -690,7 +691,7 @@ object VDJCObjectFieldExtractors {
         ) { vdjcObject: VDJCObject ->
             vdjcObject.commonChains().toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.labels + 200,
             "-topChains",
             "Top chains",
@@ -698,7 +699,7 @@ object VDJCObjectFieldExtractors {
         ) { vdjcObject: VDJCObject ->
             vdjcObject.commonTopChains().toString()
         }
-        this += FieldWithParameters(
+        this += Field(
             Order.labels + 300,
             "-geneLabel",
             "Export gene label (i.e. ReliableChain)",
@@ -709,7 +710,7 @@ object VDJCObjectFieldExtractors {
         ) { vdjcObject: VDJCObject, geneLabel ->
             vdjcObject.getGeneLabel(geneLabel)
         }
-        this += FieldParameterless(
+        this += Field(
             Order.tags + 100,
             "-tagCounts",
             "All tags with counts",
@@ -717,33 +718,34 @@ object VDJCObjectFieldExtractors {
         ) { vdjcObject: VDJCObject ->
             vdjcObject.tagCount.toString()
         }
-        val tagField = FieldWithParameters(
+        val tagField = Field(
             Order.tags + 300,
             "-tag",
             "Tag value (i.e. CELL barcode or UMI sequence)",
-            tagParameter("tagValue"),
+            tagParam("tagValue"),
             validateArgs = { (tagName, idx) ->
                 require(idx != -1) { "No tag with name $tagName" }
             }
         ) { vdjcObject: VDJCObject, (_, idx) ->
-            val tagValue = vdjcObject.tagCount.singleOrNull(idx) ?: return@FieldWithParameters NULL
+            val tagValue = vdjcObject.tagCount.singleOrNull(idx) ?: return@Field NULL
             tagValue.toString()
         }
         this += tagField
-        this += FieldsCollectionParameterless(
+        this += FieldsCollection.invoke(
             Order.tags + 301,
             "-allTags",
-            "Tag values (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.",
-            tagField
-        ) {
-            tagsInfo.map { arrayOf(it.name) }
+            "Tag values (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.%n$tagTypeDescription",
+            tagField,
+            tagTypeParamOptional()
+        ) { tagType ->
+            tagsInfo.filter { tagType == null || it.type == tagType }.map { arrayOf(it.name) }
         }
 
-        val uniqueTagCountField = FieldWithParameters(
+        val uniqueTagCountField = Field(
             Order.tags + 400,
             "-uniqueTagCount",
             "Unique tag count",
-            tagParameter("unique", sSuffix = "Count"),
+            tagParam("unique", sSuffix = "Count"),
             validateArgs = { (tagName, idx) ->
                 require(idx != -1) { "No tag with name $tagName" }
             }
@@ -752,13 +754,14 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getTagDiversity(level).toString()
         }
         this += uniqueTagCountField
-        this += FieldsCollectionParameterless(
+        this += FieldsCollection(
             Order.tags + 401,
             "-allUniqueTagsCount",
-            "Unique tag count for all available tags in separate columns.",
-            uniqueTagCountField
-        ) {
-            tagsInfo.map { arrayOf(it.name) }
+            "Unique tag count for all available tags in separate columns.%n$tagTypeDescription",
+            uniqueTagCountField,
+            tagTypeParamOptional()
+        ) { tagType ->
+            tagsInfo.filter { tagType == null || it.type == tagType }.map { arrayOf(it.name) }
         }
     }
 }

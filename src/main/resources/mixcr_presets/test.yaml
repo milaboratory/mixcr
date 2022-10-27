@@ -257,13 +257,11 @@
     splitFilesBy: [ ]
     fields:
       - field: "-cloneId"
-      - field: "-tag"
-        args: [ "CELL1" ]
-      - field: "-tag"
-        args: [ "CELL2" ]
+      - field: "-allTags"
+        args: [ "Cell" ]
       - field: "-readCount"
-      - field: "-uniqueTagCount"
-        args: [ "UMI2" ]
+      - field: "-allUniqueTagsCount"
+        args: [ "Molecule" ]
       - field: "-targetSequences"
       - field: "-targetQualities"
       - field: "-vHitsWithScore"

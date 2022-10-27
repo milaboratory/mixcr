@@ -15,12 +15,12 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetween
+import com.milaboratory.mixcr.export.ParametersFactory.nodeTypeParam
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.VJ_REFERENCE
-import java.util.*
 import kotlin.collections.set
 import kotlin.math.log2
 
@@ -48,14 +48,14 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
     override fun allAvailableFields(): List<FieldsCollection<SHMTreeForPostanalysis<*>>> = treeFields(true)
 
     fun treeFields(withTargetFeatures: Boolean): List<FieldsCollection<SHMTreeForPostanalysis<*>>> = buildList {
-        this += FieldParameterless(
+        this += Field(
             Order.treeMainParams + 100,
             "-treeId",
             "SHM tree id",
             "treeId"
         ) { it.meta.treeId.toString() }
 
-        this += FieldParameterless(
+        this += Field(
             Order.treeMainParams + 200,
             "-uniqClonesCount",
             "Number of uniq clones in the SHM tree",
@@ -64,7 +64,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
             shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
         }
 
-        this += FieldParameterless(
+        this += Field(
             Order.treeMainParams + 300,
             "-totalClonesCount",
             "Total sum of counts of clones in the SHM tree",
@@ -75,7 +75,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
 
         VJ_REFERENCE.forEach { type ->
             val l = type.letter
-            this += FieldParameterless(
+            this += Field(
                 Order.orderForBestHit(type),
                 "-${l.lowercaseChar()}Hit",
                 "Export best $l hit",
@@ -86,12 +86,12 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
         }
 
         if (withTargetFeatures) {
-            val nFeatureField = FieldWithParameters(
+            val nFeatureField = Field(
                 Order.`-nFeature`,
                 "-nFeature",
                 "Export nucleotide sequence of specified gene feature of specified node type.",
                 baseGeneFeatureParam("nSeq"),
-                baseParam()
+                nodeTypeParam("Of", withParent = false)
             ) { tree: SHMTreeForPostanalysis<*>, geneFeature: GeneFeature, what: Base ->
                 when (what) {
                     Base.germline -> tree.root
@@ -102,23 +102,23 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                     ?.toString() ?: NULL
             }
             this += nFeatureField
-            this += FieldsCollectionWithParameters(
+            this += FieldsCollection(
                 Order.`-nFeature` + 1,
                 "-allNFeatures",
                 "Export nucleotide sequences for all covered gene features.",
                 nFeatureField,
-                baseParam()
+                nodeTypeParam("Of", withParent = false)
             ) { base ->
                 geneFeaturesBetween(null, null).map { it + base.name }
             }
 
 
-            val aaFeatureField = FieldWithParameters(
+            val aaFeatureField = Field(
                 Order.`-aaFeature`,
                 "-aaFeature",
                 "Export amino acid sequence of specified gene feature of specified node type",
                 baseGeneFeatureParam("aaSeq"),
-                baseParam()
+                nodeTypeParam("Of", withParent = false)
             ) { tree: SHMTreeForPostanalysis<*>, geneFeature: GeneFeature, what: Base ->
                 when (what) {
                     Base.germline -> tree.root
@@ -129,18 +129,18 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                     ?.toString() ?: NULL
             }
             this += aaFeatureField
-            this += FieldsCollectionWithParameters(
+            this += FieldsCollection(
                 Order.`-aaFeature` + 1,
                 "-allAaFeatures",
                 "Export nucleotide sequences for all covered gene features.",
                 aaFeatureField,
-                baseParam()
+                nodeTypeParam("Of", withParent = false)
             ) { base ->
                 geneFeaturesBetween(null, null).map { it + base.name }
             }
         }
 
-        this += FieldParameterless(
+        this += Field(
             Order.treeStats + 100,
             "-wildcardsScore",
             "Count of possible nucleotide sequences of CDR3 in MRCA",
@@ -169,16 +169,3 @@ private fun baseGeneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeatur
             }
         }
     ) { sPrefix + GeneFeature.encode(it) }
-
-private fun baseParam(
-    sPrefix: (Base) -> String = { base -> "Of${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
-): CommandArgRequired<Base> = CommandArgRequired(
-    "<${Base.germline}|${Base.mrca}>",
-    { _, arg ->
-        require(arg in arrayOf(Base.germline.name, Base.mrca.name)) {
-            "$cmdArgName: unexpected arg $arg, expecting ${Base.germline} or ${Base.mrca}"
-        }
-        Base.valueOf(arg)
-    },
-    sPrefix
-)
