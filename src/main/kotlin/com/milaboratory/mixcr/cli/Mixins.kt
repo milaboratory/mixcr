@@ -406,12 +406,16 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
             IParameterConsumer {
             override fun consumeParameters(args: Stack<String>, argSpec: ArgSpec, commandSpec: CommandSpec) {
                 val fieldName = args.pop()
-                val argsCount = fieldsFactory.getMaxNArgsForField(fieldName)
-                val actualArgs: MutableList<String> = mutableListOf()
-                repeat(argsCount) {
+                val field = fieldsFactory[fieldName]
+                val argsCountToAdd = field.consumableArgs(args.reversed())
+                if (argsCountToAdd > args.size) {
+                    throw ValidationException("Not enough parameters for ${field.cmdArgName}")
+                }
+                val actualArgs: MutableList<String> = mutableListOf(fieldName)
+                repeat(argsCountToAdd) {
                     actualArgs.add(args.pop())
                 }
-                argSpec.setValue(listOf(fieldName) + actualArgs)
+                argSpec.setValue(actualArgs)
             }
         }
 

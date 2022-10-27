@@ -631,9 +631,9 @@ object ExportMixins {
         val fieldDescr get() = ExportFieldDescription(field, args)
 
         private fun checkFor(exf: FieldExtractorsFactory<*>) {
-            val nArgsExpected = exf.getMaxNArgsForField(field)
-            check(args.size == nArgsExpected) {
-                "Unexpected number of arguments for field $field. Expected $nArgsExpected but found ${args.size} " +
+            val arity = exf[field].arity
+            check(arity.min() <= args.size && args.size <= arity.max()) {
+                "Unexpected number of arguments for field $field. Expected $arity but found ${args.size} " +
                         "(${args.joinToString(", ")})"
             }
         }

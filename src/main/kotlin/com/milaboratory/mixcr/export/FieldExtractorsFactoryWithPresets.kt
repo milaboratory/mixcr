@@ -42,8 +42,8 @@ abstract class FieldExtractorsFactory<T : Any> {
         fields.associateBy { it.cmdArgName.lowercase() }
     }
 
-    fun getMaxNArgsForField(fieldName: String) =
-        (fieldsMap[fieldName.lowercase()] ?: throw IllegalArgumentException("No such field: $fieldName")).arity.max()
+    operator fun get(fieldName: String): FieldsCollection<T> =
+        fieldsMap[fieldName.lowercase()] ?: throw IllegalArgumentException("No such field: $fieldName")
 
     protected abstract fun allAvailableFields(): List<FieldsCollection<T>>
 
@@ -65,21 +65,15 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .required(false)
                     .type(if (field.arity.max() > 0) Array<Array<String>>::class.java else Boolean::class.javaPrimitiveType)
                     .parameterConsumer { args, _, _ ->
-                        val argsCountToAdd = when {
-                            field.arity.max() == 0 -> {
-                                fieldsCollector += ExportFieldDescription(field.cmdArgName)
-                                return@parameterConsumer
-                            }
-                            field.arity.min() == field.arity.max() -> field.arity.max()
-                            else -> field.consumableArgs(args.reversed())
-                        }
+                        val argsCountToAdd = field.consumableArgs(args.reversed())
                         if (argsCountToAdd > args.size) {
                             throw ValidationException("Not enough parameters for ${field.cmdArgName}")
                         }
-                        val argsToAdd = Array<String>(argsCountToAdd) {
-                            args.pop()
+                        val actualArgs: MutableList<String> = mutableListOf()
+                        repeat(argsCountToAdd) {
+                            actualArgs.add(args.pop())
                         }
-                        fieldsCollector += ExportFieldDescription(field.cmdArgName, argsToAdd.toList())
+                        fieldsCollector += ExportFieldDescription(field.cmdArgName, actualArgs)
                     }
                     .arity(field.arity.toString())
                     .paramLabel(field.metaVars)
@@ -98,8 +92,7 @@ abstract class FieldExtractorsFactory<T : Any> {
         header: MiXCRHeader
     ): List<FieldExtractor<T>> =
         fields.flatMap { fieldDescription ->
-            val eField = fieldsMap[fieldDescription.field.lowercase()]
-                ?: throw IllegalArgumentException("No field ${fieldDescription.field}.")
+            val eField = get(fieldDescription.field)
 
             eField.deprecation?.let { deprecation ->
                 logger.warn(deprecation)
