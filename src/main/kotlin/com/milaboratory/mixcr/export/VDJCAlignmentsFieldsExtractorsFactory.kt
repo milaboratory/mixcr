@@ -19,7 +19,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
         VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) + vdjcAlignmentsFields()
 
     private fun vdjcAlignmentsFields(): List<FieldsCollection<VDJCAlignments>> = buildList {
-        this += FieldParameterless(
+        this += Field(
             Order.readIds + 100,
             "-readId",
             "Export id of read corresponding to alignment (deprecated)",
@@ -28,7 +28,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
         ) { obj: VDJCAlignments ->
             obj.minReadId.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.readIds + 200,
             "-readIds",
             "Export id(s) of read(s) corresponding to alignment",
@@ -45,7 +45,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
             }
             sb.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.readDescriptions + 100,
             "-descrR1",
             "Export description line from initial .fasta or .fastq file (deprecated)",
@@ -61,7 +61,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
                 )
             reads[0].getRead(0).description
         }
-        this += FieldParameterless(
+        this += Field(
             Order.readDescriptions + 200,
             "-descrR2",
             "Export description line from initial .fasta or .fastq file (deprecated)",
@@ -84,7 +84,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
             }
             read.getRead(1).description
         }
-        this += FieldParameterless(
+        this += Field(
             Order.readDescriptions + 300,
             "-descrsR1",
             "Export description lines from initial .fasta or .fastq file " +
@@ -108,7 +108,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
             }
             sb.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.readDescriptions + 400,
             "-descrsR2",
             "Export description lines from initial .fastq file " +
@@ -139,7 +139,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
             }
             sb.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.readDescriptions + 500,
             "-readHistory",
             "Export read history",
@@ -147,7 +147,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
         ) { vdjcAlignments: VDJCAlignments ->
             GlobalObjectMappers.toOneLine(vdjcAlignments.history)
         }
-        this += FieldParameterless(
+        this += Field(
             Order.alignmentCloneIds + 100,
             "-cloneId",
             "To which clone alignment was attached (make sure using .clna file as input for exportAlignments)",
@@ -155,7 +155,7 @@ object VDJCAlignmentsFieldsExtractorsFactory : FieldExtractorsFactory<VDJCAlignm
         ) { vdjcAlignments: VDJCAlignments ->
             vdjcAlignments.cloneIndex.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.alignmentCloneIds + 200,
             "-cloneIdWithMappingType",
             "To which clone alignment was attached with additional info on mapping type (make sure using .clna file as input for exportAlignments)",

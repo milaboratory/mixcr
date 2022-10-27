@@ -60,7 +60,6 @@
       - field: "-allTags"
         args: [ "Cell" ]
       - field: "-readCount"
-      - field: "-readFraction"
       - field: "-allUniqueTagsCount"
         args: [ "Molecule" ]
       - field: "-targetSequences"
