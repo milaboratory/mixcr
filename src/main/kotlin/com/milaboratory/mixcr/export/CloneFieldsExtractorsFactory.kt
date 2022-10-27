@@ -12,13 +12,14 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.export.ParametersFactory.tagParameter
 
 object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
     override fun allAvailableFields(): List<FieldsCollection<Clone>> =
         VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) +
                 cloneFields(forTreesExport = false)
 
-    fun cloneFields(forTreesExport: Boolean): List<Field<Clone>> = buildList {
+    fun cloneFields(forTreesExport: Boolean): List<FieldsCollection<Clone>> = buildList {
         this += FieldParameterless(
             Order.cloneSpecific + 100,
             "-cloneId",
@@ -76,7 +77,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
         ) { clone: Clone ->
             clone.fraction.toString()
         }
-        this += FieldWithParameters(
+        val uniqueTagFractionField = FieldWithParameters(
             Order.tags + 500,
             "-uniqueTagFraction",
             "Fraction of unique tags (UMI, CELL, etc.) the clone or alignment collected.",
@@ -84,10 +85,21 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             validateArgs = { (tagName, idx) ->
                 require(idx != -1) { "No tag with name $tagName" }
             }
-        ) { clone: Clone, (_, idx) ->
+        ) { clone: Clone, (_, idx): Pair<String, Int> ->
             val level = idx + 1
             clone.getTagDiversityFraction(level).toString()
         }
+        this += uniqueTagFractionField
+        this += FieldsCollectionParameterless(
+            Order.tags + 501,
+            "-allUniqueTagFractions",
+            "Fractions of unique tags (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.",
+            uniqueTagFractionField
+        ) {
+            tagsInfo.map { arrayOf(it.name) }
+        }
+
+
         this += FieldParameterless(
             Order.tags + 600,
             "-cellGroup",

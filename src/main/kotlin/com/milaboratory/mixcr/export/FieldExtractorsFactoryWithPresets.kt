@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
@@ -71,6 +72,9 @@ abstract class FieldExtractorsFactory<T : Any> {
                             }
                             field.arity.min() == field.arity.max() -> field.arity.max()
                             else -> field.consumableArgs(args.reversed())
+                        }
+                        if (argsCountToAdd > args.size) {
+                            throw ValidationException("Not enough parameters for ${field.cmdArgName}")
                         }
                         val argsToAdd = Array<String>(argsCountToAdd) {
                             args.pop()

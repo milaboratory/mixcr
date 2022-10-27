@@ -52,20 +52,8 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactoryWithPrese
             ExportFieldDescription("-dAlignments"),
             ExportFieldDescription("-jAlignments"),
             ExportFieldDescription("-cAlignments"),
-            ExportFieldDescription("-nFeature", "FR1"),
-            ExportFieldDescription("-aaFeature", "CDR1"),
-            ExportFieldDescription("-nFeature", "CDR1"),
-            ExportFieldDescription("-aaFeature", "FR1"),
-            ExportFieldDescription("-nFeature", "FR2"),
-            ExportFieldDescription("-aaFeature", "FR2"),
-            ExportFieldDescription("-nFeature", "CDR2"),
-            ExportFieldDescription("-aaFeature", "CDR2"),
-            ExportFieldDescription("-nFeature", "FR3"),
-            ExportFieldDescription("-aaFeature", "FR3"),
-            ExportFieldDescription("-nFeature", "CDR3"),
-            ExportFieldDescription("-aaFeature", "CDR3"),
-            ExportFieldDescription("-nFeature", "FR4"),
-            ExportFieldDescription("-aaFeature", "FR4"),
+            ExportFieldDescription("-allNFeatures"),
+            ExportFieldDescription("-allAaFeatures"),
             ExportFieldDescription("-defaultAnchorPoints")
         )
     }

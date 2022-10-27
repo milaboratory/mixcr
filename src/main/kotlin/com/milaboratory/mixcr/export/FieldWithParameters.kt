@@ -115,7 +115,7 @@ abstract class FieldWithParameters<T : Any, P> private constructor(
             override val metaVars: String = parameter1.meta + " [" + parameter2.meta + "]"
 
             override fun consumableArgs(args: List<String>): Int = when (args.size) {
-                1 -> 1
+                0, 1 -> 1
                 else -> when {
                     !parameter2.canConsumeArg(args[1]) -> 1
                     else -> 2

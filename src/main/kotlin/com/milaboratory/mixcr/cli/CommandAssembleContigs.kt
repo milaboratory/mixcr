@@ -342,15 +342,17 @@ object CommandAssembleContigs {
                     clones += clone.setId(cloneId++)
                 }
             }
-            val resultHeader = (if (
+            val allFullyCoveredBy = if (
                 cmdParams.parameters.assemblingRegions != null &&
                 cmdParams.parameters.subCloningRegions == cmdParams.parameters.assemblingRegions &&
                 cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyDefined
             ) {
-                header.copy(allFullyCoveredBy = cmdParams.parameters.assemblingRegions)
+                cmdParams.parameters.assemblingRegions
             } else {
-                header
-            })
+                null
+            }
+            val resultHeader = header
+                .copy(allFullyCoveredBy = allFullyCoveredBy)
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
 
             val cloneSet = CloneSet(clones, genes, resultHeader, footer, ordering)

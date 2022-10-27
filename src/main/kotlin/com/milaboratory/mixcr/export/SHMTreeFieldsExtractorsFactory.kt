@@ -14,6 +14,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetween
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
@@ -44,100 +45,120 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
 
     override val defaultPreset: String = "full"
 
-    override fun allAvailableFields(): List<Field<SHMTreeForPostanalysis<*>>> = treeFields(true)
+    override fun allAvailableFields(): List<FieldsCollection<SHMTreeForPostanalysis<*>>> = treeFields(true)
 
-    fun treeFields(withTargetFeatures: Boolean): List<Field<SHMTreeForPostanalysis<*>>> =
-        buildList {
+    fun treeFields(withTargetFeatures: Boolean): List<FieldsCollection<SHMTreeForPostanalysis<*>>> = buildList {
+        this += FieldParameterless(
+            Order.treeMainParams + 100,
+            "-treeId",
+            "SHM tree id",
+            "treeId"
+        ) { it.meta.treeId.toString() }
+
+        this += FieldParameterless(
+            Order.treeMainParams + 200,
+            "-uniqClonesCount",
+            "Number of uniq clones in the SHM tree",
+            "uniqClonesCount"
+        ) { shmTree ->
+            shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
+        }
+
+        this += FieldParameterless(
+            Order.treeMainParams + 300,
+            "-totalClonesCount",
+            "Total sum of counts of clones in the SHM tree",
+            "totalClonesCount"
+        ) { shmTree ->
+            shmTree.tree.allNodes().sumOf { (_, node) -> node.content.clones.sumOf { it.clone.count } }.toString()
+        }
+
+        VJ_REFERENCE.forEach { type ->
+            val l = type.letter
             this += FieldParameterless(
-                Order.treeMainParams + 100,
-                "-treeId",
-                "SHM tree id",
-                "treeId"
-            ) { it.meta.treeId.toString() }
-
-            this += FieldParameterless(
-                Order.treeMainParams + 200,
-                "-uniqClonesCount",
-                "Number of uniq clones in the SHM tree",
-                "uniqClonesCount"
-            ) { shmTree ->
-                shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
-            }
-
-            this += FieldParameterless(
-                Order.treeMainParams + 300,
-                "-totalClonesCount",
-                "Total sum of counts of clones in the SHM tree",
-                "totalClonesCount"
-            ) { shmTree ->
-                shmTree.tree.allNodes().sumOf { (_, node) -> node.content.clones.sumOf { it.clone.count } }.toString()
-            }
-
-            VJ_REFERENCE.forEach { type ->
-                val l = type.letter
-                this += FieldParameterless(
-                    Order.orderForBestHit(type),
-                    "-${l.lowercaseChar()}Hit",
-                    "Export best $l hit",
-                    "best${l}Hit"
-                ) {
-                    it.meta.rootInfo.VJBase.geneIds[type].name
-                }
-            }
-
-            if (withTargetFeatures) {
-                this += FieldWithParameters(
-                    Order.`-nFeature`,
-                    "-nFeature",
-                    "Export nucleotide sequence of specified gene feature of specified node type.",
-                    baseGeneFeatureArg("nSeq"),
-                    baseArg()
-                ) { tree, geneFeature, what ->
-                    when (what) {
-                        Base.germline -> tree.root
-                        Base.mrca -> tree.mrca
-                        Base.parent -> throw UnsupportedOperationException()
-                    }
-                        .targetNSequence(geneFeature)
-                        ?.toString() ?: NULL
-                }
-
-                this += FieldWithParameters(
-                    Order.`-aaFeature`,
-                    "-aaFeature",
-                    "Export amino acid sequence of specified gene feature of specified node type",
-                    baseGeneFeatureArg("aaSeq"),
-                    baseArg()
-                ) { tree, geneFeature, what ->
-                    when (what) {
-                        Base.germline -> tree.root
-                        Base.mrca -> tree.mrca
-                        Base.parent -> throw UnsupportedOperationException()
-                    }
-                        .targetAASequence(geneFeature)
-                        ?.toString() ?: NULL
-                }
-            }
-
-            this += FieldParameterless(
-                Order.treeStats + 100,
-                "-wildcardsScore",
-                "Count of possible nucleotide sequences of CDR3 in MRCA",
-                "wildcardsScore",
-                deprecation = "-wildcardsScore used only for debug"
-            ) { shmTree ->
-                val CDR3Sequence = shmTree.mrca.targetNSequence(CDR3)!!
-                val wildcardSized = (0 until CDR3Sequence.size())
-                    .map { CDR3Sequence.codeAt(it) }
-                    .filter { NucleotideSequence.ALPHABET.isWildcard(it) }
-                    .map { NucleotideSequence.ALPHABET.codeToWildcard(it) }
-                    .map { log2(it.basicSize().toDouble()) }
-                wildcardSized.sum().toString()
+                Order.orderForBestHit(type),
+                "-${l.lowercaseChar()}Hit",
+                "Export best $l hit",
+                "best${l}Hit"
+            ) {
+                it.meta.rootInfo.VJBase.geneIds[type].name
             }
         }
+
+        if (withTargetFeatures) {
+            val nFeatureField = FieldWithParameters(
+                Order.`-nFeature`,
+                "-nFeature",
+                "Export nucleotide sequence of specified gene feature of specified node type.",
+                baseGeneFeatureParam("nSeq"),
+                baseParam()
+            ) { tree: SHMTreeForPostanalysis<*>, geneFeature: GeneFeature, what: Base ->
+                when (what) {
+                    Base.germline -> tree.root
+                    Base.mrca -> tree.mrca
+                    Base.parent -> throw UnsupportedOperationException()
+                }
+                    .targetNSequence(geneFeature)
+                    ?.toString() ?: NULL
+            }
+            this += nFeatureField
+            this += FieldsCollectionWithParameters(
+                Order.`-nFeature` + 1,
+                "-allNFeatures",
+                "Export nucleotide sequences for all covered gene features.",
+                nFeatureField,
+                baseParam()
+            ) { base ->
+                geneFeaturesBetween(null, null).map { it + base.name }
+            }
+
+
+            val aaFeatureField = FieldWithParameters(
+                Order.`-aaFeature`,
+                "-aaFeature",
+                "Export amino acid sequence of specified gene feature of specified node type",
+                baseGeneFeatureParam("aaSeq"),
+                baseParam()
+            ) { tree: SHMTreeForPostanalysis<*>, geneFeature: GeneFeature, what: Base ->
+                when (what) {
+                    Base.germline -> tree.root
+                    Base.mrca -> tree.mrca
+                    Base.parent -> throw UnsupportedOperationException()
+                }
+                    .targetAASequence(geneFeature)
+                    ?.toString() ?: NULL
+            }
+            this += aaFeatureField
+            this += FieldsCollectionWithParameters(
+                Order.`-aaFeature` + 1,
+                "-allAaFeatures",
+                "Export nucleotide sequences for all covered gene features.",
+                aaFeatureField,
+                baseParam()
+            ) { base ->
+                geneFeaturesBetween(null, null).map { it + base.name }
+            }
+        }
+
+        this += FieldParameterless(
+            Order.treeStats + 100,
+            "-wildcardsScore",
+            "Count of possible nucleotide sequences of CDR3 in MRCA",
+            "wildcardsScore",
+            deprecation = "-wildcardsScore used only for debug"
+        ) { shmTree ->
+            val CDR3Sequence = shmTree.mrca.targetNSequence(CDR3)!!
+            val wildcardSized = (0 until CDR3Sequence.size())
+                .map { CDR3Sequence.codeAt(it) }
+                .filter { NucleotideSequence.ALPHABET.isWildcard(it) }
+                .map { NucleotideSequence.ALPHABET.codeToWildcard(it) }
+                .map { log2(it.basicSize().toDouble()) }
+            wildcardSized.sum().toString()
+        }
+    }
 }
 
-private fun baseGeneFeatureArg(sPrefix: String): CommandArgRequired<GeneFeature> =
+private fun baseGeneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeature> =
     CommandArgRequired(
         "<gene_feature>",
         { _, arg ->
@@ -149,7 +170,7 @@ private fun baseGeneFeatureArg(sPrefix: String): CommandArgRequired<GeneFeature>
         }
     ) { sPrefix + GeneFeature.encode(it) }
 
-private fun baseArg(
+private fun baseParam(
     sPrefix: (Base) -> String = { base -> "Of${base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }}" }
 ): CommandArgRequired<Base> = CommandArgRequired(
     "<${Base.germline}|${Base.mrca}>",

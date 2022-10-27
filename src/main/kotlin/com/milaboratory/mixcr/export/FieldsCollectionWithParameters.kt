@@ -34,6 +34,64 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
     }
 
     companion object {
+        operator fun <T : Any, P1 : Any> invoke(
+            priority: Int,
+            command: String,
+            description: String,
+            delegate: Field<T>,
+            parameter1: CommandArgRequired<P1>,
+            validateArgs: FieldsCollection<*>.(P1) -> Unit = { _ -> },
+            deprecation: String? = null,
+            extract: MiXCRHeader.(P1) -> List<Array<String>>
+        ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, P1>(
+            priority,
+            command,
+            description,
+            Range.valueOf("1"),
+            delegate,
+            deprecation
+        ) {
+            override val metaVars: String = parameter1.meta
+
+            override fun getParameters(headerData: MiXCRHeader, args: Array<String>): P1 {
+                val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
+                validateArgs(arg1)
+                return arg1
+            }
+
+            override fun argsSupplier(headerData: MiXCRHeader, parameters: P1): List<Array<String>> =
+                extract(headerData, parameters)
+        }
+
+        operator fun <T : Any, P1 : Any> invoke(
+            priority: Int,
+            command: String,
+            description: String,
+            delegate: Field<T>,
+            parameter1: CommandArgOptional<P1?>,
+            validateArgs: FieldsCollection<*>.(P1?) -> Unit = { _ -> },
+            deprecation: String? = null,
+            extract: MiXCRHeader.(P1?) -> List<Array<String>>
+        ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, P1?>(
+            priority,
+            command,
+            description,
+            Range.valueOf("0..1"),
+            delegate,
+            deprecation
+        ) {
+            override val metaVars: String = "[" + parameter1.meta + "]"
+
+            override fun getParameters(headerData: MiXCRHeader, args: Array<String>): P1? {
+                val arg1 = args.getOrNull(0)?.let { arg -> parameter1.decodeAndValidate(this, headerData, arg) }
+                validateArgs(arg1)
+                return arg1
+            }
+
+            override fun argsSupplier(headerData: MiXCRHeader, parameters: P1?): List<Array<String>> =
+                extract(headerData, parameters)
+        }
+
         operator fun <T : Any, P1 : Any, P2 : Any> invoke(
             priority: Int,
             command: String,
@@ -44,15 +102,14 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
             validateArgs: FieldsCollection<*>.(P1, P2) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1, P2) -> List<Array<String>>
-        ): FieldsCollection<T> = object :
-            FieldsCollectionWithParameters<T, Pair<P1, P2>>(
-                priority,
-                command,
-                description,
-                Range.valueOf("2"),
-                delegate,
-                deprecation
-            ) {
+        ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, Pair<P1, P2>>(
+            priority,
+            command,
+            description,
+            Range.valueOf("2"),
+            delegate,
+            deprecation
+        ) {
             override val metaVars: String = parameter1.meta + " " + parameter2.meta
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Pair<P1, P2> {
@@ -76,15 +133,14 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
             validateArgs: FieldsCollection<*>.(P1?, P2?) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1?, P2?) -> List<Array<String>>
-        ): FieldsCollection<T> = object :
-            FieldsCollectionWithParameters<T, Pair<P1?, P2?>>(
-                priority,
-                command,
-                description,
-                Range.valueOf("0..2"),
-                delegate,
-                deprecation
-            ) {
+        ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, Pair<P1?, P2?>>(
+            priority,
+            command,
+            description,
+            Range.valueOf("0..2"),
+            delegate,
+            deprecation
+        ) {
             override val metaVars: String = "[" + parameter1.meta + " " + parameter2.meta + "]"
 
             override fun consumableArgs(args: List<String>): Int = when (args.size) {
@@ -107,6 +163,50 @@ abstract class FieldsCollectionWithParameters<T : Any, P> private constructor(
 
             override fun argsSupplier(headerData: MiXCRHeader, parameters: Pair<P1?, P2?>): List<Array<String>> =
                 extract(headerData, parameters.first, parameters.second)
+        }
+
+        operator fun <T : Any, P1 : Any, P2 : Any, P3 : Any> invoke(
+            priority: Int,
+            command: String,
+            description: String,
+            delegate: Field<T>,
+            parameter1: CommandArgRequired<P1>,
+            parameter2: CommandArgOptional<P2?>,
+            parameter3: CommandArgOptional<P3?>,
+            validateArgs: FieldsCollection<*>.(P1, P2?, P3?) -> Unit = { _, _, _ -> },
+            deprecation: String? = null,
+            extract: MiXCRHeader.(P1, P2?, P3?) -> List<Array<String>>
+        ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, Triple<P1, P2?, P3?>>(
+            priority,
+            command,
+            description,
+            Range.valueOf("1..3"),
+            delegate,
+            deprecation
+        ) {
+            override val metaVars: String = parameter1.meta + " [" + parameter2.meta + " " + parameter3.meta + "]"
+
+            override fun consumableArgs(args: List<String>): Int = when (args.size) {
+                0, 1, 2 -> 1
+                else -> when {
+                    !parameter2.canConsumeArg(args[1]) || !parameter3.canConsumeArg(args[2]) -> 1
+                    else -> 3
+                }
+            }
+
+            override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Triple<P1, P2?, P3?> {
+                val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
+                val arg2 = args.getOrNull(1)?.let { arg -> parameter2.decodeAndValidate(this, headerData, arg) }
+                val arg3 = args.getOrNull(2)?.let { arg -> parameter3.decodeAndValidate(this, headerData, arg) }
+                ValidationException.require((arg2 != null && arg3 != null) || (arg2 == null && arg3 == null)) {
+                    "Both second and third arguments must be set or both must be omitted, got ${args.joinToString(", ")}"
+                }
+                validateArgs(arg1, arg2, arg3)
+                return Triple(arg1, arg2, arg3)
+            }
+
+            override fun argsSupplier(headerData: MiXCRHeader, parameters: Triple<P1, P2?, P3?>): List<Array<String>> =
+                extract(headerData, parameters.first, parameters.second, parameters.third)
         }
     }
 

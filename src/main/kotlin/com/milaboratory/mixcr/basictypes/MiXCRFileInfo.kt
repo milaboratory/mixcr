@@ -31,6 +31,7 @@ import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
+import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCLibraryId
 import io.repseq.dto.VDJCLibraryData
 import java.security.MessageDigest
@@ -75,6 +76,9 @@ data class MiXCRHeader(
 
     fun withAssemblerParameters(assemblerParameters: CloneAssemblerParameters): MiXCRHeader =
         copy(assemblerParameters = assemblerParameters)
+
+    fun withAllClonesCutBy(allClonesAlignedBy: Array<GeneFeature>) =
+        copy(allFullyCoveredBy = GeneFeatures(allClonesAlignedBy.toList()))
 
     fun <P : MiXCRParams> addStepParams(cmd: MiXCRCommandDescriptor<P, *>, params: P) =
         copy(stepParams = stepParams.add(cmd, params))
