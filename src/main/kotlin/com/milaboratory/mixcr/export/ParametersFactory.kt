@@ -11,7 +11,9 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
@@ -24,16 +26,15 @@ object ParametersFactory {
     fun tagParam(
         sPrefix: String,
         sSuffix: String = ""
-    ): CommandArgRequired<Pair<String, Int>> = CommandArgRequired(
+    ): CommandArgRequired<TagInfo> = CommandArgRequired(
         "<tag_name>",
-        { header, tagName -> tagName to header.tagsInfo.indexOf(tagName) }
-    ) { (tagName, _) -> sPrefix + tagName + sSuffix }
+        { header, tagName -> header.tagsInfo[tagName] ?: throw ValidationException("No tag with name $tagName") }
+    ) { tag -> sPrefix + tag.name + sSuffix }
 
-    fun tagTypeParamOptional(
+    fun tagTypeParam(
         sPrefix: String = ""
-    ): CommandArgOptional<TagType?> = CommandArgOptional(
+    ): CommandArgRequired<TagType> = CommandArgRequired(
         "<(${TagType.values().joinToString("|")})>",
-        { arg -> TagType.values().any { it.name.lowercase() == arg.lowercase() } },
         { _, arg ->
             val tagType = TagType.values().firstOrNull { arg.lowercase() == it.name.lowercase() }
             require(tagType != null) {
@@ -41,7 +42,7 @@ object ParametersFactory {
             }
             tagType
         },
-        { sPrefix + it?.name }
+        { sPrefix + it.name }
     )
 
     fun geneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeature> = CommandArgRequired(

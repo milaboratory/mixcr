@@ -12,8 +12,10 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.export.ParametersFactory.tagParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
 
 object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
     override fun allAvailableFields(): List<FieldsCollection<Clone>> =
@@ -83,11 +85,8 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             "-uniqueTagFraction",
             "Fraction of unique tags (UMI, CELL, etc.) the clone or alignment collected.",
             tagParam("unique", sSuffix = "Fraction"),
-            validateArgs = { (tagName, idx) ->
-                require(idx != -1) { "No tag with name $tagName" }
-            }
-        ) { clone: Clone, (_, idx): Pair<String, Int> ->
-            val level = idx + 1
+        ) { clone: Clone, tag: TagInfo ->
+            val level = tag.index + 1
             clone.getTagDiversityFraction(level).toString()
         }
         this += uniqueTagFractionField
@@ -96,9 +95,9 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             "-allUniqueTagFractions",
             "Fractions of unique tags (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.%n$tagTypeDescription",
             uniqueTagFractionField,
-            ParametersFactory.tagTypeParamOptional()
+            tagTypeParam()
         ) { tagType ->
-            tagsInfo.filter { tagType == null || it.type == tagType }.map { arrayOf(it.name) }
+            tagsInfo.filter { it.type == tagType }.map { arrayOf(it.name) }
         }
 
 

@@ -19,6 +19,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.TranslationParameters
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCObject
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForFeatures
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForReferencePoints
@@ -30,7 +31,7 @@ import com.milaboratory.mixcr.export.ParametersFactory.referencePointParamOption
 import com.milaboratory.mixcr.export.ParametersFactory.relativeGeneFeatureParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
-import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParamOptional
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
 import gnu.trove.map.hash.TObjectFloatHashMap
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -722,12 +723,9 @@ object VDJCObjectFieldExtractors {
             Order.tags + 300,
             "-tag",
             "Tag value (i.e. CELL barcode or UMI sequence)",
-            tagParam("tagValue"),
-            validateArgs = { (tagName, idx) ->
-                require(idx != -1) { "No tag with name $tagName" }
-            }
-        ) { vdjcObject: VDJCObject, (_, idx) ->
-            val tagValue = vdjcObject.tagCount.singleOrNull(idx) ?: return@Field NULL
+            tagParam("tagValue")
+        ) { vdjcObject: VDJCObject, tag: TagInfo ->
+            val tagValue = vdjcObject.tagCount.singleOrNull(tag.index) ?: return@Field NULL
             tagValue.toString()
         }
         this += tagField
@@ -736,21 +734,18 @@ object VDJCObjectFieldExtractors {
             "-allTags",
             "Tag values (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.%n$tagTypeDescription",
             tagField,
-            tagTypeParamOptional()
+            tagTypeParam()
         ) { tagType ->
-            tagsInfo.filter { tagType == null || it.type == tagType }.map { arrayOf(it.name) }
+            tagsInfo.filter { it.type == tagType }.map { arrayOf(it.name) }
         }
 
         val uniqueTagCountField = Field(
             Order.tags + 400,
             "-uniqueTagCount",
             "Unique tag count",
-            tagParam("unique", sSuffix = "Count"),
-            validateArgs = { (tagName, idx) ->
-                require(idx != -1) { "No tag with name $tagName" }
-            }
-        ) { vdjcObject: VDJCObject, (_, idx) ->
-            val level = idx + 1
+            tagParam("unique", sSuffix = "Count")
+        ) { vdjcObject: VDJCObject, tag: TagInfo ->
+            val level = tag.index + 1
             vdjcObject.getTagDiversity(level).toString()
         }
         this += uniqueTagCountField
@@ -759,9 +754,9 @@ object VDJCObjectFieldExtractors {
             "-allUniqueTagsCount",
             "Unique tag count for all available tags in separate columns.%n$tagTypeDescription",
             uniqueTagCountField,
-            tagTypeParamOptional()
+            tagTypeParam()
         ) { tagType ->
-            tagsInfo.filter { tagType == null || it.type == tagType }.map { arrayOf(it.name) }
+            tagsInfo.filter { it.type == tagType }.map { arrayOf(it.name) }
         }
     }
 }
