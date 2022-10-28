@@ -30,12 +30,12 @@ class CommandPaListMetrics : MiXCRCommand() {
     @Parameters(
         description = ["Input file with PA results"],
         index = "0",
-        paramLabel = "input.json"
+        paramLabel = "input.json[.gz]"
     )
     lateinit var input: Path
 
     override fun validate() {
-        ValidationException.requireFileType(input, InputFileType.JSON)
+        ValidationException.requireFileType(input, InputFileType.JSON, InputFileType.JSON_GZ)
     }
 
     override fun run0() {

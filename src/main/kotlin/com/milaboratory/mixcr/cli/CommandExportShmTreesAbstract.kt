@@ -27,6 +27,6 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
         get() = listOf(input)
 
     override fun validate() {
-        ValidationException.requireExtension("Input file should have", input, shmFileExtension)
+        ValidationException.requireFileType(input, InputFileType.SHMT)
     }
 }

@@ -409,33 +409,49 @@ object CommandAlign {
         var highCompression = false
 
 
-        @Option(
+        @set:Option(
             description = ["Pipe not aligned R1 reads into separate file."],
             names = ["--not-aligned-R1"],
             paramLabel = "<path>"
         )
         var notAlignedReadsR1: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
 
-        @Option(
+        @set:Option(
             description = ["Pipe not aligned R2 reads into separate file."],
             names = ["--not-aligned-R2"],
             paramLabel = "<path>"
         )
         var notAlignedReadsR2: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
 
-        @Option(
+        @set:Option(
             description = ["Pipe not parsed R1 reads into separate file."],
             names = ["--not-parsed-R1"],
             paramLabel = "<path>"
         )
         var notParsedReadsR1: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
 
-        @Option(
+        @set:Option(
             description = ["Pipe not parsed R2 reads into separate file."],
             names = ["--not-parsed-R2"],
             paramLabel = "<path>"
         )
         var notParsedReadsR2: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
 
         @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
         var reportBuffers = false

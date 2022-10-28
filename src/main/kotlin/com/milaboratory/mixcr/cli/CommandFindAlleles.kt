@@ -121,7 +121,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     )
     var libraryOutput: Path? = null
         set(value) {
-            ValidationException.requireJson(value)
+            ValidationException.requireFileType(value, InputFileType.JSON)
             field = value
         }
 
@@ -132,7 +132,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     )
     var allelesMutationsOutput: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
+            ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
 

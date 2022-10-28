@@ -41,7 +41,7 @@ import java.util.*
 class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     @Parameters(
         index = "0",
-        paramLabel = "alignments.vdjca",
+        paramLabel = "alignments.(vdjca|clna)",
         description = ["Path to input file with alignments."]
     )
     lateinit var input: Path
@@ -185,7 +185,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        ValidationException.requireFileType(input, InputFileType.VDJCA)
+        ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNA)
     }
 
     override fun run0() {

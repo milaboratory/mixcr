@@ -15,25 +15,12 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.io.path.extension
 
 class ValidationException(
     override val message: String,
     val printHelp: Boolean = false
 ) : RuntimeException() {
     companion object {
-        fun requireXSV(path: Path?) {
-            requireExtension("Require", path, "tsv", "csv")
-        }
-
-        fun requireTSV(path: Path?) {
-            requireExtension("Require", path, "tsv")
-        }
-
-        fun requireJson(path: Path?) {
-            requireExtension("Require", path, "json")
-        }
-
         fun requireFileType(path: Path?, fileType: InputFileType, vararg additional: InputFileType) {
             requireFileType(path, arrayOf(fileType) + additional)
         }
@@ -48,17 +35,20 @@ class ValidationException(
             }
         }
 
+        fun requireTheSameFileType(first: Path, another: Path, vararg fileTypes: InputFileType) {
+            @Suppress("UNCHECKED_CAST")
+            requireFileType(first, fileTypes as Array<InputFileType>)
+            val fileType = fileTypes.first { it.matches(first) }
+            require(another.matches(fileType)) {
+                "$another must have the same extension as $first"
+            }
+        }
+
         fun requireNoExtension(input: String?) {
             if (input == null) return
             val asPath = Paths.get(input)
             require(InputFileType.values().none { asPath.matches(it) }) {
-                "Must be without extension, got $input"
-            }
-        }
-
-        fun requireExtension(prefix: String, path: Path?, vararg extension: String) {
-            require(path == null || path.extension in extension) {
-                "$prefix ${extension.joinToString(" or ") { ".$it" }} file extension, got $path"
+                "Must have no extension, got $input"
             }
         }
 

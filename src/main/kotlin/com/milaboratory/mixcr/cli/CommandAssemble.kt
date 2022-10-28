@@ -158,7 +158,7 @@ object CommandAssemble {
 
         @Parameters(
             description = ["Path where to write assembled clones."],
-            paramLabel = "clones.[clns|clna]",
+            paramLabel = "clones.(clns|clna)",
             index = "1"
         )
         lateinit var outputFile: Path

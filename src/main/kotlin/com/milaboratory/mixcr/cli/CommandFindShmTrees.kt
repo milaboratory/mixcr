@@ -114,17 +114,14 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     @Mixin
     lateinit var threads: ThreadsOption
 
-    public override val inputFiles
+    private val outputTreesPath: Path
+        get() = inOut.last()
+
+    override val inputFiles
         get() = inOut.dropLast(1)
 
     override val outputFiles
-        get() = inOut.takeLast(1)
-
-    private val clnsFileNames: List<Path>
-        get() = inOut.dropLast(1)
-
-    private val outputTreesPath: Path
-        get() = inOut.last()
+        get() = listOf(outputTreesPath)
 
     @Option(
         names = ["-O"],
@@ -188,7 +185,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     )
     var buildFrom: Path? = null
         set(value) {
-            ValidationException.requireExtension("Require", value, "tsv")
+            ValidationException.requireFileType(value, InputFileType.TSV)
             field = value
         }
 
@@ -256,7 +253,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             .setStartMillis(System.currentTimeMillis())
 
         val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
-        val datasets = clnsFileNames.map { path ->
+        val datasets = inputFiles.map { path ->
             ClnsReader(path, vdjcLibraryRegistry)
         }
         ValidationException.require(datasets.isNotEmpty()) { "there is no files to process" }
@@ -348,7 +345,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             report = reportBuilder.buildReport()
             shmTreesWriter.setFooter(
                 datasets.foldIndexed(MiXCRFooterMerger()) { i, m, f ->
-                    m.addReportsFromInput(i, clnsFileNames[i].toString(), f.footer)
+                    m.addReportsFromInput(i, inputFiles[i].toString(), f.footer)
                 }
                     .addStepReport(MiXCRCommandDescriptor.findShmTrees, report)
                     .build()
@@ -359,7 +356,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 
     private fun readUserInput(userInputFile: File): Map<CloneWithDatasetId.ID, Int> {
-        val fileNameToDatasetId = clnsFileNames.withIndex().associate { it.value.toString() to it.index }
+        val fileNameToDatasetId = inputFiles.withIndex().associate { it.value.toString() to it.index }
         val rows = XSV.readXSV(userInputFile, listOf("treeId", "fileName", "cloneId"), "\t")
         return rows.associate { row ->
             val datasetId = (fileNameToDatasetId[row["fileName"]!!]
@@ -410,7 +407,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             headers
                 .fold(MiXCRHeaderMerger()) { m, cloneSetInfo -> m.add(cloneSetInfo.header) }.build()
                 .addStepParams(MiXCRCommandDescriptor.findShmTrees, params),
-            clnsFileNames.map { it.toString() },
+            inputFiles.map { it.toString() },
             headers,
             usedGenes
         )

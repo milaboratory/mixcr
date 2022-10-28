@@ -39,7 +39,7 @@ import kotlin.io.path.extension
 class CommandDownsample : MiXCRCommandWithOutputs() {
     @Parameters(
         description = ["Paths to input files."],
-        paramLabel = "cloneset.{clns|clna}",
+        paramLabel = "cloneset.(clns|clna)",
         arity = "1..*"
     )
     override val inputFiles: List<Path> = mutableListOf()

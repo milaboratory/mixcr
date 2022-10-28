@@ -105,9 +105,12 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     var isolationGroups: List<String> = mutableListOf()
 
     @set:Option(
-        description = ["Tabular results output path (path/table.tsv)."],
+        description = [
+            "Results output path.",
+            "By default will be `/{outputDir}/{outputFileName}.tsv`"
+        ],
         names = ["--tables"],
-        paramLabel = "<path>"
+        paramLabel = "<path.(tsv|csv)>"
     )
     var tablesOut: Path? = null
         set(value) {
@@ -119,9 +122,12 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         }
 
     @set:Option(
-        description = ["Output path for the preprocessing summary tables (filtering and downsampling)"],
+        description = [
+            "Output path for the preprocessing summary tables (filtering and downsampling)",
+            "By default will be `/{outputDir}/{outputFileName}.preproc.tsv`"
+        ],
         names = ["--preproc-tables"],
-        paramLabel = "<path>"
+        paramLabel = "<path.(tsv|csv)>"
     )
     var preprocOut: Path? = null
         set(value) {
@@ -290,8 +296,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         result.writeJson(output)
 
         // export tables & preprocessing summary
-        CommandPaExportTables(result, tablesOut()).run0()
-        CommandPaExportTablesPreprocSummary(result, preprocOut()).run0()
+        CommandPaExportTables(result, tablesOut()).run()
+        CommandPaExportTablesPreprocSummary(result, preprocOut()).run()
     }
 
     private fun run0(group: IsolationGroup, samples: List<String>): PaResultByGroup {
@@ -320,7 +326,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
 
         private val CHAINS_COLUMN_NAMES = arrayOf("chain", "chains")
 
-        private const val inputsLabel = "cloneset.(clns|clna)..."
+        private const val inputsLabel = "(cloneset.(clns|clna)|directory)..."
 
         private const val outputLabel = "result.json[.gz]"
 
@@ -333,7 +339,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                     .type(Path::class.java)
                     .paramLabel(inputsLabel)
                     .hideParamSyntax(true)
-                    .description("Paths to input clnx files.")
+                    .description("Paths to input clnx files or to directories with clnx files. Files in directories will not be filtered by extension.")
                     .build()
             )
                 .addPositional(

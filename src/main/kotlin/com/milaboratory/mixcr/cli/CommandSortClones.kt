@@ -59,9 +59,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
         get() = listOf(out)
 
     override fun validate() {
-        ValidationException.requireFileType(input, InputFileType.CLNX)
-        val fileType = arrayOf(InputFileType.CLNS, InputFileType.CLNA).first { input.matches(it) }
-        ValidationException.requireFileType(out, fileType)
+        ValidationException.requireTheSameFileType(input, out, InputFileType.CLNS, InputFileType.CLNA)
     }
 
 

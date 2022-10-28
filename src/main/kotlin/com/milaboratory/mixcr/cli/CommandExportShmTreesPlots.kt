@@ -44,7 +44,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
             "Path to metadata file",
             "Metadata should be a .tsv or .csv file with a column named 'sample' with filenames of .clns files used in findShmTrees"
         ],
-        paramLabel = "<path>"
+        paramLabel = "<path.(tsv|csv)>"
     )
     var metadata: Path? = null
         set(value) {

@@ -102,10 +102,14 @@ class CommandSlice : MiXCRCommandWithOutputs() {
         get() = listOf(out)
 
     override fun validate() {
-        ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNX, InputFileType.SHMT)
-        val fileType = arrayOf(InputFileType.VDJCA, InputFileType.CLNS, InputFileType.CLNA, InputFileType.SHMT)
-            .first { it.matches(input) }
-        ValidationException.requireFileType(out, fileType)
+        ValidationException.requireTheSameFileType(
+            input,
+            out,
+            InputFileType.VDJCA,
+            InputFileType.CLNS,
+            InputFileType.CLNA,
+            InputFileType.SHMT
+        )
     }
 
     override fun run0() {
