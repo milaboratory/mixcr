@@ -162,7 +162,10 @@ object CommandAssembleContigs {
             val footer: MiXCRFooter
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-                cmdParams = paramsResolver.resolve(reader.header.paramsSpec.addMixins(mixinsToAdd)).second
+                cmdParams = paramsResolver.resolve(
+                    reader.header.paramsSpec.addMixins(mixinsToAdd),
+                    printParameters = logger.verbose
+                ).second
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."

@@ -186,7 +186,7 @@ object CommandExportClones {
             val header = initialSet.header
             val (_, params) = paramsResolver.resolve(
                 header.paramsSpec,
-                printParameters = outputFile != null,
+                printParameters = logger.verbose && outputFile != null
             )
 
             // Calculating splitting keys

@@ -121,7 +121,10 @@ object CommandExportAlignments {
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->
                 val info = data.info
-                val (_, params) = paramsResolver.resolve(info.paramsSpec, printParameters = outputFile != null)
+                val (_, params) = paramsResolver.resolve(
+                    info.paramsSpec,
+                    printParameters = logger.verbose && outputFile != null
+                )
 
                 InfoWriter.create(
                     outputFile,
