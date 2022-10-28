@@ -57,7 +57,7 @@ interface FieldsCollection<in T : Any> {
             command,
             description,
             CommandLine.Range.valueOf("1"),
-            delegate,
+            listOf(delegate),
             deprecation
         ) {
             override val metaVars: String = parameter1.meta
@@ -86,7 +86,7 @@ interface FieldsCollection<in T : Any> {
             command,
             description,
             CommandLine.Range.valueOf("0..1"),
-            delegate,
+            listOf(delegate),
             deprecation
         ) {
             override val metaVars: String = "[" + parameter1.meta + "]"
@@ -116,7 +116,7 @@ interface FieldsCollection<in T : Any> {
             command,
             description,
             CommandLine.Range.valueOf("2"),
-            delegate,
+            listOf(delegate),
             deprecation
         ) {
             override val metaVars: String = parameter1.meta + " " + parameter2.meta
@@ -142,12 +142,34 @@ interface FieldsCollection<in T : Any> {
             validateArgs: FieldsCollection<*>.(P1?, P2?) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1?, P2?) -> List<Array<String>>
+        ): FieldsCollection<T> = invoke(
+            priority,
+            command,
+            description,
+            listOf(delegate),
+            parameter1,
+            parameter2,
+            validateArgs,
+            deprecation,
+            extract
+        )
+
+        operator fun <T : Any, P1 : Any, P2 : Any> invoke(
+            priority: Int,
+            command: String,
+            description: String,
+            delegates: List<Field<T>>,
+            parameter1: CommandArgOptional<P1?>,
+            parameter2: CommandArgOptional<P2?>,
+            validateArgs: FieldsCollection<*>.(P1?, P2?) -> Unit = { _, _ -> },
+            deprecation: String? = null,
+            extract: MiXCRHeader.(P1?, P2?) -> List<Array<String>>
         ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, Pair<P1?, P2?>>(
             priority,
             command,
             description,
             CommandLine.Range.valueOf("0..2"),
-            delegate,
+            delegates,
             deprecation
         ) {
             override val metaVars: String = "[" + parameter1.meta + " " + parameter2.meta + "]"
@@ -190,7 +212,7 @@ interface FieldsCollection<in T : Any> {
             command,
             description,
             CommandLine.Range.valueOf("1..3"),
-            delegate,
+            listOf(delegate),
             deprecation
         ) {
             override val metaVars: String = parameter1.meta + " [" + parameter2.meta + " " + parameter3.meta + "]"
@@ -225,7 +247,7 @@ private abstract class FieldsCollectionWithParameters<T : Any, P>(
     override val cmdArgName: String,
     override val description: String,
     override val arity: CommandLine.Range,
-    private val delegate: Field<T>,
+    private val delegates: List<Field<T>>,
     override val deprecation: String? = null
 ) : FieldsCollection<T> {
     protected abstract fun getParameters(headerData: MiXCRHeader, args: Array<String>): P
@@ -234,9 +256,10 @@ private abstract class FieldsCollectionWithParameters<T : Any, P>(
     override fun createFields(
         headerData: MiXCRHeader,
         args: Array<String>
-    ): List<FieldExtractor<T>> = argsSupplier(headerData, getParameters(headerData, args)).map { argsForDelegate ->
-        delegate.create(headerData, argsForDelegate)
-    }
+    ): List<FieldExtractor<T>> = argsSupplier(headerData, getParameters(headerData, args))
+        .flatMap { argsForDelegate ->
+            delegates.map { delegate -> delegate.create(headerData, argsForDelegate) }
+        }
 }
 
 private class FieldsCollectionParameterless<T : Any>(

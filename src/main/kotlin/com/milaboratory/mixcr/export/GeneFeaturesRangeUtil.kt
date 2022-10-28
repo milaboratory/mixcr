@@ -18,10 +18,17 @@ import io.repseq.core.ReferencePoint
 object GeneFeaturesRangeUtil {
     fun commonDescriptionForFeatures(
         command: String,
-        nFeatureField: Field<*>
-    ): String = "for all gene features between specified reference points (in separate columns).%n" +
-            "For example, `$command FR3Begin FR4End` will export `${nFeatureField.cmdArgName} FR3`, `${nFeatureField.cmdArgName} CDR3` and `${nFeatureField.cmdArgName} FR4`.%n" +
-            "By default boundaries will be get from analysis parameters if possible or `FR1Begin FR4End` otherwise."
+        vararg fields: Field<*>
+    ): String {
+        val resultFields = arrayOf("FR3", "CDR3", "FR4")
+            .flatMap { feature ->
+                fields.map { field -> "`${field.cmdArgName} $feature`" }
+            }
+            .joinToString(", ")
+        return "for all gene features between specified reference points (in separate columns).%n" +
+                "For example, `$command FR3Begin FR4End` will export $resultFields.%n" +
+                "By default boundaries will be get from analysis parameters if possible or `FR1Begin FR4End` otherwise."
+    }
 
     fun commonDescriptionForReferencePoints(
         command: String,

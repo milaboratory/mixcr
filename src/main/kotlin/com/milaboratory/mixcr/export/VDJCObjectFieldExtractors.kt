@@ -53,43 +53,6 @@ private val SCORE_FORMAT = DecimalFormat("#.#")
 private const val MAX_SHIFTED_TRIPLETS = 3
 
 object VDJCObjectFieldExtractors {
-    val presets: Map<String, List<ExportFieldDescription>> = buildMap {
-        this["min"] = listOf(
-            ExportFieldDescription("-vHit"),
-            ExportFieldDescription("-dHit"),
-            ExportFieldDescription("-jHit"),
-            ExportFieldDescription("-cHit"),
-            ExportFieldDescription("-nFeature", "CDR3")
-        )
-
-        this["full"] = listOf(
-            ExportFieldDescription("-targetSequences"),
-            ExportFieldDescription("-targetQualities"),
-            ExportFieldDescription("-vHitsWithScore"),
-            ExportFieldDescription("-dHitsWithScore"),
-            ExportFieldDescription("-jHitsWithScore"),
-            ExportFieldDescription("-cHitsWithScore"),
-            ExportFieldDescription("-vAlignments"),
-            ExportFieldDescription("-dAlignments"),
-            ExportFieldDescription("-jAlignments"),
-            ExportFieldDescription("-cAlignments"),
-            ExportFieldDescription("-allNFeatures"),
-            ExportFieldDescription("-allMinFeaturesQuality"),
-            ExportFieldDescription("-allAaFeatures"),
-            ExportFieldDescription("-defaultAnchorPoints"),
-            ExportFieldDescription("-allTags"),
-            ExportFieldDescription("-allUniqueTagsCount")
-        )
-
-        this["fullImputed"] = this.getValue("full").map { fieldData ->
-            when (fieldData.field) {
-                "-allNFeatures" -> ExportFieldDescription("-allNFeaturesImputed", fieldData.args)
-                "-allAaFeature" -> ExportFieldDescription("-allAaFeaturesImputed", fieldData.args)
-                else -> fieldData
-            }
-        }
-    }
-
     fun vdjcObjectFields(forTreesExport: Boolean): List<FieldsCollection<VDJCObject>> = buildList {
         // Number of targets
         this += Field(
@@ -283,17 +246,16 @@ object VDJCObjectFieldExtractors {
                 sb.toString()
             }
         }
+        val nFeatureField = Field(
+            Order.`-nFeature`,
+            "-nFeature",
+            "Export nucleotide sequence of specified gene feature",
+            geneFeatureParam("nSeq")
+        ) { vdjcObject: VDJCObject, feature ->
+            vdjcObject.getFeature(feature)?.sequence?.toString() ?: NULL
+        }
         if (!forTreesExport) {
-            val nFeatureField = Field(
-                Order.`-nFeature`,
-                "-nFeature",
-                "Export nucleotide sequence of specified gene feature",
-                geneFeatureParam("nSeq")
-            ) { vdjcObject: VDJCObject, feature ->
-                vdjcObject.getFeature(feature)?.sequence?.toString() ?: NULL
-            }
             this += nFeatureField
-
             this += FieldsCollection(
                 Order.`-nFeature` + 1,
                 "-allNFeatures",
@@ -415,6 +377,41 @@ object VDJCObjectFieldExtractors {
             referencePointParamOptional("<to_reference_point>"),
         ) { from, to ->
             geneFeaturesBetween(from, to)
+        }
+
+        if (!forTreesExport) {
+            this += FieldsCollection(
+                Order.features + 610,
+                "-allNFeaturesWithMinQuality",
+                "Export nucleotide sequences and minimal quality ${
+                    commonDescriptionForFeatures(
+                        "-allNFeaturesWithMinQuality",
+                        nFeatureField,
+                        minFeatureQualityField
+                    )
+                }",
+                listOf(nFeatureField, minFeatureQualityField),
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+            ) { from, to ->
+                geneFeaturesBetween(from, to)
+            }
+            this += FieldsCollection(
+                Order.features + 611,
+                "-allNFeaturesImputedWithMinQuality",
+                "Export nucleotide sequences and minimal quality ${
+                    commonDescriptionForFeatures(
+                        "-allNFeaturesImputedWithMinQuality",
+                        nFeatureImputedField,
+                        minFeatureQualityField
+                    )
+                }",
+                listOf(nFeatureImputedField, minFeatureQualityField),
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+            ) { from, to ->
+                geneFeaturesBetween(from, to)
+            }
         }
 
         val avrgFeatureQualityField = Field(

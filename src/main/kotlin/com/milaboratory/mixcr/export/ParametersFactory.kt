@@ -117,7 +117,12 @@ object ParametersFactory {
                     else -> Base.valueOf(arg)
                 }
             },
-            { base -> sPrefix + ((base?.name ?: "node").replaceFirstChar { it.titlecase(Locale.getDefault()) }) }
+            { base ->
+                when {
+                    base != null -> sPrefix + base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+                    else -> sPrefix
+                }
+            }
         )
     }
 }

@@ -13,7 +13,6 @@
       - field: "-dAlignments"
       - field: "-jAlignments"
       - field: "-cAlignments"
-      - field: "-allNFeatures"
-      - field: "-allMinFeaturesQuality"
+      - field: "-allNFeaturesWithMinQuality"
       - field: "-allAaFeatures"
       - field: "-defaultAnchorPoints"
