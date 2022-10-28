@@ -12,9 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import cc.redberry.pipe.InputPort
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import org.apache.commons.io.output.CloseShieldOutputStream
-import picocli.CommandLine
 import java.io.BufferedOutputStream
 import java.io.Closeable
 import java.io.OutputStream
@@ -59,24 +57,6 @@ class InfoWriter<T : Any> private constructor(
                 file != null -> BufferedOutputStream(Files.newOutputStream(file), 65536)
                 else -> CloseShieldOutputStream.wrap(System.out)
             }
-            val result = InfoWriter(fieldExtractors, outputStream)
-            if (printHeader)
-                result.printHeader()
-            return result
-        }
-
-        fun <T : Any> create(
-            file: Path?,
-            extractorsFactory: FieldExtractorsFactory<T>,
-            cmdParseResult: CommandLine.ParseResult,
-            header: MiXCRHeader,
-            printHeader: Boolean
-        ): InfoWriter<T> {
-            val outputStream = when {
-                file != null -> BufferedOutputStream(Files.newOutputStream(file), 65536)
-                else -> CloseShieldOutputStream.wrap(System.out)
-            }
-            val fieldExtractors = extractorsFactory.createExtractors(header, cmdParseResult)
             val result = InfoWriter(fieldExtractors, outputStream)
             if (printHeader)
                 result.printHeader()

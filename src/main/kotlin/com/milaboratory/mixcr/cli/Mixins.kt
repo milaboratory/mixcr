@@ -37,7 +37,7 @@ import com.milaboratory.mixcr.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.FieldExtractorsFactoryNew
+import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
@@ -402,16 +402,20 @@ class ExportMiXCRMixins : MiXCRMixinCollector() {
     companion object {
         const val DESCRIPTION = "Params for export commands:%n"
 
-        abstract class ExportParameterConsumer(private val fieldsFactory: FieldExtractorsFactoryNew<*>) :
+        abstract class ExportParameterConsumer(private val fieldsFactory: FieldExtractorsFactory<*>) :
             IParameterConsumer {
             override fun consumeParameters(args: Stack<String>, argSpec: ArgSpec, commandSpec: CommandSpec) {
                 val fieldName = args.pop()
-                val argsCount = fieldsFactory.getNArgsForField(fieldName)
-                val actualArgs: MutableList<String> = mutableListOf()
-                repeat(argsCount) {
+                val field = fieldsFactory[fieldName]
+                val argsCountToAdd = field.consumableArgs(args.reversed())
+                if (argsCountToAdd > args.size) {
+                    throw ValidationException("Not enough parameters for ${field.cmdArgName}")
+                }
+                val actualArgs: MutableList<String> = mutableListOf(fieldName)
+                repeat(argsCountToAdd) {
                     actualArgs.add(args.pop())
                 }
-                argSpec.setValue(listOf(fieldName) + actualArgs)
+                argSpec.setValue(actualArgs)
             }
         }
 

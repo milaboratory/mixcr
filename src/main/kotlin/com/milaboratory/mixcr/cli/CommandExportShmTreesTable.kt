@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
@@ -19,6 +20,7 @@ import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -35,6 +37,15 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     )
     val out: Path? = null
 
+    @Option(
+        description = ["Don't print first header line, print only data"],
+        names = ["--no-header"],
+        order = 50_000 - 100
+    )
+    var noHeader = false
+
+    val addedFields: MutableList<ExportFieldDescription> = mutableListOf()
+
     override val outputFiles
         get() = listOfNotNull(out)
 
@@ -43,10 +54,8 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             InfoWriter.create(
                 out,
-                SHMTreeFieldsExtractorsFactory,
-                spec.commandLine().parseResult,
-                reader.header,
-                true,
+                SHMTreeFieldsExtractorsFactory.createExtractors(addedFields, reader.header),
+                !noHeader,
             ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     output.put(
@@ -66,7 +75,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
             val command = CommandExportShmTreesTable()
             val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(command)
             command.spec = spec // inject spec manually
-            SHMTreeFieldsExtractorsFactory.addOptionsToSpec(spec, true)
+            SHMTreeFieldsExtractorsFactory.addOptionsToSpec(command.addedFields, spec)
             return spec
         }
     }

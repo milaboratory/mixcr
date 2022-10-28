@@ -62,6 +62,14 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
         return tags[idx];
     }
 
+    public TagInfo get(String tagName) {
+        for (TagInfo ti : this)
+            if (ti.getName().equalsIgnoreCase(tagName)) {
+                return ti;
+            }
+        return null;
+    }
+
     @Override
     public int size() {
         return tags.length;

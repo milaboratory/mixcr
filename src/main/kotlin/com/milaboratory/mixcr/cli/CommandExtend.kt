@@ -213,7 +213,7 @@ object CommandExtend {
             paramsSpec: MiXCRParamsSpec,
             alignerParameters: VDJCAlignerParameters
         ): ProcessWrapper<T> {
-            val (_, cmdParams) = paramsResolver.resolve(paramsSpec)
+            val (_, cmdParams) = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose)
 
             val extender = VDJCObjectExtender<T>(
                 chains, extensionQuality,

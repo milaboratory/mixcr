@@ -11,23 +11,37 @@
  */
 package com.milaboratory.mixcr
 
-import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
-import com.milaboratory.cli.*
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonTypeName
+import com.milaboratory.cli.Mixin
+import com.milaboratory.cli.POverride
+import com.milaboratory.cli.POverridesBuilderDsl
+import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.cli.POverridesBuilderOpsAbstract
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
 import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.cli.*
+import com.milaboratory.mixcr.cli.CommandAlign
+import com.milaboratory.mixcr.cli.CommandAssemble
+import com.milaboratory.mixcr.cli.CommandAssembleContigs
+import com.milaboratory.mixcr.cli.CommandExportAlignments
+import com.milaboratory.mixcr.cli.CommandExportClones
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.FieldExtractorsFactoryNew
+import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.vdjaligners.KGeneAlignmentParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
-import io.repseq.core.GeneType.*
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -561,6 +575,9 @@ object ExportMixins {
         when (field) {
             "-nFeature" -> "-nFeatureImputed"
             "-aaFeature" -> "-aaFeatureImputed"
+            "-allNFeatures" -> "-allNFeaturesImputed"
+            "-allNFeaturesWithMinQuality" -> "-allNFeaturesImputedWithMinQuality"
+            "-allAaFeatures" -> "-allAaFeaturesImputed"
             else -> field
         }
 
@@ -568,6 +585,9 @@ object ExportMixins {
         when (field) {
             "-nFeatureImputed" -> "-nFeature"
             "-aaFeatureImputed" -> "-aaFeature"
+            "-allNFeaturesImputed" -> "-allNFeatures"
+            "-allNFeaturesImputedWithMinQuality" -> "-allNFeaturesWithMinQuality"
+            "-allAaFeaturesImputed" -> "-allAaFeatures"
             else -> field
         }
 
@@ -612,10 +632,10 @@ object ExportMixins {
         @get:JsonIgnore
         val fieldDescr get() = ExportFieldDescription(field, args)
 
-        private fun checkFor(exf: FieldExtractorsFactoryNew<*>) {
-            val nArgsExpected = exf.getNArgsForField(field)
-            check(args.size == nArgsExpected) {
-                "Unexpected number of arguments for field $field. Expected $nArgsExpected but found ${args.size} " +
+        private fun checkFor(exf: FieldExtractorsFactory<*>) {
+            val arity = exf[field].arity
+            check(arity.min() <= args.size && args.size <= arity.max()) {
+                "Unexpected number of arguments for field $field. Expected $arity but found ${args.size} " +
                         "(${args.joinToString(", ")})"
             }
         }

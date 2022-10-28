@@ -128,7 +128,7 @@ object CommandAssemblePartial {
             val beginTimestamp = System.currentTimeMillis()
             val cmdParams: Params
             VDJCAlignmentsReader(inputFile).use { reader1 ->
-                cmdParams = paramsResolver.resolve(reader1.header.paramsSpec).second
+                cmdParams = paramsResolver.resolve(reader1.header.paramsSpec, printParameters = logger.verbose).second
                 VDJCAlignmentsReader(inputFile).use { reader2 ->
                     VDJCAlignmentsWriter(outputFile).use { writer ->
                         val groupingDepth =

@@ -21,13 +21,13 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
@@ -135,7 +135,7 @@ object CommandExportClones {
         private var dontSplitFiles = false
 
         @Mixin
-        private lateinit var exportDefaults: ExportDefaultOptions
+        lateinit var exportDefaults: ExportDefaultOptions
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
@@ -145,7 +145,7 @@ object CommandExportClones {
                 Params::splitByTags setIfNotNull splitByTag
                 Params::splitFilesBy setIfNotEmpty splitFilesBy
                 Params::noHeader setIfTrue exportDefaults.noHeader
-                Params::fields updateBy exportDefaults.fieldsUpdater(CloneFieldsExtractorsFactory)
+                Params::fields updateBy exportDefaults
                 if (dontSplitFiles || (chains != null && chains != "ALL"))
                     Params::splitFilesBy setTo emptyList()
             }
@@ -184,25 +184,10 @@ object CommandExportClones {
         override fun run0() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val header = initialSet.header
-            val tagsInfo = header.tagsInfo
             val (_, params) = paramsResolver.resolve(
                 header.paramsSpec,
-                printParameters = outputFile != null,
-            ) { params ->
-                if (params.splitByTags == null) {
-                    val newSpitBy = params.fields
-                        .filter { it.field.equals("-tag", ignoreCase = true) }
-                        .map { it.args[0] to tagsInfo.indexOf(it.args[0]) }
-                        .maxByOrNull { it.second }
-                        ?.first
-                    if (newSpitBy != null) {
-                        println("Clone splitting by $newSpitBy added automatically because -tag $newSpitBy field is present in the list.")
-                        params.copy(splitByTags = newSpitBy)
-                    } else
-                        params
-                } else
-                    params
-            }
+                printParameters = logger.verbose && outputFile != null
+            )
 
             // Calculating splitting keys
             val splitFileKeys = params.splitFilesBy
@@ -216,14 +201,29 @@ object CommandExportClones {
                 }
             }
 
-            val fieldExtractors = CloneFieldsExtractorsFactory
-                .createExtractors(params.fields, header, OutputMode.ScriptingFriendly)
+            val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, header)
 
             fun runExport(set: CloneSet, outFile: Path?) {
                 InfoWriter.create(outFile, fieldExtractors, !params.noHeader).use { writer ->
+                    val splitByTag = if (params.splitByTags != null) {
+                        header.tagsInfo[params.splitByTags]
+                    } else {
+                        val individualTagsForExport = params.fields
+                            .filter { it.field.equals("-tag", ignoreCase = true) }
+                            .map { header.tagsInfo[it.args[0]] }
+                        val tagsExportedByGroups = params.fields
+                            .filter { it.field.equals("-allTags", ignoreCase = true) }
+                            .map { TagType.valueOf(it.args[0]) }
+                            .flatMap { tagType -> header.tagsInfo.filter { it.type == tagType } }
+                        val newSpitBy = (individualTagsForExport + tagsExportedByGroups).maxByOrNull { it.index }
+                        if (newSpitBy != null && outputFile != null) {
+                            println("Clone splitting by $newSpitBy added automatically because -tag $newSpitBy field is present in the list.")
+                        }
+                        newSpitBy
+                    }
                     val exportClones = ExportClones(
                         set, writer, Long.MAX_VALUE,
-                        if (params.splitByTags == null) 0 else tagsInfo.indexOf(params.splitByTags) + 1
+                        if (splitByTag == null) 0 else splitByTag.index + 1
                     )
                     SmartProgressReporter.startProgressReport(exportClones, System.err)
                     exportClones.run()
@@ -328,7 +328,7 @@ object CommandExportClones {
         val cmd = Cmd()
         val spec = Model.CommandSpec.forAnnotatedObject(cmd)
         cmd.spec = spec // inject spec manually
-        CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
+        CloneFieldsExtractorsFactory.addOptionsToSpec(cmd.exportDefaults.addedFields, spec)
         return spec
     }
 }

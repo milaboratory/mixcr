@@ -15,8 +15,8 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractor
-import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
@@ -76,7 +76,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
                 )
 
             export.spec = spec // inject spec manually
-            CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
+            CloneFieldsExtractorsFactory.addOptionsToSpec(export.addedFields, spec)
             return spec
         }
     }
@@ -129,6 +129,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         return out.parent.resolve(fName)
     }
 
+    var addedFields: MutableList<ExportFieldDescription> = mutableListOf()
+
     override fun run0() {
         val samples = inputFiles
         val chains = this.chains?.let { ChainsFilter.parseChainsList(this.chains) }
@@ -168,8 +170,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         val fieldExtractors: List<FieldExtractor<Clone>> =
             CloneSetIO.mkReader(samples[0], VDJCLibraryRegistry.getDefault()).use { cReader ->
                 CloneFieldsExtractorsFactory.createExtractors(
-                    CloneFieldsExtractorsFactory
-                        .parsePicocli(spec.commandLine().parseResult), cReader.header, OutputMode.ScriptingFriendly
+                    addedFields,
+                    cReader.header
                 )
             }
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
