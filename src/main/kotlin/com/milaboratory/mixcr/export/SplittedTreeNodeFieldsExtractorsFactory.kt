@@ -15,64 +15,52 @@ import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wra
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
 
-object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactory<Wrapper>() {
-    override val presets: Map<String, List<FieldCommandArgs>> = buildMap {
+object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<Wrapper>() {
+    override val presets: Map<String, List<ExportFieldDescription>> = buildMap {
         this["min"] = listOf(
-            FieldCommandArgs("-treeId"),
-            FieldCommandArgs("-nodeId"),
-            FieldCommandArgs("-parentId"),
-            FieldCommandArgs("-distance", "germline"),
-            FieldCommandArgs("-cloneId"),
-            FieldCommandArgs("-fileName"),
-            FieldCommandArgs("-readCount"),
-            FieldCommandArgs("-vHit"),
-            FieldCommandArgs("-dHit"),
-            FieldCommandArgs("-jHit"),
-            FieldCommandArgs("-cHit"),
-            FieldCommandArgs("-nFeature", "CDR3", "node")
+            ExportFieldDescription("-treeId"),
+            ExportFieldDescription("-nodeId"),
+            ExportFieldDescription("-parentId"),
+            ExportFieldDescription("-distance", "germline"),
+            ExportFieldDescription("-cloneId"),
+            ExportFieldDescription("-fileName"),
+            ExportFieldDescription("-readCount"),
+            ExportFieldDescription("-vHit"),
+            ExportFieldDescription("-dHit"),
+            ExportFieldDescription("-jHit"),
+            ExportFieldDescription("-cHit"),
+            ExportFieldDescription("-nFeature", "CDR3")
         )
 
         this["full"] = listOf(
-            FieldCommandArgs("-treeId"),
-            FieldCommandArgs("-nodeId"),
-            FieldCommandArgs("-isObserved"),
-            FieldCommandArgs("-parentId"),
-            FieldCommandArgs("-distance", "germline"),
-            FieldCommandArgs("-cloneId"),
-            FieldCommandArgs("-fileName"),
-            FieldCommandArgs("-readCount"),
-            FieldCommandArgs("-readFraction"),
-            FieldCommandArgs("-targetSequences"),
-            FieldCommandArgs("-targetQualities"),
-            FieldCommandArgs("-vHitsWithScore"),
-            FieldCommandArgs("-dHitsWithScore"),
-            FieldCommandArgs("-jHitsWithScore"),
-            FieldCommandArgs("-cHitsWithScore"),
-            FieldCommandArgs("-vAlignments"),
-            FieldCommandArgs("-dAlignments"),
-            FieldCommandArgs("-jAlignments"),
-            FieldCommandArgs("-cAlignments"),
-            FieldCommandArgs("-nFeature", "FR1", "node"),
-            FieldCommandArgs("-aaFeature", "CDR1", "node"),
-            FieldCommandArgs("-nFeature", "CDR1", "node"),
-            FieldCommandArgs("-aaFeature", "FR1", "node"),
-            FieldCommandArgs("-nFeature", "FR2", "node"),
-            FieldCommandArgs("-aaFeature", "FR2", "node"),
-            FieldCommandArgs("-nFeature", "CDR2", "node"),
-            FieldCommandArgs("-aaFeature", "CDR2", "node"),
-            FieldCommandArgs("-nFeature", "FR3", "node"),
-            FieldCommandArgs("-aaFeature", "FR3", "node"),
-            FieldCommandArgs("-nFeature", "CDR3", "node"),
-            FieldCommandArgs("-aaFeature", "CDR3", "node"),
-            FieldCommandArgs("-nFeature", "FR4", "node"),
-            FieldCommandArgs("-aaFeature", "FR4", "node"),
-            FieldCommandArgs("-defaultAnchorPoints")
+            ExportFieldDescription("-treeId"),
+            ExportFieldDescription("-nodeId"),
+            ExportFieldDescription("-isObserved"),
+            ExportFieldDescription("-parentId"),
+            ExportFieldDescription("-distance", "germline"),
+            ExportFieldDescription("-cloneId"),
+            ExportFieldDescription("-fileName"),
+            ExportFieldDescription("-readCount"),
+            ExportFieldDescription("-readFraction"),
+            ExportFieldDescription("-targetSequences"),
+            ExportFieldDescription("-targetQualities"),
+            ExportFieldDescription("-vHitsWithScore"),
+            ExportFieldDescription("-dHitsWithScore"),
+            ExportFieldDescription("-jHitsWithScore"),
+            ExportFieldDescription("-cHitsWithScore"),
+            ExportFieldDescription("-vAlignments"),
+            ExportFieldDescription("-dAlignments"),
+            ExportFieldDescription("-jAlignments"),
+            ExportFieldDescription("-cAlignments"),
+            ExportFieldDescription("-allNFeatures"),
+            ExportFieldDescription("-allAaFeatures"),
+            ExportFieldDescription("-defaultAnchorPoints")
         )
     }
 
     override val defaultPreset: String = "full"
 
-    override fun allAvailableFields(): List<Field<Wrapper>> = buildList {
+    override fun allAvailableFields(): List<FieldsCollection<Wrapper>> = buildList {
         this += SHMTreeFieldsExtractorsFactory.treeFields(false).map { it.fromProperty { tree } }
         this += SHMTreeNodeFieldsExtractor.nodeFields().map { it.fromProperty { node } }
         this += (VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = true) +

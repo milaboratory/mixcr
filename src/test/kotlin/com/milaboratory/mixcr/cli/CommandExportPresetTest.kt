@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.util.TempFileManager
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainInOrder
@@ -13,14 +14,14 @@ import org.junit.Test
 class CommandExportPresetTest {
     @Test
     fun `add several export fields`() {
-        val output = TempFileManager.getTempFile()
+        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
             "exportPreset --species hs --dna " +
                     "--append-export-clones-field -aaFeature VDJRegion " +
                     "--append-export-clones-field -aaFeature VRegion " +
                     "--append-export-clones-field -aaFeature JRegion " +
-                    "test-tcr-shotgun ${output.path}"
+                    "--preset-name test-tcr-shotgun ${output.path}"
         )
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
         result.exportClones!!.fields
@@ -29,10 +30,23 @@ class CommandExportPresetTest {
     }
 
     @Test
-    fun `add assemble contig step`() {
-        val output = TempFileManager.getTempFile()
+    fun `add field with default`() {
+        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
-        TestMain.execute("exportPreset --species hs --dna --add-step assembleContigs test-tcr-shotgun ${output.path}")
+        TestMain.execute(
+            "exportPreset --species hs --dna " +
+                    "--append-export-clones-field -allAaFeatures " +
+                    "--preset-name test-tcr-shotgun ${output.path}"
+        )
+        val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
+        result.exportClones!!.fields shouldContain ExportFieldDescription("-allAaFeatures")
+    }
+
+    @Test
+    fun `add assemble contig step`() {
+        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
+        output.delete()
+        TestMain.execute("exportPreset --species hs --dna --add-step assembleContigs --preset-name test-tcr-shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
         result.pipeline!!.steps shouldContain MiXCRCommandDescriptor.assembleContigs
         result.assemble!!.clnaOutput shouldBe true

@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_OPTION_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_PARAMETER_LIST
@@ -49,7 +50,7 @@ class CommandExportHelp : Runnable {
     private fun exportHelp(commandLine: CommandLine, dir: Path) {
         dir.createDirectories()
         val main = dir.resolve("main.txt")
-        commandLine.usage(PrintStream(main.toFile()))
+        commandLine.usage(PrintStream(main.toFile()), Ansi.OFF)
         commandLine.help.subcommands().forEach { (commandName, subcommandHelp) ->
             val output = dir.resolve("$commandName.txt")
             if (md) {
@@ -90,7 +91,7 @@ class CommandExportHelp : Runnable {
                         .replace(Regex(""" {2,50}"""), " ")
                 }
             }
-            subcommandHelp.commandSpec().commandLine().usage(PrintStream(output.toFile()))
+            subcommandHelp.commandSpec().commandLine().usage(PrintStream(output.toFile()), Ansi.OFF)
             if (subcommandHelp.subcommands().isNotEmpty()) {
                 exportHelp(subcommandHelp.commandSpec().commandLine(), dir.resolve(commandName))
             }

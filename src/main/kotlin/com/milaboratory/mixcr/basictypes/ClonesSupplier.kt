@@ -9,8 +9,15 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.export
+package com.milaboratory.mixcr.basictypes
 
-enum class OutputMode {
-    HumanFriendly, ScriptingFriendly
+import cc.redberry.pipe.OutputPortCloseable
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+
+interface ClonesSupplier {
+    fun readClones(): OutputPortCloseable<Clone>
+
+    fun numberOfClones(): Int
+
+    val tagsInfo: TagsInfo
 }

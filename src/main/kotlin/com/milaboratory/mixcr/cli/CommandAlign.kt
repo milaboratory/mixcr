@@ -424,7 +424,7 @@ object CommandAlign {
 
         private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins.mixins) }
 
-        private val bpPair by lazy { paramsResolver.resolve(paramsSpec) }
+        private val bpPair by lazy { paramsResolver.resolve(paramsSpec, printParameters = logger.verbose) }
 
         private val cmdParams get() = bpPair.second
 
@@ -571,7 +571,7 @@ object CommandAlign {
                 .groupBy { it.type }
                 .forEach { (tagType: TagType, tagInfos: List<TagInfo>) ->
                     println("  $tagType tags: " + tagInfos.stream().map { obj: TagInfo -> obj.name }
-                        .collect(Collectors.joining()))
+                        .collect(Collectors.joining(", ")))
                 }
             val tagShortcuts = parseInfo.tags
                 .map { tagInfo -> readSearchPlan.tagShortcut(tagInfo.name) }

@@ -12,92 +12,98 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.export.ParametersFactory.tagParam
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
 
-object CloneFieldsExtractorsFactory : FieldExtractorsFactoryNew<Clone>() {
-    override fun allAvailableFields(): List<Field<Clone>> =
+object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
+    override fun allAvailableFields(): List<FieldsCollection<Clone>> =
         VDJCObjectFieldExtractors.vdjcObjectFields(forTreesExport = false) +
                 cloneFields(forTreesExport = false)
 
-    fun cloneFields(forTreesExport: Boolean): List<Field<Clone>> = buildList {
-        this += FieldParameterless(
+    fun cloneFields(forTreesExport: Boolean): List<FieldsCollection<Clone>> = buildList {
+        this += Field(
             Order.cloneSpecific + 100,
             "-cloneId",
             when {
                 forTreesExport -> "Unique clone identifier in source sample file"
                 else -> "Unique clone identifier"
             },
-            "Clone ID",
             "cloneId"
         ) { clone: Clone ->
             clone.id.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 200,
             "-count",
             when {
                 forTreesExport -> "Export clone count in source sample file"
                 else -> "Export clone count"
             },
-            "Clone count",
             "cloneCount",
             deprecation = stdDeprecationNote("-count", "-readCount", true),
         ) { clone: Clone ->
             clone.count.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 201,
             "-readCount",
             when {
                 forTreesExport -> "Number of reads assigned to the clonotype in source sample file"
                 else -> "Number of reads assigned to the clonotype"
             },
-            "Read Count",
             "readCount"
         ) { clone: Clone ->
             clone.count.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 300,
             "-fraction",
             when {
                 forTreesExport -> "Export clone fraction in source sample file"
                 else -> "Export clone fraction"
             },
-            "Clone fraction",
             "cloneFraction",
             deprecation = stdDeprecationNote("-fraction", "-readFraction", true),
         ) { clone: Clone ->
             clone.fraction.toString()
         }
-        this += FieldParameterless(
+        this += Field(
             Order.cloneSpecific + 301,
             "-readFraction",
             when {
                 forTreesExport -> "Fraction of reads assigned to the clonotype in source sample file"
                 else -> "Fraction of reads assigned to the clonotype"
             },
-            "Read fraction",
             "readFraction"
         ) { clone: Clone ->
             clone.fraction.toString()
         }
-        this += FieldWithParameters(
+        val uniqueTagFractionField = Field(
             Order.tags + 500,
             "-uniqueTagFraction",
             "Fraction of unique tags (UMI, CELL, etc.) the clone or alignment collected.",
-            tagParameter("Unique ", "unique", hSuffix = " fraction", sSuffix = "Fraction"),
-            validateArgs = { (tagName, idx) ->
-                require(idx != -1) { "No tag with name $tagName" }
-            }
-        ) { clone: Clone, (_, idx) ->
-            val level = idx + 1
+            tagParam("unique", sSuffix = "Fraction"),
+        ) { clone: Clone, tag: TagInfo ->
+            val level = tag.index + 1
             clone.getTagDiversityFraction(level).toString()
         }
-        this += FieldParameterless(
+        this += uniqueTagFractionField
+        this += FieldsCollection(
+            Order.tags + 501,
+            "-allUniqueTagFractions",
+            "Fractions of unique tags (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.%n$tagTypeDescription",
+            uniqueTagFractionField,
+            tagTypeParam()
+        ) { tagType ->
+            tagsInfo.filter { it.type == tagType }.map { arrayOf(it.name) }
+        }
+
+
+        this += Field(
             Order.tags + 600,
             "-cellGroup",
-            "Cell group",
             "Cell group",
             "cellGroup"
         ) { clone: Clone ->

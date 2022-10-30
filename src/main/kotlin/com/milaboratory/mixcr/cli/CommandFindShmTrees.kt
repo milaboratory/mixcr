@@ -13,12 +13,14 @@
 
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.InputPort
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
 import com.milaboratory.mixcr.basictypes.tag.TagType
@@ -253,46 +255,53 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             .setStartMillis(System.currentTimeMillis())
 
         val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
-        val cloneReaders = clnsFileNames.map { path ->
+        val datasets = clnsFileNames.map { path ->
             ClnsReader(path, vdjcLibraryRegistry)
         }
-        ValidationException.require(cloneReaders.isNotEmpty()) { "there is no files to process" }
-        ValidationException.require(cloneReaders.map { it.alignerParameters }.distinct().count() == 1) {
-            "input files must have the same aligner parameters"
+        ValidationException.require(datasets.isNotEmpty()) { "there is no files to process" }
+
+        ValidationException.requireDistinct(datasets.map { it.alignerParameters.featuresToAlignMap }) {
+            "Require the same features to align for all input files"
         }
+        val featureToAlign = HasFeatureToAlign(datasets.first().alignerParameters.featuresToAlignMap)
+
         for (geneType in GeneType.VJ_REFERENCE) {
-            val differentScores = cloneReaders
+            val scores = datasets
                 .map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
-                .distinct()
-            ValidationException.require(differentScores.count() == 1) {
+            ValidationException.requireDistinct(scores) {
                 "input files must have the same $geneType scoring"
             }
         }
-        ValidationException.require(cloneReaders.all { it.header.foundAlleles != null }) {
+        val scoringSet = ScoringSet(
+            datasets.first().assemblerParameters.cloneFactoryParameters.vParameters.scoring,
+            MutationsUtils.NDNScoring(),
+            datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
+        )
+
+        ValidationException.require(datasets.all { it.header.foundAlleles != null }) {
             "Input files must be processed by ${CommandFindAlleles.COMMAND_NAME}"
         }
-        ValidationException.require(cloneReaders.map { it.header.foundAlleles }.distinct().count() == 1) {
+        ValidationException.requireDistinct(datasets.map { it.header.foundAlleles }) {
             "All input files must be assembled with the same alleles"
         }
-        ValidationException.require(cloneReaders.all { it.header.allFullyCoveredBy != null }) {
+
+        ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        ValidationException.require(cloneReaders.map { it.header.allFullyCoveredBy }.distinct().count() == 1) {
+        ValidationException.requireDistinct(datasets.map { it.header.allFullyCoveredBy }) {
             "Input files must be cut by the same geneFeature"
         }
-        ValidationException.require(cloneReaders.map { it.header.tagsInfo }.distinct().count() == 1) {
+        val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
+
+        ValidationException.requireDistinct(datasets.map { it.header.tagsInfo }) {
             "Input files with different tags are not supported yet"
         }
-        val allFullyCoveredBy = cloneReaders.first().header.allFullyCoveredBy!!
-        val scoringSet = ScoringSet(
-            cloneReaders.first().assemblerParameters.cloneFactoryParameters.vParameters.scoring,
-            MutationsUtils.NDNScoring(),
-            cloneReaders.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
-        )
         val shmTreeBuilderOrchestrator = SHMTreeBuilderOrchestrator(
             shmTreeBuilderParameters,
             scoringSet,
-            cloneReaders,
+            datasets,
+            featureToAlign,
+            datasets.flatMap { it.usedGenes }.distinct(),
             allFullyCoveredBy,
             tempDest,
             debugDirectoryPath,
@@ -301,32 +310,49 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             CDR3LengthToFilter,
             minCountForClone
         )
-        buildFrom?.let { buildFrom ->
-            val result = shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom.toFile()), threads.value)
-            writeResults(reportBuilder, result, cloneReaders, scoringSet, generateGlobalTreeIds = false)
-            return
-        }
-        val allDatasetsHasCellTags = cloneReaders.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
-        if (allDatasetsHasCellTags) {
-            when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
-                is SHMTreeBuilderParameters.SingleCell.NoOP -> {
+        val report: BuildSHMTreeReport
+        outputTreesPath.toAbsolutePath().parent.createDirectories()
+        SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
+            shmTreesWriter.writeHeader(datasets, Params())
+
+            val writer = shmTreesWriter.treesWriter()
+
+            buildFrom?.let { buildFrom ->
+                val result =
+                    shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom.toFile()), threads.value)
+                writeResults(writer, result, scoringSet, generateGlobalTreeIds = false)
+                return
+            }
+            val allDatasetsHasCellTags = datasets.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
+            if (allDatasetsHasCellTags) {
+                when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
+                    is SHMTreeBuilderParameters.SingleCell.NoOP -> {
 //                    warn("Single cell tags will not be used, but it's possible on this data")
-                }
-                is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
-                    shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) {
-                        writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
                     }
-                    return
+                    is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
+                        shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) {
+                            writeResults(writer, it, scoringSet, generateGlobalTreeIds = true)
+                        }
+                        return
+                    }
+                }.exhaustive
+            }
+            val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
+            SmartProgressReporter.startProgressReport(progressAndStage)
+            shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads.value) {
+                writeResults(writer, it, scoringSet, generateGlobalTreeIds = true)
+            }
+            progressAndStage.finish()
+            reportBuilder.setFinishMillis(System.currentTimeMillis())
+            report = reportBuilder.buildReport()
+            shmTreesWriter.setFooter(
+                datasets.foldIndexed(MiXCRFooterMerger()) { i, m, f ->
+                    m.addReportsFromInput(i, clnsFileNames[i].toString(), f.footer)
                 }
-            }.exhaustive
+                    .addStepReport(MiXCRCommandDescriptor.findShmTrees, report)
+                    .build()
+            )
         }
-        val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
-        SmartProgressReporter.startProgressReport(progressAndStage)
-        shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads.value) {
-            writeResults(reportBuilder, it, cloneReaders, scoringSet, generateGlobalTreeIds = true)
-        }
-        progressAndStage.finish()
-        val report = reportBuilder.buildReport()
         ReportUtil.writeReportToStdout(report)
         reportOptions.appendToFiles(report)
     }
@@ -347,44 +373,29 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 
     private fun writeResults(
-        reportBuilder: BuildSHMTreeReport.Builder,
+        writer: InputPort<SHMTreeResult>,
         result: OutputPort<TreeWithMetaBuilder>,
-        cloneReaders: List<ClnsReader>,
         scoringSet: ScoringSet,
         generateGlobalTreeIds: Boolean
     ) {
         var treeIdGenerator = 1
         val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters.topologyBuilder, scoringSet)
-        outputTreesPath.toAbsolutePath().parent.createDirectories()
-        SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            shmTreesWriter.writeHeader(cloneReaders, Params())
 
-            val writer = shmTreesWriter.treesWriter()
-            result.forEach { tree ->
-                val rebuildFromMRCA = shmTreeBuilder.rebuildFromMRCA(tree)
-                writer.put(
-                    SHMTreeResult(
-                        rebuildFromMRCA.buildResult(),
-                        rebuildFromMRCA.rootInfo,
-                        if (generateGlobalTreeIds) {
-                            treeIdGenerator++
-                        } else {
-                            rebuildFromMRCA.treeId.id
-                        }
-                    )
+        result.forEach { tree ->
+            val rebuildFromMRCA = shmTreeBuilder.rebuildFromMRCA(tree)
+            writer.put(
+                SHMTreeResult(
+                    rebuildFromMRCA.buildResult(),
+                    rebuildFromMRCA.rootInfo,
+                    if (generateGlobalTreeIds) {
+                        treeIdGenerator++
+                    } else {
+                        rebuildFromMRCA.treeId.id
+                    }
                 )
-            }
-            writer.put(null)
-
-            reportBuilder.setFinishMillis(System.currentTimeMillis())
-            shmTreesWriter.setFooter(
-                cloneReaders.foldIndexed(MiXCRFooterMerger()) { i, m, f ->
-                    m.addReportsFromInput(i, clnsFileNames[i].toString(), f.footer)
-                }
-                    .addStepReport(MiXCRCommandDescriptor.findShmTrees, reportBuilder.buildReport())
-                    .build()
             )
         }
+        writer.put(null)
     }
 
     private fun SHMTreesWriter.writeHeader(cloneReaders: List<ClnsReader>, params: Params) {

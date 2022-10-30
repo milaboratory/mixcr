@@ -226,7 +226,10 @@ object CommandAssemble {
                 val inputFooter = alignmentsReader.footer
                 numberOfAlignments = alignmentsReader.numberOfAlignments
 
-                cmdParam = paramsResolver.resolve(inputHeader.paramsSpec.addMixins(mixinsToAdd)) { cp ->
+                cmdParam = paramsResolver.resolve(
+                    inputHeader.paramsSpec.addMixins(mixinsToAdd),
+                    printParameters = logger.verbose
+                ) { cp ->
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
                         return@resolve cp
 
@@ -301,12 +304,6 @@ object CommandAssemble {
                             inputHeader.tagsInfo.hasTagsWithType(TagType.Cell) ||
                             inputHeader.tagsInfo.hasTagsWithType(TagType.Molecule)
                         ) {
-                            if (cmdParam.consensusAssemblerParameters == null)
-                                throw ValidationException(
-                                    "Current preset has no consensus assembler parameters, " +
-                                            "while molecular or cell barcodes are used in the data."
-                                )
-
                             val preClonesFile = tempDest.resolvePath("preclones.pc")
 
                             val groupingLevel = if (cmdParam.cellLevel) TagType.Cell else TagType.Molecule

@@ -17,8 +17,8 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractor
-import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
@@ -30,7 +30,6 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Help.Visibility.ALWAYS
 import java.io.FileWriter
@@ -49,11 +48,11 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         private const val outputLabel = "output.tsv"
 
         @JvmStatic
-        fun mkSpec(): CommandLine.Model.CommandSpec {
+        fun mkSpec(): Model.CommandSpec {
             val export = CommandExportOverlap()
-            val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(export)
+            val spec = Model.CommandSpec.forAnnotatedObject(export)
                 .addPositional(
-                    CommandLine.Model.PositionalParamSpec.builder()
+                    Model.PositionalParamSpec.builder()
                         .index("0")
                         .required(false)
                         .arity("0..*")
@@ -64,7 +63,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
                         .build()
                 )
                 .addPositional(
-                    CommandLine.Model.PositionalParamSpec.builder()
+                    Model.PositionalParamSpec.builder()
                         .index("1")
                         .required(false)
                         .arity("0..*")
@@ -76,7 +75,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
                 )
 
             export.spec = spec // inject spec manually
-            CloneFieldsExtractorsFactory.addOptionsToSpec(spec)
+            CloneFieldsExtractorsFactory.addOptionsToSpec(export.addedFields, spec)
             return spec
         }
     }
@@ -134,7 +133,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
 
     private fun tagLevel(tt: TagType) =
         if (tagsInfo.all { it.hasTagsWithType(tt) }) {
-            val set = tagsInfo.map { it.getDepthForOrNull(tt) }.toSet()
+            val set = tagsInfo.map { it.getDepthFor(tt) }.toSet()
             if (set.size > 1)
                 null
             else
@@ -142,6 +141,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         } else
             null
 
+    var addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
     override fun run0() {
         val samples = inputFiles
@@ -193,8 +193,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         val fieldExtractors: List<FieldExtractor<Clone>> =
             CloneSetIO.mkReader(samples[0], VDJCLibraryRegistry.getDefault()).use { cReader ->
                 CloneFieldsExtractorsFactory.createExtractors(
-                    CloneFieldsExtractorsFactory
-                        .parsePicocli(spec.commandLine().parseResult), cReader.header, OutputMode.ScriptingFriendly
+                    addedFields,
+                    cReader.header
                 )
             }
         extractors += fieldExtractors.map { ExtractorPerSample(it) }

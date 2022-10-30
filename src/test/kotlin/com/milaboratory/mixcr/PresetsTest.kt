@@ -8,7 +8,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.test.TestUtil.assertJson
 import org.junit.Assert
 import org.junit.Test
@@ -54,7 +53,13 @@ class PresetsTest {
             val tagsInfo = TagsInfo(
                 0,
                 TagInfo(TagType.Cell, TagValueType.Sequence, "CELL", 0),
-                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 1),
+                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1", 1),
+                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2", 2),
+                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3", 3),
+                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 4),
+                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI1", 5),
+                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI2", 6),
+                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI3", 7),
             )
             val header = MiXCRHeader(
                 "hashA123",
@@ -70,8 +75,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields,
-                        header,
-                        OutputMode.ScriptingFriendly
+                        header
                     ).size
                 )
             }
@@ -79,8 +83,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
-                        header,
-                        OutputMode.ScriptingFriendly
+                        header
                     ).size
                 )
             }

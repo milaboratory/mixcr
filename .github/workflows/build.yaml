@@ -13,11 +13,11 @@ jobs:
   init:
     runs-on: ubuntu-latest
     steps:
-      - uses: milaboratory/github-ci/actions/context/init@v2
+      - uses: milaboratory/github-ci/actions/context/init@v3
         with:
           version-canonize: false
       - id: context
-        uses: milaboratory/github-ci/actions/context@v2
+        uses: milaboratory/github-ci/actions/context@v3
 
     outputs:
       is-release: ${{ steps.context.outputs.is-release }}
@@ -26,7 +26,7 @@ jobs:
     needs:
       - init
 
-    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v2
+    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v3
     with:
       # Environment
       java-version: '11'
@@ -56,6 +56,10 @@ jobs:
       dist-archive-paths: ./distributions/mixcr*.zip
       dist-archive-s3: true
       dist-archive-s3-add-sha: true
+
+      #CDN redirect
+      cdn-redirect-s3: true
+      cdn-redirect-s3-bucket-path: 'link/software/mixcr'
 
       dist-docker: true
       dist-docker-tasks: |

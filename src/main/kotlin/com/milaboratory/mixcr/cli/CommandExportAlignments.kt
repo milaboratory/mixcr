@@ -29,7 +29,6 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
-import com.milaboratory.mixcr.export.OutputMode
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.primitivio.filter
@@ -79,13 +78,13 @@ object CommandExportAlignments {
         private var chains: String? = null
 
         @Mixin
-        private lateinit var exportDefaults: ExportDefaultOptions
+        lateinit var exportDefaults: ExportDefaultOptions
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportAlignments) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
                 Params::noHeader setIfTrue exportDefaults.noHeader
-                Params::fields updateBy exportDefaults.fieldsUpdater(VDJCAlignmentsFieldsExtractorsFactory)
+                Params::fields updateBy exportDefaults
             }
         }
     }
@@ -96,18 +95,22 @@ object CommandExportAlignments {
     class Cmd : CmdBase() {
         @Parameters(
             description = ["Path to input file"],
-            paramLabel = "data.(vdjca|clns|clna)",
+            paramLabel = "data.(vdjca|clna)",
             index = "0"
         )
         lateinit var inputFile: Path
 
-        @Parameters(
+        @set:Parameters(
             description = ["Path where to write export table. Will write to output if omitted."],
             paramLabel = "table.tsv",
             index = "1",
             arity = "0..1"
         )
         var outputFile: Path? = null
+            set(value) {
+                ValidationException.requireTSV(value)
+                field = value
+            }
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -118,15 +121,14 @@ object CommandExportAlignments {
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->
                 val info = data.info
-                val (_, params) = paramsResolver.resolve(info.paramsSpec, printParameters = outputFile != null)
+                val (_, params) = paramsResolver.resolve(
+                    info.paramsSpec,
+                    printParameters = logger.verbose && outputFile != null
+                )
 
                 InfoWriter.create(
                     outputFile,
-                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
-                        params.fields,
-                        info,
-                        OutputMode.ScriptingFriendly
-                    ),
+                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(params.fields, info),
                     !params.noHeader
                 ).use { writer ->
                     val reader = data.port
@@ -181,7 +183,7 @@ object CommandExportAlignments {
         val cmd = Cmd()
         val spec = Model.CommandSpec.forAnnotatedObject(cmd)
         cmd.spec = spec // inject spec manually
-        VDJCAlignmentsFieldsExtractorsFactory.addOptionsToSpec(spec)
+        VDJCAlignmentsFieldsExtractorsFactory.addOptionsToSpec(cmd.exportDefaults.addedFields, spec)
         return spec
     }
 }

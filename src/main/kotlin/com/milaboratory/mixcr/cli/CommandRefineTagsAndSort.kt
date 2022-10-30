@@ -250,7 +250,7 @@ object CommandRefineTagsAndSort {
             VDJCAlignmentsReader(inputFile).use { mainReader ->
                 val header = mainReader.header
                 require(!header.tagsInfo.hasNoTags()) { "input file has no tags" }
-                cmdParams = paramsResolver.resolve(header.paramsSpec).second
+                cmdParams = paramsResolver.resolve(header.paramsSpec, printParameters = logger.verbose).second
                 val tagNames = mutableListOf<String>()
                 val indicesBuilder = TIntArrayList()
                 for (ti in header.tagsInfo.indices) {

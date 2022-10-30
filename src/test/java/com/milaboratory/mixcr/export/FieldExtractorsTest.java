@@ -13,14 +13,11 @@ package com.milaboratory.mixcr.export;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.cli.Util;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import com.milaboratory.mixcr.tests.MiXCRTestUtils;
 import com.milaboratory.mixcr.tests.TargetBuilder;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentResult;
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import io.repseq.core.*;
 import org.apache.commons.math3.random.Well44497b;
@@ -28,12 +25,8 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.FileOutputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.ListIterator;
 
-import static com.milaboratory.mixcr.export.OutputMode.HumanFriendly;
 import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
 
 public class FieldExtractorsTest {
@@ -61,8 +54,8 @@ public class FieldExtractorsTest {
         final FieldExtractor<? super VDJCAlignments> extractor =
                 Arrays.stream(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE.getFields())
                         .filter(it -> it.getCmdArgName().equals("-defaultAnchorPoints"))
+                        .flatMap(it -> it.createFields(dummyHeader(), new String[0]).stream())
                         .findFirst()
-                        .map(it -> it.create(HumanFriendly, dummyHeader(), new String[0]))
                         .orElseThrow(IllegalArgumentException::new);
 
         F6 goAssert = new F6() {
@@ -212,92 +205,5 @@ public class FieldExtractorsTest {
             System.out.println("public static final FieldExtractorFactory<VDJCObject> EXTRACT_" + u + "_ALIGNMENTS = extractAlignments(GeneType." + type + ");");
             System.out.println();
         }
-    }
-
-    //@Test
-    //public void testDescription() throws Exception {
-    //    ArrayList<String>[] description = FieldExtractors.getDescription(Clone.class);
-    //    System.out.println(Util.printTwoColumns(description[0], description[1], 15, 40, 10, "\n"));
-    //}
-
-    // @Ignore
-    // @Test
-    // public void testName() throws Exception {
-    //     try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsVDJCAlignments.rst")) {
-    //         out.write(printDocumentation(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE).getBytes());
-    //     }
-    //     try (FileOutputStream out = new FileOutputStream("doc/ExportFieldsClone.rst")) {
-    //         out.write(printDocumentation(CloneFieldsExtractorsFactory.INSTANCE).getBytes());
-    //     }
-    // }
-
-    private static ArrayList<String>[] getDescription(Field<?>[] fields) {
-        @SuppressWarnings("unchecked")
-        ArrayList<String>[] description = new ArrayList[]{new ArrayList<String>(), new ArrayList<String>()};
-        for (Field<?> field : fields) {
-            description[0].add(field.getCmdArgName() + " " + field.getMetaVars());
-            description[1].add(field.getDescription());
-        }
-        return description;
-    }
-
-    public static String printDocumentation(FieldExtractorsFactory<?> fieldExtractors) {
-        ArrayList<String>[] cols = getDescription(fieldExtractors.getFields());
-        cols[0].add(0, "Field name");
-        cols[1].add(0, "Description");
-        ListIterator<String>[] iterators = new ListIterator[]{cols[0].listIterator(), cols[1].listIterator()};
-        int max = Integer.MIN_VALUE, min = Integer.MIN_VALUE;
-        int maxLeftLength = Integer.MIN_VALUE;
-        while (iterators[0].hasNext()) {
-            String left = iterators[0].next();
-//            left = left.trim();
-            if (!left.contains("Field name")) {
-                left = "``" + left.replaceFirst(" ", "`` ");
-                left = left.replace("<", "``<");
-                left = left.replace(">", ">``");
-            }
-            iterators[0].set(left = "| " + remEx(left));
-            maxLeftLength = Math.max(maxLeftLength, left.length());
-            String right = iterators[1].next();
-            iterators[1].set(right = "| " + remEx(right));
-            max = Math.max(max, right.length());
-            min = Math.min(min, right.length());
-        }
-        ListIterator<String> it = cols[1].listIterator();
-        while (it.hasNext()) {
-            String next = it.next();
-            it.set(next + zeros(max - next.length()) + "    |");
-        }
-        String result = Util.printTwoColumns(cols[0], cols[1], maxLeftLength + 10, 5000, 2);
-        String[] split = result.split("\\n")[0].split("\\|");
-        String left = chars(split[1].length(), '-');
-        String right = chars(split[2].length(), '-');
-        String separator = "+" + left + "+" + right + "+";
-        String headerSeparator = separator.replace("-", "=");
-        StringBuilder sb = new StringBuilder();
-        sb.append(separator).append("\n");
-        result = result.replaceFirst("\\|\\n", "|\n" + headerSeparator + "\n");
-        result = result.replaceAll("\\|\\n\\|", "|\n" + separator + "\n|");
-        result = result.replaceAll("^\\s*$", "");
-        result = result.substring(0, result.length() - 1);
-        sb.append(result).append("\n");
-        sb.append(separator).append("\n");
-        return sb.toString();
-    }
-
-    static String zeros(int l) {
-        return chars(l, ' ');
-    }
-
-    private static String chars(int n, char cc) {
-        char[] c = new char[n];
-        Arrays.fill(c, cc);
-        return String.valueOf(c);
-    }
-
-    static String remEx(String str) {
-        String replace = str.trim().replace("Export", "").trim();
-        replace = String.valueOf(replace.charAt(0)).toUpperCase() + replace.substring(1);
-        return replace;
     }
 }

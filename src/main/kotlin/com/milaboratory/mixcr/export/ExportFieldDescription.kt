@@ -18,4 +18,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class ExportFieldDescription(
     @JsonProperty("field") val field: String,
     @JsonProperty("args") @JsonInclude(NON_EMPTY) val args: List<String> = emptyList(),
-)
+) {
+    companion object {
+        operator fun invoke(vararg args: String): ExportFieldDescription =
+            ExportFieldDescription(args[0], args.copyOfRange(1, args.size).toList())
+    }
+}

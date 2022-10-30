@@ -22,8 +22,9 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.helpers.get
 import com.milaboratory.mixcr.alleles.AlleleUtil.complimentaryGeneType
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneReader
+import com.milaboratory.mixcr.basictypes.ClonesSupplier
 import com.milaboratory.mixcr.basictypes.GeneFeatures
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.trees.constructStateBuilder
@@ -71,7 +72,9 @@ class AllelesBuilder(
     private val searchMutationsInCDR3Parameters: FindAllelesParameters.SearchMutationsInCDR3Params?,
     private val clonesFilter: ClonesFilter,
     private val tempDest: TempFileDest,
-    private val datasets: List<CloneReader>,
+    private val datasets: List<ClonesSupplier>,
+    private val featureToAlign: HasFeatureToAlign,
+    private val usedGenes: Collection<VDJCGene>,
     private val allClonesCutBy: GeneFeatures,
     private val debugDir: Path?,
     private val scoring: VJPair<AlignmentScoring<NucleotideSequence>>,
@@ -86,7 +89,7 @@ class AllelesBuilder(
         threads: Int
     ): Map<String, List<VDJCGeneData>> {
         val totalClonesCount = datasets.sumOf { it.numberOfClones() }.toLong()
-        val stateBuilder = datasets.constructStateBuilder()
+        val stateBuilder = featureToAlign.constructStateBuilder(usedGenes)
 
         //assumption: there are no allele genes in library
         //TODO how to check assumption?
@@ -447,7 +450,10 @@ class AllelesBuilder(
             parameters: FindAllelesParameters,
             clonesFilter: ClonesFilter,
             tempDest: TempFileDest,
-            datasets: List<CloneReader>,
+            datasets: List<ClonesSupplier>,
+            scoring: VJPair<AlignmentScoring<NucleotideSequence>>,
+            usedGenes: Collection<VDJCGene>,
+            featureToAlign: HasFeatureToAlign,
             allClonesCutBy: GeneFeatures,
             debugDir: Path?
         ): AllelesBuilder {
@@ -461,19 +467,17 @@ class AllelesBuilder(
                     JVariants += clone.getBestHit(Joining).gene.name
                 }
             }
-
             return AllelesBuilder(
                 parameters.searchAlleleParameter,
                 parameters.searchMutationsInCDR3,
                 clonesFilter,
                 tempDest,
                 datasets,
+                featureToAlign,
+                usedGenes,
                 allClonesCutBy,
                 debugDir,
-                VJPair(
-                    V = datasets[0].assemblerParameters.cloneFactoryParameters.vParameters.scoring,
-                    J = datasets[0].assemblerParameters.cloneFactoryParameters.jParameters.scoring
-                ),
+                scoring,
                 CDR3Variants.size,
                 VJPair(
                     VVariants.size,
@@ -482,13 +486,15 @@ class AllelesBuilder(
             )
         }
 
-        private fun <R> List<CloneReader>.filteredClones(filter: ClonesFilter, function: (OutputPort<Clone>) -> R): R =
-            port
-                .flatMap { cloneReader ->
-                    cloneReader.readClones().filter { clone ->
-                        filter.match(clone, cloneReader.tagsInfo)
-                    }
+        private fun <R> List<ClonesSupplier>.filteredClones(
+            filter: ClonesFilter,
+            function: (OutputPort<Clone>) -> R
+        ): R = port
+            .flatMap { cloneReader ->
+                cloneReader.readClones().filter { clone ->
+                    filter.match(clone, cloneReader.tagsInfo)
                 }
-                .use(function)
+            }
+            .use(function)
     }
 }

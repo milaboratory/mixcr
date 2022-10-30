@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.milaboratory.mitool.helpers.KObjectMapperProvider;
 import com.milaboratory.mixcr.alleles.FindAllelesReport;
@@ -25,18 +26,18 @@ import com.milaboratory.util.Report;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = AlignerReport.class, name = "alignerReport"),
-        @JsonSubTypes.Type(value = ChainUsageStats.class, name = "chainUsage"),
-        @JsonSubTypes.Type(value = CloneAssemblerReport.class, name = "assemblerReport"),
-        @JsonSubTypes.Type(value = FullSeqAssemblerReport.class, name = "fullSeqAssemblerReport"),
-        @JsonSubTypes.Type(value = PartialAlignmentsAssemblerReport.class, name = "partialAlignmentsAssemblerReport"),
-        @JsonSubTypes.Type(value = PreCloneAssemblerReport.class, name = "preCloneAssemblerReport"),
-        @JsonSubTypes.Type(value = ReadTrimmerReport.class, name = "readTrimmerReport"),
-        @JsonSubTypes.Type(value = TagReport.class, name = "tagReport"),
-        @JsonSubTypes.Type(value = VDJCObjectExtenderReport.class, name = "extenderReport"),
-        @JsonSubTypes.Type(value = RefineTagsAndSortReport.class, name = "refineTagsAndSort"),
-        @JsonSubTypes.Type(value = FindAllelesReport.class, name = "findAllelesReport"),
-        @JsonSubTypes.Type(value = BuildSHMTreeReport.class, name = "buildSHMTreeReport")
+        @Type(value = AlignerReport.class, name = "alignerReport"),
+        @Type(value = ChainUsageStats.class, name = "chainUsage"),
+        @Type(value = CloneAssemblerReport.class, name = "assemblerReport"),
+        @Type(value = FullSeqAssemblerReport.class, name = "fullSeqAssemblerReport"),
+        @Type(value = PartialAlignmentsAssemblerReport.class, name = "partialAlignmentsAssemblerReport"),
+        @Type(value = PreCloneAssemblerReport.class, name = "preCloneAssemblerReport"),
+        @Type(value = ReadTrimmerReport.class, name = "readTrimmerReport"),
+        @Type(value = TagReport.class, name = "tagReport"),
+        @Type(value = VDJCObjectExtenderReport.class, name = "extenderReport"),
+        @Type(value = RefineTagsAndSortReport.class, name = "refineTagsAndSort"),
+        @Type(value = FindAllelesReport.class, name = "findAllelesReport"),
+        @Type(value = BuildSHMTreeReport.class, name = "buildSHMTreeReport")
 })
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider.class)
 public interface MiXCRReport extends Report {

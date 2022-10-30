@@ -19,8 +19,8 @@ import com.milaboratory.core.alignment.AlignmentUtils
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AlleleUtil.complimentaryGeneType
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
+import com.milaboratory.mixcr.assembler.CloneFactoryParameters
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.basictypes.GeneFeatures
@@ -29,10 +29,10 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.primitivio.mapInParallel
 import com.milaboratory.primitivio.toList
+import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Diversity
@@ -52,14 +52,14 @@ class CloneRebuild(
     private val allelesMapping: Map<String, List<VDJCGeneId>>,
     assemblingFeatures: GeneFeatures,
     private val threads: Int,
-    assemblerParameters: CloneAssemblerParameters,
-    alignerParameters: VDJCAlignerParameters
+    cloneFactoryParameters: CloneFactoryParameters,
+    featuresToAlign: EnumMap<GeneType, GeneFeature>
 ) {
     private val cloneFactory = CloneFactory(
-        assemblerParameters.cloneFactoryParameters,
+        cloneFactoryParameters,
         assemblingFeatures.features.toTypedArray(),
         resultLibrary.genes,
-        alignerParameters.featuresToAlignMap
+        featuresToAlign
     )
 
     /**

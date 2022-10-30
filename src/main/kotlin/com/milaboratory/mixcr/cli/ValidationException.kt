@@ -25,6 +25,10 @@ class ValidationException(
             requireExtension("Require", path, "tsv", "csv")
         }
 
+        fun requireTSV(path: Path?) {
+            requireExtension("Require", path, "tsv")
+        }
+
         fun requireJson(path: Path?) {
             requireExtension("Require", path, "json")
         }
@@ -35,26 +39,32 @@ class ValidationException(
             }
         }
 
-        @OptIn(ExperimentalContracts::class)
-        inline fun require(value: Boolean, printHelp: Boolean = false, lazyMessage: () -> Any) {
-            contract {
-                returns() implies value
-            }
-            if (!value) {
-                val message = lazyMessage()
-                throw ValidationException(message.toString(), printHelp)
+        fun requireDistinct(collection: Collection<Any?>, lazyMessage: () -> String) {
+            check(collection.isNotEmpty())
+            val different = collection.distinct()
+            require(different.size == 1) {
+                lazyMessage() + ", got $different"
             }
         }
 
         @OptIn(ExperimentalContracts::class)
-        inline fun <T : Any> requireNotNull(value: T?, printHelp: Boolean = false, lazyMessage: () -> Any): T {
+        inline fun require(value: Boolean, printHelp: Boolean = false, lazyMessage: () -> String) {
+            contract {
+                returns() implies value
+            }
+            if (!value) {
+                throw ValidationException(lazyMessage(), printHelp)
+            }
+        }
+
+        @OptIn(ExperimentalContracts::class)
+        inline fun <T : Any> requireNotNull(value: T?, printHelp: Boolean = false, lazyMessage: () -> String): T {
             contract {
                 returns() implies (value != null)
             }
 
             if (value == null) {
-                val message = lazyMessage()
-                throw ValidationException(message.toString(), printHelp)
+                throw ValidationException(lazyMessage(), printHelp)
             } else {
                 return value
             }
