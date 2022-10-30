@@ -13,6 +13,8 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.FieldExtractor
@@ -29,10 +31,8 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
-import picocli.CommandLine.Command
+import picocli.CommandLine.*
 import picocli.CommandLine.Help.Visibility.ALWAYS
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -129,6 +129,20 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         return out.parent.resolve(fName)
     }
 
+    private val tagsInfo = inputFiles
+        .map { IOUtil.extractHeader(it).tagsInfo }
+
+    private fun tagLevel(tt: TagType) =
+        if (tagsInfo.all { it.hasTagsWithType(tt) }) {
+            val set = tagsInfo.map { it.getDepthForOrNull(tt) }.toSet()
+            if (set.size > 1)
+                null
+            else
+                set.first()
+        } else
+            null
+
+
     override fun run0() {
         val samples = inputFiles
         val chains = this.chains?.let { ChainsFilter.parseChainsList(this.chains) }
@@ -165,6 +179,17 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         extractors += NumberOfSamples()
         extractors += TotalCount()
         extractors += TotalFraction()
+
+        tagLevel(TagType.Molecule)?.let { umiLevel ->
+            extractors += TotalTagCount(umiLevel, "UMI")
+            extractors += TotalTagFraction(umiLevel, "UMI")
+        }
+
+        tagLevel(TagType.Cell)?.let { cellLevel ->
+            extractors += TotalTagCount(cellLevel, "CELL")
+            extractors += TotalTagFraction(cellLevel, "CELL")
+        }
+
         val fieldExtractors: List<FieldExtractor<Clone>> =
             CloneSetIO.mkReader(samples[0], VDJCLibraryRegistry.getDefault()).use { cReader ->
                 CloneFieldsExtractorsFactory.createExtractors(
@@ -236,7 +261,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
 
     private class TotalCount : OverlapFieldExtractor {
         override fun header(samples: List<String>): List<String> =
-            samples.map { sample -> "${sample}_countAggregated" }
+            samples.map { sample -> "${sample}_readCountAggregated" }
 
         override fun values(row: OverlapGroup<Clone>): List<String> =
             row.map { clones -> clones.sumOf { it.count }.toString() }
@@ -244,10 +269,26 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
 
     private class TotalFraction : OverlapFieldExtractor {
         override fun header(samples: List<String>): List<String> =
-            samples.map { sample -> "${sample}_fractionAggregated" }
+            samples.map { sample -> "${sample}_readFractionAggregated" }
 
         override fun values(row: OverlapGroup<Clone>): List<String> =
             row.map { clones -> clones.sumOf { it.fraction }.toString() }
+    }
+
+    private class TotalTagCount(val level: Int, val tagName: String) : OverlapFieldExtractor {
+        override fun header(samples: List<String>): List<String> =
+            samples.map { sample -> "${sample}_unique${tagName}CountAggregated" }
+
+        override fun values(row: OverlapGroup<Clone>): List<String> =
+            row.map { clones -> clones.sumOf { it.getTagDiversity(level) }.toString() }
+    }
+
+    private class TotalTagFraction(val level: Int, val tagName: String) : OverlapFieldExtractor {
+        override fun header(samples: List<String>): List<String> =
+            samples.map { sample -> "${sample}_unique${tagName}FractionAggregated" }
+
+        override fun values(row: OverlapGroup<Clone>): List<String> =
+            row.map { clones -> clones.sumOf { it.getTagDiversityFraction(level) }.toString() }
     }
 
     private class NumberOfSamples : OverlapFieldExtractor {
