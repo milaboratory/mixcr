@@ -52,6 +52,13 @@ class CommandExportReads : MiXCRCommandWithOutputs() {
     override val inputFiles
         get() = listOf(input)
 
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.VDJCA)
+        outputFiles.forEach { output ->
+            ValidationException.requireFileType(output, InputFileType.FASTQ)
+        }
+    }
+
     override fun run0() {
         VDJCAlignmentsReader(inputFiles.first()).use { reader ->
             createWriter().use { writer ->

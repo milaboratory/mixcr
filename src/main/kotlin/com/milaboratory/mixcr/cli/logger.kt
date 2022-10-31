@@ -55,6 +55,9 @@ object logger {
     }
 
     fun printWarningQueue() {
-        if (!quiet) for (m in warningsQueue) printWarn(m)
+        if (!quiet) {
+            for (m in warningsQueue) printWarn(m)
+        }
+        warningsQueue.clear()
     }
 }

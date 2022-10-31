@@ -35,7 +35,11 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
         paramLabel = "trees.tsv",
         description = ["Path to output table. Print in stdout if omitted."]
     )
-    val out: Path? = null
+    var out: Path? = null
+        set(value) {
+            ValidationException.requireFileType(out, InputFileType.TSV)
+            field = value
+        }
 
     @Option(
         description = ["Don't print first header line, print only data"],

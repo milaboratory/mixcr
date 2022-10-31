@@ -139,6 +139,10 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
         return resultFilter
     }
 
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.CLNX)
+    }
+
     override fun run0() {
         val filter = mkFilter()
         var total: Long = 0

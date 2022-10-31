@@ -17,7 +17,9 @@ import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.qc.TagRefinementQc
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -34,7 +36,7 @@ class CommandExportQcTags : MiXCRCommandWithOutputs() {
     companion object {
         private const val inputsLabel = "sample.(vdjca|clns|clna)..."
 
-        private const val outputLabel = "coverage.(pdf|eps|png|jpeg)"
+        private const val outputLabel = "coverage.${InputFileType.exportTypesLabel}"
 
         fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcTags::class.java)
             .addPositional(
@@ -82,6 +84,13 @@ class CommandExportQcTags : MiXCRCommandWithOutputs() {
         get() = listOf(files.last())
 
     private val out get() = outputFiles.last().toAbsolutePath()
+
+    override fun validate() {
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNX)
+        }
+        ValidationException.requireFileType(outputFiles.first(), InputFileType.exportTypes)
+    }
 
     override fun run0() {
         val plots = inputFiles.mapNotNull { file ->

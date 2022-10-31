@@ -30,13 +30,17 @@ import kotlin.io.path.createDirectories
     description = ["Export SHMTree as a table with a row for every node"]
 )
 class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
-    @Parameters(
+    @set:Parameters(
         index = "1",
         arity = "0..1",
         paramLabel = "trees.tsv",
         description = ["Path where to write output export table. Print in stdout if omitted."]
     )
-    val out: Path? = null
+    var out: Path? = null
+        set(value) {
+            ValidationException.requireFileType(value, InputFileType.TSV)
+            field = value
+        }
 
     @Option(
         description = ["Don't print first header line, print only data"],

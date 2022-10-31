@@ -78,6 +78,11 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
     )
     var separate = false
 
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.CLNA)
+        ValidationException.requireFileType(out, InputFileType.FASTQ, InputFileType.FASTA)
+    }
+
     override fun run0() {
         ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             val firstAlignment: VDJCAlignments = clna.readAllAlignments()

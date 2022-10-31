@@ -98,11 +98,11 @@ import io.repseq.core.GeneFeature.encode
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
+import picocli.CommandLine.Model.PositionalParamSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.FileInputStream
@@ -136,13 +136,29 @@ object CommandAlign {
         override val command get() = MiXCRCommandDescriptor.align
     }
 
-    private const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
+    fun checkInputs(paths: List<Path>) {
+        when (paths.size) {
+            1 -> ValidationException.requireFileType(
+                paths[0],
+                InputFileType.FASTQ,
+                InputFileType.FASTA,
+                InputFileType.BAM
+            )
+            2 -> {
+                ValidationException.requireFileType(paths[0], InputFileType.FASTQ)
+                ValidationException.requireFileType(paths[1], InputFileType.FASTQ)
+            }
+            else -> throw ValidationException("Required 1 or 2 input files, got $paths")
+        }
+    }
+
+    const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
 
     private const val outputLabel = "alignments.vdjca"
 
     fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(Cmd::class.java)
         .addPositional(
-            CommandLine.Model.PositionalParamSpec.builder()
+            PositionalParamSpec.builder()
                 .index("0")
                 .required(false)
                 .arity("0..*")
@@ -157,7 +173,7 @@ object CommandAlign {
                 .build()
         )
         .addPositional(
-            CommandLine.Model.PositionalParamSpec.builder()
+            PositionalParamSpec.builder()
                 .index("1")
                 .required(false)
                 .arity("0..*")
@@ -367,9 +383,11 @@ object CommandAlign {
         )
         private val inOut: List<Path> = mutableListOf()
 
+        private val outputFile get() = inOut.last()
+
         override val inputFiles get() = inOut.dropLast(1)
 
-        override val outputFiles get() = inOut.takeLast(1)
+        override val outputFiles get() = listOf(outputFile)
 
         @Option(
             description = ["Size of buffer for FASTQ readers in bytes. Default: 4Mb"],
@@ -391,33 +409,49 @@ object CommandAlign {
         var highCompression = false
 
 
-        @Option(
+        @set:Option(
             description = ["Pipe not aligned R1 reads into separate file."],
             names = ["--not-aligned-R1"],
             paramLabel = "<path>"
         )
         var notAlignedReadsR1: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
 
-        @Option(
+        @set:Option(
             description = ["Pipe not aligned R2 reads into separate file."],
             names = ["--not-aligned-R2"],
             paramLabel = "<path>"
         )
         var notAlignedReadsR2: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
 
-        @Option(
+        @set:Option(
             description = ["Pipe not parsed R1 reads into separate file."],
             names = ["--not-parsed-R1"],
             paramLabel = "<path>"
         )
         var notParsedReadsR1: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
 
-        @Option(
+        @set:Option(
             description = ["Pipe not parsed R2 reads into separate file."],
             names = ["--not-parsed-R2"],
             paramLabel = "<path>"
         )
         var notParsedReadsR2: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
 
         @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
@@ -483,24 +517,20 @@ object CommandAlign {
             BAM(true, false)
         }
 
-        private val fastqRegex = Regex("\\.f(?:ast)?q(?:\\.gz)?$", RegexOption.IGNORE_CASE)
-        private val fastaRegex = Regex("\\.f(?:ast)?a$", RegexOption.IGNORE_CASE)
-        private val bamRegex = Regex("\\.[bs]am$", RegexOption.IGNORE_CASE)
-
         private val inputType: InputType by lazy {
             val first = inputFilesExpanded.first()
             if (first.size == 1) {
-                val f0 = first[0].name
+                val f0 = first[0]
                 when {
-                    f0.contains(fastqRegex) -> SingleEndFastq
-                    f0.contains(fastaRegex) -> Fasta
-                    f0.contains(bamRegex) -> BAM
+                    f0.matches(InputFileType.FASTQ) -> SingleEndFastq
+                    f0.matches(InputFileType.FASTA) -> Fasta
+                    f0.matches(InputFileType.BAM) -> BAM
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
             } else if (first.size == 2) {
-                val f0 = first[0].name
-                val f1 = first[0].name
-                if (f0.contains(fastqRegex) && f1.contains(fastqRegex))
+                val f0 = first[0]
+                val f1 = first[0]
+                if (f0.matches(InputFileType.FASTQ) && f0.matches(InputFileType.FASTQ))
                     PairedEndFastq
                 else
                     throw ValidationException("Only fastq supports paired end input, can't recognise: $f0 + $f1")
@@ -590,6 +620,9 @@ object CommandAlign {
         override fun validate() {
             if (inOut.size > 3) throw ValidationException("Too many input files.")
             if (inOut.size < 2) throw ValidationException("Output file not specified.")
+
+            checkInputs(inputFiles)
+            ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
 
             fun checkFailedReadsOptions(optionPrefix: String, r1: Path?, r2: Path?) {
                 if (r1 != null) {
@@ -707,7 +740,6 @@ object CommandAlign {
 
             // Attaching report to aligner
             aligner.setEventsListener(reportBuilder)
-            val outputFile = outputFiles[0]
             use(
                 createReader(),
                 alignedWriter(outputFile),

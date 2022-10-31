@@ -47,6 +47,11 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
     override val outputFiles
         get() = listOf(out)
 
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.VDJCA)
+        ValidationException.requireFileType(out, InputFileType.VDJCA)
+    }
+
     override fun run0() {
         VDJCAlignmentsReader(input).use { reader ->
             SmartProgressReporter.startProgressReport("Reading vdjca", reader)

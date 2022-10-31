@@ -239,6 +239,11 @@ object CommandRefineTagsAndSort {
         override val outputFiles
             get() = listOf(outputFile)
 
+        override fun validate() {
+            ValidationException.requireFileType(inputFile, InputFileType.VDJCA)
+            ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
+        }
+
         override fun run0() {
             val startTimeMillis = System.currentTimeMillis()
 

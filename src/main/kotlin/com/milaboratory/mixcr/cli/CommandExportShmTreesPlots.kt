@@ -44,12 +44,11 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
             "Path to metadata file",
             "Metadata should be a .tsv or .csv file with a column named 'sample' with filenames of .clns files used in findShmTrees"
         ],
-        paramLabel = "<path>"
+        paramLabel = "<path.(tsv|csv)>"
     )
     var metadata: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
-            //TODO validate content
+            ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
 
@@ -198,7 +197,7 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     override fun validate() {
         super.validate()
-        ValidationException.requireExtension("Output file should have", out, "pdf")
+        ValidationException.requireFileType(out, InputFileType.PDF)
     }
 
     val alignment by lazy {

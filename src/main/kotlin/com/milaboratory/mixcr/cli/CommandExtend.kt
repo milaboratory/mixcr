@@ -106,14 +106,14 @@ object CommandExtend {
     class Cmd : CmdBase() {
         @Parameters(
             description = ["Path to input file."],
-            paramLabel = "data.[vdjca|clns|clna]",
+            paramLabel = "data.(vdjca|clns|clna)",
             index = "0"
         )
         lateinit var inputFile: Path
 
         @Parameters(
             description = ["Path where to write output. Will have the same file type."],
-            paramLabel = "extendeed.[vdjca|clns|clna]",
+            paramLabel = "extendeed.(vdjca|clns|clna)",
             index = "1"
         )
         lateinit var outputFile: Path
@@ -145,6 +145,14 @@ object CommandExtend {
 
         override val outputFiles
             get() = listOf(outputFile)
+
+        override fun validate() {
+            ValidationException.requireTheSameFileType(
+                inputFile,
+                outputFile,
+                InputFileType.VDJCA, InputFileType.CLNS, InputFileType.CLNA
+            )
+        }
 
         override fun run0() {
             when (IOUtil.extractFileType(inputFile)) {

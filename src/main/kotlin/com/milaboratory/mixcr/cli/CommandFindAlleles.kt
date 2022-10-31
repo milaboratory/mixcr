@@ -82,7 +82,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     @Parameters(
         arity = "1..*",
-        paramLabel = "input_file.clns",
+        paramLabel = "input_file.(clns|clna)",
         description = ["Input files for allele search"]
     )
     override val inputFiles: List<Path> = mutableListOf()
@@ -121,7 +121,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     )
     var libraryOutput: Path? = null
         set(value) {
-            ValidationException.requireJson(value)
+            ValidationException.requireFileType(value, InputFileType.JSON)
             field = value
         }
 
@@ -132,7 +132,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     )
     var allelesMutationsOutput: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
+            ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
 
@@ -200,6 +200,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.CLNX)
+        }
         if (listOfNotNull(outputClnsOptions.outputTemplate, libraryOutput, allelesMutationsOutput).isEmpty()) {
             throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
         }

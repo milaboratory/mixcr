@@ -11,9 +11,9 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.miplots.ExportType.Companion.determine
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.cli.CommonDescriptions
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.plots.parseFilter
 import com.milaboratory.mixcr.postanalysis.plots.readMetadata
@@ -39,7 +39,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     )
     var metadata: Path? = null
         set(value) {
-            ValidationException.requireXSV(value)
+            ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
 
@@ -70,7 +70,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     @Parameters(
         description = ["Output PDF/EPS/PNG/JPEG file name."],
         index = "1",
-        paramLabel = "output.(pdf|eps|png|jpeg)"
+        paramLabel = "output.${InputFileType.exportTypesLabel}"
     )
     lateinit var out: Path
 
@@ -88,16 +88,13 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     protected val metadataDf: DataFrame<*>? by lazy {
         when {
             metadata != null -> readMetadata(metadata!!)
-            else -> getPaResult().metadata?.toDataFrame()
+            else -> paResult.metadata?.toDataFrame()
         }
     }
 
     override fun validate() {
-        try {
-            determine(out)
-        } catch (e: Exception) {
-            throw ValidationException("Unsupported file extension (possible: pdf, eps, svg, png): $out")
-        }
+        super.validate()
+        ValidationException.requireFileType(out, InputFileType.exportTypes)
         metadataDf?.let { metadataDf ->
             if (!metadataDf.containsColumn("sample"))
                 throw ValidationException("Metadata must contain 'sample' column")

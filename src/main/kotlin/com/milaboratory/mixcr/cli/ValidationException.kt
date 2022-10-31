@@ -12,30 +12,43 @@
 package com.milaboratory.mixcr.cli
 
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.io.path.extension
 
 class ValidationException(
     override val message: String,
     val printHelp: Boolean = false
 ) : RuntimeException() {
     companion object {
-        fun requireXSV(path: Path?) {
-            requireExtension("Require", path, "tsv", "csv")
+        fun requireFileType(path: Path?, fileType: InputFileType, vararg additional: InputFileType) {
+            requireFileType(path, arrayOf(fileType) + additional)
         }
 
-        fun requireTSV(path: Path?) {
-            requireExtension("Require", path, "tsv")
+        fun requireFileType(path: Path?, fileTypes: Array<InputFileType>) {
+            require(path == null || fileTypes.any { path.matches(it) }) {
+                if (fileTypes.size == 1) {
+                    "Require ${fileTypes.first().name.lowercase()} file type, got $path"
+                } else {
+                    "Require one of ${fileTypes.joinToString(", ") { it.name.lowercase() }} file types, got $path"
+                }
+            }
         }
 
-        fun requireJson(path: Path?) {
-            requireExtension("Require", path, "json")
+        fun requireTheSameFileType(first: Path, another: Path, vararg fileTypes: InputFileType) {
+            @Suppress("UNCHECKED_CAST")
+            requireFileType(first, fileTypes as Array<InputFileType>)
+            val fileType = fileTypes.first { it.matches(first) }
+            require(another.matches(fileType)) {
+                "$another must have the same extension as $first"
+            }
         }
 
-        fun requireExtension(prefix: String, path: Path?, vararg extension: String) {
-            require(path == null || path.extension in extension) {
-                "$prefix ${extension.joinToString(" or ") { ".$it" }} file extension, got $path"
+        fun requireNoExtension(input: String?) {
+            if (input == null) return
+            val asPath = Paths.get(input)
+            require(InputFileType.values().none { asPath.matches(it) }) {
+                "Must have no extension, got $input"
             }
         }
 

@@ -17,6 +17,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAlign
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
@@ -32,7 +33,7 @@ class CommandExportQcChainUsage : CommandExportQc() {
     companion object {
         private const val inputsLabel = "sample.(vdjca|clns|clna)..."
 
-        private const val outputLabel = "usage.(pdf|eps|png|jpeg)"
+        private const val outputLabel = "usage.${InputFileType.exportTypesLabel}"
 
         fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcChainUsage::class.java)
             .addPositional(
@@ -84,11 +85,20 @@ class CommandExportQcChainUsage : CommandExportQc() {
     )
     var hideNonFunctional = false
 
+    private val output get() = inOut.last()
+
     override val inputFiles
-        get() = inOut.subList(0, inOut.size - 1)
+        get() = inOut.dropLast(1)
 
     override val outputFiles
-        get() = listOf(inOut.last())
+        get() = listOf(output)
+
+    override fun validate() {
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNX)
+        }
+        ValidationException.requireFileType(output, InputFileType.exportTypes)
+    }
 
     override fun run0() {
         val fileTypes = inputFiles.map { IOUtil.extractFileType(it) }
@@ -118,6 +128,6 @@ class CommandExportQcChainUsage : CommandExportQc() {
             )
             SHMT -> throw IllegalArgumentException("Can't export chain usage from .shmt file")
         }
-        writeFile(outputFiles[0], plot)
+        writeFile(output, plot)
     }
 }

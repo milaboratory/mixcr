@@ -11,13 +11,17 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
+import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult
+import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.extension
 
-abstract class CommandPaExportTablesBase : CommandPaExport {
+abstract class CommandPaExportTablesBase : CommandPaExport() {
     @Parameters(
         description = ["Path for output file."],
         index = "1",
@@ -25,33 +29,85 @@ abstract class CommandPaExportTablesBase : CommandPaExport {
     )
     lateinit var out: Path
 
-    constructor()
-
-    constructor(paResult: PaResult, out: Path) : super(paResult) {
-        this.out = out
-    }
-
     override fun validate() {
-        ValidationException.requireExtension("Output file must have", out, "tsv", "csv")
+        super.validate()
+        ValidationException.requireFileType(out, InputFileType.XSV)
     }
 
-    protected fun outDir(): Path = out.toAbsolutePath().parent
+    abstract class Executor {
+        fun run(result: PaResultByGroup, out: Path) {
+            val dir = out.toAbsolutePath().parent
+            Files.createDirectories(dir)
+            run0(
+                result,
+                OutputDescription(
+                    dir,
+                    out.fileName.toString().dropLast(4),
+                    if (out.extension == "tsv") "\t" else ","
+                ) { group -> group.extension() + "." + out.extension }
+            )
+        }
 
-    protected fun outPrefix(): String {
-        val fName = out.fileName.toString()
-        return fName.dropLast(4)
+        protected abstract fun run0(result: PaResultByGroup, out: OutputDescription)
+
+        protected data class OutputDescription(
+            val dir: Path,
+            val prefix: String,
+            val separator: String,
+            val extension: (group: IsolationGroup) -> String
+        )
     }
 
-    protected fun outExtension(group: IsolationGroup): String =
-        group.extension() + "." + out.extension
+    @Command(
+        description = ["CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap"]
+    )
+    class Tables : CommandPaExportTablesBase() {
+        override fun run(result: PaResultByGroup) {
+            executor.run(result, out)
+        }
 
-    protected fun separator(): String =
-        if (out.extension == "tsv") "\t" else ","
+        companion object {
+            val executor = object : Executor() {
+                override fun run0(result: PaResultByGroup, out: OutputDescription) {
+                    for (table in result.schema.tables) {
+                        writeTables(out.extension(result.group), result.result.getTable(table), out)
+                    }
+                }
 
-    override fun run(result: PaResultByGroup) {
-        Files.createDirectories(outDir())
-        run1(result)
+                private fun <K> writeTables(
+                    extension: String,
+                    tableResult: CharacteristicGroupResult<K>,
+                    out: OutputDescription
+                ) {
+                    for (view in tableResult.group.views) {
+                        for (table in view.getTables(tableResult).values) {
+                            table.writeCSV(out.dir, "sample", out.prefix + ".", out.separator, extension)
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    abstract fun run1(result: PaResultByGroup)
+    @Command(
+        description = ["Export preprocessing summary tables."]
+    )
+    class PreprocSummary : CommandPaExportTablesBase() {
+        override fun run(result: PaResultByGroup) {
+            executor.run(result, out)
+        }
+
+        companion object {
+            val executor = object : Executor() {
+                override fun run0(result: PaResultByGroup, out: OutputDescription) {
+                    SetPreprocessorSummary.byCharToCSV(
+                        out.dir.resolve(out.prefix + out.extension(result.group)),
+                        result.schema,
+                        result.result,
+                        out.separator
+                    )
+                }
+            }
+        }
+    }
 }
