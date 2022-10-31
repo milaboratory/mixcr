@@ -98,14 +98,14 @@ public class CommandFindAllelesTest {
         try {
             Main.parseArgs(
                     CommandFindAlleles.COMMAND_NAME,
-                    "--export-library", "/output/folder/library.json",
+                    "--export-library", "/output/folder/library.txt",
                     "--output-template", "/output/folder/{file_name}_with_alleles.clns",
                     file1.toString(),
                     file2.toString()
             ).getParseResult();
             fail();
         } catch (ParameterException e) {
-            assertEquals("Require .json file extension, got /output/folder/library.json", e.getCause().getMessage());
+            assertEquals("Require json file type, got /output/folder/library.txt", e.getCause().getMessage());
         }
     }
 
