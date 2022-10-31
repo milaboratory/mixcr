@@ -128,8 +128,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         return out.parent.resolve(fName)
     }
 
-    private val tagsInfo = inputFiles
-        .map { IOUtil.extractHeader(it).tagsInfo }
+    private val tagsInfo
+        get() = inputFiles.map { IOUtil.extractHeader(it).tagsInfo }
 
     private fun tagLevel(tt: TagType) =
         if (tagsInfo.all { it.hasTagsWithType(tt) }) {
