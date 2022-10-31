@@ -37,6 +37,10 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
     override val outputFiles
         get() = listOf(out)
 
+    override fun validate() {
+        ValidationException.requireNoExtension(out.toString())
+    }
+
     override fun run0() {
         out.createDirectories()
 

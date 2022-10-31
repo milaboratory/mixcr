@@ -19,6 +19,7 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.cli.ValidationException;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import io.repseq.core.*;
@@ -60,6 +61,8 @@ public final class CloneFactory {
                     indexOfAssemblingFeatureWithD = i;
                 else
                     throw new IllegalArgumentException("Several features with D.");
+        if (indexOfAssemblingFeatureWithD == -1)
+            throw new ValidationException("Assembling features don't contain D gene: " + Arrays.deepToString(assemblingFeatures), false);
         this.indexOfAssemblingFeatureWithD = indexOfAssemblingFeatureWithD;
     }
 

@@ -37,7 +37,7 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
 
     @Parameters(
         description = ["Path where to write reports. Print in stdout if omitted."],
-        paramLabel = "report.(txt|json|yaml)",
+        paramLabel = "report.(txt|json|yaml|yml)",
         index = "1",
         arity = "0..1"
     )
@@ -66,6 +66,18 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
 
     override val outputFiles
         get() = listOfNotNull(outputPath)
+
+    override fun validate() {
+        ValidationException.requireFileType(inputPath, InputFileType.VDJCA, InputFileType.CLNX, InputFileType.SHMT)
+        outputFormatFlags?.let { outputFormatFlags ->
+            if (outputFormatFlags.json) {
+                ValidationException.requireFileType(outputPath, InputFileType.JSON)
+            }
+            if (outputFormatFlags.yaml) {
+                ValidationException.requireFileType(outputPath, InputFileType.YAML)
+            }
+        }
+    }
 
     override fun run0() {
         val footer = IOUtil.extractFooter(inputPath)

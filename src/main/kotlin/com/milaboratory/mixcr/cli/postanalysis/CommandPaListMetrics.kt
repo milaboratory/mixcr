@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
@@ -29,9 +30,13 @@ class CommandPaListMetrics : MiXCRCommand() {
     @Parameters(
         description = ["Input file with PA results"],
         index = "0",
-        paramLabel = "input.json"
+        paramLabel = "input.json[.gz]"
     )
     lateinit var input: Path
+
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.JSON, InputFileType.JSON_GZ)
+    }
 
     override fun run0() {
         val paResult: PaResult = try {

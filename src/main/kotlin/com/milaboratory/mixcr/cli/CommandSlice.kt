@@ -101,6 +101,17 @@ class CommandSlice : MiXCRCommandWithOutputs() {
     override val outputFiles
         get() = listOf(out)
 
+    override fun validate() {
+        ValidationException.requireTheSameFileType(
+            input,
+            out,
+            InputFileType.VDJCA,
+            InputFileType.CLNS,
+            InputFileType.CLNA,
+            InputFileType.SHMT
+        )
+    }
+
     override fun run0() {
         when (IOUtil.extractFileType(input)) {
             VDJCA -> sliceVDJCA()

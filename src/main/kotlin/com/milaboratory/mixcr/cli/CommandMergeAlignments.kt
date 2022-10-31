@@ -69,17 +69,26 @@ class CommandMergeAlignments : MiXCRCommandWithOutputs() {
         //help is covered by mkCommandSpec
         hidden = true
     )
-    var input: List<Path> = mutableListOf()
+    var inOut: List<Path> = mutableListOf()
+
+    private val output: Path get() = inOut.last()
 
     public override val inputFiles
-        get() = input.subList(0, input.size - 1)
+        get() = inOut.dropLast(1)
 
     override val outputFiles
-        get() = listOf(input.last())
+        get() = listOf(output)
+
+    override fun validate() {
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.VDJCA)
+        }
+        ValidationException.requireFileType(output, InputFileType.VDJCA)
+    }
 
     override fun run0() {
         MultiReader(inputFiles).use { reader ->
-            VDJCAlignmentsWriter(outputFiles[0]).use { writer ->
+            VDJCAlignmentsWriter(output).use { writer ->
                 SmartProgressReporter.startProgressReport("Merging", reader)
                 // FIXME shouldn't be something changed in the header ?
                 writer.inheritHeaderAndFooterFrom(reader.currentInnerReader)

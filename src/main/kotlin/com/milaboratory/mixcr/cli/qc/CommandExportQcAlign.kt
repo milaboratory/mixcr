@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.cli.qc
 
 import com.milaboratory.miplots.writeFile
+import com.milaboratory.mixcr.cli.InputFileType
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.qc.AlignmentQC.alignQc
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -25,7 +27,7 @@ class CommandExportQcAlign : CommandExportQc() {
     companion object {
         private const val inputsLabel = "sample.(vdjca|clns|clna)..."
 
-        private const val outputLabel = "align.(pdf|eps|png|jpeg)"
+        private const val outputLabel = "align.${InputFileType.exportTypesLabel}"
 
         fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcAlign::class.java)
             .addPositional(
@@ -65,11 +67,21 @@ class CommandExportQcAlign : CommandExportQc() {
     @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
     var absoluteValues = false
 
+    private val output get() = inOut.last()
+
     override val inputFiles
-        get() = inOut.subList(0, inOut.size - 1)
+        get() = inOut.dropLast(1)
 
     override val outputFiles
-        get() = listOf(inOut.last())
+        get() = listOf(output)
+
+
+    override fun validate() {
+        inputFiles.forEach { input ->
+            ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNX)
+        }
+        ValidationException.requireFileType(output, InputFileType.exportTypes)
+    }
 
     override fun run0() {
         val plt = alignQc(
@@ -77,6 +89,6 @@ class CommandExportQcAlign : CommandExportQc() {
             !absoluteValues,
             sizeParameters
         )
-        writeFile(outputFiles.first(), plt)
+        writeFile(output, plt)
     }
 }

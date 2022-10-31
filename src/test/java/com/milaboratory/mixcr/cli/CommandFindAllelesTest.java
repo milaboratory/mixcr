@@ -105,7 +105,7 @@ public class CommandFindAllelesTest {
             ).getParseResult();
             fail();
         } catch (ParameterException e) {
-            assertEquals("Require .json file extension, got /output/folder/library.txt", e.getCause().getMessage());
+            assertEquals("Require json file type, got /output/folder/library.txt", e.getCause().getMessage());
         }
     }
 

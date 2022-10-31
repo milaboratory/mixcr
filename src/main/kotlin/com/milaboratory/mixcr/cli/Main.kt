@@ -27,8 +27,7 @@ import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsBasicStatisti
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsGeneUsage
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsOverlap
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportPlotsVJUsage
-import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportTables
-import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportTablesPreprocSummary
+import com.milaboratory.mixcr.cli.postanalysis.CommandPaExportTablesBase
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaIndividual
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaListMetrics
 import com.milaboratory.mixcr.cli.postanalysis.CommandPaOverlap
@@ -154,8 +153,8 @@ object Main {
             )
             .commandsGroup(
                 CommandsGroup("Export commands")
-                    .addSubcommand("exportTables", CommandPaExportTables::class.java)
-                    .addSubcommand("exportPreprocTables", CommandPaExportTablesPreprocSummary::class.java)
+                    .addSubcommand("exportTables", CommandPaExportTablesBase.Tables::class.java)
+                    .addSubcommand("exportPreprocTables", CommandPaExportTablesBase.PreprocSummary::class.java)
                     .addSubcommand(
                         "exportPlots",
                         CommandLine(CommandExportPlotsMain::class.java)

@@ -121,6 +121,11 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
         )
     }
 
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.VDJCA)
+        ValidationException.requireFileType(out, InputFileType.VDJCA)
+    }
+
     override fun run0() {
         inputReader.use { reader ->
             outputWriter.use { writer ->
