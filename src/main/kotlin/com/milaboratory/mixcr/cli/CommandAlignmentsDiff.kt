@@ -55,7 +55,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["-o1", "--only-in-first"],
         description = ["output for alignments contained only in the first .vdjca file"],
-        paramLabel = "<path>"
+        paramLabel = "<path.vdjca>"
     )
     var onlyFirst: Path? = null
         set(value) {
@@ -66,7 +66,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["-o2", "--only-in-second"],
         description = ["output for alignments contained only in the second .vdjca file"],
-        paramLabel = "<path>"
+        paramLabel = "<path.vdjca>"
     )
     var onlySecond: Path? = null
         set(value) {
@@ -77,7 +77,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["-d1", "--diff-from-first"],
         description = ["output for alignments from the first file that are different from those alignments in the second file"],
-        paramLabel = "<path>"
+        paramLabel = "<path.vdjca>"
     )
     var diff1: Path? = null
         set(value) {
@@ -88,7 +88,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["-d2", "--diff-from-second"],
         description = ["output for alignments from the second file that are different from those alignments in the first file"],
-        paramLabel = "<path>"
+        paramLabel = "<path.vdjca>"
     )
     var diff2: Path? = null
         set(value) {
