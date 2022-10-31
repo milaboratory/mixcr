@@ -13,9 +13,9 @@ package com.milaboratory.mixcr.postanalysis.util;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.CloneReader;
-import com.milaboratory.mixcr.basictypes.CloneSetIO;
+import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.CanReportProgress;
@@ -62,8 +62,11 @@ public class OverlapBrowser implements CanReportProgressAndStage {
     /**
      * Compute counts for each chain in each sample
      */
-    public Map<Chains, double[]> computeCountsByChain(List<Path> samples) {
+    public Map<Chains, VirtualCloneSet[]> computeCountsByChain(List<Path> samples) {
         Map<Chains, double[]> counts = new HashMap<>();
+        Map<Chains, TagCountAggregator[]> tagCounts = new HashMap<>();
+        Map<Chains, int[][]> tagDiversity = new HashMap<>();
+
         AtomicInteger sampleIndex = new AtomicInteger(0);
         pas.setStage("Calculating dataset counts");
         pas.delegate(new CanReportProgress() {
@@ -84,16 +87,54 @@ public class OverlapBrowser implements CanReportProgressAndStage {
                         continue;
                     Chains chains = cl.commonTopChains();
                     counts.computeIfAbsent(chains, __ -> new double[samples.size()])[i] += cl.getCount();
+
+                    if (tagCounts.get(chains) == null) {
+                        TagCountAggregator[] aggs = new TagCountAggregator[samples.size()];
+                        for (int j = 0; j < samples.size(); j++)
+                            aggs[j] = new TagCountAggregator();
+                        tagCounts.put(chains, aggs);
+                    }
+                    if (tagDiversity.get(chains) == null) {
+                        int[][] td = new int[samples.size()][];
+                        tagDiversity.put(chains, td);
+                    }
+                    int[][] td = tagDiversity.get(chains);
+                    if (td[i] == null)
+                        td[i] = new int[reader.getTagsInfo().size() + 1];
+
+                    tagCounts.get(chains)[i].add(cl.getTagCount());
+                    int[] div = tagDiversity.get(chains)[i];
+                    for (int j = 0; j < div.length; j++) {
+                        div[j] += cl.getTagCount().getTagDiversity(j);
+                    }
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
             sampleIndex.set(i + 1);
         }
-        return counts;
+        Map<Chains, VirtualCloneSet[]> result = new HashMap<>();
+        for (Chains chains : counts.keySet()) {
+            VirtualCloneSet[] cs = new VirtualCloneSet[samples.size()];
+            for (int i = 0; i < samples.size(); i++) {
+                TagCountAggregator agg = tagCounts.get(chains)[i];
+                int[] div = tagDiversity.get(chains)[i];
+                MiXCRHeader header = IOUtil.extractHeader(samples.get(i));
+                MiXCRFooter footer = IOUtil.extractFooter(samples.get(i));
+                cs[i] = new VirtualCloneSet(
+                        counts.get(chains)[i],
+                        agg.isEmpty() ? TagCount.NO_TAGS_1 : agg.createAndDestroy(),
+                        header,
+                        footer,
+                        div == null ? new int[header.getTagsInfo().size() + 1] : div
+                );
+            }
+            result.put(chains, cs);
+        }
+        return result;
     }
 
-    public OutputPort<Map<Chains, OverlapGroup<Clone>>> overlap(Map<Chains, double[]> counts,
+    public OutputPort<Map<Chains, OverlapGroup<Clone>>> overlap(Map<Chains, VirtualCloneSet[]> counts,
                                                                 OutputPortWithProgress<OverlapGroup<Clone>> port) {
         pas.setStage("Calculating overlap");
         pas.delegate(port);
@@ -115,10 +156,10 @@ public class OverlapBrowser implements CanReportProgressAndStage {
                     if (forChain == null)
                         continue;
 
-                    double[] cs = counts.get(ch);
+                    VirtualCloneSet[] cs = counts.get(ch);
                     for (int i = 0; i < forChain.size(); i++)
                         for (Clone cl : forChain.getBySample(i))
-                            cl.overrideFraction(cl.getCount() / cs[i]);
+                            cl.setParentCloneSet(cs[i]);
 
                     map.put(ch, forChain);
                 }

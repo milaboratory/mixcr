@@ -191,12 +191,10 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         }
 
         val fieldExtractors: List<FieldExtractor<Clone>> =
-            CloneSetIO.mkReader(samples[0], VDJCLibraryRegistry.getDefault()).use { cReader ->
                 CloneFieldsExtractorsFactory.createExtractors(
                     addedFields,
-                    cReader.header
-                )
-            }
+                    IOUtil.extractHeader(samples[0]))
+
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
 
         val overlapBrowser = OverlapBrowser(onlyProductive)
@@ -213,8 +211,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         val overlap = OverlapUtil.overlap(samples.map { it.toString() }, { true }, criteria.ordering())
         overlap.mkElementsPort().use { port ->
             overlapBrowser.overlap(countsByChain, port).forEach { row ->
-                for ((chains, cloneOverlapGroup) in row) {
-                    writers[chains]!!.writeRow(cloneOverlapGroup)
+                for ((ch, cloneOverlapGroup) in row) {
+                    writers[ch]!!.writeRow(cloneOverlapGroup)
                 }
             }
         }
