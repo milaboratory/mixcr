@@ -24,7 +24,7 @@ import java.nio.file.Path
 /**
  *
  */
-abstract class CommandPaExport : MiXCRCommand {
+abstract class CommandPaExport : MiXCRCommand() {
     @Parameters(
         description = ["Input file with postanalysis results."],
         paramLabel = "pa.json[.gz]",
@@ -39,28 +39,12 @@ abstract class CommandPaExport : MiXCRCommand {
     )
     var chains: Set<String>? = null
 
-    private val parsedPaResultFromInput: PaResult by lazy {
-        PaResult.readJson(input.toAbsolutePath())
-    }
-
-    private val paResultFromConstructor: PaResult?
-
-    constructor() {
-        paResultFromConstructor = null
-    }
-
-    /** Constructor used to export tables from code  */
-    internal constructor(paResult: PaResult) {
-        this.paResultFromConstructor = paResult
-    }
-
     val inputFiles
         get() = listOf(input)
 
-    /**
-     * Get full PA result
-     */
-    protected fun getPaResult(): PaResult = paResultFromConstructor ?: parsedPaResultFromInput
+    protected val paResult: PaResult by lazy {
+        PaResult.readJson(input.toAbsolutePath())
+    }
 
     override fun validate() {
         ValidationException.requireFileType(input, InputFileType.JSON, InputFileType.JSON_GZ)
@@ -68,7 +52,7 @@ abstract class CommandPaExport : MiXCRCommand {
 
     override fun run0() {
         val chainsToProcess = chains?.run { ChainsFilter.parseChainsList(chains) }
-        for (r in getPaResult().results) {
+        for (r in paResult.results) {
             if (chainsToProcess == null || chainsToProcess.contains(r.group.chains)) {
                 run(r)
             }

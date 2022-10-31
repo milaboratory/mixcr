@@ -71,7 +71,10 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
                         .type(Path::class.java)
                         .paramLabel(outputLabel)
                         .hideParamSyntax(true)
-                        .description("Path where to write output export table")
+                        .description(
+                            "Path template where to write output export tables.",
+                            "For each `chain` will be generated table with path `{outputDir}/{outputFileName}.{chain}.tsv`"
+                        )
                         .build()
                 )
 

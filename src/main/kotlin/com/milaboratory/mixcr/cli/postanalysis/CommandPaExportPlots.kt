@@ -88,7 +88,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     protected val metadataDf: DataFrame<*>? by lazy {
         when {
             metadata != null -> readMetadata(metadata!!)
-            else -> getPaResult().metadata?.toDataFrame()
+            else -> paResult.metadata?.toDataFrame()
         }
     }
 

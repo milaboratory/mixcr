@@ -107,7 +107,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     @set:Option(
         description = [
             "Results output path.",
-            "By default will be `/{outputDir}/{outputFileName}.tsv`"
+            "By default will be `{outputDir}/{outputFileName}.tsv`",
+            "For each `chain` and `metric` will be generated file with path `{dir}/{fileName}.{metric}.{chain}.(tsv|csv)`"
         ],
         names = ["--tables"],
         paramLabel = "<path.(tsv|csv)>"
@@ -124,7 +125,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     @set:Option(
         description = [
             "Output path for the preprocessing summary tables (filtering and downsampling)",
-            "By default will be `/{outputDir}/{outputFileName}.preproc.tsv`"
+            "By default will be `{outputDir}/{outputFileName}.preproc.tsv`",
+            "For each `chain` will be generated file with path `{dir}/{fileName}.{chain}.(tsv|csv)`"
         ],
         names = ["--preproc-tables"],
         paramLabel = "<path.(tsv|csv)>"
@@ -295,9 +297,10 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         Files.createDirectories(output.toAbsolutePath().parent)
         result.writeJson(output)
 
-        // export tables & preprocessing summary
-        CommandPaExportTables(result, tablesOut()).run()
-        CommandPaExportTablesPreprocSummary(result, preprocOut()).run()
+        result.results.forEach { paResultByGroup ->
+            CommandPaExportTablesBase.Tables.executor.run(paResultByGroup, tablesOut())
+            CommandPaExportTablesBase.PreprocSummary.executor.run(paResultByGroup, preprocOut())
+        }
     }
 
     private fun run0(group: IsolationGroup, samples: List<String>): PaResultByGroup {
