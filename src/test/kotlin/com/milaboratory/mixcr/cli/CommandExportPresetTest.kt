@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.util.TempFileManager
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainInOrder
@@ -26,6 +27,19 @@ class CommandExportPresetTest {
         result.exportClones!!.fields
             .filter { it.field == "-aaFeature" }
             .map { it.args.toList() } shouldContainInOrder listOf("VDJRegion", "VRegion", "JRegion").map { listOf(it) }
+    }
+
+    @Test
+    fun `add field with default`() {
+        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
+        output.delete()
+        TestMain.execute(
+            "exportPreset --species hs --dna " +
+                    "--append-export-clones-field -allAaFeatures " +
+                    "--preset-name test-tcr-shotgun ${output.path}"
+        )
+        val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
+        result.exportClones!!.fields shouldContain ExportFieldDescription("-allAaFeatures")
     }
 
     @Test

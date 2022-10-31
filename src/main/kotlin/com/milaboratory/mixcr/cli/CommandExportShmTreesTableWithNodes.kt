@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wrapper
@@ -42,6 +43,15 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         }
 
     @Option(
+        description = ["Don't print first header line, print only data"],
+        names = ["--no-header"],
+        order = 50_000 - 100
+    )
+    var noHeader = false
+
+    val addedFields: MutableList<ExportFieldDescription> = mutableListOf()
+
+    @Option(
         description = ["Exclude nodes that was reconstructed by algorithm"],
         names = ["--onlyObserved"],
     )
@@ -55,10 +65,8 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             InfoWriter.create(
                 out,
-                SplittedTreeNodeFieldsExtractorsFactory,
-                spec.commandLine().parseResult,
-                reader.header,
-                true,
+                SplittedTreeNodeFieldsExtractorsFactory.createExtractors(addedFields, reader.header),
+                !noHeader,
             ).use { output ->
                 reader.readTrees().forEach { shmTree ->
                     val shmTreeForPostanalysis = shmTree.forPostanalysis(
@@ -84,7 +92,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
             val command = CommandExportShmTreesTableWithNodes()
             val spec = CommandSpec.forAnnotatedObject(command)
             command.spec = spec // inject spec manually
-            SplittedTreeNodeFieldsExtractorsFactory.addOptionsToSpec(spec, true)
+            SplittedTreeNodeFieldsExtractorsFactory.addOptionsToSpec(command.addedFields, spec)
             return spec
         }
     }

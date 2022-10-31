@@ -16,6 +16,7 @@ import com.milaboratory.mitool.helpers.PipeKt;
 import com.milaboratory.mitool.refinement.gfilter.*;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
+import com.milaboratory.mixcr.basictypes.tag.TagInfo;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.util.Tuple2;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -170,8 +172,8 @@ public final class CloneTagFilter {
     public static CloneTagKey getKeyByName(TagsInfo tagsInfo, String key) {
         if (key.startsWith("tag:")) {
             String tagName = key.substring(4);
-            int tagIdx = tagsInfo.indexOf(tagName);
-            return new TagExtractor(tagsInfo.get(tagIdx).getValueType().getValueClass(), tagIdx);
+            TagInfo tagInfo = Objects.requireNonNull(tagsInfo.get(tagName));
+            return new TagExtractor(tagInfo.getValueType().getValueClass(), tagInfo.getIndex());
         } else if (key.equals("clone"))
             return new CloneIdExtractor();
         else if (key.startsWith("geneLabel:"))

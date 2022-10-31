@@ -17,48 +17,8 @@
       - field: "-dAlignments"
       - field: "-jAlignments"
       - field: "-cAlignments"
-      - field: "-nFeature"
-        args: [ "FR1" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR1" ]
-      - field: "-nFeature"
-        args: [ "CDR1" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR1" ]
-      - field: "-nFeature"
-        args: [ "FR2" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR2" ]
-      - field: "-nFeature"
-        args: [ "CDR2" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR2" ]
-      - field: "-nFeature"
-        args: [ "FR3" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR3" ]
-      - field: "-nFeature"
-        args: [ "CDR3" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR3" ]
-      - field: "-nFeature"
-        args: [ "FR4" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR4" ]
-      - field: "-aaFeature"
-        args: [ "FR1" ]
-      - field: "-aaFeature"
-        args: [ "CDR1" ]
-      - field: "-aaFeature"
-        args: [ "FR2" ]
-      - field: "-aaFeature"
-        args: [ "CDR2" ]
-      - field: "-aaFeature"
-        args: [ "FR3" ]
-      - field: "-aaFeature"
-        args: [ "CDR3" ]
-      - field: "-aaFeature"
-        args: [ "FR4" ]
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAaFeatures"
       - field: "-defaultAnchorPoints"
 
 "exportClones-umi-full":
@@ -70,10 +30,10 @@
       - field: "-cloneId"
       - field: "-readCount"
       - field: "-readFraction"
-      - field: "-uniqueTagCount"
-        args: [ "UMI" ]
-      - field: "-uniqueTagFraction"
-        args: [ "UMI" ]
+      - field: "-allUniqueTagsCount"
+        args: [ "Molecule" ]
+      - field: "-allUniqueTagFractions"
+        args: [ "Molecule" ]
       - field: "-targetSequences"
       - field: "-targetQualities"
       - field: "-vHitsWithScore"
@@ -84,48 +44,8 @@
       - field: "-dAlignments"
       - field: "-jAlignments"
       - field: "-cAlignments"
-      - field: "-nFeature"
-        args: [ "FR1" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR1" ]
-      - field: "-nFeature"
-        args: [ "CDR1" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR1" ]
-      - field: "-nFeature"
-        args: [ "FR2" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR2" ]
-      - field: "-nFeature"
-        args: [ "CDR2" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR2" ]
-      - field: "-nFeature"
-        args: [ "FR3" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR3" ]
-      - field: "-nFeature"
-        args: [ "CDR3" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR3" ]
-      - field: "-nFeature"
-        args: [ "FR4" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR4" ]
-      - field: "-aaFeature"
-        args: [ "FR1" ]
-      - field: "-aaFeature"
-        args: [ "CDR1" ]
-      - field: "-aaFeature"
-        args: [ "FR2" ]
-      - field: "-aaFeature"
-        args: [ "CDR2" ]
-      - field: "-aaFeature"
-        args: [ "FR3" ]
-      - field: "-aaFeature"
-        args: [ "CDR3" ]
-      - field: "-aaFeature"
-        args: [ "FR4" ]
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAaFeatures"
       - field: "-defaultAnchorPoints"
 
 "exportClones-single-cell-full":
@@ -135,11 +55,11 @@
     splitFilesBy: []
     fields:
       - field: "-cloneId"
-      - field: "-tag"
-        args: [ "CELL" ]
+      - field: "-allTags"
+        args: [ "Cell" ]
       - field: "-readCount"
-      - field: "-uniqueTagCount"
-        args: [ "UMI" ]
+      - field: "-allUniqueTagsCount"
+        args: [ "Molecule" ]
       - field: "-targetSequences"
       - field: "-targetQualities"
       - field: "-vHitsWithScore"
@@ -150,46 +70,6 @@
       - field: "-dAlignments"
       - field: "-jAlignments"
       - field: "-cAlignments"
-      - field: "-nFeature"
-        args: [ "FR1" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR1" ]
-      - field: "-nFeature"
-        args: [ "CDR1" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR1" ]
-      - field: "-nFeature"
-        args: [ "FR2" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR2" ]
-      - field: "-nFeature"
-        args: [ "CDR2" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR2" ]
-      - field: "-nFeature"
-        args: [ "FR3" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR3" ]
-      - field: "-nFeature"
-        args: [ "CDR3" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR3" ]
-      - field: "-nFeature"
-        args: [ "FR4" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR4" ]
-      - field: "-aaFeature"
-        args: [ "FR1" ]
-      - field: "-aaFeature"
-        args: [ "CDR1" ]
-      - field: "-aaFeature"
-        args: [ "FR2" ]
-      - field: "-aaFeature"
-        args: [ "CDR2" ]
-      - field: "-aaFeature"
-        args: [ "FR3" ]
-      - field: "-aaFeature"
-        args: [ "CDR3" ]
-      - field: "-aaFeature"
-        args: [ "FR4" ]
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAaFeatures"
       - field: "-defaultAnchorPoints"

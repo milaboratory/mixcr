@@ -458,7 +458,7 @@ object CommandAlign {
 
         private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins.mixins) }
 
-        private val bpPair by lazy { paramsResolver.resolve(paramsSpec) }
+        private val bpPair by lazy { paramsResolver.resolve(paramsSpec, printParameters = logger.verbose) }
 
         private val cmdParams get() = bpPair.second
 
