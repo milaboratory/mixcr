@@ -91,10 +91,6 @@
     - type: SetSplitClonesBy
       geneType: J
       value: true
-    # FIXME ?
-    # - type: SetSplitClonesBy
-    #   geneType: C
-    #   value: true
 
 "milab-human-tcr-dna-multiplex-cdr3":
   inheritFrom: bundle-kaligner1-v1-base
@@ -106,12 +102,5 @@
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
     - type: RightAlignmentBoundaryNoPoint
-      floating: false # FIXME ? correct ?
+      floating: true
       geneType: J
-
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true

@@ -42,3 +42,173 @@
 
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+
+"han-et-al-2014-tcr":
+  inheritFrom: bundle-kaligner1-v1-base
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  flags:
+    - species
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: MaterialTypeRNA
+    - type: SetTagPattern
+      tagPattern: |
+        ^NN(CELL3PLATE:N{5})ga(CELL1ROW:N{5})ccagggttttcccagtcacgac(R1:*) \
+        ^NN(CELL2COLUMN:N{5})gtcactggatttagagtctctcag(R2:*) |
+        ^NN(CELL2COLUMN:N{5})gagatctctgcttctgatggctc(R2:*)
+  refineTagsAndSort:
+    whitelists:
+      CELL3PLATE: builtin:cell-3-plate-han-2014
+      CELL1ROW: builtin:cell-1-row-han-2014
+      CELL2COLUMN: builtin:cell-2-column-han-2014
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 0
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_groups
+        groupingKeys:
+          - CELL1ROW
+          - CELL2COLUMN
+          - CELL3PLATE
+        predicates:
+          - metrics:
+              - type: group_metric_sum_weight
+                reportHist:
+                  log: true
+                  binNumber: 0
+                  minBinWidth: 0.2
+            operator:
+              type: group_operator_cumtop
+              share: 0.99
+  assemble:
+    inheritFrom: assemble-base-with-consensus
+    overrides:
+      consensusAssemblerParameters:
+        assembler:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: simple(match = 5, mismatch = -4)
+              gapPenalty: -14
+            minAlignmentScore: 40
+            maxNormalizedAlignmentPenalty: 0.15
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: false
+            maxQuality: 45
+          maxIterations: 6
+          minAltSeedQualityScore: 11
+          minAltSeedNormalizedPenalty: 0.35
+          altSeedPenaltyTolerance: 0.3
+          minRecordSharePerConsensus: 0.05 #!!
+          minRecordsPerConsensus: 0
+          minRecursiveRecordShare: 0.3 #!!
+          minQualityScore: 0
+          maxConsensuses: 5 #!!
+        minTagSuffixShare: 0
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - tag:CELL1ROW
+              - tag:CELL2COLUMN
+              - tag:CELL3PLATE
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.1
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ ]
+    fields:
+      - field: "-cloneId"
+      - field: "-tag"
+        args: [ "CELL1ROW" ]
+      - field: "-tag"
+        args: [ "CELL2COLUMN" ]
+      - field: "-tag"
+        args: [ "CELL3PLATE" ]
+      - field: "-readCount"
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-nFeature"
+        args: [ "FR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR1" ]
+      - field: "-nFeature"
+        args: [ "CDR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR1" ]
+      - field: "-nFeature"
+        args: [ "FR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR2" ]
+      - field: "-nFeature"
+        args: [ "CDR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR2" ]
+      - field: "-nFeature"
+        args: [ "FR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR3" ]
+      - field: "-nFeature"
+        args: [ "CDR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR3" ]
+      - field: "-nFeature"
+        args: [ "FR4" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR4" ]
+      - field: "-aaFeature"
+        args: [ "FR1" ]
+      - field: "-aaFeature"
+        args: [ "CDR1" ]
+      - field: "-aaFeature"
+        args: [ "FR2" ]
+      - field: "-aaFeature"
+        args: [ "CDR2" ]
+      - field: "-aaFeature"
+        args: [ "FR3" ]
+      - field: "-aaFeature"
+        args: [ "CDR3" ]
+      - field: "-aaFeature"
+        args: [ "FR4" ]
+      - field: "-defaultAnchorPoints"
+
+"han-et-al-2014-bcr":
+  inheritFrom: han-et-al-2014-tcr
+  align:
+    inheritFrom: bundle-kaligner2-v1-base

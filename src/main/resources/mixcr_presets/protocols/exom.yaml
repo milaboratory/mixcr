@@ -1,0 +1,11 @@
+"exom-cdr3":
+  inheritFrom: bundle-kaligner1-shotgun-base
+  mixins:
+    - type: MaterialTypeDNA
+
+"exom-full-length":
+  inheritFrom: exom-cdr3
+  mixins:
+    - type: MaterialTypeDNA
+    - type: AddPipelineStep
+      step: assembleContigs

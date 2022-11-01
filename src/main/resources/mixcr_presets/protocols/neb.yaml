@@ -55,7 +55,9 @@
 
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    # FIXME no splits ?
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "nebnext-mouse-bcr-cdr3":
   inheritFrom: bundle-umi-rna-kaligner2-global-c
