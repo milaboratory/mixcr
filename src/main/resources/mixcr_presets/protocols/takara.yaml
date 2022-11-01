@@ -4,12 +4,12 @@
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+      tagPattern: ^N{30}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
 
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
-      floating: true # FIXME correct?
+      floating: false
       geneType: C
 
     - type: SetSplitClonesBy
@@ -28,12 +28,12 @@
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+      tagPattern: ^N{30}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
 
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
-      floating: true # FIXME correct?
+      floating: false
       geneType: C
 
     - type: SetClonotypeAssemblingFeatures
@@ -48,7 +48,7 @@
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+      tagPattern: ^N{28}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
 
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
@@ -62,6 +62,9 @@
     - type: SetSplitClonesBy
       geneType: J
       value: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "takara-human-tcr-V2-full-length":
   inheritFrom: bundle-umi-kaligner1-v1-base
@@ -69,7 +72,7 @@
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
+      tagPattern: ^N{28}(R1:*) \ ^(UMI:N{12})N{4}(R2:*)
 
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
@@ -79,8 +82,9 @@
 
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-
-    # FIXME no split by C ?
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "takara-human-tcr-V1-cdr3":
   inheritFrom: bundle-kaligner1-v1-base
