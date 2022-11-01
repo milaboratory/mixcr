@@ -37,7 +37,7 @@ abstract class CommandExportQc : MiXCRCommandWithOutputs() {
         var height = -1
     }
 
-    @ArgGroup(exclusive = false)
+    @ArgGroup(exclusive = false, multiplicity = "0..1")
     var sizeParameters: SizeParameters? = null
 
     @Command(

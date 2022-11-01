@@ -355,23 +355,21 @@ object CommandAlign {
         @Mixin
         var alignMixins: AlignMiXCRMixins? = null
 
-        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
-        var assembleMixins: AssembleMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        var assembleMixins: List<AssembleMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
-        var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        var assembleContigsMixins: List<AssembleContigsMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
-        var exportMixins: ExportMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
 
         @Mixin
         var genericMixins: GenericMiXCRMixins? = null
 
         private val mixins: MiXCRMixinCollection
-            get() = MiXCRMixinCollection.combine(
-                pipelineMixins, alignMixins, assembleMixins,
-                assembleContigsMixins, exportMixins, genericMixins
-            )
+            get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
+                    assembleContigsMixins + exportMixins + genericMixins
 
         @Parameters(
             index = "0",

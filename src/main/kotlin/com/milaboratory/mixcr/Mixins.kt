@@ -31,6 +31,7 @@ import com.milaboratory.mixcr.cli.CommandAssemble
 import com.milaboratory.mixcr.cli.CommandAssembleContigs
 import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractorsFactory
@@ -471,7 +472,7 @@ object AssembleMixins {
     ) : MiXCRMixinBase(10) {
         init {
             if (geneType !in arrayOf(Variable, Joining, Constant))
-                throw IllegalArgumentException("Clone splitting supported only for V, J and C genes.")
+                throw ValidationException("Clone splitting supported only for V, J and C genes.")
         }
 
         override fun MixinBuilderOps.action() {

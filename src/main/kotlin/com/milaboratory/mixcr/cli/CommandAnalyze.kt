@@ -92,29 +92,27 @@ object CommandAnalyze {
         )
         private var inOut: List<String> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
-        var pipelineMixins: PipelineMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        var pipelineMixins: List<PipelineMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
-        var alignMixins: AlignMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        var alignMixins: List<AlignMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
-        var assembleMixins: AssembleMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        var assembleMixins: List<AssembleMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
-        var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        var assembleContigsMixins: List<AssembleContigsMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
-        var exportMixins: ExportMiXCRMixins? = null
+        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
 
         @Mixin
         var genericMixins: GenericMiXCRMixins? = null
 
         private val mixins: MiXCRMixinCollection
-            get() = MiXCRMixinCollection.combine(
-                pipelineMixins, alignMixins, assembleMixins,
-                assembleContigsMixins, exportMixins, genericMixins
-            )
+            get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
+                    assembleContigsMixins + exportMixins + genericMixins
 
         // @Option(
         //     description = ["Delete all output files of the command if they already exist."],
