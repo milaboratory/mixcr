@@ -22,7 +22,7 @@ Other key features:
 
 - Clonotype assembly by arbitrary gene feature, including *full-length* variable region
 - PCR / Sequencing error correction with or without aid of UMI or Cell barcodes
-- Robust and dedicated aligner algorithms for maximum extration with zero false-positive rate
+- Robust and dedicated aligner algorithms for maximum extraction with zero false-positive rate
 - Supports any custom barcode sequences architecture (UMI / Cell)
 - _Human_, _Mice_, _Rat_, _Spalax_, _Alpaca_, _Monkey_
 - Support IMGT reference
@@ -172,7 +172,7 @@ References to cite: Lefranc, M.-P. et al., Nucleic Acids Research, 27, 209-212 (
 
 ## Obtaining a license
 
-To run MiXCR one need a license file. MiXCR is free for academic users with no commercial funding. We are committed to support academic community and provide our software free of charge for scientists doing non-profit research.
+To run MiXCR one needs a license file. MiXCR is free for academic users with no commercial funding. We are committed to support academic community and provide our software free of charge for scientists doing non-profit research.
 
 Academic users can quickly get a license at https://licensing.milaboratories.com.
 
