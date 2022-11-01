@@ -47,7 +47,25 @@ interface MiXCRPresetAwareCommand<P : Any> : PresetAware<MiXCRParamsBundle, P>
 interface MiXCRMixinCollection {
     val mixins: List<MiXCRMixin>
 
+    operator fun plus(another: MiXCRMixinCollection?): MiXCRMixinCollection = when {
+        another != null -> object : MiXCRMixinCollection {
+            override val mixins: List<MiXCRMixin> = this@MiXCRMixinCollection.mixins + another.mixins
+        }
+        else -> this
+    }
+
+    operator fun plus(another: Collection<MiXCRMixinCollection>): MiXCRMixinCollection = when {
+        another.isNotEmpty() -> object : MiXCRMixinCollection {
+            override val mixins: List<MiXCRMixin> = this@MiXCRMixinCollection.mixins + another.flatMap { it.mixins }
+        }
+        else -> this
+    }
+
     companion object {
+        val empty = object : MiXCRMixinCollection {
+            override val mixins: List<MiXCRMixin> = emptyList()
+        }
+
         fun combine(vararg list: MiXCRMixinCollection?) = object : MiXCRMixinCollection {
             override val mixins = list.filterNotNull().flatMap { it.mixins }
         }

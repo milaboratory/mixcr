@@ -76,29 +76,27 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
 
     override val outputFiles get() = listOfNotNull(outputFile)
 
-    @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION)
-    var pipelineMixins: PipelineMiXCRMixins? = null
+    @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    var pipelineMixins: List<PipelineMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION)
-    var alignMixins: AlignMiXCRMixins? = null
+    @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    var alignMixins: List<AlignMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION)
-    var assembleMixins: AssembleMiXCRMixins? = null
+    @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    var assembleMixins: List<AssembleMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION)
-    var assembleContigsMixins: AssembleContigsMiXCRMixins? = null
+    @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    var assembleContigsMixins: List<AssembleContigsMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION)
-    var exportMixins: ExportMiXCRMixins? = null
+    @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
 
     @Mixin
     var genericMixins: GenericMiXCRMixins? = null
 
     override fun run0() {
-        val mixinsFromArgs = MiXCRMixinCollection.combine(
-            pipelineMixins, alignMixins, assembleMixins,
-            assembleContigsMixins, exportMixins, genericMixins
-        )
+        val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
+                assembleContigsMixins + exportMixins + pipelineMixins
         val bundle: MiXCRParamsBundle = when {
             presetInput.presetName != null -> {
                 paramsResolver.resolve(

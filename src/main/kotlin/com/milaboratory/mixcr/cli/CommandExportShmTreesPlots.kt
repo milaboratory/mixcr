@@ -123,7 +123,8 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
 
     @ArgGroup(
         heading = "Filter by pattern\n",
-        exclusive = false
+        exclusive = false,
+        multiplicity = "0..1"
     )
     var patternOptions: PatternOptions? = null
 
