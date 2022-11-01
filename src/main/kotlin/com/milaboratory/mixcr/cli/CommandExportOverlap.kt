@@ -13,6 +13,8 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
@@ -28,11 +30,8 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine
-import picocli.CommandLine.Command
+import picocli.CommandLine.*
 import picocli.CommandLine.Help.Visibility.ALWAYS
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -49,11 +48,11 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         private const val outputLabel = "output.tsv"
 
         @JvmStatic
-        fun mkSpec(): CommandLine.Model.CommandSpec {
+        fun mkSpec(): Model.CommandSpec {
             val export = CommandExportOverlap()
-            val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(export)
+            val spec = Model.CommandSpec.forAnnotatedObject(export)
                 .addPositional(
-                    CommandLine.Model.PositionalParamSpec.builder()
+                    Model.PositionalParamSpec.builder()
                         .index("0")
                         .required(false)
                         .arity("0..*")
@@ -64,7 +63,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
                         .build()
                 )
                 .addPositional(
-                    CommandLine.Model.PositionalParamSpec.builder()
+                    Model.PositionalParamSpec.builder()
                         .index("1")
                         .required(false)
                         .arity("0..*")
@@ -136,6 +135,19 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(output, InputFileType.TSV)
     }
 
+    private val tagsInfo
+        get() = inputFiles.map { IOUtil.extractHeader(it).tagsInfo }
+
+    private fun tagLevel(tt: TagType) =
+        if (tagsInfo.all { it.hasTagsWithType(tt) }) {
+            val set = tagsInfo.map { it.getDepthFor(tt) }.toSet()
+            if (set.size > 1)
+                null
+            else
+                set.first()
+        } else
+            null
+
     var addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
     override fun run0() {
@@ -174,13 +186,22 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         extractors += NumberOfSamples()
         extractors += TotalCount()
         extractors += TotalFraction()
+
+        tagLevel(TagType.Molecule)?.let { umiLevel ->
+            extractors += TotalTagCount(umiLevel, "UMI")
+            extractors += TotalTagFraction(umiLevel, "UMI")
+        }
+
+        tagLevel(TagType.Cell)?.let { cellLevel ->
+            extractors += TotalTagCount(cellLevel, "CELL")
+            extractors += TotalTagFraction(cellLevel, "CELL")
+        }
+
         val fieldExtractors: List<FieldExtractor<Clone>> =
-            CloneSetIO.mkReader(samples[0], VDJCLibraryRegistry.getDefault()).use { cReader ->
                 CloneFieldsExtractorsFactory.createExtractors(
                     addedFields,
-                    cReader.header
-                )
-            }
+                    IOUtil.extractHeader(samples[0]))
+
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
 
         val overlapBrowser = OverlapBrowser(onlyProductive)
@@ -197,8 +218,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         val overlap = OverlapUtil.overlap(samples.map { it.toString() }, { true }, criteria.ordering())
         overlap.mkElementsPort().use { port ->
             overlapBrowser.overlap(countsByChain, port).forEach { row ->
-                for ((chains, cloneOverlapGroup) in row) {
-                    writers[chains]!!.writeRow(cloneOverlapGroup)
+                for ((ch, cloneOverlapGroup) in row) {
+                    writers[ch]!!.writeRow(cloneOverlapGroup)
                 }
             }
         }
@@ -245,7 +266,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
 
     private class TotalCount : OverlapFieldExtractor {
         override fun header(samples: List<String>): List<String> =
-            samples.map { sample -> "${sample}_countAggregated" }
+            samples.map { sample -> "${sample}_readCountAggregated" }
 
         override fun values(row: OverlapGroup<Clone>): List<String> =
             row.map { clones -> clones.sumOf { it.count }.toString() }
@@ -253,10 +274,26 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
 
     private class TotalFraction : OverlapFieldExtractor {
         override fun header(samples: List<String>): List<String> =
-            samples.map { sample -> "${sample}_fractionAggregated" }
+            samples.map { sample -> "${sample}_readFractionAggregated" }
 
         override fun values(row: OverlapGroup<Clone>): List<String> =
             row.map { clones -> clones.sumOf { it.fraction }.toString() }
+    }
+
+    private class TotalTagCount(val level: Int, val tagName: String) : OverlapFieldExtractor {
+        override fun header(samples: List<String>): List<String> =
+            samples.map { sample -> "${sample}_unique${tagName}CountAggregated" }
+
+        override fun values(row: OverlapGroup<Clone>): List<String> =
+            row.map { clones -> clones.sumOf { it.getTagDiversity(level) }.toString() }
+    }
+
+    private class TotalTagFraction(val level: Int, val tagName: String) : OverlapFieldExtractor {
+        override fun header(samples: List<String>): List<String> =
+            samples.map { sample -> "${sample}_unique${tagName}FractionAggregated" }
+
+        override fun values(row: OverlapGroup<Clone>): List<String> =
+            row.map { clones -> clones.sumOf { it.getTagDiversityFraction(level) }.toString() }
     }
 
     private class NumberOfSamples : OverlapFieldExtractor {
