@@ -19,7 +19,6 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.BaseNode
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithClones
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint.CDR3Begin
@@ -42,16 +41,12 @@ data class SHMTreeForPostanalysis<T : BaseNode>(
         val rootInfo: RootInfo,
         val treeId: Int,
         val fileNames: List<String>,
-        private val alignerParameters: VDJCAlignerParameters,
         private val geneSupplier: (VDJCGeneId) -> VDJCGene
     ) {
         fun partitioning(geneType: GeneType): ReferencePoints =
             getGene(geneType).partitioning
 
         fun getGene(geneType: GeneType) = geneSupplier(rootInfo.VJBase.geneIds[geneType])
-
-        fun geneFeatureToAlign(geneType: GeneType): GeneFeature =
-            alignerParameters.getGeneAlignerParameters(geneType).geneFeatureToAlign
     }
 
 
@@ -173,10 +168,9 @@ data class SHMTreeForPostanalysis<T : BaseNode>(
 
 fun SHMTreeResult.forPostanalysisSplitted(
     fileNames: List<String>,
-    alignerParameters: VDJCAlignerParameters,
     libraryRegistry: VDJCLibraryRegistry
 ): SHMTreeForPostanalysis<SplittedNode> {
-    val meta = createMeta(fileNames, alignerParameters, libraryRegistry)
+    val meta = createMeta(fileNames, libraryRegistry)
 
     val root = tree.root.content.mutationsSet.asMutationsDescription(meta)
     val mrca = mostRecentCommonAncestor.mutationsSet.asMutationsDescription(meta)
@@ -197,17 +191,12 @@ fun SHMTreeResult.forPostanalysisSplitted(
 
 private fun SHMTreeResult.createMeta(
     fileNames: List<String>,
-    alignerParameters: VDJCAlignerParameters,
     libraryRegistry: VDJCLibraryRegistry
-): SHMTreeForPostanalysis.Meta {
-    val meta = SHMTreeForPostanalysis.Meta(
-        rootInfo,
-        treeId,
-        fileNames,
-        alignerParameters
-    ) { geneId -> libraryRegistry.getGene(geneId) }
-    return meta
-}
+): SHMTreeForPostanalysis.Meta = SHMTreeForPostanalysis.Meta(
+    rootInfo,
+    treeId,
+    fileNames,
+) { geneId -> libraryRegistry.getGene(geneId) }
 
 private fun Tree.Node<CloneOrFoundAncestor>.mapSplitted(
     meta: SHMTreeForPostanalysis.Meta,
@@ -285,10 +274,9 @@ private fun Tree.Node<CloneOrFoundAncestor>.mapSplitted(
 
 fun SHMTreeResult.forPostanalysis(
     fileNames: List<String>,
-    alignerParameters: VDJCAlignerParameters,
     libraryRegistry: VDJCLibraryRegistry
 ): SHMTreeForPostanalysis<NodeWithClones> {
-    val meta = createMeta(fileNames, alignerParameters, libraryRegistry)
+    val meta = createMeta(fileNames, libraryRegistry)
 
     val root = tree.root.content.mutationsSet.asMutationsDescription(meta)
     val mrca = mostRecentCommonAncestor.mutationsSet.asMutationsDescription(meta)

@@ -773,6 +773,7 @@ object CommandAlign {
                             *tagSearchPlan.tagInfos.toTypedArray()
                         ) else TagsInfo.NO_TAGS,
                         aligner.parameters,
+                        aligner.parameters.featuresToAlignMap,
                         null,
                         null,
                         null

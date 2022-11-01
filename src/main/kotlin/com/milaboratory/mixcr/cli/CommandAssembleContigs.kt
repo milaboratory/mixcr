@@ -198,12 +198,12 @@ object CommandAssembleContigs {
                                 reader.assemblerParameters.cloneFactoryParameters,
                                 reader.assemblingFeatures,
                                 reader.usedGenes,
-                                reader.alignerParameters.featuresToAlignMap
+                                reader.header.featuresToAlignMap
                             )
                             header = reader.header
                             genes = reader.usedGenes
 
-                            IOUtil.registerGeneReferences(tmpOut, genes, header.alignerParameters)
+                            IOUtil.registerGeneReferences(tmpOut, genes, header.featuresToAlign)
                             val cloneAlignmentsPort = reader.clonesAndAlignments()
                             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort)
                             val parallelProcessor = cloneAlignmentsPort.mapInParallelOrdered(
@@ -344,7 +344,7 @@ object CommandAssembleContigs {
             )
             val clones: MutableList<Clone> = ArrayList(totalClonesCount)
             PrimitivI(BufferedInputStream(FileInputStream(outputFile.toFile()))).use { tmpIn ->
-                IOUtil.registerGeneReferences(tmpIn, genes, header.alignerParameters)
+                IOUtil.registerGeneReferences(tmpIn, genes, header.featuresToAlign)
                 var cloneId = 0
                 PipeDataInputReader(Clone::class.java, tmpIn, totalClonesCount.toLong()).forEach { clone ->
                     clones += clone.setId(cloneId++)

@@ -95,11 +95,11 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
             o.writeLong(alignmentReader.getNumberOfReads());
             o.writeObject(assemblingFeatures);
             o.writeObject(tagsInfo);
-            IOUtil.stdVDJCPrimitivOStateInit(o, alignmentReader.getUsedGenes(), alignmentReader.getParameters());
+            IOUtil.stdVDJCPrimitivOStateInit(o, alignmentReader.getUsedGenes(), alignmentReader.getHeader().getFeaturesToAlign());
         }
 
         PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
-        IOUtil.registerGeneReferences(stateBuilder, alignmentReader.getUsedGenes(), alignmentReader.getParameters());
+        IOUtil.registerGeneReferences(stateBuilder, alignmentReader.getUsedGenes(), alignmentReader.getHeader().getFeaturesToAlign());
 
         long memoryBudget =
                 Runtime.getRuntime().maxMemory() > 10_000_000_000L /* -Xmx10g */

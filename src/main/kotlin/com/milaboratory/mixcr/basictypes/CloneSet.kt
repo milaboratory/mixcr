@@ -15,7 +15,6 @@ import cc.redberry.primitives.Filter
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import io.repseq.core.VDJCGene
 import java.util.*
 import java.util.function.Function
@@ -46,9 +45,6 @@ class CloneSet private constructor(
     operator fun get(i: Int): Clone = clones[i]
 
     fun size(): Int = clones.size
-
-    val alignmentParameters: VDJCAlignerParameters
-        get() = header.alignerParameters
 
     val tagsInfo: TagsInfo
         get() = header.tagsInfo

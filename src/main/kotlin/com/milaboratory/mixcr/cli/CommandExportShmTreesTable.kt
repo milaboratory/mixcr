@@ -64,12 +64,9 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                 !noHeader,
             ).use { output ->
                 reader.readTrees()
+                    .filter { treeFilter?.match(it.treeId) != false }
                     .map { shmTree ->
-                        shmTree.forPostanalysis(
-                            reader.fileNames,
-                            reader.alignerParameters,
-                            reader.libraryRegistry
-                        )
+                        shmTree.forPostanalysis(reader.fileNames, reader.libraryRegistry)
                     }
                     .filter { treeFilter?.match(it) != false }
                     .forEach { output.put(it) }

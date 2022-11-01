@@ -46,7 +46,10 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import gnu.trove.list.array.TIntArrayList
 import org.apache.commons.io.FileUtils
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.util.*
 
@@ -341,7 +344,7 @@ object CommandRefineTagsAndSort {
 
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     val alPioState = PrimitivIOStateBuilder()
-                    IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.parameters)
+                    IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.header.featuresToAlign)
 
                     // Reusable routine to perform has-based soring of alignments by tag with specific index
                     val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> =

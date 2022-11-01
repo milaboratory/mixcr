@@ -13,11 +13,11 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.CountingOutputPort
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.PipeReader
 import com.milaboratory.primitivio.PipeWriter
 import com.milaboratory.primitivio.forEach
@@ -80,13 +80,13 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
     }
 
     private class VDJCAlignmentsSerializer(reader: VDJCAlignmentsReader) : ObjectSerializer<VDJCAlignments> {
-        private val parameters: VDJCAlignerParameters = reader.parameters
+        private val featuresToAlign: HasFeatureToAlign = reader.header.featuresToAlign
         private val usedAlleles: List<VDJCGene> = reader.usedGenes
 
         override fun write(data: Collection<VDJCAlignments>, stream: OutputStream) {
             object : PipeWriter<VDJCAlignments>(stream) {
                 override fun init() {
-                    IOUtil.stdVDJCPrimitivOStateInit(output, usedAlleles, parameters)
+                    IOUtil.stdVDJCPrimitivOStateInit(output, usedAlleles, featuresToAlign)
                 }
             }.use { out ->
                 data.forEach { datum ->
@@ -98,12 +98,8 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
         override fun read(stream: InputStream): OutputPort<VDJCAlignments> =
             object : PipeReader<VDJCAlignments>(VDJCAlignments::class.java, stream) {
                 override fun init() {
-                    IOUtil.stdVDJCPrimitivIStateInit(input, parameters, usedAlleles[0].parentLibrary.parent)
+                    IOUtil.stdVDJCPrimitivIStateInit(input, featuresToAlign, usedAlleles[0].parentLibrary.parent)
                 }
             }
-    }
-
-    companion object {
-        const val SORT_ALIGNMENTS_COMMAND_NAME = "sortAlignments"
     }
 }

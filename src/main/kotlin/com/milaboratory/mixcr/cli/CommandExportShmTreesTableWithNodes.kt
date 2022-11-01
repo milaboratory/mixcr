@@ -53,9 +53,18 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
     @Option(
         description = ["Exclude nodes that was reconstructed by algorithm"],
-        names = ["--onlyObserved"],
+        names = ["--only-observed"],
     )
     var onlyObserved: Boolean = false
+
+    @Option(
+        names = ["--onlyObserved"],
+        hidden = true
+    )
+    fun setOnlyObservedDeprecated(value: Boolean) {
+        logger.warn("--onlyObserved is deprecated, use --only-observed instead")
+        onlyObserved = value
+    }
 
     override val outputFiles
         get() = listOfNotNull(out)
@@ -70,12 +79,9 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
             ).use { output ->
                 reader.readTrees()
                     .asSequence()
+                    .filter { treeFilter?.match(it.treeId) != false }
                     .map {
-                        it.forPostanalysis(
-                            reader.fileNames,
-                            reader.alignerParameters,
-                            reader.libraryRegistry
-                        )
+                        it.forPostanalysis(reader.fileNames, reader.libraryRegistry)
                     }
                     .filter { treeFilter?.match(it) != false }
                     .flatMap { shmTreeForPostanalysis ->

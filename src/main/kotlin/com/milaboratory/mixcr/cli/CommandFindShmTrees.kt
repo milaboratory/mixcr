@@ -19,11 +19,14 @@ import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.basictypes.ClnsReader
-import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
-import com.milaboratory.mixcr.basictypes.MiXCRHeaderMerger
+import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
@@ -38,6 +41,7 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.util.XSV
+import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
@@ -45,6 +49,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
@@ -55,6 +60,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
+import java.security.MessageDigest
 import kotlin.io.path.createDirectories
 
 
@@ -258,10 +264,10 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
         ValidationException.require(datasets.isNotEmpty()) { "there is no files to process" }
 
-        ValidationException.requireDistinct(datasets.map { it.alignerParameters.featuresToAlignMap }) {
+        ValidationException.requireDistinct(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
         }
-        val featureToAlign = HasFeatureToAlign(datasets.first().alignerParameters.featuresToAlignMap)
+        val featureToAlign = datasets.first().header.featuresToAlign
 
         for (geneType in GeneType.VJ_REFERENCE) {
             val scores = datasets
@@ -291,9 +297,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
         val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
 
-        ValidationException.requireDistinct(datasets.map { it.header.tagsInfo }) {
-            "Input files with different tags are not supported yet"
-        }
         val shmTreeBuilderOrchestrator = SHMTreeBuilderOrchestrator(
             shmTreeBuilderParameters,
             scoringSet,
@@ -399,10 +402,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     private fun SHMTreesWriter.writeHeader(cloneReaders: List<ClnsReader>, params: Params) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
         val headers = cloneReaders.map { it.readCloneSet().cloneSetInfo }
-        require(headers.map { it.header.alignerParameters }.distinct().size == 1) {
-            "alignerParameters must be the same"
-        }
-        cloneReaders.map { it.readCloneSet() }
         writeHeader(
             headers
                 .fold(MiXCRHeaderMerger()) { m, cloneSetInfo -> m.add(cloneSetInfo.header) }.build()
@@ -414,3 +413,40 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 }
 
+private class MiXCRHeaderMerger {
+    private var inputHashAccumulator: MessageDigest? = MessageDigest.getInstance("MD5")
+    private var upstreamParams = mutableListOf<MiXCRStepParams>()
+    private var featuresToAlignMap: Map<GeneType, GeneFeature>? = null
+    private var foundAlleles: MiXCRHeader.FoundAlleles? = null
+    private var allFullyCoveredBy: GeneFeatures? = null
+
+    fun add(header: MiXCRHeader) = run {
+        if (header.inputHash == null)
+            inputHashAccumulator = null
+        inputHashAccumulator?.update(header.inputHash!!.encodeToByteArray())
+        upstreamParams += header.stepParams
+        if (allFullyCoveredBy == null) {
+            featuresToAlignMap = header.featuresToAlignMap
+            foundAlleles = header.foundAlleles
+            allFullyCoveredBy = header.allFullyCoveredBy
+        } else {
+            check(featuresToAlignMap == header.featuresToAlignMap) { "Different featuresToAlignMap" }
+            check(foundAlleles == header.foundAlleles) { "Different library" }
+            check(allFullyCoveredBy == header.allFullyCoveredBy) { "Different covered region" }
+        }
+        this
+    }
+
+    fun build() =
+        MiXCRHeader(
+            inputHashAccumulator?.digest()?.toHexString(),
+            MiXCRParamsSpec("null"),
+            MiXCRStepParams.mergeUpstreams(upstreamParams),
+            TagsInfo.NO_TAGS,
+            null,
+            featuresToAlignMap!!,
+            null,
+            foundAlleles,
+            allFullyCoveredBy
+        )
+}

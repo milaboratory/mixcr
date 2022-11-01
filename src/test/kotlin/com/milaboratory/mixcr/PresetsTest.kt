@@ -70,6 +70,7 @@ class PresetsTest {
                 MiXCRStepParams().add(MiXCRCommandDescriptor.align, bundle.align!!),
                 tagsInfo,
                 bundle.align!!.parameters,
+                bundle.align!!.parameters.featuresToAlignMap,
                 null,
                 null,
                 null
