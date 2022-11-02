@@ -20,11 +20,13 @@ import com.milaboratory.core.sequence.TranslationParameters
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForFeatures
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForReferencePoints
-import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetween
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetweenArgs
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.referencePointsToExport
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.warnIfFeatureNotCovered
 import com.milaboratory.mixcr.export.ParametersFactory.geneFeatureParam
 import com.milaboratory.mixcr.export.ParametersFactory.referencePointParam
 import com.milaboratory.mixcr.export.ParametersFactory.referencePointParamOptional
@@ -250,7 +252,10 @@ object VDJCObjectFieldExtractors {
             Order.`-nFeature`,
             "-nFeature",
             "Export nucleotide sequence of specified gene feature",
-            geneFeatureParam("nSeq")
+            geneFeatureParam("nSeq"),
+            validateArgs = { header, feature ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { vdjcObject: VDJCObject, feature ->
             vdjcObject.getFeature(feature)?.sequence?.toString() ?: NULL
         }
@@ -263,15 +268,21 @@ object VDJCObjectFieldExtractors {
                 nFeatureField,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
             ) { from, to ->
-                geneFeaturesBetween(from, to)
+                geneFeaturesBetweenArgs(from, to)
             }
         }
         val qFeatureField = Field(
             Order.features + 200,
             "-qFeature",
             "Export quality string of specified gene feature",
-            geneFeatureParam("qual")
+            geneFeatureParam("qual"),
+            validateArgs = { header, feature ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { vdjcObject: VDJCObject, feature ->
             vdjcObject.getFeature(feature)?.quality?.toString() ?: NULL
         }
@@ -283,8 +294,11 @@ object VDJCObjectFieldExtractors {
             qFeatureField,
             referencePointParamOptional("<from_reference_point>"),
             referencePointParamOptional("<to_reference_point>"),
+            validateArgs = { header, from, to ->
+                warnIfFeatureNotCovered(header, from, to)
+            }
         ) { from, to ->
-            geneFeaturesBetween(from, to)
+            geneFeaturesBetweenArgs(from, to)
         }
 
         if (!forTreesExport) {
@@ -292,7 +306,10 @@ object VDJCObjectFieldExtractors {
                 Order.`-aaFeature`,
                 "-aaFeature",
                 "Export amino acid sequence of specified gene feature",
-                geneFeatureParam("aaSeq")
+                geneFeatureParam("aaSeq"),
+                validateArgs = { header, feature ->
+                    warnIfFeatureNotCovered(header, feature)
+                }
             ) { vdjcObject: VDJCObject, geneFeature ->
                 val feature = vdjcObject.getFeature(geneFeature) ?: return@Field NULL
                 val targetId = vdjcObject.getTargetContainingFeature(geneFeature)
@@ -313,15 +330,21 @@ object VDJCObjectFieldExtractors {
                 aaFeatureField,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
             ) { from, to ->
-                geneFeaturesBetween(from, to)
+                geneFeaturesBetweenArgs(from, to)
             }
         }
         val nFeatureImputedField = Field(
             Order.features + 400,
             "-nFeatureImputed",
             "Export nucleotide sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
-            geneFeatureParam("nSeqImputed")
+            geneFeatureParam("nSeqImputed"),
+            validateArgs = { header, feature ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { vdjcObject: VDJCObject, geneFeature ->
             vdjcObject.getIncompleteFeature(geneFeature)?.toString() ?: NULL
         }
@@ -334,15 +357,21 @@ object VDJCObjectFieldExtractors {
             nFeatureImputedField,
             referencePointParamOptional("<from_reference_point>"),
             referencePointParamOptional("<to_reference_point>"),
+            validateArgs = { header, from, to ->
+                warnIfFeatureNotCovered(header, from, to)
+            }
         ) { from, to ->
-            geneFeaturesBetween(from, to)
+            geneFeaturesBetweenArgs(from, to)
         }
 
         val aaFeatureImputedField = Field(
             Order.features + 500,
             "-aaFeatureImputed",
             "Export amino acid sequence of specified gene feature using letters from germline (marked lowercase) for uncovered regions",
-            geneFeatureParam("aaSeqImputed")
+            geneFeatureParam("aaSeqImputed"),
+            validateArgs = { header, feature ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { vdjcObject: VDJCObject, geneFeature ->
             vdjcObject.getIncompleteFeature(geneFeature)?.toAminoAcidString() ?: NULL
         }
@@ -355,15 +384,21 @@ object VDJCObjectFieldExtractors {
             aaFeatureImputedField,
             referencePointParamOptional("<from_reference_point>"),
             referencePointParamOptional("<to_reference_point>"),
+            validateArgs = { header, from, to ->
+                warnIfFeatureNotCovered(header, from, to)
+            }
         ) { from, to ->
-            geneFeaturesBetween(from, to)
+            geneFeaturesBetweenArgs(from, to)
         }
 
         val minFeatureQualityField = Field(
             Order.features + 600,
             "-minFeatureQuality",
             "Export minimal quality of specified gene feature",
-            geneFeatureParam("minQual")
+            geneFeatureParam("minQual"),
+            validateArgs = { header, feature ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { vdjcObject: VDJCObject, feature ->
             vdjcObject.getFeature(feature)?.quality?.minValue()?.toString() ?: NULL
         }
@@ -375,8 +410,11 @@ object VDJCObjectFieldExtractors {
             minFeatureQualityField,
             referencePointParamOptional("<from_reference_point>"),
             referencePointParamOptional("<to_reference_point>"),
+            validateArgs = { header, from, to ->
+                warnIfFeatureNotCovered(header, from, to)
+            }
         ) { from, to ->
-            geneFeaturesBetween(from, to)
+            geneFeaturesBetweenArgs(from, to)
         }
 
         if (!forTreesExport) {
@@ -393,8 +431,11 @@ object VDJCObjectFieldExtractors {
                 listOf(nFeatureField, minFeatureQualityField),
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
             ) { from, to ->
-                geneFeaturesBetween(from, to)
+                geneFeaturesBetweenArgs(from, to)
             }
             this += FieldsCollection(
                 Order.features + 611,
@@ -409,8 +450,11 @@ object VDJCObjectFieldExtractors {
                 listOf(nFeatureImputedField, minFeatureQualityField),
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
             ) { from, to ->
-                geneFeaturesBetween(from, to)
+                geneFeaturesBetweenArgs(from, to)
             }
         }
 
@@ -418,7 +462,10 @@ object VDJCObjectFieldExtractors {
             Order.features + 700,
             "-avrgFeatureQuality",
             "Export average quality of specified gene feature",
-            geneFeatureParam("meanQual")
+            geneFeatureParam("meanQual"),
+            validateArgs = { header, feature ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { vdjcObject: VDJCObject, feature ->
             vdjcObject.getFeature(feature)?.quality?.meanValue()?.toString() ?: NULL
         }
@@ -431,8 +478,11 @@ object VDJCObjectFieldExtractors {
             avrgFeatureQualityField,
             referencePointParamOptional("<from_reference_point>"),
             referencePointParamOptional("<to_reference_point>"),
+            validateArgs = { header, from, to ->
+                warnIfFeatureNotCovered(header, from, to)
+            }
         ) { from, to ->
-            geneFeaturesBetween(from, to)
+            geneFeaturesBetweenArgs(from, to)
         }
 
         if (!forTreesExport) {
@@ -440,7 +490,10 @@ object VDJCObjectFieldExtractors {
                 Order.`-lengthOf`,
                 "-lengthOf",
                 "Export length of specified gene feature.",
-                geneFeatureParam("lengthOf")
+                geneFeatureParam("lengthOf"),
+                validateArgs = { header, feature ->
+                    warnIfFeatureNotCovered(header, feature)
+                }
             ) { vdjcObject: VDJCObject, feature ->
                 vdjcObject.getFeature(feature)?.size()?.toString() ?: NULL
             }
@@ -452,8 +505,11 @@ object VDJCObjectFieldExtractors {
                 lengthOf,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
             ) { from, to ->
-                geneFeaturesBetween(from, to)
+                geneFeaturesBetweenArgs(from, to)
             }
 
             val nMutationsField = Field(
@@ -461,7 +517,10 @@ object VDJCObjectFieldExtractors {
                 "-nMutations",
                 "Extract nucleotide mutations for specific gene feature; relative to germline sequence.",
                 geneFeatureParam("nMutations"),
-                { geneFeature -> validateFeaturesForMutationsExtraction(geneFeature) }
+                { header, geneFeature ->
+                    warnIfFeatureNotCovered(header, geneFeature)
+                    validateFeaturesForMutationsExtraction(geneFeature)
+                }
             ) { obj: VDJCObject, geneFeature ->
                 obj.nMutations(geneFeature)?.encode(",") ?: "-"
             }
@@ -474,8 +533,11 @@ object VDJCObjectFieldExtractors {
                 nMutationsField,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
             ) { from, to ->
-                geneFeaturesBetween(from, to)
+                geneFeaturesBetweenArgs(from, to)
             }
 
             this += Field(
@@ -484,7 +546,10 @@ object VDJCObjectFieldExtractors {
                 "Extract nucleotide mutations for specific gene feature relative to another feature.",
                 geneFeatureParam("nMutationsIn"),
                 relativeGeneFeatureParam(),
-                { geneFeature, relativeTo -> validateFeaturesForMutationsExtraction(geneFeature, relativeTo) }
+                { header, geneFeature, relativeTo ->
+                    warnIfFeatureNotCovered(header, geneFeature)
+                    validateFeaturesForMutationsExtraction(geneFeature, relativeTo)
+                }
             ) { obj: VDJCObject, geneFeature, relativeTo ->
                 obj.nMutations(geneFeature, relativeTo)?.encode(",") ?: "-"
             }
@@ -493,7 +558,10 @@ object VDJCObjectFieldExtractors {
                 "-aaMutations",
                 "Extract amino acid mutations for specific gene feature",
                 geneFeatureParam("aaMutations"),
-                { geneFeature -> validateFeaturesForMutationsExtraction(geneFeature) }
+                { header, geneFeature ->
+                    warnIfFeatureNotCovered(header, geneFeature)
+                    validateFeaturesForMutationsExtraction(geneFeature)
+                }
             ) { obj: VDJCObject, geneFeature ->
                 obj.aaMutations(geneFeature)?.encode(",") ?: "-"
             }
@@ -506,8 +574,11 @@ object VDJCObjectFieldExtractors {
                 aaMutationsFiled,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
             ) { from, to ->
-                geneFeaturesBetween(from, to)
+                geneFeaturesBetweenArgs(from, to)
             }
 
             this += Field(
@@ -516,7 +587,10 @@ object VDJCObjectFieldExtractors {
                 "Extract amino acid mutations for specific gene feature relative to another feature.",
                 geneFeatureParam("aaMutationsIn"),
                 relativeGeneFeatureParam(),
-                { geneFeature, relativeTo -> validateFeaturesForMutationsExtraction(geneFeature, relativeTo) }
+                { header, geneFeature, relativeTo ->
+                    warnIfFeatureNotCovered(header, geneFeature)
+                    validateFeaturesForMutationsExtraction(geneFeature, relativeTo)
+                }
             ) { obj: VDJCObject, geneFeature, relativeTo ->
                 obj.aaMutations(geneFeature, relativeTo)?.encode(",") ?: "-"
             }
@@ -529,7 +603,10 @@ object VDJCObjectFieldExtractors {
                 "-mutationsDetailed",
                 "Detailed list of nucleotide and corresponding amino acid mutations. $detailedMutationsFormat",
                 geneFeatureParam("mutationsDetailedIn"),
-                { geneFeature -> validateFeaturesForMutationsExtraction(geneFeature) }
+                { header, geneFeature ->
+                    warnIfFeatureNotCovered(header, geneFeature)
+                    validateFeaturesForMutationsExtraction(geneFeature)
+                }
             ) { obj: VDJCObject, geneFeature ->
                 obj.mutationsDetailed(geneFeature) ?: "-"
             }
@@ -542,8 +619,11 @@ object VDJCObjectFieldExtractors {
                 mutationsDetailedField,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
             ) { from, to ->
-                geneFeaturesBetween(from, to)
+                geneFeaturesBetweenArgs(from, to)
             }
 
             this += Field(
@@ -552,7 +632,10 @@ object VDJCObjectFieldExtractors {
                 "Detailed list of nucleotide and corresponding amino acid mutations written, positions relative to specified gene feature. $detailedMutationsFormat",
                 geneFeatureParam("mutationsDetailedIn"),
                 relativeGeneFeatureParam(),
-                { geneFeature, relativeTo -> validateFeaturesForMutationsExtraction(geneFeature, relativeTo) }
+                { header, geneFeature, relativeTo ->
+                    warnIfFeatureNotCovered(header, geneFeature)
+                    validateFeaturesForMutationsExtraction(geneFeature, relativeTo)
+                }
             ) { obj: VDJCObject, geneFeature, relativeTo ->
                 obj.mutationsDetailed(geneFeature, relativeTo) ?: "-"
             }
@@ -793,17 +876,17 @@ private fun Field<VDJCObject>.validateFeaturesForMutationsExtraction(
     geneFeature: GeneFeature,
     relativeTo: GeneFeature = geneFeature
 ) {
-    require(relativeTo.contains(geneFeature)) {
+    ValidationException.require(relativeTo.contains(geneFeature)) {
         "$cmdArgName: Base feature ${GeneFeature.encode(relativeTo)} " +
                 "does not contain relative feature ${GeneFeature.encode(geneFeature)}"
     }
 
     for (feature in arrayOf(geneFeature, relativeTo)) {
-        requireNotNull(feature.geneType) {
+        ValidationException.requireNotNull(feature.geneType) {
             "$cmdArgName: Gene feature ${GeneFeature.encode(feature)} covers several gene types (not possible to select corresponding alignment)"
         }
     }
-    require(!relativeTo.isAlignmentAttached) {
+    ValidationException.require(!relativeTo.isAlignmentAttached) {
         "%$cmdArgName: Alignment attached base gene features not allowed (error in ${GeneFeature.encode(relativeTo)})"
     }
 }

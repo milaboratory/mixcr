@@ -11,7 +11,10 @@
  */
 package com.milaboratory.mixcr.cli
 
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
+import picocli.CommandLine.Spec
+import picocli.CommandLine.Spec.Target.MIXEE
 
 @Suppress("ClassName")
 object logger {
@@ -28,6 +31,9 @@ object logger {
         order = 1_000_000 - 1
     )
     var verbose = false
+
+    @Spec(MIXEE)
+    lateinit var spec: CommandSpec
 
     /** queue of warning messages  */
     private val warningsQueue: MutableList<String> = ArrayList()
@@ -51,7 +57,7 @@ object logger {
     }
 
     private fun printWarn(message: String) {
-        if (!quiet) System.err.println(message)
+        if (!quiet) spec.commandLine().err.println(message)
     }
 
     fun printWarningQueue() {

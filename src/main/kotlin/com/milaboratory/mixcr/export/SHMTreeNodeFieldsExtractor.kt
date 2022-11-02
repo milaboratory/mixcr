@@ -14,8 +14,10 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.mutations.MutationsUtil
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
-import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetween
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetweenArgs
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.warnIfFeatureNotCovered
 import com.milaboratory.mixcr.export.ParametersFactory.nodeTypeParam
 import com.milaboratory.mixcr.export.ParametersFactory.nodeTypeParamOptional
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
@@ -79,7 +81,10 @@ object SHMTreeNodeFieldsExtractor {
             "-nFeature",
             "Export nucleotide sequence of specified gene feature.%n${nodeParamDescription("feature")}",
             baseGeneFeatureParam("nSeq"),
-            nodeTypeParamOptional("Of")
+            nodeTypeParamOptional("Of"),
+            validateArgs = { header, feature, _ ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
             node.mutationsFromGermlineTo(what)
                 ?.targetNSequence(geneFeature)
@@ -93,7 +98,7 @@ object SHMTreeNodeFieldsExtractor {
             nFeatureField,
             nodeTypeParamOptional("Of")
         ) { base ->
-            val geneFeaturesBetween = geneFeaturesBetween(null, null)
+            val geneFeaturesBetween = geneFeaturesBetweenArgs(null, null)
             when {
                 base != null -> geneFeaturesBetween.map { it + base.name }
                 else -> geneFeaturesBetween
@@ -106,7 +111,10 @@ object SHMTreeNodeFieldsExtractor {
             "-aaFeature",
             "Export amino acid sequence of specified gene feature.%n${nodeParamDescription("feature")}",
             baseGeneFeatureParam("aaSeq"),
-            nodeTypeParamOptional("Of")
+            nodeTypeParamOptional("Of"),
+            validateArgs = { header, feature, _ ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
             node.mutationsFromGermlineTo(what)
                 ?.targetAASequence(geneFeature)
@@ -120,7 +128,7 @@ object SHMTreeNodeFieldsExtractor {
             aaFeatureField,
             nodeTypeParamOptional("Of")
         ) { base ->
-            val geneFeaturesBetween = geneFeaturesBetween(null, null)
+            val geneFeaturesBetween = geneFeaturesBetweenArgs(null, null)
             when {
                 base != null -> geneFeaturesBetween.map { it + base.name }
                 else -> geneFeaturesBetween
@@ -132,7 +140,10 @@ object SHMTreeNodeFieldsExtractor {
             "-lengthOf",
             "Export length of specified gene feature.%n${nodeParamDescription("length")}",
             baseGeneFeatureParam("lengthOf"),
-            nodeTypeParamOptional("Of")
+            nodeTypeParamOptional("Of"),
+            validateArgs = { header, feature, _ ->
+                warnIfFeatureNotCovered(header, feature)
+            }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
             node.mutationsFromGermlineTo(what)
                 ?.targetNSequence(geneFeature)?.size()
@@ -146,7 +157,7 @@ object SHMTreeNodeFieldsExtractor {
             lengthOfField,
             nodeTypeParamOptional("Of")
         ) { base ->
-            val geneFeaturesBetween = geneFeaturesBetween(null, null)
+            val geneFeaturesBetween = geneFeaturesBetweenArgs(null, null)
             when {
                 base != null -> geneFeaturesBetween.map { it + base.name }
                 else -> geneFeaturesBetween
@@ -159,7 +170,8 @@ object SHMTreeNodeFieldsExtractor {
             "Extract nucleotide mutations from specific node for specific gene feature.",
             baseGeneFeatureParam("nMutations"),
             nodeTypeParam("BasedOn"),
-            validateArgs = { feature, _ ->
+            validateArgs = { header, feature, _ ->
+                warnIfFeatureNotCovered(header, feature)
                 checkFeaturesForAlignment(feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, base: Base ->
@@ -176,7 +188,7 @@ object SHMTreeNodeFieldsExtractor {
             nMutationsField,
             nodeTypeParam("BasedOn")
         ) { base ->
-            geneFeaturesBetween(null, null).map { it + base.name }
+            geneFeaturesBetweenArgs(null, null).map { it + base.name }
         }
 
         this += Field(
@@ -186,7 +198,8 @@ object SHMTreeNodeFieldsExtractor {
             baseGeneFeatureParam("nMutationsIn"),
             relativeGeneFeatureParam(),
             nodeTypeParam("BasedOn"),
-            validateArgs = { feature, relativeTo, _ ->
+            validateArgs = { header, feature, relativeTo, _ ->
+                warnIfFeatureNotCovered(header, feature)
                 checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
@@ -203,7 +216,8 @@ object SHMTreeNodeFieldsExtractor {
             "Extract amino acid mutations from specific node for specific gene feature",
             baseGeneFeatureParam("aaMutations"),
             nodeTypeParam("BasedOn"),
-            validateArgs = { feature, _ ->
+            validateArgs = { header, feature, _ ->
+                warnIfFeatureNotCovered(header, feature)
                 checkFeaturesForAlignment(feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, base: Base ->
@@ -219,7 +233,7 @@ object SHMTreeNodeFieldsExtractor {
             aaMutationsField,
             nodeTypeParam("BasedOn")
         ) { base ->
-            geneFeaturesBetween(null, null).map { it + base.name }
+            geneFeaturesBetweenArgs(null, null).map { it + base.name }
         }
 
         this += Field(
@@ -229,7 +243,8 @@ object SHMTreeNodeFieldsExtractor {
             baseGeneFeatureParam("aaMutations"),
             relativeGeneFeatureParam(),
             nodeTypeParam("BasedOn"),
-            validateArgs = { feature, relativeTo, _ ->
+            validateArgs = { header, feature, relativeTo, _ ->
+                warnIfFeatureNotCovered(header, feature)
                 checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
@@ -248,7 +263,8 @@ object SHMTreeNodeFieldsExtractor {
             "Detailed list of nucleotide and corresponding amino acid mutations from specific node. $detailedMutationsFormat",
             baseGeneFeatureParam("mutationsDetailedIn"),
             nodeTypeParam("BasedOn"),
-            validateArgs = { feature, _ ->
+            validateArgs = { header, feature, _ ->
+                warnIfFeatureNotCovered(header, feature)
                 checkFeaturesForAlignment(feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, base: Base ->
@@ -264,7 +280,7 @@ object SHMTreeNodeFieldsExtractor {
             mutationsDetailedField,
             nodeTypeParam("BasedOn")
         ) { base ->
-            geneFeaturesBetween(null, null).map { it + base.name }
+            geneFeaturesBetweenArgs(null, null).map { it + base.name }
         }
 
         this += Field(
@@ -274,7 +290,8 @@ object SHMTreeNodeFieldsExtractor {
             baseGeneFeatureParam("mutationsDetailedIn"),
             relativeGeneFeatureParam(),
             nodeTypeParam("BasedOn"),
-            validateArgs = { feature, relativeTo, _ ->
+            validateArgs = { header, feature, relativeTo, _ ->
+                warnIfFeatureNotCovered(header, feature)
                 checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
@@ -289,7 +306,7 @@ private fun baseGeneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeatur
     "<gene_feature>",
     { _, arg ->
         GeneFeature.parse(arg).also {
-            require(!it.isComposite) {
+            ValidationException.require(!it.isComposite) {
                 "$cmdArgName doesn't support composite features"
             }
         }
@@ -300,7 +317,7 @@ private fun relativeGeneFeatureParam(): CommandArgRequired<GeneFeature> = Comman
     "<relative_to_gene_feature>",
     { _, arg ->
         GeneFeature.parse(arg).also {
-            require(!it.isComposite) {
+            ValidationException.require(!it.isComposite) {
                 "$cmdArgName doesn't support composite features"
             }
         }
@@ -313,13 +330,13 @@ private fun Field<*>.checkFeaturesForAlignment(
 ) {
     if (feature != relativeTo) {
         listOfNotNull(feature, relativeTo).forEach {
-            requireNotNull(it.geneType) {
+            ValidationException.requireNotNull(it.geneType) {
                 "$cmdArgName: Gene feature ${GeneFeature.encode(it)} covers several gene types (not possible to select corresponding alignment)"
             }
         }
     }
 
-    require(!feature.isAlignmentAttached) {
+    ValidationException.require(!feature.isAlignmentAttached) {
         "$cmdArgName: Alignment attached base gene features not allowed (error in ${GeneFeature.encode(feature)})"
     }
 }

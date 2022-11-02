@@ -67,6 +67,28 @@ class CommandExportClonesTest {
     }
 
     @Test
+    fun `specify duplicated column`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files -cloneId $input ${output.path}")
+        val columns = output.readLines().first().split("\t")
+        columns.count { it == "cloneId" } shouldBe 1
+    }
+
+    @Test
+    fun `specify duplicated column with composite column`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files -nFeatureImputed CDR3 $input ${output.path}")
+        val columns = output.readLines().first().split("\t")
+        columns.count { it == "nSeqImputedCDR3" } shouldBe 1
+    }
+
+    @Test
     fun `export all nFeatures equal to export by one`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
@@ -75,7 +97,7 @@ class CommandExportClonesTest {
         val outputComposite = TempFileManager.getTempDir().toPath().resolve("output1.tsv").toFile()
         outputComposite.delete()
         val outputByOne = TempFileManager.getTempDir().toPath().resolve("output2.tsv").toFile()
-        outputComposite.delete()
+        outputByOne.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -allNFeatures $input ${outputCompositeDefaults.path}")
         TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -allNFeatures FR1Begin FR4End $input ${outputComposite.path}")
         TestMain.execute(
@@ -95,5 +117,34 @@ class CommandExportClonesTest {
         columnsCompositeDefaults shouldBe columnsComposite
         columnsComposite shouldBe columnsByOne
         outputComposite.readLines() shouldBe outputByOne.readLines()
+    }
+
+    @Test
+    fun `get features from allCoveredBy`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
+        val outputCompositeDefaults = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
+        outputCompositeDefaults.delete()
+        val outputByOne = TempFileManager.getTempDir().toPath().resolve("output2.tsv").toFile()
+        outputByOne.delete()
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -allNFeatures $input ${outputCompositeDefaults.path}")
+        TestMain.execute(
+            "${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields " +
+                    "-nFeature CDR3 " +
+                    "$input ${outputByOne.path}"
+        )
+        val columnsCompositeDefaults = outputCompositeDefaults.readLines().first().split("\t")
+        val columnsByOne = outputByOne.readLines().first().split("\t")
+        columnsCompositeDefaults shouldBe columnsByOne
+    }
+
+    @Test
+    fun `try to get not covered feature`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -nFeature CDR1 $input ${output.path}")
+        output.readLines()[1].split("\t") shouldBe listOf("")
     }
 }

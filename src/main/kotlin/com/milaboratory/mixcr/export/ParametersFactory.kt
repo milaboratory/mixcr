@@ -37,7 +37,7 @@ object ParametersFactory {
         "<(${TagType.values().joinToString("|")})>",
         { _, arg ->
             val tagType = TagType.values().firstOrNull { arg.lowercase() == it.name.lowercase() }
-            require(tagType != null) {
+            ValidationException.require(tagType != null) {
                 "$cmdArgName: unexpected arg $arg, expecting one of ${TagType.values().joinToString(", ") { it.name }}"
             }
             tagType
@@ -84,7 +84,7 @@ object ParametersFactory {
         withParent -> CommandArgRequired(
             "<(${Base.germline}|${Base.mrca}|${Base.parent})>",
             { _, arg ->
-                require(Base.values().any { arg == it.name }) {
+                ValidationException.require(Base.values().any { arg == it.name }) {
                     "$cmdArgName: unexpected arg $arg, expecting one of ${Base.values().joinToString(", ") { it.name }}"
                 }
                 Base.valueOf(arg)
@@ -94,7 +94,7 @@ object ParametersFactory {
         else -> CommandArgRequired(
             "<(${Base.germline}|${Base.mrca})>",
             { _, arg ->
-                require(arg in arrayOf(Base.germline.name, Base.mrca.name)) {
+                ValidationException.require(arg in arrayOf(Base.germline.name, Base.mrca.name)) {
                     "$cmdArgName: unexpected arg $arg, expecting ${Base.germline} or ${Base.mrca}"
                 }
                 Base.valueOf(arg)
@@ -109,7 +109,7 @@ object ParametersFactory {
             "<(${Base.germline}|${Base.mrca}|${Base.parent})>",
             { arg -> arg == "node" || Base.values().any { arg == it.name } },
             { _, arg ->
-                require(arg == "node" || Base.values().any { arg == it.name }) {
+                ValidationException.require(arg == "node" || Base.values().any { arg == it.name }) {
                     "$cmdArgName: unexpected arg $arg, expecting ${Base.values().joinToString(", ") { it.name }}"
                 }
                 when (arg) {
@@ -120,7 +120,7 @@ object ParametersFactory {
             { base ->
                 when {
                     base != null -> sPrefix + base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }
-                    else -> sPrefix
+                    else -> ""
                 }
             }
         )

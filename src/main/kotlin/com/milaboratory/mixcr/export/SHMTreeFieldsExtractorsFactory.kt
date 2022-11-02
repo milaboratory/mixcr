@@ -14,7 +14,8 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetween
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetweenArgs
+import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.warnIfFeatureNotCovered
 import com.milaboratory.mixcr.export.ParametersFactory.nodeTypeParam
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
@@ -91,7 +92,10 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                 "-nFeature",
                 "Export nucleotide sequence of specified gene feature of specified node type.",
                 baseGeneFeatureParam("nSeq"),
-                nodeTypeParam("Of", withParent = false)
+                nodeTypeParam("Of", withParent = false),
+                validateArgs = { header, feature, _ ->
+                    warnIfFeatureNotCovered(header, feature)
+                }
             ) { tree: SHMTreeForPostanalysis<*>, geneFeature: GeneFeature, what: Base ->
                 when (what) {
                     Base.germline -> tree.root
@@ -109,7 +113,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                 nFeatureField,
                 nodeTypeParam("Of", withParent = false)
             ) { base ->
-                geneFeaturesBetween(null, null).map { it + base.name }
+                geneFeaturesBetweenArgs(null, null).map { it + base.name }
             }
 
 
@@ -118,7 +122,10 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                 "-aaFeature",
                 "Export amino acid sequence of specified gene feature of specified node type",
                 baseGeneFeatureParam("aaSeq"),
-                nodeTypeParam("Of", withParent = false)
+                nodeTypeParam("Of", withParent = false),
+                validateArgs = { header, feature, _ ->
+                    warnIfFeatureNotCovered(header, feature)
+                }
             ) { tree: SHMTreeForPostanalysis<*>, geneFeature: GeneFeature, what: Base ->
                 when (what) {
                     Base.germline -> tree.root
@@ -136,7 +143,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                 aaFeatureField,
                 nodeTypeParam("Of", withParent = false)
             ) { base ->
-                geneFeaturesBetween(null, null).map { it + base.name }
+                geneFeaturesBetweenArgs(null, null).map { it + base.name }
             }
         }
 

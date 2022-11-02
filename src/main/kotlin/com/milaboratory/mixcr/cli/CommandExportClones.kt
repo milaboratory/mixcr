@@ -164,7 +164,11 @@ object CommandExportClones {
         lateinit var inputFile: Path
 
         @set:Parameters(
-            description = ["Path where to write export table. Will write to output if omitted."],
+            description = [
+                "Path where to write export table.",
+                "If `--split-files-by` is specified (or was set in preset), than command will write several files `{outputDir}/{outputFileName}.{suffix}.tsv`",
+                "Will write to output if omitted."
+            ],
             paramLabel = "table.tsv",
             index = "1",
             arity = "0..1"
@@ -324,7 +328,7 @@ object CommandExportClones {
     }
 
     private class CloneGeneLabelSplittingKey(private val labelName: String) : CloneSplittingKey {
-        override fun getLabel(clone: Clone) = clone.getGeneLabel(labelName)
+        override fun getLabel(clone: Clone): String = clone.getGeneLabel(labelName)
     }
 
     @JvmStatic
