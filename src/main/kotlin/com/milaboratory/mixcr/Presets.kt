@@ -41,6 +41,7 @@ import org.apache.commons.io.IOUtils
 import java.nio.charset.Charset
 import kotlin.io.path.Path
 import kotlin.io.path.exists
+import kotlin.io.path.toPath
 import kotlin.reflect.KProperty1
 
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
@@ -105,8 +106,9 @@ object Flags {
 }
 
 object Presets {
-    private val localPresetSearchPath = listOf(
+    private val localPresetSearchPath = listOfNotNull(
         Path(System.getProperty("user.home"), ".mixcr", "presets"),
+        Presets::class.java.protectionDomain.codeSource?.location?.toURI()?.toPath(),
         Path(".")
     ).filter {
         try {
