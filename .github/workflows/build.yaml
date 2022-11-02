@@ -50,6 +50,11 @@ jobs:
       test-integration-cache-key: 'tests-sequences-v1'
       test-integration-python-version: '3.9'
 
+      # Lib
+      dist-library: ${{ github.event_name != 'schedule' }}
+      dist-library-dev-tasks: publishAllPublicationsToMiprivRepository
+      dist-library-release-tasks: publishAllPublicationsToMiprivRepository
+
       # Distribution
       dist-archive: ${{ github.event_name != 'schedule' }}
       dist-archive-tasks: distributionZip
@@ -57,7 +62,7 @@ jobs:
       dist-archive-s3: true
       dist-archive-s3-add-sha: true
 
-      #CDN redirect
+      # CDN redirect
       cdn-redirect-s3: true
       cdn-redirect-s3-bucket-path: 'link/software/mixcr'
 
@@ -86,4 +91,3 @@ jobs:
 
       TELEGRAM_NOTIFICATION_TARGET: ${{ secrets.TG_CHANNEL_MIBUILDS }}
       TELEGRAM_API_TOKEN: ${{ secrets.TG_CI_BOT_TOKEN }}
-
