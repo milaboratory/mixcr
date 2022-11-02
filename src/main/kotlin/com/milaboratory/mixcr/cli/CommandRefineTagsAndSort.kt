@@ -18,7 +18,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.data.CriticalThresholdKey
-import com.milaboratory.mitool.pattern.SequenceSetCollection.loadSequenceSetByAddress
+import com.milaboratory.mitool.pattern.Whitelist
+import com.milaboratory.mitool.pattern.WhitelistFromAddress
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
@@ -45,10 +46,7 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import gnu.trove.list.array.TIntArrayList
 import org.apache.commons.io.FileUtils
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.nio.file.Path
 import java.util.*
 
@@ -57,7 +55,7 @@ object CommandRefineTagsAndSort {
 
     data class Params(
         /** Whitelists to use on the correction step for barcodes requiring whitelist-driven correction */
-        @JsonProperty("whitelists") val whitelists: Map<String, String> = emptyMap(),
+        @JsonProperty("whitelists") val whitelists: Map<String, Whitelist> = emptyMap(),
         /** If false no correction will be performed, only sorting */
         @JsonProperty("runCorrection") val runCorrection: Boolean = true,
         /** Correction parameters */
@@ -163,7 +161,7 @@ object CommandRefineTagsAndSort {
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::refineTagsAndSort) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::whitelists setIfNotEmpty whitelists
+                Params::whitelists setIfNotEmpty whitelists.mapValues { WhitelistFromAddress(it.value) }
 
                 Params::runCorrection resetIfTrue dontCorrect
 
@@ -283,7 +281,7 @@ object CommandRefineTagsAndSort {
                             val t = cmdParams.whitelists[tagNames[i]]
                             if (t != null) {
                                 println("The following whitelist will be used for ${tagNames[i]}: $t")
-                                whitelists[i] = loadSequenceSetByAddress(t)
+                                whitelists[i] = t.load()
                             }
                         }
 
