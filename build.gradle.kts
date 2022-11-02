@@ -265,7 +265,7 @@ val buildIMGTDockerImage by tasks.registering(DockerBuildImage::class) {
 
 publishing {
     repositories {
-        if (miRepoAccessKeyId != null) {
+        if (miRepoAccessKeyId != null && miRepoSecretAccessKey != null) {
             maven {
                 name = "mipriv"
                 url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
