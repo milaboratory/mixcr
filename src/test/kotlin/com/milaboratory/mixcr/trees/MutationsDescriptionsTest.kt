@@ -34,13 +34,16 @@ import com.milaboratory.mixcr.util.plus
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR1
 import io.repseq.core.GeneFeature.CDR2
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.FR3
 import io.repseq.core.GeneFeature.FR4
 import io.repseq.core.GeneFeature.JCDR3Part
 import io.repseq.core.GeneFeature.VCDR3Part
+import io.repseq.core.GeneFeature.VDJRegion
 import io.repseq.core.GeneFeature.VJJunction
+import io.repseq.core.ReferencePoint.CDR1Begin
 import io.repseq.core.ReferencePoint.CDR2Begin
 import io.repseq.core.ReferencePoint.CDR3Begin
 import io.repseq.core.ReferencePoint.CDR3End
@@ -514,6 +517,45 @@ class MutationsDescriptionsTest {
             it.absoluteMutations shouldBe Mutations(AminoAcidSequence.ALPHABET, "SK0ESG2VSK4ISK5ISG7VSK10N")
             it.relativeMutations.mutate(it.sequence1.getRange(it.sequence1Range)) shouldBe AminoAcidSequence("EKVPIIPVKKN")
         }
+    }
+
+    @Test
+    fun `export not covered feature`() {
+        val VSequence1 = NucleotideSequence("AAAAAACCCCCCAAAAAAGGGCCCCCCCCC")
+        val VMutations = Mutations(NucleotideSequence.ALPHABET, "SA12GSG19T")
+        val baseNDN = NucleotideSequence("AAAAAA")
+        val NDNMutations = Mutations(NucleotideSequence.ALPHABET, "SA1TSA4T")
+        val JSequence1 = NucleotideSequence("CCCCCCGGGAAAAAAAAA")
+        val JMutations = Mutations(NucleotideSequence.ALPHABET, "SG7TSA17T")
+        val mutationsDescription = MutationsDescription(
+            sortedMapOf(GeneFeature(FR3Begin, VEndTrimmed) to VMutations),
+            VSequence1,
+            ReferencePoints(ReferenceUtil.getReferencePointIndex(CDR2Begin), intArrayOf(0, 6, 12, 18, 30))
+                .withVCDR3PartLength(6),
+            baseNDN,
+            NDNMutations,
+            sortedMapOf(GeneFeature(JBeginTrimmed, FR4End) to JMutations),
+            JSequence1,
+            ReferencePoints(ReferenceUtil.getReferencePointIndex(JBegin), intArrayOf(0, 9, 18))
+                .withJCDR3PartLength(6)
+        )
+        VMutations.mutate(VSequence1) shouldBe NucleotideSequence("AAAAAACCCCCCGAAAAAGTGCCCCCCCCC")
+        JMutations.mutate(JSequence1) shouldBe NucleotideSequence("CCCCCCGTGAAAAAAAAT")
+
+        mutationsDescription.nAlignment(CDR2) shouldBe null
+        mutationsDescription.aaAlignment(CDR2) shouldBe null
+        mutationsDescription.nAlignment(GeneFeature(CDR2Begin, CDR3Begin)) shouldBe null
+        mutationsDescription.aaAlignment(GeneFeature(CDR2Begin, CDR3Begin)) shouldBe null
+
+        mutationsDescription.nAlignment(CDR1) shouldBe null
+        mutationsDescription.aaAlignment(CDR1) shouldBe null
+        mutationsDescription.nAlignment(GeneFeature(CDR1Begin, CDR3Begin)) shouldBe null
+        mutationsDescription.aaAlignment(GeneFeature(CDR1Begin, CDR3Begin)) shouldBe null
+
+        mutationsDescription.nAlignment(VDJRegion) shouldBe null
+        mutationsDescription.aaAlignment(VDJRegion) shouldBe null
+        mutationsDescription.nAlignment(VDJRegion) shouldBe null
+        mutationsDescription.aaAlignment(VDJRegion) shouldBe null
     }
 
     @Test
