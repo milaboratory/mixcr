@@ -137,15 +137,7 @@ data class CloneWithDatasetId(
     ) {
         fun encode() = "$datasetId:$cloneId"
 
-        companion object {
-            fun decode(text: String): ID {
-                val (datasetId, cloneId) = text.split(":")
-                return ID(
-                    datasetId.toInt(),
-                    cloneId.toInt()
-                )
-            }
-        }
+        override fun toString() = encode()
     }
 
     class SerializerImpl : BasicSerializer<CloneWithDatasetId>() {

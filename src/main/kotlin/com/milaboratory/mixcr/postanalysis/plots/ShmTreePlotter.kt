@@ -15,6 +15,7 @@ import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.motif.BitapPattern
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.color.Palettes
 import com.milaboratory.miplots.dendro.GGDendroPlot
@@ -56,7 +57,7 @@ data class SeqPattern(
     /** Amino acid or nucleotide */
     val isAA: Boolean,
     /** Match inside specified gene feature */
-    val feature: GeneFeature?,
+    val feature: GeneFeature,
     /** Max allowed subs & indels */
     val maxErrors: Int
 ) {
@@ -91,16 +92,14 @@ class TreeFilter(
         if (seqPattern != null) {
             return tree.tree.allNodes()
                 .asSequence()
-                .flatMap { it.node.content.clones.map { w -> w.clone } }
-                .any { clone ->
-                    if (seqPattern.feature != null) {
-                        if (seqPattern.isAA)
-                            seqPattern.bitapQ(clone.getAAFeature(seqPattern.feature))
-                        else
-                            seqPattern.bitapQ(clone.getFeature(seqPattern.feature).sequence)
-                    } else {
-                        clone.targets.any { seqPattern.bitapQ(it.sequence) }
-                    }
+                .map { it.node.content }
+                .any { node ->
+                    val sequence: Sequence<*>? = if (seqPattern.isAA)
+                        node.mutationsFromGermline().targetAASequence(seqPattern.feature)
+                    else
+                        node.mutationsFromGermline().targetNSequence(seqPattern.feature)
+                    if (sequence == null) return false
+                    seqPattern.bitapQ(sequence)
                 }
         }
         return true

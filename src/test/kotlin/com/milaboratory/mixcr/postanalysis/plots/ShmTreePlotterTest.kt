@@ -58,7 +58,7 @@ class ShmTreePlotterTest {
                     minNodes = 30, minHeight = 15, seqPattern = SeqPattern(
                         seq = "ATGCTTGAAAA",
                         isAA = false,
-                        feature = null,
+                        feature = GeneFeature.CDR2,
                         maxErrors = 3
                     )
                 ),
