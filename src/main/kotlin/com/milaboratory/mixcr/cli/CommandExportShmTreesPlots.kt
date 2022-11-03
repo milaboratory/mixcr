@@ -15,11 +15,8 @@ import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.postanalysis.plots.AlignmentOption
 import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta
-import com.milaboratory.mixcr.postanalysis.plots.SeqPattern
 import com.milaboratory.mixcr.postanalysis.plots.ShmTreePlotter
-import com.milaboratory.mixcr.postanalysis.plots.TreeFilter
 import io.repseq.core.GeneFeature
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
@@ -51,82 +48,6 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
             ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
-
-    @set:Option(
-        names = ["--filter-min-nodes"],
-        description = ["Minimal number of nodes in tree"],
-        paramLabel = "<n>"
-    )
-    var minNodes: Int? = null
-        set(value) {
-            ValidationException.require(value == null || value > 0) { "value must be greater then 0" }
-            field = value
-        }
-
-    @set:Option(
-        names = ["--filter-min-height"],
-        description = ["Minimal height of the tree "],
-        paramLabel = "<n>"
-    )
-    var minHeight: Int? = null
-        set(value) {
-            ValidationException.require(value == null || value > 0) { "value must be greater then 0" }
-            field = value
-        }
-
-    @Option(
-        names = ["--ids"],
-        description = ["Filter specific trees by id"],
-        split = ",",
-        paramLabel = "<id>"
-    )
-    var treeIds: Set<Int>? = null
-
-    class PatternOptions {
-        class PatternChoice {
-            @Option(
-                names = ["--filter-aa-pattern"],
-                description = ["Filter specific trees by aa pattern."],
-                paramLabel = "<pattern>"
-            )
-            var seqAa: String? = null
-
-            @Option(
-                names = ["--filter-nt-pattern"],
-                description = ["Filter specific trees by nt pattern."],
-                paramLabel = "<pattern>"
-            )
-            var seqNt: String? = null
-        }
-
-        @ArgGroup(multiplicity = "1", exclusive = true)
-        lateinit var pattern: PatternChoice
-
-        @Option(
-            names = ["--filter-in-feature"],
-            description = ["Match pattern inside specified gene feature."],
-            paramLabel = Labels.GENE_FEATURE,
-            defaultValue = "CDR3",
-            showDefaultValue = ALWAYS
-        )
-        lateinit var inFeature: GeneFeature
-
-        @Option(
-            names = ["--pattern-max-errors"],
-            description = ["Max allowed subs & indels."],
-            paramLabel = "<n>",
-            showDefaultValue = ALWAYS,
-            defaultValue = "0"
-        )
-        var maxErrors: Int = 0
-    }
-
-    @ArgGroup(
-        heading = "Filter by pattern\n",
-        exclusive = false,
-        multiplicity = "0..1"
-    )
-    var patternOptions: PatternOptions? = null
 
     @set:Option(
         names = ["--limit"],
@@ -210,32 +131,11 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
             AlignmentOption(alignmentGeneFeatureNt!!, false, !noAlignmentFill)
     }
 
-    private val pattern by lazy {
-        patternOptions?.let { options ->
-            if (options.pattern.seqNt != null)
-                SeqPattern(options.pattern.seqNt!!, false, options.inFeature, options.maxErrors)
-            else
-                SeqPattern(options.pattern.seqAa!!, true, options.inFeature, options.maxErrors)
-        }
-    }
-
-    private val filter by lazy {
-        if (minNodes == null && minHeight == null && treeIds == null && pattern == null)
-            null
-        else
-            TreeFilter(
-                minNodes = minNodes,
-                minHeight = minHeight,
-                treeIds = treeIds,
-                seqPattern = pattern
-            )
-    }
-
     override fun run0() {
         val plots = ShmTreePlotter(
             input.toAbsolutePath(),
             metadata?.toAbsolutePath(),
-            filter = filter,
+            filter = treeFilter,
             limit = limit,
             nodeColor = nodeColor,
             lineColor = lineColor,

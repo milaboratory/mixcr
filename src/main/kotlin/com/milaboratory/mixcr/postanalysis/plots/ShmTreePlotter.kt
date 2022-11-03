@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.postanalysis.plots
 
-import cc.redberry.pipe.CUtils
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.motif.BitapPattern
 import com.milaboratory.core.sequence.AminoAcidSequence
@@ -35,6 +34,7 @@ import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.Tree
 import com.milaboratory.mixcr.trees.forPostanalysisSplitted
+import com.milaboratory.primitivio.asSequence
 import com.milaboratory.util.StringUtil
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -178,30 +178,24 @@ class ShmTreePlotter(
     }
 
     val plots: List<Plot> by lazy {
-        SHMTreesReader(shmtFile, VDJCLibraryRegistry.getDefault()).use {
-            val list = mutableListOf<Plot>()
-
-            it.readTrees().use { reader ->
-                var c = 0
-                for (t in CUtils.it(reader)) {
-                    val tree = t.forPostanalysisSplitted(
-                        it.fileNames,
-                        it.alignerParameters,
-                        VDJCLibraryRegistry.getDefault()
-                    )
-
-                    if (filter != null && !filter.match(tree))
-                        continue
-                    if (limit != null && c > limit)
-                        break
-
-                    list += plot(t.treeId, tree.tree)
-
-                    ++c
-                }
+        SHMTreesReader(shmtFile, VDJCLibraryRegistry.getDefault()).use { reader ->
+            reader.readTrees().use { trees ->
+                trees
+                    .asSequence()
+                    .map { tree ->
+                        tree.forPostanalysisSplitted(
+                            reader.fileNames,
+                            reader.alignerParameters,
+                            VDJCLibraryRegistry.getDefault()
+                        )
+                    }
+                    .filter { filter?.match(it) != false }
+                    .take(limit ?: Int.MAX_VALUE)
+                    .map { tree ->
+                        plot(tree.meta.treeId, tree.tree)
+                    }
+                    .toList()
             }
-
-            list
         }
     }
 
