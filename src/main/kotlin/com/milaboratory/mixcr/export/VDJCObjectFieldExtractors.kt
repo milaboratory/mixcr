@@ -287,18 +287,29 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getFeature(feature)?.quality?.toString() ?: NULL
         }
         this += qFeatureField
-        this += FieldsCollection(
-            Order.features + 201,
-            "-allQFeatures",
-            "Export quality string ${commonDescriptionForFeatures("-allQFeatures", qFeatureField)}",
-            qFeatureField,
-            referencePointParamOptional("<from_reference_point>"),
-            referencePointParamOptional("<to_reference_point>"),
-            validateArgs = { header, from, to ->
-                warnIfFeatureNotCovered(header, from, to)
+        if (!forTreesExport) {
+            this += FieldsCollection(
+                Order.features + 201,
+                "-allQFeatures",
+                "Export quality string ${commonDescriptionForFeatures("-allQFeatures", qFeatureField)}",
+                qFeatureField,
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
+            ) { from, to ->
+                geneFeaturesBetweenArgs(from, to)
             }
-        ) { from, to ->
-            geneFeaturesBetweenArgs(from, to)
+        } else {
+            this += FieldsCollection(
+                Order.features + 201,
+                "-allQFeatures",
+                "Export quality string for all covered gene features",
+                qFeatureField
+            ) {
+                geneFeaturesBetweenArgs(null, null)
+            }
         }
 
         if (!forTreesExport) {
@@ -349,19 +360,30 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getIncompleteFeature(geneFeature)?.toString() ?: NULL
         }
         this += nFeatureImputedField
-        this += FieldsCollection(
-            Order.features + 401,
-            "-allNFeaturesImputed",
-            "Export nucleotide sequence using letters from germline (marked lowercase) for uncovered regions " +
-                    commonDescriptionForFeatures("-allNFeaturesImputed", nFeatureImputedField),
-            nFeatureImputedField,
-            referencePointParamOptional("<from_reference_point>"),
-            referencePointParamOptional("<to_reference_point>"),
-            validateArgs = { header, from, to ->
-                warnIfFeatureNotCovered(header, from, to)
+        if (!false) {
+            this += FieldsCollection(
+                Order.features + 401,
+                "-allNFeaturesImputed",
+                "Export nucleotide sequence using letters from germline (marked lowercase) for uncovered regions " +
+                        commonDescriptionForFeatures("-allNFeaturesImputed", nFeatureImputedField),
+                nFeatureImputedField,
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
+            ) { from, to ->
+                geneFeaturesBetweenArgs(from, to)
             }
-        ) { from, to ->
-            geneFeaturesBetweenArgs(from, to)
+        } else {
+            this += FieldsCollection(
+                Order.features + 401,
+                "-allNFeaturesImputed",
+                "Export nucleotide sequence using letters from germline (marked lowercase) for uncovered regions for all covered features.",
+                nFeatureImputedField
+            ) {
+                geneFeaturesBetweenArgs(null, null)
+            }
         }
 
         val aaFeatureImputedField = Field(
@@ -376,19 +398,30 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getIncompleteFeature(geneFeature)?.toAminoAcidString() ?: NULL
         }
         this += aaFeatureImputedField
-        this += FieldsCollection(
-            Order.features + 501,
-            "-allAaFeaturesImputed",
-            "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions " +
-                    commonDescriptionForFeatures("-allAaFeaturesImputed", aaFeatureImputedField),
-            aaFeatureImputedField,
-            referencePointParamOptional("<from_reference_point>"),
-            referencePointParamOptional("<to_reference_point>"),
-            validateArgs = { header, from, to ->
-                warnIfFeatureNotCovered(header, from, to)
+        if (!forTreesExport) {
+            this += FieldsCollection(
+                Order.features + 501,
+                "-allAaFeaturesImputed",
+                "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions " +
+                        commonDescriptionForFeatures("-allAaFeaturesImputed", aaFeatureImputedField),
+                aaFeatureImputedField,
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
+            ) { from, to ->
+                geneFeaturesBetweenArgs(from, to)
             }
-        ) { from, to ->
-            geneFeaturesBetweenArgs(from, to)
+        } else {
+            this += FieldsCollection(
+                Order.features + 501,
+                "-allAaFeaturesImputed",
+                "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions for all covered features",
+                aaFeatureImputedField
+            ) {
+                geneFeaturesBetweenArgs(null, null)
+            }
         }
 
         val minFeatureQualityField = Field(
@@ -403,18 +436,34 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getFeature(feature)?.quality?.minValue()?.toString() ?: NULL
         }
         this += minFeatureQualityField
-        this += FieldsCollection(
-            Order.features + 601,
-            "-allMinFeaturesQuality",
-            "Export minimal quality ${commonDescriptionForFeatures("-allMinFeaturesQuality", minFeatureQualityField)}",
-            minFeatureQualityField,
-            referencePointParamOptional("<from_reference_point>"),
-            referencePointParamOptional("<to_reference_point>"),
-            validateArgs = { header, from, to ->
-                warnIfFeatureNotCovered(header, from, to)
+        if (!forTreesExport) {
+            this += FieldsCollection(
+                Order.features + 601,
+                "-allMinFeaturesQuality",
+                "Export minimal quality ${
+                    commonDescriptionForFeatures(
+                        "-allMinFeaturesQuality",
+                        minFeatureQualityField
+                    )
+                }",
+                minFeatureQualityField,
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
+            ) { from, to ->
+                geneFeaturesBetweenArgs(from, to)
             }
-        ) { from, to ->
-            geneFeaturesBetweenArgs(from, to)
+        } else {
+            this += FieldsCollection(
+                Order.features + 601,
+                "-allMinFeaturesQuality",
+                "Export minimal quality for all covered features.",
+                minFeatureQualityField
+            ) {
+                geneFeaturesBetweenArgs(null, null)
+            }
         }
 
         if (!forTreesExport) {
@@ -470,19 +519,30 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getFeature(feature)?.quality?.meanValue()?.toString() ?: NULL
         }
         this += avrgFeatureQualityField
-        this += FieldsCollection(
-            Order.features + 701,
-            "-allAvrgFeaturesQuality",
-            "Export average quality " +
-                    commonDescriptionForFeatures("-allAvrgFeaturesQuality", avrgFeatureQualityField),
-            avrgFeatureQualityField,
-            referencePointParamOptional("<from_reference_point>"),
-            referencePointParamOptional("<to_reference_point>"),
-            validateArgs = { header, from, to ->
-                warnIfFeatureNotCovered(header, from, to)
+        if (!forTreesExport) {
+            this += FieldsCollection(
+                Order.features + 701,
+                "-allAvrgFeaturesQuality",
+                "Export average quality " +
+                        commonDescriptionForFeatures("-allAvrgFeaturesQuality", avrgFeatureQualityField),
+                avrgFeatureQualityField,
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+                validateArgs = { header, from, to ->
+                    warnIfFeatureNotCovered(header, from, to)
+                }
+            ) { from, to ->
+                geneFeaturesBetweenArgs(from, to)
             }
-        ) { from, to ->
-            geneFeaturesBetweenArgs(from, to)
+        } else {
+            this += FieldsCollection(
+                Order.features + 701,
+                "-allAvrgFeaturesQuality",
+                "Export average quality for all covered feautures",
+                avrgFeatureQualityField
+            ) {
+                geneFeaturesBetweenArgs(null, null)
+            }
         }
 
         if (!forTreesExport) {
@@ -649,20 +709,27 @@ object VDJCObjectFieldExtractors {
             obj.positionOfReferencePoint(refPoint, true)
         }
         this += positionInReferenceOfField
-        this += FieldsCollection(
-            Order.positions + 101,
-            "-allPositionsInReferenceOf",
-            "Export position inside reference sequences (clonal sequence / read sequence) ${
-                commonDescriptionForReferencePoints(
-                    "-allPositionsInReferenceOf",
-                    positionInReferenceOfField
-                )
-            }",
-            positionInReferenceOfField,
-            referencePointParamOptional("<from_reference_point>"),
-            referencePointParamOptional("<to_reference_point>"),
-        ) { from, to ->
-            referencePointsToExport(from, to)
+        if (!forTreesExport) {
+            this += FieldsCollection(
+                Order.positions + 101,
+                "-allPositionsInReference",
+                "Export position inside reference sequences (clonal sequence / read sequence) " +
+                        commonDescriptionForReferencePoints("-allPositionsInReference", positionInReferenceOfField),
+                positionInReferenceOfField,
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+            ) { from, to ->
+                referencePointsToExport(from, to)
+            }
+        } else {
+            this += FieldsCollection(
+                Order.positions + 101,
+                "-allPositionsInReference",
+                "Export position inside reference sequences (clonal sequence / read sequence) for all covered reference points.",
+                positionInReferenceOfField
+            ) {
+                referencePointsToExport(null, null)
+            }
         }
 
         val positionOfField = Field(
@@ -674,20 +741,27 @@ object VDJCObjectFieldExtractors {
             obj.positionOfReferencePoint(refPoint, false)
         }
         this += positionOfField
-        this += FieldsCollection(
-            Order.positions + 201,
-            "-allPositionsOf",
-            "Export position inside target sequences (clonal sequence / read sequence) ${
-                commonDescriptionForReferencePoints(
-                    "-allPositionsOf",
-                    positionOfField
-                )
-            }",
-            positionOfField,
-            referencePointParamOptional("<from_reference_point>"),
-            referencePointParamOptional("<to_reference_point>"),
-        ) { from, to ->
-            referencePointsToExport(from, to)
+        if (!forTreesExport) {
+            this += FieldsCollection(
+                Order.positions + 201,
+                "-allPositions",
+                "Export position inside target sequences (clonal sequence / read sequence) " +
+                        commonDescriptionForReferencePoints("-allPositions", positionOfField),
+                positionOfField,
+                referencePointParamOptional("<from_reference_point>"),
+                referencePointParamOptional("<to_reference_point>"),
+            ) { from, to ->
+                referencePointsToExport(from, to)
+            }
+        } else {
+            this += FieldsCollection(
+                Order.positions + 201,
+                "-allPositions",
+                "Export position inside target sequences (clonal sequence / read sequence) for all covered reference points",
+                positionOfField
+            ) {
+                referencePointsToExport(null, null)
+            }
         }
 
         this += Field(

@@ -20,8 +20,7 @@ import io.repseq.core.ReferencePoint
 import java.util.*
 
 object ParametersFactory {
-    const val tagTypeDescription =
-        "Optionally tag type may be specified, if will be used for filtering tags for export. Otherwise, all tags will be exported."
+    const val tagTypeDescription = "Tag type will be used for filtering tags for export."
 
     fun tagParam(
         sPrefix: String,

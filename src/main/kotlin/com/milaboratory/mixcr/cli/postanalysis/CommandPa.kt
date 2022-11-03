@@ -107,7 +107,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     @set:Option(
         description = [
             "Results output path.",
-            "By default will be `{outputDir}/{outputFileName}.tsv`",
+            "By default, will be `{outputDir}/{outputFileName}.tsv`.",
             "For each `chain` and `metric` will be generated file with path `{dir}/{fileName}.{metric}.{chain}.(tsv|csv)`"
         ],
         names = ["--tables"],
@@ -125,7 +125,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     @set:Option(
         description = [
             "Output path for the preprocessing summary tables (filtering and downsampling)",
-            "By default will be `{outputDir}/{outputFileName}.preproc.tsv`",
+            "By default, will be `{outputDir}/{outputFileName}.preproc.tsv`.",
             "For each `chain` will be generated file with path `{dir}/{fileName}.{chain}.(tsv|csv)`"
         ],
         names = ["--preproc-tables"],

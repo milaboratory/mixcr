@@ -26,7 +26,7 @@ import io.repseq.core.GeneFeature
 
 object SHMTreeNodeFieldsExtractor {
     private fun nodeParamDescription(subject: String) =
-        "If second arg is omitted, than $subject will be printed for current node. Otherwise - for corresponding ${Base.parent}, ${Base.germline} or ${Base.mrca}"
+        "If second arg is omitted, then $subject will be printed for current node. Otherwise - for corresponding `${Base.parent}`, `${Base.germline}` or `${Base.mrca}`"
 
     fun nodeFields(): List<FieldsCollection<SHMTreeForPostanalysis.SplittedNode>> = buildList {
         this += Field(

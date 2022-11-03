@@ -29,15 +29,15 @@ object GeneFeaturesRangeUtil {
             .joinToString(", ")
         return "for all gene features between specified reference points (in separate columns).%n" +
                 "For example, `$command FR3Begin FR4End` will export $resultFields.%n" +
-                "By default boundaries will be get from analysis parameters if possible or `FR1Begin FR4End` otherwise."
+                "By default, boundaries will be got from analysis parameters if possible or `FR1Begin FR4End` otherwise."
     }
 
     fun commonDescriptionForReferencePoints(
         command: String,
         nFeatureField: Field<*>
-    ): String = "for all reference between specified reference points (in separate columns).%n" +
+    ): String = "for all reference points between specified (in separate columns).%n" +
             "For example, `$command FR3Begin FR4End` will export `${nFeatureField.cmdArgName} FR3Begin`, ${nFeatureField.cmdArgName} CDR3Begin`, ${nFeatureField.cmdArgName} CDR3End` and `${nFeatureField.cmdArgName} FR4End`.%n" +
-            "By default boundaries will be get from analysis parameters if possible or `FR1Begin FR4End` otherwise."
+            "By default, boundaries will be got from analysis parameters if possible or `FR1Begin FR4End` otherwise."
 
     fun MiXCRHeader.geneFeaturesBetweenArgs(
         from: ReferencePoint?,
