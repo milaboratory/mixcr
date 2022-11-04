@@ -49,7 +49,7 @@ interface FieldsCollection<in T : Any> {
             description: String,
             delegate: Field<T>,
             parameter1: CommandArgRequired<P1>,
-            validateArgs: FieldsCollection<*>.(P1) -> Unit = { _ -> },
+            validateArgs: FieldsCollection<*>.(MiXCRHeader, P1) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1) -> List<Array<String>>
         ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, P1>(
@@ -64,7 +64,7 @@ interface FieldsCollection<in T : Any> {
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): P1 {
                 val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
-                validateArgs(arg1)
+                validateArgs(headerData, arg1)
                 return arg1
             }
 
@@ -78,7 +78,7 @@ interface FieldsCollection<in T : Any> {
             description: String,
             delegate: Field<T>,
             parameter1: CommandArgOptional<P1?>,
-            validateArgs: FieldsCollection<*>.(P1?) -> Unit = { _ -> },
+            validateArgs: FieldsCollection<*>.(MiXCRHeader, P1?) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1?) -> List<Array<String>>
         ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, P1?>(
@@ -93,7 +93,7 @@ interface FieldsCollection<in T : Any> {
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): P1? {
                 val arg1 = args.getOrNull(0)?.let { arg -> parameter1.decodeAndValidate(this, headerData, arg) }
-                validateArgs(arg1)
+                validateArgs(headerData, arg1)
                 return arg1
             }
 
@@ -108,7 +108,7 @@ interface FieldsCollection<in T : Any> {
             delegate: Field<T>,
             parameter1: CommandArgRequired<P1>,
             parameter2: CommandArgRequired<P2>,
-            validateArgs: FieldsCollection<*>.(P1, P2) -> Unit = { _, _ -> },
+            validateArgs: FieldsCollection<*>.(MiXCRHeader, P1, P2) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1, P2) -> List<Array<String>>
         ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, Pair<P1, P2>>(
@@ -124,7 +124,7 @@ interface FieldsCollection<in T : Any> {
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Pair<P1, P2> {
                 val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
                 val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
-                validateArgs(arg1, arg2)
+                validateArgs(headerData, arg1, arg2)
                 return arg1 to arg2
             }
 
@@ -139,7 +139,7 @@ interface FieldsCollection<in T : Any> {
             delegate: Field<T>,
             parameter1: CommandArgOptional<P1?>,
             parameter2: CommandArgOptional<P2?>,
-            validateArgs: FieldsCollection<*>.(P1?, P2?) -> Unit = { _, _ -> },
+            validateArgs: FieldsCollection<*>.(MiXCRHeader, P1?, P2?) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1?, P2?) -> List<Array<String>>
         ): FieldsCollection<T> = invoke(
@@ -161,7 +161,7 @@ interface FieldsCollection<in T : Any> {
             delegates: List<Field<T>>,
             parameter1: CommandArgOptional<P1?>,
             parameter2: CommandArgOptional<P2?>,
-            validateArgs: FieldsCollection<*>.(P1?, P2?) -> Unit = { _, _ -> },
+            validateArgs: FieldsCollection<*>.(MiXCRHeader, P1?, P2?) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1?, P2?) -> List<Array<String>>
         ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, Pair<P1?, P2?>>(
@@ -188,7 +188,7 @@ interface FieldsCollection<in T : Any> {
                 ValidationException.require((arg1 != null && arg2 != null) || (arg1 == null && arg2 == null)) {
                     "Both arguments must be set or both must be omitted, got ${args.joinToString(", ")}"
                 }
-                validateArgs(arg1, arg2)
+                validateArgs(headerData, arg1, arg2)
                 return arg1 to arg2
             }
 
@@ -204,7 +204,7 @@ interface FieldsCollection<in T : Any> {
             parameter1: CommandArgRequired<P1>,
             parameter2: CommandArgOptional<P2?>,
             parameter3: CommandArgOptional<P3?>,
-            validateArgs: FieldsCollection<*>.(P1, P2?, P3?) -> Unit = { _, _, _ -> },
+            validateArgs: FieldsCollection<*>.(MiXCRHeader, P1, P2?, P3?) -> Unit = { _, _, _, _ -> },
             deprecation: String? = null,
             extract: MiXCRHeader.(P1, P2?, P3?) -> List<Array<String>>
         ): FieldsCollection<T> = object : FieldsCollectionWithParameters<T, Triple<P1, P2?, P3?>>(
@@ -232,7 +232,7 @@ interface FieldsCollection<in T : Any> {
                 ValidationException.require((arg2 != null && arg3 != null) || (arg2 == null && arg3 == null)) {
                     "Both second and third arguments must be set or both must be omitted, got ${args.joinToString(", ")}"
                 }
-                validateArgs(arg1, arg2, arg3)
+                validateArgs(headerData, arg1, arg2, arg3)
                 return Triple(arg1, arg2, arg3)
             }
 

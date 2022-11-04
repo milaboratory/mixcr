@@ -11,7 +11,9 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
 
@@ -27,22 +29,47 @@ object GeneFeaturesRangeUtil {
             .joinToString(", ")
         return "for all gene features between specified reference points (in separate columns).%n" +
                 "For example, `$command FR3Begin FR4End` will export $resultFields.%n" +
-                "By default boundaries will be get from analysis parameters if possible or `FR1Begin FR4End` otherwise."
+                "By default, boundaries will be got from analysis parameters if possible or `FR1Begin FR4End` otherwise."
     }
 
     fun commonDescriptionForReferencePoints(
         command: String,
         nFeatureField: Field<*>
-    ): String = "for all reference between specified reference points (in separate columns).%n" +
+    ): String = "for all reference points between specified (in separate columns).%n" +
             "For example, `$command FR3Begin FR4End` will export `${nFeatureField.cmdArgName} FR3Begin`, ${nFeatureField.cmdArgName} CDR3Begin`, ${nFeatureField.cmdArgName} CDR3End` and `${nFeatureField.cmdArgName} FR4End`.%n" +
-            "By default boundaries will be get from analysis parameters if possible or `FR1Begin FR4End` otherwise."
+            "By default, boundaries will be got from analysis parameters if possible or `FR1Begin FR4End` otherwise."
 
-    fun MiXCRHeader.geneFeaturesBetween(
+    fun MiXCRHeader.geneFeaturesBetweenArgs(
         from: ReferencePoint?,
         to: ReferencePoint?
-    ): List<Array<String>> = referencePointsBetweenOrDefault(from, to)
-        .zipWithNext { a, b -> GeneFeature(a, b) }
+    ): List<Array<String>> = geneFeaturesBetween(from, to)
         .map { arrayOf(GeneFeature.encode(it)) }
+
+    fun FieldsCollection<*>.warnIfFeatureNotCovered(
+        header: MiXCRHeader,
+        from: ReferencePoint?,
+        to: ReferencePoint?
+    ) {
+        header.geneFeaturesBetween(from, to).forEach { feature ->
+            warnIfFeatureNotCovered(header, feature)
+        }
+    }
+
+    fun FieldsCollection<*>.warnIfFeatureNotCovered(
+        header: MiXCRHeader,
+        feature: GeneFeature
+    ) {
+        if (header.allFullyCoveredBy != null) {
+            if (header.allFullyCoveredBy.intersection(feature) != GeneFeatures(feature)) {
+                logger.warn("${GeneFeature.encode(feature)} is not covered ($cmdArgName ${GeneFeature.encode(feature)})")
+            }
+        }
+    }
+
+    private fun MiXCRHeader.geneFeaturesBetween(
+        from: ReferencePoint?,
+        to: ReferencePoint?
+    ) = referencePointsBetweenOrDefault(from, to).zipWithNext { a, b -> GeneFeature(a, b) }
 
     fun MiXCRHeader.referencePointsToExport(
         from: ReferencePoint?,

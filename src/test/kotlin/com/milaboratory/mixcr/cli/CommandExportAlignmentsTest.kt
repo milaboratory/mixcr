@@ -57,4 +57,26 @@ class CommandExportAlignmentsTest {
         val columns = output.readLines().first().split("\t")
         columns shouldBe listOf("readHistory")
     }
+
+    @Test
+    fun `don't get features from allCoveredBy for clna`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --drop-default-fields -allNFeatures $input ${output.path}")
+        val columnsCompositeDefaults = output.readLines().first().split("\t")
+        columnsCompositeDefaults shouldContain "nSeqFR1"
+    }
+
+    @Test
+    fun `don't get features from allCoveredBy for vdjca`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.vdjca").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --drop-default-fields -allNFeatures $input ${output.path}")
+        val columnsCompositeDefaults = output.readLines().first().split("\t")
+        columnsCompositeDefaults shouldContain "nSeqFR1"
+    }
 }

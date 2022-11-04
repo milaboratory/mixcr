@@ -11,7 +11,13 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.postanalysis.plots.SeqPattern
+import com.milaboratory.mixcr.postanalysis.plots.TreeFilter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
+import io.repseq.core.GeneFeature
+import picocli.CommandLine
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
@@ -22,6 +28,103 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
         description = ["Input file produced by '${CommandFindShmTrees.COMMAND_NAME}' command."]
     )
     lateinit var input: Path
+
+    @set:Option(
+        names = ["--filter-min-nodes"],
+        description = ["Minimal number of nodes in tree"],
+        paramLabel = "<n>"
+    )
+    private var minNodes: Int? = null
+        set(value) {
+            ValidationException.require(value == null || value > 0) { "value must be greater then 0" }
+            field = value
+        }
+
+    @set:Option(
+        names = ["--filter-min-height"],
+        description = ["Minimal height of the tree "],
+        paramLabel = "<n>"
+    )
+    private var minHeight: Int? = null
+        set(value) {
+            ValidationException.require(value == null || value > 0) { "value must be greater then 0" }
+            field = value
+        }
+
+    @Option(
+        names = ["--ids"],
+        description = ["Filter specific trees by id"],
+        split = ",",
+        paramLabel = "<id>"
+    )
+    private var treeIds: Set<Int>? = null
+
+    class PatternOptions {
+        class PatternChoice {
+            @Option(
+                names = ["--filter-aa-pattern"],
+                description = ["Filter specific trees by aa pattern."],
+                paramLabel = "<pattern>"
+            )
+            var seqAa: String? = null
+
+            @Option(
+                names = ["--filter-nt-pattern"],
+                description = ["Filter specific trees by nt pattern."],
+                paramLabel = "<pattern>"
+            )
+            var seqNt: String? = null
+        }
+
+        @ArgGroup(multiplicity = "1", exclusive = true)
+        lateinit var pattern: PatternChoice
+
+        @Option(
+            names = ["--filter-in-feature"],
+            description = ["Match pattern inside specified gene feature."],
+            paramLabel = CommonDescriptions.Labels.GENE_FEATURE,
+            defaultValue = "CDR3",
+            showDefaultValue = CommandLine.Help.Visibility.ALWAYS
+        )
+        lateinit var inFeature: GeneFeature
+
+        @Option(
+            names = ["--pattern-max-errors"],
+            description = ["Max allowed subs & indels."],
+            paramLabel = "<n>",
+            showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
+            defaultValue = "0"
+        )
+        var maxErrors: Int = 0
+    }
+
+    @ArgGroup(
+        heading = "Filter by pattern\n",
+        exclusive = false,
+        multiplicity = "0..1"
+    )
+    private var patternOptions: PatternOptions? = null
+
+    private val pattern by lazy {
+        patternOptions?.let { options ->
+            if (options.pattern.seqNt != null)
+                SeqPattern(options.pattern.seqNt!!, false, options.inFeature, options.maxErrors)
+            else
+                SeqPattern(options.pattern.seqAa!!, true, options.inFeature, options.maxErrors)
+        }
+    }
+
+    protected val treeFilter by lazy {
+        if (minNodes == null && minHeight == null && treeIds == null && pattern == null)
+            null
+        else
+            TreeFilter(
+                minNodes = minNodes,
+                minHeight = minHeight,
+                treeIds = treeIds,
+                seqPattern = pattern
+            )
+    }
 
     override val inputFiles
         get() = listOf(input)

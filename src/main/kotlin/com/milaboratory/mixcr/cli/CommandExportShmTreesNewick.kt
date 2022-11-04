@@ -15,7 +15,9 @@ import com.milaboratory.mixcr.trees.NewickTreePrinter
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.map
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
@@ -49,17 +51,19 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
         }
 
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
-            reader.readTrees().forEach { shmTree ->
-                val shmTreeForPostanalysis = shmTree.forPostanalysis(
-                    reader.fileNames,
-                    reader.alignerParameters,
-                    reader.libraryRegistry
-                )
-
-                val newickFileOutput = out.resolve("${shmTree.treeId}.tree")
-
-                newickFileOutput.writeText(newickTreePrinter.print(shmTreeForPostanalysis.tree))
-            }
+            reader.readTrees()
+                .map {
+                    it.forPostanalysis(
+                        reader.fileNames,
+                        reader.alignerParameters,
+                        reader.libraryRegistry
+                    )
+                }
+                .filter { treeFilter?.match(it) != false }
+                .forEach { shmTree ->
+                    val newickFileOutput = out.resolve("${shmTree.meta.treeId}.tree")
+                    newickFileOutput.writeText(newickTreePrinter.print(shmTree.tree))
+                }
         }
     }
 

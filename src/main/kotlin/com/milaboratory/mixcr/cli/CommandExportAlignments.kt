@@ -132,7 +132,12 @@ object CommandExportAlignments {
 
                 InfoWriter.create(
                     outputFile,
-                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(params.fields, info),
+                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
+                        params.fields, info.copy(
+                            //in case of input clna file, allFullyCoveredBy has nothing to do with alignments
+                            allFullyCoveredBy = null
+                        )
+                    ),
                     !params.noHeader
                 ).use { writer ->
                     val reader = data.port

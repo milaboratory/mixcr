@@ -49,7 +49,11 @@ object CommandAnalyze {
                 .type(Path::class.java)
                 .paramLabel(inputsLabel)
                 .hideParamSyntax(true)
-                .description("Paths of input files with sequencing data")
+                .description(
+                    "Two fastq files for paired reads or one file for single read data.",
+                    "Use {{n}} if you want to concatenate files from multiple lanes, like:",
+                    "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"
+                )
                 .build()
         )
         .addPositional(

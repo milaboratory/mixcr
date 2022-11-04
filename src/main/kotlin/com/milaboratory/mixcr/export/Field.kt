@@ -35,7 +35,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             command: String,
             description: String,
             parameter1: CommandArgRequired<P1>,
-            validateArgs: Field<T>.(P1) -> Unit = {},
+            validateArgs: Field<T>.(MiXCRHeader, P1) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: (T, P1) -> String
         ): Field<T> = object :
@@ -44,7 +44,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
 
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): P1 {
                 val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
-                validateArgs(arg1)
+                validateArgs(headerData, arg1)
                 return arg1
             }
 
@@ -60,7 +60,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             description: String,
             parameter1: CommandArgRequired<P1>,
             parameter2: CommandArgRequired<P2>,
-            validateArgs: Field<T>.(P1, P2) -> Unit = { _, _ -> },
+            validateArgs: Field<T>.(MiXCRHeader, P1, P2) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: (T, P1, P2) -> String
         ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(
@@ -75,7 +75,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Pair<P1, P2> {
                 val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
                 val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
-                validateArgs(arg1, arg2)
+                validateArgs(headerData, arg1, arg2)
                 return arg1 to arg2
             }
 
@@ -92,7 +92,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             description: String,
             parameter1: CommandArgRequired<P1>,
             parameter2: CommandArgOptional<P2?>,
-            validateArgs: Field<T>.(P1, P2?) -> Unit = { _, _ -> },
+            validateArgs: Field<T>.(MiXCRHeader, P1, P2?) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: (T, P1, P2?) -> String
         ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2?>>(
@@ -115,7 +115,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             override fun getParameters(headerData: MiXCRHeader, args: Array<String>): Pair<P1, P2?> {
                 val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
                 val arg2 = args.getOrNull(1)?.let { arg -> parameter2.decodeAndValidate(this, headerData, arg) }
-                validateArgs(arg1, arg2)
+                validateArgs(headerData, arg1, arg2)
                 return arg1 to arg2
             }
 
@@ -133,7 +133,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             parameter1: CommandArgRequired<P1>,
             parameter2: CommandArgRequired<P2>,
             parameter3: CommandArgRequired<P3>,
-            validateArgs: Field<T>.(P1, P2, P3) -> Unit = { _, _, _ -> },
+            validateArgs: Field<T>.(MiXCRHeader, P1, P2, P3) -> Unit = { _, _, _, _ -> },
             deprecation: String? = null,
             extract: (T, P1, P2, P3) -> String
         ): Field<T> =
@@ -150,7 +150,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
                     val arg1 = parameter1.decodeAndValidate(this, headerData, args[0])
                     val arg2 = parameter2.decodeAndValidate(this, headerData, args[1])
                     val arg3 = parameter3.decodeAndValidate(this, headerData, args[2])
-                    validateArgs(arg1, arg2, arg3)
+                    validateArgs(headerData, arg1, arg2, arg3)
                     return Triple(arg1, arg2, arg3)
                 }
 

@@ -20,6 +20,7 @@ import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
+import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.groupBy
 import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.mapInParallel
@@ -48,6 +49,7 @@ class TreeBuilderByUserData(
             val treeId = cluster.first().treeId
             asCloneWrappers(cluster, treeId) to treeId
         }
+        .filter { it.first.isNotEmpty() }
         .mapInParallel(threads) { (cluster, treeId) ->
             val rebasedFromGermline = cluster
                 .map { cloneWrapper -> cloneWrapper.rebaseFromGermline(assemblingFeatures) }
@@ -74,10 +76,28 @@ class TreeBuilderByUserData(
         )
 
         val cloneWrappers = cluster
-            .asSequence()
-            .filter { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) == VJBase.CDR3length }
+            .partition { it.clone.getFeature(CDR3, VJBase) != null }
+            .also { (_, excluded) ->
+                if (excluded.isNotEmpty()) {
+                    logger.warn("${excluded.map { it.id }} have other genes than majority in tree $treeId")
+                }
+            }
+            .first
+            .partition { it.clone.ntLengthOf(CDR3, VGeneId, JGeneId) == VJBase.CDR3length }
+            .also { (_, excluded) ->
+                if (excluded.isNotEmpty()) {
+                    logger.warn("${excluded.map { it.id }} have other CDR3length than majority in tree $treeId")
+                }
+            }
+            .first
             //filter compositions that not overlap with each another
-            .filter { it.clone.formsAllRefPointsInCDR3(VJBase) }
+            .partition { it.clone.formsAllRefPointsInCDR3(VJBase) }
+            .also { (_, excluded) ->
+                if (excluded.isNotEmpty()) {
+                    logger.warn("${excluded.map { it.id }} can not form correct CDR3 ($treeId)")
+                }
+            }
+            .first
             .groupBy { it.clone.targets.toList() }
             .values
             .map { theSameClones ->
@@ -89,10 +109,6 @@ class TreeBuilderByUserData(
             }
             .toList()
 
-        if (cloneWrappers.size != cluster.size) {
-            val excludedCloneIds = cluster.map { it.clone.id } - cloneWrappers.map { it.id }.toSet()
-            logger.warn("$excludedCloneIds will be not included in $treeId")
-        }
         return cloneWrappers
     }
 

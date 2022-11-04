@@ -16,7 +16,9 @@ import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.primitivio.filter
 import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.map
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -61,15 +63,16 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                 SHMTreeFieldsExtractorsFactory.createExtractors(addedFields, reader.header),
                 !noHeader,
             ).use { output ->
-                reader.readTrees().forEach { shmTree ->
-                    output.put(
+                reader.readTrees()
+                    .map { shmTree ->
                         shmTree.forPostanalysis(
                             reader.fileNames,
                             reader.alignerParameters,
                             reader.libraryRegistry
                         )
-                    )
-                }
+                    }
+                    .filter { treeFilter?.match(it) != false }
+                    .forEach { output.put(it) }
             }
         }
     }

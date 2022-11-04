@@ -17,7 +17,7 @@ import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wrapper
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
-import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.asSequence
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec
@@ -68,21 +68,26 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                 SplittedTreeNodeFieldsExtractorsFactory.createExtractors(addedFields, reader.header),
                 !noHeader,
             ).use { output ->
-                reader.readTrees().forEach { shmTree ->
-                    val shmTreeForPostanalysis = shmTree.forPostanalysis(
-                        reader.fileNames,
-                        reader.alignerParameters,
-                        reader.libraryRegistry
-                    )
-
-                    shmTreeForPostanalysis.tree.allNodes()
-                        .asSequence()
-                        .filter { !onlyObserved || it.node.isLeaf() }
-                        .flatMap { it.node.content.split() }
-                        .forEach { node ->
-                            output.put(Wrapper(shmTreeForPostanalysis, node))
-                        }
-                }
+                reader.readTrees()
+                    .asSequence()
+                    .map {
+                        it.forPostanalysis(
+                            reader.fileNames,
+                            reader.alignerParameters,
+                            reader.libraryRegistry
+                        )
+                    }
+                    .filter { treeFilter?.match(it) != false }
+                    .flatMap { shmTreeForPostanalysis ->
+                        shmTreeForPostanalysis.tree.allNodes()
+                            .asSequence()
+                            .filter { !onlyObserved || it.node.isLeaf() }
+                            .flatMap { it.node.content.split() }
+                            .map { node -> Wrapper(shmTreeForPostanalysis, node) }
+                    }
+                    .forEach {
+                        output.put(it)
+                    }
             }
         }
     }

@@ -91,29 +91,31 @@ abstract class FieldExtractorsFactory<T : Any> {
         fields: List<ExportFieldDescription>,
         header: MiXCRHeader
     ): List<FieldExtractor<T>> =
-        fields.flatMap { fieldDescription ->
-            val eField = get(fieldDescription.field)
+        fields
+            .flatMap { fieldDescription ->
+                val eField = get(fieldDescription.field)
 
-            eField.deprecation?.let { deprecation ->
-                logger.warn(deprecation)
-            }
-
-            when (eField.arity.max()) {
-                0 -> {
-                    require(
-                        fieldDescription.args.isEmpty() ||
-                                (fieldDescription.args.size == 1 &&
-                                        (fieldDescription.args[0].lowercase() in arrayOf("true", "false")))
-                    )
-                    eField.createFields(header, emptyArray())
+                eField.deprecation?.let { deprecation ->
+                    logger.warn(deprecation)
                 }
 
-                else -> {
-                    require(fieldDescription.args.size <= eField.arity.max())
-                    eField.createFields(header, fieldDescription.args.toTypedArray())
+                when (eField.arity.max()) {
+                    0 -> {
+                        require(
+                            fieldDescription.args.isEmpty() ||
+                                    (fieldDescription.args.size == 1 &&
+                                            (fieldDescription.args[0].lowercase() in arrayOf("true", "false")))
+                        )
+                        eField.createFields(header, emptyArray())
+                    }
+
+                    else -> {
+                        require(fieldDescription.args.size <= eField.arity.max())
+                        eField.createFields(header, fieldDescription.args.toTypedArray())
+                    }
                 }
             }
-        }
+            .distinctBy { it.header }
 
     @Suppress("ObjectPropertyName")
     object Order {

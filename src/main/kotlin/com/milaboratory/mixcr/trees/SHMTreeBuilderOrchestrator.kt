@@ -259,6 +259,8 @@ class CloneFromUserInput(
     val datasetId: Int,
     val treeId: Int
 ) {
+    val id get() = CloneWithDatasetId.ID(clone.id, datasetId)
+
     class SerializerImpl : BasicSerializer<CloneFromUserInput>() {
         override fun write(output: PrimitivO, obj: CloneFromUserInput) {
             output.writeObject(obj.clone)

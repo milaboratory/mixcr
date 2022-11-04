@@ -20,6 +20,8 @@ import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.TranslationParameters
+import com.milaboratory.miplots.filterNotNull
+import com.milaboratory.mixcr.cli.ApplicationException
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
 import io.repseq.core.ExtendedReferencePoints
@@ -274,8 +276,21 @@ class MutationsDescription private constructor(
         requestedGeneFeature: GeneFeature,
         relativeTo: GeneFeature
     ): Result<S>? {
+        val interestedFeatures = mutations
+            .mapValues { (key) ->
+                intersection(key, requestedGeneFeature)
+            }
+            .filterNotNull()
+        if (interestedFeatures.isEmpty()) return null
+        val overallInterception = interestedFeatures.values.reduce { previous, next ->
+            ApplicationException.check(previous.lastPoint == next.firstPoint) {
+                "Can't build single intersection of $requestedGeneFeature and ${mutations.keys}"
+            }
+            GeneFeature(previous.firstPoint, next.lastPoint)
+        }
+        if (overallInterception != requestedGeneFeature) return null
         val alignmentsOfIntersections = mutations.mapNotNull { (key, value) ->
-            intersection(key, requestedGeneFeature)?.let { intersection ->
+            interestedFeatures[key]?.let { intersection ->
                 val sequence1Range = partitioning.getRange(intersection)
                 val isLeftBoundOfPart = intersection.firstPoint == key.firstPoint
                 val resultMutations = value.extractAbsoluteMutations(
@@ -284,7 +299,7 @@ class MutationsDescription private constructor(
                 )
                 val shift = partitioning.getPosition(relativeTo.firstPoint)
                 //build alignment by `intersection`, but shift everything accordingly to `relativeTo`
-                intersection to Alignment(
+                Alignment(
                     sequence1.getRange(partitioning.getRange(relativeTo)),
                     resultMutations.move(-shift),
                     sequence1Range.move(-shift),
@@ -293,18 +308,12 @@ class MutationsDescription private constructor(
                 )
             }
         }
-        if (alignmentsOfIntersections.isEmpty()) return null
-        for (i in 1 until alignmentsOfIntersections.size) {
-            require(alignmentsOfIntersections[i - 1].first.lastPoint == alignmentsOfIntersections[i].first.firstPoint) {
-                "Can't build single intersection of $requestedGeneFeature and ${mutations.keys}"
-            }
-        }
         //merge alignments for neighbor gene features
-        val (geneFeature, alignment) = alignmentsOfIntersections
-            .reduce { (previousGeneFeature, previousAlignment), (nextGeneFeature, nextAlignment) ->
+        val alignment = alignmentsOfIntersections
+            .reduce { previousAlignment, nextAlignment ->
                 val resultMutations = previousAlignment.absoluteMutations.concat(nextAlignment.absoluteMutations)
                 val sequence1Range = previousAlignment.sequence1Range.setUpper(nextAlignment.sequence1Range.upper)
-                GeneFeature(previousGeneFeature.firstPoint, nextGeneFeature.lastPoint) to Alignment(
+                Alignment(
                     previousAlignment.sequence1,
                     resultMutations,
                     sequence1Range,
@@ -314,7 +323,7 @@ class MutationsDescription private constructor(
             }
         return Result(
             alignment,
-            geneFeature,
+            requestedGeneFeature,
             partitioning
         )
     }
