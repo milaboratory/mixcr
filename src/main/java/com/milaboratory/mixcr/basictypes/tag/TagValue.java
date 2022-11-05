@@ -16,7 +16,9 @@ import com.milaboratory.primitivio.annotations.Serializable;
 
 @Serializable(custom = {
         @CustomSerializer(id = 1, type = SequenceAndQualityTagValue.class),
-        @CustomSerializer(id = 2, type = SequenceTagValue.class)
+        @CustomSerializer(id = 2, type = SequenceTagValue.class),
+        @CustomSerializer(id = 3, type = StringTagValue.class),
+        @CustomSerializer(id = 4, type = LongTagValue.class)
 })
 public interface TagValue extends Comparable<TagValue> {
     /**

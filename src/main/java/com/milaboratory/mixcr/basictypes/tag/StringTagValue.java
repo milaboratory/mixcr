@@ -11,17 +11,16 @@
  */
 package com.milaboratory.mixcr.basictypes.tag;
 
-import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.primitivio.annotations.Serializable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-@Serializable(by = IO.SequenceTagValueSerializer.class)
-public final class SequenceTagValue implements TagValue {
-    public final NucleotideSequence value;
+@Serializable(by = IO.StringTagValueSerializer.class)
+public final class StringTagValue implements TagValue {
+    public final String value;
 
-    public SequenceTagValue(NucleotideSequence value) {
+    public StringTagValue(String value) {
         Objects.requireNonNull(value);
         this.value = value;
     }
@@ -38,14 +37,14 @@ public final class SequenceTagValue implements TagValue {
 
     @Override
     public int compareTo(@NotNull TagValue o) {
-        return value.compareTo(((SequenceTagValue) o).value);
+        return value.compareTo(((StringTagValue) o).value);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SequenceTagValue that = (SequenceTagValue) o;
+        StringTagValue that = (StringTagValue) o;
         return value.equals(that.value);
     }
 
@@ -56,6 +55,6 @@ public final class SequenceTagValue implements TagValue {
 
     @Override
     public String toString() {
-        return value.toString();
+        return value;
     }
 }

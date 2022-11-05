@@ -51,12 +51,56 @@ public final class IO {
     public static class SequenceTagValueSerializer implements Serializer<SequenceTagValue> {
         @Override
         public void write(PrimitivO output, SequenceTagValue obj) {
-            output.writeObject(obj.sequence);
+            output.writeObject(obj.value);
         }
 
         @Override
         public SequenceTagValue read(PrimitivI input) {
             return new SequenceTagValue(input.readObject(NucleotideSequence.class));
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
+    public static class StringTagValueSerializer implements Serializer<StringTagValue> {
+        @Override
+        public void write(PrimitivO output, StringTagValue obj) {
+            output.writeUTF(obj.value);
+        }
+
+        @Override
+        public StringTagValue read(PrimitivI input) {
+            return new StringTagValue(input.readUTF());
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
+    public static class LongTagValueSerializer implements Serializer<LongTagValue> {
+        @Override
+        public void write(PrimitivO output, LongTagValue obj) {
+            output.writeLong(obj.value);
+        }
+
+        @Override
+        public LongTagValue read(PrimitivI input) {
+            return new LongTagValue(input.readLong());
         }
 
         @Override

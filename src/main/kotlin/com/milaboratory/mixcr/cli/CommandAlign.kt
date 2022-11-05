@@ -13,8 +13,7 @@ package com.milaboratory.mixcr.cli
 
 
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.blocks.Merger
-import cc.redberry.pipe.util.Chunk
+import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.util.CountLimitingOutputPort
 import cc.redberry.pipe.util.StatusReporter
 import cc.redberry.pipe.util.StatusReporter.StatusProvider
@@ -22,13 +21,10 @@ import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.io.CompressionType
-import com.milaboratory.core.io.sequence.ConcatenatingSingleReader
-import com.milaboratory.core.io.sequence.PairedReader
-import com.milaboratory.core.io.sequence.SequenceRead
-import com.milaboratory.core.io.sequence.SequenceReaderCloseable
-import com.milaboratory.core.io.sequence.SequenceWriter
+import com.milaboratory.core.io.sequence.*
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
+import com.milaboratory.core.io.sequence.fastq.PairedFastqReader
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
@@ -37,78 +33,43 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
+import com.milaboratory.mitool.helpers.FileGroup
+import com.milaboratory.mitool.helpers.map
 import com.milaboratory.mitool.helpers.mapUnchunked
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.mitool.pattern.search.ReadSearchMode
-import com.milaboratory.mitool.pattern.search.ReadSearchPlan
+import com.milaboratory.mitool.pattern.search.*
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
-import com.milaboratory.mitool.pattern.search.ReadSearchSettings
-import com.milaboratory.mitool.pattern.search.ReadTagShortcut
-import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mitool.use
+import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.AlignMixins.LimitInput
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.mixcr.basictypes.MiXCRFooter
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
-import com.milaboratory.mixcr.basictypes.SequenceHistory
-import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
-import com.milaboratory.mixcr.basictypes.VDJCHit
-import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
-import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.basictypes.tag.TagInfo
-import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.basictypes.tag.TagValueType
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.SingleEndFastq
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.Good
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotAligned
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotParsed
+import com.milaboratory.mixcr.basictypes.*
+import com.milaboratory.mixcr.basictypes.tag.*
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.*
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.primitivio.buffered
-import com.milaboratory.primitivio.chunked
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapChunksInParallel
-import com.milaboratory.primitivio.ordered
-import com.milaboratory.primitivio.unchunked
-import com.milaboratory.util.CanReportProgress
-import com.milaboratory.util.LightFileDescriptor
-import com.milaboratory.util.ReportHelper
-import com.milaboratory.util.ReportUtil
-import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.primitivio.*
+import com.milaboratory.util.*
 import io.repseq.core.Chains
-import io.repseq.core.GeneFeature.VRegion
-import io.repseq.core.GeneFeature.VRegionWithP
-import io.repseq.core.GeneFeature.encode
+import io.repseq.core.GeneFeature.*
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.ArgGroup
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
+import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
 import java.io.FileInputStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import kotlin.io.path.name
@@ -144,10 +105,12 @@ object CommandAlign {
                 InputFileType.FASTA,
                 InputFileType.BAM
             )
+
             2 -> {
                 ValidationException.requireFileType(paths[0], InputFileType.FASTQ)
                 ValidationException.requireFileType(paths[1], InputFileType.FASTQ)
             }
+
             else -> throw ValidationException("Required 1 or 2 input files, got $paths")
         }
     }
@@ -499,13 +462,13 @@ object CommandAlign {
         }
 
         /** I.e. list of mate-pair files */
-        private val inputFilesExpanded: List<List<Path>> by lazy {
-            val matchingResult = inputFiles.parseAndRunAndCorrelateFSPattern()
-            matchingResult.map { fg -> fg.files }
+        private val inputFilesExpanded: List<FileGroup> by lazy {
+            inputFiles.parseAndRunAndCorrelateFSPattern()
         }
 
         private val inputHash: String? by lazy {
-            LightFileDescriptor.calculateCommutativeLightHash(inputFilesExpanded.flatten())?.toHexString()
+            LightFileDescriptor.calculateCommutativeLightHash(inputFilesExpanded.map { it.files }.flatten())
+                ?.toHexString()
         }
 
         enum class InputType(val pairedRecords: Boolean, val isFastq: Boolean) {
@@ -516,7 +479,7 @@ object CommandAlign {
         }
 
         private val inputType: InputType by lazy {
-            val first = inputFilesExpanded.first()
+            val first = inputFilesExpanded.first().files
             if (first.size == 1) {
                 val f0 = first[0]
                 when {
@@ -536,8 +499,69 @@ object CommandAlign {
                 throw ValidationException("Too many inputs")
         }
 
+        abstract class FastqGroupReader(fileGroups: List<FileGroup>) :
+            OutputPortCloseable<ProcessingBundle>, CanReportProgress {
+            private val fileGroupIt = fileGroups.iterator()
+            private val readerCount = fileGroups.size
+            private var currentReaderIdx = -1
+
+            // -1 used to indicate closed stream
+            private var id = 0L
+            private var currentReader: SequenceReaderCloseable<SequenceRead>? = null
+            private var currentFileTags: List<Pair<String, String>>? = null
+
+            override fun take(): ProcessingBundle? {
+                synchronized(fileGroupIt) {
+                    if (id == -1L)
+                        return null
+                    while (true) {
+                        currentReader
+                            ?.take()
+                            ?.let {
+                                return ProcessingBundle(
+                                    SequenceReadUtil.setReadId(id++, it),
+                                    currentFileTags!!,
+                                    it.id
+                                )
+                            }
+                        // Terminating the stream if there are no more reads and readers
+                        if (!fileGroupIt.hasNext()) {
+                            id = -1L
+                            return null
+                        }
+                        // Closing existing reader, if any
+                        currentReader?.close()
+                        val nextGroup = fileGroupIt.next()
+                        // Opening new reader and saving nexct files tags
+                        currentReader = nextReader(nextGroup)
+                        currentFileTags = nextGroup.tags
+                        currentReaderIdx++
+                    }
+                }
+            }
+
+            abstract fun nextReader(fileGroup: FileGroup): SequenceReaderCloseable<SequenceRead>
+
+            override fun close() {
+                synchronized(fileGroupIt) {
+                    // Closing existing reader, if any
+                    currentReader?.close()
+                    // Prevents any values to be returned by the stream
+                    id = -1L
+                }
+            }
+
+            override fun getProgress(): Double {
+                if (currentReaderIdx == -1)
+                    return 0.0
+                return (1.0 * currentReaderIdx / readerCount) + (currentReader as CanReportProgress).progress
+            }
+
+            override fun isFinished() = id == -1L
+        }
+
         @Suppress("UNCHECKED_CAST")
-        private fun createReader(): SequenceReaderCloseable<SequenceRead> {
+        private fun createReader(): OutputPortCloseable<ProcessingBundle> {
             // Common single fastq reader constructor
             val fastqReaderFactory: (Path) -> SingleFastqReader = { path: Path ->
                 SingleFastqReader(
@@ -553,40 +577,48 @@ object CommandAlign {
                 BAM -> {
                     if (inputFilesExpanded.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
-                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded[0])
-                    BAMReader(inputFilesExpanded[0].toTypedArray(), cmdParams.bamDropNonVDJ, true)
+                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded[0].files)
+                    BAMReader(inputFilesExpanded[0].files.toTypedArray(), cmdParams.bamDropNonVDJ, true)
+                        .map { ProcessingBundle(it) }
+
                 }
 
                 Fasta -> {
                     if (inputFilesExpanded.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
-                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFilesExpanded[0][0]))
+                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFilesExpanded[0].files[0]))
                     FastaSequenceReaderWrapper(
-                        FastaReader(inputFilesExpanded[0][0].toFile(), NucleotideSequence.ALPHABET),
+                        FastaReader(inputFilesExpanded[0].files[0].toFile(), NucleotideSequence.ALPHABET),
                         true
-                    ) as SequenceReaderCloseable<SequenceRead>
+                    )
+                        .map { ProcessingBundle(it) }
                 }
 
                 SingleEndFastq -> {
-                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.map { it[0] })
-                    ConcatenatingSingleReader(
-                        inputFilesExpanded.map { fastqReaderFactory(it[0]) }
-                    ) as SequenceReaderCloseable<SequenceRead>
+                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.map { it.files[0] })
+                    object : FastqGroupReader(inputFilesExpanded) {
+                        override fun nextReader(fileGroup: FileGroup) =
+                            fastqReaderFactory(fileGroup.files[0]) as SequenceReaderCloseable<SequenceRead>
+                    }
                 }
 
                 PairedEndFastq -> {
-                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.flatten())
-                    PairedReader(
-                        ConcatenatingSingleReader(inputFilesExpanded.map { fastqReaderFactory(it[0]) }),
-                        ConcatenatingSingleReader(inputFilesExpanded.map { fastqReaderFactory(it[1]) })
-                    ) as SequenceReaderCloseable<SequenceRead>
+                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.map { it.files }.flatten())
+                    object : FastqGroupReader(inputFilesExpanded) {
+                        override fun nextReader(fileGroup: FileGroup) =
+                            PairedFastqReader(
+                                fastqReaderFactory(fileGroup.files[0]),
+                                fastqReaderFactory(fileGroup.files[1])
+                            ) as SequenceReaderCloseable<SequenceRead>
+                    }
                 }
             }
         }
 
-        private fun getTagPattern(): TagSearchPlan? {
+        private fun getTagsExtractor(): TagsExtractor {
             if (cmdParams.tagPattern == null)
-                return null
+                return TagsExtractor(null, null, emptyList(), emptyList(), emptyList())
+
             val searchSettings = ReadSearchSettings(
                 SearchSettings.Default.copy(bitBudget = cmdParams.tagMaxBudget),
                 if (cmdParams.tagUnstranded) ReadSearchMode.DirectAndReversed else ReadSearchMode.Direct
@@ -610,7 +642,12 @@ object CommandAlign {
             if (readShortcuts.size > 2) throw ValidationException(
                 "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported."
             )
-            return TagSearchPlan(readSearchPlan, tagShortcuts, readShortcuts, parseInfo.tags)
+            return TagsExtractor(
+                readSearchPlan, readShortcuts,
+                emptyList(),
+                tagShortcuts.map { PatternTag(it) },
+                parseInfo.tags
+            )
         }
 
         override fun inputsMustExist(): Boolean = false
@@ -683,11 +720,11 @@ object CommandAlign {
             }
 
             // Tags
-            val tagSearchPlan = getTagPattern()
+            val tagsExtractor = getTagsExtractor()
 
             // true if final NSQTuple will have two reads, false otherwise
             val pairedPayload =
-                if (tagSearchPlan != null) tagSearchPlan.readShortcuts.size == 2 else inputType.pairedRecords
+                if (tagsExtractor.readShortcuts != null) tagsExtractor.readShortcuts.size == 2 else inputType.pairedRecords
 
             // Creating aligner
             val aligner = VDJCAligner.createAligner(
@@ -755,11 +792,7 @@ object CommandAlign {
                         inputHash,
                         paramsSpec,
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
-                        if (tagSearchPlan != null) TagsInfo(
-                            0,
-
-                            *tagSearchPlan.tagInfos.toTypedArray()
-                        ) else TagsInfo.NO_TAGS,
+                        TagsInfo(0, *tagsExtractor.tagInfos.toTypedArray()),
                         aligner.parameters,
                         null,
                         null,
@@ -767,7 +800,7 @@ object CommandAlign {
                     ),
                     aligner.usedGenes
                 )
-                val sReads: OutputPort<out SequenceRead> = when {
+                val sReads: OutputPort<ProcessingBundle> = when {
                     cmdParams.limit != null -> CountLimitingOutputPort(reader, cmdParams.limit!!)
                     else -> reader
                 }
@@ -787,23 +820,16 @@ object CommandAlign {
                     arrayOfNulls(0)
                 val readsLayout = alignerParameters.readsLayout
                 SmartProgressReporter.startProgressReport("Alignment", progress)
-                @Suppress("UNCHECKED_CAST")
-                val mainInputReads: Merger<Chunk<SequenceRead>> = (sReads
-                    .chunked(64) as OutputPort<Chunk<out SequenceRead>>)
-                    .buffered(max(16, threads.value)) as Merger<Chunk<SequenceRead>>
+                val mainInputReads = sReads
+                    .chunked(64)
+                    .buffered(max(16, threads.value))
 
-                val step0 = if (tagSearchPlan != null)
+                val step0 =
                     mainInputReads.mapUnchunked {
-                        val parsingResult = tagSearchPlan.parse(it)
-                        if (parsingResult == null) {
+                        val parsed = tagsExtractor.parse(it)
+                        if (parsed.status == NotParsed)
                             reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.NoBarcode)
-                            ProcessingBundle(it, status = NotParsed)
-                        } else
-                            ProcessingBundle(it, parsingResult.first, parsingResult.second)
-                    }
-                else
-                    mainInputReads.mapUnchunked {
-                        ProcessingBundle(it)
+                        parsed
                     }
 
                 val step1 = if (cmdParams.trimmingQualityThreshold > 0) {
@@ -902,9 +928,9 @@ object CommandAlign {
                         writer?.write(alignment)
                     }
 
-                writer?.setNumberOfProcessedReads(reader.numberOfReads)
+                writer?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
-                if (tagSearchPlan != null) reportBuilder.tagReportBuilder = tagSearchPlan.reportAgg.report
+                if (tagsExtractor.reportAgg != null) reportBuilder.tagReportBuilder = tagsExtractor.reportAgg.report
                 val report = reportBuilder.buildReport()
                 writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
@@ -922,6 +948,8 @@ object CommandAlign {
 
         data class ProcessingBundle(
             val read: SequenceRead,
+            val fileTags: List<Pair<String, String>> = emptyList(),
+            val originalReadId: Long = read.id,
             val sequence: NSQTuple = read.toTuple(),
             val tags: TagTuple = TagTuple.NO_TAGS,
             val alignment: VDJCAlignments? = null,
@@ -951,25 +979,115 @@ object CommandAlign {
             )
         }
 
-        private class TagSearchPlan(
-            private val plan: ReadSearchPlan,
-            private val tagShortcuts: List<ReadTagShortcut>, val readShortcuts: List<ReadTagShortcut>,
+        private sealed interface TagExtractor {
+            fun extract(
+                originalReadId: Long,
+                fileTags: List<Pair<String, String>>,
+                headerMatches: List<Matcher>,
+                patternMatch: MicRecord?
+            ): TagValue
+        }
+
+        private data class PatternTag(val shortcut: ReadTagShortcut) : TagExtractor {
+            override fun extract(
+                originalReadId: Long,
+                fileTags: List<Pair<String, String>>,
+                headerMatches: List<Matcher>,
+                patternMatch: MicRecord?
+            ) = SequenceAndQualityTagValue(patternMatch!!.getTagValue(shortcut).value)
+        }
+
+        private data class FileTag(val tagName: String) : TagExtractor {
+            override fun extract(
+                originalReadId: Long,
+                fileTags: List<Pair<String, String>>,
+                headerMatches: List<Matcher>,
+                patternMatch: MicRecord?
+            ) = StringTagValue(fileTags.find { it.first == tagName }!!.second)
+        }
+
+        private data class HeaderTag(val patternIdx: Int, val groupName: String) : TagExtractor {
+            override fun extract(
+                originalReadId: Long,
+                fileTags: List<Pair<String, String>>,
+                headerMatches: List<Matcher>,
+                patternMatch: MicRecord?
+            ) = StringTagValue(headerMatches[patternIdx].group(groupName))
+        }
+
+        private object ReadIndex : TagExtractor {
+            override fun extract(
+                originalReadId: Long,
+                fileTags: List<Pair<String, String>>,
+                headerMatches: List<Matcher>,
+                patternMatch: MicRecord?
+            ) = LongTagValue(originalReadId)
+        }
+
+        data class HeaderPattern(val patter: Pattern, val readIndices: List<Int>?) {
+            /** Returns non-null result if all the patterns were matched */
+            fun parse(read: SequenceRead): Matcher? {
+                for (i in (readIndices ?: (0 until read.numberOfReads()))) {
+                    val matcher = patter.matcher(read.getRead(i).description)
+                    if (matcher.find())
+                        return matcher
+                }
+                return null
+            }
+        }
+
+        private class TagsExtractor(
+            /** Not null if tag pattern was specified */
+            private val plan: ReadSearchPlan?,
+            /** Not null if tag pattern was specified */
+            val readShortcuts: List<ReadTagShortcut>?,
+            private val headerPatterns: List<HeaderPattern>,
+            private val tagExtractors: List<TagExtractor>,
             val tagInfos: List<TagInfo>
         ) {
-            val reportAgg = ParseReportAggregator(plan)
+            init {
+                require((plan != null) == (readShortcuts != null))
+            }
 
-            fun parse(read: SequenceRead): Pair<NSQTuple, TagTuple>? {
-                val result = plan.search(read)
-                reportAgg.consume(result)
-                if (result.hit == null) return null
-                val tags = tagShortcuts
-                    .map { readTagShortcut: ReadTagShortcut ->
-                        SequenceAndQualityTagValue(result.getTagValue(readTagShortcut).value)
+            val inputReads = AtomicLong()
+            val matchedHeaders = AtomicLong()
+            val reportAgg = plan?.let { ParseReportAggregator(it) }
+
+            fun parse(bundle: ProcessingBundle): ProcessingBundle {
+                inputReads.incrementAndGet()
+
+                val headerMatches = headerPatterns.mapNotNull { it.parse(bundle.read) }
+                if (headerMatches.size != headerPatterns.size)
+                    return bundle.copy(status = NotParsed)
+                matchedHeaders.incrementAndGet()
+
+                val (newSeq, patternMatch) =
+                    if (plan != null) {
+                        val result = plan.search(bundle.read)
+                        reportAgg!!.consume(result)
+                        if (result.hit == null) return bundle.copy(status = NotParsed)
+                        NSQTuple(
+                            bundle.read.id,
+                            *Array(readShortcuts!!.size) { i -> result.getTagValue(readShortcuts[i]).value }
+                        ) to result
+                    } else
+                        bundle.sequence to null
+
+                val tags = tagExtractors
+                    .map {
+                        it.extract(
+                            bundle.originalReadId,
+                            bundle.fileTags,
+                            headerMatches,
+                            patternMatch
+                        )
                     }
                     .toTypedArray()
-                val payload =
-                    NSQTuple(read.id, *Array(readShortcuts.size) { i -> result.getTagValue(readShortcuts[i]).value })
-                return payload to TagTuple(*tags)
+
+                return bundle.copy(
+                    sequence = newSeq,
+                    tags = TagTuple(*tags)
+                )
             }
         }
 
