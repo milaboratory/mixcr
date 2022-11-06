@@ -521,7 +521,7 @@
 "align-kaligner1-base-v1":
   abstract: true
   align:
-# this is align-legacy-4.0-rna-seq with floating bound adjustments
+    # this is align-legacy-4.0-rna-seq with floating bound adjustments
     species: ""
     trimmingQualityThreshold: 0
     trimmingWindowSize: 6

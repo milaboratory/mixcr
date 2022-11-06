@@ -156,12 +156,12 @@ object CommandAnalyze {
 
         override fun validate() {
             val inputs = inFiles.map { Paths.get(it) }
-            inputs.forEach { input ->
-                if (!input.exists()) {
-                    throw ValidationException("Input file $input doesn't exist.")
-                }
-            }
-            CommandAlign.checkInputs(inputs)
+            // inputs.forEach { input ->
+            //     if (!input.exists()) {
+            //         throw ValidationException("Input file $input doesn't exist.")
+            //     }
+            // }
+            // CommandAlign.checkInputs(inputs)
             ValidationException.requireNoExtension(outSuffix)
         }
 

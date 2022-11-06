@@ -11,21 +11,15 @@
  */
 package com.milaboratory.mixcr.basictypes.tag;
 
-import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.core.sequence.NucleotideSequence;
-
 public enum TagValueType {
-    Enum(null, java.lang.Enum.class),
-    ByteString(null, com.milaboratory.util.ByteString.class),
-    Sequence(null, NucleotideSequence.class),
-    SequenceAndQuality(TagValueType.Sequence, NSequenceWithQuality.class);
+    NonSequence(null),
+    Sequence(null),
+    SequenceAndQuality(TagValueType.Sequence);
 
     private final TagValueType keyType;
-    private final Class<?> valueClass;
 
-    TagValueType(TagValueType keyType, Class<?> valueClass) {
+    TagValueType(TagValueType keyType) {
         this.keyType = keyType;
-        this.valueClass = valueClass;
     }
 
     public TagValueType getKeyType() {
@@ -34,9 +28,5 @@ public enum TagValueType {
 
     public boolean isKey() {
         return keyType == null;
-    }
-
-    public Class<?> getValueClass() {
-        return valueClass;
     }
 }

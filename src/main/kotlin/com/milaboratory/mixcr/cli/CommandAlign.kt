@@ -33,10 +33,8 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
-import com.milaboratory.mitool.helpers.FileGroup
+import com.milaboratory.mitool.helpers.*
 import com.milaboratory.mitool.helpers.map
-import com.milaboratory.mitool.helpers.mapUnchunked
-import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.pattern.search.*
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
 import com.milaboratory.mitool.report.ParseReportAggregator
@@ -61,6 +59,7 @@ import io.repseq.core.GeneFeature.*
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
+import jetbrains.datalore.plot.config.asMutable
 import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
@@ -71,7 +70,6 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import java.util.stream.Collectors
 import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.math.max
@@ -91,6 +89,7 @@ object CommandAlign {
         @JsonProperty("tagPattern") val tagPattern: String? = null,
         @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
         @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
+        @JsonProperty("readIdAsCellTag") val readIdAsCellTag: Boolean = false,
         @JsonProperty("limit") val limit: Long? = null,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
     ) : MiXCRParams {
@@ -118,6 +117,8 @@ object CommandAlign {
     const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
 
     private const val outputLabel = "alignments.vdjca"
+
+    private const val cellSplitGroupLabel = "CELLSPLIT"
 
     fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(Cmd::class.java)
         .addPositional(
@@ -240,6 +241,20 @@ object CommandAlign {
 
         @Option(
             description = [
+                "Marks reads, coming from different files, but having the same positions in those files, " +
+                        "as reads coming from the same cells. " +
+                        "Main use-case is protocols with overlapped alpha-beta, gamma-delta or heavy-light cDNA molecules, " +
+                        "where each side was sequenced by separate mate pairs in a paired-end sequencer. " +
+                        "Use special expansion group $cellSplitGroupLabel instead of R index " +
+                        "(i.e. \"my_file_R{{$cellSplitGroupLabel:n}}.fastq.gz\").",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
+            names = ["--read-id-as-cell-tag"]
+        )
+        private var readIdAsCellTag = false
+
+        @Option(
+            description = [
                 "Copy original reads (sequences + qualities + descriptions) to .vdjca file.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
@@ -282,6 +297,7 @@ object CommandAlign {
                 Params::tagPattern setIfNotNull tagPatternFile?.readText()
                 Params::tagUnstranded setIfTrue tagUnstranded
                 Params::tagMaxBudget setIfNotNull tagMaxBudget
+                Params::readIdAsCellTag setIfTrue readIdAsCellTag
 
                 if (saveReads)
                     Params::parameters.updateBy {
@@ -615,41 +631,6 @@ object CommandAlign {
             }
         }
 
-        private fun getTagsExtractor(): TagsExtractor {
-            if (cmdParams.tagPattern == null)
-                return TagsExtractor(null, null, emptyList(), emptyList(), emptyList())
-
-            val searchSettings = ReadSearchSettings(
-                SearchSettings.Default.copy(bitBudget = cmdParams.tagMaxBudget),
-                if (cmdParams.tagUnstranded) ReadSearchMode.DirectAndReversed else ReadSearchMode.Direct
-            )
-            val readSearchPlan = create(cmdParams.tagPattern!!, searchSettings)
-            val parseInfo = parseTagsFromSet(readSearchPlan.allTags)
-            println("The following tags and their roles were recognised:")
-            println("  Payload tags: " + java.lang.String.join(", ", parseInfo.readTags))
-            parseInfo.tags
-                .groupBy { it.type }
-                .forEach { (tagType: TagType, tagInfos: List<TagInfo>) ->
-                    println("  $tagType tags: " + tagInfos.stream().map { obj: TagInfo -> obj.name }
-                        .collect(Collectors.joining(", ")))
-                }
-            val tagShortcuts = parseInfo.tags
-                .map { tagInfo -> readSearchPlan.tagShortcut(tagInfo.name) }
-            val readShortcuts = parseInfo.readTags
-                .map { name -> readSearchPlan.tagShortcut(name) }
-            if (readShortcuts.isEmpty())
-                throw ValidationException("Tag pattern has no read (payload) groups, nothing to align.")
-            if (readShortcuts.size > 2) throw ValidationException(
-                "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported."
-            )
-            return TagsExtractor(
-                readSearchPlan, readShortcuts,
-                emptyList(),
-                tagShortcuts.map { PatternTag(it) },
-                parseInfo.tags
-            )
-        }
-
         override fun inputsMustExist(): Boolean = false
 
         override fun validate() {
@@ -979,6 +960,79 @@ object CommandAlign {
             )
         }
 
+        private val readGroupPattern = Regex("R\\d+")
+
+        private fun getTagsExtractor(): TagsExtractor {
+            var plan: ReadSearchPlan? = null
+            val readTags = mutableListOf<String>()
+            var readTagShortcuts: List<ReadTagShortcut>? = null
+            var tagExtractors = mutableListOf<TagExtractorWithInfo>()
+
+            if (cmdParams.tagPattern != null) {
+                val searchSettings = ReadSearchSettings(
+                    SearchSettings.Default.copy(bitBudget = cmdParams.tagMaxBudget),
+                    if (cmdParams.tagUnstranded) ReadSearchMode.DirectAndReversed else ReadSearchMode.Direct
+                )
+                plan = create(cmdParams.tagPattern!!, searchSettings)
+                for (tagName in plan.allTags)
+                    if (tagName.matches(readGroupPattern))
+                        readTags += tagName
+                    else {
+                        val type = detectTagTypeByName(tagName) ?: continue
+                        tagExtractors += TagExtractorWithInfo(
+                            PatternTag(plan.tagShortcut(tagName)),
+                            TagInfo(type, TagValueType.SequenceAndQuality, tagName, 0 /* will be changed below */)
+                        )
+                    }
+
+                readTagShortcuts = readTags.map { name -> plan.tagShortcut(name) }
+                if (readTagShortcuts.isEmpty())
+                    throw ValidationException("Tag pattern has no read (payload) groups, nothing to align.")
+                if (readTagShortcuts.size > 2) throw ValidationException(
+                    "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported."
+                )
+            }
+
+            val fileTags = inputFilesExpanded.first().tags.map { it.first }
+
+            if (cmdParams.readIdAsCellTag) {
+                if (fileTags != listOf(cellSplitGroupLabel))
+                    throw ValidationException(
+                        "Exactly one cell splitting group is required in file name for " +
+                                "read-id-as-cell-tag feature to work (i.e. \"my_file_R{{$cellSplitGroupLabel:n}}.fastq.gz\")"
+                    )
+                tagExtractors += TagExtractorWithInfo(
+                    ReadIndex,
+                    TagInfo(TagType.Cell, TagValueType.NonSequence, "READ_IDX", 0 /* will be changed below */)
+                )
+            }
+
+            tagExtractors = tagExtractors
+                .sortedBy { it.tagInfo }
+                .mapIndexed { i, tag -> tag.withInfoIndex(i) }
+                .asMutable()
+
+            if (tagExtractors.size != 0) {
+                println("The following tags and their roles were recognised:")
+                if (readTagShortcuts != null)
+                    println("  Payload tags: " + readTags.joinToString(", "))
+
+                tagExtractors
+                    .groupBy { it.tagInfo.type }
+                    .forEach { (tagType: TagType, extractors: List<TagExtractorWithInfo>) ->
+                        println("  $tagType tags: " + extractors.joinToString(", ") { it.tagInfo.name })
+                    }
+            }
+
+            return TagsExtractor(
+                plan, readTagShortcuts,
+                emptyList(),
+                tagExtractors
+                    .sortedBy { it.tagInfo }
+                    .mapIndexed { i, tag -> tag.withInfoIndex(i) }
+            )
+        }
+
         private sealed interface TagExtractor {
             fun extract(
                 originalReadId: Long,
@@ -1024,7 +1078,7 @@ object CommandAlign {
             ) = LongTagValue(originalReadId)
         }
 
-        data class HeaderPattern(val patter: Pattern, val readIndices: List<Int>?) {
+        private data class HeaderPattern(val patter: Pattern, val readIndices: List<Int>?) {
             /** Returns non-null result if all the patterns were matched */
             fun parse(read: SequenceRead): Matcher? {
                 for (i in (readIndices ?: (0 until read.numberOfReads()))) {
@@ -1036,18 +1090,23 @@ object CommandAlign {
             }
         }
 
+        private data class TagExtractorWithInfo(val tagExtractor: TagExtractor, val tagInfo: TagInfo) {
+            fun withInfoIndex(idx: Int) = copy(tagInfo = tagInfo.withIndex(idx))
+        }
+
         private class TagsExtractor(
             /** Not null if tag pattern was specified */
             private val plan: ReadSearchPlan?,
             /** Not null if tag pattern was specified */
             val readShortcuts: List<ReadTagShortcut>?,
             private val headerPatterns: List<HeaderPattern>,
-            private val tagExtractors: List<TagExtractor>,
-            val tagInfos: List<TagInfo>
+            val tagExtractorsWithInfo: List<TagExtractorWithInfo>,
         ) {
             init {
                 require((plan != null) == (readShortcuts != null))
             }
+
+            val tagInfos by lazy { tagExtractorsWithInfo.map { it.tagInfo } }
 
             val inputReads = AtomicLong()
             val matchedHeaders = AtomicLong()
@@ -1073,9 +1132,9 @@ object CommandAlign {
                     } else
                         bundle.sequence to null
 
-                val tags = tagExtractors
+                val tags = tagExtractorsWithInfo
                     .map {
-                        it.extract(
+                        it.tagExtractor.extract(
                             bundle.originalReadId,
                             bundle.fileTags,
                             headerMatches,
@@ -1096,7 +1155,18 @@ object CommandAlign {
             val readTags: List<String>
         )
 
-        private fun parseTagsFromSet(names: Set<String>): ParseInfo {
+        private fun detectTagTypeByName(name: String): TagType? =
+            when {
+                name.startsWith("S") -> TagType.Sample
+                name.startsWith("CELL") -> TagType.Cell
+                name.startsWith("UMI") || name.startsWith("MI") -> TagType.Molecule
+                else -> {
+                    logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
+                    null
+                }
+            }
+
+        private fun parseTagsFromPatternGroupNames(names: Set<String>): ParseInfo {
             val tags: MutableList<TagInfo> = ArrayList()
             val readTags: MutableList<String> = ArrayList()
             for (name in names) {
@@ -1123,6 +1193,7 @@ object CommandAlign {
                     )
 
                     name.matches(Regex("R\\d+")) -> readTags += name
+
                     else -> logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
                 }
             }

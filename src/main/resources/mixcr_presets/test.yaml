@@ -276,3 +276,43 @@
       - field: "-allAaFeatures"
       - field: "-defaultAnchorPoints"
 
+"pereshlop-test":
+  inheritFrom: bundle-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+  pipeline:
+    inheritFrom: pipeline-single-cell-amplicon
+  align:
+    inheritFrom: align-kaligner1-base-v1
+    overrides:
+      readIdAsCellTag: true
+  refineTagsAndSort:
+    runCorrection: false
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-allTags"
+        args: [ "Cell" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAaFeatures"
+      - field: "-defaultAnchorPoints"

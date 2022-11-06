@@ -59,7 +59,7 @@ object CommandRefineTagsAndSort {
         /** If false no correction will be performed, only sorting */
         @JsonProperty("runCorrection") val runCorrection: Boolean = true,
         /** Correction parameters */
-        @JsonMerge @JsonProperty("parameters") val parameters: TagCorrectorParameters
+        @JsonMerge @JsonProperty("parameters") val parameters: TagCorrectorParameters?
     ) : MiXCRParams {
         override val command get() = MiXCRCommandDescriptor.refineTagsAndSort
     }
@@ -254,19 +254,26 @@ object CommandRefineTagsAndSort {
                 val header = mainReader.header
                 require(!header.tagsInfo.hasNoTags()) { "input file has no tags" }
                 cmdParams = paramsResolver.resolve(header.paramsSpec, printParameters = logger.verbose).second
-                val tagNames = mutableListOf<String>()
-                val indicesBuilder = TIntArrayList()
+
+                // All tag names
+                val tagNames = header.tagsInfo.map { it.name }
+
+                // Indices to be corrected
+                val correctionIndicesBuilder = TIntArrayList()
                 for (ti in header.tagsInfo.indices) {
                     val tag = header.tagsInfo[ti]
                     assert(ti == tag.index) /* just in case */
-                    if (tag.valueType == TagValueType.SequenceAndQuality) indicesBuilder.add(ti)
-                    tagNames += tag.name
+                    if (tag.valueType == TagValueType.SequenceAndQuality) correctionIndicesBuilder.add(ti)
                 }
-                val targetTagIndices = indicesBuilder.toArray()
-                println(
-                    (if (cmdParams.runCorrection) "Correction" else "Sorting") +
-                            " will be applied to the following tags: ${tagNames.joinToString(", ")}"
-                )
+                // Indices of tags to be corrected
+                val correctionTagIndices = correctionIndicesBuilder.toArray()
+
+                if (cmdParams.runCorrection)
+                    println(
+                        "Correction will be applied to the following tags: " +
+                                correctionTagIndices.joinToString(", ") { tagNames[it] }
+                    )
+                println("Sorting will be applied to the following tags: ${tagNames.joinToString(", ")}")
 
                 val (corrected, progress: CanReportProgress, numberOfAlignments) = when {
                     !cmdParams.runCorrection -> {
@@ -284,6 +291,9 @@ object CommandRefineTagsAndSort {
                                 whitelists[i] = t.load()
                             }
                         }
+
+                        if (cmdParams.parameters == null)
+                            throw ValidationException("No correction parameters provided.")
 
                         val corrector = TagCorrector(
                             cmdParams.parameters,
@@ -303,8 +313,8 @@ object CommandRefineTagsAndSort {
                                         "Please run tag correction for *.vdjca files produced by 'align'."
                             )
                             val tagTuple = it.tagCount.tuples().iterator().next()
-                            Array(targetTagIndices.size) { tIdxIdx -> // <- local index for the procedure
-                                (tagTuple[targetTagIndices[tIdxIdx]] as SequenceAndQualityTagValue).data
+                            Array(correctionTagIndices.size) { tIdxIdx -> // <- local index for the procedure
+                                (tagTuple[correctionTagIndices[tIdxIdx]] as SequenceAndQualityTagValue).data
                             }
                         }
 
@@ -325,7 +335,7 @@ object CommandRefineTagsAndSort {
                                 { al -> al.alignmentsIndex }) { al, newTagValues ->
                                 // starting off the copy of original alignment tags array
                                 val updatedTags = al.tagCount.singletonTuple.asArray()
-                                targetTagIndices.forEachIndexed { tIdxIdx, tIdx ->
+                                correctionTagIndices.forEachIndexed { tIdxIdx, tIdx ->
                                     // tIdxIdx - local index for the procedure
                                     // tIdx - index inside the alignment object
                                     updatedTags[tIdx] = SequenceAndQualityTagValue(newTagValues[tIdxIdx])
@@ -339,6 +349,8 @@ object CommandRefineTagsAndSort {
                     }
                 }
 
+                // Sorting
+
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     val alPioState = PrimitivIOStateBuilder()
                     IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.parameters)
@@ -349,7 +361,7 @@ object CommandRefineTagsAndSort {
                             hashGrouping(
                                 GroupingCriteria.groupBy { al ->
                                     val tagTuple = al.tagCount.singletonTuple
-                                    (tagTuple[tIdx] as SequenceAndQualityTagValue).data.sequence
+                                    tagTuple[tIdx].extractKey()
                                 },
                                 alPioState,
                                 tempDest.addSuffix("hashsorter.$tIdx"),
@@ -364,25 +376,25 @@ object CommandRefineTagsAndSort {
                     // Progress reporter for the first sorting step
                     SmartProgressReporter.startProgressReport(
                         when {
-                            cmdParams.runCorrection -> "Applying correction & sorting alignments by ${tagNames[targetTagIndices.size - 1]}"
-                            else -> "Sorting alignments by ${tagNames[targetTagIndices.size - 1]}"
+                            cmdParams.runCorrection -> "Applying correction & sorting alignments by ${tagNames.last()}"
+                            else -> "Sorting alignments by ${tagNames.last()}"
                         },
                         progress
                     )
 
                     // Running initial hash sorter
                     var sorted = CountingOutputPort(
-                        corrected.hashSort(targetTagIndices[targetTagIndices.size - 1])
+                        corrected.hashSort(tagNames.size - 1)
                     )
                     corrected.close()
 
                     // Sorting by other tags
-                    for (tIdxIdx in targetTagIndices.size - 2 downTo 0) {
+                    for (tIdx in tagNames.size - 2 downTo 0) {
                         SmartProgressReporter.startProgressReport(
-                            "Sorting alignments by " + tagNames[tIdxIdx],
+                            "Sorting alignments by " + tagNames[tIdx],
                             SmartProgressReporter.extractProgress(sorted, numberOfAlignments)
                         )
-                        sorted = CountingOutputPort(sorted.hashSort(targetTagIndices[tIdxIdx]))
+                        sorted = CountingOutputPort(sorted.hashSort(tIdx))
                     }
                     SmartProgressReporter.startProgressReport(
                         "Writing result",
