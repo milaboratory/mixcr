@@ -42,6 +42,7 @@ mixcr findAlleles \
   --debugDir alleles/debug \
   --output-template 'alleles/{file_name}.with_alleles.clns' \
   --export-library alleles_library.json \
+  --export-library alleles_library.fasta \
   --export-alleles-mutations alleles/description.tsv \
   $(ls assemble/*.clns)
 
