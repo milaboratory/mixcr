@@ -43,6 +43,7 @@ object GeneFeaturesRangeUtil {
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<Array<String>> = geneFeaturesBetween(from, to)
+        .flatten()
         .map { arrayOf(GeneFeature.encode(it)) }
 
     fun FieldsCollection<*>.warnIfFeatureNotCovered(
@@ -50,9 +51,11 @@ object GeneFeaturesRangeUtil {
         from: ReferencePoint?,
         to: ReferencePoint?
     ) {
-        header.geneFeaturesBetween(from, to).forEach { feature ->
-            warnIfFeatureNotCovered(header, feature)
-        }
+        header.geneFeaturesBetween(from, to)
+            .flatten()
+            .forEach { feature ->
+                warnIfFeatureNotCovered(header, feature)
+            }
     }
 
     fun FieldsCollection<*>.warnIfFeatureNotCovered(
@@ -69,21 +72,24 @@ object GeneFeaturesRangeUtil {
     private fun MiXCRHeader.geneFeaturesBetween(
         from: ReferencePoint?,
         to: ReferencePoint?
-    ) = referencePointsBetweenOrDefault(from, to).zipWithNext { a, b -> GeneFeature(a, b) }
+    ): List<List<GeneFeature>> = referencePointsBetweenOrDefault(from, to)
+        .map { it.zipWithNext { a, b -> GeneFeature(a, b) } }
 
     fun MiXCRHeader.referencePointsToExport(
         from: ReferencePoint?,
         to: ReferencePoint?
-    ): List<Array<String>> = referencePointsBetweenOrDefault(from, to).map { arrayOf(ReferencePoint.encode(it, true)) }
+    ): List<Array<String>> = referencePointsBetweenOrDefault(from, to)
+        .flatten()
+        .map { arrayOf(ReferencePoint.encode(it, true)) }
 
     private fun MiXCRHeader.referencePointsBetweenOrDefault(
         from: ReferencePoint?,
         to: ReferencePoint?
-    ): List<ReferencePoint> = when {
-        from != null && to != null -> referencePointsBetween(from, to)
+    ): List<List<ReferencePoint>> = when {
+        from != null && to != null -> listOf(referencePointsBetween(from, to))
         allFullyCoveredBy != null -> allFullyCoveredBy.features
-            .flatMap { referencePointsBetween(it.firstPoint, it.lastPoint) }
-        else -> referencePointsBetween(ReferencePoint.FR1Begin, ReferencePoint.FR4End)
+            .map { referencePointsBetween(it.firstPoint, it.lastPoint) }
+        else -> listOf(referencePointsBetween(ReferencePoint.FR1Begin, ReferencePoint.FR4End))
     }
 
     private fun referencePointsBetween(
