@@ -39,8 +39,8 @@ class PresetsTest {
         // val bundle = Presets.resolveParamsBundle("assemblePartial-universal")
         // val bundle = Presets.resolveParamsBundle("simple-base")
         // val bundle = Presets.resolveParamsBundle("_10x_vdj")
-        val bundle = Presets.resolveParamsBundle("test-subCloningRegions")
-        Presets.assembleContigs("test-subCloningRegions")
+        val bundle = Presets.resolveParamsBundle("umi-guided-consensus-test")
+        // Presets.assemble("umi-guided-consensus-test")
         assertJson(K_YAML_OM, bundle, true)
     }
 

@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.assembler.preclone;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.mitool.consensus.AAssemblerParameters;
@@ -23,6 +24,7 @@ import java.util.function.Function;
 public final class PreCloneAssemblerParameters {
     /** Parameters to pre-assemble clone assembling feature sequence inside read groups having the same tags */
     @JsonProperty("assembler")
+    @JsonMerge
     final GConsensusAssemblerParameters assembler;
 
     /**
@@ -35,7 +37,7 @@ public final class PreCloneAssemblerParameters {
 
     @JsonCreator
     public PreCloneAssemblerParameters(
-            @JsonProperty("assembler") GConsensusAssemblerParameters assembler,
+            @JsonProperty("assembler") @JsonMerge GConsensusAssemblerParameters assembler,
             @JsonProperty("minTagSuffixShare") float minTagSuffixShare) {
         this.assembler = Objects.requireNonNull(assembler);
         this.minTagSuffixShare = minTagSuffixShare;
