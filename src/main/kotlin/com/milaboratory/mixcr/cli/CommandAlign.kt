@@ -410,7 +410,7 @@ object CommandAlign {
         @set:Option(
             description = ["Pipe not aligned R1 reads into separate file."],
             names = ["--not-aligned-R1"],
-            paramLabel = "<path>"
+            paramLabel = "<path.fastq[.gz]>"
         )
         var notAlignedReadsR1: Path? = null
             set(value) {
@@ -421,7 +421,7 @@ object CommandAlign {
         @set:Option(
             description = ["Pipe not aligned R2 reads into separate file."],
             names = ["--not-aligned-R2"],
-            paramLabel = "<path>"
+            paramLabel = "<path.fastq[.gz]>"
         )
         var notAlignedReadsR2: Path? = null
             set(value) {
@@ -432,7 +432,7 @@ object CommandAlign {
         @set:Option(
             description = ["Pipe not parsed R1 reads into separate file."],
             names = ["--not-parsed-R1"],
-            paramLabel = "<path>"
+            paramLabel = "<path.fastq[.gz]>"
         )
         var notParsedReadsR1: Path? = null
             set(value) {
@@ -443,7 +443,7 @@ object CommandAlign {
         @set:Option(
             description = ["Pipe not parsed R2 reads into separate file."],
             names = ["--not-parsed-R2"],
-            paramLabel = "<path>"
+            paramLabel = "<path.fastq[.gz]>"
         )
         var notParsedReadsR2: Path? = null
             set(value) {

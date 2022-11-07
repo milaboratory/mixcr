@@ -75,17 +75,19 @@ private fun CloneWrapper.getMutationsWithoutCDR3(
     val hit = getHit(geneType)
     val partitioning = getPartitioning(geneType)
     val features = assemblingFeatures.intersection(hit.alignedFeature)?.features?.toTypedArray() ?: emptyArray()
-    return hit.alignments.flatMap { alignment ->
-        features
-            .map { it.withoutCDR3Part() }
-            .map { geneFeature ->
-                val range = partitioning.getRange(geneFeature)
-                geneFeature to alignment.absoluteMutations.extractAbsoluteMutations(
-                    range,
-                    alignment.sequence1Range.lower == range.lower
-                )
-            }
-    }.toMap()
+    return hit.alignments
+        .filterNotNull()
+        .flatMap { alignment ->
+            features
+                .map { it.withoutCDR3Part() }
+                .map { geneFeature ->
+                    val range = partitioning.getRange(geneFeature)
+                    geneFeature to alignment.absoluteMutations.extractAbsoluteMutations(
+                        range,
+                        alignment.sequence1Range.lower == range.lower
+                    )
+                }
+        }.toMap()
 }
 
 private fun GeneFeature.withoutCDR3Part(): GeneFeature = when {
@@ -97,8 +99,8 @@ private fun GeneFeature.withoutCDR3Part(): GeneFeature = when {
 private fun getVMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<NucleotideSequence>, Range> {
     val hit = clone.getHit(Variable)
     val CDR3Begin = hit.gene.partitioning.getRelativePosition(hit.alignedFeature, CDR3Begin)
-    val alignment = (0 until hit.alignments.size)
-        .map { hit.getAlignment(it) }
+    val alignment = hit.alignments
+        .filterNotNull()
         .firstOrNull { alignment ->
             alignment.sequence1Range.contains(CDR3Begin)
         }
@@ -114,8 +116,8 @@ private fun getVMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<Nucleot
 private fun getJMutationsWithinCDR3(clone: CloneWrapper): Pair<Mutations<NucleotideSequence>, Range> {
     val hit = clone.getHit(Joining)
     val CDR3End = hit.gene.partitioning.getRelativePosition(hit.alignedFeature, CDR3End)
-    val alignment = (0 until hit.alignments.size)
-        .map { hit.getAlignment(it) }
+    val alignment = hit.alignments
+        .filterNotNull()
         .firstOrNull { alignment ->
             alignment.sequence1Range.contains(CDR3End)
         }

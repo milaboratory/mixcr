@@ -178,9 +178,12 @@ class CloneRebuild(
             foundAllele.name != hit.gene.name -> calculateChange(clone, foundAllele, scoring, hit)
             else -> AlignmentsChange(
                 hit,
-                hit.alignments.asSequence().sumOf { it.absoluteMutations.size() } == 0,
+                hit.alignments.asSequence()
+                    .filterNotNull()
+                    .sumOf { it.absoluteMutations.size() } == 0,
                 0.0F,
                 hit.alignments.asSequence()
+                    .filterNotNull()
                     .sumOf { it.sequence1Range.length() * scoring.maximalMatchScore - it.score.toDouble() }
             )
         }
