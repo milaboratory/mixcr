@@ -96,16 +96,18 @@ public class CommandFindAllelesTest {
     @Test
     public void libraryMustBeJson() {
         try {
-            Main.parseArgs(
+            CommandLine.ParseResult p = Main.parseArgs(
                     CommandFindAlleles.COMMAND_NAME,
                     "--export-library", "/output/folder/library.txt",
                     "--output-template", "/output/folder/{file_name}_with_alleles.clns",
                     file1.toString(),
                     file2.toString()
             ).getParseResult();
+            CommandFindAlleles command = p.asCommandLineList().get(p.asCommandLineList().size() - 1).getCommand();
+            command.validate();
             fail();
-        } catch (ParameterException e) {
-            assertEquals("Require json file type, got /output/folder/library.txt", e.getCause().getMessage());
+        } catch (ValidationException e) {
+            assertEquals("Require one of json, fasta file types, got /output/folder/library.txt", e.getMessage());
         }
     }
 
