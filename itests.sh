@@ -83,19 +83,6 @@ fi
 rm -rf ${dir}/test_target
 mkdir ${dir}/test_target
 
-cp ${dir}/src/test/resources/sequences/*.fastq ${dir}/test_target/
-
-cd ${dir}/test_target/
-ln -s ../src/test/resources/sequences/big/CD4M1_test_R1.fastq.gz ${dir}/test_target/CD4M1_test_R1.fastq.gz
-ln -s ../src/test/resources/sequences/big/CD4M1_test_R2.fastq.gz ${dir}/test_target/CD4M1_test_R2.fastq.gz
-ln -s ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R1.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R1.fastq.gz
-ln -s ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R2.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R2.fastq.gz
-ln -s ../src/test/resources/sequences/big/trees_samples ${dir}/test_target/trees_samples
-ln -s ../src/test/resources/sequences/big/regression ${dir}/test_target/regression
-ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R1.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R1.fastq.gz
-ln -s ../src/test/resources/sequences/umi_ig_data_2_subset_R2.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R2.fastq.gz
-ln -s ../src/test/resources/bam/unsorted.bam ${dir}/test_target/unsorted.bam
-
 PATH=${dir}:${PATH}
 
 which mixcr
@@ -125,6 +112,24 @@ fi
 
 function run_test() {
   cd ${dir}/test_target
+  find . -type f -not -name '*.error' -delete
+
+  files=`ls ../src/test/resources/sequences/*.fastq`
+  for file in $files; do
+    filename=${file#../src/test/resources/sequences/*}
+    ln -s -f ../src/test/resources/sequences/$filename ../test_target/$filename
+  done
+
+  ln -s -f ../src/test/resources/sequences/big/CD4M1_test_R1.fastq.gz ${dir}/test_target/CD4M1_test_R1.fastq.gz
+  ln -s -f ../src/test/resources/sequences/big/CD4M1_test_R2.fastq.gz ${dir}/test_target/CD4M1_test_R2.fastq.gz
+  ln -s -f ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R1.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R1.fastq.gz
+  ln -s -f ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R2.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R2.fastq.gz
+  ln -s -f ../src/test/resources/sequences/big/trees_samples ${dir}/test_target/trees_samples
+  ln -s -f ../src/test/resources/sequences/big/regression ${dir}/test_target/regression
+  ln -s -f ../src/test/resources/sequences/umi_ig_data_2_subset_R1.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R1.fastq.gz
+  ln -s -f ../src/test/resources/sequences/umi_ig_data_2_subset_R2.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R2.fastq.gz
+  ln -s -f ../src/test/resources/bam/unsorted.bam ${dir}/test_target/unsorted.bam
+
   echo "========================"
   echo "Running: $1"
   echo "========================"

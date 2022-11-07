@@ -429,7 +429,9 @@ internal class SHMTreeBuilderBySteps(
             }
             .any { it < threshold }
 
-    private fun VDJCHit.mutationsCount(): Int = alignments.sumOf { it.absoluteMutations.size() }
+    private fun VDJCHit.mutationsCount(): Int = alignments
+        .filterNotNull()
+        .sumOf { it.absoluteMutations.size() }
 
     private fun restore(snapshot: TreeWithMetaBuilder.Snapshot, clones: List<CloneWrapper>): TreeWithMetaBuilder {
         val clonesInTrees = snapshot.clonesAdditionHistory.toSet()

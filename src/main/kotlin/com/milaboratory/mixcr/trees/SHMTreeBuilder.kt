@@ -109,8 +109,8 @@ class SHMTreeBuilder(
         val rootBasedOn = minWith(CloneWithMutationsFromVJGermline.comparatorByMutationsCount)
 
         val sequence1 = VJPair(
-            rootBasedOn.cloneWrapper.getHit(Variable).getAlignment(0).sequence1,
-            rootBasedOn.cloneWrapper.getHit(Joining).getAlignment(0).sequence1
+            rootBasedOn.cloneWrapper.getHit(Variable).alignments.filterNotNull().first().sequence1,
+            rootBasedOn.cloneWrapper.getHit(Joining).alignments.filterNotNull().first().sequence1
         )
         val VJBase = rootBasedOn.cloneWrapper.VJBase
 
