@@ -69,6 +69,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
     abstract val reportClass: KClass<R>
     abstract val command: String
     abstract val order: Int
+    abstract val hasThreadsOption: Boolean
     open val allowMultipleRounds: Boolean get() = false
 
     abstract fun outputName(prefix: String, params: P, round: Int): String
@@ -110,6 +111,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val command get() = CommandAlign.COMMAND_NAME
         override val order get() = 0
 
+        override val hasThreadsOption = true
+
         override fun outputName(prefix: String, params: CommandAlign.Params, round: Int) =
             "${prefix.ifBlank { "alignments" }}.vdjca"
 
@@ -125,6 +128,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
     object refineTagsAndSort : MiXCRCommandDescriptor<CommandRefineTagsAndSort.Params, RefineTagsAndSortReport>() {
         override val paramClass get() = CommandRefineTagsAndSort.Params::class
         override val reportClass get() = RefineTagsAndSortReport::class
+
+        override val hasThreadsOption = false
 
         @get:JsonValue
         override val command get() = CommandRefineTagsAndSort.COMMAND_NAME
@@ -146,6 +151,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val paramClass get() = CommandExportAlignments.Params::class
         override val reportClass get() = NoReport::class
 
+        override val hasThreadsOption = false
+
         @get:JsonValue
         override val command get() = CommandExportAlignments.COMMAND_NAME
         override val order get() = 2
@@ -162,6 +169,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
     object assemblePartial : MiXCRCommandDescriptor<CommandAssemblePartial.Params, PartialAlignmentsAssemblerReport>() {
         override val paramClass get() = CommandAssemblePartial.Params::class
         override val reportClass get() = PartialAlignmentsAssemblerReport::class
+
+        override val hasThreadsOption = false
 
         @get:JsonValue
         override val command get() = CommandAssemblePartial.COMMAND_NAME
@@ -184,6 +193,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val paramClass get() = CommandExtend.Params::class
         override val reportClass get() = VDJCObjectExtenderReport::class
 
+        override val hasThreadsOption = true
+
         @get:JsonValue
         override val command get() = CommandExtend.COMMAND_NAME
         override val order get() = 4
@@ -203,6 +214,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
     object assemble : MiXCRCommandDescriptor<CommandAssemble.Params, CloneAssemblerReport>() {
         override val paramClass get() = CommandAssemble.Params::class
         override val reportClass get() = CloneAssemblerReport::class
+
+        override val hasThreadsOption = false
 
         @get:JsonValue
         override val command get() = CommandAssemble.COMMAND_NAME
@@ -224,6 +237,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val paramClass get() = CommandAssembleContigs.Params::class
         override val reportClass get() = FullSeqAssemblerReport::class
 
+        override val hasThreadsOption = true
+
         @get:JsonValue
         override val command get() = CommandAssembleContigs.COMMAND_NAME
         override val order get() = 6
@@ -244,6 +259,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val paramClass get() = CommandExportClones.Params::class
         override val reportClass get() = NoReport::class
 
+        override val hasThreadsOption = false
+
         @get:JsonValue
         override val command get() = CommandExportClones.COMMAND_NAME
         override val order get() = 7
@@ -261,6 +278,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val paramClass get() = CommandFindAlleles.Params::class
         override val reportClass get() = FindAllelesReport::class
 
+        override val hasThreadsOption = true
+
         @get:JsonValue
         override val command get() = CommandFindAlleles.COMMAND_NAME
         override val order get() = 8
@@ -276,6 +295,8 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
     object findShmTrees : MiXCRCommandDescriptor<CommandFindShmTrees.Params, BuildSHMTreeReport>() {
         override val paramClass get() = CommandFindShmTrees.Params::class
         override val reportClass get() = BuildSHMTreeReport::class
+
+        override val hasThreadsOption = true
 
         @get:JsonValue
         override val command get() = CommandFindShmTrees.COMMAND_NAME

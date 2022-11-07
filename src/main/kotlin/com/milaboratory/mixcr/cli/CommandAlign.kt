@@ -136,6 +136,52 @@ object CommandAlign {
         override val command get() = MiXCRCommandDescriptor.align
     }
 
+    class PathsForNotAligned {
+        @set:Option(
+            description = ["Pipe not aligned R1 reads into separate file."],
+            names = ["--not-aligned-R1"],
+            paramLabel = "<path.fastq[.gz]>"
+        )
+        var notAlignedReadsR1: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
+
+        @set:Option(
+            description = ["Pipe not aligned R2 reads into separate file."],
+            names = ["--not-aligned-R2"],
+            paramLabel = "<path.fastq[.gz]>"
+        )
+        var notAlignedReadsR2: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
+
+        @set:Option(
+            description = ["Pipe not parsed R1 reads into separate file."],
+            names = ["--not-parsed-R1"],
+            paramLabel = "<path.fastq[.gz]>"
+        )
+        var notParsedReadsR1: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
+
+        @set:Option(
+            description = ["Pipe not parsed R2 reads into separate file."],
+            names = ["--not-parsed-R2"],
+            paramLabel = "<path.fastq[.gz]>"
+        )
+        var notParsedReadsR2: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
+    }
+
     fun checkInputs(paths: List<Path>) {
         when (paths.size) {
             1 -> ValidationException.requireFileType(
@@ -406,50 +452,8 @@ object CommandAlign {
         )
         var highCompression = false
 
-
-        @set:Option(
-            description = ["Pipe not aligned R1 reads into separate file."],
-            names = ["--not-aligned-R1"],
-            paramLabel = "<path>"
-        )
-        var notAlignedReadsR1: Path? = null
-            set(value) {
-                ValidationException.requireFileType(value, InputFileType.FASTQ)
-                field = value
-            }
-
-        @set:Option(
-            description = ["Pipe not aligned R2 reads into separate file."],
-            names = ["--not-aligned-R2"],
-            paramLabel = "<path>"
-        )
-        var notAlignedReadsR2: Path? = null
-            set(value) {
-                ValidationException.requireFileType(value, InputFileType.FASTQ)
-                field = value
-            }
-
-        @set:Option(
-            description = ["Pipe not parsed R1 reads into separate file."],
-            names = ["--not-parsed-R1"],
-            paramLabel = "<path>"
-        )
-        var notParsedReadsR1: Path? = null
-            set(value) {
-                ValidationException.requireFileType(value, InputFileType.FASTQ)
-                field = value
-            }
-
-        @set:Option(
-            description = ["Pipe not parsed R2 reads into separate file."],
-            names = ["--not-parsed-R2"],
-            paramLabel = "<path>"
-        )
-        var notParsedReadsR2: Path? = null
-            set(value) {
-                ValidationException.requireFileType(value, InputFileType.FASTQ)
-                field = value
-            }
+        @Mixin
+        lateinit var pathsForNotAligned: PathsForNotAligned
 
         @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
         var reportBuffers = false
@@ -639,8 +643,16 @@ object CommandAlign {
                     }
                 }
             }
-            checkFailedReadsOptions("--not-aligned", notAlignedReadsR1, notAlignedReadsR2)
-            checkFailedReadsOptions("--not-parsed", notParsedReadsR1, notParsedReadsR2)
+            checkFailedReadsOptions(
+                "--not-aligned",
+                pathsForNotAligned.notAlignedReadsR1,
+                pathsForNotAligned.notAlignedReadsR2
+            )
+            checkFailedReadsOptions(
+                "--not-parsed",
+                pathsForNotAligned.notParsedReadsR1,
+                pathsForNotAligned.notParsedReadsR2
+            )
 
             if (cmdParams.library.contains("/") || cmdParams.library.contains("\\")) {
                 val libraryLocations = Paths.get(
@@ -742,12 +754,12 @@ object CommandAlign {
                 createReader(),
                 alignedWriter(outputFile),
                 failedReadsWriter(
-                    notAlignedReadsR1,
-                    notAlignedReadsR2
+                    pathsForNotAligned.notAlignedReadsR1,
+                    pathsForNotAligned.notAlignedReadsR2
                 ),
                 failedReadsWriter(
-                    notParsedReadsR1,
-                    notParsedReadsR2
+                    pathsForNotAligned.notParsedReadsR1,
+                    pathsForNotAligned.notParsedReadsR2
                 )
             ) { reader, writer, notAlignedWriter, notParsedWriter ->
                 writer?.writeHeader(
