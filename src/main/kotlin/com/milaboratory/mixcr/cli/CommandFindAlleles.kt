@@ -13,10 +13,15 @@
 
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.core.Range
+import com.milaboratory.core.io.sequence.fasta.FastaRecord
+import com.milaboratory.core.io.sequence.fasta.FastaWriter
+import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.alleles.AllelesBuilder
+import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyAlleleVariantOf
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableRanges
 import com.milaboratory.mixcr.alleles.CloneRebuild
@@ -47,6 +52,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VDJC_REFERENCE
@@ -114,16 +120,17 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     @ArgGroup(exclusive = true, multiplicity = "1")
     lateinit var outputClnsOptions: OutputClnsOptions
 
-    @set:Option(
-        description = ["Path where to write library with found alleles."],
+    @Option(
+        description = [
+            "Paths where to write library with found alleles and other genes that exits in inputs.",
+            "For `.json` library will be written in reqpseqio format.",
+            "For `.fasta` library will be written in FASTA format with gene name and reliable range in description. " +
+                    "There will be several records for one gene if clnx were assembled by composite gene feature.",
+        ],
         names = ["--export-library"],
-        paramLabel = "<path>"
+        paramLabel = "<path.(json|fasta)>"
     )
-    var libraryOutput: Path? = null
-        set(value) {
-            ValidationException.requireFileType(value, InputFileType.JSON)
-            field = value
-        }
+    var libraryOutputs: List<Path> = mutableListOf()
 
     @set:Option(
         description = ["Path where to write descriptions and stats for all result alleles, existed and new."],
@@ -180,7 +187,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         clnsFiles
     }
 
-    override val outputFiles get() = outputClnsFiles + listOfNotNull(libraryOutput, allelesMutationsOutput)
+    override val outputFiles get() = outputClnsFiles + listOfNotNull(allelesMutationsOutput) + libraryOutputs
 
     private val tempDest: TempFileDest by lazy {
         val path = outputFiles.first()
@@ -203,7 +210,10 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         inputFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNX)
         }
-        if (listOfNotNull(outputClnsOptions.outputTemplate, libraryOutput, allelesMutationsOutput).isEmpty()) {
+        libraryOutputs.forEach { output ->
+            ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.FASTA)
+        }
+        if ((listOfNotNull(outputClnsOptions.outputTemplate, allelesMutationsOutput) + libraryOutputs).isEmpty()) {
             throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
         }
     }
@@ -295,9 +305,41 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val usedGenes = collectUsedGenes(datasets, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
         val resultLibrary = buildLibrary(libraryRegistry, usedGenes, originalLibrary)
-        libraryOutput?.let { libraryOutput ->
+        libraryOutputs.forEach { libraryOutput ->
             libraryOutput.toAbsolutePath().parent.createDirectories()
-            GlobalObjectMappers.getOneLine().writeValue(libraryOutput.toFile(), arrayOf(resultLibrary.data))
+            if (libraryOutput.matches(InputFileType.JSON)) {
+                GlobalObjectMappers.getOneLine().writeValue(libraryOutput.toFile(), arrayOf(resultLibrary.data))
+            } else if (libraryOutput.matches(InputFileType.FASTA)) {
+                FastaWriter<NucleotideSequence>(libraryOutput.toFile()).use { writer ->
+                    var id = 0L
+                    resultLibrary.genes.forEach { gene ->
+                        val geneFeaturesForFoundAllele = gene.data.meta[metaKeyForAlleleMutationsReliableGeneFeatures]
+                            ?.map { GeneFeature.parse(it) }
+                            ?.sorted()
+                        when {
+                            geneFeaturesForFoundAllele != null -> {
+                                geneFeaturesForFoundAllele.forEach { geneFeature ->
+                                    val baseGene = originalLibrary[gene.data.meta[metaKeyAlleleVariantOf]!!.first()]
+                                    val range = baseGene.partitioning.getRange(geneFeature)
+                                    val sequence =
+                                        gene.sequenceProvider.getRegion(gene.partitioning.getRange(geneFeature))
+                                    writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
+                                }
+                            }
+                            else -> {
+                                val range = Range(
+                                    gene.partitioning.firstAvailablePosition,
+                                    gene.partitioning.lastAvailablePosition
+                                )
+                                val sequence = gene.sequenceProvider.getRegion(range)
+                                writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
+                            }
+                        }
+                    }
+                }
+            } else {
+                throw ApplicationException("Unsupported file type for export library, $libraryOutput")
+            }
         }
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
             geneDatum.map { resultLibrary[it.name].id }

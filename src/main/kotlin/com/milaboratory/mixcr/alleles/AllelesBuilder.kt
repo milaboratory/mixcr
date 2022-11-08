@@ -214,8 +214,8 @@ class AllelesBuilder(
                             { (_, clones) -> clones.count { it.naiveByComplimentaryGeneMutations } }
                         this["mutations"] = { (mutations, _) -> mutations }
                         result.forEach { allele ->
-                            this[allele.name] = { (_, clonesDescriptors) ->
-                                clonesDescriptors
+                            this[allele.name] = { (_, clones) ->
+                                clones
                                     .map { it.clone }
                                     .minOf {
                                         CloneRebuild
@@ -397,7 +397,7 @@ class AllelesBuilder(
                 .flatMap { gene.partitioning.getRanges(it).asSequence() }
                 .map { it.toString() }
                 .toSortedSet()
-        meta["alleleVariantOf"] = sortedSetOf(gene.name)
+        meta[metaKeyAlleleVariantOf] = sortedSetOf(gene.name)
         return meta
     }
 
@@ -445,6 +445,7 @@ class AllelesBuilder(
     companion object {
         const val metaKeyForAlleleMutationsReliableGeneFeatures = "alleleMutationsReliableGeneFeatures"
         const val metaKeyForAlleleMutationsReliableRanges = "alleleMutationsReliableRanges"
+        const val metaKeyAlleleVariantOf = "alleleVariantOf"
 
         fun create(
             parameters: FindAllelesParameters,
