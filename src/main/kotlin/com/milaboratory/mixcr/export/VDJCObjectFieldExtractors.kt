@@ -360,7 +360,7 @@ object VDJCObjectFieldExtractors {
             vdjcObject.getIncompleteFeature(geneFeature)?.toString() ?: NULL
         }
         this += nFeatureImputedField
-        if (!false) {
+        if (!forTreesExport) {
             this += FieldsCollection(
                 Order.features + 401,
                 "-allNFeaturesImputed",
