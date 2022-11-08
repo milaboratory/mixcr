@@ -114,6 +114,12 @@ object CommandAnalyze {
         @Mixin
         var genericMixins: GenericMiXCRMixins? = null
 
+        @Mixin
+        lateinit var pathsForNotAligned: CommandAlign.PathsForNotAligned
+
+        @Mixin
+        lateinit var threadsOption: ThreadsOption
+
         private val mixins: MiXCRMixinCollection
             get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
                     assembleContigsMixins + exportMixins + genericMixins
@@ -195,11 +201,20 @@ object CommandAnalyze {
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
                 !noReports, !noJsonReports,
-                inFiles
+                inFiles, threadsOption
             )
             // Adding "align" step
-            planBuilder.addStep(MiXCRCommandDescriptor.align,
-                listOf("--preset", presetName) + mixins.flatMap { it.cmdArgs })
+            planBuilder.addStep(
+                MiXCRCommandDescriptor.align,
+                listOf("--preset", presetName) + mixins.flatMap { it.cmdArgs } + listOf(
+                    "--not-aligned-R1" to pathsForNotAligned.notAlignedReadsR1,
+                    "--not-aligned-R2" to pathsForNotAligned.notAlignedReadsR2,
+                    "--not-parsed-R1" to pathsForNotAligned.notParsedReadsR1,
+                    "--not-parsed-R2" to pathsForNotAligned.notParsedReadsR2,
+                )
+                    .filter { it.second != null }
+                    .flatMap { listOf(it.first, it.second!!.toString()) }
+            )
             // Adding all other steps
             pipeline.drop(1).forEach { cmd ->
                 planBuilder.addStep(cmd)
@@ -246,6 +261,7 @@ object CommandAnalyze {
             private val outputReports: Boolean,
             private val outputJsonReports: Boolean,
             initialInputs: List<String>,
+            private val threadsOption: ThreadsOption,
         ) {
             val executionPlan = mutableListOf<ExecutionStep>()
             private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
@@ -277,6 +293,10 @@ object CommandAnalyze {
                         ?.let {
                             arguments += listOf("--json-report", outputFolder.resolve(it).toString())
                         }
+
+                if (cmd.hasThreadsOption && threadsOption.isSet) {
+                    arguments += listOf("--threads", threadsOption.value.toString())
+                }
 
                 executionPlan += ExecutionStep(
                     cmd.command,

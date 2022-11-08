@@ -20,9 +20,17 @@ class ThreadsOption {
         paramLabel = "<n>",
         order = 1_000_000 - 4
     )
-    var value = Runtime.getRuntime().availableProcessors()
+    private var fromCmd = -1
         set(value) {
             if (value <= 0) throw ValidationException("-t / --threads must be positive")
             field = value
         }
+
+    val value: Int
+        get() = when {
+            fromCmd != -1 -> fromCmd
+            else -> Runtime.getRuntime().availableProcessors()
+        }
+
+    val isSet: Boolean get() = fromCmd != -1
 }
