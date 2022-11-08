@@ -21,7 +21,8 @@ import java.nio.file.Path
 
 class InfoWriter<T : Any> private constructor(
     private val fieldExtractors: List<FieldExtractor<T>>,
-    private val outputStream: OutputStream
+    private val outputStream: OutputStream,
+    private val headerSupplier: (T) -> RowMetaForExport
 ) : InputPort<T>, AutoCloseable {
 
     private fun printHeader() {
@@ -35,7 +36,7 @@ class InfoWriter<T : Any> private constructor(
 
     override fun put(t: T) {
         for (i in fieldExtractors.indices) {
-            outputStream.write(fieldExtractors[i].extractValue(t).toByteArray())
+            outputStream.write(fieldExtractors[i].extractValue(headerSupplier(t), t).toByteArray())
             if (i == fieldExtractors.size - 1) break
             outputStream.write('\t'.code)
         }
@@ -51,13 +52,14 @@ class InfoWriter<T : Any> private constructor(
         fun <T : Any> create(
             file: Path?,
             fieldExtractors: List<FieldExtractor<T>>,
-            printHeader: Boolean
+            printHeader: Boolean,
+            headerSupplier: (T) -> RowMetaForExport
         ): InfoWriter<T> {
             val outputStream = when {
                 file != null -> BufferedOutputStream(Files.newOutputStream(file), 65536)
                 else -> CloseShieldOutputStream.wrap(System.out)
             }
-            val result = InfoWriter(fieldExtractors, outputStream)
+            val result = InfoWriter(fieldExtractors, outputStream, headerSupplier)
             if (printHeader)
                 result.printHeader()
             return result

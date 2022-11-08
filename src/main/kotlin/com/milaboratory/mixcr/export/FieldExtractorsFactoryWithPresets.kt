@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneType
@@ -89,7 +88,7 @@ abstract class FieldExtractorsFactory<T : Any> {
     /** Creates field extractors from field descriptions */
     fun createExtractors(
         fields: List<ExportFieldDescription>,
-        header: MiXCRHeader
+        header: HeaderForExport
     ): List<FieldExtractor<T>> =
         fields
             .flatMap { fieldDescription ->

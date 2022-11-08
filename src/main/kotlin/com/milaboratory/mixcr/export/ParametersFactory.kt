@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
@@ -25,16 +24,16 @@ object ParametersFactory {
     fun tagParam(
         sPrefix: String,
         sSuffix: String = ""
-    ): CommandArgRequired<TagInfo> = CommandArgRequired(
+    ): CommandArgRequired<String> = CommandArgRequired(
         "<tag_name>",
-        { header, tagName -> header.tagsInfo[tagName] ?: throw ValidationException("No tag with name $tagName") }
-    ) { tag -> sPrefix + tag.name + sSuffix }
+        { tagName -> tagName }
+    ) { tagName -> sPrefix + tagName + sSuffix }
 
     fun tagTypeParam(
         sPrefix: String = ""
     ): CommandArgRequired<TagType> = CommandArgRequired(
         "<(${TagType.values().joinToString("|")})>",
-        { _, arg ->
+        { arg ->
             val tagType = TagType.values().firstOrNull { arg.lowercase() == it.name.lowercase() }
             ValidationException.require(tagType != null) {
                 "$cmdArgName: unexpected arg $arg, expecting one of ${TagType.values().joinToString(", ") { it.name }}"
@@ -46,19 +45,19 @@ object ParametersFactory {
 
     fun geneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeature> = CommandArgRequired(
         "<gene_feature>",
-        { _, arg -> GeneFeature.parse(arg) }
+        { arg -> GeneFeature.parse(arg) }
     ) { sPrefix + GeneFeature.encode(it) }
 
     fun relativeGeneFeatureParam(): CommandArgRequired<GeneFeature> = CommandArgRequired(
         "<relative_to_gene_feature>",
-        { _, arg -> GeneFeature.parse(arg) }
+        { arg -> GeneFeature.parse(arg) }
     ) { "Relative" + GeneFeature.encode(it) }
 
     fun referencePointParam(
         sPrefix: String = ""
     ): CommandArgRequired<ReferencePoint> = CommandArgRequired(
         "<reference_point>",
-        { _, arg -> ReferencePoint.parse(arg) },
+        { arg -> ReferencePoint.parse(arg) },
         { sPrefix + ReferencePoint.encode(it, true) }
     )
 
@@ -75,14 +74,14 @@ object ParametersFactory {
                 false
             }
         },
-        { _, arg -> ReferencePoint.parse(arg) },
+        { arg -> ReferencePoint.parse(arg) },
         { sPrefix + ReferencePoint.encode(it, true) }
     )
 
     fun nodeTypeParam(sPrefix: String, withParent: Boolean = true): CommandArgRequired<Base> = when {
         withParent -> CommandArgRequired(
             "<(${Base.germline}|${Base.mrca}|${Base.parent})>",
-            { _, arg ->
+            { arg ->
                 ValidationException.require(Base.values().any { arg == it.name }) {
                     "$cmdArgName: unexpected arg $arg, expecting one of ${Base.values().joinToString(", ") { it.name }}"
                 }
@@ -92,7 +91,7 @@ object ParametersFactory {
         )
         else -> CommandArgRequired(
             "<(${Base.germline}|${Base.mrca})>",
-            { _, arg ->
+            { arg ->
                 ValidationException.require(arg in arrayOf(Base.germline.name, Base.mrca.name)) {
                     "$cmdArgName: unexpected arg $arg, expecting ${Base.germline} or ${Base.mrca}"
                 }
@@ -102,12 +101,11 @@ object ParametersFactory {
         )
     }
 
-    fun nodeTypeParamOptional(sPrefix: String, withParent: Boolean = true): CommandArgOptional<Base?> {
-        check(withParent)
-        return CommandArgOptional(
+    fun nodeTypeParamOptional(sPrefix: String): CommandArgOptional<Base?> =
+        CommandArgOptional(
             "<(${Base.germline}|${Base.mrca}|${Base.parent})>",
             { arg -> arg == "node" || Base.values().any { arg == it.name } },
-            { _, arg ->
+            { arg ->
                 ValidationException.require(arg == "node" || Base.values().any { arg == it.name }) {
                     "$cmdArgName: unexpected arg $arg, expecting ${Base.values().joinToString(", ") { it.name }}"
                 }
@@ -123,5 +121,4 @@ object ParametersFactory {
                 }
             }
         )
-    }
 }

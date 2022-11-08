@@ -28,7 +28,9 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
+import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.primitivio.filter
@@ -130,16 +132,19 @@ object CommandExportAlignments {
                     printParameters = logger.verbose && outputFile != null
                 )
 
+                val rowMetaForExport = RowMetaForExport(info.tagsInfo)
                 InfoWriter.create(
                     outputFile,
                     VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
-                        params.fields, info.copy(
+                        params.fields,
+                        HeaderForExport(
+                            allTagsInfo = listOf(info.tagsInfo),
                             //in case of input clna file, allFullyCoveredBy has nothing to do with alignments
                             allFullyCoveredBy = null
                         )
                     ),
                     !params.noHeader
-                ).use { writer ->
+                ) { rowMetaForExport }.use { writer ->
                     val reader = data.port
                     if (reader is CanReportProgress) {
                         SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err)
