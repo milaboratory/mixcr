@@ -260,7 +260,7 @@ class SingleCellTreeBuilder(
             .filter { clonesFilter.countMatches(it.clone) }
             .flatMap { (clone, datasetId) ->
                 clone.tagCount.tuples()
-                    .map { tuple -> (tuple[cellTageIndex] as SequenceTagValue).sequence }
+                    .map { tuple -> (tuple[cellTageIndex] as SequenceTagValue).value }
                     .groupingBy { it }.eachCount()
                     .filterValues { umiCount -> umiCount > 3 }
                     .entries

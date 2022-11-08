@@ -229,6 +229,7 @@ object CommandExportClones {
                         }
                         newSpitBy
                     }
+
                     val exportClones = ExportClones(
                         set, writer, Long.MAX_VALUE,
                         if (splitByTag == null) 0 else splitByTag.index + 1

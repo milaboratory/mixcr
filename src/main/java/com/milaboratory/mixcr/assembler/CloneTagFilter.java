@@ -15,10 +15,7 @@ import cc.redberry.pipe.CUtils;
 import com.milaboratory.mitool.helpers.PipeKt;
 import com.milaboratory.mitool.refinement.gfilter.*;
 import com.milaboratory.mixcr.basictypes.Clone;
-import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
-import com.milaboratory.mixcr.basictypes.tag.TagInfo;
-import com.milaboratory.mixcr.basictypes.tag.TagTuple;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.basictypes.tag.*;
 import com.milaboratory.mixcr.util.Tuple2;
 import com.milaboratory.util.sorting.SortingUtil;
 import gnu.trove.iterator.TObjectDoubleIterator;
@@ -173,7 +170,7 @@ public final class CloneTagFilter {
         if (key.startsWith("tag:")) {
             String tagName = key.substring(4);
             TagInfo tagInfo = Objects.requireNonNull(tagsInfo.get(tagName));
-            return new TagExtractor(tagInfo.getValueType().getValueClass(), tagInfo.getIndex());
+            return new TagExtractor(TagValue.class, tagInfo.getIndex());
         } else if (key.equals("clone"))
             return new CloneIdExtractor();
         else if (key.startsWith("geneLabel:"))
