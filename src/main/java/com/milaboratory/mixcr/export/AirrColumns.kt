@@ -9,605 +9,313 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.export;
+package com.milaboratory.mixcr.export
 
-import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.sequence.AminoAcidSequence;
-import com.milaboratory.core.sequence.NSequenceWithQuality;
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.VDJCHit;
-import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence;
-import com.milaboratory.mixcr.export.AirrUtil.AirrAlignment;
-import io.repseq.core.*;
-import org.jetbrains.annotations.NotNull;
+import com.milaboratory.core.alignment.Alignment
+import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.export.AirrUtil.AirrAlignment
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
+import io.repseq.core.ReferencePoint
+import io.repseq.core.SequencePartitioning
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
+object AirrColumns {
+    private fun airrStr(str: String?): String = str ?: ""
 
-public final class AirrColumns {
-    private AirrColumns() {
+    private fun airrBoolean(value: Boolean?): String = if (value == null) "" else if (value) "T" else "F"
+
+    class CloneId : FieldExtractor<AirrVDJCObjectWrapper> {
+        override val header = "sequence_id"
+
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String = "clone." + obj.asClone().id
     }
 
-    private static String airrStr(String str) {
-        return str == null ? "" : str;
+    class AlignmentId : FieldExtractor<AirrVDJCObjectWrapper> {
+        override val header = "sequence_id"
+
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String = "read." + obj.asAlignment().minReadId
     }
 
-    private static String airrBoolean(Boolean value) {
-        return value == null ? "" : value ? "T" : "F";
-    }
+    class Sequence(private val targetId: Int) : FieldExtractor<AirrVDJCObjectWrapper> {
+        override val header = "sequence"
 
-    public static final class CloneId implements FieldExtractor<AirrVDJCObjectWrapper> {
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "sequence_id";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            return "clone." + object.asClone().getId();
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String {
+            val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
+            return obj.`object`.getTarget(resolvedTargetId).sequence.toString()
         }
     }
 
-    public static final class AlignmentId implements FieldExtractor<AirrVDJCObjectWrapper> {
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "sequence_id";
-        }
+    class RevComp : FieldExtractor<AirrVDJCObjectWrapper> {
+        override val header = "rev_comp"
 
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            return "read." + object.asAlignment().getMinReadId();
-        }
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String = "F"
     }
 
-    public static final class Sequence implements FieldExtractor<AirrVDJCObjectWrapper> {
-        private final int targetId;
+    class Productive : FieldExtractor<AirrVDJCObjectWrapper> {
+        override val header = "productive"
 
-        public Sequence(int targetId) {
-            this.targetId = targetId;
-        }
-
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "sequence";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
-            return object.object.getTarget(resolvedTargetId).getSequence().toString();
-        }
-    }
-
-    public static final class RevComp implements FieldExtractor<AirrVDJCObjectWrapper> {
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "rev_comp";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(@NotNull AirrVDJCObjectWrapper object) {
-            return "F";
-        }
-    }
-
-    public static class Productive implements FieldExtractor<AirrVDJCObjectWrapper> {
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "productive";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            NSequenceWithQuality cdr3nt = object.object.getFeature(GeneFeature.CDR3);
-            AminoAcidSequence cdr3aa = object.object.getAAFeature(GeneFeature.CDR3);
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String {
+            val cdr3nt = obj.`object`.getFeature(GeneFeature.CDR3)
+            val cdr3aa = obj.`object`.getAAFeature(GeneFeature.CDR3)
             return airrBoolean(
-                    cdr3nt != null
-                            && cdr3aa != null
-                            && cdr3nt.size() % 3 == 0
-                            && !cdr3aa.containStops()
-            );
+                cdr3nt != null && cdr3aa != null && cdr3nt.size() % 3 == 0 && !cdr3aa.containStops()
+            )
         }
     }
 
-    public static final class VDJCCalls implements FieldExtractor<AirrVDJCObjectWrapper> {
-        private final GeneType gt;
+    class VDJCCalls(private val gt: GeneType) : FieldExtractor<AirrVDJCObjectWrapper> {
+        override val header = gt.letterLowerCase.toString() + "_call"
 
-        public VDJCCalls(GeneType gt) {
-            this.gt = gt;
-        }
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String =
+            obj.`object`.getHits(gt).joinToString(",") { it.gene.name }
+    }
 
-        @NotNull
-        @Override
-        public String getHeader() {
-            return gt.getLetterLowerCase() + "_call";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            return Arrays.stream(object.object.getHits(gt))
-                    .map(h -> h.getGene().getName())
-                    .collect(Collectors.joining(","));
+    abstract class AirrAlignmentExtractor(private val targetId: Int, protected val withPadding: Boolean) :
+        FieldExtractor<AirrVDJCObjectWrapper> {
+        abstract fun extractValue(obj: AirrAlignment): String
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String {
+            val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
+            val alignment = obj.getAirrAlignment(resolvedTargetId, withPadding) ?: return ""
+            return airrStr(extractValue(alignment))
         }
     }
 
-    public static final class BestVDJCCall implements FieldExtractor<AirrVDJCObjectWrapper> {
-        private final GeneType gt;
+    class SequenceAlignment(targetId: Int, withPadding: Boolean) : AirrAlignmentExtractor(targetId, withPadding) {
+        override val header = "sequence_alignment"
 
-        public BestVDJCCall(GeneType gt) {
-            this.gt = gt;
-        }
-
-        @NotNull
-        @Override
-        public String getHeader() {
-            return Character.toLowerCase(gt.getLetter()) + "_call";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            VDJCGene bestHitGene = object.object.getBestHitGene(gt);
-            return bestHitGene == null ? "" : bestHitGene.getGeneName();
-        }
+        override fun extractValue(obj: AirrAlignment): String = airrStr(obj.getSequence(withPadding))
     }
 
-    public static abstract class AirrAlignmentExtractor implements FieldExtractor<AirrVDJCObjectWrapper> {
-        private final int targetId;
-        protected final boolean withPadding;
+    class GermlineAlignment(targetId: Int, withPadding: Boolean) : AirrAlignmentExtractor(targetId, withPadding) {
+        override val header = "germline_alignment"
 
-        public AirrAlignmentExtractor(int targetId, boolean withPadding) {
-            this.targetId = targetId;
-            this.withPadding = withPadding;
-        }
-
-        public abstract String extractValue(AirrAlignment object);
-
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
-            AirrAlignment alignment = object.getAirrAlignment(resolvedTargetId, withPadding);
-            if (alignment == null)
-                return "";
-            return airrStr(extractValue(alignment));
-        }
+        override fun extractValue(obj: AirrAlignment): String = airrStr(obj.getGermline(withPadding))
     }
 
-    public static final class SequenceAlignment extends AirrAlignmentExtractor {
-        public SequenceAlignment(int targetId, boolean withPadding) {
-            super(targetId, withPadding);
-        }
-
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "sequence_alignment";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrAlignment object) {
-            return airrStr(object.getSequence(withPadding));
-        }
+    interface ComplexReferencePoint {
+        fun getPosition(partitioning: SequencePartitioning, referenceFeature: GeneFeature?): Int
     }
 
-    public static final class GermlineAlignment extends AirrAlignmentExtractor {
-        public GermlineAlignment(int targetId, boolean withPadding) {
-            super(targetId, withPadding);
-        }
+    class Single(private val point: ReferencePoint) : ComplexReferencePoint {
+        override fun getPosition(partitioning: SequencePartitioning, referenceFeature: GeneFeature?): Int =
+            if (referenceFeature == null) partitioning.getPosition(point) else partitioning.getRelativePosition(
+                referenceFeature,
+                point
+            )
 
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "germline_alignment";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrAlignment object) {
-            return airrStr(object.getGermline(withPadding));
-        }
+        override fun toString(): String = point.toString()
     }
 
-    public interface ComplexReferencePoint {
-        int getPosition(SequencePartitioning partitioning, GeneFeature referenceFeature);
-    }
+    class Rightmost(vararg points: ReferencePoint) : ComplexReferencePoint {
+        private val points: Array<ComplexReferencePoint> = Array(points.size) { i -> Single(points[i]) }
 
-    public static final class Single implements ComplexReferencePoint {
-        private final ReferencePoint point;
-
-        public Single(ReferencePoint refPoint) {
-            this.point = refPoint;
-        }
-
-        @Override
-        public int getPosition(SequencePartitioning partitioning, GeneFeature referenceFeature) {
-            return referenceFeature == null
-                    ? partitioning.getPosition(point)
-                    : partitioning.getRelativePosition(referenceFeature, point);
-        }
-
-        @Override
-        public String toString() {
-            return point.toString();
-        }
-    }
-
-    public static final class Rightmost implements ComplexReferencePoint {
-        private final ComplexReferencePoint[] points;
-
-        public Rightmost(ReferencePoint... points) {
-            this.points = new ComplexReferencePoint[points.length];
-            for (int i = 0; i < points.length; i++)
-                this.points[i] = new Single(points[i]);
-        }
-
-        public Rightmost(ComplexReferencePoint... points) {
-            this.points = points;
-        }
-
-        @Override
-        public int getPosition(SequencePartitioning partitioning, GeneFeature referenceFeature) {
-            int result = -1;
-            for (ComplexReferencePoint rp : points) {
-                int position = rp.getPosition(partitioning, referenceFeature);
-                if (position < 0)
-                    continue;
-                result = Math.max(result, position);
+        override fun getPosition(partitioning: SequencePartitioning, referenceFeature: GeneFeature?): Int {
+            var result = -1
+            for (rp in points) {
+                val position = rp.getPosition(partitioning, referenceFeature)
+                if (position < 0) continue
+                result = max(result, position)
             }
-            return result;
+            return result
         }
 
-        @Override
-        public String toString() {
-            return "Rightmost{" + Arrays.toString(points) + '}';
-        }
+        override fun toString(): String = "Rightmost{" + points.contentToString() + '}'
     }
 
-    public static final class Leftmost implements ComplexReferencePoint {
-        private final ComplexReferencePoint[] points;
+    class Leftmost(
+        vararg val points: ComplexReferencePoint
+    ) : ComplexReferencePoint {
 
-        public Leftmost(ReferencePoint... points) {
-            this.points = new ComplexReferencePoint[points.length];
-            for (int i = 0; i < points.length; i++)
-                this.points[i] = new Single(points[i]);
-        }
+        constructor(vararg points: ReferencePoint) : this(*Array(points.size) { i ->
+            Single(points[i])
+        })
 
-        public Leftmost(ComplexReferencePoint... points) {
-            this.points = points;
-        }
-
-        @Override
-        public int getPosition(SequencePartitioning partitioning, GeneFeature referenceFeature) {
-            int result = Integer.MAX_VALUE;
-            for (ComplexReferencePoint rp : points) {
-                int position = rp.getPosition(partitioning, referenceFeature);
-                if (position < 0)
-                    continue;
-                result = Math.min(result, position);
+        override fun getPosition(partitioning: SequencePartitioning, referenceFeature: GeneFeature?): Int {
+            var result = Int.MAX_VALUE
+            for (rp in points) {
+                val position = rp.getPosition(partitioning, referenceFeature)
+                if (position < 0) continue
+                result = min(result, position)
             }
-            return result == Integer.MAX_VALUE ? -1 : result;
+            return if (result == Int.MAX_VALUE) -1 else result
         }
 
-        @Override
-        public String toString() {
-            return "Leftmost{" + Arrays.toString(points) + '}';
-        }
+        override fun toString(): String = "Leftmost{" + points.contentToString() + '}'
     }
 
-    public final static class NFeatureFromAlign extends AirrAlignmentExtractor {
-        private final ComplexReferencePoint from, to;
-        private final String header;
+    class NFeatureFromAlign(
+        targetId: Int, withPadding: Boolean,
+        private val from: ComplexReferencePoint, private val to: ComplexReferencePoint,
+        override val header: String
+    ) : AirrAlignmentExtractor(targetId, withPadding) {
 
-        public NFeatureFromAlign(int targetId, boolean withPadding,
-                                 ComplexReferencePoint from, ComplexReferencePoint to,
-                                 String header) {
-            super(targetId, withPadding);
-            this.from = from;
-            this.to = to;
-            this.header = header;
-        }
-
-        @NotNull
-        @Override
-        public String getHeader() {
-            return header;
-        }
-
-        @Override
-        public String extractValue(AirrAlignment object) {
-            return object.getSequence(from, to, withPadding);
-        }
+        override fun extractValue(obj: AirrAlignment): String = obj.getSequence(from, to, withPadding)
     }
 
-    public abstract static class NFeatureAbstract implements FieldExtractor<AirrVDJCObjectWrapper> {
+    abstract class NFeatureAbstract private constructor(
         /**
          * Used only for complex features
          */
-        protected final int targetId;
+        protected val targetId: Int,
+
         /**
          * Not null for simple gene features
          */
-        protected final GeneFeature feature;
+        protected val feature: GeneFeature?,
+
         /**
          * Not null for complex gene features.
          */
-        protected final ComplexReferencePoint from, to;
-        protected final String header;
+        protected val from: ComplexReferencePoint?,
+        protected val to: ComplexReferencePoint?,
+        final override val header: String
+    ) : FieldExtractor<AirrVDJCObjectWrapper> {
 
-        public NFeatureAbstract(int targetId,
-                                ComplexReferencePoint from, ComplexReferencePoint to,
-                                String header) {
-            this.targetId = targetId;
-            this.feature = null;
-            this.from = from;
-            this.to = to;
-            this.header = header;
-        }
+        constructor(
+            targetId: Int,
+            from: ComplexReferencePoint, to: ComplexReferencePoint,
+            header: String
+        ) : this(targetId, null, from, to, header)
 
-        public NFeatureAbstract(GeneFeature feature, String header) {
-            this.targetId = -1; // will not be used
-            this.feature = feature;
-            this.from = null;
-            this.to = null;
-            this.header = header;
-        }
+        constructor(feature: GeneFeature, header: String) : this(
+            -1, // will not be used
+            feature,
+            null, null,
+            header
+        )
 
-        @NotNull
-        @Override
-        public String getHeader() {
-            return header;
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(@NotNull AirrVDJCObjectWrapper object) {
-            if (feature != null) {
-                NSequenceWithQuality feature = object.object.getFeature(this.feature);
-                if (feature == null)
-                    return "";
-                return extractValue(feature.getSequence());
-            } else {
-                int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
-
-                assert from != null && to != null;
-                SequencePartitioning partitioning = object.object.getPartitionedTarget(resolvedTargetId).getPartitioning();
-
-                int fromPosition = from.getPosition(partitioning, null);
-                if (fromPosition < 0)
-                    return "";
-
-                int toPosition = to.getPosition(partitioning, null);
-                if (toPosition < 0)
-                    return "";
-
-                if (fromPosition < toPosition)
-                    return extractValue(object.object.getTarget(resolvedTargetId).getSequence().getRange(fromPosition, toPosition));
-                else
-                    return extractValue(NucleotideSequence.EMPTY);
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String = when {
+            feature != null -> when (val feature = obj.`object`.getFeature(feature)) {
+                null -> ""
+                else -> extractValue(feature.sequence)
+            }
+            else -> {
+                val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
+                check(from != null && to != null)
+                val partitioning = obj.`object`.getPartitionedTarget(resolvedTargetId).partitioning
+                val fromPosition = from.getPosition(partitioning, null)
+                val toPosition = to.getPosition(partitioning, null)
+                when {
+                    fromPosition < 0 -> ""
+                    toPosition < 0 -> ""
+                    else -> extractValue(
+                        when {
+                            fromPosition < toPosition -> obj.`object`.getTarget(resolvedTargetId)
+                                .sequence.getRange(fromPosition, toPosition)
+                            else -> NucleotideSequence.EMPTY
+                        }
+                    )
+                }
             }
         }
 
-        protected abstract String extractValue(NucleotideSequence feature);
+        protected abstract fun extractValue(feature: NucleotideSequence): String
     }
 
-    public static final class NFeature extends NFeatureAbstract {
-        public NFeature(int targetId,
-                        ComplexReferencePoint from, ComplexReferencePoint to,
-                        String header) {
-            super(targetId, from, to, header);
-        }
+    class NFeature : NFeatureAbstract {
+        constructor(
+            targetId: Int,
+            from: ComplexReferencePoint, to: ComplexReferencePoint,
+            header: String
+        ) : super(targetId, from, to, header)
 
-        public NFeature(GeneFeature feature, String header) {
-            super(feature, header);
-        }
+        constructor(feature: GeneFeature, header: String) : super(feature, header)
 
-        @Override
-        public String extractValue(NucleotideSequence feature) {
-            return feature.toString();
-        }
+        public override fun extractValue(feature: NucleotideSequence): String = feature.toString()
     }
 
-    public static final class NFeatureLength extends NFeatureAbstract {
-        public NFeatureLength(int targetId,
-                              ComplexReferencePoint from, ComplexReferencePoint to,
-                              String header) {
-            super(targetId, from, to, header);
-        }
+    class NFeatureLength : NFeatureAbstract {
+        constructor(
+            targetId: Int,
+            from: ComplexReferencePoint, to: ComplexReferencePoint,
+            header: String
+        ) : super(targetId, from, to, header)
 
-        public NFeatureLength(GeneFeature feature, String header) {
-            super(feature, header);
-        }
+        constructor(feature: GeneFeature, header: String) : super(feature, header)
 
-        @Override
-        public String extractValue(NucleotideSequence feature) {
-            return "" + feature.size();
-        }
+        public override fun extractValue(feature: NucleotideSequence): String = "" + feature.size()
     }
 
-    public static final class AAFeature implements FieldExtractor<AirrVDJCObjectWrapper> {
-        private final GeneFeature feature;
-        private final String header;
+    class AAFeature(private val feature: GeneFeature, override val header: String) :
+        FieldExtractor<AirrVDJCObjectWrapper> {
 
-        public AAFeature(GeneFeature feature, String header) {
-            this.feature = feature;
-            this.header = header;
-        }
-
-        @NotNull
-        @Override
-        public String getHeader() {
-            return header;
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            AminoAcidSequence feature = object.object.getAAFeature(this.feature);
-            if (feature == null)
-                return "";
-            return feature.toString();
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String {
+            val feature = obj.`object`.getAAFeature(feature) ?: return ""
+            return feature.toString()
         }
     }
 
-    public static abstract class AlignmentColumn implements FieldExtractor<AirrVDJCObjectWrapper> {
-        protected final int targetId;
-        protected final GeneType geneType;
-
-        public AlignmentColumn(int targetId, GeneType geneType) {
-            this.targetId = targetId;
-            this.geneType = geneType;
+    abstract class AlignmentColumn(protected val targetId: Int, protected val geneType: GeneType) :
+        FieldExtractor<AirrVDJCObjectWrapper> {
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String {
+            val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
+            val bestHit = obj.`object`.getBestHit(geneType) ?: return ""
+            val alignment = bestHit.getAlignment(resolvedTargetId) ?: return ""
+            return extractValue(alignment)
         }
 
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
-            VDJCHit bestHit = object.object.getBestHit(geneType);
-            if (bestHit == null)
-                return "";
-            Alignment<NucleotideSequence> alignment = bestHit.getAlignment(resolvedTargetId);
-            if (alignment == null)
-                return "";
-            return extractValue(alignment);
-        }
-
-        public abstract String extractValue(Alignment<NucleotideSequence> alignment);
+        abstract fun extractValue(alignment: Alignment<NucleotideSequence>): String
     }
 
     /**
      * Scoring for actual alignment in actual target, in contrast with normal MiXCR output where score shows the sum for
      * all targets, or an aggregated value for clonotypes.
      */
-    public static final class AlignmentScoring extends AlignmentColumn {
-        public AlignmentScoring(int targetId, GeneType geneType) {
-            super(targetId, geneType);
-        }
+    class AlignmentScoring(targetId: Int, geneType: GeneType) : AlignmentColumn(targetId, geneType) {
+        override val header = geneType.letterLowerCase.toString() + "_score"
 
-        @NotNull
-        @Override
-        public String getHeader() {
-            return geneType.getLetterLowerCase() + "_score";
-        }
+        override fun extractValue(alignment: Alignment<NucleotideSequence>): String = "" + alignment.score
+    }
 
-        @Override
-        public String extractValue(Alignment<NucleotideSequence> alignment) {
-            return "" + alignment.getScore();
+    class AlignmentCigar(targetId: Int, geneType: GeneType) : AlignmentColumn(targetId, geneType) {
+        override val header = geneType.letterLowerCase.toString() + "_cigar"
+
+        override fun extractValue(alignment: Alignment<NucleotideSequence>): String = alignment.getCigarString(true)
+    }
+
+    class SequenceAlignmentBoundary(targetId: Int, geneType: GeneType, val start: Boolean, val germline: Boolean) :
+        AlignmentColumn(targetId, geneType) {
+        override val header = geneType.letterLowerCase.toString() + "_" +
+                (if (germline) "germline" else "sequence") + "_" +
+                if (start) "start" else "end"
+
+        override fun extractValue(alignment: Alignment<NucleotideSequence>): String {
+            val range = if (germline) alignment.sequence1Range else alignment.sequence2Range
+            return "" + if (start) range.lower + 1 else range.upper
         }
     }
 
-    public static final class AlignmentCigar extends AlignmentColumn {
-        public AlignmentCigar(int targetId, GeneType geneType) {
-            super(targetId, geneType);
-        }
+    class AirrAlignmentBoundary(
+        targetId: Int,
+        withPadding: Boolean,
+        private val geneType: GeneType,
+        private val start: Boolean
+    ) : AirrAlignmentExtractor(targetId, withPadding) {
+        override val header = geneType.letterLowerCase.toString() + "_alignment_" +
+                if (start) "start" else "end"
 
-        @Override
-        public String getHeader() {
-            return geneType.getLetterLowerCase() + "_cigar";
-        }
-
-        @Override
-        public String extractValue(Alignment<NucleotideSequence> alignment) {
-            return alignment.getCigarString(true);
-        }
-    }
-
-    public static final class SequenceAlignmentBoundary extends AlignmentColumn {
-        final boolean start, germline;
-
-        public SequenceAlignmentBoundary(int targetId, GeneType geneType, boolean start, boolean germline) {
-            super(targetId, geneType);
-            this.start = start;
-            this.germline = germline;
-        }
-
-        @NotNull
-        @Override
-        public String getHeader() {
-            return geneType.getLetterLowerCase() + "_" +
-                    (germline ? "germline" : "sequence") + "_" +
-                    (start ? "start" : "end");
-        }
-
-        @Override
-        public String extractValue(Alignment<NucleotideSequence> alignment) {
-            Range range = germline ? alignment.getSequence1Range() : alignment.getSequence2Range();
-            return "" + (start ? range.getLower() + 1 : range.getUpper());
+        override fun extractValue(obj: AirrAlignment): String {
+            val range = obj.getRange(geneType, withPadding) ?: return ""
+            return "" + if (start) range.lower + 1 else range.upper
         }
     }
 
-    public static final class AirrAlignmentBoundary extends AirrAlignmentExtractor {
-        private final GeneType geneType;
-        private final boolean start;
+    class CloneCount : FieldExtractor<AirrVDJCObjectWrapper> {
+        override val header = "duplicate_count"
 
-        public AirrAlignmentBoundary(int targetId, boolean withPadding, GeneType geneType, boolean start) {
-            super(targetId, withPadding);
-            this.geneType = geneType;
-            this.start = start;
-        }
-
-        @NotNull
-        @Override
-        public String getHeader() {
-            return geneType.getLetterLowerCase() + "_alignment_" +
-                    (start ? "start" : "end");
-        }
-
-        @Override
-        public String extractValue(AirrAlignment object) {
-            Range range = object.getRange(geneType, withPadding);
-            if (range == null)
-                return "";
-            return "" + (start ? range.getLower() + 1 : range.getUpper());
-        }
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String = "" + obj.asClone().count.roundToInt()
     }
 
-    public static final class CloneCount implements FieldExtractor<AirrVDJCObjectWrapper> {
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "duplicate_count";
-        }
+    class CompleteVDJ(private val targetId: Int) : FieldExtractor<AirrVDJCObjectWrapper> {
+        override val header = "complete_vdj"
 
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            return "" + (int) Math.round(object.asClone().getCount());
-        }
-    }
-
-    public static final class CompleteVDJ implements FieldExtractor<AirrVDJCObjectWrapper> {
-        private final int targetId;
-
-        public CompleteVDJ(int targetId) {
-            this.targetId = targetId;
-        }
-
-        @NotNull
-        @Override
-        public String getHeader() {
-            return "complete_vdj";
-        }
-
-        @NotNull
-        @Override
-        public String extractValue(AirrVDJCObjectWrapper object) {
-            int resolvedTargetId = targetId == -1 ? object.getBestTarget() : targetId;
-            VDJCPartitionedSequence partitionedTarget = object.object.getPartitionedTarget(resolvedTargetId);
-            return airrBoolean(partitionedTarget.getPartitioning().isAvailable(GeneFeature.VDJRegion));
+        override fun extractValue(obj: AirrVDJCObjectWrapper): String {
+            val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
+            val partitionedTarget = obj.`object`.getPartitionedTarget(resolvedTargetId)
+            return airrBoolean(partitionedTarget.partitioning.isAvailable(GeneFeature.VDJRegion))
         }
     }
 }
