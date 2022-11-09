@@ -120,6 +120,9 @@ object CommandAnalyze {
         @Mixin
         lateinit var threadsOption: ThreadsOption
 
+        @Mixin
+        lateinit var useLocalTemp: UseLocalTempOption
+
         private val mixins: MiXCRMixinCollection
             get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
                     assembleContigsMixins + exportMixins + genericMixins
@@ -167,7 +170,7 @@ object CommandAnalyze {
             //         throw ValidationException("Input file $input doesn't exist.")
             //     }
             // }
-            // CommandAlign.checkInputs(inputs)
+            CommandAlign.checkInputs(inputs)
             ValidationException.requireNoExtension(outSuffix)
         }
 
@@ -201,7 +204,7 @@ object CommandAnalyze {
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
                 !noReports, !noJsonReports,
-                inFiles, threadsOption
+                inFiles, threadsOption, useLocalTemp
             )
             // Adding "align" step
             planBuilder.addStep(
@@ -262,6 +265,7 @@ object CommandAnalyze {
             private val outputJsonReports: Boolean,
             initialInputs: List<String>,
             private val threadsOption: ThreadsOption,
+            private val useLocalTemp: UseLocalTempOption,
         ) {
             val executionPlan = mutableListOf<ExecutionStep>()
             private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
@@ -296,6 +300,10 @@ object CommandAnalyze {
 
                 if (cmd.hasThreadsOption && threadsOption.isSet) {
                     arguments += listOf("--threads", threadsOption.value.toString())
+                }
+
+                if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
+                    arguments += "--use-local-temp"
                 }
 
                 executionPlan += ExecutionStep(
