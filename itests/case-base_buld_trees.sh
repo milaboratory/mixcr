@@ -50,17 +50,17 @@ mixcr findShmTrees \
   -j trees/report.json \
   -r trees/report.txt \
   --debugDir trees/debug \
-  $(ls alleles/*.clns) trees/result.shmt
+  $(ls alleles/*.clns) base_build_trees.shmt
 
-mixcr exportShmTrees trees/result.shmt trees/trees.tsv
+mixcr exportShmTrees base_build_trees.shmt trees/trees.tsv
 
-mixcr exportShmTreesWithNodes trees/result.shmt trees/trees_with_nodes.tsv
+mixcr exportShmTreesWithNodes base_build_trees.shmt trees/trees_with_nodes.tsv
 
-assert "mixcr exportShmTreesWithNodes -readFraction trees/result.shmt | grep -c 'NaN'" "0"
+assert "mixcr exportShmTreesWithNodes -readFraction base_build_trees.shmt | grep -c 'NaN'" "0"
 
-assert "mixcr exportShmTreesWithNodes -cloneId trees/result.shmt | head -n 1 | wc -w" "1"
+assert "mixcr exportShmTreesWithNodes -cloneId base_build_trees.shmt | head -n 1 | wc -w" "1"
 
-mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
+mixcr exportPlots shmTrees base_build_trees.shmt trees/plots.pdf
 
 [[ -f trees/plots.pdf ]] || exit 1
 
