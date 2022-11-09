@@ -58,6 +58,8 @@ mixcr exportShmTreesWithNodes trees/result.shmt trees/trees_with_nodes.tsv
 
 assert "mixcr exportShmTreesWithNodes -readFraction trees/result.shmt | grep -c 'NaN'" "0"
 
+assert "mixcr exportShmTreesWithNodes -cloneId trees/result.shmt | head -n 1 | wc -w" "1"
+
 mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
 
 [[ -f trees/plots.pdf ]] || exit 1
