@@ -74,6 +74,7 @@ public final class PreCloneAssembler {
                              OutputPort<VDJCAlignments> alignmentsReader1,
                              OutputPort<VDJCAlignments> alignmentsReader2,
                              HasRelativeMinScore relativeMinScores) {
+        Objects.requireNonNull(parameters);
         this.parameters = parameters;
         this.assemblingFeatures = assemblingFeatures;
         this.groupingLevel = groupingLevel;

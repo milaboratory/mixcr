@@ -9,24 +9,5 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.basictypes.tag;
+package com.milaboratory.mixcr.util
 
-public enum TagValueType {
-    NonSequence(null),
-    Sequence(null),
-    SequenceAndQuality(TagValueType.Sequence);
-
-    private final TagValueType keyType;
-
-    TagValueType(TagValueType keyType) {
-        this.keyType = keyType;
-    }
-
-    public TagValueType getKeyType() {
-        return keyType == null ? this : keyType;
-    }
-
-    public boolean isKey() {
-        return keyType == null;
-    }
-}
