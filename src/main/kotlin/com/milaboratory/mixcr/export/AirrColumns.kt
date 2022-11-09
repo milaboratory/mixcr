@@ -77,7 +77,7 @@ object AirrColumns {
 
     abstract class AirrAlignmentExtractor(private val targetId: Int, protected val withPadding: Boolean) :
         FieldExtractor<AirrVDJCObjectWrapper> {
-        abstract fun extractValue(obj: AirrAlignment): String
+        abstract fun extractValue(obj: AirrAlignment): String?
         override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
             val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
             val alignment = obj.getAirrAlignment(resolvedTargetId, withPadding) ?: return ""
@@ -88,13 +88,13 @@ object AirrColumns {
     class SequenceAlignment(targetId: Int, withPadding: Boolean) : AirrAlignmentExtractor(targetId, withPadding) {
         override val header = "sequence_alignment"
 
-        override fun extractValue(obj: AirrAlignment): String = airrStr(obj.getSequence(withPadding))
+        override fun extractValue(obj: AirrAlignment): String? = obj.getSequence(withPadding)
     }
 
     class GermlineAlignment(targetId: Int, withPadding: Boolean) : AirrAlignmentExtractor(targetId, withPadding) {
         override val header = "germline_alignment"
 
-        override fun extractValue(obj: AirrAlignment): String = airrStr(obj.getGermline(withPadding))
+        override fun extractValue(obj: AirrAlignment): String? = obj.getGermline(withPadding)
     }
 
     interface ComplexReferencePoint {
@@ -154,7 +154,7 @@ object AirrColumns {
         override val header: String
     ) : AirrAlignmentExtractor(targetId, withPadding) {
 
-        override fun extractValue(obj: AirrAlignment): String = obj.getSequence(from, to, withPadding)
+        override fun extractValue(obj: AirrAlignment): String? = obj.getSequence(from, to, withPadding)
     }
 
     abstract class NFeatureAbstract private constructor(
