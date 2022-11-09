@@ -62,6 +62,8 @@ import java.io.File
 import java.nio.file.Path
 import java.security.MessageDigest
 import kotlin.io.path.createDirectories
+import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
 
 
 @Command(
@@ -71,7 +73,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     companion object {
         const val COMMAND_NAME = "findShmTrees"
 
-        private const val inputsLabel = "input_file.clns..."
+        private const val inputsLabel = "(input_file.clns|directory)..."
 
         private const val outputLabel = "output_file.$shmFileExtension"
 
@@ -86,7 +88,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                     .paramLabel(inputsLabel)
                     .hideParamSyntax(true)
                     .description(
-                        "Paths to clns files that was processed by '${CommandFindAlleles.COMMAND_NAME}' command"
+                        "Paths to clns files or to directory with clns files that was processed by '${CommandFindAlleles.COMMAND_NAME}' command.",
+                        "In case of directory no filter by file type will be applied."
                     )
                     .build()
             )
@@ -125,6 +128,12 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
     override val inputFiles
         get() = inOut.dropLast(1)
+            .flatMap { path ->
+                when {
+                    path.isDirectory() -> path.listDirectoryEntries()
+                    else -> listOf(path)
+                }
+            }
 
     override val outputFiles
         get() = listOf(outputTreesPath)

@@ -72,6 +72,8 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.io.path.createDirectories
+import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.nameWithoutExtension
 
 @Command(
@@ -84,10 +86,21 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     @Parameters(
         arity = "1..*",
-        paramLabel = "input_file.(clns|clna)",
-        description = ["Input files for allele search"]
+        paramLabel = "(input_file.(clns|clna)|directory)",
+        description = [
+            "Input files or directory with files for allele search.",
+            "In case of directory no filter by file type will be applied."
+        ]
     )
-    override val inputFiles: List<Path> = mutableListOf()
+    private val input: List<Path> = mutableListOf()
+
+    override val inputFiles: List<Path>
+        get() = input.flatMap { path ->
+            when {
+                path.isDirectory() -> path.listDirectoryEntries()
+                else -> listOf(path)
+            }
+        }
 
     class OutputClnsOptions {
         @Option(
