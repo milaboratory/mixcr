@@ -70,6 +70,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
     abstract val command: String
     abstract val order: Int
     abstract val hasThreadsOption: Boolean
+    abstract val hasUseLocalTempOption: Boolean
     open val allowMultipleRounds: Boolean get() = false
 
     abstract fun outputName(prefix: String, params: P, round: Int): String
@@ -112,6 +113,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val order get() = 0
 
         override val hasThreadsOption = true
+        override val hasUseLocalTempOption = false
 
         override fun outputName(prefix: String, params: CommandAlign.Params, round: Int) =
             "${prefix.ifBlank { "alignments" }}.vdjca"
@@ -130,6 +132,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = RefineTagsAndSortReport::class
 
         override val hasThreadsOption = false
+        override val hasUseLocalTempOption = true
 
         @get:JsonValue
         override val command get() = CommandRefineTagsAndSort.COMMAND_NAME
@@ -152,6 +155,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = NoReport::class
 
         override val hasThreadsOption = false
+        override val hasUseLocalTempOption = false
 
         @get:JsonValue
         override val command get() = CommandExportAlignments.COMMAND_NAME
@@ -171,6 +175,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = PartialAlignmentsAssemblerReport::class
 
         override val hasThreadsOption = false
+        override val hasUseLocalTempOption = false
 
         @get:JsonValue
         override val command get() = CommandAssemblePartial.COMMAND_NAME
@@ -194,6 +199,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = VDJCObjectExtenderReport::class
 
         override val hasThreadsOption = true
+        override val hasUseLocalTempOption = false
 
         @get:JsonValue
         override val command get() = CommandExtend.COMMAND_NAME
@@ -216,6 +222,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = CloneAssemblerReport::class
 
         override val hasThreadsOption = false
+        override val hasUseLocalTempOption = true
 
         @get:JsonValue
         override val command get() = CommandAssemble.COMMAND_NAME
@@ -238,6 +245,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = FullSeqAssemblerReport::class
 
         override val hasThreadsOption = true
+        override val hasUseLocalTempOption = false
 
         @get:JsonValue
         override val command get() = CommandAssembleContigs.COMMAND_NAME
@@ -260,6 +268,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = NoReport::class
 
         override val hasThreadsOption = false
+        override val hasUseLocalTempOption = false
 
         @get:JsonValue
         override val command get() = CommandExportClones.COMMAND_NAME
@@ -279,6 +288,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = FindAllelesReport::class
 
         override val hasThreadsOption = true
+        override val hasUseLocalTempOption = true
 
         @get:JsonValue
         override val command get() = CommandFindAlleles.COMMAND_NAME
@@ -297,6 +307,7 @@ sealed class MiXCRCommandDescriptor<P : MiXCRParams, R : MiXCRCommandReport> : C
         override val reportClass get() = BuildSHMTreeReport::class
 
         override val hasThreadsOption = true
+        override val hasUseLocalTempOption = true
 
         @get:JsonValue
         override val command get() = CommandFindShmTrees.COMMAND_NAME

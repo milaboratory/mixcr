@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mitool.helpers.PathPatternExpandException
+import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mixcr.AnyMiXCRCommand
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsBundle
@@ -120,6 +122,9 @@ object CommandAnalyze {
         @Mixin
         lateinit var threadsOption: ThreadsOption
 
+        @Mixin
+        lateinit var useLocalTemp: UseLocalTempOption
+
         private val mixins: MiXCRMixinCollection
             get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
                     assembleContigsMixins + exportMixins + genericMixins
@@ -151,7 +156,7 @@ object CommandAnalyze {
 
         // parsing inOut
 
-        private val inFiles get() = inOut.dropLast(1)
+        private val inputTemplates get() = inOut.dropLast(1).map { Paths.get(it) }
 
         private val outSuffix get() = inOut.last()
 
@@ -161,13 +166,18 @@ object CommandAnalyze {
         }
 
         override fun validate() {
-            val inputs = inFiles.map { Paths.get(it) }
-            // inputs.forEach { input ->
-            //     if (!input.exists()) {
-            //         throw ValidationException("Input file $input doesn't exist.")
-            //     }
-            // }
-            // CommandAlign.checkInputs(inputs)
+            CommandAlign.checkInputTemplates(inputTemplates)
+            val inputFileGroups = try {
+                CommandAlign.InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
+            } catch (e: PathPatternExpandException) {
+                throw ValidationException(e.message!!)
+            }
+            pathsForNotAligned.validate(inputFileGroups.inputType)
+            inputFileGroups.allFiles.forEach { input ->
+                if (!input.exists()) {
+                    throw ValidationException("Input file $input doesn't exist.")
+                }
+            }
             ValidationException.requireNoExtension(outSuffix)
         }
 
@@ -201,7 +211,7 @@ object CommandAnalyze {
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
                 !noReports, !noJsonReports,
-                inFiles, threadsOption
+                inputTemplates, threadsOption, useLocalTemp
             )
             // Adding "align" step
             planBuilder.addStep(
@@ -260,12 +270,13 @@ object CommandAnalyze {
             private val outputNamePrefix: String,
             private val outputReports: Boolean,
             private val outputJsonReports: Boolean,
-            initialInputs: List<String>,
+            initialInputs: List<Path>,
             private val threadsOption: ThreadsOption,
+            private val useLocalTemp: UseLocalTempOption,
         ) {
             val executionPlan = mutableListOf<ExecutionStep>()
             private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
-            private var nextInputs: List<String> = initialInputs
+            private var nextInputs: List<String> = initialInputs.map { it.toString() }
 
             fun addStep(cmd: AnyMiXCRCommand, extraArgs: List<String> = emptyList()) {
                 val round = rounds.compute(cmd) { c, p ->
@@ -296,6 +307,10 @@ object CommandAnalyze {
 
                 if (cmd.hasThreadsOption && threadsOption.isSet) {
                     arguments += listOf("--threads", threadsOption.value.toString())
+                }
+
+                if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
+                    arguments += "--use-local-temp"
                 }
 
                 executionPlan += ExecutionStep(

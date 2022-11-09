@@ -189,12 +189,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             field = value
         }
 
-    @Option(
-        description = ["Put temporary files in the same folder as the output files."],
-        names = ["--use-local-temp"],
-        order = 1_000_000 - 5
-    )
-    var useLocalTemp = false
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
 
     private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
         val shmTreeBuilderParametersName = "default"
@@ -241,8 +237,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 
     private val tempDest: TempFileDest by lazy {
-        if (useLocalTemp) outputTreesPath.toAbsolutePath().parent.createDirectories()
-        TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", !useLocalTemp)
+        if (useLocalTemp.value) outputTreesPath.toAbsolutePath().parent.createDirectories()
+        TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", !useLocalTemp.value)
     }
 
     override fun run0() {
