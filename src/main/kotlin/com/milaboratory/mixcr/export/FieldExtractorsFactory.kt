@@ -17,7 +17,6 @@ import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
 import picocli.CommandLine
-import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Model.ArgGroupSpec
 import picocli.CommandLine.Model.OptionSpec
 import java.io.BufferedReader
@@ -87,7 +86,7 @@ abstract class FieldExtractorsFactory<T : Any> {
     }
 
     /** Creates field extractors from field descriptions */
-    fun createExtractors(
+    open fun createExtractors(
         fields: List<ExportFieldDescription>,
         header: MiXCRHeader
     ): List<FieldExtractor<T>> =
@@ -169,12 +168,10 @@ abstract class FieldExtractorsFactoryWithPresets<T : Any> : FieldExtractorsFacto
         spec.addOption(
             OptionSpec
                 .builder("-p", "--preset")
-                .description("Specify preset of export fields. Possible values: \${COMPLETION-CANDIDATES}")
+                .description("Specify preset of export fields. Possible values: \${COMPLETION-CANDIDATES}. By default `$defaultPreset`")
                 .order(50_000 - 300)
                 .required(false)
                 .type(String::class.java)
-                .defaultValue(defaultPreset)
-                .showDefaultValue(ALWAYS)
                 .completionCandidates(presets.keys)
                 .parameterConsumer { args, _, _ ->
                     val preset: String = args.pop()
@@ -201,6 +198,9 @@ abstract class FieldExtractorsFactoryWithPresets<T : Any> : FieldExtractorsFacto
                 .build()
         )
     }
+
+    override fun createExtractors(fields: List<ExportFieldDescription>, header: MiXCRHeader): List<FieldExtractor<T>> =
+        super.createExtractors(fields.ifEmpty { presets[defaultPreset]!! }, header)
 
     private fun parseFile(file: String): List<ExportFieldDescription> = buildList {
         BufferedReader(FileReader(file)).use { reader ->
