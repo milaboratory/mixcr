@@ -77,7 +77,10 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.nameWithoutExtension
 
 @Command(
-    description = ["Find allele variants in clnx."]
+    description = [
+        "Find allele variants in clnx.",
+        "All inputs must be fully covered by the same feature, have the same align library, the same scoring of V and J genes and the same features to align."
+    ]
 )
 class CommandFindAlleles : MiXCRCommandWithOutputs() {
     data class Params(val dummy: Boolean = true) : MiXCRParams {
@@ -216,6 +219,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
+        ValidationException.require(inputFiles.isNotEmpty()) { "there is no files to process" }
         inputFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNX)
         }
@@ -261,7 +265,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .setStartMillis(System.currentTimeMillis())
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
-        ValidationException.require(datasets.isNotEmpty()) { "there is no files to process" }
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }

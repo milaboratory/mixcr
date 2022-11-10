@@ -67,7 +67,10 @@ import kotlin.io.path.listDirectoryEntries
 
 
 @Command(
-    description = ["Builds SHM trees."]
+    description = [
+        "Builds SHM trees.",
+        "All inputs must be fully covered by the same feature, have the same library produced by `findAlleles`, the same scoring of V and J genes and the same features to align."
+    ]
 )
 class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     companion object {
@@ -229,6 +232,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
+        ValidationException.require(inputFiles.isNotEmpty()) { "there is no files to process" }
         inputFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNS)
         }
@@ -271,7 +275,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val datasets = inputFiles.map { path ->
             ClnsReader(path, vdjcLibraryRegistry)
         }
-        ValidationException.require(datasets.isNotEmpty()) { "there is no files to process" }
 
         ValidationException.requireDistinct(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
@@ -282,7 +285,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             val scores = datasets
                 .map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
             ValidationException.requireDistinct(scores) {
-                "input files must have the same $geneType scoring"
+                "Input files must have the same $geneType scoring"
             }
         }
         val scoringSet = ScoringSet(
