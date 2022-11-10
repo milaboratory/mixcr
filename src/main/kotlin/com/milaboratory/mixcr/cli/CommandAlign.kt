@@ -46,6 +46,8 @@ import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.*
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.*
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.toHexString
@@ -163,8 +165,6 @@ object CommandAlign {
     const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
 
     private const val outputLabel = "alignments.vdjca"
-
-    private const val cellSplitGroupLabel = "CELLSPLIT"
 
     fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(Cmd::class.java)
         .addPositional(
@@ -713,11 +713,10 @@ object CommandAlign {
             }
 
             // Tags
-            val tagsExtractor = getTagsExtractor()
+            val tagsExtractor = getTagsExtractor(cmdParams, inputFilesExpanded.first().tags.map { it.first })
 
             // true if final NSQTuple will have two reads, false otherwise
-            val pairedPayload =
-                if (tagsExtractor.readShortcuts != null) tagsExtractor.readShortcuts.size == 2 else inputType.pairedRecords
+            val pairedPayload = tagsExtractor.pairedPatternPayload ?: inputType.pairedRecords
 
             // Creating aligner
             val aligner = VDJCAligner.createAligner(
@@ -969,255 +968,6 @@ object CommandAlign {
             else -> VDJCAlignmentsWriter(
                 outputFile, max(1, threads.value / 8),
                 VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
-            )
-        }
-
-        private val readGroupPattern = Regex("R\\d+")
-
-        private fun getTagsExtractor(): TagsExtractor {
-            var plan: ReadSearchPlan? = null
-            val readTags = mutableListOf<String>()
-            var readTagShortcuts: List<ReadTagShortcut>? = null
-            var tagExtractors = mutableListOf<TagExtractorWithInfo>()
-
-            if (cmdParams.tagPattern != null) {
-                val searchSettings = ReadSearchSettings(
-                    SearchSettings.Default.copy(bitBudget = cmdParams.tagMaxBudget),
-                    if (cmdParams.tagUnstranded) ReadSearchMode.DirectAndReversed else ReadSearchMode.Direct
-                )
-                plan = create(cmdParams.tagPattern!!, searchSettings)
-                for (tagName in plan.allTags)
-                    if (tagName.matches(readGroupPattern))
-                        readTags += tagName
-                    else {
-                        val type = detectTagTypeByName(tagName) ?: continue
-                        tagExtractors += TagExtractorWithInfo(
-                            PatternTag(plan.tagShortcut(tagName)),
-                            TagInfo(type, TagValueType.SequenceAndQuality, tagName, 0 /* will be changed below */)
-                        )
-                    }
-
-                readTagShortcuts = readTags.map { name -> plan.tagShortcut(name) }
-                if (readTagShortcuts.isEmpty())
-                    throw ValidationException("Tag pattern has no read (payload) groups, nothing to align.")
-                if (readTagShortcuts.size > 2) throw ValidationException(
-                    "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported."
-                )
-            }
-
-            val fileTags = inputFilesExpanded.first().tags.map { it.first }
-
-            if (cmdParams.readIdAsCellTag) {
-                if (fileTags != listOf(cellSplitGroupLabel))
-                    throw ValidationException(
-                        "Exactly one cell splitting group is required in file name for " +
-                                "read-id-as-cell-tag feature to work (i.e. \"my_file_R{{$cellSplitGroupLabel:n}}.fastq.gz\")"
-                    )
-                tagExtractors += TagExtractorWithInfo(
-                    ReadIndex,
-                    TagInfo(TagType.Cell, TagValueType.NonSequence, "READ_IDX", 0 /* will be changed below */)
-                )
-            }
-
-            tagExtractors = tagExtractors
-                .sortedBy { it.tagInfo }
-                .mapIndexed { i, tag -> tag.withInfoIndex(i) }
-                .asMutable()
-
-            if (tagExtractors.size != 0) {
-                println("The following tags and their roles were recognised:")
-                if (readTagShortcuts != null)
-                    println("  Payload tags: " + readTags.joinToString(", "))
-
-                tagExtractors
-                    .groupBy { it.tagInfo.type }
-                    .forEach { (tagType: TagType, extractors: List<TagExtractorWithInfo>) ->
-                        println("  $tagType tags: " + extractors.joinToString(", ") { it.tagInfo.name })
-                    }
-            }
-
-            return TagsExtractor(
-                plan, readTagShortcuts,
-                emptyList(),
-                tagExtractors
-                    .sortedBy { it.tagInfo }
-                    .mapIndexed { i, tag -> tag.withInfoIndex(i) }
-            )
-        }
-
-        private sealed interface TagExtractor {
-            fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ): TagValue
-        }
-
-        private data class PatternTag(val shortcut: ReadTagShortcut) : TagExtractor {
-            override fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ) = SequenceAndQualityTagValue(patternMatch!!.getTagValue(shortcut).value)
-        }
-
-        private data class FileTag(val tagName: String) : TagExtractor {
-            override fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ) = StringTagValue(fileTags.find { it.first == tagName }!!.second)
-        }
-
-        private data class HeaderTag(val patternIdx: Int, val groupName: String) : TagExtractor {
-            override fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ) = StringTagValue(headerMatches[patternIdx].group(groupName))
-        }
-
-        private object ReadIndex : TagExtractor {
-            override fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ) = LongTagValue(originalReadId)
-        }
-
-        private data class HeaderPattern(val patter: Pattern, val readIndices: List<Int>?) {
-            /** Returns non-null result if all the patterns were matched */
-            fun parse(read: SequenceRead): Matcher? {
-                for (i in (readIndices ?: (0 until read.numberOfReads()))) {
-                    val matcher = patter.matcher(read.getRead(i).description)
-                    if (matcher.find())
-                        return matcher
-                }
-                return null
-            }
-        }
-
-        private data class TagExtractorWithInfo(val tagExtractor: TagExtractor, val tagInfo: TagInfo) {
-            fun withInfoIndex(idx: Int) = copy(tagInfo = tagInfo.withIndex(idx))
-        }
-
-        private class TagsExtractor(
-            /** Not null if tag pattern was specified */
-            private val plan: ReadSearchPlan?,
-            /** Not null if tag pattern was specified */
-            val readShortcuts: List<ReadTagShortcut>?,
-            private val headerPatterns: List<HeaderPattern>,
-            val tagExtractorsWithInfo: List<TagExtractorWithInfo>,
-        ) {
-            init {
-                require((plan != null) == (readShortcuts != null))
-            }
-
-            val tagInfos by lazy { tagExtractorsWithInfo.map { it.tagInfo } }
-
-            val inputReads = AtomicLong()
-            val matchedHeaders = AtomicLong()
-            val reportAgg = plan?.let { ParseReportAggregator(it) }
-
-            fun parse(bundle: ProcessingBundle): ProcessingBundle {
-                inputReads.incrementAndGet()
-
-                val headerMatches = headerPatterns.mapNotNull { it.parse(bundle.read) }
-                if (headerMatches.size != headerPatterns.size)
-                    return bundle.copy(status = NotParsed)
-                matchedHeaders.incrementAndGet()
-
-                val (newSeq, patternMatch) =
-                    if (plan != null) {
-                        val result = plan.search(bundle.read)
-                        reportAgg!!.consume(result)
-                        if (result.hit == null) return bundle.copy(status = NotParsed)
-                        NSQTuple(
-                            bundle.read.id,
-                            *Array(readShortcuts!!.size) { i -> result.getTagValue(readShortcuts[i]).value }
-                        ) to result
-                    } else
-                        bundle.sequence to null
-
-                val tags = tagExtractorsWithInfo
-                    .map {
-                        it.tagExtractor.extract(
-                            bundle.originalReadId,
-                            bundle.fileTags,
-                            headerMatches,
-                            patternMatch
-                        )
-                    }
-                    .toTypedArray()
-
-                return bundle.copy(
-                    sequence = newSeq,
-                    tags = TagTuple(*tags)
-                )
-            }
-        }
-
-        data class ParseInfo(
-            val tags: List<TagInfo>,
-            val readTags: List<String>
-        )
-
-        private fun detectTagTypeByName(name: String): TagType? =
-            when {
-                name.startsWith("S") -> TagType.Sample
-                name.startsWith("CELL") -> TagType.Cell
-                name.startsWith("UMI") || name.startsWith("MI") -> TagType.Molecule
-                else -> {
-                    logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
-                    null
-                }
-            }
-
-        private fun parseTagsFromPatternGroupNames(names: Set<String>): ParseInfo {
-            val tags: MutableList<TagInfo> = ArrayList()
-            val readTags: MutableList<String> = ArrayList()
-            for (name in names) {
-                when {
-                    name.startsWith("S") -> tags += TagInfo(
-                        TagType.Sample,
-                        TagValueType.SequenceAndQuality,
-                        name,
-                        0
-                    )
-
-                    name.startsWith("CELL") -> tags += TagInfo(
-                        TagType.Cell,
-                        TagValueType.SequenceAndQuality,
-                        name,
-                        0
-                    )
-
-                    name.startsWith("UMI") || name.startsWith("MI") -> tags += TagInfo(
-                        TagType.Molecule,
-                        TagValueType.SequenceAndQuality,
-                        name,
-                        0
-                    )
-
-                    name.matches(Regex("R\\d+")) -> readTags += name
-
-                    else -> logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
-                }
-            }
-            tags
-                .map { it.type }
-                .distinct()
-                .forEach { tagType -> MiXCRMain.lm.reportFeature("mixcr.tag-type", tagType.toString()) }
-            return ParseInfo(
-                tags
-                    .sorted()
-                    .mapIndexed { i, tag -> tag.withIndex(i) },
-                readTags.sorted()
             )
         }
 
