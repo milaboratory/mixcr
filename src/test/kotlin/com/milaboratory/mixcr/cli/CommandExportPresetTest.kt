@@ -38,11 +38,11 @@ class CommandExportPresetTest {
         output.delete()
         TestMain.execute(
             "exportPreset --species hs --dna " +
-                    "--append-export-clones-field -allAaFeatures " +
+                    "--append-export-clones-field -allAAFeatures " +
                     "--preset-name test-tcr-shotgun ${output.path}"
         )
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
-        result.exportClones!!.fields shouldContain ExportFieldDescription("-allAaFeatures")
+        result.exportClones!!.fields shouldContain ExportFieldDescription("-allAAFeatures")
     }
 
     @Test

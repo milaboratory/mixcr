@@ -123,7 +123,7 @@ object SHMTreeNodeFieldsExtractor {
         this += aaFeatureField
         this += FieldsCollection(
             Order.`-aaFeature` + 1,
-            "-allAaFeatures",
+            "-allAAFeatures",
             "Export amino acid sequences for all covered gene features.%n${nodeParamDescription("feature")}",
             aaFeatureField,
             nodeTypeParamOptional("Of")
