@@ -14,5 +14,5 @@
       - field: "-jAlignments"
       - field: "-cAlignments"
       - field: "-allNFeaturesWithMinQuality"
-      - field: "-allAaFeatures"
+      - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
