@@ -77,7 +77,7 @@ object CommandAnalyze {
         @Option(
             names = ["-f", "--force-overwrite"],
             description = ["Force overwrite of output file(s)."],
-            order = 1_000_000 - 3
+            order = OptionsOrder.forceOverride
         )
         var forceOverwrite = false
 
@@ -98,19 +98,44 @@ object CommandAnalyze {
         )
         private var inOut: List<String> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = PipelineMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.pipeline
+        )
         var pipelineMixins: List<PipelineMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = AlignMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.align
+        )
         var alignMixins: List<AlignMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = AssembleMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.assemble
+        )
         var assembleMixins: List<AssembleMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = AssembleContigsMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.assembleContigs
+        )
         var assembleContigsMixins: List<AssembleContigsMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = ExportMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.exports
+        )
         var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
 
         @Mixin
@@ -144,13 +169,15 @@ object CommandAnalyze {
 
         @Option(
             description = ["Don't output report files for each of the steps"],
-            names = ["--no-reports"]
+            names = ["--no-reports"],
+            order = OptionsOrder.report + 100
         )
         private var noReports: Boolean = false
 
         @Option(
             description = ["Don't output json report files for each of the steps"],
-            names = ["--no-json-reports"]
+            names = ["--no-json-reports"],
+            order = OptionsOrder.report + 101
         )
         private var noJsonReports: Boolean = false
 

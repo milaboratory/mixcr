@@ -12,27 +12,31 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
+import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.cli.ValidationException
 import picocli.CommandLine.Option
 
 class ExportDefaultOptions : (List<ExportFieldDescription>) -> List<ExportFieldDescription> {
     @Option(
         description = ["Don't print first header line, print only data", DEFAULT_VALUE_FROM_PRESET],
-        names = ["--no-header"]
+        names = ["--no-header"],
+        order = OptionsOrder.exportOptions + 100
     )
     var noHeader = false
 
     @Option(
         description = ["Don't export fields from preset."],
         names = ["--drop-default-fields"],
-        arity = "0"
+        arity = "0",
+        order = OptionsOrder.exportOptions + 200
     )
     private var dropDefaultFields: Boolean = false
 
     @Option(
         description = ["Added columns will be inserted before default columns. By default columns will be added after default columns"],
         names = ["--prepend-columns"],
-        arity = "0"
+        arity = "0",
+        order = OptionsOrder.main + 300
     )
     private var prependColumns: Boolean? = null
 

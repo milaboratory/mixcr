@@ -35,7 +35,8 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     @set:Option(
         description = [CommonDescriptions.METADATA],
         names = ["--metadata"],
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 4_000
     )
     var metadata: Path? = null
         set(value) {
@@ -47,7 +48,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
         description = ["Plot width."],
         names = ["--width"],
         paramLabel = "<n>",
-        order = 10_000 + 1
+        order = OptionsOrder.width
     )
     var width = 0
 
@@ -55,7 +56,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
         description = ["Plot height."],
         names = ["--height"],
         paramLabel = "<n>",
-        order = 10_000 + 2
+        order = OptionsOrder.height
     )
     var height = 0
 
@@ -63,7 +64,8 @@ abstract class CommandPaExportPlots : CommandPaExport() {
         description = ["Filter samples to put on a plot by their metadata values. Filter allows equality (`species=cat`) or arithmetic comparison (`age>=10`) etc."],
         names = ["--filter"],
         split = ",",
-        paramLabel = "<meta(|>|>=|=|<=|<)value>"
+        paramLabel = "<meta(|>|>=|=|<=|<)value>",
+        order = OptionsOrder.main + 4_100
     )
     var filterByMetadata: List<String>? = null
 

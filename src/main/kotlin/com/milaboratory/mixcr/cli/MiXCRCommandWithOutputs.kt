@@ -19,7 +19,7 @@ abstract class MiXCRCommandWithOutputs : MiXCRCommand() {
     @Option(
         names = ["-f", "--force-overwrite"],
         description = ["Force overwrite of output file(s)."],
-        order = 1_000_000 - 3
+        order = OptionsOrder.forceOverride
     )
     var forceOverwrite = false
 

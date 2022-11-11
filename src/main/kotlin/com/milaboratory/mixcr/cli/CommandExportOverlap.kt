@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -29,9 +28,11 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.*
+import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Visibility.ALWAYS
+import picocli.CommandLine.Model
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -97,7 +98,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         description = ["Output overlap for specified chains only; if multiple chains are specified, results per each chains will be exported in separate files."],
         names = ["--chains"],
         split = ",",
-        paramLabel = Labels.CHAIN
+        paramLabel = Labels.CHAIN,
+        order = OptionsOrder.main + 10_100
     )
     var chains: Set<String>? = null
 
@@ -105,13 +107,15 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         description = [CommonDescriptions.OVERLAP_CRITERIA],
         names = ["--criteria"],
         showDefaultValue = ALWAYS,
-        paramLabel = "<s>"
+        paramLabel = "<s>",
+        order = OptionsOrder.main + 10_200
     )
     var overlapCriteria = "CDR3|AA|V|J"
 
     @Option(
         description = ["Filter out-of-frame sequences and clonotypes with stop-codons"],
-        names = ["--only-productive"]
+        names = ["--only-productive"],
+        order = OptionsOrder.main + 10_300
     )
     var onlyProductive = false
 

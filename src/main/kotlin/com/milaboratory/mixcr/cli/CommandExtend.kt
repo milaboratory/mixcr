@@ -65,28 +65,32 @@ object CommandExtend {
         @Option(
             description = ["V extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--v-anchor"],
-            paramLabel = Labels.ANCHOR_POINT
+            paramLabel = Labels.ANCHOR_POINT,
+            order = OptionsOrder.main + 10_100
         )
         private var vAnchorPoint: ReferencePoint? = null
 
         @Option(
             description = ["J extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--j-anchor"],
-            paramLabel = Labels.ANCHOR_POINT
+            paramLabel = Labels.ANCHOR_POINT,
+            order = OptionsOrder.main + 10_200
         )
         private var jAnchorPoint: ReferencePoint? = null
 
         @Option(
             description = ["Minimal V hit score to perform left extension.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--min-v-score"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_300
         )
         private var minimalVScore: Int? = null
 
         @Option(
             description = ["Minimal J hit score to perform right extension.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--min-j-score"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_400
         )
         private var minimalJScore: Int? = null
 
@@ -122,7 +126,8 @@ object CommandExtend {
             description = ["Apply procedure only to alignments with specific immunological-receptor chains."],
             names = ["-c", "--chains"],
             paramLabel = Labels.CHAINS,
-            showDefaultValue = ALWAYS
+            showDefaultValue = ALWAYS,
+            order = OptionsOrder.main + 10_500
         )
         var chains: Chains = Chains.TCR
 
@@ -133,7 +138,8 @@ object CommandExtend {
             description = ["Quality score value to assign imputed sequences."],
             names = ["-q", "--quality"],
             paramLabel = "<n>",
-            showDefaultValue = ALWAYS
+            showDefaultValue = ALWAYS,
+            order = OptionsOrder.main + 10_600
         )
         var extensionQuality: Byte = 30
 

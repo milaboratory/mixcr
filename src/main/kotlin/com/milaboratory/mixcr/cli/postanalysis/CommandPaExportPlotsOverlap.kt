@@ -30,17 +30,26 @@ import picocli.CommandLine.Option
 
 @Command(description = ["Export overlap heatmaps"])
 class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlotsHeatmapWithGroupBy() {
-    @Option(description = ["Don't add dendrograms"], names = ["--no-dendro"])
+    @Option(
+        description = ["Don't add dendrograms"],
+        names = ["--no-dendro"],
+        order = OptionsOrder.main + 10_100
+    )
     var noDendro = false
 
     @Option(
         description = ["Add color key layer to the heatmap. One may write `--color-key x_meta` to draw color key horizontally (default) or `--color-key y_meta` to draw vertically."],
         names = ["--color-key"],
-        paramLabel = "<meta>"
+        paramLabel = "<meta>",
+        order = OptionsOrder.main + 10_200
     )
     var colorKeysParam: List<String> = mutableListOf()
 
-    @Option(description = ["Fill diagonal line"], names = ["--fill-diagonal"])
+    @Option(
+        description = ["Fill diagonal line"],
+        names = ["--fill-diagonal"],
+        order = OptionsOrder.main + 10_300
+    )
     var fillDiagonal = false
 
     @Option(
@@ -49,7 +58,8 @@ class CommandPaExportPlotsOverlap : MultipleMetricsInOneFile, CommandPaExportPlo
             "Possible values are: \${COMPLETION-CANDIDATES}"
         ],
         names = ["--metric"],
-        paramLabel = "<metric>"
+        paramLabel = "<metric>",
+        order = OptionsOrder.main + 10_400
     )
     var metrics: List<OverlapType>? = null
 

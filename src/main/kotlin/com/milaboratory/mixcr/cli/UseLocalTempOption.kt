@@ -11,13 +11,14 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import picocli.CommandLine.Option
 
 class UseLocalTempOption {
     @Option(
         description = ["Put temporary files in the same folder as the output files."],
         names = ["--use-local-temp"],
-        order = 1_000_000 - 5
+        order = OptionsOrder.localTemp
     )
     var value = false
 

@@ -77,7 +77,8 @@ object CommandAssemble {
                     "This file then can be used to build wider contigs for clonal sequence or extract original " +
                     "reads for each clone (if -OsaveOriginalReads=true was use on 'align' stage).",
                 DEFAULT_VALUE_FROM_PRESET],
-            names = ["-a", "--write-alignments"]
+            names = ["-a", "--write-alignments"],
+            order = OptionsOrder.main + 10_100
         )
         private var isClnaOutput = false
 
@@ -88,7 +89,8 @@ object CommandAssemble {
                 "This option has no effect on the data without tags.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--cell-level"]
+            names = ["--cell-level"],
+            order = OptionsOrder.main + 10_200
         )
         private var cellLevel = false
 
@@ -98,7 +100,8 @@ object CommandAssemble {
                         "which allows to build overlaps between clonesets.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["-s", "--sort-by-sequence"]
+            names = ["-s", "--sort-by-sequence"],
+            order = OptionsOrder.main + 10_300
         )
         private var sortBySequence = false
 
@@ -106,7 +109,7 @@ object CommandAssemble {
             names = ["-O"],
             description = ["Overrides default parameter values."],
             paramLabel = Labels.OVERRIDES,
-            order = 100_000
+            order = OptionsOrder.overrides
         )
         private val cloneAssemblerOverrides: Map<String, String> = mutableMapOf()
 
@@ -114,7 +117,7 @@ object CommandAssemble {
             names = ["-P"],
             description = ["Overrides default pre-clone assembler parameter values."],
             paramLabel = Labels.OVERRIDES,
-            order = 100_000 + 1
+            order = OptionsOrder.overrides + 100
         )
         private val consensusAssemblerOverrides: Map<String, String> = mutableMapOf()
 
@@ -123,7 +126,8 @@ object CommandAssemble {
                 "Turns off automatic inference of minRecordsPerConsensus parameter.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--dont-infer-threshold"]
+            names = ["--dont-infer-threshold"],
+            order = OptionsOrder.main + 10_400
         )
         private var dontInferThreshold = false
 
@@ -172,7 +176,8 @@ object CommandAssemble {
 
         @Option(
             description = ["Use higher compression for output file."],
-            names = ["--high-compression"]
+            names = ["--high-compression"],
+            order = OptionsOrder.main + 10_500
         )
         var highCompression = false
 

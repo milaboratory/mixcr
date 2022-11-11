@@ -67,26 +67,30 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
     @Option(
         description = ["Target id (use -1 to export from the target containing CDR3)."],
         names = ["-t", "--target"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_100
     )
     var targetId = -1
 
     @Option(
         description = ["If this option is specified, alignment fields will be padded with IMGT-style gaps."],
-        names = ["-g", "--imgt-gaps"]
+        names = ["-g", "--imgt-gaps"],
+        order = OptionsOrder.main + 10_200
     )
     var withPadding = false
 
     @Option(
         description = ["Get fields like fwr1, cdr2, etc.. from alignment."],
-        names = ["-a", "--from-alignment"]
+        names = ["-a", "--from-alignment"],
+        order = OptionsOrder.main + 10_300
     )
     var fromAlignment = false
 
     @Option(
         description = ["Limit number of filtered alignments; no more than N alignments will be outputted"],
         names = ["-n", "--limit"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_400
     )
     var limit: Int? = null
 

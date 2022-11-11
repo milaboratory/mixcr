@@ -31,7 +31,8 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
         names = ["-b", "--bam"],
         description = ["BAM files for conversion."],
         required = true,
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_100
     )
     lateinit var bamFiles: Array<Path>
 
@@ -39,7 +40,8 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
         names = ["-r1"],
         description = ["File for first reads."],
         required = true,
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_200
     )
     lateinit var fastq1: Path
 
@@ -47,7 +49,8 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
         names = ["-r2"],
         description = ["File for second reads."],
         required = true,
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_300
     )
     lateinit var fastq2: Path
 
@@ -55,17 +58,23 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
         names = ["-u"],
         description = ["File for unpaired reads."],
         required = true,
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_400
     )
     lateinit var fastqUnpaired: Path
 
     @Option(
         names = ["--drop-non-vdj"],
-        description = ["Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)"]
+        description = ["Drop reads from bam file mapped on human chromosomes except with VDJ region (2, 7, 14, 22)"],
+        order = OptionsOrder.main + 10_500
     )
     var dropNonVDJ = false
 
-    @Option(names = ["--keep-wildcards"], description = ["Keep sequences with wildcards in the output"])
+    @Option(
+        names = ["--keep-wildcards"],
+        description = ["Keep sequences with wildcards in the output"],
+        order = OptionsOrder.main + 10_600
+    )
     var keepWildcards = false
 
     override val inputFiles

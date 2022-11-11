@@ -73,7 +73,8 @@ object CommandExportAlignments {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-c", "--chains"],
-            paramLabel = Labels.CHAINS
+            paramLabel = Labels.CHAINS,
+            order = OptionsOrder.main + 10_100
         )
         private var chains: String? = null
 

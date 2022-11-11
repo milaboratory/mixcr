@@ -53,18 +53,24 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
         description = ["Chains to export."],
         names = ["--chains"],
         split = ",",
-        paramLabel = Labels.CHAIN
+        paramLabel = Labels.CHAIN,
+        order = OptionsOrder.main + 10_100
     )
     var chains: Set<String>? = null
 
-    @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    @Option(
+        description = [CommonDescriptions.ONLY_PRODUCTIVE],
+        names = ["--only-productive"],
+        order = OptionsOrder.main + 10_200
+    )
     var onlyProductive = false
 
     @Option(
         description = ["Choose ${CommonDescriptions.DOWNSAMPLING}"],
         names = ["--downsampling"],
         required = true,
-        paramLabel = "(<type>|none)"
+        paramLabel = "(<type>|none)",
+        order = OptionsOrder.main + 10_300
     )
     lateinit var downsampling: String
 
@@ -72,7 +78,8 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
         description = [CommonDescriptions.OVERLAP_CRITERIA],
         names = ["--criteria"],
         showDefaultValue = ALWAYS,
-        paramLabel = "<s>"
+        paramLabel = "<s>",
+        order = OptionsOrder.main + 10_400
     )
     var overlapCriteria = "CDR3|AA|V|J"
 
@@ -80,11 +87,16 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
         description = ["Correlation method to use. Possible value: \${COMPLETION-CANDIDATES}."],
         names = ["--method"],
         paramLabel = "<method>",
-        showDefaultValue = ALWAYS
+        showDefaultValue = ALWAYS,
+        order = OptionsOrder.main + 10_500
     )
     var method: CorrelationMethod = CorrelationMethod.Pearson
 
-    @Option(description = ["Do not apply log10 to clonotype frequencies."], names = ["--no-log"])
+    @Option(
+        description = ["Do not apply log10 to clonotype frequencies."],
+        names = ["--no-log"],
+        order = OptionsOrder.main + 10_600
+    )
     var noLog = false
 
     override val inputFiles

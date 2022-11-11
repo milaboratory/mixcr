@@ -53,17 +53,26 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
 
     private val output get() = inOut.last()
 
-    @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    @Option(
+        description = [CommonDescriptions.ONLY_PRODUCTIVE],
+        names = ["--only-productive"],
+        order = OptionsOrder.main + 10_100
+    )
     var onlyProductive = false
 
-    @Option(description = [CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS], names = ["--drop-outliers"])
+    @Option(
+        description = [CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS],
+        names = ["--drop-outliers"],
+        order = OptionsOrder.main + 10_200
+    )
     var dropOutliers = false
 
     @Option(
         description = ["Default ${CommonDescriptions.DOWNSAMPLING}"],
         names = ["--default-downsampling"],
         required = true,
-        paramLabel = "(<type>|none)"
+        paramLabel = "(<type>|none)",
+        order = OptionsOrder.main + 10_300
     )
     lateinit var defaultDownsampling: String
 
@@ -71,7 +80,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         description = ["Default clonotype weight function"],
         names = ["--default-weight-function"],
         required = true,
-        paramLabel = "(<read>|<Tag>|none)"
+        paramLabel = "(<read>|<Tag>|none)",
+        order = OptionsOrder.main + 10_400
     )
     lateinit var defaultWeightFunction: String
 
@@ -80,14 +90,16 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                 "Possible values (multiple values allowed): TRA, TRD, TRAD (for human), TRG, IGH, IGK, IGL"],
         names = ["--chains"],
         split = ",",
-        paramLabel = Labels.CHAIN
+        paramLabel = Labels.CHAIN,
+        order = OptionsOrder.main + 10_500
     )
     var chains: Set<String>? = null
 
     @set:Option(
         description = [CommonDescriptions.METADATA + " Optionally may have `chains` column."],
         names = ["--metadata"],
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_600
     )
     var metadataFile: Path? = null
         set(value) {
@@ -100,7 +112,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                 "postanalysis will be performed in each of the groups separately. " +
                 "It is possible to specify several isolation groups."],
         names = ["--group"],
-        paramLabel = "<group>"
+        paramLabel = "<group>",
+        order = OptionsOrder.main + 10_700
     )
     var isolationGroups: List<String> = mutableListOf()
 
@@ -111,7 +124,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
             "For each `chain` and `metric` will be generated file with path `{dir}/{fileName}.{metric}.{chain}.(tsv|csv)`"
         ],
         names = ["--tables"],
-        paramLabel = "<path.(tsv|csv)>"
+        paramLabel = "<path.(tsv|csv)>",
+        order = OptionsOrder.main + 10_800
     )
     var tablesOut: Path? = null
         set(value) {
@@ -129,7 +143,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
             "For each `chain` will be generated file with path `{dir}/{fileName}.{chain}.(tsv|csv)`"
         ],
         names = ["--preproc-tables"],
-        paramLabel = "<path.(tsv|csv)>"
+        paramLabel = "<path.(tsv|csv)>",
+        order = OptionsOrder.main + 10_900
     )
     var preprocOut: Path? = null
         set(value) {
@@ -144,7 +159,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         names = ["-O"],
         description = ["Overrides default postanalysis settings"],
         paramLabel = Labels.OVERRIDES,
-        order = 100_000
+        order = OptionsOrder.overrides
     )
     var overrides: Map<String, String> = mutableMapOf()
 

@@ -82,6 +82,7 @@ import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotAli
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.NotParsed
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -179,7 +180,8 @@ object CommandAlign {
         @set:Option(
             description = ["Pipe not aligned R1 reads into separate file."],
             names = ["--not-aligned-R1"],
-            paramLabel = "<path.fastq[.gz]>"
+            paramLabel = "<path.fastq[.gz]>",
+            order = OptionsOrder.notAligned + 101
         )
         var notAlignedReadsR1: Path? = null
             set(value) {
@@ -190,7 +192,8 @@ object CommandAlign {
         @set:Option(
             description = ["Pipe not aligned R2 reads into separate file."],
             names = ["--not-aligned-R2"],
-            paramLabel = "<path.fastq[.gz]>"
+            paramLabel = "<path.fastq[.gz]>",
+            order = OptionsOrder.notAligned + 102
         )
         var notAlignedReadsR2: Path? = null
             set(value) {
@@ -201,7 +204,8 @@ object CommandAlign {
         @set:Option(
             description = ["Pipe not parsed R1 reads into separate file."],
             names = ["--not-parsed-R1"],
-            paramLabel = "<path.fastq[.gz]>"
+            paramLabel = "<path.fastq[.gz]>",
+            order = OptionsOrder.notAligned + 201
         )
         var notParsedReadsR1: Path? = null
             set(value) {
@@ -212,7 +216,8 @@ object CommandAlign {
         @set:Option(
             description = ["Pipe not parsed R2 reads into separate file."],
             names = ["--not-parsed-R2"],
-            paramLabel = "<path.fastq[.gz]>"
+            paramLabel = "<path.fastq[.gz]>",
+            order = OptionsOrder.notAligned + 202
         )
         var notParsedReadsR2: Path? = null
             set(value) {
@@ -308,7 +313,7 @@ object CommandAlign {
             names = ["-O"],
             description = ["Overrides aligner parameters from the selected preset"],
             paramLabel = Labels.OVERRIDES,
-            order = 100_000
+            order = OptionsOrder.overrides
         )
         private var overrides: Map<String, String> = mutableMapOf()
 
@@ -319,7 +324,8 @@ object CommandAlign {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--trimming-quality-threshold"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_000
         )
         private var trimmingQualityThreshold: Byte? = null
 
@@ -329,7 +335,8 @@ object CommandAlign {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--trimming-window-size"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_100
         )
         private var trimmingWindowSize: Byte? = null
 
@@ -360,7 +367,8 @@ object CommandAlign {
                 "Write alignment results for all input reads (even if alignment failed).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--write-all"]
+            names = ["--write-all"],
+            order = OptionsOrder.main + 10_200
         )
         private var writeAllResults = false
 
@@ -370,7 +378,8 @@ object CommandAlign {
                 "  Default tag pattern determined by the preset."
             ],
             names = ["--tag-pattern-file"],
-            paramLabel = "<path>"
+            paramLabel = "<path>",
+            order = OptionsOrder.main + 10_300
         )
         var tagPatternFile: Path? = null
 
@@ -380,7 +389,8 @@ object CommandAlign {
                         "only match reads to the corresponding pattern sections (i.e. first file to first section, etc...).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--tag-parse-unstranded"]
+            names = ["--tag-parse-unstranded"],
+            order = OptionsOrder.main + 10_400
         )
         private var tagUnstranded = false
 
@@ -390,7 +400,8 @@ object CommandAlign {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--tag-max-budget"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_500
         )
         private var tagMaxBudget: Double? = null
 
@@ -404,7 +415,8 @@ object CommandAlign {
                         "(i.e. \"my_file_R{{$cellSplitGroupLabel:n}}.fastq.gz\").",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--read-id-as-cell-tag"]
+            names = ["--read-id-as-cell-tag"],
+            order = OptionsOrder.main + 10_600
         )
         private var readIdAsCellTag = false
 
@@ -480,6 +492,7 @@ object CommandAlign {
             names = ["-p", "--preset"],
             paramLabel = "<name>",
             required = true,
+            order = OptionsOrder.main + 1000
         )
         lateinit var presetName: String
 
@@ -489,13 +502,28 @@ object CommandAlign {
         @Mixin
         var alignMixins: AlignMiXCRMixins? = null
 
-        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = AssembleMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.assemble
+        )
         var assembleMixins: List<AssembleMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = AssembleContigsMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.assembleContigs
+        )
         var assembleContigsMixins: List<AssembleContigsMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = ExportMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.exports
+        )
         var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
 
         @Mixin
@@ -535,7 +563,8 @@ object CommandAlign {
         @Option(
             description = ["Size of buffer for FASTQ readers in bytes. Default: 4Mb"],
             names = ["--read-buffer"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_700
         )
         var readBufferSize = 1 shl 22 // 4 Mb
 
@@ -547,7 +576,8 @@ object CommandAlign {
 
         @Option(
             description = ["Use higher compression for output file, 10~25%% slower, minus 30~50%% of file size."],
-            names = ["--high-compression"]
+            names = ["--high-compression"],
+            order = OptionsOrder.main + 10_800
         )
         var highCompression = false
 

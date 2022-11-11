@@ -44,4 +44,35 @@ abstract class MiXCRCommand : Runnable {
 
     /** Do actual job  */
     abstract fun run0()
+
+    object OptionsOrder {
+        const val main = 10_000
+
+        const val notAligned = 90_000
+
+        const val width = 100_000
+        const val height = 100_000 + 100
+
+        @Suppress("ClassName")
+        object mixins {
+            private const val begin = 200_000
+
+            const val pipeline = begin + 10_000
+            const val align = begin + 20_000
+            const val assemble = begin + 30_000
+            const val assembleContigs = begin + 40_000
+            const val exports = begin + 50_000
+        }
+
+        const val exportOptions = 490_000
+
+        const val overrides = 500_000
+
+        const val report = 1_000_000 + 1_000
+        const val localTemp = 1_000_000 + 2_000
+        const val threads = 1_000_000 + 3_000
+        const val forceOverride = 1_000_000 + 4_000
+        const val logger = 1_000_000 + 5_000
+        const val help = 1_000_000 + 6_000
+    }
 }

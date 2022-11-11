@@ -41,7 +41,8 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
             names = ["--preset-name"],
             description = ["Preset name to export."],
             paramLabel = "preset",
-            required = true
+            required = true,
+            order = 1
         )
         var presetName: String? = null
 
@@ -49,7 +50,8 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
             names = ["--mixcr-file"],
             description = ["File that was processed by MiXCR."],
             paramLabel = "<input.(vdjca|clns|clna)>",
-            required = true
+            required = true,
+            order = 2
         )
         var input: Path? = null
             set(value) {
@@ -58,7 +60,11 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
             }
     }
 
-    @ArgGroup(exclusive = true, multiplicity = "1")
+    @ArgGroup(
+        exclusive = true,
+        multiplicity = "1",
+        order = OptionsOrder.main + 10_100
+    )
     lateinit var presetInput: PresetInput
 
     @set:Parameters(
@@ -76,19 +82,44 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
 
     override val outputFiles get() = listOfNotNull(outputFile)
 
-    @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = PipelineMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.pipeline
+    )
     var pipelineMixins: List<PipelineMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = AlignMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.align
+    )
     var alignMixins: List<AlignMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = AssembleMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.assemble
+    )
     var assembleMixins: List<AssembleMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = AssembleContigsMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.assembleContigs
+    )
     var assembleContigsMixins: List<AssembleContigsMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = ExportMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.exports
+    )
     var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
 
     @Mixin
