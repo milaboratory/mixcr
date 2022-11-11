@@ -4,7 +4,7 @@
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
+      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
 
     - type: SetSplitClonesBy
       geneType: V
@@ -22,7 +22,7 @@
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
+      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
 
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
@@ -36,7 +36,7 @@
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})(R2:*)
+      tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
 
     - type: SetSplitClonesBy
       geneType: V
@@ -51,7 +51,7 @@
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})(R2:*)
+      tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
 
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
@@ -65,7 +65,7 @@
     - type: SetSpecies
       species: mmu
     - type: SetTagPattern
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
+      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
 
     - type: SetSplitClonesBy
       geneType: V
@@ -83,7 +83,7 @@
     - type: SetSpecies
       species: mmu
     - type: SetTagPattern
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})(R2:*)
+      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
 
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
@@ -97,7 +97,7 @@
     - type: SetSpecies
       species: mmu
     - type: SetTagPattern
-      tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})(R2:*)
+      tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
 
     - type: SetSplitClonesBy
       geneType: V
@@ -115,7 +115,7 @@
     - type: SetSpecies
       species: mmu
     - type: SetTagPattern
-      tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})(R2:*)
+      tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
 
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
