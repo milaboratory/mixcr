@@ -241,7 +241,7 @@
       maxIndels: 2
       maxTotalErrors: 3
 
-"10x-5gex--full-length":
+"10x-5gex-full-length":
   inheritFrom: 10x-5gex-cdr3
   mixins:
     - type: SetContigAssemblingFeatures
