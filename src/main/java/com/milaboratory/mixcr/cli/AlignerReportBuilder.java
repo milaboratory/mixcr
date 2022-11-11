@@ -19,7 +19,6 @@ import io.repseq.core.GeneType;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
@@ -56,8 +55,9 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
         return tagReport;
     }
 
-    public void setTagReportBuilder(ParseReport tagReport) {
+    public AlignerReportBuilder setTagReportBuilder(ParseReport tagReport) {
         this.tagReport = tagReport;
+        return this;
     }
 
     public long getTotalReadsProcessed() {
@@ -176,7 +176,7 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
                 getTotalReadsProcessed(),
                 successfullyAligned.get(),
                 getNotAligned(),
-                new TreeMap(getFailsMap()),
+                getFailsMap(),
                 chimeras.get(),
                 getOverlapped(),
                 alignmentAidedOverlaps.get(),

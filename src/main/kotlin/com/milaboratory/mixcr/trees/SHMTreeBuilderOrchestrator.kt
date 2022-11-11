@@ -140,11 +140,13 @@ class SHMTreeBuilderOrchestrator(
             )
         }
 
+        val genes = usedGenes.associateBy { it.name }
         debugs.forEachIndexed { i, debug ->
             reportBuilder.addStatsForStep(
                 parameters.steps[i],
                 debug,
-                if (i == 0) null else debugs[i - 1]
+                if (i == 0) null else debugs[i - 1],
+                genes
             )
         }
     }

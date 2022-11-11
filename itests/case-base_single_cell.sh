@@ -17,13 +17,13 @@ assert() {
 
 set -euxo pipefail
 
-mixcr analyze -f 10x-vdj-bcr \
+mixcr analyze 10x-vdj-bcr \
   --species hs \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case10.raw
 
-mixcr analyze -f 10x-vdj-bcr \
+mixcr analyze 10x-vdj-bcr \
   --species hs \
   --assemble-contigs-by VDJRegion \
   single_cell_vdj_t_subset_R1.fastq.gz \

@@ -23,8 +23,11 @@ import com.milaboratory.mixcr.cli.AbstractCommandReportBuilder
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport
 import com.milaboratory.mixcr.cli.CommandFindShmTrees
 import com.milaboratory.mixcr.cli.MiXCRCommandReport.StatsWithQuantiles
+import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportHelper
+import io.repseq.core.VDJCGene
+import java.io.File
 import java.util.*
 import kotlin.math.log2
 
@@ -101,23 +104,45 @@ class BuildSHMTreeReport(
         fun addStatsForStep(
             step: BuildSHMTreeStep,
             stepResultDebug: SHMTreeBuilderOrchestrator.Debug,
-            previousStepResultDebug: SHMTreeBuilderOrchestrator.Debug?
+            previousStepResultDebug: SHMTreeBuilderOrchestrator.Debug?,
+            genes: Map<String, VDJCGene>
         ) {
             stepResults += calculateStatsFromDebug(
                 step,
-                XSV.readXSV(stepResultDebug.treesBeforeDecisionsFile, DebugInfo.COLUMNS_FOR_XSV.keys, ";"),
-                XSV.readXSV(stepResultDebug.treesAfterDecisionsFile, DebugInfo.COLUMNS_FOR_XSV.keys, ";"),
-                previousStepResultDebug?.let {
-                    XSV.readXSV(it.treesAfterDecisionsFile, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
-                }
+                stepResultDebug.treesBeforeDecisionsFile.parseDebug(genes),
+                stepResultDebug.treesAfterDecisionsFile.parseDebug(genes),
+                previousStepResultDebug?.treesAfterDecisionsFile?.parseDebug(genes)
             )
         }
 
+        private fun File.parseDebug(genes: Map<String, VDJCGene>): List<Pair<TreeId, List<Pair<Int, Map<String, String?>>>>> =
+            XSV.readXSV(this, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
+                .asSequence()
+                .map { row ->
+                    val treeId = TreeId(
+                        row["treeId"]!!.toInt(),
+                        VJBase(
+                            VJPair(
+                                genes[row["VGeneName"]!!]!!.id,
+                                genes[row["JGeneName"]!!]!!.id
+                            ),
+                            row["CDR3Length"]!!.toInt()
+                        )
+                    )
+                    val nodeId = row["id"]!!.toInt()
+                    treeId to (nodeId to row - arrayOf("treeId", "treeIdFull", "VGeneName", "JGeneName", "id"))
+                }
+                .groupBy({ (treeId) -> treeId }, { (_, node) -> node })
+                .toList()
+                .map { (treeId, nodes) -> treeId to nodes.sortedBy { it.first } }
+                .sortedWith(Comparator.comparing({ it.first }, TreeId.comparator))
+                .toList()
+
         private fun calculateStatsFromDebug(
             step: BuildSHMTreeStep,
-            debugInfosBeforeDecisions: List<Map<String, String?>>,
-            debugInfosAfterDecisions: List<Map<String, String?>>,
-            previousStepDebug: List<Map<String, String?>>?
+            debugInfosBeforeDecisions: List<Pair<TreeId, List<Pair<Int, Map<String, String?>>>>>,
+            debugInfosAfterDecisions: List<Pair<TreeId, List<Pair<Int, Map<String, String?>>>>>,
+            previousStepDebug: List<Pair<TreeId, List<Pair<Int, Map<String, String?>>>>>?
         ): StepResult {
             val clonesWasAdded = debugInfosAfterDecisions.clonesCount - (previousStepDebug?.clonesCount ?: 0)
             val cloneNodesWasAdded =
@@ -125,42 +150,45 @@ class BuildSHMTreeReport(
             val treesCountDelta = debugInfosAfterDecisions.treesCount - (previousStepDebug?.treesCount ?: 0)
 
             val commonVJMutationsCounts = debugInfosAfterDecisions
-                .filter { it["parentId"] == "0" }
-                .map {
-                    it.getMutations("VMutationsFromRoot").size() + it.getMutations("JMutationsFromRoot").size()
+                .map { (_, nodes) -> nodes.map { (_, row) -> row }.first { it["parentId"] == "0" } }
+                .map { row ->
+                    row.getMutations("VMutationsFromRoot").size() + row.getMutations("JMutationsFromRoot").size()
                 }
             val clonesCountInTrees = debugInfosAfterDecisions
-                .filterNot { it["clonesIds"].isNullOrBlank() }
-                .groupBy({ it.treeId() }, { it["clonesIds"]?.split(",") ?: emptyList() })
-                .values
-                .map { it.size }
-            val NDNsByTrees = debugInfosAfterDecisions
-                .filter { it["id"] != "0" }
-                .groupBy { it.treeId() }
-                .mapValues { (_, value) ->
-                    value.sortedBy { it["id"]!!.toInt() }.map { it.getNucleotideSequence("NDN") }
+                .map { (_, nodes) ->
+                    nodes.map { (_, row) -> row }
+                        .filterNot { it["clonesIds"].isNullOrBlank() }
+                        .flatMap { it["clonesIds"]!!.split(",") }
+                        .count()
                 }
-            val averageNDNWildcardsScore = NDNsByTrees.values
+            val NDNsByTrees = debugInfosAfterDecisions
+                .map { (_, nodes) ->
+                    nodes.filter { (nodeId) -> nodeId != 0 }
+                        .map { (_, row) -> row.getNucleotideSequence("NDN") }
+                }
+            val averageNDNWildcardsScore = NDNsByTrees
                 .map { NDNs ->
                     NDNs
                         .filter { it.size() != 0 }
                         .map { it.wildcardsScore() }
                         .average()
                 }
-            val NDNsWildcardsScoreForRoots = NDNsByTrees.values
+            val NDNsWildcardsScoreForRoots = NDNsByTrees
                 .map { it[0] }
                 .filter { it.size() != 0 }
                 .map { it.wildcardsScore() }
-            val maxNDNsWildcardsScoreInTree = NDNsByTrees.values
+            val maxNDNsWildcardsScoreInTree = NDNsByTrees
                 .mapNotNull { NDNs ->
                     NDNs
                         .filter { it.size() != 0 }
                         .maxOfOrNull { NDN -> NDN.wildcardsScore() }
                 }
             val surenessOfDecisions = debugInfosBeforeDecisions
+                .flatMap { (_, nodes) -> nodes.map { (_, row) -> row } }
                 .filterNot { it["clonesIds"].isNullOrBlank() }
                 .filter { it["decisionMetric"] != null }
-                .groupBy({ it["clonesIds"] }) { it["decisionMetric"]!!.toDouble() }
+                .flatMap { row -> row["clonesIds"]!!.split(",").map { it to row["decisionMetric"]!!.toDouble() } }
+                .groupBy({ it.first }) { it.second }
                 .filterValues { it.size > 1 }
                 .mapValues { (_, metrics) ->
                     val minMetric = metrics.minOrNull()!!
@@ -183,18 +211,18 @@ class BuildSHMTreeReport(
             )
         }
 
-        private val List<Map<String, String?>>.clonesCount
-            get() = map { it["clonesCount"]!! }
+        private val List<Pair<TreeId, List<Pair<Int, Map<String, String?>>>>>.clonesCount
+            get() = flatMap { it.second }
+                .map { it.second["clonesCount"]!! }
                 .sumOf { it.toInt() }
 
-        private val List<Map<String, String?>>.cloneNodesCount
-            get() = mapNotNull { it["clonesIds"] }
+        private val List<Pair<TreeId, List<Pair<Int, Map<String, String?>>>>>.cloneNodesCount
+            get() = flatMap { it.second }
+                .mapNotNull { it.second["clonesIds"] }
                 .count()
 
-        private val List<Map<String, String?>>.treesCount
-            get() = map { it["treeId"] }
-                .distinct()
-                .count()
+        private val List<Pair<TreeId, List<Pair<Int, Map<String, String?>>>>>.treesCount
+            get() = size
     }
 }
 
@@ -211,9 +239,6 @@ private fun Map<String, String?>.getMutations(columnName: String): Mutations<Nuc
     } else {
         Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
     }
-
-private fun Map<String, String?>.treeId(): String =
-    this["VGeneName"] + this["JGeneName"] + this["CDR3Length"] + this["treeId"]
 
 private fun NucleotideSequence.wildcardsScore(): Double = (0 until size())
     .map { NucleotideSequence.ALPHABET.codeToWildcard(codeAt(it)).basicSize() }
