@@ -92,7 +92,6 @@ public class TargetMerger {
             result.put(geneType, resultingHits.toArray(new VDJCHit[resultingHits.size()]));
         }
 
-
         VDJCAlignments alignments = new VDJCAlignments(result,
                 TagCountAggregator.merge(targetLeft.getAlignments().getTagCount(), targetRight.getAlignments().getTagCount()),
                 new NSequenceWithQuality[]{mergedTarget},

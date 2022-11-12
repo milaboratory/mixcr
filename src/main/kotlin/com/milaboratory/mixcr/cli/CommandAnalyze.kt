@@ -14,18 +14,10 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.PathPatternExpandException
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.mixcr.AnyMiXCRCommand
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.MiXCRPipeline
-import picocli.CommandLine.ArgGroup
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
+import com.milaboratory.mixcr.*
+import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -34,6 +26,7 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteExisting
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.system.exitProcess
 
 object CommandAnalyze {
     const val COMMAND_NAME = "analyze"
@@ -93,7 +86,7 @@ object CommandAnalyze {
             index = "1",
             arity = "2..3",
             paramLabel = "$inputsLabel $outputLabel",
-            //help is covered by mkCommandSpec
+            // help is covered by mkCommandSpec
             hidden = true
         )
         private var inOut: List<String> = mutableListOf()
@@ -259,7 +252,10 @@ object CommandAnalyze {
                     println("Running:")
                     println(executionStep)
                     val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
-                    Main.mkCmd().execute(*actualArgs)
+                    val exitCode = Main.mkCmd().execute(*actualArgs)
+                    if (exitCode != 0)
+                        // Terminating execution if one of the steps resulted in error
+                        exitProcess(exitCode)
                 }
             }
         }

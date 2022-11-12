@@ -411,10 +411,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract {
                 hits.put(GeneType.Constant, cHits);
 
             return new VDJCAlignments(hits, TagCount.NO_TAGS_1, target.targets,
-                    new SequenceHistory[]{
-                            new SequenceHistory.RawSequence(input.getId(), (byte) 0,
-                                    target.getRCStateOfTarget(0),
-                                    target.targets[0].size())},
+                    SequenceHistory.RawSequence.of(input.getId(), target),
                     parameters.isSaveOriginalSequence() ? new NSQTuple[]{input} : null);
         }
     }
