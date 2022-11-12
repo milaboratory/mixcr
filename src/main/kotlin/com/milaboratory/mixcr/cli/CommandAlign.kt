@@ -119,6 +119,7 @@ object CommandAlign {
         @JsonProperty("trimmingQualityThreshold") val trimmingQualityThreshold: Byte,
         @JsonProperty("trimmingWindowSize") val trimmingWindowSize: Byte,
         @JsonProperty("chains") val chains: String = "ALL",
+        @JsonProperty("replaceWildcards") val replaceWildcards: Boolean = true,
         @JsonProperty("overlapPairedReads") val overlapPairedReads: Boolean = true,
         @JsonProperty("bamDropNonVDJ") val bamDropNonVDJ: Boolean = false,
         @JsonProperty("writeFailedAlignments") val writeFailedAlignments: Boolean = false,
@@ -701,7 +702,7 @@ object CommandAlign {
                     SingleFastqReader.DEFAULT_QUALITY_FORMAT,
                     CompressionType.detectCompressionType(path.name),
                     false, readBufferSize,
-                    true, true
+                    cmdParams.replaceWildcards, true
                 )
             }
 
@@ -711,7 +712,7 @@ object CommandAlign {
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
                     MiXCRMain.lm.reportApplicationInputs(files)
-                    BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, true)
+                    BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
                         .map { ProcessingBundle(it) }
                 }
 
@@ -722,7 +723,7 @@ object CommandAlign {
                     MiXCRMain.lm.reportApplicationInputs(listOf(inputFile))
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
-                        true
+                        cmdParams.replaceWildcards
                     )
                         .map { ProcessingBundle(it) }
                 }
