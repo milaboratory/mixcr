@@ -273,7 +273,7 @@
       - field: "-jAlignments"
       - field: "-cAlignments"
       - field: "-allNFeaturesWithMinQuality"
-      - field: "-allAaFeatures"
+      - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
 
 "pereshlop-test":
@@ -314,7 +314,7 @@
       - field: "-jAlignments"
       - field: "-cAlignments"
       - field: "-allNFeaturesWithMinQuality"
-      - field: "-allAaFeatures"
+      - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
 
 "umi-guided-consensus-test":
@@ -408,5 +408,5 @@
       - field: "-jAlignments"
       - field: "-cAlignments"
       - field: "-allNFeaturesWithMinQuality"
-      - field: "-allAaFeatures"
+      - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"

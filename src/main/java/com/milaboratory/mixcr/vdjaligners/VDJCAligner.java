@@ -231,6 +231,7 @@ public abstract class VDJCAligner {
         return hit::getRecordPayload;
     }
 
+    @Deprecated
     public static <S extends SequenceRead> Processor<S, VDJCAlignmentResult<S>> asProcessor(VDJCAligner aligner) {
         if (aligner.parameters.isSaveOriginalReads())
             return input -> {

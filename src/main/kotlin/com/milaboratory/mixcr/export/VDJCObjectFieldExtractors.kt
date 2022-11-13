@@ -336,8 +336,8 @@ object VDJCObjectFieldExtractors {
 
             this += FieldsCollection(
                 Order.`-aaFeature` + 1,
-                "-allAaFeatures",
-                "Export amino acid sequence ${commonDescriptionForFeatures("-allAaFeatures", aaFeatureField)}",
+                "-allAAFeatures",
+                "Export amino acid sequence ${commonDescriptionForFeatures("-allAAFeatures", aaFeatureField)}",
                 aaFeatureField,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
@@ -401,9 +401,9 @@ object VDJCObjectFieldExtractors {
         if (!forTreesExport) {
             this += FieldsCollection(
                 Order.features + 501,
-                "-allAaFeaturesImputed",
+                "-allAAFeaturesImputed",
                 "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions " +
-                        commonDescriptionForFeatures("-allAaFeaturesImputed", aaFeatureImputedField),
+                        commonDescriptionForFeatures("-allAAFeaturesImputed", aaFeatureImputedField),
                 aaFeatureImputedField,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
@@ -416,7 +416,7 @@ object VDJCObjectFieldExtractors {
         } else {
             this += FieldsCollection(
                 Order.features + 501,
-                "-allAaFeaturesImputed",
+                "-allAAFeaturesImputed",
                 "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions for all covered features",
                 aaFeatureImputedField
             ) {

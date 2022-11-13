@@ -12,18 +12,12 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.AnyMiXCRCommand
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.MiXCRPipeline
-import picocli.CommandLine.ArgGroup
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
+import com.milaboratory.mitool.helpers.PathPatternExpandException
+import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
+import com.milaboratory.mixcr.*
+import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -32,6 +26,7 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteExisting
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.system.exitProcess
 
 object CommandAnalyze {
     const val COMMAND_NAME = "analyze"
@@ -91,7 +86,7 @@ object CommandAnalyze {
             index = "1",
             arity = "2..3",
             paramLabel = "$inputsLabel $outputLabel",
-            //help is covered by mkCommandSpec
+            // help is covered by mkCommandSpec
             hidden = true
         )
         private var inOut: List<String> = mutableListOf()
@@ -119,6 +114,9 @@ object CommandAnalyze {
 
         @Mixin
         lateinit var threadsOption: ThreadsOption
+
+        @Mixin
+        lateinit var useLocalTemp: UseLocalTempOption
 
         private val mixins: MiXCRMixinCollection
             get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
@@ -151,7 +149,7 @@ object CommandAnalyze {
 
         // parsing inOut
 
-        private val inFiles get() = inOut.dropLast(1)
+        private val inputTemplates get() = inOut.dropLast(1).map { Paths.get(it) }
 
         private val outSuffix get() = inOut.last()
 
@@ -161,13 +159,18 @@ object CommandAnalyze {
         }
 
         override fun validate() {
-            val inputs = inFiles.map { Paths.get(it) }
-            // inputs.forEach { input ->
-            //     if (!input.exists()) {
-            //         throw ValidationException("Input file $input doesn't exist.")
-            //     }
-            // }
-            // CommandAlign.checkInputs(inputs)
+            CommandAlign.checkInputTemplates(inputTemplates)
+            val inputFileGroups = try {
+                CommandAlign.InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
+            } catch (e: PathPatternExpandException) {
+                throw ValidationException(e.message!!)
+            }
+            pathsForNotAligned.validate(inputFileGroups.inputType)
+            inputFileGroups.allFiles.forEach { input ->
+                if (!input.exists()) {
+                    throw ValidationException("Input file $input doesn't exist.")
+                }
+            }
             ValidationException.requireNoExtension(outSuffix)
         }
 
@@ -201,7 +204,7 @@ object CommandAnalyze {
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
                 !noReports, !noJsonReports,
-                inFiles, threadsOption
+                inputTemplates, threadsOption, useLocalTemp
             )
             // Adding "align" step
             planBuilder.addStep(
@@ -249,7 +252,10 @@ object CommandAnalyze {
                     println("Running:")
                     println(executionStep)
                     val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
-                    Main.mkCmd().execute(*actualArgs)
+                    val exitCode = Main.mkCmd().execute(*actualArgs)
+                    if (exitCode != 0)
+                        // Terminating execution if one of the steps resulted in error
+                        exitProcess(exitCode)
                 }
             }
         }
@@ -260,12 +266,13 @@ object CommandAnalyze {
             private val outputNamePrefix: String,
             private val outputReports: Boolean,
             private val outputJsonReports: Boolean,
-            initialInputs: List<String>,
+            initialInputs: List<Path>,
             private val threadsOption: ThreadsOption,
+            private val useLocalTemp: UseLocalTempOption,
         ) {
             val executionPlan = mutableListOf<ExecutionStep>()
             private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
-            private var nextInputs: List<String> = initialInputs
+            private var nextInputs: List<String> = initialInputs.map { it.toString() }
 
             fun addStep(cmd: AnyMiXCRCommand, extraArgs: List<String> = emptyList()) {
                 val round = rounds.compute(cmd) { c, p ->
@@ -296,6 +303,10 @@ object CommandAnalyze {
 
                 if (cmd.hasThreadsOption && threadsOption.isSet) {
                     arguments += listOf("--threads", threadsOption.value.toString())
+                }
+
+                if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
+                    arguments += "--use-local-temp"
                 }
 
                 executionPlan += ExecutionStep(

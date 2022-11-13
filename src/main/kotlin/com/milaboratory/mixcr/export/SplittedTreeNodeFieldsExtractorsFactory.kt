@@ -53,7 +53,7 @@ object SplittedTreeNodeFieldsExtractorsFactory : FieldExtractorsFactoryWithPrese
             ExportFieldDescription("-jAlignments"),
             ExportFieldDescription("-cAlignments"),
             ExportFieldDescription("-allNFeatures"),
-            ExportFieldDescription("-allAaFeatures"),
+            ExportFieldDescription("-allAAFeatures"),
             ExportFieldDescription("-defaultAnchorPoints")
         )
     }

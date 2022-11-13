@@ -143,12 +143,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             field = value
         }
 
-    @Option(
-        description = ["Put temporary files in the same folder as the output files."],
-        names = ["--use-local-temp"],
-        order = 1_000_000 - 5
-    )
-    var useLocalTemp = false
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
 
     @Mixin
     lateinit var threadsOptions: ThreadsOption
@@ -191,8 +187,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     private val tempDest: TempFileDest by lazy {
         val path = outputFiles.first()
-        if (useLocalTemp) path.toAbsolutePath().parent.createDirectories()
-        TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp)
+        if (useLocalTemp.value) path.toAbsolutePath().parent.createDirectories()
+        TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp.value)
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
