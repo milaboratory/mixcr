@@ -31,7 +31,6 @@ import com.milaboratory.core.io.sequence.fastq.PairedFastqReader
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
-import com.milaboratory.core.sequence.NSQTuple
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
@@ -49,7 +48,8 @@ import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.*
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.*
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundle
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.*
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
@@ -952,25 +952,6 @@ object CommandAlign {
                 ReportUtil.writeReportToStdout(report)
                 reportOptions.appendToFiles(report)
             }
-        }
-
-        enum class ProcessingBundleStatus {
-            Good,
-            NotParsed,
-            NotAligned,
-        }
-
-        data class ProcessingBundle(
-            val read: SequenceRead,
-            val fileTags: List<Pair<String, String>> = emptyList(),
-            val originalReadId: Long = read.id,
-            val sequence: NSQTuple = read.toTuple(),
-            val tags: TagTuple = TagTuple.NO_TAGS,
-            val alignment: VDJCAlignments? = null,
-            val status: ProcessingBundleStatus = Good,
-        ) {
-            val ok get() = status == Good
-            fun mapSequence(mapping: (NSQTuple) -> NSQTuple) = copy(sequence = mapping(sequence))
         }
 
         @Suppress("UNCHECKED_CAST")

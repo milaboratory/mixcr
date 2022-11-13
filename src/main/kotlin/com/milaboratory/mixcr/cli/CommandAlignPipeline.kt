@@ -13,9 +13,23 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.sequence.NSQTuple
-import com.milaboratory.mitool.pattern.search.*
+import com.milaboratory.mitool.pattern.search.MicRecord
+import com.milaboratory.mitool.pattern.search.ReadSearchMode
+import com.milaboratory.mitool.pattern.search.ReadSearchPlan
+import com.milaboratory.mitool.pattern.search.ReadSearchSettings
+import com.milaboratory.mitool.pattern.search.ReadTagShortcut
+import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReportAggregator
-import com.milaboratory.mixcr.basictypes.tag.*
+import com.milaboratory.mixcr.basictypes.VDJCAlignments
+import com.milaboratory.mixcr.basictypes.tag.LongTagValue
+import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
+import com.milaboratory.mixcr.basictypes.tag.StringTagValue
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagValue
+import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
 import jetbrains.datalore.plot.config.asMutable
 import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Matcher
@@ -176,19 +190,19 @@ object CommandAlignPipeline {
         val matchedHeaders = AtomicLong()
         val reportAgg = plan?.let { ParseReportAggregator(it) }
 
-        fun parse(bundle: CommandAlign.Cmd.ProcessingBundle): CommandAlign.Cmd.ProcessingBundle {
+        fun parse(bundle: ProcessingBundle): ProcessingBundle {
             inputReads.incrementAndGet()
 
             val headerMatches = headerPatterns.mapNotNull { it.parse(bundle.read) }
             if (headerMatches.size != headerPatterns.size)
-                return bundle.copy(status = CommandAlign.Cmd.ProcessingBundleStatus.NotParsed)
+                return bundle.copy(status = ProcessingBundleStatus.NotParsed)
             matchedHeaders.incrementAndGet()
 
             val (newSeq, patternMatch) =
                 if (plan != null) {
                     val result = plan.search(bundle.read)
                     reportAgg!!.consume(result)
-                    if (result.hit == null) return bundle.copy(status = CommandAlign.Cmd.ProcessingBundleStatus.NotParsed)
+                    if (result.hit == null) return bundle.copy(status = ProcessingBundleStatus.NotParsed)
                     NSQTuple(
                         bundle.read.id,
                         *Array(readShortcuts!!.size) { i -> result.getTagValue(readShortcuts[i]).value }
@@ -224,4 +238,23 @@ object CommandAlignPipeline {
                 null
             }
         }
+
+    enum class ProcessingBundleStatus {
+        Good,
+        NotParsed,
+        NotAligned,
+    }
+
+    data class ProcessingBundle(
+        val read: SequenceRead,
+        val fileTags: List<Pair<String, String>> = emptyList(),
+        val originalReadId: Long = read.id,
+        val sequence: NSQTuple = read.toTuple(),
+        val tags: TagTuple = TagTuple.NO_TAGS,
+        val alignment: VDJCAlignments? = null,
+        val status: ProcessingBundleStatus = Good,
+    ) {
+        val ok get() = status == Good
+        fun mapSequence(mapping: (NSQTuple) -> NSQTuple) = copy(sequence = mapping(sequence))
+    }
 }
