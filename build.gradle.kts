@@ -98,10 +98,10 @@ repositories {
     }
 }
 
-val milibVersion = "2.1.0"
+val milibVersion = "2.1.0-3-master"
 val repseqioVersion = "1.5.0"
 val miplotsVersion = "1.1.0"
-val mitoolVersion = "1.3.0"
+val mitoolVersion = "1.3.0-1-main"
 val jacksonBomVersion = "2.14.0"
 val redberryPipeVersion = "1.3.0"
 
