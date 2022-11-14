@@ -28,8 +28,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import io.repseq.core.GeneType;
 
-import java.util.Collections;
-
 import static com.milaboratory.core.alignment.AlignmentTestUtils.assertAlignment;
 
 public class MiXCRTestUtils {
@@ -38,6 +36,7 @@ public class MiXCRTestUtils {
                 "hashA123",
                 new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                 Presets.INSTANCE.resolveParamsBundle("legacy-4.0-default").getAlign().getParameters(),
+                Presets.INSTANCE.resolveParamsBundle("legacy-4.0-default").getAlign().getParameters().getFeaturesToAlignMap(),
                 null, null, null);
     }
 

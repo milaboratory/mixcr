@@ -34,16 +34,16 @@ public final class CloneFactory {
     private final Map<VDJCGeneId, VDJCGene> usedGenes;
     private final GeneFeature[] assemblingFeatures;
     private final int indexOfAssemblingFeatureWithD;
-    private final EnumMap<GeneType, GeneFeature> featuresToAlign;
+    private final Map<GeneType, GeneFeature> featuresToAlign;
 
     public CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
-                        Collection<VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
+                        Collection<VDJCGene> usedGenes, Map<GeneType, GeneFeature> featuresToAlign) {
         this(parameters, assemblingFeatures,
                 usedGenes.stream().collect(Collectors.toMap(VDJCGene::getId, Function.identity())), featuresToAlign);
     }
 
     public CloneFactory(CloneFactoryParameters parameters, GeneFeature[] assemblingFeatures,
-                        Map<VDJCGeneId, VDJCGene> usedGenes, EnumMap<GeneType, GeneFeature> featuresToAlign) {
+                        Map<VDJCGeneId, VDJCGene> usedGenes, Map<GeneType, GeneFeature> featuresToAlign) {
         this.parameters = parameters.clone();
         this.assemblingFeatures = assemblingFeatures.clone();
         this.usedGenes = usedGenes;

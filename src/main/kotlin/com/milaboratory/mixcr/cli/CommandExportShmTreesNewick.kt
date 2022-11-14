@@ -52,12 +52,9 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
 
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             reader.readTrees()
+                .filter { treeFilter?.match(it.treeId) != false }
                 .map {
-                    it.forPostanalysis(
-                        reader.fileNames,
-                        reader.alignerParameters,
-                        reader.libraryRegistry
-                    )
+                    it.forPostanalysis(reader.fileNames, reader.libraryRegistry)
                 }
                 .filter { treeFilter?.match(it) != false }
                 .forEach { shmTree ->

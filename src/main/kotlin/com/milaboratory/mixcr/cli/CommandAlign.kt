@@ -814,6 +814,7 @@ object CommandAlign {
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         TagsInfo(0, *tagsExtractor.tagInfos.toTypedArray()),
                         aligner.parameters,
+                        aligner.parameters.featuresToAlignMap,
                         null,
                         null,
                         null

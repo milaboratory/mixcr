@@ -8,6 +8,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.test.TestUtil.assertJson
 import org.junit.Assert
 import org.junit.Test
@@ -70,6 +71,7 @@ class PresetsTest {
                 MiXCRStepParams().add(MiXCRCommandDescriptor.align, bundle.align!!),
                 tagsInfo,
                 bundle.align!!.parameters,
+                bundle.align!!.parameters.featuresToAlignMap,
                 null,
                 null,
                 null
@@ -78,7 +80,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields,
-                        header
+                        HeaderForExport(listOf(header.tagsInfo), header.allFullyCoveredBy)
                     ).size
                 )
             }
@@ -86,7 +88,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
-                        header
+                        HeaderForExport(listOf(header.tagsInfo), header.allFullyCoveredBy)
                     ).size
                 )
             }

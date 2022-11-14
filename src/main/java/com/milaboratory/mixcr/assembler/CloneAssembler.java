@@ -104,7 +104,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     volatile boolean deferredExists = false;
     volatile boolean preClusteringDone = false;
     final TIntIntHashMap preClustered = new TIntIntHashMap();
-    final EnumMap<GeneType, GeneFeature> featuresToAlign;
+    final Map<GeneType, GeneFeature> featuresToAlign;
 
     public static final Factory<ArrayList<CloneAccumulatorContainer>> LIST_FACTORY = new Factory<ArrayList<CloneAccumulatorContainer>>() {
         @Override
@@ -118,7 +118,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             CloneAssemblerParameters parameters,
             boolean logAssemblerEvents,
             Collection<VDJCGene> genes,
-            EnumMap<GeneType, GeneFeature> featuresToAlign) {
+            Map<GeneType, GeneFeature> featuresToAlign) {
         if (!parameters.isComplete())
             throw new IllegalArgumentException("Not complete parameters");
         this.tagsInfo = tagsInfo;

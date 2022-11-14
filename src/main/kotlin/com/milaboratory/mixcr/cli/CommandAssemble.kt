@@ -279,7 +279,7 @@ object CommandAssemble {
                     cloneAssemblerParameters,
                     cmdParam.clnaOutput,
                     alignmentsReader.usedGenes,
-                    inputHeader.alignerParameters.featuresToAlignMap
+                    inputHeader.featuresToAlignMap
                 ).use { assembler ->
                     // Creating event listener to collect run statistics
                     reportBuilder.setStartMillis(beginTimestamp)

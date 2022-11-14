@@ -82,6 +82,8 @@ class TreeFilter(
     /** filter specific trees by pattern */
     val seqPattern: SeqPattern? = null,
 ) {
+    fun match(treeId: Int): Boolean = treeIds?.contains(treeId) != false
+
     fun match(tree: SHMTreeForPostanalysis<*>): Boolean {
         if (minNodes != null && tree.tree.allNodes().count() < minNodes)
             return false
@@ -181,12 +183,9 @@ class ShmTreePlotter(
             reader.readTrees().use { trees ->
                 trees
                     .asSequence()
+                    .filter { filter?.match(it.treeId) != false }
                     .map { tree ->
-                        tree.forPostanalysisSplitted(
-                            reader.fileNames,
-                            reader.alignerParameters,
-                            VDJCLibraryRegistry.getDefault()
-                        )
+                        tree.forPostanalysisSplitted(reader.fileNames, reader.libraryRegistry)
                     }
                     .filter { filter?.match(it) != false }
                     .take(limit ?: Int.MAX_VALUE)

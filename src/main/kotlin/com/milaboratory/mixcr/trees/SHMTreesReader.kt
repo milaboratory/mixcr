@@ -14,12 +14,14 @@ package com.milaboratory.mixcr.trees
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mitool.pattern.search.readObject
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VirtualCloneSet
 import com.milaboratory.mixcr.cli.ApplicationException
+import com.milaboratory.mixcr.util.BackwardCompatibilityUtils
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.onEach
@@ -53,6 +55,7 @@ class SHMTreesReader(
             val magicBytes = ByteArray(SHMTreesWriter.MAGIC_LENGTH)
             i.readFully(magicBytes)
             when (val magicString = String(magicBytes)) {
+                SHMTreesWriter.MAGIC_V4 -> BackwardCompatibilityUtils.register41_0Serializers(i.serializersManager)
                 SHMTreesWriter.MAGIC -> {}
                 else -> throw ApplicationException(
                     "Unsupported file format; .shmt file of version " + magicString +
@@ -86,7 +89,7 @@ class SHMTreesReader(
                     libraryRegistry.registerLibrary(null, name, libraryData)
             }
 
-            userGenes = IOUtil.stdVDJCPrimitivIStateInit(i, header.alignerParameters, libraryRegistry)
+            userGenes = IOUtil.stdVDJCPrimitivIStateInit(i, header.featuresToAlign, libraryRegistry)
         }
 
         input.beginRandomAccessPrimitivI(reportsStartPosition).use { pi ->
@@ -96,7 +99,7 @@ class SHMTreesReader(
         treesPosition = input.position
     }
 
-    val alignerParameters get() = header.alignerParameters
+    val alignerParameters: HasFeatureToAlign get() = header.featuresToAlign
 
     fun readTrees(): OutputPortCloseable<SHMTreeResult> =
         input.beginRandomAccessPrimitivIBlocks(SHMTreeResult::class.java, treesPosition)

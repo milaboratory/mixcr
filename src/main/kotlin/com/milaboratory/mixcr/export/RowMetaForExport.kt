@@ -11,9 +11,20 @@
  */
 package com.milaboratory.mixcr.export
 
-const val NULL = ""
+import com.milaboratory.mixcr.basictypes.GeneFeatures
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 
-interface FieldExtractor<in T : Any> {
-    val header: String
-    fun extractValue(header: RowMetaForExport, obj: T): String
+class RowMetaForExport(
+    val tagsInfo: TagsInfo
+)
+
+class HeaderForExport(
+    private val allTagsInfo: List<TagsInfo>,
+    val allFullyCoveredBy: GeneFeatures?
+) {
+    fun tagNamesWithType(tagType: TagType) = allTagsInfo.flatten()
+        .filter { it.type == tagType }
+        .map { it.name }
+        .distinct()
 }

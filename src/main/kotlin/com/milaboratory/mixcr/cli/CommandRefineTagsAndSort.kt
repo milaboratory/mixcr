@@ -339,7 +339,7 @@ object CommandRefineTagsAndSort {
 
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     val alPioState = PrimitivIOStateBuilder()
-                    IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.parameters)
+                    IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.header.featuresToAlign)
 
                     // Reusable routine to perform has-based soring of alignments by tag with specific index
                     val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> =

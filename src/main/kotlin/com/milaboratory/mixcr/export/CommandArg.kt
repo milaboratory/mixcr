@@ -11,23 +11,21 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
-
 sealed interface CommandArg<T> {
     val meta: String
-    val decodeAndValidate: FieldsCollection<*>.(MiXCRHeader, String) -> T
+    val decodeAndValidate: FieldsCollection<*>.(String) -> T
     val sPrefix: (T) -> String
 }
 
 class CommandArgRequired<T : Any>(
     override val meta: String,
-    override val decodeAndValidate: FieldsCollection<*>.(MiXCRHeader, String) -> T,
+    override val decodeAndValidate: FieldsCollection<*>.(String) -> T,
     override val sPrefix: (T) -> String
 ) : CommandArg<T>
 
 class CommandArgOptional<T>(
     override val meta: String,
     val canConsumeArg: (String) -> Boolean,
-    override val decodeAndValidate: FieldsCollection<*>.(MiXCRHeader, String) -> T,
+    override val decodeAndValidate: FieldsCollection<*>.(String) -> T,
     override val sPrefix: (T) -> String
 ) : CommandArg<T>
