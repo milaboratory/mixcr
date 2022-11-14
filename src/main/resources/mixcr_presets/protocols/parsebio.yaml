@@ -1,4 +1,5 @@
 "split-seq-vdj-3gex-base":
+  abstract: true
   pipeline:
     inheritFrom: pipeline-single-cell-shotgun
   align:
