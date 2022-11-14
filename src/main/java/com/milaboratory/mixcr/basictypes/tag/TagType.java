@@ -11,8 +11,18 @@
  */
 package com.milaboratory.mixcr.basictypes.tag;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public enum TagType {
-    Sample,
-    Cell,
-    Molecule
+    Sample("SPL", "SAMPLE"),
+    Cell("CELL"),
+    Molecule("UMI", "MIG");
+
+    public final List<String> aliases;
+
+    TagType(String... aliases) {
+        this.aliases = Collections.unmodifiableList(Arrays.asList(aliases));
+    }
 }
