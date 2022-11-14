@@ -163,24 +163,27 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     )
     var overrides: Map<String, String> = mutableMapOf()
 
-    override val inputFiles: List<Path>
+    val inputClnsFiles: List<Path>
         get() = inOut.dropLast(1)
             .flatMap { path ->
                 when {
                     path.isDirectory() -> path.listDirectoryEntries()
                     else -> listOf(path)
                 }
-            } + listOfNotNull(metadataFile)
+            }
+
+    override val inputFiles: List<Path>
+        get() = inputClnsFiles + listOfNotNull(metadataFile)
 
     override val outputFiles
         get() = listOf(output)
 
     protected val tagsInfo: TagsInfo by lazy {
-        extractTagsInfo(inputFiles)
+        extractTagsInfo(inputClnsFiles)
     }
 
     override fun validate() {
-        inputFiles.forEach { input ->
+        inputClnsFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNX)
         }
         ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.JSON_GZ)
@@ -189,7 +192,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         } catch (t: Throwable) {
             throw ValidationException(t.message ?: t.javaClass.name)
         }
-        val duplicates = inputFiles
+        val duplicates = inputClnsFiles
             .groupingBy { it }.eachCount()
             .filterValues { it > 1 }
             .keys
@@ -198,7 +201,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         metadata?.let { metadata ->
             if (!metadata.containsKey("sample"))
                 throw ValidationException("Metadata must contain 'sample' column")
-            val samples = inputFiles.map { it.toString() }
+            val samples = inputClnsFiles.map { it.toString() }
             val mapping = StringUtil.matchLists(samples, metadata["sample"]!!.map { it as String })
             if (mapping.size < samples.size || mapping.values.any { it == null }) {
                 throw ValidationException("Metadata samples does not match input file names: " + samples
@@ -261,11 +264,11 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     private fun groupSamples(): List<SamplesGroup> {
         val chainsColumn = chainsColumn()
         if (chainsColumn == null && isolationGroups.isEmpty()) {
-            return listOf(SamplesGroup(inputFiles.map { it.toString() }, emptyMap()))
+            return listOf(SamplesGroup(inputClnsFiles.map { it.toString() }, emptyMap()))
         }
         val metadata = metadata!!
         val mSamples = metadata["sample"]!!.map { it as String }
-        val qSamples = inputFiles
+        val qSamples = inputClnsFiles
         val sample2meta = StringUtil.matchLists(qSamples.map { it.toString() }, mSamples)
         for ((key, value) in sample2meta) {
             requireNotNull(value) { "Malformed metadata: can't find metadata row for sample $key" }
@@ -289,7 +292,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     }
 
     private val chainsToProcess by lazy {
-        val availableChains = ChainsUtil.allChainsFromClnx(inputFiles)
+        val availableChains = ChainsUtil.allChainsFromClnx(inputClnsFiles)
         println("The following chains present in the data: $availableChains")
         if (chains == null)
             availableChains

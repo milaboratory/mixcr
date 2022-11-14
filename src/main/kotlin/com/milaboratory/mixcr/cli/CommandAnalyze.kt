@@ -33,7 +33,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteExisting
 import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 import kotlin.system.exitProcess
 
 object CommandAnalyze {
@@ -67,7 +66,7 @@ object CommandAnalyze {
                 .type(String::class.java)
                 .paramLabel(outputLabel)
                 .hideParamSyntax(true)
-                .description("Path prefix telling mixcr where to put all output files")
+                .description("Path prefix telling mixcr where to put all output files. If arguments ends with file separator, then outputs will be written in specified directory.")
                 .build()
         )
 
@@ -209,10 +208,8 @@ object CommandAnalyze {
 
         override fun run0() {
             // Calculating output folder and output file suffix
-            var outputIsFolder = outSuffix.endsWith(File.separator)
+            val outputIsFolder = outSuffix.endsWith(File.separator)
             val outputPath = Path(outSuffix)
-            if (!outputIsFolder && outputPath.exists() && outputPath.isDirectory())
-                outputIsFolder = true
             val outputNamePrefix = if (!outputIsFolder) outputPath.fileName.toString() else ""
             val outputFolder = if (!outputIsFolder) outputPath.parent ?: Path(".") else outputPath
 

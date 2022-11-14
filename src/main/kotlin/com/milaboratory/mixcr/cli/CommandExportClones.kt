@@ -237,7 +237,7 @@ object CommandExportClones {
                             .flatMap { tagType -> header.tagsInfo.filter { it.type == tagType } }
                         val newSpitBy = (individualTagsForExport + tagsExportedByGroups).maxByOrNull { it.index }
                         if (newSpitBy != null && outputFile != null) {
-                            println("Clone splitting by $newSpitBy added automatically because -tag $newSpitBy field is present in the list.")
+                            println("Clone splitting by ${newSpitBy.name} added automatically because -tag ${newSpitBy.name} field is present in the list.")
                         }
                         newSpitBy
                     }
