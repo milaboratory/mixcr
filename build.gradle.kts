@@ -98,7 +98,7 @@ repositories {
     }
 }
 
-val milibVersion = "2.1.0"
+val milibVersion = "2.1.0-3-master"
 val repseqioVersion = "1.5.0-1-comparable_chains"
 val miplotsVersion = "1.1.0"
 val mitoolVersion = "1.3.0-1-sorting_key"
@@ -119,7 +119,7 @@ dependencies {
     api("com.milaboratory:miplots:$miplotsVersion")
 
     // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
-    implementation("com.milaboratory:milm2-jvm:2.0.0")
+    implementation("com.milaboratory:milm2-jvm:2.1.0")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

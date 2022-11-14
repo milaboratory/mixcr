@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import io.repseq.core.VDJCGene;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,10 +32,6 @@ public interface CloneReader extends MiXCRFileInfo, AutoCloseable, ClonesSupplie
     @Override
     default TagsInfo getTagsInfo() {
         return getHeader().getTagsInfo();
-    }
-
-    default VDJCAlignerParameters getAlignerParameters() {
-        return getHeader().getAlignerParameters();
     }
 
     default CloneAssemblerParameters getAssemblerParameters() {

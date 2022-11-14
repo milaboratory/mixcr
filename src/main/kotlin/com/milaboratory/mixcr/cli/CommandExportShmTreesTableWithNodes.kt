@@ -11,8 +11,11 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
+import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wrapper
 import com.milaboratory.mixcr.trees.SHMTreesReader
@@ -53,10 +56,20 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
     @Option(
         description = ["Exclude nodes that was reconstructed by algorithm"],
-        names = ["--onlyObserved"],
+        names = ["--only-observed"],
         order = OptionsOrder.main + 10_100
     )
     var onlyObserved: Boolean = false
+
+    @Suppress("unused")
+    @Option(
+        names = ["--onlyObserved"],
+        hidden = true
+    )
+    fun setOnlyObservedDeprecated(value: Boolean) {
+        logger.warn("--onlyObserved is deprecated, use --only-observed instead")
+        onlyObserved = value
+    }
 
     override val outputFiles
         get() = listOfNotNull(out)
@@ -66,17 +79,23 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             InfoWriter.create(
                 out,
-                SplittedTreeNodeFieldsExtractorsFactory.createExtractors(addedFields, reader.header),
+                SplittedTreeNodeFieldsExtractorsFactory.createExtractors(
+                    addedFields,
+                    HeaderForExport(
+                        reader.cloneSetInfos.map { it.tagsInfo },
+                        reader.header.allFullyCoveredBy
+                    )
+                ),
                 !noHeader,
-            ).use { output ->
+            ) {
+                val datasetId = it.node.clone?.datasetId ?: return@create RowMetaForExport(TagsInfo.NO_TAGS)
+                RowMetaForExport(reader.cloneSetInfos[datasetId].tagsInfo)
+            }.use { output ->
                 reader.readTrees()
                     .asSequence()
+                    .filter { treeFilter?.match(it.treeId) != false }
                     .map {
-                        it.forPostanalysis(
-                            reader.fileNames,
-                            reader.alignerParameters,
-                            reader.libraryRegistry
-                        )
+                        it.forPostanalysis(reader.fileNames, reader.libraryRegistry)
                     }
                     .filter { treeFilter?.match(it) != false }
                     .flatMap { shmTreeForPostanalysis ->

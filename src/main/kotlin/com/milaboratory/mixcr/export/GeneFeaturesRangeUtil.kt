@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
@@ -39,7 +38,7 @@ object GeneFeaturesRangeUtil {
             "For example, `$command FR3Begin FR4End` will export `${nFeatureField.cmdArgName} FR3Begin`, ${nFeatureField.cmdArgName} CDR3Begin`, ${nFeatureField.cmdArgName} CDR3End` and `${nFeatureField.cmdArgName} FR4End`.%n" +
             "By default, boundaries will be got from analysis parameters if possible or `FR1Begin FR4End` otherwise."
 
-    fun MiXCRHeader.geneFeaturesBetweenArgs(
+    fun HeaderForExport.geneFeaturesBetweenArgs(
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<Array<String>> = geneFeaturesBetween(from, to)
@@ -47,7 +46,7 @@ object GeneFeaturesRangeUtil {
         .map { arrayOf(GeneFeature.encode(it)) }
 
     fun FieldsCollection<*>.warnIfFeatureNotCovered(
-        header: MiXCRHeader,
+        header: HeaderForExport,
         from: ReferencePoint?,
         to: ReferencePoint?
     ) {
@@ -59,7 +58,7 @@ object GeneFeaturesRangeUtil {
     }
 
     fun FieldsCollection<*>.warnIfFeatureNotCovered(
-        header: MiXCRHeader,
+        header: HeaderForExport,
         feature: GeneFeature
     ) {
         if (header.allFullyCoveredBy != null) {
@@ -69,20 +68,20 @@ object GeneFeaturesRangeUtil {
         }
     }
 
-    private fun MiXCRHeader.geneFeaturesBetween(
+    private fun HeaderForExport.geneFeaturesBetween(
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<List<GeneFeature>> = referencePointsBetweenOrDefault(from, to)
         .map { it.zipWithNext { a, b -> GeneFeature(a, b) } }
 
-    fun MiXCRHeader.referencePointsToExport(
+    fun HeaderForExport.referencePointsToExport(
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<Array<String>> = referencePointsBetweenOrDefault(from, to)
         .flatten()
         .map { arrayOf(ReferencePoint.encode(it, true)) }
 
-    private fun MiXCRHeader.referencePointsBetweenOrDefault(
+    private fun HeaderForExport.referencePointsBetweenOrDefault(
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<List<ReferencePoint>> = when {

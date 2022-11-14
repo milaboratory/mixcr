@@ -60,7 +60,7 @@ public final class CloneSetOverlap {
                             ? Runtime.getRuntime().maxMemory() / 4L /* 1 Gb */
                             : 1 << 28 /* 256 Mb */;
             PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
-            IOUtil.registerGeneReferences(stateBuilder, readers.get(0).getUsedGenes(), readers.get(0).getAlignerParameters());
+            IOUtil.registerGeneReferences(stateBuilder, readers.get(0).getUsedGenes(), readers.get(0).getHeader().getFeaturesToAlign());
             UnorderedMerger<Clone> merger = new UnorderedMerger<>(
                     Clone.class,
                     readers.stream()

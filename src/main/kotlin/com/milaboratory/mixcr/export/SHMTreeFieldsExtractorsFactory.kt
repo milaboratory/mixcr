@@ -168,7 +168,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
 private fun baseGeneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeature> =
     CommandArgRequired(
         "<gene_feature>",
-        { _, arg ->
+        { arg ->
             GeneFeature.parse(arg).also {
                 require(!it.isComposite) {
                     "$cmdArgName doesn't support composite features"

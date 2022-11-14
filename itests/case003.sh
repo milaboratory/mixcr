@@ -8,7 +8,7 @@ mixcr analyze generic-tcr-amplicon --dry-run \
   --floating-left-alignment-boundary \
   --floating-right-alignment-boundary J \
   --add-step assembleContigs \
-  test_R1.fastq test_R2.fastq case3_1
+  test_R1.fastq test_R2.fastq case3
 
 mixcr analyze generic-tcr-amplicon \
   --species hs \
@@ -16,7 +16,7 @@ mixcr analyze generic-tcr-amplicon \
   --floating-left-alignment-boundary \
   --floating-right-alignment-boundary J \
   --add-step assembleContigs \
-  test_R1.fastq test_R2.fastq case3_1
+  test_R1.fastq test_R2.fastq case3
 
-[[ -f case3_1.clna ]] || exit 1
+[[ -f case3.clna ]] || exit 1
 

@@ -95,6 +95,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
             magicString = new String(magicBytes, StandardCharsets.US_ASCII);
             switch (magicString) {
                 case ClnAWriter.MAGIC_V9: // see below for custom serializers registration
+                case ClnAWriter.MAGIC_V10: // see below for custom serializers registration
                 case ClnAWriter.MAGIC:
                     break;
                 default:
@@ -149,6 +150,10 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
             switch (magicString) {
                 case ClnAWriter.MAGIC_V9:
                     BackwardCompatibilityUtils.register41rc2Serializers(pi.getSerializersManager());
+                    break;
+                case ClnAWriter.MAGIC_V10:
+                    BackwardCompatibilityUtils.register41_0Serializers(pi.getSerializersManager());
+                    break;
                 case ClnAWriter.MAGIC:
                     break;
                 default:
@@ -170,7 +175,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
                 }
             }
 
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.header.getAlignerParameters(), libraryRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, this.header.getFeaturesToAlign(), libraryRegistry);
         }
 
         // read reports from footer

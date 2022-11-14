@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.basictypes
 
 import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 
@@ -20,10 +21,13 @@ interface CloneSetInfo : MiXCRFileInfo, HasFeatureToAlign {
 
     val totalTagCounts: TagCount?
 
+    val tagsInfo: TagsInfo
+        get() = header.tagsInfo
+
     fun getTagDiversity(level: Int): Int
 
     override fun getFeatureToAlign(geneType: GeneType): GeneFeature? =
-        header.alignerParameters.getFeatureToAlign(geneType)
+        header.featuresToAlign.getFeatureToAlign(geneType)
 
     val assemblingFeatures: Array<GeneFeature>
         get() = header.assemblerParameters!!.assemblingFeatures

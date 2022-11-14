@@ -239,7 +239,7 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
 
             output.put(mAlignment.shiftIndelsAtHomopolymers(geneTypesToShiftIndels));
 
-            // Saving alignment that where merge to prevent it's use as left part
+            // Saving alignment that where merge to prevent its use as left part
             alreadyMergedIds.add(alignment.getAlignmentsIndex());
             alreadyMergedIds.add(searchResult.KMerInfo.alignments.getAlignmentsIndex());
         }

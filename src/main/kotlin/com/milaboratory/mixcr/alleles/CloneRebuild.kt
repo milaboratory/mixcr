@@ -55,7 +55,7 @@ class CloneRebuild(
     assemblingFeatures: GeneFeatures,
     private val threads: Int,
     cloneFactoryParameters: CloneFactoryParameters,
-    featuresToAlign: EnumMap<GeneType, GeneFeature>
+    featuresToAlign: Map<GeneType, GeneFeature>
 ) {
     private val cloneFactory = CloneFactory(
         cloneFactoryParameters,

@@ -76,6 +76,10 @@ public class ClnsReader implements CloneReader, AutoCloseable {
             switch (magicString) {
                 case MAGIC_V14:
                     BackwardCompatibilityUtils.register41rc2Serializers(i.getSerializersManager());
+                    break;
+                case MAGIC_V15:
+                    BackwardCompatibilityUtils.register41_0Serializers(i.getSerializersManager());
+                    break;
                 case MAGIC:
                     break;
                 default:
@@ -111,7 +115,7 @@ public class ClnsReader implements CloneReader, AutoCloseable {
                 }
             }
 
-            usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, header.getAlignerParameters(), libraryRegistry);
+            usedGenes = IOUtil.stdVDJCPrimitivIStateInit(i, header.getFeaturesToAlign(), libraryRegistry);
         }
 
         try (PrimitivI pi = this.input.beginRandomAccessPrimitivI(reportsStartPosition)) {

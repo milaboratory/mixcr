@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneType
@@ -88,7 +87,7 @@ abstract class FieldExtractorsFactory<T : Any> {
     /** Creates field extractors from field descriptions */
     open fun createExtractors(
         fields: List<ExportFieldDescription>,
-        header: MiXCRHeader
+        header: HeaderForExport
     ): List<FieldExtractor<T>> =
         fields
             .flatMap { fieldDescription ->
@@ -199,7 +198,10 @@ abstract class FieldExtractorsFactoryWithPresets<T : Any> : FieldExtractorsFacto
         )
     }
 
-    override fun createExtractors(fields: List<ExportFieldDescription>, header: MiXCRHeader): List<FieldExtractor<T>> =
+    override fun createExtractors(
+        fields: List<ExportFieldDescription>,
+        header: HeaderForExport
+    ): List<FieldExtractor<T>> =
         super.createExtractors(fields.ifEmpty { presets[defaultPreset]!! }, header)
 
     private fun parseFile(file: String): List<ExportFieldDescription> = buildList {

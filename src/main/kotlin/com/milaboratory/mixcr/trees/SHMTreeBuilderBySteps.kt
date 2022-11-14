@@ -58,7 +58,6 @@ import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGeneId
 import java.io.PrintStream
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.Supplier
 import kotlin.math.max
 import kotlin.math.min
 
@@ -333,7 +332,7 @@ internal class SHMTreeBuilderBySteps(
                 clonesNotInClusters: () -> Sequence<CloneWithMutationsFromVJGermline>
             ): StepResult = attachClonesByDistanceChange(
                 originalTrees,
-                clonesNotInClusters,
+                clonesNotInClusters(),
                 stepParameters
             )
         }
@@ -349,7 +348,7 @@ internal class SHMTreeBuilderBySteps(
                 clonesNotInClusters: () -> Sequence<CloneWithMutationsFromVJGermline>
             ): StepResult = attachClonesByNDN(
                 originalTrees,
-                clonesNotInClusters,
+                clonesNotInClusters(),
                 stepParameters
             )
         }
@@ -371,7 +370,7 @@ internal class SHMTreeBuilderBySteps(
     private fun buildTreeTopParts(clones: Sequence<CloneWithMutationsFromVJGermline>): StepResult {
         val clusterizationAlgorithm = initialStep.algorithm
         //use only clones that are at long distance from any germline
-        val rebasedClones = clones.toList()
+        val rebasedClones = clones
             .filterNot {
                 hasVJPairThatCloseToGermline(it.cloneWrapper, clusterizationAlgorithm.commonMutationsCountForClustering)
             }
@@ -517,13 +516,13 @@ internal class SHMTreeBuilderBySteps(
      */
     private fun attachClonesByNDN(
         originalTrees: List<TreeWithMetaBuilder>,
-        clonesNotInClusters: Supplier<Sequence<CloneWithMutationsFromVJGermline>>,
+        clones: Sequence<CloneWithMutationsFromVJGermline>,
         parameters: AttachClonesByNDN
     ): StepResult {
         if (originalTrees.isEmpty()) return StepResult.empty
         val decisions = mutableMapOf<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>()
         val resultTrees = originalTrees.map { it.copy() }
-        clonesNotInClusters.get()
+        clones
             .filter { clone -> clone.mutations.VJMutationsCount < initialStep.algorithm.commonMutationsCountForClustering }
             .forEach { clone ->
                 //find a tree that closed to the clone by NDN of MRCA
@@ -571,13 +570,13 @@ internal class SHMTreeBuilderBySteps(
      */
     private fun attachClonesByDistanceChange(
         originalTrees: List<TreeWithMetaBuilder>,
-        clonesNotInClustersSupplier: () -> Sequence<CloneWithMutationsFromVJGermline>,
+        clones: Sequence<CloneWithMutationsFromVJGermline>,
         parameters: AttachClonesByDistanceChange
     ): StepResult {
         if (originalTrees.isEmpty()) return StepResult.empty
         val result = originalTrees.map { it.copy() }
         val decisions = mutableMapOf<CloneWrapper.ID, TreeWithMetaBuilder.DecisionInfo>()
-        val clonesNotInClusters = clonesNotInClustersSupplier()
+        val clonesNotInClusters = clones
             .sortedByDescending { it.mutations.VJMutationsCount }
         //try to add clones as nodes, more mutated first, so we build a tree from top to bottom
         clonesNotInClusters.forEach { clone ->
