@@ -10,7 +10,7 @@ mixcr analyze generic-tcr-amplicon \
   --add-step assembleContigs \
   test_{{R}}.fastq result_1
 
-[[ -f result_1.clna ]] || exit 1
+[[ -f result_1.contigs.clns ]] || exit 1
 
 mixcr align -p generic-tcr-amplicon \
   --species hs \

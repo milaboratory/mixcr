@@ -14,10 +14,18 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.PathPatternExpandException
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.mixcr.*
-import picocli.CommandLine.*
+import com.milaboratory.mixcr.AnyMiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRPipeline
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -194,9 +202,7 @@ object CommandAnalyze {
             }
             pathsForNotAligned.validate(inputFileGroups.inputType)
             inputFileGroups.allFiles.forEach { input ->
-                if (!input.exists()) {
-                    throw ValidationException("Input file $input doesn't exist.")
-                }
+                ValidationException.requireFileExists(input)
             }
             ValidationException.requireNoExtension(outSuffix)
         }

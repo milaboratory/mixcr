@@ -170,7 +170,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                     path.isDirectory() -> path.listDirectoryEntries()
                     else -> listOf(path)
                 }
-            }
+            } + listOfNotNull(metadataFile)
 
     override val outputFiles
         get() = listOf(output)

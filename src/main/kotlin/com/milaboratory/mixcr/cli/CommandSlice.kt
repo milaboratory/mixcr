@@ -102,7 +102,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
     }
 
     override val inputFiles
-        get() = listOf(input)
+        get() = listOf(input) + listOfNotNull(idsOptions.fileWithIds)
 
     override val outputFiles
         get() = listOf(out)

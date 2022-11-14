@@ -15,12 +15,19 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.io.path.exists
 
 class ValidationException(
     override val message: String,
     val printHelp: Boolean = false
 ) : RuntimeException() {
     companion object {
+        fun requireFileExists(input: Path?, message: (Path) -> String = { "Input file $it doesn't exist." }) {
+            if (input != null && !input.exists()) {
+                throw ValidationException(message(input))
+            }
+        }
+
         fun requireFileType(path: Path?, fileType: InputFileType, vararg additional: InputFileType) {
             requireFileType(path, arrayOf(fileType) + additional)
         }

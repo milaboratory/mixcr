@@ -209,6 +209,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     var buildFrom: Path? = null
         set(value) {
             ValidationException.requireFileType(value, InputFileType.TSV)
+            ValidationException.requireFileExists(value)
             field = value
         }
 

@@ -56,6 +56,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         var input: Path? = null
             set(value) {
                 ValidationException.requireFileType(value, InputFileType.VDJCA, InputFileType.CLNX)
+                ValidationException.requireFileExists(value)
                 field = value
             }
     }

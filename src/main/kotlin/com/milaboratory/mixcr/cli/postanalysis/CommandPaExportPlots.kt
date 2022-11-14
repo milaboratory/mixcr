@@ -41,6 +41,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     var metadata: Path? = null
         set(value) {
             ValidationException.requireFileType(value, InputFileType.XSV)
+            ValidationException.requireFileExists(value)
             field = value
         }
 
