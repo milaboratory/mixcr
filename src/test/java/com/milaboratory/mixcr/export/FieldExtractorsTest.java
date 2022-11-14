@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.export;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import com.milaboratory.mixcr.tests.MiXCRTestUtils;
@@ -26,8 +27,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
-
-import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
+import java.util.Collections;
 
 public class FieldExtractorsTest {
     @Test
@@ -54,7 +54,7 @@ public class FieldExtractorsTest {
         final FieldExtractor<? super VDJCAlignments> extractor =
                 Arrays.stream(VDJCAlignmentsFieldsExtractorsFactory.INSTANCE.getFields())
                         .filter(it -> it.getCmdArgName().equals("-defaultAnchorPoints"))
-                        .flatMap(it -> it.createFields(dummyHeader(), new String[0]).stream())
+                        .flatMap(it -> it.createFields(new HeaderForExport(Collections.emptyList(), null), new String[0]).stream())
                         .findFirst()
                         .orElseThrow(IllegalArgumentException::new);
 
@@ -82,7 +82,7 @@ public class FieldExtractorsTest {
                     System.out.println();
                 }
 
-                String val = extractor.extractValue(al);
+                String val = extractor.extractValue(new RowMetaForExport(TagsInfo.NO_TAGS), al);
 
                 if (print)
                     System.out.println(val);

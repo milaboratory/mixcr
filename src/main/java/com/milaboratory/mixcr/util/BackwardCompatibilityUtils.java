@@ -21,4 +21,8 @@ public class BackwardCompatibilityUtils {
     public static void register41rc2Serializers(SerializersManager sm) {
         sm.registerCustomSerializer(MiXCRHeader.class, new MiXCRHeader.SerializerV1Impl());
     }
+
+    public static void register41_0Serializers(SerializersManager sm) {
+        sm.registerCustomSerializer(MiXCRHeader.class, new MiXCRHeader.SerializerV2Impl());
+    }
 }

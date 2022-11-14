@@ -578,7 +578,7 @@ object ExportMixins {
             "-aaFeature" -> "-aaFeatureImputed"
             "-allNFeatures" -> "-allNFeaturesImputed"
             "-allNFeaturesWithMinQuality" -> "-allNFeaturesImputedWithMinQuality"
-            "-allAaFeatures" -> "-allAaFeaturesImputed"
+            "-allAAFeatures" -> "-allAAFeaturesImputed"
             else -> field
         }
 
@@ -588,7 +588,7 @@ object ExportMixins {
             "-aaFeatureImputed" -> "-aaFeature"
             "-allNFeaturesImputed" -> "-allNFeatures"
             "-allNFeaturesImputedWithMinQuality" -> "-allNFeaturesWithMinQuality"
-            "-allAaFeaturesImputed" -> "-allAaFeatures"
+            "-allAAFeaturesImputed" -> "-allAAFeatures"
             else -> field
         }
 

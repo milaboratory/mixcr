@@ -21,23 +21,26 @@ import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.io.CompressionType
-import com.milaboratory.core.io.sequence.*
+import com.milaboratory.core.io.sequence.SequenceRead
+import com.milaboratory.core.io.sequence.SequenceReadUtil
+import com.milaboratory.core.io.sequence.SequenceReaderCloseable
+import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
-import com.milaboratory.core.sequence.NSQTuple
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
-import com.milaboratory.mitool.helpers.*
+import com.milaboratory.mitool.helpers.FileGroup
+import com.milaboratory.mitool.helpers.PathPatternExpandException
 import com.milaboratory.mitool.helpers.map
+import com.milaboratory.mitool.helpers.mapUnchunked
+import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.pattern.search.*
-import com.milaboratory.mitool.pattern.search.ReadSearchPlan.Companion.create
-import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mitool.use
 import com.milaboratory.mixcr.*
 import com.milaboratory.mixcr.AlignMixins.LimitInput
@@ -45,21 +48,28 @@ import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.basictypes.tag.*
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.*
-import com.milaboratory.mixcr.cli.CommandAlign.Cmd.ProcessingBundleStatus.*
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundle
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.*
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.primitivio.*
+import com.milaboratory.primitivio.buffered
+import com.milaboratory.primitivio.chunked
+import com.milaboratory.primitivio.forEach
+import com.milaboratory.primitivio.mapChunksInParallel
+import com.milaboratory.primitivio.ordered
+import com.milaboratory.primitivio.unchunked
 import com.milaboratory.util.*
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.*
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
-import jetbrains.datalore.plot.config.asMutable
 import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
@@ -67,9 +77,9 @@ import java.io.FileInputStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.atomic.AtomicLong
-import java.util.regex.Matcher
 import java.util.regex.Pattern
+import kotlin.collections.component1
+import kotlin.collections.set
 import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.math.max
@@ -94,6 +104,36 @@ object CommandAlign {
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
     ) : MiXCRParams {
         override val command get() = MiXCRCommandDescriptor.align
+    }
+
+    class InputFileGroups(
+        val fileGroups: List<FileGroup>
+    ) {
+        val allFiles: List<Path> = fileGroups.flatMap { it.files }
+
+        /** List of tags (keys) available for each file group (i.e. CELL) */
+        val tags: List<String> = fileGroups.first().tags.map { it.first }
+
+        val inputType: Cmd.InputType by lazy {
+            val first = fileGroups.first().files
+            if (first.size == 1) {
+                val f0 = first[0]
+                when {
+                    f0.matches(InputFileType.FASTQ) -> SingleEndFastq
+                    f0.matches(InputFileType.FASTA) -> Fasta
+                    f0.matches(InputFileType.BAM) -> BAM
+                    else -> throw ValidationException("Unknown file type: $f0")
+                }
+            } else if (first.size == 2) {
+                val f0 = first[0]
+                val f1 = first[0]
+                if (f0.matches(InputFileType.FASTQ) && f0.matches(InputFileType.FASTQ))
+                    PairedEndFastq
+                else
+                    throw ValidationException("Only fastq supports paired end input, can't recognise: $f0 + $f1")
+            } else
+                throw ValidationException("Too many inputs")
+        }
     }
 
     class PathsForNotAligned {
@@ -140,9 +180,39 @@ object CommandAlign {
                 ValidationException.requireFileType(value, InputFileType.FASTQ)
                 field = value
             }
+
+        fun validate(inputType: Cmd.InputType) {
+            fun checkFailedReadsOptions(optionPrefix: String, r1: Path?, r2: Path?) {
+                if (r1 != null) {
+                    when {
+                        r2 == null && inputType == PairedEndFastq -> throw ValidationException(
+                            "Option ${optionPrefix}-R2 is not specified but paired-end input data provided."
+                        )
+
+                        r2 != null && inputType == SingleEndFastq -> throw ValidationException(
+                            "Option ${optionPrefix}-R2 is specified but single-end input data provided."
+                        )
+
+                        !inputType.isFastq -> throw ValidationException(
+                            "Option ${optionPrefix}-* options are supported for fastq data input only."
+                        )
+                    }
+                }
+            }
+            checkFailedReadsOptions(
+                "--not-aligned",
+                notAlignedReadsR1,
+                notAlignedReadsR2
+            )
+            checkFailedReadsOptions(
+                "--not-parsed",
+                notParsedReadsR1,
+                notParsedReadsR2
+            )
+        }
     }
 
-    fun checkInputs(paths: List<Path>) {
+    fun checkInputTemplates(paths: List<Path>) {
         when (paths.size) {
             1 -> ValidationException.requireFileType(
                 paths[0],
@@ -163,8 +233,6 @@ object CommandAlign {
     const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
 
     private const val outputLabel = "alignments.vdjca"
-
-    private const val cellSplitGroupLabel = "CELLSPLIT"
 
     fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(Cmd::class.java)
         .addPositional(
@@ -408,7 +476,18 @@ object CommandAlign {
 
         private val outputFile get() = inOut.last()
 
-        override val inputFiles get() = inOut.dropLast(1)
+        private val inputTemplates get() = inOut.dropLast(1)
+
+        /** I.e. list of mate-pair files */
+        private val inputFileGroups: InputFileGroups by lazy {
+            try {
+                InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
+            } catch (e: PathPatternExpandException) {
+                throw ValidationException(e.message!!)
+            }
+        }
+
+        override val inputFiles get() = inputFileGroups.allFiles
 
         override val outputFiles get() = listOf(outputFile)
 
@@ -481,13 +560,8 @@ object CommandAlign {
             VDJCLibraryRegistry.getDefault().getLibrary(libraryName, cmdParams.species)
         }
 
-        /** I.e. list of mate-pair files */
-        private val inputFilesExpanded: List<FileGroup> by lazy {
-            inputFiles.parseAndRunAndCorrelateFSPattern()
-        }
-
         private val inputHash: String? by lazy {
-            LightFileDescriptor.calculateCommutativeLightHash(inputFilesExpanded.map { it.files }.flatten())
+            LightFileDescriptor.calculateCommutativeLightHash(inputFileGroups.allFiles)
                 ?.toHexString()
         }
 
@@ -496,27 +570,6 @@ object CommandAlign {
             PairedEndFastq(true, true),
             Fasta(false, false),
             BAM(true, false)
-        }
-
-        private val inputType: InputType by lazy {
-            val first = inputFilesExpanded.first().files
-            if (first.size == 1) {
-                val f0 = first[0]
-                when {
-                    f0.matches(InputFileType.FASTQ) -> SingleEndFastq
-                    f0.matches(InputFileType.FASTA) -> Fasta
-                    f0.matches(InputFileType.BAM) -> BAM
-                    else -> throw ValidationException("Unknown file type: $f0")
-                }
-            } else if (first.size == 2) {
-                val f0 = first[0]
-                val f1 = first[0]
-                if (f0.matches(InputFileType.FASTQ) && f0.matches(InputFileType.FASTQ))
-                    PairedEndFastq
-                else
-                    throw ValidationException("Only fastq supports paired end input, can't recognise: $f0 + $f1")
-            } else
-                throw ValidationException("Too many inputs")
         }
 
         abstract class FastqGroupReader(fileGroups: List<FileGroup>) :
@@ -574,7 +627,7 @@ object CommandAlign {
             override fun getProgress(): Double {
                 if (currentReaderIdx == -1)
                     return 0.0
-                return (1.0 * currentReaderIdx / readerCount) + (currentReader as CanReportProgress).progress
+                return (currentReaderIdx + (currentReader as CanReportProgress).progress) / readerCount
             }
 
             override fun isFinished() = id == -1L
@@ -593,38 +646,39 @@ object CommandAlign {
                 )
             }
 
-            return when (inputType) {
+            return when (inputFileGroups.inputType) {
                 BAM -> {
-                    if (inputFilesExpanded.size != 1)
+                    if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
-                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded[0].files)
-                    BAMReader(inputFilesExpanded[0].files.toTypedArray(), cmdParams.bamDropNonVDJ, true)
+                    val files = inputFileGroups.fileGroups.first().files
+                    MiXCRMain.lm.reportApplicationInputs(files)
+                    BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, true)
                         .map { ProcessingBundle(it) }
-
                 }
 
                 Fasta -> {
-                    if (inputFilesExpanded.size != 1)
+                    if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
-                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFilesExpanded[0].files[0]))
+                    val inputFile = inputFileGroups.fileGroups.first().files.first()
+                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFile))
                     FastaSequenceReaderWrapper(
-                        FastaReader(inputFilesExpanded[0].files[0].toFile(), NucleotideSequence.ALPHABET),
+                        FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         true
                     )
                         .map { ProcessingBundle(it) }
                 }
 
                 SingleEndFastq -> {
-                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.map { it.files[0] })
-                    object : FastqGroupReader(inputFilesExpanded) {
+                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles)
+                    object : FastqGroupReader(inputFileGroups.fileGroups) {
                         override fun nextReader(fileGroup: FileGroup) =
                             fastqReaderFactory(fileGroup.files[0]) as SequenceReaderCloseable<SequenceRead>
                     }
                 }
 
                 PairedEndFastq -> {
-                    MiXCRMain.lm.reportApplicationInputs(inputFilesExpanded.map { it.files }.flatten())
-                    object : FastqGroupReader(inputFilesExpanded) {
+                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles)
+                    object : FastqGroupReader(inputFileGroups.fileGroups) {
                         override fun nextReader(fileGroup: FileGroup) =
                             PairedFastqReader(
                                 fastqReaderFactory(fileGroup.files[0]),
@@ -635,42 +689,10 @@ object CommandAlign {
             }
         }
 
-        override fun inputsMustExist(): Boolean = false
-
         override fun validate() {
-            if (inOut.size > 3) throw ValidationException("Too many input files.")
-            if (inOut.size < 2) throw ValidationException("Output file not specified.")
-
-            checkInputs(inputFiles)
+            checkInputTemplates(inputTemplates)
             ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
-
-            fun checkFailedReadsOptions(optionPrefix: String, r1: Path?, r2: Path?) {
-                if (r1 != null) {
-                    when {
-                        r2 == null && inputType == PairedEndFastq -> throw ValidationException(
-                            "Option ${optionPrefix}-R2 is not specified but paired-end input data provided."
-                        )
-
-                        r2 != null && inputType == SingleEndFastq -> throw ValidationException(
-                            "Option ${optionPrefix}-R2 is specified but single-end input data provided."
-                        )
-
-                        !inputType.isFastq -> throw ValidationException(
-                            "Option ${optionPrefix}-* options are supported for fastq data input only."
-                        )
-                    }
-                }
-            }
-            checkFailedReadsOptions(
-                "--not-aligned",
-                pathsForNotAligned.notAlignedReadsR1,
-                pathsForNotAligned.notAlignedReadsR2
-            )
-            checkFailedReadsOptions(
-                "--not-parsed",
-                pathsForNotAligned.notParsedReadsR1,
-                pathsForNotAligned.notParsedReadsR2
-            )
+            pathsForNotAligned.validate(inputFileGroups.inputType)
 
             if (cmdParams.library.contains("/") || cmdParams.library.contains("\\")) {
                 val libraryLocations = Paths.get(
@@ -713,11 +735,10 @@ object CommandAlign {
             }
 
             // Tags
-            val tagsExtractor = getTagsExtractor()
+            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups.tags)
 
             // true if final NSQTuple will have two reads, false otherwise
-            val pairedPayload =
-                if (tagsExtractor.readShortcuts != null) tagsExtractor.readShortcuts.size == 2 else inputType.pairedRecords
+            val pairedPayload = tagsExtractor.pairedPatternPayload ?: inputFileGroups.inputType.pairedRecords
 
             // Creating aligner
             val aligner = VDJCAligner.createAligner(
@@ -787,6 +808,7 @@ object CommandAlign {
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         TagsInfo(0, *tagsExtractor.tagInfos.toTypedArray()),
                         aligner.parameters,
+                        aligner.parameters.featuresToAlignMap,
                         null,
                         null,
                         null
@@ -933,29 +955,10 @@ object CommandAlign {
             }
         }
 
-        enum class ProcessingBundleStatus {
-            Good,
-            NotParsed,
-            NotAligned,
-        }
-
-        data class ProcessingBundle(
-            val read: SequenceRead,
-            val fileTags: List<Pair<String, String>> = emptyList(),
-            val originalReadId: Long = read.id,
-            val sequence: NSQTuple = read.toTuple(),
-            val tags: TagTuple = TagTuple.NO_TAGS,
-            val alignment: VDJCAlignments? = null,
-            val status: ProcessingBundleStatus = Good,
-        ) {
-            val ok get() = status == Good
-            fun mapSequence(mapping: (NSQTuple) -> NSQTuple) = copy(sequence = mapping(sequence))
-        }
-
         @Suppress("UNCHECKED_CAST")
         private fun failedReadsWriter(r1: Path?, r2: Path?): SequenceWriter<SequenceRead>? = when (r1) {
             null -> null
-            else -> when (inputType) {
+            else -> when (inputFileGroups.inputType) {
                 PairedEndFastq -> PairedFastqWriter(r1.toFile(), r2!!.toFile()) as SequenceWriter<SequenceRead>
                 SingleEndFastq -> SingleFastqWriter(r1.toFile()) as SequenceWriter<SequenceRead>
                 else -> throw ApplicationException(
@@ -969,255 +972,6 @@ object CommandAlign {
             else -> VDJCAlignmentsWriter(
                 outputFile, max(1, threads.value / 8),
                 VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
-            )
-        }
-
-        private val readGroupPattern = Regex("R\\d+")
-
-        private fun getTagsExtractor(): TagsExtractor {
-            var plan: ReadSearchPlan? = null
-            val readTags = mutableListOf<String>()
-            var readTagShortcuts: List<ReadTagShortcut>? = null
-            var tagExtractors = mutableListOf<TagExtractorWithInfo>()
-
-            if (cmdParams.tagPattern != null) {
-                val searchSettings = ReadSearchSettings(
-                    SearchSettings.Default.copy(bitBudget = cmdParams.tagMaxBudget),
-                    if (cmdParams.tagUnstranded) ReadSearchMode.DirectAndReversed else ReadSearchMode.Direct
-                )
-                plan = create(cmdParams.tagPattern!!, searchSettings)
-                for (tagName in plan.allTags)
-                    if (tagName.matches(readGroupPattern))
-                        readTags += tagName
-                    else {
-                        val type = detectTagTypeByName(tagName) ?: continue
-                        tagExtractors += TagExtractorWithInfo(
-                            PatternTag(plan.tagShortcut(tagName)),
-                            TagInfo(type, TagValueType.SequenceAndQuality, tagName, 0 /* will be changed below */)
-                        )
-                    }
-
-                readTagShortcuts = readTags.map { name -> plan.tagShortcut(name) }
-                if (readTagShortcuts.isEmpty())
-                    throw ValidationException("Tag pattern has no read (payload) groups, nothing to align.")
-                if (readTagShortcuts.size > 2) throw ValidationException(
-                    "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported."
-                )
-            }
-
-            val fileTags = inputFilesExpanded.first().tags.map { it.first }
-
-            if (cmdParams.readIdAsCellTag) {
-                if (fileTags != listOf(cellSplitGroupLabel))
-                    throw ValidationException(
-                        "Exactly one cell splitting group is required in file name for " +
-                                "read-id-as-cell-tag feature to work (i.e. \"my_file_R{{$cellSplitGroupLabel:n}}.fastq.gz\")"
-                    )
-                tagExtractors += TagExtractorWithInfo(
-                    ReadIndex,
-                    TagInfo(TagType.Cell, TagValueType.NonSequence, "READ_IDX", 0 /* will be changed below */)
-                )
-            }
-
-            tagExtractors = tagExtractors
-                .sortedBy { it.tagInfo }
-                .mapIndexed { i, tag -> tag.withInfoIndex(i) }
-                .asMutable()
-
-            if (tagExtractors.size != 0) {
-                println("The following tags and their roles were recognised:")
-                if (readTagShortcuts != null)
-                    println("  Payload tags: " + readTags.joinToString(", "))
-
-                tagExtractors
-                    .groupBy { it.tagInfo.type }
-                    .forEach { (tagType: TagType, extractors: List<TagExtractorWithInfo>) ->
-                        println("  $tagType tags: " + extractors.joinToString(", ") { it.tagInfo.name })
-                    }
-            }
-
-            return TagsExtractor(
-                plan, readTagShortcuts,
-                emptyList(),
-                tagExtractors
-                    .sortedBy { it.tagInfo }
-                    .mapIndexed { i, tag -> tag.withInfoIndex(i) }
-            )
-        }
-
-        private sealed interface TagExtractor {
-            fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ): TagValue
-        }
-
-        private data class PatternTag(val shortcut: ReadTagShortcut) : TagExtractor {
-            override fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ) = SequenceAndQualityTagValue(patternMatch!!.getTagValue(shortcut).value)
-        }
-
-        private data class FileTag(val tagName: String) : TagExtractor {
-            override fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ) = StringTagValue(fileTags.find { it.first == tagName }!!.second)
-        }
-
-        private data class HeaderTag(val patternIdx: Int, val groupName: String) : TagExtractor {
-            override fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ) = StringTagValue(headerMatches[patternIdx].group(groupName))
-        }
-
-        private object ReadIndex : TagExtractor {
-            override fun extract(
-                originalReadId: Long,
-                fileTags: List<Pair<String, String>>,
-                headerMatches: List<Matcher>,
-                patternMatch: MicRecord?
-            ) = LongTagValue(originalReadId)
-        }
-
-        private data class HeaderPattern(val patter: Pattern, val readIndices: List<Int>?) {
-            /** Returns non-null result if all the patterns were matched */
-            fun parse(read: SequenceRead): Matcher? {
-                for (i in (readIndices ?: (0 until read.numberOfReads()))) {
-                    val matcher = patter.matcher(read.getRead(i).description)
-                    if (matcher.find())
-                        return matcher
-                }
-                return null
-            }
-        }
-
-        private data class TagExtractorWithInfo(val tagExtractor: TagExtractor, val tagInfo: TagInfo) {
-            fun withInfoIndex(idx: Int) = copy(tagInfo = tagInfo.withIndex(idx))
-        }
-
-        private class TagsExtractor(
-            /** Not null if tag pattern was specified */
-            private val plan: ReadSearchPlan?,
-            /** Not null if tag pattern was specified */
-            val readShortcuts: List<ReadTagShortcut>?,
-            private val headerPatterns: List<HeaderPattern>,
-            val tagExtractorsWithInfo: List<TagExtractorWithInfo>,
-        ) {
-            init {
-                require((plan != null) == (readShortcuts != null))
-            }
-
-            val tagInfos by lazy { tagExtractorsWithInfo.map { it.tagInfo } }
-
-            val inputReads = AtomicLong()
-            val matchedHeaders = AtomicLong()
-            val reportAgg = plan?.let { ParseReportAggregator(it) }
-
-            fun parse(bundle: ProcessingBundle): ProcessingBundle {
-                inputReads.incrementAndGet()
-
-                val headerMatches = headerPatterns.mapNotNull { it.parse(bundle.read) }
-                if (headerMatches.size != headerPatterns.size)
-                    return bundle.copy(status = NotParsed)
-                matchedHeaders.incrementAndGet()
-
-                val (newSeq, patternMatch) =
-                    if (plan != null) {
-                        val result = plan.search(bundle.read)
-                        reportAgg!!.consume(result)
-                        if (result.hit == null) return bundle.copy(status = NotParsed)
-                        NSQTuple(
-                            bundle.read.id,
-                            *Array(readShortcuts!!.size) { i -> result.getTagValue(readShortcuts[i]).value }
-                        ) to result
-                    } else
-                        bundle.sequence to null
-
-                val tags = tagExtractorsWithInfo
-                    .map {
-                        it.tagExtractor.extract(
-                            bundle.originalReadId,
-                            bundle.fileTags,
-                            headerMatches,
-                            patternMatch
-                        )
-                    }
-                    .toTypedArray()
-
-                return bundle.copy(
-                    sequence = newSeq,
-                    tags = TagTuple(*tags)
-                )
-            }
-        }
-
-        data class ParseInfo(
-            val tags: List<TagInfo>,
-            val readTags: List<String>
-        )
-
-        private fun detectTagTypeByName(name: String): TagType? =
-            when {
-                name.startsWith("S") -> TagType.Sample
-                name.startsWith("CELL") -> TagType.Cell
-                name.startsWith("UMI") || name.startsWith("MI") -> TagType.Molecule
-                else -> {
-                    logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
-                    null
-                }
-            }
-
-        private fun parseTagsFromPatternGroupNames(names: Set<String>): ParseInfo {
-            val tags: MutableList<TagInfo> = ArrayList()
-            val readTags: MutableList<String> = ArrayList()
-            for (name in names) {
-                when {
-                    name.startsWith("S") -> tags += TagInfo(
-                        TagType.Sample,
-                        TagValueType.SequenceAndQuality,
-                        name,
-                        0
-                    )
-
-                    name.startsWith("CELL") -> tags += TagInfo(
-                        TagType.Cell,
-                        TagValueType.SequenceAndQuality,
-                        name,
-                        0
-                    )
-
-                    name.startsWith("UMI") || name.startsWith("MI") -> tags += TagInfo(
-                        TagType.Molecule,
-                        TagValueType.SequenceAndQuality,
-                        name,
-                        0
-                    )
-
-                    name.matches(Regex("R\\d+")) -> readTags += name
-
-                    else -> logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
-                }
-            }
-            tags
-                .map { it.type }
-                .distinct()
-                .forEach { tagType -> MiXCRMain.lm.reportFeature("mixcr.tag-type", tagType.toString()) }
-            return ParseInfo(
-                tags
-                    .sorted()
-                    .mapIndexed { i, tag -> tag.withIndex(i) },
-                readTags.sorted()
             )
         }
 

@@ -123,7 +123,7 @@ object SHMTreeNodeFieldsExtractor {
         this += aaFeatureField
         this += FieldsCollection(
             Order.`-aaFeature` + 1,
-            "-allAaFeatures",
+            "-allAAFeatures",
             "Export amino acid sequences for all covered gene features.%n${nodeParamDescription("feature")}",
             aaFeatureField,
             nodeTypeParamOptional("Of")
@@ -304,7 +304,7 @@ object SHMTreeNodeFieldsExtractor {
 
 private fun baseGeneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeature> = CommandArgRequired(
     "<gene_feature>",
-    { _, arg ->
+    { arg ->
         GeneFeature.parse(arg).also {
             ValidationException.require(!it.isComposite) {
                 "$cmdArgName doesn't support composite features"
@@ -315,7 +315,7 @@ private fun baseGeneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeatur
 
 private fun relativeGeneFeatureParam(): CommandArgRequired<GeneFeature> = CommandArgRequired(
     "<relative_to_gene_feature>",
-    { _, arg ->
+    { arg ->
         GeneFeature.parse(arg).also {
             ValidationException.require(!it.isComposite) {
                 "$cmdArgName doesn't support composite features"

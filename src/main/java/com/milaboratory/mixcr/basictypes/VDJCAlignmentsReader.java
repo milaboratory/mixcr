@@ -25,6 +25,7 @@ import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.CanReportProgress;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -137,6 +138,10 @@ public final class VDJCAlignmentsReader implements
             switch (magicString) {
                 case MAGIC_V19:
                     BackwardCompatibilityUtils.register41rc2Serializers(pi.getSerializersManager());
+                    break;
+                case MAGIC_V20:
+                    BackwardCompatibilityUtils.register41_0Serializers(pi.getSerializersManager());
+                    break;
                 case MAGIC:
                     break;
                 default:
@@ -148,7 +153,7 @@ public final class VDJCAlignmentsReader implements
 
             header = Objects.requireNonNull(pi.readObject(MiXCRHeader.class));
 
-            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, header.getAlignerParameters(), vdjcRegistry);
+            this.usedGenes = IOUtil.stdVDJCPrimitivIStateInit(pi, header.getFeaturesToAlign(), vdjcRegistry);
             this.iState = pi.getState();
         }
 
@@ -178,6 +183,7 @@ public final class VDJCAlignmentsReader implements
         return usedGenes;
     }
 
+    @NotNull
     @Override
     public MiXCRHeader getHeader() {
         ensureInitialized();

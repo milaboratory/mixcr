@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.export.ParametersFactory.tagParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
@@ -85,7 +84,8 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             "-uniqueTagFraction",
             "Fraction of unique tags (UMI, CELL, etc.) the clone or alignment collected.",
             tagParam("unique", sSuffix = "Fraction"),
-        ) { clone: Clone, tag: TagInfo ->
+        ) { clone: Clone, tagName: String ->
+            val tag = tagsInfo[tagName] ?: return@Field NULL
             val level = tag.index + 1
             clone.getTagDiversityFraction(level).toString()
         }
@@ -97,7 +97,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             uniqueTagFractionField,
             tagTypeParam()
         ) { tagType ->
-            tagsInfo.filter { it.type == tagType }.map { arrayOf(it.name) }
+            tagNamesWithType(tagType).map { arrayOf(it) }
         }
 
 

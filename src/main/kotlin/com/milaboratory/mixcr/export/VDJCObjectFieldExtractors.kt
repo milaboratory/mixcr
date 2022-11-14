@@ -19,7 +19,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.TranslationParameters
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCObject
-import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForFeatures
@@ -336,8 +335,8 @@ object VDJCObjectFieldExtractors {
 
             this += FieldsCollection(
                 Order.`-aaFeature` + 1,
-                "-allAaFeatures",
-                "Export amino acid sequence ${commonDescriptionForFeatures("-allAaFeatures", aaFeatureField)}",
+                "-allAAFeatures",
+                "Export amino acid sequence ${commonDescriptionForFeatures("-allAAFeatures", aaFeatureField)}",
                 aaFeatureField,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
@@ -401,9 +400,9 @@ object VDJCObjectFieldExtractors {
         if (!forTreesExport) {
             this += FieldsCollection(
                 Order.features + 501,
-                "-allAaFeaturesImputed",
+                "-allAAFeaturesImputed",
                 "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions " +
-                        commonDescriptionForFeatures("-allAaFeaturesImputed", aaFeatureImputedField),
+                        commonDescriptionForFeatures("-allAAFeaturesImputed", aaFeatureImputedField),
                 aaFeatureImputedField,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
@@ -416,7 +415,7 @@ object VDJCObjectFieldExtractors {
         } else {
             this += FieldsCollection(
                 Order.features + 501,
-                "-allAaFeaturesImputed",
+                "-allAAFeaturesImputed",
                 "Export amino acid sequence using letters from germline (marked lowercase) for uncovered regions for all covered features",
                 aaFeatureImputedField
             ) {
@@ -860,7 +859,7 @@ object VDJCObjectFieldExtractors {
             "Export gene label (i.e. ReliableChain)",
             CommandArgRequired(
                 "<label>",
-                { _, geneLabel -> geneLabel }
+                { geneLabel -> geneLabel }
             ) { geneLabel -> "geneLabel$geneLabel" }
         ) { vdjcObject: VDJCObject, geneLabel ->
             vdjcObject.getGeneLabel(geneLabel)
@@ -878,19 +877,20 @@ object VDJCObjectFieldExtractors {
             "-tag",
             "Tag value (i.e. CELL barcode or UMI sequence)",
             tagParam("tagValue")
-        ) { vdjcObject: VDJCObject, tag: TagInfo ->
+        ) { vdjcObject: VDJCObject, tagName: String ->
+            val tag = tagsInfo[tagName] ?: return@Field NULL
             val tagValue = vdjcObject.tagCount.singleOrNull(tag.index) ?: return@Field NULL
             tagValue.toString()
         }
         this += tagField
-        this += FieldsCollection.invoke(
+        this += FieldsCollection(
             Order.tags + 301,
             "-allTags",
             "Tag values (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.%n$tagTypeDescription",
             tagField,
             tagTypeParam()
         ) { tagType ->
-            tagsInfo.filter { it.type == tagType }.map { arrayOf(it.name) }
+            tagNamesWithType(tagType).map { arrayOf(it) }
         }
 
         val uniqueTagCountField = Field(
@@ -898,7 +898,8 @@ object VDJCObjectFieldExtractors {
             "-uniqueTagCount",
             "Unique tag count",
             tagParam("unique", sSuffix = "Count")
-        ) { vdjcObject: VDJCObject, tag: TagInfo ->
+        ) { vdjcObject: VDJCObject, tagName: String ->
+            val tag = tagsInfo[tagName] ?: return@Field NULL
             val level = tag.index + 1
             vdjcObject.getTagDiversity(level).toString()
         }
@@ -910,7 +911,7 @@ object VDJCObjectFieldExtractors {
             uniqueTagCountField,
             tagTypeParam()
         ) { tagType ->
-            tagsInfo.filter { it.type == tagType }.map { arrayOf(it.name) }
+            tagNamesWithType(tagType).map { arrayOf(it) }
         }
     }
 }

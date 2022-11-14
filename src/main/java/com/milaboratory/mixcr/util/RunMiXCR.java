@@ -56,7 +56,6 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static cc.redberry.pipe.CUtils.chunked;
@@ -122,6 +121,7 @@ public final class RunMiXCR {
                     new MiXCRStepParams(),
                     align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                     align.parameters.alignerParameters,
+                    align.parameters.alignerParameters.getFeaturesToAlignMap(),
                     align.parameters.cloneAssemblerParameters,
                     null,
                     null
@@ -145,7 +145,7 @@ public final class RunMiXCR {
             IOUtil.registerGeneReferences(tmpOut, align.usedGenes, align.parameters.alignerParameters);
 
             final CloneFactory cloneFactory = new CloneFactory(reader.getAssemblerParameters().getCloneFactoryParameters(),
-                    reader.getAssemblingFeatures(), reader.getUsedGenes(), reader.getAlignerParameters().getFeaturesToAlignMap());
+                    reader.getAssemblingFeatures(), reader.getUsedGenes(), reader.getHeader().getFeaturesToAlignMap());
 
             ClnAReader.CloneAlignmentsPort cloneAlignmentsPort = reader.clonesAndAlignments();
             SmartProgressReporter.startProgressReport("Assembling", cloneAlignmentsPort);
@@ -194,6 +194,7 @@ public final class RunMiXCR {
                         new MiXCRStepParams(),
                         align.tagsInfo != null ? align.tagsInfo : TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters,
+                        align.parameters.alignerParameters.getFeaturesToAlignMap(),
                         align.parameters.cloneAssemblerParameters,
                         null,
                         null
@@ -331,6 +332,7 @@ public final class RunMiXCR {
                             new MiXCRStepParams(),
                             tagsInfo != null ? tagsInfo : TagsInfo.NO_TAGS,
                             aligner.getParameters(),
+                            aligner.getParameters().getFeaturesToAlignMap(),
                             null,
                             null,
                             null

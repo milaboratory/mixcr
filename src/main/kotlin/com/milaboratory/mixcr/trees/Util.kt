@@ -12,25 +12,11 @@
 package com.milaboratory.mixcr.trees
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCGene
-
-fun List<CloneReader>.constructStateBuilder(): PrimitivIOStateBuilder {
-    check(map { it.alignerParameters }.distinct().size == 1) {
-        "Files was prepared with different alignerParameters"
-    }
-    val stateBuilder = PrimitivIOStateBuilder()
-    IOUtil.registerGeneReferences(
-        stateBuilder,
-        asSequence().flatMap { it.usedGenes }.toSet(),
-        first().alignerParameters
-    )
-    return stateBuilder
-}
 
 fun HasFeatureToAlign.constructStateBuilder(usedGenes: Collection<VDJCGene>): PrimitivIOStateBuilder {
     val stateBuilder = PrimitivIOStateBuilder()

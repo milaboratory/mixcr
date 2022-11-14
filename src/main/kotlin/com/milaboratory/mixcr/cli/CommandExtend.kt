@@ -167,7 +167,7 @@ object CommandExtend {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val cloneSet = reader.readCloneSet()
                 val outputPort = cloneSet.port
-                val process = processWrapper(outputPort, reader.header.paramsSpec, cloneSet.alignmentParameters)
+                val process = processWrapper(outputPort, reader.header.paramsSpec, cloneSet.header.alignerParameters!!)
 
                 val clones = process.output
                     .asSequence()

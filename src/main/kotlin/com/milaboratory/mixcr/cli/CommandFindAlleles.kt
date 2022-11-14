@@ -33,8 +33,6 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.ClonesSupplier
-import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
@@ -42,7 +40,6 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
@@ -55,7 +52,6 @@ import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.VDJC_REFERENCE
 import io.repseq.core.GeneType.VJ_REFERENCE
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
@@ -76,10 +72,15 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.io.path.createDirectories
+import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.nameWithoutExtension
 
 @Command(
-    description = ["Find allele variants in clnx."]
+    description = [
+        "Find allele variants in clnx.",
+        "All inputs must be fully covered by the same feature, have the same align library, the same scoring of V and J genes and the same features to align."
+    ]
 )
 class CommandFindAlleles : MiXCRCommandWithOutputs() {
     data class Params(val dummy: Boolean = true) : MiXCRParams {
@@ -88,10 +89,21 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     @Parameters(
         arity = "1..*",
-        paramLabel = "input_file.(clns|clna)",
-        description = ["Input files for allele search"]
+        paramLabel = "(input_file.(clns|clna)|directory)",
+        description = [
+            "Input files or directory with files for allele search.",
+            "In case of directory no filter by file type will be applied."
+        ]
     )
-    override val inputFiles: List<Path> = mutableListOf()
+    private val input: List<Path> = mutableListOf()
+
+    override val inputFiles: List<Path>
+        get() = input.flatMap { path ->
+            when {
+                path.isDirectory() -> path.listDirectoryEntries()
+                else -> listOf(path)
+            }
+        }
 
     class OutputClnsOptions {
         @Option(
@@ -143,12 +155,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             field = value
         }
 
-    @Option(
-        description = ["Put temporary files in the same folder as the output files."],
-        names = ["--use-local-temp"],
-        order = 1_000_000 - 5
-    )
-    var useLocalTemp = false
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
 
     @Mixin
     lateinit var threadsOptions: ThreadsOption
@@ -191,8 +199,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     private val tempDest: TempFileDest by lazy {
         val path = outputFiles.first()
-        if (useLocalTemp) path.toAbsolutePath().parent.createDirectories()
-        TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp)
+        if (useLocalTemp.value) path.toAbsolutePath().parent.createDirectories()
+        TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp.value)
     }
 
     private val findAllelesParameters: FindAllelesParameters by lazy {
@@ -207,6 +215,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
+        ValidationException.require(inputFiles.isNotEmpty()) { "there is no files to process" }
         inputFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNX)
         }
@@ -220,8 +229,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     override fun initialize() {
         findAllelesParameters
-        if (debugDir != null) {
-            debugDir?.toFile()?.mkdirs()
+        debugDir?.let { debugDir ->
+            debugDir.toFile().deleteRecursively()
+            debugDir.toFile().mkdirs()
         }
     }
 
@@ -251,7 +261,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .setStartMillis(System.currentTimeMillis())
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
-        ValidationException.require(datasets.isNotEmpty()) { "there is no files to process" }
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
@@ -277,10 +286,10 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             J = datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
         )
 
-        ValidationException.requireDistinct(datasets.map { it.alignerParameters.featuresToAlignMap }) {
+        ValidationException.requireDistinct(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
         }
-        val featureToAlign = HasFeatureToAlign(datasets.first().alignerParameters.featuresToAlignMap)
+        val featureToAlign = datasets.first().header.featuresToAlign
 
         val allelesBuilder = AllelesBuilder.create(
             findAllelesParameters,
@@ -352,7 +361,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 allFullyCoveredBy,
                 threadsOptions.value,
                 cloneReader.assemblerParameters.cloneFactoryParameters,
-                cloneReader.alignerParameters.featuresToAlignMap
+                cloneReader.header.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
                 val withRecalculatedScores = port.withProgress(
@@ -509,7 +518,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     private fun collectUsedGenes(
-        cloneReaders: List<ClonesSupplier>,
+        cloneReaders: List<CloneReader>,
         alleles: Map<String, List<VDJCGeneData>>
     ): Map<String, VDJCGeneData> {
         val usedGenes = mutableMapOf<String, VDJCGeneData>()
@@ -517,16 +526,10 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .flatten()
             .forEach { usedGenes[it.name] = it }
         for (cloneReader in cloneReaders) {
-            cloneReader.readClones().use { port ->
-                port.forEach { clone ->
-                    for (gt in VDJC_REFERENCE) {
-                        for (hit in clone.getHits(gt)) {
-                            val geneName = hit.gene.name
-                            if (geneName !in alleles && geneName !in usedGenes) {
-                                usedGenes[geneName] = hit.gene.data
-                            }
-                        }
-                    }
+            for (gene in cloneReader.usedGenes) {
+                val geneName = gene.name
+                if (geneName !in alleles && geneName !in usedGenes) {
+                    usedGenes[geneName] = gene.data
                 }
             }
         }

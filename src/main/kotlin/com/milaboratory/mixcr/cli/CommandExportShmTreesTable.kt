@@ -11,8 +11,11 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
+import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
@@ -58,18 +61,19 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
+            val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS)
             InfoWriter.create(
                 out,
-                SHMTreeFieldsExtractorsFactory.createExtractors(addedFields, reader.header),
+                SHMTreeFieldsExtractorsFactory.createExtractors(
+                    addedFields,
+                    HeaderForExport(emptyList(), reader.header.allFullyCoveredBy)
+                ),
                 !noHeader,
-            ).use { output ->
+            ) { rowMetaForExport }.use { output ->
                 reader.readTrees()
+                    .filter { treeFilter?.match(it.treeId) != false }
                     .map { shmTree ->
-                        shmTree.forPostanalysis(
-                            reader.fileNames,
-                            reader.alignerParameters,
-                            reader.libraryRegistry
-                        )
+                        shmTree.forPostanalysis(reader.fileNames, reader.libraryRegistry)
                     }
                     .filter { treeFilter?.match(it) != false }
                     .forEach { output.put(it) }

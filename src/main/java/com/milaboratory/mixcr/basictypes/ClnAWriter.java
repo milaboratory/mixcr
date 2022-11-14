@@ -55,9 +55,13 @@ public final class ClnAWriter implements
         CanReportProgressAndStage {
     static final String MAGIC_V9 = MAGIC_CLNA + ".V09";
     static final String MAGIC_V10 = MAGIC_CLNA + ".V10";
-    static final String MAGIC = MAGIC_V10;
+
+    static final String MAGIC_V11 = MAGIC_CLNA + ".V11";
+    static final String MAGIC = MAGIC_V11;
     static final int MAGIC_LENGTH = MAGIC.length(); // 14
-    /** Number of bytes in footer with meta information */
+    /**
+     * Number of bytes in footer with meta information
+     */
     static final int FOOTER_LENGTH = 8 + 8 + 8 + IOUtil.END_MAGIC_LENGTH;
 
     /**
@@ -141,7 +145,7 @@ public final class ClnAWriter implements
 
                 // Writing header meta-info
                 o.writeObject(Objects.requireNonNull(cloneSet.getHeader()));
-                featureToAlignProvider = cloneSet.getAlignmentParameters();
+                featureToAlignProvider = cloneSet.getHeader().getFeaturesToAlign();
 
                 // Writing clone-set ordering
                 o.writeObject(cloneSet.getOrdering());

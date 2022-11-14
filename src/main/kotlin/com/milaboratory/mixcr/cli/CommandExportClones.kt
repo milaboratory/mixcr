@@ -27,7 +27,9 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
+import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
@@ -209,10 +211,14 @@ object CommandExportClones {
                 }
             }
 
-            val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, header)
+            val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(
+                params.fields,
+                HeaderForExport(listOf(header.tagsInfo), header.allFullyCoveredBy)
+            )
 
             fun runExport(set: CloneSet, outFile: Path?) {
-                InfoWriter.create(outFile, fieldExtractors, !params.noHeader).use { writer ->
+                val rowMetaForExport = RowMetaForExport(set.tagsInfo)
+                InfoWriter.create(outFile, fieldExtractors, !params.noHeader) { rowMetaForExport }.use { writer ->
                     val splitByTag = if (params.splitByTags != null) {
                         header.tagsInfo[params.splitByTags]
                     } else {

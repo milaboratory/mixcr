@@ -23,18 +23,19 @@ import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
-import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
+import com.milaboratory.primitivio.readMap
 import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
+import com.milaboratory.primitivio.writeMap
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryId
 import io.repseq.dto.VDJCLibraryData
-import java.security.MessageDigest
 
 interface MiXCRFileInfo {
     /** Returns information from .vdjca/.clna/.clns file header  */
@@ -49,7 +50,7 @@ interface MiXCRFileInfo {
  * The information that is relevant for the downstream analysis.
  */
 @Suppress("DuplicatedCode")
-@Serializable(by = MiXCRHeader.SerializerV2Impl::class)
+@Serializable(by = MiXCRHeader.SerializerV3Impl::class)
 data class MiXCRHeader(
     /** Hash code of input files with raw sequencing data. */
     val inputHash: String?,
@@ -60,7 +61,9 @@ data class MiXCRHeader(
     /** Positional descriptors for tag tuples attached to objects in the file */
     val tagsInfo: TagsInfo = TagsInfo.NO_TAGS,
     /** Aligner parameters */
-    val alignerParameters: VDJCAlignerParameters,
+    val alignerParameters: VDJCAlignerParameters?,
+    /** Aligner parameters */
+    val featuresToAlignMap: Map<GeneType, GeneFeature>,
     /** Clone assembler parameters  */
     val assemblerParameters: CloneAssemblerParameters? = null,
     /** Library produced by search of alleles */
@@ -68,8 +71,8 @@ data class MiXCRHeader(
     /** If all clones cut by the same feature and cover this feature fully */
     val allFullyCoveredBy: GeneFeatures?
 ) {
-    fun withTagInfo(tagsInfo: TagsInfo): MiXCRHeader =
-        copy(tagsInfo = tagsInfo)
+
+    val featuresToAlign: HasFeatureToAlign get() = HasFeatureToAlign(featuresToAlignMap)
 
     fun updateTagInfo(tagsInfoUpdate: (TagsInfo) -> TagsInfo): MiXCRHeader =
         copy(tagsInfo = tagsInfoUpdate(tagsInfo))
@@ -134,6 +137,7 @@ data class MiXCRHeader(
                 stepParams,
                 tagsInfo,
                 alignerParameters,
+                alignerParameters.featuresToAlignMap,
                 assemblerParameters,
                 foundAlleles,
                 allFullyCoveredBy
@@ -168,61 +172,50 @@ data class MiXCRHeader(
                 stepParams,
                 tagsInfo,
                 alignerParameters,
+                alignerParameters.featuresToAlignMap,
                 assemblerParameters,
                 foundAlleles,
                 allFullyCoveredBy
             )
         }
     }
-}
 
-class MiXCRHeaderMerger {
-    private var inputHashAccumulator: MessageDigest? = MessageDigest.getInstance("MD5")
-    private var upstreamParams = mutableListOf<MiXCRStepParams>()
-    private var paramsSpec: MiXCRParamsSpec? = null
-    private var tagsInfo: TagsInfo? = null
-    private var alignerParameters: VDJCAlignerParameters? = null
-    private var assemblerParameters: CloneAssemblerParameters? = null
-    private var allFullyCoveredBy: GeneFeatures? = null
-    // TODO something seems to be done with alleles here ?
-
-    fun add(header: MiXCRHeader) = run {
-        if (header.inputHash == null)
-            inputHashAccumulator = null
-        inputHashAccumulator?.update(header.inputHash!!.encodeToByteArray())
-        upstreamParams += header.stepParams
-        if (paramsSpec == null) {
-            paramsSpec = header.paramsSpec
-            tagsInfo = header.tagsInfo
-            alignerParameters = header.alignerParameters
-            assemblerParameters = header.assemblerParameters
-            allFullyCoveredBy = header.allFullyCoveredBy
-        } else {
-            if (paramsSpec != header.paramsSpec)
-                throw IllegalArgumentException("Different analysis specs")
-            if (tagsInfo != header.tagsInfo)
-                throw IllegalArgumentException("Different tag structure")
-            if (alignerParameters != header.alignerParameters)
-                throw IllegalArgumentException("Different alignment parameters")
-            if (assemblerParameters != header.assemblerParameters)
-                throw IllegalArgumentException("Different assemble parameters")
-            if (allFullyCoveredBy != header.allFullyCoveredBy)
-                throw IllegalArgumentException("Different covered region")
+    class SerializerV3Impl : BasicSerializer<MiXCRHeader>() {
+        override fun write(output: PrimitivO, obj: MiXCRHeader) {
+            output.writeObject(obj.inputHash)
+            output.writeObject(obj.paramsSpec)
+            output.writeObject(obj.stepParams)
+            output.writeObject(obj.tagsInfo)
+            output.writeObject(obj.alignerParameters)
+            output.writeMap(obj.featuresToAlignMap)
+            output.writeObject(obj.assemblerParameters)
+            output.writeObject(obj.foundAlleles)
+            output.writeObject(obj.allFullyCoveredBy)
         }
-        this
-    }
 
-    fun build() =
-        MiXCRHeader(
-            inputHashAccumulator?.digest()?.toHexString(),
-            paramsSpec!!,
-            MiXCRStepParams.mergeUpstreams(upstreamParams),
-            tagsInfo!!,
-            alignerParameters!!,
-            assemblerParameters,
-            null,
-            allFullyCoveredBy
-        )
+        override fun read(input: PrimitivI): MiXCRHeader {
+            val inputHash = input.readObjectOptional<String>()
+            val paramsSpec = input.readObjectRequired<MiXCRParamsSpec>()
+            val stepParams = input.readObject<MiXCRStepParams>()
+            val tagsInfo = input.readObjectRequired<TagsInfo>()
+            val alignerParameters = input.readObjectOptional<VDJCAlignerParameters>()
+            val featuresToAlign = input.readMap<GeneType, GeneFeature>()
+            val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
+            val foundAlleles = input.readObjectOptional<FoundAlleles>()
+            val allFullyCoveredBy = input.readObjectOptional<GeneFeatures>()
+            return MiXCRHeader(
+                inputHash,
+                paramsSpec,
+                stepParams,
+                tagsInfo,
+                alignerParameters,
+                featuresToAlign,
+                assemblerParameters,
+                foundAlleles,
+                allFullyCoveredBy
+            )
+        }
+    }
 }
 
 /** Information stored in the footer of */

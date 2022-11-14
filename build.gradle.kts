@@ -98,28 +98,28 @@ repositories {
     }
 }
 
-val milibVersion = "2.1.0"
+val milibVersion = "2.1.0-3-master"
 val repseqioVersion = "1.5.0"
 val miplotsVersion = "1.1.0"
-val mitoolVersion = "1.3.0-7-whitelist"
-val jacksonBomVersion = "2.13.4"
+val mitoolVersion = "1.3.0-2-main"
+val jacksonBomVersion = "2.14.0"
 val redberryPipeVersion = "1.3.0"
 
 dependencies {
-    implementation("cc.redberry:pipe:$redberryPipeVersion")
-    implementation("com.milaboratory:milib:$milibVersion") {
+    api("cc.redberry:pipe:$redberryPipeVersion")
+    api("com.milaboratory:milib:$milibVersion") {
         exclude("cc.redberry", "pipe")
     }
-    implementation("io.repseq:repseqio:$repseqioVersion") {
+    api("io.repseq:repseqio:$repseqioVersion") {
         exclude("com.milaboratory", "milib")
     }
-    implementation("com.milaboratory:mitool:$mitoolVersion") {
+    api("com.milaboratory:mitool:$mitoolVersion") {
         exclude("com.milaboratory", "milib")
     }
-    implementation("com.milaboratory:miplots:$miplotsVersion")
+    api("com.milaboratory:miplots:$miplotsVersion")
 
     // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
-    implementation("com.milaboratory:milm2-jvm:2.0.0")
+    implementation("com.milaboratory:milm2-jvm:2.2.0")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

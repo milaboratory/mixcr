@@ -53,7 +53,7 @@ class SHMTreesWriter(
             o.writeObject(header)
             o.writeCollection(fileNames, PrimitivO::writeObject)
             o.writeCollection(cloneSetInfos, PrimitivO::writeObject)
-            IOUtil.stdVDJCPrimitivOStateInit(o, genes, header.alignerParameters)
+            IOUtil.stdVDJCPrimitivOStateInit(o, genes, header.featuresToAlign)
         }
     }
 
@@ -88,7 +88,8 @@ class SHMTreesWriter(
 
     companion object {
         const val MAGIC_V4 = "$MAGIC_SHMT.V04"
-        const val MAGIC = MAGIC_V4
+        const val MAGIC_V5 = "$MAGIC_SHMT.V05"
+        const val MAGIC = MAGIC_V5
         const val MAGIC_LENGTH = 14
         val MAGIC_BYTES = MAGIC.toByteArray(StandardCharsets.US_ASCII)
 

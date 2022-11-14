@@ -112,7 +112,7 @@ public final class VDJCAlignerPVFirst extends VDJCAlignerAbstract {
                                                 alignment.getHistory(1),
                                                 mergeResult.getOffset(),
                                                 mergeResult.getMismatched())},
-                                parameters.isSaveOriginalReads() ? new NSQTuple[]{input} : null
+                                parameters.isSaveOriginalSequence() ? new NSQTuple[]{input} : null
                         );
                 if (listener != null)
                     listener.onSuccessfulAlignmentOverlap(sAlignments);
