@@ -72,7 +72,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         names = ["--default-downsampling"],
         required = true,
         paramLabel = "(<type>|none)",
-        order = OptionsOrder.main + 10_300
+        order = OptionsOrder.required + 100
     )
     lateinit var defaultDownsampling: String
 
@@ -81,7 +81,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         names = ["--default-weight-function"],
         required = true,
         paramLabel = "(<read>|<Tag>|none)",
-        order = OptionsOrder.main + 10_400
+        order = OptionsOrder.required + 200
     )
     lateinit var defaultWeightFunction: String
 

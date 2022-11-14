@@ -20,6 +20,23 @@ class MetaInfoTest {
     }
 
     @Test
+    fun `all required options must be first in help`() {
+        val mkCmd = Main.mkCmd()
+        val optionsWithoutOrder = mkCmd.allSubCommands()
+            .flatMap { commandLine ->
+                val (required, notRequired) = commandLine.commandSpec.options()
+                    .filterNot { it.hidden() }
+                    .filter { it.group() == null }
+                    .partition { it.required() }
+                val minOrderForNotRequired = notRequired.map { it.order() }.min()
+                required
+                    .filter { it.order() >= minOrderForNotRequired }
+                    .map { commandLine.commandName + " " + it.longestName() }
+            }
+        optionsWithoutOrder shouldBe emptyList()
+    }
+
+    @Test
     fun `all arg groups must have specified order`() {
         val mkCmd = Main.mkCmd()
         val optionsWithoutOrder = mkCmd.allSubCommands().flatMap { commandLine ->

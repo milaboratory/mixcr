@@ -36,7 +36,7 @@ class ExportDefaultOptions : (List<ExportFieldDescription>) -> List<ExportFieldD
         description = ["Added columns will be inserted before default columns. By default columns will be added after default columns"],
         names = ["--prepend-columns"],
         arity = "0",
-        order = OptionsOrder.main + 300
+        order = OptionsOrder.exportOptions + 300
     )
     private var prependColumns: Boolean? = null
 

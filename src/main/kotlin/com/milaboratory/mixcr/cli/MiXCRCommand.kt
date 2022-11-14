@@ -46,6 +46,7 @@ abstract class MiXCRCommand : Runnable {
     abstract fun run0()
 
     object OptionsOrder {
+        const val required = 5_000
         const val main = 10_000
 
         const val notAligned = 90_000
@@ -64,7 +65,8 @@ abstract class MiXCRCommand : Runnable {
             const val exports = begin + 50_000
         }
 
-        const val exportOptions = 490_000
+        const val exportOptions = 450_000
+        const val exportFields = 460_000
 
         const val overrides = 500_000
 

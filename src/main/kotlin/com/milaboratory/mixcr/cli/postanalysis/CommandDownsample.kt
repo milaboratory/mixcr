@@ -64,7 +64,7 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         names = ["--downsampling"],
         required = true,
         paramLabel = "<type>",
-        order = OptionsOrder.main + 10_300
+        order = OptionsOrder.required + 100
     )
     lateinit var downsampling: String
 

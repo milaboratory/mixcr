@@ -627,9 +627,9 @@ object VDJCObjectFieldExtractors {
             this += aaMutationsFiled
             this += FieldsCollection(
                 Order.`-aaMutations` + 1,
-                "-allAaMutations",
+                "-allAAMutations",
                 "Extract amino acid nucleotide mutations relative to germline sequence " +
-                        commonDescriptionForFeatures("-allAaMutations", aaMutationsFiled),
+                        commonDescriptionForFeatures("-allAAMutations", aaMutationsFiled),
                 aaMutationsFiled,
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
