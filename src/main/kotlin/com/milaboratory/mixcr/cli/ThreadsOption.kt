@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import picocli.CommandLine.Option
 
 class ThreadsOption {
@@ -18,7 +19,7 @@ class ThreadsOption {
         description = ["Processing threads"],
         names = ["-t", "--threads"],
         paramLabel = "<n>",
-        order = 1_000_000 - 4
+        order = OptionsOrder.threads
     )
     private var fromCmd = -1
         set(value) {

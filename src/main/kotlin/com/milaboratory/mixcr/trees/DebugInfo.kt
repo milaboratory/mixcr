@@ -42,7 +42,8 @@ class DebugInfo(
                 .put("JRangeWithoutCDR3") {
                     it.JRangesWithoutCDR3.joinToString(",") { range -> encodeRange(range) }
                 }
-                .put("treeId") { it.treeId.encode() }
+                .put("treeIdFull") { it.treeId.encode() }
+                .put("treeId") { it.treeId.id }
                 .put("clonesIds") { info -> info.cloneIds?.ids?.joinToString(",") { it.encode() } }
                 .put("clonesCount") { it.cloneIds?.ids?.size ?: 0 }
                 .put("id") { it.id }

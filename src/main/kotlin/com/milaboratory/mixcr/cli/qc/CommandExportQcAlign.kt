@@ -64,7 +64,11 @@ class CommandExportQcAlign : CommandExportQc() {
     )
     var inOut: List<Path> = mutableListOf()
 
-    @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
+    @Option(
+        names = ["--absolute-values"],
+        description = ["Plot in absolute values instead of percent"],
+        order = OptionsOrder.main + 30_000
+    )
     var absoluteValues = false
 
     private val output get() = inOut.last()

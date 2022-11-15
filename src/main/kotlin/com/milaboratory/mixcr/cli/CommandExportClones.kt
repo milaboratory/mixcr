@@ -89,7 +89,8 @@ object CommandExportClones {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-c", "--chains"],
-            paramLabel = Labels.CHAINS
+            paramLabel = Labels.CHAINS,
+            order = OptionsOrder.main + 10_100
         )
         private var chains: String? = null
 
@@ -98,7 +99,8 @@ object CommandExportClones {
                 "Exclude clones with out-of-frame clone sequences (fractions will be recalculated).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["-o", "--filter-out-of-frames"]
+            names = ["-o", "--filter-out-of-frames"],
+            order = OptionsOrder.main + 10_200
         )
         private var filterOutOfFrames = false
 
@@ -107,7 +109,8 @@ object CommandExportClones {
                 "Exclude sequences containing stop codons (fractions will be recalculated).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["-t", "--filter-stops"]
+            names = ["-t", "--filter-stops"],
+            order = OptionsOrder.main + 10_300
         )
         private var filterStops = false
 
@@ -117,7 +120,8 @@ object CommandExportClones {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--split-by-tag"],
-            paramLabel = "<tag>"
+            paramLabel = "<tag>",
+            order = OptionsOrder.main + 10_400
         )
         private var splitByTag: String? = null
 
@@ -126,13 +130,15 @@ object CommandExportClones {
                 "Split files by (currently the only supported value is \"geneLabel:reliableChain\" etc... ).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--split-files-by"]
+            names = ["--split-files-by"],
+            order = OptionsOrder.main + 10_500
         )
         private var splitFilesBy: List<String> = mutableListOf()
 
         @Option(
             description = ["Don't split files."],
-            names = ["--dont-split-files"]
+            names = ["--dont-split-files"],
+            order = OptionsOrder.main + 10_600
         )
         private var dontSplitFiles = false
 
@@ -231,7 +237,7 @@ object CommandExportClones {
                             .flatMap { tagType -> header.tagsInfo.filter { it.type == tagType } }
                         val newSpitBy = (individualTagsForExport + tagsExportedByGroups).maxByOrNull { it.index }
                         if (newSpitBy != null && outputFile != null) {
-                            println("Clone splitting by $newSpitBy added automatically because -tag $newSpitBy field is present in the list.")
+                            println("Clone splitting by ${newSpitBy.name} added automatically because -tag ${newSpitBy.name} field is present in the list.")
                         }
                         newSpitBy
                     }

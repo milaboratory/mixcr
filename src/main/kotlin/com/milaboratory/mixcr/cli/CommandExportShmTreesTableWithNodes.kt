@@ -48,7 +48,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     @Option(
         description = ["Don't print first header line, print only data"],
         names = ["--no-header"],
-        order = 50_000 - 100
+        order = OptionsOrder.exportOptions
     )
     var noHeader = false
 
@@ -57,6 +57,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     @Option(
         description = ["Exclude nodes that was reconstructed by algorithm"],
         names = ["--only-observed"],
+        order = OptionsOrder.main + 10_100
     )
     var onlyObserved: Boolean = false
 

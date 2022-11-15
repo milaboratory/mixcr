@@ -100,7 +100,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         description = ["Output overlap for specified chains only; if multiple chains are specified, results per each chains will be exported in separate files."],
         names = ["--chains"],
         split = ",",
-        paramLabel = Labels.CHAIN
+        paramLabel = Labels.CHAIN,
+        order = OptionsOrder.main + 10_100
     )
     var chains: Set<String>? = null
 
@@ -108,13 +109,15 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         description = [CommonDescriptions.OVERLAP_CRITERIA],
         names = ["--criteria"],
         showDefaultValue = ALWAYS,
-        paramLabel = "<s>"
+        paramLabel = "<s>",
+        order = OptionsOrder.main + 10_200
     )
     var overlapCriteria = "CDR3|AA|V|J"
 
     @Option(
         description = ["Filter out-of-frame sequences and clonotypes with stop-codons"],
-        names = ["--only-productive"]
+        names = ["--only-productive"],
+        order = OptionsOrder.main + 10_300
     )
     var onlyProductive = false
 

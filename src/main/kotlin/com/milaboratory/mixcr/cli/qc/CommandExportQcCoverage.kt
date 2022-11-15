@@ -78,7 +78,11 @@ class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
     )
     var inOut: List<Path> = mutableListOf()
 
-    @Option(names = ["--show-boundaries"], description = ["Show V alignment begin and J alignment end"])
+    @Option(
+        names = ["--show-boundaries"],
+        description = ["Show V alignment begin and J alignment end"],
+        order = OptionsOrder.main + 10_100
+    )
     var showAlignmentBoundaries = false
 
     private val output get() = inOut.last()

@@ -24,7 +24,7 @@ abstract class CommandPaExportPlotsHeatmap : CommandPaExportPlots() {
         paramLabel = "<s>",
         showDefaultValue = ALWAYS,
         completionCandidates = PaletteCandidates::class,
-        order = 10_000 + 100
+        order = OptionsOrder.main + 30_000
     )
     var palette = "density"
 
@@ -32,7 +32,7 @@ abstract class CommandPaExportPlotsHeatmap : CommandPaExportPlots() {
         description = ["Width of horizontal labels. One unit corresponds to the width of one tile."],
         names = ["--h-labels-size"],
         paramLabel = "<d>",
-        order = 10_000 + 101
+        order = OptionsOrder.main + 30_001
     )
     var hLabelsSize = -1.0
 
@@ -40,7 +40,7 @@ abstract class CommandPaExportPlotsHeatmap : CommandPaExportPlots() {
         description = ["Height of vertical labels. One unit corresponds to the height of one tile."],
         names = ["--v-labels-size"],
         paramLabel = "<d>",
-        order = 10_000 + 102
+        order = OptionsOrder.main + 30_002
     )
     var vLabelsSize = -1.0
 

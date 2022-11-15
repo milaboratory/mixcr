@@ -47,13 +47,15 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
     @Option(
         description = ["Specify chains"],
         names = ["-c", "--chains"],
-        required = true
+        required = true,
+        order = OptionsOrder.main + 10_100
     )
     var chains: Chains? = null
 
     @Option(
         description = [CommonDescriptions.ONLY_PRODUCTIVE],
-        names = ["--only-productive"]
+        names = ["--only-productive"],
+        order = OptionsOrder.main + 10_200
     )
     var onlyProductive = false
 
@@ -61,14 +63,16 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         description = ["Choose ${CommonDescriptions.DOWNSAMPLING}"],
         names = ["--downsampling"],
         required = true,
-        paramLabel = "<type>"
+        paramLabel = "<type>",
+        order = OptionsOrder.required + 100
     )
     lateinit var downsampling: String
 
     @set:Option(
         description = ["Write downsampling summary tsv/csv table."],
         names = ["--summary"],
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_400
     )
     var summary: Path? = null
         set(value) {
@@ -80,14 +84,16 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         description = ["Suffix to add to output clns file."],
         names = ["--suffix"],
         paramLabel = "<s>",
-        showDefaultValue = ALWAYS
+        showDefaultValue = ALWAYS,
+        order = OptionsOrder.main + 10_500
     )
     var suffix = "downsampled"
 
     @Option(
         description = ["Output path prefix."],
         names = ["--out"],
-        paramLabel = "<path_prefix>"
+        paramLabel = "<path_prefix>",
+        order = OptionsOrder.main + 10_600
     )
     var outPath: Path? = null
 

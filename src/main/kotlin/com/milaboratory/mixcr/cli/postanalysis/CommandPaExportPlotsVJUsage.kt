@@ -26,19 +26,22 @@ import picocli.CommandLine.Option
 class CommandPaExportPlotsVJUsage : CommandPaExportPlotsHeatmap() {
     @Option(
         description = ["Show gene family usage instead."],
-        names = ["--family-usage"]
+        names = ["--family-usage"],
+        order = OptionsOrder.main + 10_100
     )
     var familyUsage: Boolean = false
 
     @Option(
         description = ["Don't add V genes dendrogram"],
-        names = ["--no-v-dendro"]
+        names = ["--no-v-dendro"],
+        order = OptionsOrder.main + 10_200
     )
     var noVDendro = false
 
     @Option(
         description = ["Don't add J genes dendrogram"],
-        names = ["--no-j-dendro"]
+        names = ["--no-j-dendro"],
+        order = OptionsOrder.main + 10_300
     )
     var noJDendro = false
 
