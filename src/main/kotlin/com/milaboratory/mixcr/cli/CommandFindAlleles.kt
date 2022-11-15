@@ -115,7 +115,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             ],
             names = ["--output-template"],
             paramLabel = "<template.clns>",
-            required = true
+            required = true,
+            order = 1
         )
         var outputTemplate: String? = null
 
@@ -124,12 +125,16 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             description = ["Command will not realign input clns files. Must be specified if `--output-template` is omitted."],
             names = ["--no-clns-output"],
             required = true,
-            arity = "0"
+            arity = "0",
+            order = 2
         )
         var noClnsOutput: Boolean = false
     }
 
-    @ArgGroup(exclusive = true, multiplicity = "1")
+    @ArgGroup(
+        exclusive = true, multiplicity = "1",
+        order = OptionsOrder.main + 10_000
+    )
     lateinit var outputClnsOptions: OutputClnsOptions
 
     @Option(
@@ -140,14 +145,16 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                     "There will be several records for one gene if clnx were assembled by composite gene feature.",
         ],
         names = ["--export-library"],
-        paramLabel = "<path.(json|fasta)>"
+        paramLabel = "<path.(json|fasta)>",
+        order = OptionsOrder.main + 10_100
     )
     var libraryOutputs: List<Path> = mutableListOf()
 
     @set:Option(
         description = ["Path where to write descriptions and stats for all result alleles, existed and new."],
         names = ["--export-alleles-mutations"],
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_200
     )
     var allelesMutationsOutput: Path? = null
         set(value) {
@@ -165,7 +172,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         names = ["-O"],
         description = ["Overrides default build SHM parameter values"],
         paramLabel = Labels.OVERRIDES,
-        order = 100_000
+        order = OptionsOrder.overrides
     )
     var overrides: Map<String, String> = mutableMapOf()
 

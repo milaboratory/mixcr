@@ -36,6 +36,7 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryId
 import io.repseq.dto.VDJCLibraryData
+import java.util.*
 
 interface MiXCRFileInfo {
     /** Returns information from .vdjca/.clna/.clns file header  */
@@ -187,7 +188,7 @@ data class MiXCRHeader(
             output.writeObject(obj.stepParams)
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
-            output.writeMap(obj.featuresToAlignMap)
+            output.writeMap(TreeMap(obj.featuresToAlignMap))
             output.writeObject(obj.assemblerParameters)
             output.writeObject(obj.foundAlleles)
             output.writeObject(obj.allFullyCoveredBy)

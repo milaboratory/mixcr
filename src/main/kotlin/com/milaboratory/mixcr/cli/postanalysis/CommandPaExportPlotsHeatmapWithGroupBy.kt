@@ -17,7 +17,8 @@ abstract class CommandPaExportPlotsHeatmapWithGroupBy : CommandPaExportPlotsHeat
     @Option(
         description = ["Group heatmaps by specific metadata properties."],
         names = ["--group-by"],
-        paramLabel = "<s>"
+        paramLabel = "<s>",
+        order = OptionsOrder.main + 25_000
     )
     var groupBy: List<String>? = null
 }

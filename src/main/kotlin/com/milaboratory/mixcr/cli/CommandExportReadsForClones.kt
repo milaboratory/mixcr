@@ -61,7 +61,8 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
         ],
         names = ["--id"],
         paramLabel = "<id>",
-        arity = "0..*"
+        arity = "0..*",
+        order = OptionsOrder.main + 10_100
     )
     var cloneIds: List<Int> = mutableListOf()
 
@@ -74,7 +75,8 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
     @Option(
         description = ["Create separate files for each clone. File or pair of `_R1`/`_R2` files, with `_clnN` suffix, " +
                 "where N is clone index, will be created for each clone index."],
-        names = ["-s", "--separate"]
+        names = ["-s", "--separate"],
+        order = OptionsOrder.main + 10_200
     )
     var separate = false
 

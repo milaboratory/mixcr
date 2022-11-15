@@ -85,7 +85,8 @@ object CommandAssembleContigs {
                 "Ignore tags (UMIs, cell-barcodes).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--ignore-tags"]
+            names = ["--ignore-tags"],
+            order = OptionsOrder.main + 10_100
         )
         private var ignoreTags = false
 
@@ -93,7 +94,7 @@ object CommandAssembleContigs {
             names = ["-O"],
             description = ["Overrides for the assembler parameters."],
             paramLabel = Labels.OVERRIDES,
-            order = 100_000
+            order = OptionsOrder.overrides
         )
         private var overrides: Map<String, String> = mutableMapOf()
 

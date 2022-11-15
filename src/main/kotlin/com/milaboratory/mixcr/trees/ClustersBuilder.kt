@@ -216,7 +216,11 @@ sealed class ClustersBuilder<T : Any> {
             val notOverlappedCliques = mutableListOf<BitArrayInt>()
             matrix.calculateMaximalCliques()
                 .filter { it.bitCount() > 1 }
-                .sortedByDescending { it.bitCount() }
+                .sortedWith(Comparator
+                    .comparingInt { clique: BitArrayInt -> clique.bitCount() }.reversed()
+                    .thenComparingInt { clique: BitArrayInt -> clique.bits.sum() }
+                    .thenComparingInt { clique: BitArrayInt -> clique.bits.first() }
+                )
                 .forEach { clique ->
                     if (notOverlappedCliques.none { it.intersects(clique) }) {
                         notOverlappedCliques.add(clique)

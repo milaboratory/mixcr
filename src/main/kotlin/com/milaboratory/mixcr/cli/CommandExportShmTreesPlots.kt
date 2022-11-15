@@ -41,7 +41,8 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
             "Path to metadata file",
             "Metadata should be a .tsv or .csv file with a column named 'sample' with filenames of .clns files used in findShmTrees"
         ],
-        paramLabel = "<path.(tsv|csv)>"
+        paramLabel = "<path.(tsv|csv)>",
+        order = OptionsOrder.main + 10_000
     )
     var metadata: Path? = null
         set(value) {
@@ -64,14 +65,16 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     @Option(
         names = ["--node-color"],
         description = ["Color nodes with given metadata column"],
-        paramLabel = "<meta>"
+        paramLabel = "<meta>",
+        order = OptionsOrder.main + 10_100
     )
     var nodeColor: String? = null
 
     @Option(
         names = ["--line-color"],
         description = ["Color lines with given metadata column"],
-        paramLabel = "<meta>"
+        paramLabel = "<meta>",
+        order = OptionsOrder.main + 10_200
     )
     var lineColor: String? = null
 
@@ -79,14 +82,16 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         names = ["--node-size"],
         description = ["Size nodes with given metadata column. Predefined columns: \"${DefaultMeta.Abundance}\"."],
         paramLabel = "<meta>",
-        showDefaultValue = ALWAYS
+        showDefaultValue = ALWAYS,
+        order = OptionsOrder.main + 10_300
     )
     var nodeSize: String = DefaultMeta.Abundance
 
     @Option(
         names = ["--node-label"],
         description = ["Label nodes with given metadata column. Predefined columns: \"${DefaultMeta.Isotype}\""],
-        paramLabel = "<meta>"
+        paramLabel = "<meta>",
+        order = OptionsOrder.main + 10_400
     )
     var nodeLabel: String? = null
 
@@ -94,20 +99,23 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     @Option(
         names = ["--alignment-nt"],
         description = ["Show tree nucleotide alignments using specified gene feature"],
-        paramLabel = Labels.GENE_FEATURE
+        paramLabel = Labels.GENE_FEATURE,
+        order = OptionsOrder.main + 10_500
     )
     var alignmentGeneFeatureNt: GeneFeature? = null
 
     @Option(
         names = ["--alignment-aa"],
         description = ["Show tree amino acid alignments using specified gene feature"],
-        paramLabel = Labels.GENE_FEATURE
+        paramLabel = Labels.GENE_FEATURE,
+        order = OptionsOrder.main + 10_600
     )
     var alignmentGeneFeatureAa: GeneFeature? = null
 
     @Option(
         names = ["--alignment-no-fill"],
-        description = ["Do not highlight alignments with color"]
+        description = ["Do not highlight alignments with color"],
+        order = OptionsOrder.main + 10_700
     )
     var noAlignmentFill: Boolean = false
 

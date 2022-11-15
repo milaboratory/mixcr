@@ -53,17 +53,26 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
 
     private val output get() = inOut.last()
 
-    @Option(description = [CommonDescriptions.ONLY_PRODUCTIVE], names = ["--only-productive"])
+    @Option(
+        description = [CommonDescriptions.ONLY_PRODUCTIVE],
+        names = ["--only-productive"],
+        order = OptionsOrder.main + 10_100
+    )
     var onlyProductive = false
 
-    @Option(description = [CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS], names = ["--drop-outliers"])
+    @Option(
+        description = [CommonDescriptions.DOWNSAMPLING_DROP_OUTLIERS],
+        names = ["--drop-outliers"],
+        order = OptionsOrder.main + 10_200
+    )
     var dropOutliers = false
 
     @Option(
         description = ["Default ${CommonDescriptions.DOWNSAMPLING}"],
         names = ["--default-downsampling"],
         required = true,
-        paramLabel = "(<type>|none)"
+        paramLabel = "(<type>|none)",
+        order = OptionsOrder.required + 100
     )
     lateinit var defaultDownsampling: String
 
@@ -71,7 +80,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         description = ["Default clonotype weight function"],
         names = ["--default-weight-function"],
         required = true,
-        paramLabel = "(<read>|<Tag>|none)"
+        paramLabel = "(<read>|<Tag>|none)",
+        order = OptionsOrder.required + 200
     )
     lateinit var defaultWeightFunction: String
 
@@ -80,14 +90,16 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                 "Possible values (multiple values allowed): TRA, TRD, TRAD (for human), TRG, IGH, IGK, IGL"],
         names = ["--chains"],
         split = ",",
-        paramLabel = Labels.CHAIN
+        paramLabel = Labels.CHAIN,
+        order = OptionsOrder.main + 10_500
     )
     var chains: Set<String>? = null
 
     @set:Option(
         description = [CommonDescriptions.METADATA + " Optionally may have `chains` column."],
         names = ["--metadata"],
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_600
     )
     var metadataFile: Path? = null
         set(value) {
@@ -100,7 +112,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                 "postanalysis will be performed in each of the groups separately. " +
                 "It is possible to specify several isolation groups."],
         names = ["--group"],
-        paramLabel = "<group>"
+        paramLabel = "<group>",
+        order = OptionsOrder.main + 10_700
     )
     var isolationGroups: List<String> = mutableListOf()
 
@@ -111,7 +124,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
             "For each `chain` and `metric` will be generated file with path `{dir}/{fileName}.{metric}.{chain}.(tsv|csv)`"
         ],
         names = ["--tables"],
-        paramLabel = "<path.(tsv|csv)>"
+        paramLabel = "<path.(tsv|csv)>",
+        order = OptionsOrder.main + 10_800
     )
     var tablesOut: Path? = null
         set(value) {
@@ -129,7 +143,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
             "For each `chain` will be generated file with path `{dir}/{fileName}.{chain}.(tsv|csv)`"
         ],
         names = ["--preproc-tables"],
-        paramLabel = "<path.(tsv|csv)>"
+        paramLabel = "<path.(tsv|csv)>",
+        order = OptionsOrder.main + 10_900
     )
     var preprocOut: Path? = null
         set(value) {
@@ -144,11 +159,11 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         names = ["-O"],
         description = ["Overrides default postanalysis settings"],
         paramLabel = Labels.OVERRIDES,
-        order = 100_000
+        order = OptionsOrder.overrides
     )
     var overrides: Map<String, String> = mutableMapOf()
 
-    override val inputFiles: List<Path>
+    val inputClnsFiles: List<Path>
         get() = inOut.dropLast(1)
             .flatMap { path ->
                 when {
@@ -157,15 +172,18 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                 }
             }
 
+    override val inputFiles: List<Path>
+        get() = inputClnsFiles + listOfNotNull(metadataFile)
+
     override val outputFiles
         get() = listOf(output)
 
     protected val tagsInfo: TagsInfo by lazy {
-        extractTagsInfo(inputFiles)
+        extractTagsInfo(inputClnsFiles)
     }
 
     override fun validate() {
-        inputFiles.forEach { input ->
+        inputClnsFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNX)
         }
         ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.JSON_GZ)
@@ -174,7 +192,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         } catch (t: Throwable) {
             throw ValidationException(t.message ?: t.javaClass.name)
         }
-        val duplicates = inputFiles
+        val duplicates = inputClnsFiles
             .groupingBy { it }.eachCount()
             .filterValues { it > 1 }
             .keys
@@ -183,7 +201,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         metadata?.let { metadata ->
             if (!metadata.containsKey("sample"))
                 throw ValidationException("Metadata must contain 'sample' column")
-            val samples = inputFiles.map { it.toString() }
+            val samples = inputClnsFiles.map { it.toString() }
             val mapping = StringUtil.matchLists(samples, metadata["sample"]!!.map { it as String })
             if (mapping.size < samples.size || mapping.values.any { it == null }) {
                 throw ValidationException("Metadata samples does not match input file names: " + samples
@@ -246,11 +264,11 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     private fun groupSamples(): List<SamplesGroup> {
         val chainsColumn = chainsColumn()
         if (chainsColumn == null && isolationGroups.isEmpty()) {
-            return listOf(SamplesGroup(inputFiles.map { it.toString() }, emptyMap()))
+            return listOf(SamplesGroup(inputClnsFiles.map { it.toString() }, emptyMap()))
         }
         val metadata = metadata!!
         val mSamples = metadata["sample"]!!.map { it as String }
-        val qSamples = inputFiles
+        val qSamples = inputClnsFiles
         val sample2meta = StringUtil.matchLists(qSamples.map { it.toString() }, mSamples)
         for ((key, value) in sample2meta) {
             requireNotNull(value) { "Malformed metadata: can't find metadata row for sample $key" }
@@ -274,7 +292,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
     }
 
     private val chainsToProcess by lazy {
-        val availableChains = ChainsUtil.allChainsFromClnx(inputFiles)
+        val availableChains = ChainsUtil.allChainsFromClnx(inputClnsFiles)
         println("The following chains present in the data: $availableChains")
         if (chains == null)
             availableChains

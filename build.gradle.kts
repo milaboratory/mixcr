@@ -98,10 +98,10 @@ repositories {
     }
 }
 
-val milibVersion = "2.1.0-3-master"
-val repseqioVersion = "1.5.0"
+val milibVersion = "2.1.0-5-order_maps_in_json"
+val repseqioVersion = "1.5.0-1-comparable_chains"
 val miplotsVersion = "1.1.0"
-val mitoolVersion = "1.3.0-2-main"
+val mitoolVersion = "1.3.0-4-sorting_key"
 val jacksonBomVersion = "2.14.0"
 val redberryPipeVersion = "1.3.0"
 

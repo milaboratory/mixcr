@@ -23,7 +23,7 @@ abstract class CommandExportQc : MiXCRCommandWithOutputs() {
             description = ["Plot width"],
             paramLabel = "<n>",
             required = true,
-            order = 10_000 + 1
+            order = OptionsOrder.width
         )
         var width = -1
 
@@ -32,12 +32,16 @@ abstract class CommandExportQc : MiXCRCommandWithOutputs() {
             description = ["Plot height"],
             paramLabel = "<n>",
             required = true,
-            order = 10_000 + 2
+            order = OptionsOrder.height
         )
         var height = -1
     }
 
-    @ArgGroup(exclusive = false, multiplicity = "0..1")
+    @ArgGroup(
+        exclusive = false,
+        multiplicity = "0..1",
+        order = OptionsOrder.width
+    )
     var sizeParameters: SizeParameters? = null
 
     @Command(

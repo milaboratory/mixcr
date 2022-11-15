@@ -55,7 +55,8 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["-o1", "--only-in-first"],
         description = ["output for alignments contained only in the first .vdjca file"],
-        paramLabel = "<path.vdjca>"
+        paramLabel = "<path.vdjca>",
+        order = OptionsOrder.main + 10_100
     )
     var onlyFirst: Path? = null
         set(value) {
@@ -66,7 +67,8 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["-o2", "--only-in-second"],
         description = ["output for alignments contained only in the second .vdjca file"],
-        paramLabel = "<path.vdjca>"
+        paramLabel = "<path.vdjca>",
+        order = OptionsOrder.main + 10_200
     )
     var onlySecond: Path? = null
         set(value) {
@@ -77,7 +79,8 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["-d1", "--diff-from-first"],
         description = ["output for alignments from the first file that are different from those alignments in the second file"],
-        paramLabel = "<path.vdjca>"
+        paramLabel = "<path.vdjca>",
+        order = OptionsOrder.main + 10_300
     )
     var diff1: Path? = null
         set(value) {
@@ -88,7 +91,8 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["-d2", "--diff-from-second"],
         description = ["output for alignments from the second file that are different from those alignments in the first file"],
-        paramLabel = "<path.vdjca>"
+        paramLabel = "<path.vdjca>",
+        order = OptionsOrder.main + 10_400
     )
     var diff2: Path? = null
         set(value) {
@@ -101,14 +105,16 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
         description = ["Specifies a gene feature to compare."],
         paramLabel = Labels.GENE_FEATURE,
         defaultValue = "CDR3",
-        showDefaultValue = ALWAYS
+        showDefaultValue = ALWAYS,
+        order = OptionsOrder.main + 10_500
     )
     lateinit var geneFeatureToMatch: GeneFeature
 
     @Option(
         names = ["-l", "--top-hits-level"],
         description = ["Number of top hits to search for a match"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_600
     )
     var hitsCompareLevel = 1
 

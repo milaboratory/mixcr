@@ -28,45 +28,52 @@ abstract class CommandPaExportPlotsGeneUsage : CommandPaExportPlotsHeatmapWithGr
 
     @Option(
         description = ["Show gene family usage instead."],
-        names = ["--family-usage"]
+        names = ["--family-usage"],
+        order = OptionsOrder.main + 10_100
     )
     var familyUsage: Boolean = false
 
     @Option(
         description = ["Don't add samples dendrogram on heatmap."],
-        names = ["--no-samples-dendro"]
+        names = ["--no-samples-dendro"],
+        order = OptionsOrder.main + 10_200
     )
     var noSamplesDendro = false
 
     @Option(
         description = ["Don't add genes dendrogram on heatmap."],
-        names = ["--no-genes-dendro"]
+        names = ["--no-genes-dendro"],
+        order = OptionsOrder.main + 10_300
     )
     var noGenesDendro = false
 
     @Option(
         description = ["Add color key layer to heatmap."],
         names = ["--color-key"],
-        paramLabel = "<key>"
+        paramLabel = "<key>",
+        order = OptionsOrder.main + 10_400
     )
     var colorKey: List<String> = mutableListOf()
 
     @Option(
         description = ["Export bar plot instead of heatmap."],
-        names = ["--bar-plot"]
+        names = ["--bar-plot"],
+        order = OptionsOrder.main + 10_500
     )
     var barPlot = false
 
     @Option(
         description = ["Export bar plot groupped by sample."],
-        names = ["--bar-plot-by-sample"]
+        names = ["--bar-plot-by-sample"],
+        order = OptionsOrder.main + 10_600
     )
     var barPlotBySamples = false
 
     @Option(
         description = ["Facet barplot."],
         names = ["--facet-by"],
-        paramLabel = "<s>"
+        paramLabel = "<s>",
+        order = OptionsOrder.main + 10_700
     )
     var facetBy: String? = null
 

@@ -47,19 +47,22 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
 
     @Option(
         names = ["-v"],
-        description = ["Use V gene in clone comparison (include it as a clone key along with a clone sequence)."]
+        description = ["Use V gene in clone comparison (include it as a clone key along with a clone sequence)."],
+        order = OptionsOrder.main + 10_100
     )
     var useV = false
 
     @Option(
         names = ["-j"],
-        description = ["Use J gene in clone comparison (include it as a clone key along with a clone sequence)."]
+        description = ["Use J gene in clone comparison (include it as a clone key along with a clone sequence)."],
+        order = OptionsOrder.main + 10_200
     )
     var useJ = false
 
     @Option(
         names = ["-c"],
-        description = ["Use C gene in clone comparison (include it as a clone key along with a clone sequence)."]
+        description = ["Use C gene in clone comparison (include it as a clone key along with a clone sequence)."],
+        order = OptionsOrder.main + 10_300
     )
     var useC = false
 

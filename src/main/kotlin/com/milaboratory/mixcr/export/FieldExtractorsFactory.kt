@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneType
@@ -51,7 +52,7 @@ abstract class FieldExtractorsFactory<T : Any> {
     ) {
         val argGroup = ArgGroupSpec.builder()
             .heading("Possible fields to export\n")
-            .order(50_000)
+            .order(MiXCRCommand.OptionsOrder.exportFields)
             .validate(false)
             .exclusive(false)
 
@@ -77,7 +78,7 @@ abstract class FieldExtractorsFactory<T : Any> {
                     .paramLabel(field.metaVars)
                     .hideParamSyntax(true)
                     .hidden(field.deprecation != null)
-                    .order(50_000 + index)
+                    .order(MiXCRCommand.OptionsOrder.exportFields + index)
                     .build()
             )
         }
