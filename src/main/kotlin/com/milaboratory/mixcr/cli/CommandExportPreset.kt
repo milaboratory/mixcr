@@ -121,7 +121,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         multiplicity = "0..*",
         order = OptionsOrder.mixins.exports
     )
-    var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
+    var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
     @Mixin
     var genericMixins: GenericMiXCRMixins? = null

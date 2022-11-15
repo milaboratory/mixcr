@@ -327,103 +327,112 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
     }
 }
 
-class ExportMiXCRMixins : MiXCRMixinCollector() {
-    @Option(
-        description = ["Export nucleotide sequences using letters from germline (marked lowercase) for uncovered regions"],
-        names = [ImputeGermlineOnExport.CMD_OPTION],
-        arity = "0",
-        order = OptionsOrder.mixins.exports + 100
-    )
-    fun imputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
-        mixIn(ImputeGermlineOnExport)
+object ExportMiXCRMixins {
 
-    @Option(
-        description = ["Export nucleotide sequences only from covered region"],
-        names = [DontImputeGermlineOnExport.CMD_OPTION],
-        arity = "0",
-        order = OptionsOrder.mixins.exports + 200
-    )
-    fun dontImputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
-        mixIn(DontImputeGermlineOnExport)
+    class All : Modifiers, Generic, MiXCRMixinCollector()
 
-    private fun addExportClonesField(args: List<String>, prepend: Boolean) {
-        require(args.isNotEmpty())
-        mixIn(AddExportClonesField(if (prepend) 0 else -1, args.first(), args.drop(1)))
+    class CommandSpecific : Modifiers, MiXCRMixinCollector()
+
+    private interface Modifiers : MiXCRMixinRegister {
+        @Option(
+            description = ["Export nucleotide sequences using letters from germline (marked lowercase) for uncovered regions"],
+            names = [ImputeGermlineOnExport.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 100
+        )
+        fun imputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+            mixIn(ImputeGermlineOnExport)
+
+        @Option(
+            description = ["Export nucleotide sequences only from covered region"],
+            names = [DontImputeGermlineOnExport.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 200
+        )
+        fun dontImputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+            mixIn(DontImputeGermlineOnExport)
     }
 
-    private fun addExportAlignmentsField(args: List<String>, prepend: Boolean) {
-        require(args.isNotEmpty())
-        mixIn(AddExportAlignmentsField(if (prepend) 0 else -1, args.first(), args.drop(1)))
-    }
-
-    @Option(
-        description = ["Add clones export column before other columns. First param is field name as it is in `${CommandExportClones.COMMAND_NAME}` command, left params are params of the field"],
-        names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX],
-        parameterConsumer = CloneExportParameterConsumer::class,
-        arity = "1..*",
-        paramLabel = "<field> [<param>...]",
-        hideParamSyntax = true,
-        order = OptionsOrder.mixins.exports + 300
-    )
-    fun prependExportClonesField(data: List<String>) = addExportClonesField(data, true)
-
-    @Option(
-        description = ["Add clones export column after other columns. First param is field name as it is in `${CommandExportClones.COMMAND_NAME}` command, left params are params of the field"],
-        names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX],
-        parameterConsumer = CloneExportParameterConsumer::class,
-        arity = "1..*",
-        paramLabel = "<field> [<param>...]",
-        hideParamSyntax = true,
-        order = OptionsOrder.mixins.exports + 400
-    )
-    fun appendExportClonesField(data: List<String>) = addExportClonesField(data, false)
-
-    @Option(
-        description = ["Add clones export column before other columns. First param is field name as it is in `${CommandExportAlignments.COMMAND_NAME}` command, left params are params of the field"],
-        names = [AddExportAlignmentsField.CMD_OPTION_PREPEND_PREFIX],
-        parameterConsumer = AlignsExportParameterConsumer::class,
-        arity = "1..*",
-        paramLabel = "<field> [<param>...]",
-        hideParamSyntax = true,
-        order = OptionsOrder.mixins.exports + 500
-    )
-    fun prependExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, true)
-
-    @Option(
-        description = ["Add clones export column after other columns. First param is field name as it is in `${CommandExportAlignments.COMMAND_NAME}` command, left params are params of the field"],
-        names = [AddExportAlignmentsField.CMD_OPTION_APPEND_PREFIX],
-        parameterConsumer = AlignsExportParameterConsumer::class,
-        arity = "1..*",
-        paramLabel = "<field> [<param>...]",
-        hideParamSyntax = true,
-        order = OptionsOrder.mixins.exports + 600
-    )
-    fun appendExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, false)
-
-    companion object {
-        const val DESCRIPTION = "Params for export commands:%n"
-
-        abstract class ExportParameterConsumer(private val fieldsFactory: FieldExtractorsFactory<*>) :
-            IParameterConsumer {
-            override fun consumeParameters(args: Stack<String>, argSpec: ArgSpec, commandSpec: CommandSpec) {
-                val fieldName = args.pop()
-                val field = fieldsFactory[fieldName]
-                val argsCountToAdd = field.consumableArgs(args.reversed())
-                if (argsCountToAdd > args.size) {
-                    throw ValidationException("Not enough parameters for ${field.cmdArgName}")
-                }
-                val actualArgs: MutableList<String> = mutableListOf(fieldName)
-                repeat(argsCountToAdd) {
-                    actualArgs.add(args.pop())
-                }
-                argSpec.setValue(actualArgs)
-            }
+    private interface Generic : MiXCRMixinRegister {
+        private fun addExportClonesField(args: List<String>, prepend: Boolean) {
+            require(args.isNotEmpty())
+            mixIn(AddExportClonesField(if (prepend) 0 else -1, args.first(), args.drop(1)))
         }
 
-        class CloneExportParameterConsumer : ExportParameterConsumer(CloneFieldsExtractorsFactory)
+        private fun addExportAlignmentsField(args: List<String>, prepend: Boolean) {
+            require(args.isNotEmpty())
+            mixIn(AddExportAlignmentsField(if (prepend) 0 else -1, args.first(), args.drop(1)))
+        }
 
-        class AlignsExportParameterConsumer : ExportParameterConsumer(VDJCAlignmentsFieldsExtractorsFactory)
+        @Option(
+            description = ["Add clones export column before other columns. First param is field name as it is in `${CommandExportClones.COMMAND_NAME}` command, left params are params of the field"],
+            names = [AddExportClonesField.CMD_OPTION_PREPEND_PREFIX],
+            parameterConsumer = CloneExportParameterConsumer::class,
+            arity = "1..*",
+            paramLabel = "<field> [<param>...]",
+            hideParamSyntax = true,
+            order = OptionsOrder.mixins.exports + 300
+        )
+        fun prependExportClonesField(data: List<String>) = addExportClonesField(data, true)
+
+        @Option(
+            description = ["Add clones export column after other columns. First param is field name as it is in `${CommandExportClones.COMMAND_NAME}` command, left params are params of the field"],
+            names = [AddExportClonesField.CMD_OPTION_APPEND_PREFIX],
+            parameterConsumer = CloneExportParameterConsumer::class,
+            arity = "1..*",
+            paramLabel = "<field> [<param>...]",
+            hideParamSyntax = true,
+            order = OptionsOrder.mixins.exports + 400
+        )
+        fun appendExportClonesField(data: List<String>) = addExportClonesField(data, false)
+
+        @Option(
+            description = ["Add clones export column before other columns. First param is field name as it is in `${CommandExportAlignments.COMMAND_NAME}` command, left params are params of the field"],
+            names = [AddExportAlignmentsField.CMD_OPTION_PREPEND_PREFIX],
+            parameterConsumer = AlignsExportParameterConsumer::class,
+            arity = "1..*",
+            paramLabel = "<field> [<param>...]",
+            hideParamSyntax = true,
+            order = OptionsOrder.mixins.exports + 500
+        )
+        fun prependExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, true)
+
+        @Option(
+            description = ["Add clones export column after other columns. First param is field name as it is in `${CommandExportAlignments.COMMAND_NAME}` command, left params are params of the field"],
+            names = [AddExportAlignmentsField.CMD_OPTION_APPEND_PREFIX],
+            parameterConsumer = AlignsExportParameterConsumer::class,
+            arity = "1..*",
+            paramLabel = "<field> [<param>...]",
+            hideParamSyntax = true,
+            order = OptionsOrder.mixins.exports + 600
+        )
+        fun appendExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, false)
+
+        companion object {
+            abstract class ExportParameterConsumer(private val fieldsFactory: FieldExtractorsFactory<*>) :
+                IParameterConsumer {
+                override fun consumeParameters(args: Stack<String>, argSpec: ArgSpec, commandSpec: CommandSpec) {
+                    val fieldName = args.pop()
+                    val field = fieldsFactory[fieldName]
+                    val argsCountToAdd = field.consumableArgs(args.reversed())
+                    if (argsCountToAdd > args.size) {
+                        throw ValidationException("Not enough parameters for ${field.cmdArgName}")
+                    }
+                    val actualArgs: MutableList<String> = mutableListOf(fieldName)
+                    repeat(argsCountToAdd) {
+                        actualArgs.add(args.pop())
+                    }
+                    argSpec.setValue(actualArgs)
+                }
+            }
+
+            class CloneExportParameterConsumer : ExportParameterConsumer(CloneFieldsExtractorsFactory)
+
+            class AlignsExportParameterConsumer : ExportParameterConsumer(VDJCAlignmentsFieldsExtractorsFactory)
+        }
     }
+
+    const val DESCRIPTION = "Params for export commands:%n"
 }
 
 class GenericMiXCRMixins : MiXCRMixinCollector() {
