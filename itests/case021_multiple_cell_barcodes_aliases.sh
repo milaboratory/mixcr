@@ -19,12 +19,12 @@ mixcr analyze -f 10x-vdj-tcr-alias-multi-barcode-test \
   --species hs \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
-  case19.vdjcontigs
+  case21.vdjcontigs
 
 #assert "cat case19.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "9"
 
-mixcr exportReports --yaml case19.vdjcontigs.contigs.clns
-mixcr exportReports case19.vdjcontigs.contigs.clns
+mixcr exportReports --yaml case21.vdjcontigs.contigs.clns
+mixcr exportReports case21.vdjcontigs.contigs.clns
 
 #mixcr refineTagsAndSort case10.aligned-vdjca case10.corrected-vdjca
 #

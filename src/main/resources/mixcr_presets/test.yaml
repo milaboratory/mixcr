@@ -188,6 +188,8 @@
                 operator:
                   type: group_operator_otsu1
                   logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
           - type: filter_groups
             groupingKeys:
               - CELL1
@@ -322,6 +324,43 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL1:N{8})(CELL2:N{8})(UMI1:N{5})(UMI2:N{5})\^(R2:*)
+  assemble:
+    inheritFrom: assemble-base-with-consensus
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+          - type: filter_in_groups
+            isolationKeys:
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
 
 "umi-guided-consensus-test":
   pipeline:

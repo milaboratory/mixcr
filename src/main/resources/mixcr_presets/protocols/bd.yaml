@@ -40,6 +40,8 @@
                 operator:
                   type: group_operator_otsu1
                   logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
           - type: filter_groups
             groupingKeys:
               - CELL1

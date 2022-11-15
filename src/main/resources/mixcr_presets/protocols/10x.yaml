@@ -46,6 +46,8 @@
                 operator:
                   type: group_operator_otsu1
                   logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
           - type: filter_groups
             groupingKeys:
               - CELL
@@ -61,6 +63,8 @@
                 operator:
                   type: group_operator_otsu1
                   logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 2.0
   assemblePartial:
     inheritFrom: assemblePartial-universal
   assemble:
@@ -159,6 +163,8 @@
                 operator:
                   type: group_operator_otsu1
                   logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
           - type: filter_groups
             groupingKeys:
               - CELL
