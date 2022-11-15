@@ -287,6 +287,7 @@ object CommandAnalyze {
                         // Terminating execution if one of the steps resulted in error
                         exitProcess(exitCode)
                 }
+                println("Analysis finished successfully.")
             }
         }
 
