@@ -317,6 +317,12 @@
       - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
 
+"10x-vdj-tcr-alias-multi-barcode-test":
+  inheritFrom: 10x-vdj-tcr
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(CELL1:N{8})(CELL2:N{8})(UMI1:N{5})(UMI2:N{5})\^(R2:*)
+
 "umi-guided-consensus-test":
   pipeline:
     - align
