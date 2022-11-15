@@ -77,7 +77,7 @@
                 - metrics:
                     - type: group_metric_nunique
                       keys:
-                        - tag:UMI
+                        - allTags:Molecule
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
@@ -94,7 +94,7 @@
                 - metrics:
                     - type: group_metric_nunique
                       keys:
-                        - tag:UMI
+                        - allTags:Molecule
                   operator:
                     type: group_operator_cumtop
                     share: 0.99
@@ -108,7 +108,7 @@
               - metrics:
                   - type: group_metric_nunique
                     keys:
-                      - tag:UMI
+                      - allTags:Molecule
                 operator:
                   type: group_operator_range
                   lower: 2.0

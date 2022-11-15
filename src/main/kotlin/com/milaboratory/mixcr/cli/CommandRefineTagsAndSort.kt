@@ -33,8 +33,8 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.GroupingCriteria
@@ -255,15 +255,7 @@ object CommandRefineTagsAndSort {
                 // All tag names
                 val tagNames = header.tagsInfo.map { it.name }
                 // Building tag aliases for each specific tag type
-                val tagAliases = TagType.values()
-                    .map { type -> type to header.tagsInfo.filter { it.type == type }.map { it.name } }
-                    .filter { it.second.isNotEmpty() }
-                    .flatMap { typeToTags ->
-                        typeToTags.first.aliases
-                            .filter { !tagNames.contains(it) }
-                            .map { alias -> alias to typeToTags.second }
-                    }
-                    .toMap()
+                val tagAliases = header.tagsInfo.tagAliases
 
                 // Indices to be corrected
                 val correctionIndicesBuilder = TIntArrayList()
