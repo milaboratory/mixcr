@@ -22,7 +22,20 @@ class CommandExportAlignmentsTest {
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} $input ${output.path}")
         val columns = output.readLines().first().split("\t")
         columns shouldContain "refPoints"
+        columns shouldContainInOrder listOf("nSeqImputedFR1", "minQualFR1", "nSeqImputedCDR2", "minQualCDR2")
         columns shouldNotContain "readHistory"
+    }
+
+    @Test
+    fun `use don't impute option`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --dont-impute-germline-on-export $input ${output.path}")
+        val columns = output.readLines().first().split("\t")
+        columns shouldNotContain listOf("nSeqImputedFR1", "nSeqImputedCDR2")
+        columns shouldContainInOrder listOf("nSeqFR1", "minQualFR1", "nSeqCDR2", "minQualCDR2")
     }
 
     @Test

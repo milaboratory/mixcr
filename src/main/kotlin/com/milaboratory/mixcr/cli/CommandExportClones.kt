@@ -187,6 +187,9 @@ object CommandExportClones {
                 field = value
             }
 
+        @Mixin
+        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecific
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -201,7 +204,7 @@ object CommandExportClones {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val header = initialSet.header
             val (_, params) = paramsResolver.resolve(
-                header.paramsSpec,
+                header.paramsSpec.addMixins(exportMixins.mixins),
                 printParameters = logger.verbose && outputFile != null
             )
 

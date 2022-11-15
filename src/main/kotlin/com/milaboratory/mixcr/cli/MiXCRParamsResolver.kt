@@ -65,17 +65,17 @@ interface MiXCRMixinCollection {
         val empty = object : MiXCRMixinCollection {
             override val mixins: List<MiXCRMixin> = emptyList()
         }
-
-        fun combine(vararg list: MiXCRMixinCollection?) = object : MiXCRMixinCollection {
-            override val mixins = list.filterNotNull().flatMap { it.mixins }
-        }
     }
 }
 
-abstract class MiXCRMixinCollector : MiXCRMixinCollection {
+interface MiXCRMixinRegister {
+    fun mixIn(mixin: MiXCRMixin)
+}
+
+abstract class MiXCRMixinCollector : MiXCRMixinCollection, MiXCRMixinRegister {
     private val _mixins = mutableListOf<MiXCRMixin>()
 
-    protected fun mixIn(mixin: MiXCRMixin) {
+    override fun mixIn(mixin: MiXCRMixin) {
         _mixins += mixin
     }
 
