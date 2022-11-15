@@ -39,7 +39,7 @@ done
 mixcr findAlleles \
   -j alleles/report.json \
   -r alleles/report.txt \
-  --debugDir alleles/debug \
+  --debug-dir alleles/debug \
   --output-template 'alleles/{file_name}.with_alleles.clns' \
   --export-library alleles_library.json \
   --export-library alleles_library.fasta \
@@ -49,7 +49,7 @@ mixcr findAlleles \
 mixcr findShmTrees \
   -j trees/report.json \
   -r trees/report.txt \
-  --debugDir trees/debug \
+  --debug-dir trees/debug \
   $(ls alleles/*.clns) base_build_trees.shmt
 
 mixcr exportShmTrees base_build_trees.shmt trees/trees.tsv

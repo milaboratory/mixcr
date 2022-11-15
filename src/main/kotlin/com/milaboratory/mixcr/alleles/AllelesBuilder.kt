@@ -27,6 +27,7 @@ import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.DebugDirOption
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
@@ -60,7 +61,6 @@ import io.repseq.core.ReferencePoints
 import io.repseq.core.VDJCGene
 import io.repseq.dto.VDJCGeneData
 import java.io.PrintStream
-import java.nio.file.Path
 import java.util.*
 import kotlin.collections.set
 import kotlin.math.absoluteValue
@@ -76,7 +76,6 @@ class AllelesBuilder(
     private val featureToAlign: HasFeatureToAlign,
     private val usedGenes: Collection<VDJCGene>,
     private val allClonesCutBy: GeneFeatures,
-    private val debugDir: Path?,
     private val scoring: VJPair<AlignmentScoring<NucleotideSequence>>,
     private val CDR3Diversity: Int,
     private val geneDiversity: VJPair<Int>
@@ -199,7 +198,7 @@ class AllelesBuilder(
                 mutationsInCDR3.knownCDR3RangeLength
             )
         }
-        if (debugDir != null) {
+        DebugDirOption { debugDir ->
             val rows = cloneDescriptors
                 .groupBy { it.mutationGroups }
                 .entries
@@ -456,8 +455,7 @@ class AllelesBuilder(
             scoring: VJPair<AlignmentScoring<NucleotideSequence>>,
             usedGenes: Collection<VDJCGene>,
             featureToAlign: HasFeatureToAlign,
-            allClonesCutBy: GeneFeatures,
-            debugDir: Path?
+            allClonesCutBy: GeneFeatures
         ): AllelesBuilder {
             val CDR3Variants = mutableSetOf<Int>()
             val VVariants = mutableSetOf<String>()
@@ -478,7 +476,6 @@ class AllelesBuilder(
                 featureToAlign,
                 usedGenes,
                 allClonesCutBy,
-                debugDir,
                 scoring,
                 CDR3Variants.size,
                 VJPair(

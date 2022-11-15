@@ -49,7 +49,7 @@ class SHMTreeBuilder(
     }
 
     fun buildATreeFromRoot(cluster: List<CloneWithMutationsFromVJGermline>): TreeWithMetaBuilder =
-        buildATree(cluster, cluster.buildRootInfo())
+        buildATree(cluster, buildRootInfo(cluster, parameters.topToVoteOnNDNSize))
 
     private fun buildATree(
         cluster: List<CloneWithMutationsFromVJGermline>,
@@ -104,91 +104,6 @@ class SHMTreeBuilder(
         )
         return distance(mutations)
     }
-
-    private fun List<CloneWithMutationsFromVJGermline>.buildRootInfo(): RootInfo {
-        val rootBasedOn = minWith(CloneWithMutationsFromVJGermline.comparatorByMutationsCount)
-
-        val sequence1 = VJPair(
-            rootBasedOn.cloneWrapper.getHit(Variable).alignments.filterNotNull().first().sequence1,
-            rootBasedOn.cloneWrapper.getHit(Joining).alignments.filterNotNull().first().sequence1
-        )
-        val VJBase = rootBasedOn.cloneWrapper.VJBase
-
-
-        val rangeInCDR3 = voteForRangesInCDR3()
-        val NDNBuilder = NucleotideSequence.ALPHABET.createBuilder()
-        repeat(rootBasedOn.mutations.CDR3.size() - rangeInCDR3.V.length() - rangeInCDR3.J.length()) {
-            NDNBuilder.append(NucleotideSequence.N)
-        }
-        return RootInfo(
-            sequence1,
-            VJPair(
-                rootBasedOn.cloneWrapper.getPartitioning(Variable),
-                rootBasedOn.cloneWrapper.getPartitioning(Joining)
-            ),
-            rangeInCDR3,
-            NDNBuilder.createAndDestroy(),
-            VJBase
-        )
-    }
-
-
-    private val voteForCDR3RangesComparator = Comparator
-        .comparingInt<VJPair<Map.Entry<Range, Int>>> { (V, J) -> V.value + J.value }
-        .thenComparing { (V, J) -> V.key.length() + J.key.length() }
-
-    /**
-     * Choose V and J regions in CDR3
-     * Pair must not intersect (sum length is less or equals CDR3 size)
-     * For possible combinations use top clones (with minimum mutations)
-     *
-     * If there is a pair in top that less than CDR3 then choose it. Otherwise, cut best pair to fit CDR3.
-     */
-    private fun List<CloneWithMutationsFromVJGermline>.voteForRangesInCDR3(): VJPair<Range> {
-        val CDR3Size = first().mutations.CDR3.size()
-        val possibleCombinationsFromTop = possibleRangesInCDR3(
-            this,
-            { it.mutations.knownMutationsWithinCDR3.V.second },
-            parameters.topToVoteOnNDNSize
-        )
-            .flatMap { V ->
-                possibleRangesInCDR3(
-                    this,
-                    { it.mutations.knownMutationsWithinCDR3.J.second },
-                    parameters.topToVoteOnNDNSize
-                ).map { J -> VJPair(V, J) }
-            }
-        val combinationsThatFitCDR3 = possibleCombinationsFromTop
-            .filter { (V, J) -> V.key.length() + J.key.length() <= CDR3Size }
-
-        return if (combinationsThatFitCDR3.isNotEmpty()) {
-            combinationsThatFitCDR3
-                .maxWithOrNull(voteForCDR3RangesComparator)!!
-                .map { it.key }
-        } else {
-            val (V, J) = possibleCombinationsFromTop
-                .maxWithOrNull(voteForCDR3RangesComparator)!!
-                .map { it.key }
-            val delta = V.length() + J.length() - CDR3Size
-            val correctionForV = delta / 2
-            val correctionForJ = delta - correctionForV
-            VJPair(
-                V.setUpper(V.upper - correctionForV),
-                J.setLower(J.lower + correctionForJ)
-            )
-        }
-    }
-
-    //TODO it is more possible to decrease length of alignment than to increase
-    private fun possibleRangesInCDR3(
-        cluster: List<CloneWithMutationsFromVJGermline>,
-        rangeSupplier: (CloneWithMutationsFromVJGermline) -> Range,
-        limit: Int
-    ): Map<Range, Int> = cluster.asSequence()
-        .sortedBy { it.mutations.VJMutationsCount }
-        .take(limit)
-        .map(rangeSupplier)
-        .groupingBy { it }.eachCount()
 
     private fun createTreeBuilder(
         rootInfo: RootInfo,
@@ -412,4 +327,91 @@ class SHMTreeBuilder(
 
     private fun CompositeMutations.intersection(with: CompositeMutations): CompositeMutations =
         copy(mutationsFromParentToThis = mutationsFromParentToThis.intersection(with.mutationsFromParentToThis))
+
+    companion object {
+        fun buildRootInfo(clones: List<CloneWithMutationsFromVJGermline>, topToVoteOnNDNSize: Int): RootInfo {
+            val rootBasedOn = clones.minWith(CloneWithMutationsFromVJGermline.comparatorByMutationsCount)
+
+            val sequence1 = VJPair(
+                rootBasedOn.cloneWrapper.getHit(Variable).alignments.filterNotNull().first().sequence1,
+                rootBasedOn.cloneWrapper.getHit(Joining).alignments.filterNotNull().first().sequence1
+            )
+            val VJBase = rootBasedOn.cloneWrapper.VJBase
+
+
+            val rangeInCDR3 = clones.voteForRangesInCDR3(topToVoteOnNDNSize)
+            val NDNBuilder = NucleotideSequence.ALPHABET.createBuilder()
+            repeat(rootBasedOn.mutations.CDR3.size() - rangeInCDR3.V.length() - rangeInCDR3.J.length()) {
+                NDNBuilder.append(NucleotideSequence.N)
+            }
+            return RootInfo(
+                sequence1,
+                VJPair(
+                    rootBasedOn.cloneWrapper.getPartitioning(Variable),
+                    rootBasedOn.cloneWrapper.getPartitioning(Joining)
+                ),
+                rangeInCDR3,
+                NDNBuilder.createAndDestroy(),
+                VJBase
+            )
+        }
+
+        /**
+         * Choose V and J regions in CDR3
+         * Pair must not intersect (sum length is less or equals CDR3 size)
+         * For possible combinations use top clones (with minimum mutations)
+         *
+         * If there is a pair in top that less than CDR3 then choose it. Otherwise, cut best pair to fit CDR3.
+         */
+        private fun List<CloneWithMutationsFromVJGermline>.voteForRangesInCDR3(topToVoteOnNDNSize: Int): VJPair<Range> {
+            val CDR3Size = first().mutations.CDR3.size()
+            val possibleCombinationsFromTop = possibleRangesInCDR3(
+                this,
+                { it.mutations.knownMutationsWithinCDR3.V.second },
+                topToVoteOnNDNSize
+            )
+                .flatMap { V ->
+                    possibleRangesInCDR3(
+                        this,
+                        { it.mutations.knownMutationsWithinCDR3.J.second },
+                        topToVoteOnNDNSize
+                    ).map { J -> VJPair(V, J) }
+                }
+            val combinationsThatFitCDR3 = possibleCombinationsFromTop
+                .filter { (V, J) -> V.key.length() + J.key.length() <= CDR3Size }
+
+            return if (combinationsThatFitCDR3.isNotEmpty()) {
+                combinationsThatFitCDR3
+                    .maxWithOrNull(voteForCDR3RangesComparator)!!
+                    .map { it.key }
+            } else {
+                val (V, J) = possibleCombinationsFromTop
+                    .maxWithOrNull(voteForCDR3RangesComparator)!!
+                    .map { it.key }
+                val delta = V.length() + J.length() - CDR3Size
+                val correctionForV = delta / 2
+                val correctionForJ = delta - correctionForV
+                VJPair(
+                    V.setUpper(V.upper - correctionForV),
+                    J.setLower(J.lower + correctionForJ)
+                )
+            }
+        }
+
+        private val voteForCDR3RangesComparator = Comparator
+            .comparingInt<VJPair<Map.Entry<Range, Int>>> { (V, J) -> V.value + J.value }
+            .thenComparing { (V, J) -> V.key.length() + J.key.length() }
+
+        //TODO it is more possible to decrease length of alignment than to increase
+        private fun possibleRangesInCDR3(
+            cluster: List<CloneWithMutationsFromVJGermline>,
+            rangeSupplier: (CloneWithMutationsFromVJGermline) -> Range,
+            limit: Int
+        ): Map<Range, Int> = cluster.asSequence()
+            .sortedBy { it.mutations.VJMutationsCount }
+            .take(limit)
+            .map(rangeSupplier)
+            .groupingBy { it }.eachCount()
+
+    }
 }
