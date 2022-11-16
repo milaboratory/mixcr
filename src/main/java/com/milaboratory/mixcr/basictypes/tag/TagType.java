@@ -13,10 +13,12 @@ package com.milaboratory.mixcr.basictypes.tag;
 
 import java.util.*;
 
+import static com.milaboratory.mixcr.basictypes.tag.TagsInfo.*;
+
 public enum TagType {
-    Sample("SPL", "SAMPLE", TagsInfo.ALL_TAGS_OF_TYPE + "Sample"),
-    Cell("CELL", TagsInfo.ALL_TAGS_OF_TYPE + "Cell"),
-    Molecule("UMI", "MIG", TagsInfo.ALL_TAGS_OF_TYPE + "Molecule");
+    Sample("SPL", "SAMPLE", ALL_TAGS_OF_TYPE + "Sample"),
+    Cell("CELL", ALL_TAGS_OF_TYPE + "Cell"),
+    Molecule("UMI", "MIG", ALL_TAGS_OF_TYPE + "Molecule");
 
     public final List<String> aliases;
 
@@ -32,7 +34,7 @@ public enum TagType {
             caseInsensitiveMap.put(value.name().toLowerCase(), value);
     }
 
-    public static TagType valueOfCaseInsensitive(String str) {
+    public static TagType valueOfCaseInsensitiveOrNull(String str) {
         return caseInsensitiveMap.get(str.toLowerCase());
     }
 }
