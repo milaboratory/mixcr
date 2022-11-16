@@ -11,18 +11,28 @@
  */
 package com.milaboratory.mixcr.basictypes.tag;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public enum TagType {
-    Sample("SPL", "SAMPLE"),
-    Cell("CELL"),
-    Molecule("UMI", "MIG");
+    Sample("SPL", "SAMPLE", TagsInfo.ALL_TAGS_OF_TYPE + "Sample"),
+    Cell("CELL", TagsInfo.ALL_TAGS_OF_TYPE + "Cell"),
+    Molecule("UMI", "MIG", TagsInfo.ALL_TAGS_OF_TYPE + "Molecule");
 
     public final List<String> aliases;
 
     TagType(String... aliases) {
         this.aliases = Collections.unmodifiableList(Arrays.asList(aliases));
+    }
+
+    private static final Map<String, TagType> caseInsensitiveMap;
+
+    static {
+        caseInsensitiveMap = new HashMap<>();
+        for (TagType value : values())
+            caseInsensitiveMap.put(value.name().toLowerCase(), value);
+    }
+
+    public static TagType valueOfCaseInsensitive(String str) {
+        return caseInsensitiveMap.get(str.toLowerCase());
     }
 }

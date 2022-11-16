@@ -34,8 +34,8 @@
         operands:
           - type: filter_groups
             groupingKeys:
-              - CELL
-              - UMI
+              - allTags:Cell
+              - allTags:Molecule
             predicates:
               - metrics:
                   - type: group_metric_sum_weight
@@ -50,7 +50,7 @@
                   fallbackThreshold: 1.0
           - type: filter_groups
             groupingKeys:
-              - CELL
+              - allTags:Cell
             predicates:
               - metrics:
                   - type: group_metric_nunique
@@ -59,7 +59,7 @@
                       binNumber: 0
                       minBinWidth: 0.2
                     keys:
-                      - UMI
+                      - allTags:Molecule
                 operator:
                   type: group_operator_otsu1
                   logX: true
@@ -151,8 +151,8 @@
         operands:
           - type: filter_groups
             groupingKeys:
-              - CELL
-              - UMI
+              - allTags:Cell
+              - allTags:Molecule
             predicates:
               - metrics:
                   - type: group_metric_sum_weight
@@ -167,7 +167,7 @@
                   fallbackThreshold: 1.0
           - type: filter_groups
             groupingKeys:
-              - CELL
+              - allTags:Cell
             predicates:
               - metrics:
                   - type: group_metric_nunique
@@ -176,7 +176,7 @@
                       binNumber: 0
                       minBinWidth: 0.2
                     keys:
-                      - UMI
+                      - allTags:Molecule
                 operator:
                   type: group_operator_range
                   lower: 3.0

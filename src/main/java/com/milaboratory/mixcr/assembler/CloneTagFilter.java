@@ -31,6 +31,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.milaboratory.mixcr.basictypes.tag.TagsInfo.*;
+
 /**
  * Applies a clone*tag filtering to a list of clones
  */
@@ -169,15 +171,13 @@ public final class CloneTagFilter {
         }
     }
 
-    public static final String ALL_TAGS_OF_TYPE = "allTags:";
     public static final String GENE_LABEL_KEY_PREFIX = "geneLabel:";
     public static final String CLONE_KEY = "clone";
-    public static final String TAGS_KEY_PREFIX = "tag:";
 
     public static CloneTagKey getKeyByName(TagsInfo tagsInfo, String key) {
         if (key.startsWith(ALL_TAGS_OF_TYPE)) {
             String typeS = key.substring(ALL_TAGS_OF_TYPE.length());
-            TagType tagType = TagType.valueOf(typeS);
+            TagType tagType = TagType.valueOfCaseInsensitive(typeS);
             TIntArrayList indices = new TIntArrayList();
             for (TagInfo ti : tagsInfo)
                 if (ti.getType() == tagType)

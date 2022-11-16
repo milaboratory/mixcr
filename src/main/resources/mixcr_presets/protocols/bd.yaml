@@ -26,10 +26,8 @@
         operands:
           - type: filter_groups
             groupingKeys:
-              - CELL1
-              - CELL2
-              - CELL3
-              - UMI
+              - allTags:Cell
+              - allTags:Molecule
             predicates:
               - metrics:
                   - type: group_metric_sum_weight
@@ -44,9 +42,7 @@
                   fallbackThreshold: 1.0
           - type: filter_groups
             groupingKeys:
-              - CELL1
-              - CELL2
-              - CELL3
+              - allTags:Cell
             predicates:
               - metrics:
                   - type: group_metric_nunique
@@ -55,7 +51,7 @@
                       binNumber: 0
                       minBinWidth: 0.2
                     keys:
-                      - UMI
+                      - allTags:Molecule
                 operator:
                   type: group_operator_range
                   lower: 3.0
@@ -68,9 +64,7 @@
           - type: filter_in_groups
             isolationKeys:
               - geneLabel:ReliableChain
-              - tag:CELL1
-              - tag:CELL2
-              - tag:CELL3
+              - allTags:Cell
             nestedFilter:
               type: filter_groups
               groupingKeys:
@@ -85,9 +79,7 @@
                     share: 0.95
           - type: filter_in_groups
             isolationKeys:
-              - tag:CELL1
-              - tag:CELL2
-              - tag:CELL3
+              - allTags:Cell
             nestedFilter:
               type: filter_groups
               groupingKeys:
@@ -102,9 +94,7 @@
                     share: 0.99
           - type: filter_groups
             groupingKeys:
-              - tag:CELL1
-              - tag:CELL2
-              - tag:CELL3
+              - allTags:Cell
               - clone
             predicates:
               - metrics:
@@ -116,9 +106,7 @@
                   lower: 2.0
           - type: filter_groups
             groupingKeys:
-              - tag:CELL1
-              - tag:CELL2
-              - tag:CELL3
+              - allTags:Cell
             predicates:
               - metrics:
                   - type: group_metric_nunique
