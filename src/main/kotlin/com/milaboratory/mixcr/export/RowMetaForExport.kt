@@ -17,7 +17,11 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 
 class RowMetaForExport(
     val tagsInfo: TagsInfo
-)
+) {
+    companion object {
+        val empty = RowMetaForExport(TagsInfo.NO_TAGS)
+    }
+}
 
 class HeaderForExport(
     private val allTagsInfo: List<TagsInfo>,
@@ -27,4 +31,8 @@ class HeaderForExport(
         .filter { it.type == tagType }
         .map { it.name }
         .distinct()
+
+    companion object {
+        val empty = HeaderForExport(emptyList(), null)
+    }
 }

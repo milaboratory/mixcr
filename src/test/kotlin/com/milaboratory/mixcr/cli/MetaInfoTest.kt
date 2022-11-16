@@ -8,8 +8,7 @@ import picocli.CommandLine
 class MetaInfoTest {
     @Test
     fun `all options must have specified order`() {
-        val mkCmd = Main.mkCmd()
-        val optionsWithoutOrder = mkCmd.allSubCommands()
+        val optionsWithoutOrder = Main.mkCmd().allSubCommands()
             .flatMap { commandLine ->
                 commandLine.commandSpec.options()
                     .filterNot { it.hidden() }
@@ -21,8 +20,7 @@ class MetaInfoTest {
 
     @Test
     fun `all required options must be first in help`() {
-        val mkCmd = Main.mkCmd()
-        val optionsWithoutOrder = mkCmd.allSubCommands()
+        val optionsWithoutOrder = Main.mkCmd().allSubCommands()
             .flatMap { commandLine ->
                 val (required, notRequired) = commandLine.commandSpec.options()
                     .filterNot { it.hidden() }
@@ -38,8 +36,7 @@ class MetaInfoTest {
 
     @Test
     fun `all arg groups must have specified order`() {
-        val mkCmd = Main.mkCmd()
-        val optionsWithoutOrder = mkCmd.allSubCommands().flatMap { commandLine ->
+        val optionsWithNotUniqOrder = Main.mkCmd().allSubCommands().flatMap { commandLine ->
             commandLine.commandSpec.argGroups()
                 .filter { it.order() == -1 }
                 .map { argGroupSpec ->
@@ -47,13 +44,12 @@ class MetaInfoTest {
                         .options().map { it.longestName() }
                 }
         }
-        optionsWithoutOrder shouldBe emptyList()
+        optionsWithNotUniqOrder shouldBe emptyList()
     }
 
     @Test
     fun `all options must uniq order`() {
-        val mkCmd = Main.mkCmd()
-        mkCmd.allSubCommands().forEach { commandLine ->
+        Main.mkCmd().allSubCommands().forEach { commandLine ->
             val notUniqOrders = commandLine.commandSpec.options()
                 .filterNot { it.hidden() }
                 .groupBy { it.order() }

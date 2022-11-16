@@ -259,7 +259,7 @@ class MiXCRFooterMerger {
     private val upstreamReports = mutableListOf<MiXCRStepReports>()
     private var reports: MiXCRStepReports? = null
 
-    fun addReportsFromInput(inputIdx: Int, inputName: String, footer: MiXCRFooter) = run {
+    fun addReportsFromInput(footer: MiXCRFooter) = run {
         check(reports == null)
         upstreamReports += footer.reports
         this

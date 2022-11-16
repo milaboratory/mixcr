@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
@@ -88,7 +87,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                 ),
                 !noHeader,
             ) {
-                val datasetId = it.node.clone?.datasetId ?: return@create RowMetaForExport(TagsInfo.NO_TAGS)
+                val datasetId = it.node.clone?.datasetId ?: return@create RowMetaForExport.empty
                 RowMetaForExport(reader.cloneSetInfos[datasetId].tagsInfo)
             }.use { output ->
                 reader.readTrees()

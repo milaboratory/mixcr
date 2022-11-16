@@ -395,8 +395,8 @@ interface IStepDataCollection {
 
 /** Represents a collection of reports / parameters for steps executed for the dataset. Each report encoded as Json. */
 @Serializable(by = StepDataCollection.Companion.SerializerImpl::class)
-class StepDataCollection(
-    override val upstreamCollections: List<StepDataCollection> = emptyList(),
+class StepDataCollection<D : Any>(
+    override val upstreamCollections: List<StepDataCollection<D>> = emptyList(),
     private val perStepData: List<Pair<String, ByteArray>> = emptyList()
 ) : IStepDataCollection {
     override val dataMap by lazy {
@@ -409,16 +409,16 @@ class StepDataCollection(
     override val steps by lazy { dataMap.keys.toList() }
 
     fun add(step: String, report: ByteArray) = StepDataCollection(upstreamCollections, perStepData + (step to report))
-    fun <D> add(step: AnyMiXCRCommand, report: D) = add(step.command, K_OM.writeValueAsBytes(report))
+    fun <T : D> add(step: AnyMiXCRCommand, data: T) = add(step.command, K_OM.writeValueAsBytes(data))
     fun getBytes(step: String): List<ByteArray> = perStepData.filter { it.first == step }.map { it.second }
     fun getBytes(step: AnyMiXCRCommand): List<ByteArray> = getBytes(step.command)
-    fun <D : Any> get(step: AnyMiXCRCommand, type: KClass<D>) = getBytes(step).map { K_OM.readValue(it, type.java) }
+    fun <T : D> get(step: AnyMiXCRCommand, type: KClass<T>) = getBytes(step).map { K_OM.readValue(it, type.java) }
     override fun getTrees(step: String) = getBytes(step).map { K_OM.readTree(it) }
     override fun getTrees(step: AnyMiXCRCommand) = getBytes(step).map { K_OM.readTree(it) }
 
-    fun <D : Any, P : MiXCRParams, R : MiXCRCommandReport> get(
+    fun <T : D, P : MiXCRParams, R : MiXCRCommandReport> get(
         step: MiXCRCommandDescriptor<P, R>,
-        typeExtractor: (MiXCRCommandDescriptor<P, R>) -> KClass<D>
+        typeExtractor: (MiXCRCommandDescriptor<P, R>) -> KClass<T>
     ) =
         get(step, typeExtractor(step))
 
@@ -430,8 +430,8 @@ class StepDataCollection(
         }.toMap()
 
     companion object {
-        class SerializerImpl : Serializer<StepDataCollection> {
-            override fun write(output: PrimitivO, obj: StepDataCollection) {
+        class SerializerImpl : Serializer<StepDataCollection<*>> {
+            override fun write(output: PrimitivO, obj: StepDataCollection<*>) {
                 output.writeList(obj.upstreamCollections) {
                     writeObject(it) // recurrent call to the same serializer
                 }
@@ -441,16 +441,16 @@ class StepDataCollection(
                 }
             }
 
-            override fun read(input: PrimitivI): StepDataCollection {
+            override fun read(input: PrimitivI): StepDataCollection<*> {
                 val upstreams = input.readList {
-                    readObject<StepDataCollection>() // recurrent call to the same serializer
+                    readObject<StepDataCollection<*>>() // recurrent call to the same serializer
                 }
                 val steps = input.readList {
                     val step = readUTF()
                     val content = readObject<ByteArray>()
                     step to content
                 }
-                return StepDataCollection(upstreams, steps)
+                return StepDataCollection(upstreams.map { it as StepDataCollection }, steps)
             }
 
             override fun isReference() = false
@@ -460,7 +460,7 @@ class StepDataCollection(
 }
 
 @Serializable(by = MiXCRStepReports.Companion.SerializerImpl::class)
-class MiXCRStepReports(val collection: StepDataCollection = StepDataCollection()) :
+class MiXCRStepReports(val collection: StepDataCollection<MiXCRCommandReport> = StepDataCollection()) :
     IStepDataCollection by collection {
     val upstreams by lazy { collection.upstreamCollections.map { MiXCRStepReports(it) } }
 
@@ -481,7 +481,9 @@ class MiXCRStepReports(val collection: StepDataCollection = StepDataCollection()
 
         class SerializerImpl : Serializer<MiXCRStepReports> {
             override fun write(output: PrimitivO, obj: MiXCRStepReports) = output.writeObject(obj.collection)
-            override fun read(input: PrimitivI) = MiXCRStepReports(input.readObject<StepDataCollection>())
+            override fun read(input: PrimitivI) =
+                MiXCRStepReports(input.readObject<StepDataCollection<MiXCRCommandReport>>())
+
             override fun isReference() = false
             override fun handlesReference() = false
         }
@@ -489,7 +491,7 @@ class MiXCRStepReports(val collection: StepDataCollection = StepDataCollection()
 }
 
 @Serializable(by = MiXCRStepParams.Companion.SerializerImpl::class)
-class MiXCRStepParams(private val collection: StepDataCollection = StepDataCollection()) :
+class MiXCRStepParams(private val collection: StepDataCollection<MiXCRParams> = StepDataCollection()) :
     IStepDataCollection by collection {
     val upstreams by lazy { collection.upstreamCollections.map { MiXCRStepParams(it) } }
 
@@ -510,7 +512,7 @@ class MiXCRStepParams(private val collection: StepDataCollection = StepDataColle
 
         class SerializerImpl : Serializer<MiXCRStepParams> {
             override fun write(output: PrimitivO, obj: MiXCRStepParams) = output.writeObject(obj.collection)
-            override fun read(input: PrimitivI) = MiXCRStepParams(input.readObject<StepDataCollection>())
+            override fun read(input: PrimitivI) = MiXCRStepParams(input.readObject<StepDataCollection<MiXCRParams>>())
             override fun isReference() = false
             override fun handlesReference() = false
         }

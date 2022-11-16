@@ -361,8 +361,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             reportBuilder.setFinishMillis(System.currentTimeMillis())
             report = reportBuilder.buildReport()
             shmTreesWriter.setFooter(
-                datasets.foldIndexed(MiXCRFooterMerger()) { i, m, f ->
-                    m.addReportsFromInput(i, inputFiles[i].toString(), f.footer)
+                datasets.fold(MiXCRFooterMerger()) { m, f ->
+                    m.addReportsFromInput(f.footer)
                 }
                     .addStepReport(MiXCRCommandDescriptor.findShmTrees, report)
                     .build()
