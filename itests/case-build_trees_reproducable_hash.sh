@@ -39,7 +39,7 @@ cd alleles_1
 mixcr findAlleles \
   -j report.json \
   -r report.txt \
-  --debugDir debug \
+  --debug-dir debug \
   --output-template '{file_name}.with_alleles.clns' \
   --export-library alleles_library.json \
   --export-library alleles_library.fasta \
@@ -54,7 +54,7 @@ cd alleles_2
 mixcr findAlleles \
   -j report.json \
   -r report.txt \
-  --debugDir debug \
+  --debug-dir debug \
   --output-template '{file_name}.with_alleles.clns' \
   --export-library alleles_library.json \
   --export-library alleles_library.fasta \
@@ -93,7 +93,7 @@ cd trees_1
 mixcr findShmTrees \
   -j report.json \
   -r report.txt \
-  --debugDir debug \
+  --debug-dir debug \
   $(ls ../alleles_1/*.clns) result.shmt
 mixcr exportReports --yaml result.shmt result.report.yaml
 
@@ -112,7 +112,7 @@ cd trees_2
 mixcr findShmTrees \
   -j report.json \
   -r report.txt \
-  --debugDir debug \
+  --debug-dir debug \
   $(ls ../alleles_1/*.clns) result.shmt
 mixcr exportReports --yaml result.shmt result.report.yaml
 
