@@ -278,6 +278,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             ClnsReader(path, vdjcLibraryRegistry)
         }
 
+        reportBuilder.totalClonesProcessed = datasets.sumOf { it.numberOfClones() }
+
         ValidationException.requireDistinct(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
         }

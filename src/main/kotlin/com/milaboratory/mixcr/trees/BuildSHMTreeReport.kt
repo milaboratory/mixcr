@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.cli.AbstractCommandReportBuilder
@@ -43,7 +44,10 @@ class BuildSHMTreeReport(
     outputFiles: Array<String>,
     executionTimeMillis: Long?,
     version: String,
-    val stepResults: List<StepResult>
+    @field:JsonProperty("stepResults")
+    val stepResults: List<StepResult>,
+    @field:JsonProperty("totalClonesProcessed")
+    val totalClonesProcessed: Int? = null
 ) : AbstractMiXCRCommandReport(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version) {
     override fun command(): String = CommandFindShmTrees.COMMAND_NAME
 
@@ -66,8 +70,10 @@ class BuildSHMTreeReport(
             }
         }
         helper.writeField("Total trees count", stepResults.sumOf { it.treesCountDelta })
-        helper.writeField("Total clones count in trees", stepResults.sumOf { it.clonesWasAdded })
+        helper.writeField("Total clones count in trees", totalClonesCountInTrees())
     }
+
+    fun totalClonesCountInTrees() = stepResults.sumOf { it.clonesWasAdded }
 
     @Suppress("unused")
     @JsonAutoDetect(
@@ -95,9 +101,21 @@ class BuildSHMTreeReport(
 
     class Builder : AbstractCommandReportBuilder<Builder>() {
         private val stepResults = mutableListOf<StepResult>()
-        override fun buildReport() = BuildSHMTreeReport(
-            date, commandLine, inputFiles, outputFiles, executionTimeMillis, version, stepResults
-        )
+        var totalClonesProcessed = -1
+
+        override fun buildReport(): BuildSHMTreeReport {
+            check(totalClonesProcessed != -1)
+            return BuildSHMTreeReport(
+                date,
+                commandLine,
+                inputFiles,
+                outputFiles,
+                executionTimeMillis,
+                version,
+                stepResults,
+                totalClonesProcessed
+            )
+        }
 
         override fun that(): Builder = this
 

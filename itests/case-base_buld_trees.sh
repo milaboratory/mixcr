@@ -64,6 +64,8 @@ mixcr exportPlots shmTrees base_build_trees.shmt trees/plots.pdf
 
 [[ -f trees/plots.pdf ]] || exit 1
 
+mixcr exportReportsTable base_build_trees.shmt total_report.tsv
+
 FILES=`ls trees_samples/*_R1.fastq.gz`
 for filename in $FILES; do
   id=${filename#trees_samples/*}

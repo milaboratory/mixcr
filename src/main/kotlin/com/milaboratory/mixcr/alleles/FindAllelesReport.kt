@@ -51,6 +51,11 @@ class FindAllelesReport(
 ) : AbstractMiXCRCommandReport(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version) {
     override fun command(): String = CommandFindAlleles.COMMAND_NAME
 
+    fun totalClonesCount() =
+        clonesCountWithNegativeScoreChange + clonesCountWithNoChangeOfScore + clonesScoreDeltaStats.size
+
+    fun changedClonesCount() = allelesScoreChange.size
+
     override fun writeReport(helper: ReportHelper) {
         // Writing common analysis information
         writeSuperReport(helper)
