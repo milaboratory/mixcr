@@ -11,13 +11,15 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.StepDataCollection
+import com.milaboratory.mixcr.allReports
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.ReportFieldsExtractors
-import com.milaboratory.mixcr.export.ReportFieldsExtractors.ReportWithSource
+import com.milaboratory.mixcr.export.ReportFieldsExtractors.ReportsWithSource
 import com.milaboratory.mixcr.export.RowMetaForExport
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -44,20 +46,12 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
     private lateinit var inOut: List<Path>
 
     @Option(
-        names = ["--step"],
-        description = ["Export report only for a specific step."],
-        paramLabel = "<step>",
-        order = OptionsOrder.main + 10_100
-    )
-    private var stepToExport: String? = null
-
-    @Option(
-        names = ["--without-upstreams"],
-        description = ["Don't export upstream reports for sources of steps that get several inputs, like `${CommandFindShmTrees.COMMAND_NAME}`."],
+        names = ["--with-upstreams"],
+        description = ["Export upstream reports for sources of steps with several inputs, like `${CommandFindShmTrees.COMMAND_NAME}`."],
         arity = "0",
         order = OptionsOrder.main + 10_200
     )
-    private var withoutUpstreams: Boolean = false
+    private var withUpstreams: Boolean = false
 
     @Option(
         description = ["Don't print first header line, print only data"],
@@ -99,31 +93,31 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
 
-        val fieldExtractors = ReportFieldsExtractors.createExtractors(addedFields, HeaderForExport.empty)
+        val allReports = inputFiles.fold(MiXCRFooterMerger()) { m, input ->
+            val footer = IOUtil.extractFooter(input)
+            m.addReportsFromInput(input.toString(), footer)
+        }.build().reports
+
+        val fieldExtractors = ReportFieldsExtractors.createExtractors(
+            addedFields,
+            MetaForExport(emptyList(), null, allReports)
+        )
         InfoWriter.create(out, fieldExtractors, !noHeader) { RowMetaForExport.empty }.use { output ->
             inputFiles.forEach { input ->
                 val footer = IOUtil.extractFooter(input)
-                val upstreamReports = if (withoutUpstreams) {
-                    emptyList()
-                } else {
-                    footer.reports.upstreams
+                if (withUpstreams) {
+                    footer.reports.collection.upstreamReportsWithSources()
+                        .forEach { output.put(it) }
                 }
-                (upstreamReports + footer.reports).forEach { stepReports ->
-                    val stepsToExport = when (stepToExport) {
-                        null -> stepReports.steps
-                        !in stepReports.steps -> emptyList()
-                        else -> listOf(stepToExport!!)
-                    }
-                    stepsToExport.forEach { step ->
-                        val command = MiXCRCommandDescriptor.fromString(step)
-                        stepReports[command].zip(stepReports.getTrees(step)).forEach { (report, json) ->
-                            output.put(ReportWithSource(report, json, command, input))
-                        }
-                    }
-                }
+                output.put(ReportsWithSource(input.toString(), footer.reports.collection.allReports()))
             }
         }
     }
+
+    private fun StepDataCollection<MiXCRCommandReport>.upstreamReportsWithSources(): List<ReportsWithSource> =
+        upstreamCollections.flatMap { (sourceName, collection) ->
+            collection.upstreamReportsWithSources() + ReportsWithSource(sourceName, collection.allReports())
+        }
 
     companion object {
         const val COMMAND_NAME = "exportReportsTable"

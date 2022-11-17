@@ -13,12 +13,13 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.IOUtil.extractFileInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractor
-import com.milaboratory.mixcr.export.HeaderForExport
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
@@ -203,10 +204,10 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
             extractors += TotalTagFraction(cellLevel, "CELL")
         }
 
-        val header = IOUtil.extractHeader(samples[0])
+        val fileInfo = extractFileInfo(samples[0])
         val fieldExtractors: List<FieldExtractor<Clone>> = CloneFieldsExtractorsFactory.createExtractors(
             addedFields,
-            HeaderForExport(listOf(header.tagsInfo), header.allFullyCoveredBy)
+            MetaForExport(listOf(fileInfo.header.tagsInfo), fileInfo.header.allFullyCoveredBy, fileInfo.footer.reports)
         )
 
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
@@ -223,7 +224,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         }
 
         val overlap = OverlapUtil.overlap(samples.map { it.toString() }, { true }, criteria.ordering())
-        val rowMetaForExport = RowMetaForExport(header.tagsInfo)
+        val rowMetaForExport = RowMetaForExport(fileInfo.header.tagsInfo)
         overlap.mkElementsPort().use { port ->
             overlapBrowser.overlap(countsByChain, port).forEach { row ->
                 for ((ch, cloneOverlapGroup) in row) {

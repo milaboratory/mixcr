@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.util;
 
+import com.milaboratory.mixcr.MiXCRStepParams;
+import com.milaboratory.mixcr.MiXCRStepReports;
 import com.milaboratory.mixcr.basictypes.MiXCRHeader;
 import com.milaboratory.primitivio.SerializersManager;
 
@@ -20,9 +22,18 @@ public class BackwardCompatibilityUtils {
 
     public static void register41rc2Serializers(SerializersManager sm) {
         sm.registerCustomSerializer(MiXCRHeader.class, new MiXCRHeader.SerializerV1Impl());
+        sm.registerCustomSerializer(MiXCRStepParams.class, new MiXCRStepParams.SerializerV1Impl());
+        sm.registerCustomSerializer(MiXCRStepReports.class, new MiXCRStepReports.SerializerV1Impl());
     }
 
     public static void register41_0Serializers(SerializersManager sm) {
         sm.registerCustomSerializer(MiXCRHeader.class, new MiXCRHeader.SerializerV2Impl());
+        sm.registerCustomSerializer(MiXCRStepParams.class, new MiXCRStepParams.SerializerV1Impl());
+        sm.registerCustomSerializer(MiXCRStepReports.class, new MiXCRStepReports.SerializerV1Impl());
+    }
+
+    public static void register41_1Serializers(SerializersManager sm) {
+        sm.registerCustomSerializer(MiXCRStepParams.class, new MiXCRStepParams.SerializerV1Impl());
+        sm.registerCustomSerializer(MiXCRStepReports.class, new MiXCRStepReports.SerializerV1Impl());
     }
 }

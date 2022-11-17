@@ -12,8 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
@@ -62,7 +62,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             val fieldExtractors = SHMTreeFieldsExtractorsFactory.createExtractors(
                 addedFields,
-                HeaderForExport(emptyList(), reader.header.allFullyCoveredBy)
+                MetaForExport(emptyList(), reader.header.allFullyCoveredBy, reader.footer.reports)
             )
             InfoWriter.create(out, fieldExtractors, !noHeader) { RowMetaForExport.empty }.use { output ->
                 reader.readTrees()

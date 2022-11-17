@@ -55,9 +55,9 @@ public final class ClnAWriter implements
         CanReportProgressAndStage {
     static final String MAGIC_V9 = MAGIC_CLNA + ".V09";
     static final String MAGIC_V10 = MAGIC_CLNA + ".V10";
-
     static final String MAGIC_V11 = MAGIC_CLNA + ".V11";
-    static final String MAGIC = MAGIC_V11;
+    static final String MAGIC_V12 = MAGIC_CLNA + ".V12";
+    static final String MAGIC = MAGIC_V12;
     static final int MAGIC_LENGTH = MAGIC.length(); // 14
     /**
      * Number of bytes in footer with meta information

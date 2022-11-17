@@ -38,7 +38,7 @@ object GeneFeaturesRangeUtil {
             "For example, `$command FR3Begin FR4End` will export `${nFeatureField.cmdArgName} FR3Begin`, ${nFeatureField.cmdArgName} CDR3Begin`, ${nFeatureField.cmdArgName} CDR3End` and `${nFeatureField.cmdArgName} FR4End`.%n" +
             "By default, boundaries will be got from analysis parameters if possible or `FR1Begin FR4End` otherwise."
 
-    fun HeaderForExport.geneFeaturesBetweenArgs(
+    fun MetaForExport.geneFeaturesBetweenArgs(
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<Array<String>> = geneFeaturesBetween(from, to)
@@ -46,7 +46,7 @@ object GeneFeaturesRangeUtil {
         .map { arrayOf(GeneFeature.encode(it)) }
 
     fun FieldsCollection<*>.warnIfFeatureNotCovered(
-        header: HeaderForExport,
+        header: MetaForExport,
         from: ReferencePoint?,
         to: ReferencePoint?
     ) {
@@ -58,7 +58,7 @@ object GeneFeaturesRangeUtil {
     }
 
     fun FieldsCollection<*>.warnIfFeatureNotCovered(
-        header: HeaderForExport,
+        header: MetaForExport,
         feature: GeneFeature
     ) {
         if (header.allFullyCoveredBy != null) {
@@ -68,20 +68,20 @@ object GeneFeaturesRangeUtil {
         }
     }
 
-    private fun HeaderForExport.geneFeaturesBetween(
+    private fun MetaForExport.geneFeaturesBetween(
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<List<GeneFeature>> = referencePointsBetweenOrDefault(from, to)
         .map { it.zipWithNext { a, b -> GeneFeature(a, b) } }
 
-    fun HeaderForExport.referencePointsToExport(
+    fun MetaForExport.referencePointsToExport(
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<Array<String>> = referencePointsBetweenOrDefault(from, to)
         .flatten()
         .map { arrayOf(ReferencePoint.encode(it, true)) }
 
-    private fun HeaderForExport.referencePointsBetweenOrDefault(
+    private fun MetaForExport.referencePointsBetweenOrDefault(
         from: ReferencePoint?,
         to: ReferencePoint?
     ): List<List<ReferencePoint>> = when {

@@ -80,6 +80,9 @@ public class ClnsReader implements CloneReader, AutoCloseable {
                 case MAGIC_V15:
                     BackwardCompatibilityUtils.register41_0Serializers(i.getSerializersManager());
                     break;
+                case MAGIC_V16:
+                    BackwardCompatibilityUtils.register41_1Serializers(i.getSerializersManager());
+                    break;
                 case MAGIC:
                     break;
                 default:

@@ -69,9 +69,11 @@ class BuildSHMTreeReport(
                 helper.writeField("\tTrees combined", -stepResult.treesCountDelta)
             }
         }
-        helper.writeField("Total trees count", stepResults.sumOf { it.treesCountDelta })
+        helper.writeField("Total trees count", totalTreesCount())
         helper.writeField("Total clones count in trees", totalClonesCountInTrees())
     }
+
+    fun totalTreesCount() = stepResults.sumOf { it.treesCountDelta }
 
     fun totalClonesCountInTrees() = stepResults.sumOf { it.clonesWasAdded }
 

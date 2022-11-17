@@ -45,7 +45,7 @@ class FindAllelesReport(
     private val clonesCountWithNoChangeOfScore: Long,
     private val clonesCountWithNegativeScoreChange: Long,
     private val clonesScoreDeltaStats: MiXCRCommandReport.StandardStats,
-    private val foundAlleles: Int,
+    val foundAlleles: Int,
     private val zygotes: Map<Int, Int>,
     private val allelesScoreChange: Map<String, MiXCRCommandReport.StandardStats>
 ) : AbstractMiXCRCommandReport(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version) {

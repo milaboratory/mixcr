@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
@@ -23,16 +24,13 @@ class RowMetaForExport(
     }
 }
 
-class HeaderForExport(
+class MetaForExport(
     private val allTagsInfo: List<TagsInfo>,
-    val allFullyCoveredBy: GeneFeatures?
+    val allFullyCoveredBy: GeneFeatures?,
+    val allReports: MiXCRStepReports
 ) {
     fun tagNamesWithType(tagType: TagType) = allTagsInfo.flatten()
         .filter { it.type == tagType }
         .map { it.name }
         .distinct()
-
-    companion object {
-        val empty = HeaderForExport(emptyList(), null)
-    }
 }

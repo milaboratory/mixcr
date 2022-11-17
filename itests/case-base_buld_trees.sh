@@ -64,7 +64,8 @@ mixcr exportPlots shmTrees base_build_trees.shmt trees/plots.pdf
 
 [[ -f trees/plots.pdf ]] || exit 1
 
-mixcr exportReportsTable base_build_trees.shmt total_report.tsv
+mixcr exportReportsTable base_build_trees.shmt trees/total_report.tsv
+mixcr exportReportsTable --with-upstreams base_build_trees.shmt trees/total_report_with_upstream.tsv
 
 FILES=`ls trees_samples/*_R1.fastq.gz`
 for filename in $FILES; do
@@ -75,6 +76,12 @@ for filename in $FILES; do
 
   mixcr align -p mikelov-et-al-2021 -b alleles_library.json trees_samples/$R1 trees_samples/$R2 align_by_alleles/$id.vdjca
 done
+
+assert "mixcr exportReportsTable --no-header base_build_trees.shmt | wc -l" "1"
+assert "mixcr exportReportsTable --with-upstreams --no-header base_build_trees.shmt | wc -l" "3"
+
+assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "1"
+assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "3"
 
 assert "cat alleles/report.json | head -n 1 | jq -r .foundAlleles" "3"
 assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"

@@ -363,8 +363,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             reportBuilder.setFinishMillis(System.currentTimeMillis())
             report = reportBuilder.buildReport()
             shmTreesWriter.setFooter(
-                datasets.fold(MiXCRFooterMerger()) { m, f ->
-                    m.addReportsFromInput(f.footer)
+                datasets.foldIndexed(MiXCRFooterMerger()) { index, m, f ->
+                    m.addReportsFromInput(inputFiles[index].toString(), f.footer)
                 }
                     .addStepReport(MiXCRCommandDescriptor.findShmTrees, report)
                     .build()
@@ -419,8 +419,10 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
         val headers = cloneReaders.map { it.readCloneSet().cloneSetInfo }
         writeHeader(
-            headers
-                .fold(MiXCRHeaderMerger()) { m, cloneSetInfo -> m.add(cloneSetInfo.header) }.build()
+            headers.foldIndexed(MiXCRHeaderMerger()) { index, m, cloneSetInfo ->
+                m.add(inputFiles[index].toString(), cloneSetInfo.header)
+            }
+                .build()
                 .addStepParams(MiXCRCommandDescriptor.findShmTrees, params),
             inputFiles.map { it.toString() },
             headers,
@@ -431,16 +433,16 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
 private class MiXCRHeaderMerger {
     private var inputHashAccumulator: MessageDigest? = MessageDigest.getInstance("MD5")
-    private var upstreamParams = mutableListOf<MiXCRStepParams>()
+    private var upstreamParams = mutableListOf<Pair<String, MiXCRStepParams>>()
     private var featuresToAlignMap: Map<GeneType, GeneFeature>? = null
     private var foundAlleles: MiXCRHeader.FoundAlleles? = null
     private var allFullyCoveredBy: GeneFeatures? = null
 
-    fun add(header: MiXCRHeader) = run {
+    fun add(fileName: String, header: MiXCRHeader) = run {
         if (header.inputHash == null)
             inputHashAccumulator = null
         inputHashAccumulator?.update(header.inputHash!!.encodeToByteArray())
-        upstreamParams += header.stepParams
+        upstreamParams += fileName to header.stepParams
         if (allFullyCoveredBy == null) {
             featuresToAlignMap = header.featuresToAlignMap
             foundAlleles = header.foundAlleles

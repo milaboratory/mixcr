@@ -12,8 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wrapper
@@ -80,9 +80,10 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                 out,
                 SplittedTreeNodeFieldsExtractorsFactory.createExtractors(
                     addedFields,
-                    HeaderForExport(
+                    MetaForExport(
                         reader.cloneSetInfos.map { it.tagsInfo },
-                        reader.header.allFullyCoveredBy
+                        reader.header.allFullyCoveredBy,
+                        reader.footer.reports
                     )
                 ),
                 !noHeader,
