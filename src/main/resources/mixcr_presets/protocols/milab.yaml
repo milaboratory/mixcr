@@ -45,7 +45,6 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
-
     - type: SetSplitClonesBy
       geneType: V
       value: true
@@ -67,15 +66,9 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
-
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
+
 
 "milab-human-tcr-rna-multiplex-cdr3":
   inheritFrom: bundle-umi-rna-kaligner1-global-c
@@ -104,3 +97,15 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
+
+"milab-mouse-tcr-rna-race-cdr3":
+  inheritFrom: milab-human-tcr-rna-race-cdr3
+  mixins:
+    - type: SetSpecies
+      species: mmu
+
+"milab-mouse-tcr-rna-race-full-length":
+  inheritFrom: milab-human-tcr-rna-race-full-length
+  mixins:
+    - type: SetSpecies
+      species: mmu
