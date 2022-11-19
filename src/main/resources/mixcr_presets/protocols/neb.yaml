@@ -17,18 +17,10 @@
       value: true
 
 "nebnext-human-bcr-full-length":
-  inheritFrom: bundle-umi-rna-kaligner2-global-c
+  inheritFrom: nebnext-human-bcr-cdr3
   mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetTagPattern
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
-
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: SetSplitClonesBy
-      geneType: C
-      value: true
 
 "nebnext-human-tcr-cdr3":
   inheritFrom: bundle-umi-rna-kaligner1-global-c
@@ -44,20 +36,16 @@
     - type: SetSplitClonesBy
       geneType: J
       value: true
-
-"nebnext-human-tcr-full-length":
-  inheritFrom: bundle-umi-rna-kaligner1-global-c
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetTagPattern
-      tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
-
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
     - type: SetSplitClonesBy
       geneType: C
       value: true
+
+"nebnext-human-tcr-full-length":
+  inheritFrom: nebnext-human-tcr-cdr3
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
 
 "nebnext-mouse-bcr-cdr3":
   inheritFrom: bundle-umi-rna-kaligner2-global-c
@@ -78,18 +66,10 @@
       value: true
 
 "nebnext-mouse-bcr-full-length":
-  inheritFrom: bundle-umi-rna-kaligner2-global-c
+  inheritFrom: nebnext-mouse-bcr-cdr3
   mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetTagPattern
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
-
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: SetSplitClonesBy
-      geneType: C
-      value: true
 
 "nebnext-mouse-tcr-cdr3":
   inheritFrom: bundle-umi-rna-kaligner1-global-c
@@ -110,15 +90,7 @@
       value: true
 
 "nebnext-mouse-tcr-full-length":
-  inheritFrom: bundle-umi-rna-kaligner1-global-c
+  inheritFrom: nebnext-mouse-tcr-cdr3
   mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetTagPattern
-      tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
-
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
-    - type: SetSplitClonesBy
-      geneType: C
-      value: true
