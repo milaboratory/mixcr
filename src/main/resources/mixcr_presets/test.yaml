@@ -362,6 +362,75 @@
                     type: group_operator_cumtop
                     share: 0.99
 
+"single-cell-as-sample":
+  inheritFrom: bundle-base
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-kaligner1-single-cell-v1
+    overrides:
+      tagPattern: ^(SMPL:N{16})(UMI:N{10})\^(R2:*)
+      sampleTable:
+        matchingTagNames: ["SMPL"]
+        sampleTagName: SAMPLE
+        samples:
+          - matchingTagValues: [ "GGATTACTCATTGCCC" ]
+            sampleName: sample0
+          - matchingTagValues: [ "CTGAAGTTCAAGGTAA" ]
+            sampleName: sample1
+          - matchingTagValues: [ "AACTCCCAGATCCTGT" ]
+            sampleName: sample2
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: "filter_groups"
+          groupingKeys:
+            - "allTagsUpTo:Molecule"
+          predicates:
+            - metrics:
+                - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0 # don't limit number of bins, use only minBinWidth
+                    minBinWidth: 0.2 # in respect to log10 of the value
+              operator:
+                type: "group_operator_otsu1"
+                logX: true
+                # Fallback behaviour for low total number of UMIs: accept all UMIs if there are 29 or fewer UMIs
+                minimalSample: 30
+                fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: assemble-base-with-consensus
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-readFraction"
+      - field: "-allUniqueTagsCount"
+        args: [ "Molecule" ]
+      - field: "-allUniqueTagFractions"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
 "umi-guided-consensus-test":
   pipeline:
     - align

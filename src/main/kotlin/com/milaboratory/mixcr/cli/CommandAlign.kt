@@ -113,6 +113,19 @@ import kotlin.math.max
 object CommandAlign {
     const val COMMAND_NAME = "align"
 
+    /** Defines specific mapping between tag values and sample name (i.e. one row from sample table) */
+    data class SampleTableRow(
+        @JsonProperty("matchingTagValues") val matchingTagValues: List<String>,
+        @JsonProperty("sampleName") val sampleName: String
+    )
+
+    /** Whole set of sample tag values to sample name mappings (i.e. sample table) */
+    data class SampleTable(
+        @JsonProperty("matchingTagNames") val matchingTagNames: List<String>,
+        @JsonProperty("sampleTagName") val sampleTagName: String,
+        @JsonProperty("samples") val samples: List<SampleTableRow>
+    )
+
     data class Params(
         @JsonProperty("species") val species: String = "",
         @JsonProperty("libraryName") val library: String = "default",
@@ -126,6 +139,7 @@ object CommandAlign {
         @JsonProperty("tagPattern") val tagPattern: String? = null,
         @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
         @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
+        @JsonProperty("sampleTable") val sampleTable: SampleTable? = null,
         @JsonProperty("readIdAsCellTag") val readIdAsCellTag: Boolean = false,
         @JsonProperty("limit") val limit: Long? = null,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
@@ -866,7 +880,7 @@ object CommandAlign {
                         inputHash,
                         paramsSpec,
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
-                        TagsInfo(0, *tagsExtractor.tagInfos.toTypedArray()),
+                        tagsExtractor.tagsInfo,
                         aligner.parameters,
                         aligner.parameters.featuresToAlignMap,
                         null,

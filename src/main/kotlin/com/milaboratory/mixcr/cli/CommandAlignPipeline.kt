@@ -29,9 +29,13 @@ import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValue
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
+import gnu.trove.impl.Constants
+import gnu.trove.map.hash.TObjectIntHashMap
 import jetbrains.datalore.plot.config.asMutable
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicLongArray
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -40,11 +44,15 @@ object CommandAlignPipeline {
 
     private val readGroupPattern = Regex("R\\d+")
 
-    fun getTagsExtractor(cmdParams: CommandAlign.Params, fileTags: List<String>): TagsExtractor {
+    fun getTagsExtractor(
+        cmdParams: CommandAlign.Params,
+        fileTags: List<String>
+    ): TagsExtractor {
         var plan: ReadSearchPlan? = null
         val readTags = mutableListOf<String>()
         var readTagShortcuts: List<ReadTagShortcut>? = null
         var tagExtractors = mutableListOf<TagExtractorWithInfo>()
+        val sampleTable = cmdParams.sampleTable
 
         if (cmdParams.tagPattern != null) {
             val searchSettings = ReadSearchSettings(
@@ -100,12 +108,21 @@ object CommandAlignPipeline {
                 }
         }
 
+        val finalExtractors = tagExtractors
+            .sortedBy { it.tagInfo }
+            .mapIndexed { i, tag -> tag.withInfoIndex(i) }
+
+        val originalTagsInfo = TagsInfo(0, *finalExtractors.map { it.tagInfo }.toTypedArray())
+
+        val (tagMapper, tagsInfo) =
+            sampleTable?.toTagMapper(originalTagsInfo) ?: (null to originalTagsInfo)
+
         return TagsExtractor(
             plan, readTagShortcuts,
             emptyList(),
-            tagExtractors
-                .sortedBy { it.tagInfo }
-                .mapIndexed { i, tag -> tag.withInfoIndex(i) }
+            finalExtractors.map { it.tagExtractor },
+            tagMapper,
+            tagsInfo
         )
     }
 
@@ -170,21 +187,92 @@ object CommandAlignPipeline {
         fun withInfoIndex(idx: Int) = copy(tagInfo = tagInfo.withIndex(idx))
     }
 
+    class TagMapper(
+        private val matchingTagIds: IntArray,
+        private val mapping: TObjectIntHashMap<List<String>>,
+        private val mappingValues: List<String>,
+        private val originalTagMapping: LongArray,
+        private val mappingValueIndex: Int
+    ) {
+        init {
+            require(mappingValueIndex >= 0)
+            require(mapping.size() == mappingValues.size)
+        }
+
+        val miss = AtomicLong()
+        val matches = AtomicLongArray(mapping.size())
+
+        fun apply(values: List<TagValue>): List<TagValue>? {
+            // Creating row of string to map against the mapping table
+            val row = ArrayList<String>(matchingTagIds.size)
+            for (i in matchingTagIds)
+                row.add(values[i].toString())
+
+            // Do mapping
+            val match = mapping[row]
+            if (match == -1) {
+                miss.incrementAndGet()
+                return null
+            }
+            matches.incrementAndGet(match)
+
+            // Creating mapped tag values vector
+            val result = arrayOfNulls<TagValue>(originalTagMapping.size + 1)
+            result[mappingValueIndex] = StringTagValue(mappingValues[match])
+            for (m in originalTagMapping)
+                result[(m and 0xFFFFFFFFL).toInt()] = values[(m ushr 32).toInt()]
+
+            return result.requireNoNulls().toList()
+        }
+    }
+
+    private fun CommandAlign.SampleTable.toTagMapper(originalInfo: TagsInfo): Pair<TagMapper, TagsInfo> = run {
+        val matchingTagIds = matchingTagNames
+            .map {
+                (originalInfo[it] ?: throw ValidationException("No tag with name \"$it\"")).index
+            }.toIntArray()
+
+        val mapping = TObjectIntHashMap<List<String>>(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1)
+        val mappingValues = ArrayList<String>(samples.size)
+        samples.forEachIndexed { idx, row ->
+            mapping.put(row.matchingTagValues, idx)
+            mappingValues.add(row.sampleName)
+        }
+
+        val sampleTagInfo = TagInfo(TagType.Sample, TagValueType.NonSequence, sampleTagName, -1)
+        val tagsInfosTmp =
+            (originalInfo.filter { !matchingTagNames.contains(it.name) }.toList()
+                    + listOf(sampleTagInfo)).sorted()
+        var mappingValueIndex = -1
+        val originalTagMapping = LongArray(tagsInfosTmp.size - 1)
+        var i = 0
+        val tagsInfosAfterMapping = tagsInfosTmp.mapIndexed { newIdx, tagInfo ->
+            if (tagInfo.index == -1) {
+                assert(mappingValueIndex == -1)
+                mappingValueIndex = newIdx
+            } else
+                originalTagMapping[i++] = (tagInfo.index.toLong() shl 32) or newIdx.toLong()
+            tagInfo.withIndex(newIdx)
+        }
+        TagMapper(matchingTagIds, mapping, mappingValues, originalTagMapping, mappingValueIndex) to
+                TagsInfo(0, *tagsInfosAfterMapping.toTypedArray())
+    }
+
     class TagsExtractor(
         /** Not null if tag pattern was specified */
         private val plan: ReadSearchPlan?,
         /** Not null if tag pattern was specified */
         private val readShortcuts: List<ReadTagShortcut>?,
         private val headerPatterns: List<HeaderPattern>,
-        private val tagExtractorsWithInfo: List<TagExtractorWithInfo>,
+        private val tagExtractors: List<TagExtractor>,
+        val tagMapper: TagMapper?,
+        val tagsInfo: TagsInfo
     ) {
         init {
             require((plan != null) == (readShortcuts != null))
         }
 
         val pairedPatternPayload = readShortcuts?.size?.let { it == 2 }
-
-        val tagInfos by lazy { tagExtractorsWithInfo.map { it.tagInfo } }
 
         val inputReads = AtomicLong()
         val matchedHeaders = AtomicLong()
@@ -210,20 +298,25 @@ object CommandAlignPipeline {
                 } else
                     bundle.sequence to null
 
-            val tags = tagExtractorsWithInfo
+            val tags = tagExtractors
                 .map {
-                    it.tagExtractor.extract(
+                    it.extract(
                         bundle.originalReadId,
                         bundle.fileTags,
                         headerMatches,
                         patternMatch
                     )
                 }
-                .toTypedArray()
+
+            val mappedTags =
+                if (tagMapper == null)
+                    tags
+                else
+                    tagMapper.apply(tags) ?: return bundle.copy(status = ProcessingBundleStatus.NotParsed)
 
             return bundle.copy(
                 sequence = newSeq,
-                tags = TagTuple(*tags)
+                tags = TagTuple(*tags.toTypedArray())
             )
         }
     }

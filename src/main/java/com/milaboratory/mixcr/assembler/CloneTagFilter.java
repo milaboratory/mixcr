@@ -31,8 +31,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.milaboratory.mixcr.basictypes.tag.TagsInfo.ALL_TAGS_OF_TYPE;
-import static com.milaboratory.mixcr.basictypes.tag.TagsInfo.TAGS_KEY_PREFIX;
+import static com.milaboratory.mixcr.basictypes.tag.TagsInfo.*;
 
 /**
  * Applies a clone*tag filtering to a list of clones
@@ -185,6 +184,16 @@ public final class CloneTagFilter {
             for (TagInfo ti : tagsInfo)
                 if (ti.getType() == tagType)
                     indices.add(ti.getIndex());
+            return new TagsExtractor(indices.toArray());
+        } else if (key.startsWith(ALL_TAGS_UP_TO_TYPE)) {
+            String typeS = key.substring(ALL_TAGS_UP_TO_TYPE.length());
+            TagType tagType = TagType.valueOfCaseInsensitiveOrNull(typeS);
+            if (tagType == null)
+                throw new IllegalArgumentException("Unrecognized tag type: " + typeS);
+            TIntArrayList indices = new TIntArrayList();
+            int depth = tagsInfo.getDepthFor(tagType);
+            for (int i = 0; i < depth; i++)
+                indices.add(i);
             return new TagsExtractor(indices.toArray());
         } else if (key.startsWith(TAGS_KEY_PREFIX)) {
             String tagName = key.substring(TAGS_KEY_PREFIX.length());
