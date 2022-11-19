@@ -7,9 +7,6 @@
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
     - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: J
-    - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
 
