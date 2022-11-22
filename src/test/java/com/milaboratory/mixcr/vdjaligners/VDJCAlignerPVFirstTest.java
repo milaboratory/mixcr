@@ -12,13 +12,13 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import cc.redberry.pipe.CUtils;
-import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
+import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;

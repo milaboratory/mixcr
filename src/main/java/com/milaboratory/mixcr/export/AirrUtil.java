@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.export;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
 import com.milaboratory.mixcr.export.AirrColumns.ComplexReferencePoint;

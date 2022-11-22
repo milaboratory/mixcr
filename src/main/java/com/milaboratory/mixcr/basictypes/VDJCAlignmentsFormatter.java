@@ -17,7 +17,6 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Aligner;
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.sequence.AminoAcidAlphabet;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NSequenceWithQuality;

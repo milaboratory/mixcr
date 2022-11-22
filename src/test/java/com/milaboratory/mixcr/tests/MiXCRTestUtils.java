@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.tests;
 
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.sequence.NSequenceWithQuality;

@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.ExtendedReferencePointsBuilder;
@@ -21,7 +20,7 @@ import io.repseq.core.ReferencePoint;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static com.milaboratory.core.alignment.MultiAlignmentHelper.DEFAULT_SETTINGS;
+import static com.milaboratory.mixcr.basictypes.MultiAlignmentHelper.DEFAULT_SETTINGS;
 
 public class VDJCAlignmentsFormatterTest {
     boolean show = true;
