@@ -97,7 +97,10 @@ object CommandAlignPipeline {
             .asMutable()
 
         if (tagExtractors.size != 0) {
-            println("The following tags and their roles were recognised:")
+            if (sampleTable != null)
+                println("The following tags and their roles were recognised before sample mapping:")
+            else
+                println("The following tags and their roles were recognised:")
             if (readTagShortcuts != null)
                 println("  Payload tags: " + readTags.joinToString(", "))
 
@@ -116,6 +119,15 @@ object CommandAlignPipeline {
 
         val (tagMapper, tagsInfo) =
             sampleTable?.toTagMapper(originalTagsInfo) ?: (null to originalTagsInfo)
+
+        if (sampleTable != null) {
+            println("The following tags and their roles were recognised after sample mapping:")
+            tagsInfo
+                .groupBy { it.type }
+                .forEach { (tagType: TagType, extractors: List<TagInfo>) ->
+                    println("  $tagType tags: " + extractors.joinToString(", ") { it.name })
+                }
+        }
 
         return TagsExtractor(
             plan, readTagShortcuts,

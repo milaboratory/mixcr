@@ -281,12 +281,14 @@ object CommandRefineTagsAndSort {
                     }
 
                     else -> {
+                        val correctionTagNames =  correctionTagIndices.map { tagNames[it] }
+
                         // Running correction
                         val whitelists = mutableMapOf<Int, ShortSequenceSet>()
-                        for (i in tagNames.indices) {
-                            val t = cmdParams.whitelists[tagNames[i]]
+                        for (i in correctionTagNames.indices) {
+                            val t = cmdParams.whitelists[correctionTagNames[i]]
                             if (t != null) {
-                                println("The following whitelist will be used for ${tagNames[i]}: $t")
+                                println("The following whitelist will be used for ${correctionTagNames[i]}: $t")
                                 whitelists[i] = t.load()
                             }
                         }
@@ -296,7 +298,7 @@ object CommandRefineTagsAndSort {
 
                         val corrector = TagCorrector(
                             cmdParams.parameters,
-                            tagNames,
+                            correctionTagNames,
                             tempDest.addSuffix("tags"),
                             whitelists,
                             memoryBudget,
@@ -341,7 +343,7 @@ object CommandRefineTagsAndSort {
                                     updatedTags[tIdx] = SequenceAndQualityTagValue(newTagValues[tIdxIdx])
                                 }
                                 // Applying updated tags values and returning updated alignments object
-                                al.setTagCount(TagCount(TagTuple(*updatedTags)))
+                                al.setTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
                             },
                             secondaryReader,
                             corrector.report.outputRecords
