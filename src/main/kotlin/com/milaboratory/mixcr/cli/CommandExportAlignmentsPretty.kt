@@ -217,24 +217,25 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         CommandExportAlignments.openAlignmentsPort(input).use { readerAndHeader ->
             (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it.toFile()), 32768)) }
                 ?: System.out).use { output ->
-                val reader = readerAndHeader.port
-                val countBefore = limitBefore ?: Int.MAX_VALUE
-                val countAfter = limitAfter ?: Int.MAX_VALUE
-                val skipAfter = skipAfter ?: 0
-                reader
-                    .asSequence()
-                    .take(countBefore)
-                    .onEach { ++total }
-                    .filter { filter.accept(it) }
-                    .drop(skipAfter)
-                    .take(countAfter)
-                    .forEach { alignments ->
-                        ++filtered
-                        if (logger.verbose) outputVerbose(output, alignments) else outputCompact(output, alignments)
-                    }
+                readerAndHeader.port.use { reader ->
+                    val countBefore = limitBefore ?: Int.MAX_VALUE
+                    val countAfter = limitAfter ?: Int.MAX_VALUE
+                    val skipAfter = skipAfter ?: 0
+                    reader
+                        .asSequence()
+                        .take(countBefore)
+                        .onEach { ++total }
+                        .filter { filter.accept(it) }
+                        .drop(skipAfter)
+                        .take(countAfter)
+                        .forEach { alignments ->
+                            ++filtered
+                            if (logger.verbose) outputVerbose(output, alignments) else outputCompact(output, alignments)
+                        }
 
 
-                output.println("Filtered: " + filtered + " / " + total + " = " + 100.0 * filtered / total + "%")
+                    output.println("Filtered: " + filtered + " / " + total + " = " + 100.0 * filtered / total + "%")
+                }
             }
         }
     }

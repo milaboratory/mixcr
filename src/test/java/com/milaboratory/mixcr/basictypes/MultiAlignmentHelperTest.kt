@@ -44,7 +44,7 @@ class MultiAlignmentHelperTest {
             *alignments
         )
         helper.addSubjectQuality("Quality", seq0qual)
-        helper.setSubjectLeftTitle("Subject")
+        helper.subjectLeftTitle = "Subject"
         for (i in 0..3) helper.setQueryLeftTitle(i, "Query$i")
 
         helper.toString().lines().map { it.trimEnd() } shouldContainExactly """
