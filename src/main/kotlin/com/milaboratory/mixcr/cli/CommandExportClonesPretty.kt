@@ -184,10 +184,10 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
             output.println()
             for (i in 0 until clone.numberOfTargets()) {
                 val targetAsMultiAlignment =
-                    VDJCAlignmentsFormatter.getTargetAsMultiAlignment(clone, i, true, false) ?: continue
+                    VDJCAlignmentsFormatter(addHitScore = true, addReads = false).formatMultiAlignments(clone, i)
                 val split = targetAsMultiAlignment.split(80)
                 for (spl in split) {
-                    output.println(spl)
+                    output.println(spl.formatLines())
                     output.println()
                 }
             }

@@ -263,10 +263,10 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     """.trimIndent()
                 )
             }
-            val targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i) ?: continue
+            val targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i)
             val split = targetAsMultiAlignment.split(80)
             for (spl in split) {
-                output.println(spl)
+                output.println(spl.formatLines())
                 output.println()
             }
         }

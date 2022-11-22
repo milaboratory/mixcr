@@ -87,10 +87,8 @@ public class VDJCAlignerPVFirstTest {
         for (VDJCAlignments alignments : alignemntsList) {
             for (int target = 0; target < alignments.numberOfTargets(); target++) {
                 MultiAlignmentHelper helperBig = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, target);
-                if (helperBig == null)
-                    continue;
                 for (MultiAlignmentHelper helper : helperBig.split(80)) {
-                    System.out.println(helper);
+                    System.out.println(helper.formatLines(0));
                     System.out.println();
                     if (--k < 0)
                         return;
@@ -138,7 +136,7 @@ public class VDJCAlignerPVFirstTest {
 
         for (VDJCAlignments al : align.alignments) {
             for (int i = 0; i < al.numberOfTargets(); i++) {
-                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i).formatLines(0));
                 System.out.println();
             }
             System.out.println();

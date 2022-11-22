@@ -415,7 +415,7 @@ public class FullSeqAssemblerTest {
                 continue;
 
             for (int i = 0; i < al.numberOfTargets(); i++) {
-                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i).formatLines(0));
                 System.out.println();
             }
             System.out.println();
@@ -442,7 +442,7 @@ public class FullSeqAssemblerTest {
                 .filter(al -> al.getBestHit(GeneType.Variable).getGene().getName().contains("3-74"))
                 .forEach(al -> {
                     for (int i = 0; i < al.numberOfTargets(); i++) {
-                        System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+                        System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i).formatLines(0));
                         System.out.println();
                     }
                     System.out.println();
