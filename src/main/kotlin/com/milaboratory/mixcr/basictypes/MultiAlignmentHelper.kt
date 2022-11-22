@@ -9,554 +9,398 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.basictypes;
+package com.milaboratory.mixcr.basictypes
 
-import com.milaboratory.core.Range;
-import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.mutations.MutationType;
-import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.sequence.Alphabet;
-import com.milaboratory.core.sequence.Sequence;
-import com.milaboratory.core.sequence.SequenceQuality;
-import com.milaboratory.util.BitArray;
-import com.milaboratory.util.IntArrayList;
+import com.milaboratory.core.Range
+import com.milaboratory.core.alignment.Alignment
+import com.milaboratory.core.mutations.Mutation
+import com.milaboratory.core.mutations.MutationType
+import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.sequence.Sequence
+import com.milaboratory.core.sequence.SequenceQuality
+import com.milaboratory.util.BitArray
+import com.milaboratory.util.IntArrayList
+import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static com.milaboratory.core.mutations.Mutation.RAW_MUTATION_TYPE_DELETION;
-import static com.milaboratory.core.mutations.Mutation.RAW_MUTATION_TYPE_SUBSTITUTION;
-
-public class MultiAlignmentHelper {
+class MultiAlignmentHelper private constructor(
+    val subject: String,
+    private val queries: Array<String>,
+    private val subjectPositions: IntArray,
+    private val queryPositions: Array<IntArray>,
+    val match: Array<BitArray>,
+    var subjectLeftTitle: String? = "",
+    private val queryLeftTitles: Array<String?> = arrayOfNulls(queries.size),
+    var subjectRightTitle: String = "",
+    private val queryRightTitles: Array<String?> = arrayOfNulls(queries.size)
+) {
     // subject / queries nomenclature seems to be swapped here...
     // subject here corresponds to sequence2 from alignments (so, the query sequence)
     // queries here corresponds to sequence1 from alignments (so, the reference sequence)
+    private var minimalPositionWidth = 0
+    private val annotationStrings = mutableListOf<String>()
+    private val annotationStringTitles = mutableListOf<String>()
 
-    int minimalPositionWidth = 0;
-    final String subject;
-    final String[] queries;
-    final int[] subjectPositions;
-    final int[][] queryPositions;
-    final BitArray[] match;
-    final List<String> annotationStrings = new ArrayList<>();
-    final List<String> annotationStringTitles = new ArrayList<>();
+    fun getQuery(idx: Int): String = queries[idx]
 
-    String subjectLeftTitle;
-    final String[] queryLeftTitles;
-
-    String subjectRightTitle;
-    final String[] queryRightTitles;
-
-    private MultiAlignmentHelper(String subject, String[] queries, int[] subjectPositions,
-                                 int[][] queryPositions, BitArray[] match,
-                                 String subjectLeftTitle, String[] queryLeftTitles,
-                                 String subjectRightTitle, String[] queryRightTitles) {
-        this.subject = subject;
-        this.queries = queries;
-        this.subjectPositions = subjectPositions;
-        this.queryPositions = queryPositions;
-        this.match = match;
-        this.subjectLeftTitle = subjectLeftTitle;
-        this.queryLeftTitles = queryLeftTitles;
-        this.subjectRightTitle = subjectRightTitle;
-        this.queryRightTitles = queryRightTitles;
-    }
-
-    private MultiAlignmentHelper(String subject, String[] queries, int[] subjectPositions, int[][] queryPositions,
-                                 BitArray[] match) {
-        this(subject, queries, subjectPositions, queryPositions, match, "", new String[queries.length],
-                "", new String[queries.length]);
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public String getQuery(int idx) {
-        return queries[idx];
-    }
-
-    public int[] getSubjectPositions() {
-        return subjectPositions;
-    }
-
-    public int[][] getQueryPositions() {
-        return queryPositions;
-    }
-
-    public BitArray[] getMatch() {
-        return match;
-    }
-
-    public String getSubjectLeftTitle() {
-        return subjectLeftTitle;
-    }
-
-    public String getSubjectRightTitle() {
-        return subjectRightTitle;
-    }
-
-    public String getQueryLeftTitle(int i) {
-        return queryLeftTitles[i];
-    }
-
-    public String getQueryRightTitle(int i) {
-        return queryRightTitles[i];
-    }
-
-    public int getActualPositionWidth() {
-        int ret = ("" + getSubjectFrom()).length();
-        for (int i = 0; i < queries.length; i++)
-            ret = Math.max(ret, ("" + getQueryFrom(i)).length());
-        return ret;
-    }
-
-    public void setMinimalPositionWidth(int minimalPositionWidth) {
-        this.minimalPositionWidth = minimalPositionWidth;
-    }
-
-    public MultiAlignmentHelper setSubjectLeftTitle(String subjectLeftTitle) {
-        this.subjectLeftTitle = subjectLeftTitle;
-        return this;
-    }
-
-    public MultiAlignmentHelper addSubjectQuality(String title, SequenceQuality quality) {
-        char[] chars = new char[size()];
-        for (int i = 0; i < size(); ++i)
-            chars[i] = subjectPositions[i] < 0 ? ' ' : simplifiedQuality(quality.value(subjectPositions[i]));
-        addAnnotationString(title, new String(chars));
-        return this;
-    }
-
-    private static char simplifiedQuality(int value) {
-        value /= 5;
-        if (value > 9)
-            value = 9;
-        return Integer.toString(value).charAt(0);
-    }
-
-    public MultiAlignmentHelper setSubjectRightTitle(String subjectRightTitle) {
-        this.subjectRightTitle = subjectRightTitle;
-        return this;
-    }
-
-    public MultiAlignmentHelper addAnnotationString(String title, String string) {
-        if (string.length() != size())
-            throw new IllegalArgumentException();
-        annotationStrings.add(string);
-        annotationStringTitles.add(title);
-        return this;
-    }
-
-    public MultiAlignmentHelper setQueryLeftTitle(int id, String queryLeftTitle) {
-        this.queryLeftTitles[id] = queryLeftTitle;
-        return this;
-    }
-
-    public MultiAlignmentHelper setQueryRightTitle(int id, String queryRightTitle) {
-        this.queryRightTitles[id] = queryRightTitle;
-        return this;
-    }
-
-    public int getSubjectPositionAt(int position) {
-        return subjectPositions[position];
-    }
-
-    public int subjectToAlignmentPosition(int subjectPosition) {
-        for (int i = 0; i < subjectPositions.length; i++)
-            if (subjectPositions[i] == subjectPosition)
-                return i;
-        return -1;
-    }
-
-    public int getQueryPositionAt(int index, int position) {
-        return queryPositions[index][position];
-    }
-
-    public int getAbsSubjectPositionAt(int position) {
-        return aabs(subjectPositions[position]);
-    }
-
-    public int getAbsQueryPositionAt(int index, int position) {
-        return aabs(queryPositions[index][position]);
-    }
-
-    private static int aabs(int pos) {
-        if (pos >= 0)
-            return pos;
-        if (pos == -1)
-            return -1;
-        return -2 - pos;
-    }
-
-    public int getSubjectFrom() {
-        return getFirstPosition(subjectPositions);
-    }
-
-    public int getSubjectTo() {
-        return getLastPosition(subjectPositions);
-    }
-
-    public int getSubjectLength() {
-        return 1 + getSubjectTo() - getSubjectFrom();
-    }
-
-    public int getQueryFrom(int index) {
-        return getFirstPosition(queryPositions[index]);
-    }
-
-    public int getQueryTo(int index) {
-        return getLastPosition(queryPositions[index]);
-    }
-
-    public String getAnnotationString(int i) {
-        return annotationStrings.get(i);
-    }
-
-    public int size() {
-        return subject.length();
-    }
-
-    public MultiAlignmentHelper getRange(int from, int to) {
-        boolean[] queriesToExclude = new boolean[queries.length];
-        int queriesCount = 0;
-        for (int i = 0; i < queries.length; i++) {
-            boolean exclude = true;
-            for (int j = from; j < to; j++)
-                if (queryPositions[i][j] != -1) {
-                    exclude = false;
-                    break;
-                }
-            queriesToExclude[i] = exclude;
-            if (!exclude)
-                queriesCount++;
+    val actualPositionWidth: Int
+        get() {
+            var ret = ("" + subjectFrom).length
+            for (i in queries.indices) ret = max(ret, ("" + getQueryFrom(i)).length)
+            return ret
         }
 
-        String[] cQueries = new String[queriesCount];
-        int[][] cQueryPositions = new int[queriesCount][];
-        BitArray[] cMatch = new BitArray[queriesCount];
-        String[] cQueryLeftTitles = new String[queriesCount];
-        String[] cQueryRightTitles = new String[queriesCount];
-
-        int j = 0;
-        for (int i = 0; i < queries.length; i++) {
-            if (queriesToExclude[i])
-                continue;
-            cQueries[j] = queries[i].substring(from, to);
-            cQueryPositions[j] = Arrays.copyOfRange(queryPositions[i], from, to);
-            cMatch[j] = match[i].getRange(from, to);
-            cQueryLeftTitles[j] = queryLeftTitles[i];
-            cQueryRightTitles[j] = queryRightTitles[i];
-            j++;
+    fun addSubjectQuality(title: String, quality: SequenceQuality): MultiAlignmentHelper {
+        val chars = CharArray(size())
+        for (i in 0 until size()) chars[i] = when {
+            subjectPositions[i] < 0 -> ' '
+            else -> simplifiedQuality(quality.value(subjectPositions[i]).toInt())
         }
-
-        MultiAlignmentHelper result = new MultiAlignmentHelper(subject.substring(from, to), cQueries,
-                Arrays.copyOfRange(subjectPositions, from, to), cQueryPositions, cMatch,
-                subjectLeftTitle, cQueryLeftTitles, subjectRightTitle, cQueryRightTitles);
-
-        for (int i = 0; i < annotationStrings.size(); i++)
-            result.addAnnotationString(annotationStringTitles.get(i),
-                    annotationStrings.get(i).substring(from, to));
-        return result;
+        addAnnotationString(title, String(chars))
+        return this
     }
 
-    public MultiAlignmentHelper[] split(int length) {
-        return split(length, false);
+    fun addAnnotationString(title: String, string: String): MultiAlignmentHelper {
+        require(string.length == size())
+        annotationStrings.add(string)
+        annotationStringTitles.add(title)
+        return this
     }
 
-    public MultiAlignmentHelper[] split(int length, boolean eqPositionWidth) {
-        MultiAlignmentHelper[] ret = new MultiAlignmentHelper[(size() + length - 1) / length];
-        for (int i = 0; i < ret.length; ++i) {
-            int pointer = i * length;
-            int l = Math.min(length, size() - pointer);
-            ret[i] = getRange(pointer, pointer + l);
-        }
-        if (eqPositionWidth)
-            alignPositions(ret);
-        return ret;
+    fun setQueryLeftTitle(id: Int, queryLeftTitle: String?): MultiAlignmentHelper {
+        queryLeftTitles[id] = queryLeftTitle
+        return this
     }
 
-    private static int getFirstPosition(int[] array) {
-        for (int pos : array)
-            if (pos >= 0)
-                return pos;
-        for (int pos : array)
-            if (pos < -1)
-                return -2 - pos;
-        return -1;
+    fun setQueryRightTitle(id: Int, queryRightTitle: String?): MultiAlignmentHelper {
+        queryRightTitles[id] = queryRightTitle
+        return this
     }
 
-    private static int getLastPosition(int[] array) {
-        for (int i = array.length - 1; i >= 0; i--)
-            if (array[i] >= 0)
-                return array[i];
-        for (int i = array.length - 1; i >= 0; i--)
-            if (array[i] < -1)
-                return -2 - array[i];
-        return -1;
+    fun subjectToAlignmentPosition(subjectPosition: Int): Int {
+        for (i in subjectPositions.indices) if (subjectPositions[i] == subjectPosition) return i
+        return -1
     }
 
-    private static int fixedWidthL(String[] strings) {
-        return fixedWidthL(strings, 0);
-    }
+    fun getAbsSubjectPositionAt(position: Int): Int = aabs(subjectPositions[position])
 
-    private static int fixedWidthL(String[] strings, int minWidth) {
-        int length = 0;
-        for (String string : strings)
-            length = Math.max(length, string.length());
-        length = Math.max(length, minWidth);
-        for (int i = 0; i < strings.length; i++)
-            strings[i] = spaces(length - strings[i].length()) + strings[i];
-        return length;
-    }
+    fun getAbsQueryPositionAt(index: Int, position: Int): Int = aabs(queryPositions[index][position])
 
-    private static int fixedWidthR(String[] strings) {
-        return fixedWidthR(strings, 0);
-    }
+    private val subjectFrom: Int
+        get() = getFirstPosition(subjectPositions)
+    private val subjectTo: Int
+        get() = getLastPosition(subjectPositions)
 
-    private static int fixedWidthR(String[] strings, int minWidth) {
-        int length = 0;
-        for (String string : strings)
-            length = Math.max(length, string.length());
-        length = Math.max(length, minWidth);
-        for (int i = 0; i < strings.length; i++)
-            strings[i] = strings[i] + spaces(length - strings[i].length());
-        return length;
-    }
+    private fun getQueryFrom(index: Int): Int = getFirstPosition(queryPositions[index])
 
-    public static class Settings {
-        public final boolean markMatchWithSpecialLetter;
-        public final boolean lowerCaseMatch;
-        public final boolean lowerCaseMismatch;
-        public final char specialMatchChar;
-        public final char outOfRangeChar;
+    private fun getQueryTo(index: Int): Int = getLastPosition(queryPositions[index])
 
-        public Settings(boolean markMatchWithSpecialLetter, boolean lowerCaseMatch, boolean lowerCaseMismatch,
-                        char specialMatchChar, char outOfRangeChar) {
-            this.markMatchWithSpecialLetter = markMatchWithSpecialLetter;
-            this.lowerCaseMatch = lowerCaseMatch;
-            this.lowerCaseMismatch = lowerCaseMismatch;
-            this.specialMatchChar = specialMatchChar;
-            this.outOfRangeChar = outOfRangeChar;
-        }
-    }
+    fun getAnnotationString(i: Int): String = annotationStrings[i]
 
-    @Override
-    public String toString() {
-        int aCount = queries.length;
-        int asSize = annotationStringTitles.size();
+    fun size(): Int = subject.length
 
-        String[] lines = new String[aCount + 1 + asSize];
-
-        for (int i = 0; i < asSize; i++)
-            lines[i] = "";
-
-        lines[asSize] = "" + getSubjectFrom();
-        for (int i = 0; i < aCount; i++)
-            lines[i + 1 + asSize] = "" + getQueryFrom(i);
-
-        int width = fixedWidthL(lines, minimalPositionWidth);
-
-        for (int i = 0; i < asSize; i++)
-            lines[i] = annotationStringTitles.get(i) + spaces(width + 1);
-
-        lines[asSize] = (subjectLeftTitle == null ? "" : subjectLeftTitle) +
-                " " + lines[asSize];
-
-        for (int i = 0; i < aCount; i++)
-            lines[i + 1 + asSize] = (queryLeftTitles[i] == null ? "" : queryLeftTitles[i]) +
-                    " " + lines[i + 1 + asSize];
-
-        width = fixedWidthL(lines);
-
-        for (int i = 0; i < asSize; i++)
-            lines[i] += " " + annotationStrings.get(i);
-        lines[asSize] += " " + subject + " " + getSubjectTo();
-        for (int i = 0; i < aCount; i++)
-            lines[i + 1 + asSize] += " " + queries[i] + " " + getQueryTo(i);
-
-        width = fixedWidthR(lines);
-
-        lines[asSize] += " " + subjectRightTitle;
-        for (int i = 0; i < aCount; i++)
-            if (queryRightTitles[i] != null)
-                lines[i + 1 + asSize] += " " + queryRightTitles[i];
-
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < lines.length; i++) {
-            if (i != 0)
-                result.append("\n");
-            result.append(lines[i]);
-        }
-        return result.toString();
-    }
-
-    public static final Settings DEFAULT_SETTINGS = new Settings(false, true, false, ' ', ' ');
-    public static final Settings DOT_MATCH_SETTINGS = new Settings(true, true, false, '.', ' ');
-
-    public static <S extends Sequence<S>> MultiAlignmentHelper build(Settings settings, Range subjectRange,
-                                                                     Alignment<S>... alignments) {
-        S subject = alignments[0].getSequence1();
-        return build(settings, subjectRange, subject, alignments);
-    }
-
-    public static <S extends Sequence<S>> MultiAlignmentHelper build(Settings settings, Range subjectRange,
-                                                                     S subject, Alignment<S>... alignments) {
-        for (Alignment<S> alignment : alignments)
-            if (!alignment.getSequence1().equals(subject))
-                throw new IllegalArgumentException();
-
-        int subjectPointer = subjectRange.getFrom();
-        int subjectPointerTo = subjectRange.getTo();
-
-        int aCount = alignments.length;
-        int[] queryPointers = new int[aCount];
-        int[] mutationPointers = new int[aCount];
-        Mutations<S>[] mutations = new Mutations[aCount];
-        List<Boolean>[] matches = new List[aCount];
-
-        IntArrayList subjectPositions = new IntArrayList();
-        IntArrayList[] queryPositions = new IntArrayList[aCount];
-
-        StringBuilder subjectString = new StringBuilder();
-        StringBuilder[] queryStrings = new StringBuilder[aCount];
-
-        for (int i = 0; i < aCount; i++) {
-            queryPointers[i] = alignments[i].getSequence2Range().getFrom();
-            matches[i] = new ArrayList<>();
-            mutations[i] = alignments[i].getAbsoluteMutations();
-            queryPositions[i] = new IntArrayList();
-            queryStrings[i] = new StringBuilder();
-        }
-
-        final Alphabet<S> alphabet = subject.getAlphabet();
-
-        BitArray processed = new BitArray(aCount);
-        while (true) {
-            // Checking continue condition
-            boolean doContinue = subjectPointer < subjectPointerTo;
-            for (int i = 0; i < aCount; i++)
-                doContinue |= mutationPointers[i] < mutations[i].size();
-            if (!doContinue)
-                break;
-
-            processed.clearAll();
-
-            // Processing out of range sequences
-            for (int i = 0; i < aCount; i++)
-                if (!alignments[i].getSequence1Range().contains(subjectPointer)
-                        && !(alignments[i].getSequence1Range().containsBoundary(subjectPointer) &&
-                        mutationPointers[i] != mutations[i].size())) {
-                    queryStrings[i].append(settings.outOfRangeChar);
-                    queryPositions[i].add(-1);
-                    matches[i].add(false);
-                    processed.set(i);
-                }
-
-            // Checking for insertions
-            boolean insertion = false;
-            for (int i = 0; i < aCount; i++)
-                if (mutationPointers[i] < mutations[i].size() &&
-                        mutations[i].getTypeByIndex(mutationPointers[i]) == MutationType.Insertion &&
-                        mutations[i].getPositionByIndex(mutationPointers[i]) == subjectPointer) {
-                    insertion = true;
-                    queryStrings[i].append(mutations[i].getToAsSymbolByIndex(mutationPointers[i]));
-                    queryPositions[i].add(queryPointers[i]++);
-                    matches[i].add(false);
-                    mutationPointers[i]++;
-                    assert !processed.get(i);
-                    processed.set(i);
-                }
-
-            if (insertion) { // In case on insertion in query sequence
-                subjectString.append('-');
-                subjectPositions.add(-2 - subjectPointer);
-
-                for (int i = 0; i < aCount; i++) {
-                    if (!processed.get(i)) {
-                        queryStrings[i].append('-');
-                        queryPositions[i].add(-2 - queryPointers[i]);
-                        matches[i].add(false);
-                    }
-                }
-            } else { // In other cases
-                char subjectSymbol = subject.symbolAt(subjectPointer);
-                subjectString.append(subjectSymbol);
-                subjectPositions.add(subjectPointer);
-
-                for (int i = 0; i < aCount; i++) {
-                    if (processed.get(i))
-                        continue;
-
-                    Mutations<S> cMutations = mutations[i];
-                    int cMutationPointer = mutationPointers[i];
-
-                    boolean mutated = false;
-
-                    if (cMutationPointer < cMutations.size()) {
-                        int mutPosition = cMutations.getPositionByIndex(cMutationPointer);
-                        assert mutPosition >= subjectPointer;
-                        mutated = mutPosition == subjectPointer;
-                    }
-
-                    if (mutated) {
-                        switch (cMutations.getRawTypeByIndex(cMutationPointer)) {
-                            case RAW_MUTATION_TYPE_SUBSTITUTION:
-                                char symbol = cMutations.getToAsSymbolByIndex(cMutationPointer);
-                                queryStrings[i].append(settings.lowerCaseMismatch ?
-                                        Character.toLowerCase(symbol) :
-                                        symbol);
-                                queryPositions[i].add(queryPointers[i]++);
-                                matches[i].add(false);
-                                break;
-                            case RAW_MUTATION_TYPE_DELETION:
-                                queryStrings[i].append('-');
-                                queryPositions[i].add(-2 - queryPointers[i]);
-                                matches[i].add(false);
-                                break;
-                            default:
-                                assert false;
-                        }
-                        mutationPointers[i]++;
-                    } else {
-                        if (settings.markMatchWithSpecialLetter)
-                            queryStrings[i].append(settings.specialMatchChar);
-                        else
-                            queryStrings[i].append(settings.lowerCaseMatch ? Character.toLowerCase(subjectSymbol) :
-                                    subjectSymbol);
-                        queryPositions[i].add(queryPointers[i]++);
-                        matches[i].add(true);
-                    }
-                }
-                subjectPointer++;
+    fun getRange(from: Int, to: Int): MultiAlignmentHelper {
+        val queriesToExclude = BooleanArray(queries.size)
+        var queriesCount = 0
+        for (i in queries.indices) {
+            var exclude = true
+            for (j in from until to) if (queryPositions[i][j] != -1) {
+                exclude = false
+                break
             }
+            queriesToExclude[i] = exclude
+            if (!exclude) queriesCount++
+        }
+        val indexMapping = IntArray(queriesCount)
+        var j = 0
+        for (i in queries.indices) {
+            if (queriesToExclude[i]) continue
+            indexMapping[j] = i
+            j++
         }
 
-        int[][] queryPositionsArrays = new int[aCount][];
-        BitArray[] matchesBAs = new BitArray[aCount];
-        String[] queryStringsArray = new String[aCount];
-        for (int i = 0; i < aCount; i++) {
-            queryPositionsArrays[i] = queryPositions[i].toArray();
-            matchesBAs[i] = new BitArray(matches[i]);
-            queryStringsArray[i] = queryStrings[i].toString();
+        val cQueries: Array<String> = Array(queriesCount) {
+            queries[indexMapping[it]].substring(from, to)
+        }
+        val cQueryPositions: Array<IntArray> = Array(queriesCount) {
+            queryPositions[indexMapping[it]].copyOfRange(from, to)
+        }
+        val cMatch: Array<BitArray> = Array(queriesCount) {
+            match[indexMapping[it]].getRange(from, to)
+        }
+        val cQueryLeftTitles: Array<String?> = Array(queriesCount) {
+            queryLeftTitles[indexMapping[it]]
+        }
+        val cQueryRightTitles: Array<String?> = Array(queriesCount) {
+            queryRightTitles[indexMapping[it]]
+        }
+        val result = MultiAlignmentHelper(
+            subject.substring(from, to), cQueries,
+            subjectPositions.copyOfRange(from, to), cQueryPositions, cMatch,
+            subjectLeftTitle, cQueryLeftTitles, subjectRightTitle, cQueryRightTitles
+        )
+        for (i in annotationStrings.indices)
+            result.addAnnotationString(
+                annotationStringTitles[i],
+                annotationStrings[i].substring(from, to)
+            )
+        return result
+    }
+
+    @JvmOverloads
+    fun split(length: Int, eqPositionWidth: Boolean = false): Array<MultiAlignmentHelper> {
+        val ret: Array<MultiAlignmentHelper> = Array((size() + length - 1) / length) { i ->
+            val pointer = i * length
+            val l = min(length, size() - pointer)
+            getRange(pointer, pointer + l)
+        }
+        if (eqPositionWidth) alignPositions(ret)
+        return ret
+    }
+
+    class Settings(
+        val markMatchWithSpecialLetter: Boolean,
+        val lowerCaseMatch: Boolean,
+        val lowerCaseMismatch: Boolean,
+        val specialMatchChar: Char,
+        val outOfRangeChar: Char
+    )
+
+    override fun toString(): String {
+        val aCount = queries.size
+        val asSize = annotationStringTitles.size
+        val lines: Array<String> = Array(aCount + 1 + asSize) { "" }
+        lines[asSize] = "" + subjectFrom
+        for (i in 0 until aCount)
+            lines[i + 1 + asSize] = "" + getQueryFrom(i)
+        val width = fixedWidthL(lines, minimalPositionWidth)
+        for (i in 0 until asSize)
+            lines[i] = annotationStringTitles[i] + spaces(width + 1)
+        lines[asSize] = (subjectLeftTitle ?: "") + " " + lines[asSize]
+        for (i in 0 until aCount)
+            lines[i + 1 + asSize] = (queryLeftTitles[i] ?: "") + " " + lines[i + 1 + asSize]
+        fixedWidthL(lines)
+
+        for (i in 0 until asSize)
+            lines[i] += " " + annotationStrings[i]
+        lines[asSize] += " $subject $subjectTo"
+        for (i in 0 until aCount)
+            lines[i + 1 + asSize] += " ${queries[i]} ${getQueryTo(i)}"
+
+        fixedWidthR(lines)
+        lines[asSize] += " $subjectRightTitle"
+        for (i in 0 until aCount)
+            if (queryRightTitles[i] != null) lines[i + 1 + asSize] += " " + queryRightTitles[i]
+        val result = StringBuilder()
+        for (i in lines.indices) {
+            if (i != 0) result.append("\n")
+            result.append(lines[i])
+        }
+        return result.toString()
+    }
+
+    companion object {
+        private fun simplifiedQuality(value: Int): Char {
+            var result = value
+            result /= 5
+            if (result > 9) result = 9
+            return result.toString()[0]
         }
 
-        return new MultiAlignmentHelper(subjectString.toString(), queryStringsArray, subjectPositions.toArray(),
-                queryPositionsArrays, matchesBAs);
-    }
+        private fun aabs(pos: Int): Int {
+            if (pos >= 0) return pos
+            return if (pos == -1) -1 else -2 - pos
+        }
 
-    public static void alignPositions(MultiAlignmentHelper[] helpers) {
-        int maxPositionWidth = 0;
-        for (MultiAlignmentHelper helper : helpers)
-            maxPositionWidth = Math.max(maxPositionWidth, helper.getActualPositionWidth());
-        for (MultiAlignmentHelper helper : helpers)
-            helper.setMinimalPositionWidth(maxPositionWidth);
-    }
+        private fun getFirstPosition(array: IntArray): Int {
+            for (pos in array) if (pos >= 0) return pos
+            for (pos in array) if (pos < -1) return -2 - pos
+            return -1
+        }
 
-    private static String spaces(int n) {
-        char[] c = new char[n];
-        Arrays.fill(c, ' ');
-        return String.valueOf(c);
+        private fun getLastPosition(array: IntArray): Int {
+            for (i in array.indices.reversed()) if (array[i] >= 0) return array[i]
+            for (i in array.indices.reversed()) if (array[i] < -1) return -2 - array[i]
+            return -1
+        }
+
+        private fun fixedWidthL(strings: Array<String>, minWidth: Int = 0): Int {
+            var length = 0
+            for (string in strings) length = max(length, string.length)
+            length = max(length, minWidth)
+            for (i in strings.indices) strings[i] = spaces(length - strings[i].length) + strings[i]
+            return length
+        }
+
+        private fun fixedWidthR(strings: Array<String>, minWidth: Int = 0): Int {
+            var length = 0
+            for (string in strings) length = max(length, string.length)
+            length = max(length, minWidth)
+            for (i in strings.indices) strings[i] = strings[i] + spaces(length - strings[i].length)
+            return length
+        }
+
+        @JvmField
+        val DEFAULT_SETTINGS = Settings(
+            markMatchWithSpecialLetter = false,
+            lowerCaseMatch = true,
+            lowerCaseMismatch = false,
+            specialMatchChar = ' ',
+            outOfRangeChar = ' '
+        )
+        val DOT_MATCH_SETTINGS = Settings(
+            markMatchWithSpecialLetter = true,
+            lowerCaseMatch = true,
+            lowerCaseMismatch = false,
+            specialMatchChar = '.',
+            outOfRangeChar = ' '
+        )
+
+        @JvmStatic
+        @SafeVarargs
+        fun <S : Sequence<S>> build(
+            settings: Settings, subjectRange: Range,
+            vararg alignments: Alignment<S>
+        ): MultiAlignmentHelper = build(settings, subjectRange, alignments[0].sequence1, *alignments)
+
+        @JvmStatic
+        @SafeVarargs
+        fun <S : Sequence<S>> build(
+            settings: Settings, subjectRange: Range,
+            subject: S, vararg alignments: Alignment<S>
+        ): MultiAlignmentHelper {
+            for (alignment in alignments) require(alignment.sequence1 == subject)
+            var subjectPointer = subjectRange.from
+            val subjectPointerTo = subjectRange.to
+            val aCount = alignments.size
+            val queryPointers = IntArray(aCount) { alignments[it].sequence2Range.from }
+            val mutationPointers = IntArray(aCount)
+            val mutations: Array<Mutations<S>> = Array(aCount) { alignments[it].absoluteMutations }
+            val matches: Array<MutableList<Boolean>> = Array(aCount) { ArrayList() }
+            val subjectPositions = IntArrayList()
+            val queryPositions: Array<IntArrayList> = Array(aCount) { IntArrayList() }
+            val subjectString = StringBuilder()
+            val queryStrings: Array<StringBuilder> = Array(aCount) { StringBuilder() }
+            val processed = BitArray(aCount)
+            while (true) {
+                // Checking continue condition
+                var doContinue = subjectPointer < subjectPointerTo
+                for (i in 0 until aCount) doContinue = doContinue or (mutationPointers[i] < mutations[i].size())
+                if (!doContinue) break
+                processed.clearAll()
+
+                // Processing out of range sequences
+                for (i in 0 until aCount) {
+                    if (!alignments[i].sequence1Range.contains(subjectPointer)
+                        && !(alignments[i].sequence1Range.containsBoundary(subjectPointer) &&
+                                mutationPointers[i] != mutations[i].size())
+                    ) {
+                        queryStrings[i].append(settings.outOfRangeChar)
+                        queryPositions[i].add(-1)
+                        matches[i].add(false)
+                        processed.set(i)
+                    }
+                }
+
+                // Checking for insertions
+                var insertion = false
+                for (i in 0 until aCount) {
+                    if (mutationPointers[i] < mutations[i].size() &&
+                        mutations[i].getTypeByIndex(mutationPointers[i]) == MutationType.Insertion &&
+                        mutations[i].getPositionByIndex(mutationPointers[i]) == subjectPointer
+                    ) {
+                        insertion = true
+                        queryStrings[i].append(mutations[i].getToAsSymbolByIndex(mutationPointers[i]))
+                        queryPositions[i].add(queryPointers[i]++)
+                        matches[i].add(false)
+                        mutationPointers[i]++
+                        assert(!processed[i])
+                        processed.set(i)
+                    }
+                }
+                if (insertion) { // In case on insertion in query sequence
+                    subjectString.append('-')
+                    subjectPositions.add(-2 - subjectPointer)
+                    for (i in 0 until aCount) {
+                        if (!processed[i]) {
+                            queryStrings[i].append('-')
+                            queryPositions[i].add(-2 - queryPointers[i])
+                            matches[i].add(false)
+                        }
+                    }
+                } else { // In other cases
+                    val subjectSymbol = subject.symbolAt(subjectPointer)
+                    subjectString.append(subjectSymbol)
+                    subjectPositions.add(subjectPointer)
+                    for (i in 0 until aCount) {
+                        if (processed[i]) continue
+                        val cMutations = mutations[i]
+                        val cMutationPointer = mutationPointers[i]
+                        var mutated = false
+                        if (cMutationPointer < cMutations.size()) {
+                            val mutPosition = cMutations.getPositionByIndex(cMutationPointer)
+                            assert(mutPosition >= subjectPointer)
+                            mutated = mutPosition == subjectPointer
+                        }
+                        if (mutated) {
+                            when (cMutations.getRawTypeByIndex(cMutationPointer)) {
+                                Mutation.RAW_MUTATION_TYPE_SUBSTITUTION -> {
+                                    val symbol = cMutations.getToAsSymbolByIndex(cMutationPointer)
+                                    queryStrings[i].append(if (settings.lowerCaseMismatch) symbol.lowercaseChar() else symbol)
+                                    queryPositions[i].add(queryPointers[i]++)
+                                    matches[i].add(false)
+                                }
+                                Mutation.RAW_MUTATION_TYPE_DELETION -> {
+                                    queryStrings[i].append('-')
+                                    queryPositions[i].add(-2 - queryPointers[i])
+                                    matches[i].add(false)
+                                }
+                                else -> assert(false)
+                            }
+                            mutationPointers[i]++
+                        } else {
+                            queryStrings[i].append(
+                                when {
+                                    settings.markMatchWithSpecialLetter -> settings.specialMatchChar
+                                    settings.lowerCaseMatch -> subjectSymbol.lowercaseChar()
+                                    else -> subjectSymbol
+                                }
+                            )
+                            queryPositions[i].add(queryPointers[i]++)
+                            matches[i].add(true)
+                        }
+                    }
+                    subjectPointer++
+                }
+            }
+            val queryPositionsArrays: Array<IntArray> = Array(aCount) {
+                queryPositions[it].toArray()
+            }
+            val matchesBAs: Array<BitArray> = Array(aCount) {
+                BitArray(matches[it])
+            }
+            val queryStringsArray: Array<String> = Array(aCount) {
+                queryStrings[it].toString()
+            }
+            return MultiAlignmentHelper(
+                subjectString.toString(), queryStringsArray, subjectPositions.toArray(),
+                queryPositionsArrays, matchesBAs
+            )
+        }
+
+        fun alignPositions(helpers: Array<MultiAlignmentHelper>) {
+            var maxPositionWidth = 0
+            for (helper in helpers)
+                maxPositionWidth = max(maxPositionWidth, helper.actualPositionWidth)
+            for (helper in helpers)
+                helper.minimalPositionWidth = maxPositionWidth
+        }
+
+        private fun spaces(n: Int): String {
+            val c = CharArray(n)
+            Arrays.fill(c, ' ')
+            return String(c)
+        }
     }
 }

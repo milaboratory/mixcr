@@ -47,7 +47,7 @@ class MultiAlignmentHelperTest {
         helper.subjectLeftTitle = "Subject"
         for (i in 0..3) helper.setQueryLeftTitle(i, "Query$i")
 
-        helper.toString().lines().map { it.trimEnd() } shouldContainExactly """
+        helper.toString().also { println(it) }.lines().map { it.trimEnd() } shouldContainExactly """
 |Quality   78778     878777   7778887878      
 |Subject 0 GATAC-----ATTAGA---CACAGATACA--- 20 
 | Query0 0              aga---cacaTataca    12
@@ -111,14 +111,14 @@ class MultiAlignmentHelperTest {
         )
 
         helper.split(5).forEachIndexed { index, spl ->
-            spl.toString().lines().map { it.trimEnd() } shouldContainExactly
+            spl.toString().also { println(it) }.lines().map { it.trimEnd() } shouldContainExactly
                     expectedSplit[index].lines().map { it.trimEnd() }
         }
 
         MultiAlignmentHelper.build(
             MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
             *alignments
-        ).toString().lines().map { it.trimEnd() } shouldContainExactly """
+        ).toString().also { println(it) }.lines().map { it.trimEnd() } shouldContainExactly """
 | 0 GATAC-----ATTAGA---CACAGATACA--- 20 
 | 0              ...---....T.....    12
 | 0 -------------...---....T.....CAG 15
@@ -130,7 +130,7 @@ class MultiAlignmentHelperTest {
             MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
             seq0
         ).addSubjectQuality("", seq0qual)
-            .toString().lines().map { it.trimEnd() } shouldContainExactly """
+            .toString().also { println(it) }.lines().map { it.trimEnd() } shouldContainExactly """
 |   787788787777778887878   
 | 0 GATACATTAGACACAGATACA 20 
             """.trimMargin().lines().map { it.trimEnd() }
@@ -160,7 +160,7 @@ class MultiAlignmentHelperTest {
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, seq0.size()),
             *alignments
-        ).toString().lines().map { it.trimEnd() } shouldContainExactly """
+        ).toString().lines().also { println(it) }.map { it.trimEnd() } shouldContainExactly """
 | 0 AACGATGGGCGCAAATATAGGGAGAACTCCGATCGACATCGGGTATCGCCCTGGTACGATCC--CGGTGACAAAGCGTTCGGACCTGTCTGGACGCTAGAACGC 101 
 | 0                tatagggag--ctccgatcgacatcg                                                                23 
 | 0                                                         cgatccTTcggtgacaaagcgttcggacc                    28 
