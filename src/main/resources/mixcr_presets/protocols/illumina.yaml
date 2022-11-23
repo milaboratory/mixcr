@@ -3,41 +3,18 @@
   mixins:
     - type: SetSpecies
       species: hs
-
+    - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
-      floating: false
+      floating: true
     - type: RightAlignmentBoundaryNoPoint
-      floating: false
+      floating: true
       geneType: J
-
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
 
 "ampliseq-tcrb-plus-full-length":
-  inheritFrom: bundle-kaligner1-v1-base
+  inheritFrom: ampliseq-tcrb-plus-cdr3
   mixins:
-    - type: SetSpecies
-      species: hs
-
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: J
-
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
-
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
 
 "ampliseq-tcrb-sr-cdr3":
   inheritFrom: ampliseq-tcrb-plus-cdr3
