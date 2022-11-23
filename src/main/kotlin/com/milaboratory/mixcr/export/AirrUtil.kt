@@ -49,7 +49,11 @@ object AirrUtil {
     fun calculateAirrAlignment(obj: VDJCObject, targetId: Int, vdjRegion: Boolean): AirrAlignment? {
         val target = obj.getTarget(targetId).sequence
         val settings = MultiAlignmentHelper.Settings(
-            false, false, false, ' ', ' '
+            markMatchWithSpecialLetter = false,
+            lowerCaseMatch = false,
+            lowerCaseMismatch = false,
+            specialMatchChar = ' ',
+            outOfRangeChar = ' '
         )
         val alignments = mutableListOf<Alignment<NucleotideSequence>>()
         val actualGeneTypes = mutableListOf<GeneType>()
@@ -132,13 +136,15 @@ object AirrUtil {
         val helper: MultiAlignmentHelper = MultiAlignmentHelper.build(
             settings,
             Range(0, target.size()),
+            "",
+            "",
             target,
-            *alignments.toTypedArray()
+            *alignments.map { MultiAlignmentHelper.Input("", it, null) }.toTypedArray()
         )
 
         // merging alignments
         // output data
-        var sequence = helper.subject
+        var sequence = helper.subject.content
         // output data
         val germlineBuilder = StringBuilder()
         var size = helper.size()
