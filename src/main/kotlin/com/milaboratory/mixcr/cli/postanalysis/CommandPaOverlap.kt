@@ -46,7 +46,8 @@ class CommandPaOverlap : CommandPa() {
         description = [CommonDescriptions.OVERLAP_CRITERIA],
         names = ["--criteria"],
         paramLabel = "<s>",
-        showDefaultValue = ALWAYS
+        showDefaultValue = ALWAYS,
+        order = OptionsOrder.main + 1_100
     )
     var overlapCriteria = "CDR3|AA|V|J"
 
@@ -54,7 +55,8 @@ class CommandPaOverlap : CommandPa() {
         description = ["Pools samples with the same values of specified metadata columns and performs overlap between such pooled samples"],
         names = ["--factor-by"],
         split = ",",
-        paramLabel = "<meta>"
+        paramLabel = "<meta>",
+        order = OptionsOrder.main + 1_200
     )
     var factoryBy = mutableListOf<String>()
 

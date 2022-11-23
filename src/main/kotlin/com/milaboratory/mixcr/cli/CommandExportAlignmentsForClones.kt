@@ -52,7 +52,8 @@ class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
         ],
         names = ["--id"],
         paramLabel = "<id>",
-        arity = "0..*"
+        arity = "0..*",
+        order = OptionsOrder.main + 10_100
     )
     var ids: List<Int> = mutableListOf()
 

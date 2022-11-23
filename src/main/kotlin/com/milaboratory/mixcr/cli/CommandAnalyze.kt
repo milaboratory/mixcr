@@ -14,10 +14,18 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.PathPatternExpandException
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.mixcr.*
-import picocli.CommandLine.*
+import com.milaboratory.mixcr.AnyMiXCRCommand
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.MiXCRPipeline
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -25,7 +33,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteExisting
 import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 import kotlin.system.exitProcess
 
 object CommandAnalyze {
@@ -59,7 +66,7 @@ object CommandAnalyze {
                 .type(String::class.java)
                 .paramLabel(outputLabel)
                 .hideParamSyntax(true)
-                .description("Path prefix telling mixcr where to put all output files")
+                .description("Path prefix telling mixcr where to put all output files. If arguments ends with file separator, then outputs will be written in specified directory.")
                 .build()
         )
 
@@ -70,7 +77,7 @@ object CommandAnalyze {
         @Option(
             names = ["-f", "--force-overwrite"],
             description = ["Force overwrite of output file(s)."],
-            order = 1_000_000 - 3
+            order = OptionsOrder.forceOverride
         )
         var forceOverwrite = false
 
@@ -91,20 +98,45 @@ object CommandAnalyze {
         )
         private var inOut: List<String> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = PipelineMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.pipeline
+        )
         var pipelineMixins: List<PipelineMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = AlignMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.align
+        )
         var alignMixins: List<AlignMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = AssembleMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.assemble
+        )
         var assembleMixins: List<AssembleMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+        @ArgGroup(
+            validate = false,
+            heading = AssembleContigsMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.assembleContigs
+        )
         var assembleContigsMixins: List<AssembleContigsMiXCRMixins> = mutableListOf()
 
-        @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
-        var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
+        @ArgGroup(
+            validate = false,
+            heading = ExportMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.exports
+        )
+        var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
         @Mixin
         var genericMixins: GenericMiXCRMixins? = null
@@ -137,13 +169,15 @@ object CommandAnalyze {
 
         @Option(
             description = ["Don't output report files for each of the steps"],
-            names = ["--no-reports"]
+            names = ["--no-reports"],
+            order = OptionsOrder.report + 100
         )
         private var noReports: Boolean = false
 
         @Option(
             description = ["Don't output json report files for each of the steps"],
-            names = ["--no-json-reports"]
+            names = ["--no-json-reports"],
+            order = OptionsOrder.report + 101
         )
         private var noJsonReports: Boolean = false
 
@@ -167,19 +201,15 @@ object CommandAnalyze {
             }
             pathsForNotAligned.validate(inputFileGroups.inputType)
             inputFileGroups.allFiles.forEach { input ->
-                if (!input.exists()) {
-                    throw ValidationException("Input file $input doesn't exist.")
-                }
+                ValidationException.requireFileExists(input)
             }
             ValidationException.requireNoExtension(outSuffix)
         }
 
         override fun run0() {
             // Calculating output folder and output file suffix
-            var outputIsFolder = outSuffix.endsWith(File.separator)
+            val outputIsFolder = outSuffix.endsWith(File.separator)
             val outputPath = Path(outSuffix)
-            if (!outputIsFolder && outputPath.exists() && outputPath.isDirectory())
-                outputIsFolder = true
             val outputNamePrefix = if (!outputIsFolder) outputPath.fileName.toString() else ""
             val outputFolder = if (!outputIsFolder) outputPath.parent ?: Path(".") else outputPath
 
@@ -257,6 +287,7 @@ object CommandAnalyze {
                         // Terminating execution if one of the steps resulted in error
                         exitProcess(exitCode)
                 }
+                println("Analysis finished successfully.")
             }
         }
 

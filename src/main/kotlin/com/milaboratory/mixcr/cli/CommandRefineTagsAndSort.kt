@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.GroupingCriteria
@@ -73,7 +74,8 @@ object CommandRefineTagsAndSort {
                 "Don't correct barcodes, only sort alignments by tags.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--dont-correct"]
+            names = ["--dont-correct"],
+            order = OptionsOrder.main + 10_000
         )
         private var dontCorrect = false
 
@@ -85,7 +87,8 @@ object CommandRefineTagsAndSort {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-p", "--power"],
-            paramLabel = "<d>"
+            paramLabel = "<d>",
+            order = OptionsOrder.main + 10_100
         )
         private var power: Double? = null
 
@@ -95,7 +98,8 @@ object CommandRefineTagsAndSort {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-s", "--substitution-rate"],
-            paramLabel = "<d>"
+            paramLabel = "<d>",
+            order = OptionsOrder.main + 10_200
         )
         private var backgroundSubstitutionRate: Double? = null
 
@@ -105,7 +109,8 @@ object CommandRefineTagsAndSort {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-i", "--indel-rate"],
-            paramLabel = "<d>"
+            paramLabel = "<d>",
+            order = OptionsOrder.main + 10_300
         )
         private var backgroundIndelRate: Double? = null
 
@@ -116,7 +121,8 @@ object CommandRefineTagsAndSort {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-q", "--min-quality"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_400
         )
         private var minQuality: Int? = null
 
@@ -126,7 +132,8 @@ object CommandRefineTagsAndSort {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--max-substitutions"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_500
         )
         private var maxSubstitutions: Int? = null
 
@@ -136,7 +143,8 @@ object CommandRefineTagsAndSort {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--max-indels"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_600
         )
         private var maxIndels: Int? = null
 
@@ -146,7 +154,8 @@ object CommandRefineTagsAndSort {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--max-errors"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_700
         )
         private var maxTotalErrors: Int? = null
 
@@ -158,7 +167,8 @@ object CommandRefineTagsAndSort {
                 "If not specified mixcr will set correct whitelists if --tag-preset was used on align step.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            paramLabel = "<tag=value>"
+            paramLabel = "<tag=value>",
+            order = OptionsOrder.main + 10_800
         )
         private var whitelists: Map<String, String> = mutableMapOf()
 
@@ -210,7 +220,8 @@ object CommandRefineTagsAndSort {
         @Option(
             description = ["Memory budget in bytes. Default: 4Gb"],
             names = ["--memory-budget"],
-            paramLabel = "<n>"
+            paramLabel = "<n>",
+            order = OptionsOrder.main + 10_900
         )
         var memoryBudget = 4 * FileUtils.ONE_GB
 
@@ -243,6 +254,8 @@ object CommandRefineTagsAndSort {
 
                 // All tag names
                 val tagNames = header.tagsInfo.map { it.name }
+                // Building tag aliases for each specific tag type
+                val tagAliases = header.tagsInfo.tagAliases
 
                 // Indices to be corrected
                 val correctionIndicesBuilder = TIntArrayList()
@@ -287,7 +300,8 @@ object CommandRefineTagsAndSort {
                             tempDest.addSuffix("tags"),
                             whitelists,
                             memoryBudget,
-                            4, 4
+                            4, 4,
+                            tagAliases
                         )
 
                         SmartProgressReporter.startProgressReport(corrector)

@@ -228,7 +228,7 @@ object SHMTreeNodeFieldsExtractor {
         this += aaMutationsField
         this += FieldsCollection(
             Order.`-aaMutations` + 1,
-            "-allAaMutations",
+            "-allAAMutations",
             "Extract amino acid mutations from specific node for all covered gene features.",
             aaMutationsField,
             nodeTypeParam("BasedOn")

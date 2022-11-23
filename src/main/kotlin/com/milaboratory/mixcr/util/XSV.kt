@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.util
 
+import com.milaboratory.mixcr.cli.ApplicationException
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Files
@@ -57,23 +58,23 @@ object XSV {
 
     fun readXSV(input: File, columns: Collection<String>, delimiter: String): List<Map<String, String?>> {
         val lines = Files.readAllLines(input.toPath())
-        require(lines.size != 0) { "no header row" }
+        ApplicationException.check(lines.size != 0) { "no header row in file $input" }
         if (lines.size == 1) {
             return emptyList()
         }
         val header = lines[0]
-        val columnsPositions: MutableMap<String, Int> = HashMap()
+        val columnsPositions: MutableMap<String, Int> = hashMapOf()
         val columnsFromFile = header.split(delimiter.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         for (i in columnsFromFile.indices) {
             columnsPositions[columnsFromFile[i]] = i
         }
         for (column in columns) {
-            require(columnsPositions.containsKey(column)) { "no column with name $column" }
+            ApplicationException.check(columnsPositions.containsKey(column)) { "no column with name $column, got $columns ($input)" }
         }
-        return lines.subList(1, lines.size - 1).stream()
+        return lines.drop(1)
             .map { row: String ->
                 val cells = row.split(delimiter.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                val result: MutableMap<String, String?> = HashMap()
+                val result: MutableMap<String, String?> = hashMapOf()
                 for (column in columns) {
                     var cellValue: String?
                     if (cells.size <= columnsPositions[column]!!) {
@@ -88,6 +89,5 @@ object XSV {
                 }
                 result
             }
-            .collect(Collectors.toList())
     }
 }

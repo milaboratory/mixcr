@@ -55,7 +55,8 @@ object CommandAssemblePartial {
                 "Write only overlapped sequences (needed for testing).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["-o", "--overlapped-only"]
+            names = ["-o", "--overlapped-only"],
+            order = OptionsOrder.main + 10_100
         )
         private var overlappedOnly = false
 
@@ -65,7 +66,8 @@ object CommandAssemblePartial {
                         "size if no additional rounds of `assemblePartial` are required.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["-d", "--drop-partial"]
+            names = ["-d", "--drop-partial"],
+            order = OptionsOrder.main + 10_200
         )
         private var dropPartial = false
 
@@ -74,7 +76,8 @@ object CommandAssemblePartial {
                 "Overlap sequences on the cell level instead of UMIs for tagged data with molecular and cell barcodes.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
-            names = ["--cell-level"]
+            names = ["--cell-level"],
+            order = OptionsOrder.main + 10_300
         )
         private var cellLevel = false
 
@@ -82,7 +85,7 @@ object CommandAssemblePartial {
             names = ["-O"],
             description = ["Overrides default parameter values."],
             paramLabel = Labels.OVERRIDES,
-            order = 100_000
+            order = OptionsOrder.overrides
         )
         private var overrides: Map<String, String> = mutableMapOf()
 
@@ -103,7 +106,7 @@ object CommandAssemblePartial {
         @Parameters(
             description = ["Path to input alignments file."],
             paramLabel = "alignments.vdjca",
-            index = "0",
+            index = "0"
         )
         lateinit var inputFile: Path
 

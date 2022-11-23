@@ -74,7 +74,11 @@ class CommandExportQcTags : MiXCRCommandWithOutputs() {
     )
     var files: List<Path> = mutableListOf()
 
-    @Option(names = ["--log"], description = ["Use log10 scale for y-axis"])
+    @Option(
+        names = ["--log"],
+        description = ["Use log10 scale for y-axis"],
+        order = OptionsOrder.main + 10_100
+    )
     var log = false
 
     override val inputFiles: List<Path>

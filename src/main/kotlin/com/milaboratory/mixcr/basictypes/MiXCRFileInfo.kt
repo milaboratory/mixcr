@@ -21,6 +21,7 @@ import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -36,6 +37,7 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryId
 import io.repseq.dto.VDJCLibraryData
+import java.util.*
 
 interface MiXCRFileInfo {
     /** Returns information from .vdjca/.clna/.clns file header  */
@@ -71,7 +73,6 @@ data class MiXCRHeader(
     /** If all clones cut by the same feature and cover this feature fully */
     val allFullyCoveredBy: GeneFeatures?
 ) {
-
     val featuresToAlign: HasFeatureToAlign get() = HasFeatureToAlign(featuresToAlignMap)
 
     fun updateTagInfo(tagsInfoUpdate: (TagsInfo) -> TagsInfo): MiXCRHeader =
@@ -187,7 +188,7 @@ data class MiXCRHeader(
             output.writeObject(obj.stepParams)
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
-            output.writeMap(obj.featuresToAlignMap)
+            output.writeMap(TreeMap(obj.featuresToAlignMap))
             output.writeObject(obj.assemblerParameters)
             output.writeObject(obj.foundAlleles)
             output.writeObject(obj.allFullyCoveredBy)

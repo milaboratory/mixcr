@@ -56,31 +56,39 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
                 "separated by ','. Available genes: IGH, IGL, IGK, TRA, TRB, TRG, TRD."],
         names = ["-c", "--chains"],
         paramLabel = Labels.CHAINS,
-        showDefaultValue = ALWAYS
+        showDefaultValue = ALWAYS,
+        order = OptionsOrder.main + 10_100
     )
     var chains: Chains = Chains.ALL
 
     @Option(
         description = ["Include only those alignments that contain specified feature."],
         names = ["-g", "--contains-feature"],
-        paramLabel = Labels.GENE_FEATURE
+        paramLabel = Labels.GENE_FEATURE,
+        order = OptionsOrder.main + 10_200
     )
     var containsFeature: GeneFeature? = null
 
     @Option(
         description = ["Include only those alignments which CDR3 equals to a specified sequence."],
         names = ["-e", "--cdr3-equals"],
-        paramLabel = "<seq>"
+        paramLabel = "<seq>",
+        order = OptionsOrder.main + 10_300
     )
     var cdr3Equals: NucleotideSequence? = null
 
-    @Option(description = ["Output only chimeric alignments."], names = ["-x", "--chimeras-only"])
+    @Option(
+        description = ["Output only chimeric alignments."],
+        names = ["-x", "--chimeras-only"],
+        order = OptionsOrder.main + 10_400
+    )
     var chimerasOnly = false
 
     @set:Option(
         description = ["Maximal number of reads to process"],
         names = ["-n", "--limit"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_500
     )
     var limit: Long = 0
         set(value) {

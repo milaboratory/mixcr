@@ -38,14 +38,16 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
     @Option(
         description = ["Plot type. Possible values: \${COMPLETION-CANDIDATES}"],
         names = ["--plot-type"],
-        completionCandidates = PlotTypeCandidates::class
+        completionCandidates = PlotTypeCandidates::class,
+        order = OptionsOrder.main + 10_100
     )
     var plotType: PlotType? = null
 
     @Option(
         description = ["Specify metadata column used to group datasets."],
         names = ["-p", "--primary-group"],
-        paramLabel = "<meta>"
+        paramLabel = "<meta>",
+        order = OptionsOrder.main + 10_200
     )
     var primaryGroup: String? = null
         get() = field?.lowercase()
@@ -54,14 +56,16 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
         description = ["List of comma separated primary group values."],
         names = ["-pv", "--primary-group-values"],
         split = ",",
-        paramLabel = "<value>"
+        paramLabel = "<value>",
+        order = OptionsOrder.main + 10_300
     )
     var primaryGroupValues: List<String>? = null
 
     @Option(
         description = ["Secondary group."],
         names = ["-s", "--secondary-group"],
-        paramLabel = "<meta>"
+        paramLabel = "<meta>",
+        order = OptionsOrder.main + 10_400
     )
     var secondaryGroup: String? = null
         get() = field?.lowercase()
@@ -70,37 +74,56 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
         description = ["List of comma separated secondary group values."],
         names = ["-sv", "--secondary-group-values"],
         split = ",",
-        paramLabel = "<value>"
+        paramLabel = "<value>",
+        order = OptionsOrder.main + 10_500
     )
     var secondaryGroupValues: List<String>? = null
 
     @Option(
         description = ["Specify metadata column to use for plotting facets."],
         names = ["--facet-by"],
-        paramLabel = "<meta>"
+        paramLabel = "<meta>",
+        order = OptionsOrder.main + 10_600
     )
     var facetBy: String? = null
         get() = field?.lowercase()
 
     abstract var metrics: List<String>?
 
-    @Option(description = ["Hide overall p-value."], names = ["--hide-overall-p-value"])
+    @Option(
+        description = ["Hide overall p-value."],
+        names = ["--hide-overall-p-value"],
+        order = OptionsOrder.main + 10_700
+    )
     var hideOverallPValue = false
 
-    @Option(description = ["Show pairwise p-value comparisons."], names = ["--pairwise-comparisons"])
+    @Option(
+        description = ["Show pairwise p-value comparisons."],
+        names = ["--pairwise-comparisons"],
+        order = OptionsOrder.main + 10_800
+    )
     var pairwiseComparisons = false
 
     @Option(
         description = ["Reference group for compare means statistics. Can be 'all' or some specific value."],
         names = ["--ref-group"],
-        paramLabel = "<refGroup>"
+        paramLabel = "<refGroup>",
+        order = OptionsOrder.main + 10_900
     )
     var refGroupParam: String? = null
 
-    @Option(description = ["Hide non-significant observations."], names = ["--hide-non-significant"])
+    @Option(
+        description = ["Hide non-significant observations."],
+        names = ["--hide-non-significant"],
+        order = OptionsOrder.main + 11_000
+    )
     var hideNS = false
 
-    @Option(description = ["Do paired analysis"], names = ["--paired"])
+    @Option(
+        description = ["Do paired analysis"],
+        names = ["--paired"],
+        order = OptionsOrder.main + 11_100
+    )
     var paired = false
 
     @Option(
@@ -108,7 +131,8 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
         names = ["--method"],
         showDefaultValue = ALWAYS,
         paramLabel = "<method>",
-        completionCandidates = EnumTypes.TestMethodCandidates::class
+        completionCandidates = EnumTypes.TestMethodCandidates::class,
+        order = OptionsOrder.main + 11_200
     )
     var method: TestMethod = TestMethod.Wilcoxon
 
@@ -117,7 +141,8 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
         names = ["--method-multiple-groups"],
         showDefaultValue = ALWAYS,
         paramLabel = "<method>",
-        completionCandidates = EnumTypes.TestMethodCandidates::class
+        completionCandidates = EnumTypes.TestMethodCandidates::class,
+        order = OptionsOrder.main + 11_300
     )
     var methodForMultipleGroups: TestMethod = TestMethod.KruskalWallis
 
@@ -127,13 +152,15 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
         showDefaultValue = ALWAYS,
         completionCandidates = PValueCorrectionMethodCandidatesWithNone::class,
         converter = [PValueCorrectionMethodConverterWithNone::class],
-        paramLabel = "<method>"
+        paramLabel = "<method>",
+        order = OptionsOrder.main + 11_400
     )
     var pAdjustMethod: PValueCorrection.Method = PValueCorrection.Method.Holm
 
     @Option(
         description = ["Show significance levels instead of p-values ( `ns` for p-value >= 0.05, `***` for p-value < 0.0001,  `**` for p-value < 0.001, `*` in other case)."],
-        names = ["--show-significance"]
+        names = ["--show-significance"],
+        order = OptionsOrder.main + 11_500
     )
     var showSignificance = false
 
@@ -197,7 +224,8 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
             names = ["--metric"],
             split = ",",
             paramLabel = "<metric>",
-            completionCandidates = MetricValues::class
+            completionCandidates = MetricValues::class,
+            order = OptionsOrder.main + 10_000
         )
         override var metrics: List<String>? = null
 
@@ -231,7 +259,8 @@ abstract class CommandPaExportPlotsBasicStatistics : MultipleMetricsInOneFile, C
             names = ["--metric"],
             split = ",",
             paramLabel = "<metric>",
-            completionCandidates = MetricValues::class
+            completionCandidates = MetricValues::class,
+            order = OptionsOrder.main + 10_000
         )
         override var metrics: List<String>? = null
 

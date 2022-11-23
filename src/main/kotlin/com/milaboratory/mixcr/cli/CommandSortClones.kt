@@ -32,7 +32,7 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
-import picocli.CommandLine.Option
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
@@ -46,11 +46,8 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
     @Parameters(paramLabel = "clones.sorted.(clns|clna)", index = "1")
     lateinit var out: Path
 
-    @Option(
-        description = ["Use system temp folder for temporary files, the output folder will be used if this option is omitted."],
-        names = ["--use-system-temp"]
-    )
-    var useSystemTemp = false
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
 
     override val inputFiles
         get() = listOf(input)
@@ -82,7 +79,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
                 VDJCLibraryRegistry.getDefault(),
                 Runtime.getRuntime().availableProcessors()
             ).use { reader ->
-                ClnAWriter(out, TempFileManager.smartTempDestination(out, "", useSystemTemp)).use { writer ->
+                ClnAWriter(out, TempFileManager.smartTempDestination(out, "", !useLocalTemp.value)).use { writer ->
                     SmartProgressReporter.startProgressReport(writer)
                     val assemblingFeatures =
                         sortGeneFeaturesContainingCDR3First(reader.assemblerParameters.assemblingFeatures)

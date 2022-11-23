@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Spec
@@ -21,14 +22,14 @@ object logger {
     @Option(
         names = ["-nw", "--no-warnings"],
         description = ["Suppress all warning messages."],
-        order = 1_000_000 - 2
+        order = OptionsOrder.logger
     )
     var quiet = false
 
     @Option(
         description = ["Verbose warning messages."],
         names = ["--verbose"],
-        order = 1_000_000 - 1
+        order = OptionsOrder.logger + 1
     )
     var verbose = false
 

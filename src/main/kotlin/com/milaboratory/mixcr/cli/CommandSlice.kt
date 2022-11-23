@@ -66,7 +66,11 @@ class CommandSlice : MiXCRCommandWithOutputs() {
     )
     lateinit var out: Path
 
-    @ArgGroup(exclusive = true, multiplicity = "1")
+    @ArgGroup(
+        exclusive = true,
+        multiplicity = "1",
+        order = OptionsOrder.main + 10_100
+    )
     lateinit var idsOptions: IdsFilterOptions
 
     class IdsFilterOptions {
@@ -74,7 +78,8 @@ class CommandSlice : MiXCRCommandWithOutputs() {
             description = ["List of read (for .vdjca) / clone (for .clns/.clna) / tree (for .shmt) ids to export."],
             names = ["-i", "--id"],
             required = true,
-            paramLabel = "<id>"
+            paramLabel = "<id>",
+            order = 1
         )
         var ids: List<Long>? = null
 
@@ -85,7 +90,8 @@ class CommandSlice : MiXCRCommandWithOutputs() {
             ],
             names = ["--ids-file"],
             required = true,
-            paramLabel = "<path>"
+            paramLabel = "<path>",
+            order = 2
         )
         var fileWithIds: Path? = null
     }
@@ -96,7 +102,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
     }
 
     override val inputFiles
-        get() = listOf(input)
+        get() = listOf(input) + listOfNotNull(idsOptions.fileWithIds)
 
     override val outputFiles
         get() = listOf(out)

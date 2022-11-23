@@ -121,6 +121,7 @@ class AllelesBuilder(
                         ).sortedBy { it.name }
                     }
                         .asSequence()
+                        .sortedBy { it.first }
                         .toMap()
                 }
         }
