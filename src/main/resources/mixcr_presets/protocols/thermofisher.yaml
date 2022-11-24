@@ -15,7 +15,7 @@
     inheritFrom: bundle-kaligner2-v1-base
 
 "oncomine-human-tcrb-lr-cdr3":
-  inheritFrom: oncomine-human-tcrb-base
+  inheritFrom: oncomine-human-tcr-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
@@ -25,7 +25,7 @@
       value: true
 
 "oncomine-human-tcrb-lr-full-length":
-  inheritFrom: oncomine-human-tcrb-base
+  inheritFrom: oncomine-human-tcr-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
@@ -34,7 +34,7 @@
       features: [ "{CDR1Begin:FR4End}" ]
 
 "oncomine-human-tcrb-sr-cdr3":
-  inheritFrom: oncomine-human-tcrb-base
+  inheritFrom: oncomine-human-tcr-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
