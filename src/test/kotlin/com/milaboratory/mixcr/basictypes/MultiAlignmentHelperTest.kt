@@ -18,7 +18,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.SequenceQuality
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper.Input
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter.Companion.makeQualityLine
-import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainInOrder
 import org.junit.Test
 
 /**
@@ -60,12 +60,11 @@ class MultiAlignmentHelperTest {
         val helper = MultiAlignmentHelper.build(
             MultiAlignmentHelper.DEFAULT_SETTINGS, Range(0, seq0.size()),
             leftTitle = "Subject",
-            rightTitle = "",
             *inputs
         )
         helper.addAnnotation(helper.makeQualityLine("Quality", seq0qual))
 
-        helper.formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainExactly """
+        helper.formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainInOrder """
 |Quality   78778     878777   7778887878      
 |Subject 0 GATAC-----ATTAGA---CACAGATACA--- 20 
 | Query0 0              aga---cacaTataca    12
@@ -129,16 +128,15 @@ class MultiAlignmentHelperTest {
         )
 
         helper.split(5).forEachIndexed { index, spl ->
-            spl.formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainExactly
+            spl.formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainInOrder
                     expectedSplit[index].lines().map { it.trimEnd() }
         }
 
         MultiAlignmentHelper.build(
             MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
             leftTitle = "",
-            rightTitle = "",
             *inputs
-        ).formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainExactly """
+        ).formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainInOrder """
 |       0 GATAC-----ATTAGA---CACAGATACA--- 20 
 |Query0 0              ...---....T.....    12
 |Query1 0 -------------...---....T.....CAG 15
@@ -150,12 +148,11 @@ class MultiAlignmentHelperTest {
             val build = MultiAlignmentHelper.build(
                 MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
                 leftTitle = "",
-                rightTitle = "",
                 seq0
             )
             build.addAnnotation(build.makeQualityLine("", seq0qual))
                 .formatLines().also { println(it) }.lines().map { it.trimEnd() }
-        } shouldContainExactly """
+        } shouldContainInOrder """
 |   787788787777778887878   
 | 0 GATACATTAGACACAGATACA 20 
             """.trimMargin().lines().map { it.trimEnd() }
@@ -197,9 +194,8 @@ class MultiAlignmentHelperTest {
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, seq0.size()),
             leftTitle = "",
-            rightTitle = "",
             *inputs
-        ).formatLines().lines().also { println(it) }.map { it.trimEnd() } shouldContainExactly """
+        ).formatLines().lines().also { println(it) }.map { it.trimEnd() } shouldContainInOrder """
 | 0 AACGATGGGCGCAAATATAGGGAGAACTCCGATCGACATCGGGTATCGCCCTGGTACGATCC--CGGTGACAAAGCGTTCGGACCTGTCTGGACGCTAGAACGC 101 
 | 0                tatagggag--ctccgatcgacatcg                                                                23 
 | 0                                                         cgatccTTcggtgacaaagcgttcggacc                    28 

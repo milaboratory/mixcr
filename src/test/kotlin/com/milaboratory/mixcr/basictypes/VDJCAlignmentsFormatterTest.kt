@@ -93,8 +93,7 @@ class VDJCAlignmentsFormatterTest {
             Range(0, seq.size()), Range(0, seq.size()), 100.0f
         )
         val ml = build(
-            MultiAlignmentHelper.DEFAULT_SETTINGS, Range(0, seq.size()), "", "",
-            MultiAlignmentHelper.Input("", al, null)
+            MultiAlignmentHelper.DEFAULT_SETTINGS, Range(0, seq.size()), "", MultiAlignmentHelper.Input("", al, null)
         )
         val b = ExtendedReferencePointsBuilder()
         b.setPosition(rp1, 0)
@@ -115,8 +114,7 @@ class VDJCAlignmentsFormatterTest {
             Range(0, seq.size()), Range(0, seq.size()), 100.0f
         )
         val ml = build(
-            MultiAlignmentHelper.DEFAULT_SETTINGS, Range(0, seq.size()), "", "",
-            MultiAlignmentHelper.Input("", al, null)
+            MultiAlignmentHelper.DEFAULT_SETTINGS, Range(0, seq.size()), "", MultiAlignmentHelper.Input("", al, null)
         )
         val b = ExtendedReferencePointsBuilder()
         b.setPosition(rp1, 0)

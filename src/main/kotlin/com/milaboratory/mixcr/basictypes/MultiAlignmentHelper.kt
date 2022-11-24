@@ -24,8 +24,8 @@ import kotlin.math.max
 import kotlin.math.min
 
 class MultiAlignmentHelper private constructor(
-    val subject: LineWithPositions,
-    private val queries: Array<LineWithPositions>,
+    val subject: SubjectLine,
+    private val queries: Array<QueryLine>,
     val match: Array<BitArray>
 ) {
     // subject / queries nomenclature seems to be swapped here...
@@ -78,7 +78,7 @@ class MultiAlignmentHelper private constructor(
             j++
         }
 
-        val cQueries: Array<LineWithPositions> = Array(queriesCount) {
+        val cQueries: Array<QueryLine> = Array(queriesCount) {
             val origin = queries[indexMapping[it]]
             origin.subRange(from, to)
         }
@@ -134,9 +134,12 @@ class MultiAlignmentHelper private constructor(
             lines[i + 1 + asSize] += " ${queries[i].content} ${queries[i].lastPosition}"
 
         fixedWidthR(lines)
-        lines[asSize] += " ${subject.rightTitle}"
-        for (i in 0 until aCount)
-            if (queries[i].rightTitle != null) lines[i + 1 + asSize] += " " + queries[i].rightTitle
+        lines[asSize] += "  ${subject.rightTitle}"
+        for (i in 0 until aCount) {
+            if (queries[i].rightTitle != null) {
+                lines[i + 1 + asSize] += "  " + queries[i].rightTitle
+            }
+        }
         val result = StringBuilder()
         for (i in lines.indices) {
             if (i != 0) result.append("\n")
@@ -188,10 +191,17 @@ class MultiAlignmentHelper private constructor(
         fun <S : Sequence<S>> build(
             settings: Settings, subjectRange: Range,
             leftTitle: String,
-            rightTitle: String,
+            addHitScore: Boolean,
             vararg alignments: Input<S>
         ): MultiAlignmentHelper =
-            build(settings, subjectRange, leftTitle, rightTitle, alignments[0].alignment.sequence1, *alignments)
+            build(
+                settings,
+                subjectRange,
+                leftTitle,
+                addHitScore,
+                alignments[0].alignment.sequence1,
+                *alignments
+            )
 
         @JvmStatic
         @SafeVarargs
@@ -199,7 +209,7 @@ class MultiAlignmentHelper private constructor(
             settings: Settings,
             subjectRange: Range,
             leftTitle: String,
-            rightTitle: String,
+            addHitScore: Boolean,
             subject: S,
             vararg inputs: Input<S>
         ): MultiAlignmentHelper {
@@ -310,20 +320,29 @@ class MultiAlignmentHelper private constructor(
             val matchesBAs: Array<BitArray> = Array(aCount) {
                 BitArray(matches[it])
             }
-            val queryStringsArray: Array<LineWithPositions> = Array(aCount) {
-                LineWithPositions(
-                    leftTitle = inputs[it].leftTitle,
-                    content = queryStrings[it].toString(),
-                    rightTitle = inputs[it].rightTitle,
-                    positions = queryPositions[it].toArray()
-                )
+            val queryStringsArray: Array<QueryLine> = Array(aCount) { i ->
+                when (val input = inputs[i]) {
+                    is AlignmentInput -> AlignmentLine(
+                        geneName = input.geneName,
+                        content = queryStrings[i].toString(),
+                        positions = queryPositions[i].toArray(),
+                        alignmentScore = input.alignmentScore,
+                        hitScore = input.hitScore,
+                        addHitScore = addHitScore
+                    )
+                    is ReadInput -> ReadLine(
+                        index = input.index,
+                        content = queryStrings[i].toString(),
+                        positions = queryPositions[i].toArray(),
+                    )
+                }
             }
             return MultiAlignmentHelper(
-                LineWithPositions(
+                SubjectLine(
                     leftTitle = leftTitle,
                     content = subjectString.toString(),
-                    rightTitle = rightTitle,
-                    positions = subjectPositions.toArray()
+                    positions = subjectPositions.toArray(),
+                    addHitScore = addHitScore
                 ),
                 queryStringsArray,
                 matchesBAs
@@ -337,28 +356,28 @@ class MultiAlignmentHelper private constructor(
         }
     }
 
-    class AnnotationLine(
+    data class AnnotationLine(
+        val type: Type,
         val leftTitle: String,
         val content: String
     ) {
-        fun subRange(from: Int, to: Int) = AnnotationLine(
-            leftTitle = leftTitle,
+        fun subRange(from: Int, to: Int) = copy(
             content = content.substring(from, to)
         )
+
+        enum class Type {
+            QUALITY,
+            AMINO_ACIDS,
+            REFERENCE_POINTS_POSITIONS
+        }
     }
 
-    class LineWithPositions(
-        val leftTitle: String,
-        val content: String,
-        val rightTitle: String?,
+    sealed interface LineWithPositions {
+        val leftTitle: String
+        val content: String
         val positions: IntArray
-    ) {
-        fun subRange(from: Int, to: Int) = LineWithPositions(
-            leftTitle = leftTitle,
-            content = content.substring(from, to),
-            rightTitle = rightTitle,
-            positions = positions.copyOfRange(from, to)
-        )
+        fun subRange(from: Int, to: Int): LineWithPositions
+        val rightTitle: String?
 
         val firstPosition: Int
             get() {
@@ -375,11 +394,81 @@ class MultiAlignmentHelper private constructor(
             }
     }
 
-    data class Input<S : Sequence<S>>(
-        val leftTitle: String,
-        val alignment: Alignment<S>,
-        val rightTitle: String?
-    )
+    sealed interface QueryLine : LineWithPositions {
+        override fun subRange(from: Int, to: Int): QueryLine
+    }
+
+    class SubjectLine(
+        override val leftTitle: String,
+        override val content: String,
+        override val positions: IntArray,
+        private val addHitScore: Boolean
+    ) : LineWithPositions {
+        override fun subRange(from: Int, to: Int) = SubjectLine(
+            leftTitle = leftTitle,
+            content = content.substring(from, to),
+            positions = positions.copyOfRange(from, to),
+            addHitScore = addHitScore
+        )
+
+        override val rightTitle: String = "Score" + if (addHitScore) " (hit score)" else ""
+    }
+
+    class AlignmentLine(
+        val geneName: String,
+        override val content: String,
+        override val positions: IntArray,
+        val alignmentScore: Int,
+        val hitScore: Int,
+        private val addHitScore: Boolean
+    ) : QueryLine {
+        override val leftTitle: String
+            get() = geneName
+
+        override val rightTitle: String = "" + alignmentScore + if (addHitScore) " ($hitScore)" else ""
+
+        override fun subRange(from: Int, to: Int) = AlignmentLine(
+            geneName = geneName,
+            content = content.substring(from, to),
+            positions = positions.copyOfRange(from, to),
+            alignmentScore = alignmentScore,
+            hitScore = hitScore,
+            addHitScore = addHitScore
+        )
+    }
+
+
+    class ReadLine(
+        val index: String,
+        override val content: String,
+        override val positions: IntArray
+    ) : QueryLine {
+        override fun subRange(from: Int, to: Int) = ReadLine(
+            index = index,
+            content = content.substring(from, to),
+            positions = positions.copyOfRange(from, to)
+        )
+
+        override val leftTitle: String
+            get() = index
+        override val rightTitle: String? = null
+    }
+
+    sealed interface Input<S : Sequence<S>> {
+        val alignment: Alignment<S>
+    }
+
+    class AlignmentInput<S : Sequence<S>>(
+        val geneName: String,
+        override val alignment: Alignment<S>,
+        val alignmentScore: Int,
+        val hitScore: Int
+    ) : Input<S>
+
+    class ReadInput<S : Sequence<S>>(
+        val index: String,
+        override val alignment: Alignment<S>
+    ) : Input<S>
 }
 
 

@@ -48,7 +48,7 @@ class VDJCAlignmentsFormatter(
                 subject.positions[i] < 0 -> ' '
                 else -> simplifiedQuality(quality.value(subject.positions[i]).toInt())
             }
-            return AnnotationLine(leftTitle = title, content = String(chars))
+            return AnnotationLine(leftTitle = title, content = String(chars), type = AnnotationLine.Type.QUALITY)
         }
 
         private fun simplifiedQuality(value: Int): Char {
@@ -117,7 +117,7 @@ class VDJCAlignmentsFormatter(
                         AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition))
                 }
             }
-            return AnnotationLine(leftTitle = "", content = String(line))
+            return AnnotationLine(leftTitle = "", content = String(line), type = AnnotationLine.Type.AMINO_ACIDS)
         }
 
         private fun MultiAlignmentHelper.makePointsLines(
@@ -136,7 +136,13 @@ class VDJCAlignmentsFormatter(
                 } while (!result)
             }
             return markers.reversed()
-                .map { marker -> AnnotationLine(leftTitle = "", content = String(marker)) }
+                .map { marker ->
+                    AnnotationLine(
+                        leftTitle = "",
+                        content = String(marker),
+                        type = AnnotationLine.Type.REFERENCE_POINTS_POSITIONS
+                    )
+                }
         }
 
         private fun emptyLine(size: Int): CharArray {
@@ -262,7 +268,7 @@ class VDJCAlignmentsFormatter(
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, target.size()),
             leftTitle = "Target$targetId",
-            rightTitle = " Score" + if (addHitScore) " (hit score)" else "",
+            addHitScore = addHitScore,
             target.sequence,
             *alignmentsInputs.toTypedArray()
         )
@@ -292,10 +298,9 @@ class VDJCAlignmentsFormatter(
                 target.sequence, seq, offset, seq.size(), 0, seq.size(),
                 AffineGapAlignmentScoring.IGBLAST_NUCLEOTIDE_SCORING
             )
-            MultiAlignmentHelper.Input(
+            MultiAlignmentHelper.ReadInput(
                 read.index.toString(),
-                alignment,
-                null
+                alignment
             )
         }
         return map
@@ -309,10 +314,11 @@ class VDJCAlignmentsFormatter(
         return GeneType.values().flatMap { gt ->
             vdjcObject.getHits(gt).mapNotNull { hit ->
                 val alignment = hit.getAlignment(targetId) ?: return@mapNotNull null
-                MultiAlignmentHelper.Input(
+                MultiAlignmentHelper.AlignmentInput(
                     hit.gene.name,
                     alignment.invert(target.sequence),
-                    " " + hit.getAlignment(targetId).score.toInt() + if (addHitScore) " (" + hit.score.toInt() + ")" else ""
+                    hit.getAlignment(targetId).score.toInt(),
+                    hit.score.toInt()
                 )
             }
         }
