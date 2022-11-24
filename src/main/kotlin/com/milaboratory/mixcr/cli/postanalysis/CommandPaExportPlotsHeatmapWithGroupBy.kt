@@ -20,5 +20,5 @@ abstract class CommandPaExportPlotsHeatmapWithGroupBy : CommandPaExportPlotsHeat
 //         paramLabel = "<s>",
 //         order = OptionsOrder.main + 25_000
 //     )
-//     var groupBy: List<String>? = null
+    var groupBy: List<String>? = null
 }
