@@ -14,11 +14,11 @@ package com.milaboratory.mixcr.cli.postanalysis
 import picocli.CommandLine.Option
 
 abstract class CommandPaExportPlotsHeatmapWithGroupBy : CommandPaExportPlotsHeatmap() {
-    @Option(
-        description = ["Group heatmaps by specific metadata properties."],
-        names = ["--group-by"],
-        paramLabel = "<s>",
-        order = OptionsOrder.main + 25_000
-    )
-    var groupBy: List<String>? = null
+//     @Option(
+//         description = ["Group heatmaps by specific metadata properties."],
+//         names = ["--group-by"],
+//         paramLabel = "<s>",
+//         order = OptionsOrder.main + 25_000
+//     )
+//     var groupBy: List<String>? = null
 }
