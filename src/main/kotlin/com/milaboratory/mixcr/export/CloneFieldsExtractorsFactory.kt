@@ -12,9 +12,13 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.export.ParametersFactory.tagParam
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeLabel
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeWithDeprecatedTagName
+import com.milaboratory.mixcr.export.TagsUtil.checkTagExists
+import com.milaboratory.mixcr.export.TagsUtil.checkTagTypeExists
 
 object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
     override fun allAvailableFields(): List<FieldsCollection<Clone>> =
@@ -83,9 +87,16 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             Order.tags + 500,
             "-uniqueTagFraction",
             "Fraction of unique tags (UMI, CELL, etc.) the clone or alignment collected.",
-            tagParam("unique", sSuffix = "Fraction"),
-        ) { clone: Clone, tagName: String ->
-            val tag = tagsInfo[tagName] ?: return@Field NULL
+            tagTypeWithDeprecatedTagName(sPrefix = "unique", sSuffix = "Fraction"),
+            validateArgs = { header, (tagName, tagType) ->
+                tagType?.let { checkTagTypeExists(header, it) }
+                tagName?.let { checkTagExists(header, it) }
+            },
+        ) { clone: Clone, (tagName, tagType) ->
+            val tag: TagInfo = when {
+                tagType != null -> tagsInfo.lastOrNull { it.type == tagType }
+                else -> tagsInfo[tagName]
+            } ?: return@Field NULL
             val level = tag.index + 1
             clone.getTagDiversityFraction(level).toString()
         }
@@ -95,7 +106,11 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             "-allUniqueTagFractions",
             "Fractions of unique tags (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.%n$tagTypeDescription",
             uniqueTagFractionField,
-            tagTypeParam()
+            tagTypeParam(),
+            validateArgs = { header, tagType ->
+                checkTagTypeExists(header, tagType)
+            },
+            deprecation = "`-allUniqueTagFractions $tagTypeLabel` deprecated use `-uniqueTagFraction $tagTypeLabel` instead"
         ) { tagType ->
             tagNamesWithType(tagType).map { arrayOf(it) }
         }

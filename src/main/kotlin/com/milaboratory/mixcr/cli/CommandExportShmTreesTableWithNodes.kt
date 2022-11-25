@@ -77,19 +77,17 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
+            val headerForExport = HeaderForExport(
+                reader.cloneSetInfos.map { it.tagsInfo },
+                reader.header.allFullyCoveredBy
+            )
             InfoWriter.create(
                 out,
-                SplittedTreeNodeFieldsExtractorsFactory.createExtractors(
-                    addedFields,
-                    HeaderForExport(
-                        reader.cloneSetInfos.map { it.tagsInfo },
-                        reader.header.allFullyCoveredBy
-                    )
-                ),
+                SplittedTreeNodeFieldsExtractorsFactory.createExtractors(addedFields, headerForExport),
                 !noHeader,
-            ) {
-                val datasetId = it.node.clone?.datasetId ?: return@create RowMetaForExport(TagsInfo.NO_TAGS)
-                RowMetaForExport(reader.cloneSetInfos[datasetId].tagsInfo)
+            ) { (_, node) ->
+                val tagsInfo = node.clone?.datasetId?.let { reader.cloneSetInfos[it].tagsInfo } ?: TagsInfo.NO_TAGS
+                RowMetaForExport(tagsInfo, headerForExport)
             }.use { output ->
                 reader.readTrees()
                     .asSequence()

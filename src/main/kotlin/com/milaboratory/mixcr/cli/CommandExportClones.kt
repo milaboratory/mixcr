@@ -220,13 +220,11 @@ object CommandExportClones {
                 }
             }
 
-            val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(
-                params.fields,
-                HeaderForExport(listOf(header.tagsInfo), header.allFullyCoveredBy)
-            )
+            val headerForExport = HeaderForExport(header)
+            val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, headerForExport)
 
             fun runExport(set: CloneSet, outFile: Path?) {
-                val rowMetaForExport = RowMetaForExport(set.tagsInfo)
+                val rowMetaForExport = RowMetaForExport(set.tagsInfo, headerForExport)
                 InfoWriter.create(outFile, fieldExtractors, !params.noHeader) { rowMetaForExport }.use { writer ->
                     val splitByTag = if (params.splitByTags != null) {
                         header.tagsInfo[params.splitByTags]

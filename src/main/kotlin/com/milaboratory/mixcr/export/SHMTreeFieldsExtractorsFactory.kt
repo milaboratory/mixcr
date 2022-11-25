@@ -14,9 +14,12 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetweenArgs
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.warnIfFeatureNotCovered
 import com.milaboratory.mixcr.export.ParametersFactory.nodeTypeParam
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
+import com.milaboratory.mixcr.export.TagsUtil.checkTagTypeExists
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
@@ -29,8 +32,8 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
     override val presets: Map<String, List<ExportFieldDescription>> = buildMap {
         this["full"] = listOf(
             ExportFieldDescription("-treeId"),
-            ExportFieldDescription("-uniqClonesCount"),
-            ExportFieldDescription("-totalClonesCount"),
+            ExportFieldDescription("-numberOfClonesInTree"),
+            ExportFieldDescription("-totalReadsCountInTree"),
             ExportFieldDescription("-vHit"),
             ExportFieldDescription("-jHit"),
             ExportFieldDescription("-nFeature", "CDR3", "mrca"),
@@ -60,7 +63,16 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
             Order.treeMainParams + 200,
             "-uniqClonesCount",
             "Number of uniq clones in the SHM tree",
-            "uniqClonesCount"
+            "uniqClonesCount",
+            deprecation = "`-uniqClonesCount` deprecated, use `-numberOfClonesInTree` instead"
+        ) { shmTree ->
+            shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
+        }
+        this += Field(
+            Order.treeMainParams + 201,
+            "-numberOfClonesInTree",
+            "Number of uniq clones in the SHM tree",
+            "numberOfClonesInTree"
         ) { shmTree ->
             shmTree.tree.allNodes().sumOf { it.node.content.clones.count() }.toString()
         }
@@ -69,9 +81,38 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
             Order.treeMainParams + 300,
             "-totalClonesCount",
             "Total sum of counts of clones in the SHM tree",
-            "totalClonesCount"
+            "totalClonesCount",
+            deprecation = "`-totalClonesCount` deprecated, use `-totalReadsCountInTree` instead"
         ) { shmTree ->
             shmTree.tree.allNodes().sumOf { (_, node) -> node.content.clones.sumOf { it.clone.count } }.toString()
+        }
+        this += Field(
+            Order.treeMainParams + 301,
+            "-totalReadsCountInTree",
+            "Total sum of read counts of clones in the SHM tree",
+            "totalReadsCountInTree"
+        ) { shmTree ->
+            shmTree.tree.allNodes().sumOf { (_, node) -> node.content.clones.sumOf { it.clone.count } }.toString()
+        }
+
+        this += Field(
+            Order.treeMainParams + 400,
+            "-totalUniqueTagCountInTree",
+            "Total count of unique tags in the SHM tree with specified type",
+            tagTypeParam(sPrefix = "totalUnique", sSuffix = "CountInTree"),
+            validateArgs = { header, tagType ->
+                checkTagTypeExists(header, tagType)
+            }
+        ) { shmTree, tagType ->
+            shmTree.tree.allNodes()
+                .flatMap { (_, node) -> node.content.clones }
+                .sumOf { clone: SHMTreeForPostanalysis.CloneWithDatasetId ->
+                    val tagsInfo = header.allTagsInfo[clone.datasetId]
+                    val tag: TagInfo = tagsInfo.lastOrNull { it.type == tagType } ?: return@sumOf 0
+                    val level = tag.index + 1
+                    clone.clone.getTagDiversity(level)
+                }
+                .toString()
         }
 
         VJ_REFERENCE.forEach { type ->

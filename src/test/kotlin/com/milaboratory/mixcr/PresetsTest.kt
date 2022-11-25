@@ -80,7 +80,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields,
-                        HeaderForExport(listOf(header.tagsInfo), header.allFullyCoveredBy)
+                        HeaderForExport(header)
                     ).size
                 )
             }
@@ -88,7 +88,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
-                        HeaderForExport(listOf(header.tagsInfo), header.allFullyCoveredBy)
+                        HeaderForExport(header)
                     ).size
                 )
             }
