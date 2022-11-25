@@ -152,7 +152,7 @@ data class SHMTreeForPostanalysis<T : BaseNode>(
         }
     }
 
-    class CloneWithDatasetId(
+    data class CloneWithDatasetId(
         val clone: Clone,
         val datasetId: Int,
         val fileName: String

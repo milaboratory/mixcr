@@ -233,7 +233,10 @@ object CommandExportClones {
                             .filter { it.field.equals("-tag", ignoreCase = true) }
                             .map { header.tagsInfo[it.args[0]] }
                         val tagsExportedByGroups = params.fields
-                            .filter { it.field.equals("-allTags", ignoreCase = true) }
+                            .filter {
+                                it.field.equals("-allTags", ignoreCase = true) ||
+                                        it.field.equals("-tags", ignoreCase = true)
+                            }
                             .map { TagType.valueOf(it.args[0]) }
                             .flatMap { tagType -> header.tagsInfo.filter { it.type == tagType } }
                         val newSpitBy = (individualTagsForExport + tagsExportedByGroups).maxByOrNull { it.index }

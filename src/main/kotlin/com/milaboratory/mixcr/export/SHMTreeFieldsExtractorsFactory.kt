@@ -106,11 +106,11 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
         ) { shmTree, tagType ->
             shmTree.tree.allNodes()
                 .flatMap { (_, node) -> node.content.clones }
-                .sumOf { clone: SHMTreeForPostanalysis.CloneWithDatasetId ->
-                    val tagsInfo = header.allTagsInfo[clone.datasetId]
+                .sumOf { (clone, datasetId) ->
+                    val tagsInfo = header.allTagsInfo[datasetId]
                     val tag: TagInfo = tagsInfo.lastOrNull { it.type == tagType } ?: return@sumOf 0
                     val level = tag.index + 1
-                    clone.clone.getTagDiversity(level)
+                    clone.getTagDiversity(level)
                 }
                 .toString()
         }

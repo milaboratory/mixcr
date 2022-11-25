@@ -143,12 +143,8 @@
     splitFilesBy: [ ]
     fields:
       - field: "-cloneId"
-      - field: "-tag"
-        args: [ "CELL1ROW" ]
-      - field: "-tag"
-        args: [ "CELL2COLUMN" ]
-      - field: "-tag"
-        args: [ "CELL3PLATE" ]
+      - field: "-tags"
+        args: [ "Cell" ]
       - field: "-readCount"
       - field: "-targetSequences"
       - field: "-targetQualities"
