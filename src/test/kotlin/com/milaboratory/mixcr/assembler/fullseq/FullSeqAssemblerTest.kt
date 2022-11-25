@@ -24,6 +24,7 @@ import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
+import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter.Companion.getTargetAsMultiAlignment
 import com.milaboratory.mixcr.cli.CommandExportClonesPretty.Companion.outputCompact
@@ -373,7 +374,7 @@ class FullSeqAssemblerTest {
             if (al.getFeature(GeneFeature.CDR3) == null) continue
             if (NucleotideSequence("TACGGGTTTGACTACTGG") != al.getFeature(GeneFeature.CDR3).sequence) continue
             for (i in 0 until al.numberOfTargets()) {
-                println(getTargetAsMultiAlignment(al, i).formatLines(0))
+                println(getTargetAsMultiAlignment(al, i).format(MultiAlignmentHelper.LinesFormatter()))
                 println()
             }
             println()
@@ -398,7 +399,7 @@ class FullSeqAssemblerTest {
             .filter { al: VDJCAlignments -> al.getBestHit(GeneType.Variable).gene.name.contains("3-74") }
             .forEach { al: VDJCAlignments ->
                 for (i in 0 until al.numberOfTargets()) {
-                    println(getTargetAsMultiAlignment(al, i).formatLines(0))
+                    println(getTargetAsMultiAlignment(al, i).format(MultiAlignmentHelper.LinesFormatter()))
                     println()
                 }
                 println()

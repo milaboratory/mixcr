@@ -55,7 +55,7 @@ object AirrUtil {
             specialMatchChar = ' ',
             outOfRangeChar = ' '
         )
-        val alignments = mutableListOf<Alignment<NucleotideSequence>>()
+        val alignments = mutableListOf<MultiAlignmentHelper.AlignmentInput<NucleotideSequence>>()
         val actualGeneTypes = mutableListOf<GeneType>()
         var validPaddings = true
         // padding insertion positions are in germline coordinates
@@ -101,7 +101,14 @@ object AirrUtil {
                 }
             }
             bestHits[gt] = bestHit
-            alignments.add(al.invert(target))
+            alignments.add(
+                MultiAlignmentHelper.AlignmentInput(
+                    bestHit.gene.name,
+                    al.invert(target),
+                    al.score.toInt(),
+                    bestHit.score.toInt()
+                )
+            )
 
             // IMGT related code below
             val refGeneSequence = al.sequence1
@@ -137,9 +144,8 @@ object AirrUtil {
             settings,
             Range(0, target.size()),
             "",
-            "",
             target,
-            *alignments.map { MultiAlignmentHelper.Input("", it, null) }.toTypedArray()
+            *alignments.toTypedArray()
         )
 
         // merging alignments

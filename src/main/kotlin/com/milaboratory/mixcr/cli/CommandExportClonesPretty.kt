@@ -15,6 +15,7 @@ import cc.redberry.primitives.Filter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.and
@@ -183,11 +184,10 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
             output.println(">>> Abundance, reads (fraction): " + clone.count + " (" + clone.fraction + ")")
             output.println()
             for (i in 0 until clone.numberOfTargets()) {
-                val targetAsMultiAlignment =
-                    VDJCAlignmentsFormatter(addHitScore = true, addReads = false).formatMultiAlignments(clone, i)
+                val targetAsMultiAlignment = VDJCAlignmentsFormatter(addReads = false).formatMultiAlignments(clone, i)
                 val split = targetAsMultiAlignment.split(80)
                 for (spl in split) {
-                    output.println(spl.formatLines())
+                    output.println(spl.format(linesFormatter = MultiAlignmentHelper.LinesFormatter(addHitScore = true)))
                     output.println()
                 }
             }

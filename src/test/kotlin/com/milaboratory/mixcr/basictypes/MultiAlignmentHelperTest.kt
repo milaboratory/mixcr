@@ -16,7 +16,6 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.SequenceQuality
-import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper.Input
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter.Companion.makeQualityLine
 import io.kotest.matchers.collections.shouldContainInOrder
 import org.junit.Test
@@ -32,25 +31,29 @@ class MultiAlignmentHelperTest {
         val seq1 = NucleotideSequence("AGACACATATACACAG")
         val seq2 = NucleotideSequence("GATACGATACATTAGAGACCACAGATACA")
         val inputs = arrayOf(
-            Input(
+            MultiAlignmentHelper.AlignmentInput(
                 "Query0",
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq1),
-                null
+                10,
+                20
             ),
-            Input(
+            MultiAlignmentHelper.AlignmentInput(
                 "Query1",
                 Aligner.alignGlobalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq1),
-                null
+                12,
+                30
             ),
-            Input(
+            MultiAlignmentHelper.AlignmentInput(
                 "Query2",
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq2),
-                null
+                14,
+                30
             ),
-            Input(
+            MultiAlignmentHelper.AlignmentInput(
                 "Query3",
                 Aligner.alignGlobalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq2),
-                null
+                16,
+                30
             )
         )
         for (input in inputs) {
@@ -59,102 +62,104 @@ class MultiAlignmentHelperTest {
         }
         val helper = MultiAlignmentHelper.build(
             MultiAlignmentHelper.DEFAULT_SETTINGS, Range(0, seq0.size()),
-            leftTitle = "Subject",
+            name = "Subject",
             *inputs
         )
-        helper.addAnnotation(helper.makeQualityLine("Quality", seq0qual))
+        helper.addAnnotation(helper.makeQualityLine(seq0qual))
 
-        helper.formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainInOrder """
+        helper.format(linesFormatter = MultiAlignmentHelper.LinesFormatter()).also { println(it) }.lines()
+            .map { it.trimEnd() } shouldContainInOrder """
 |Quality   78778     878777   7778887878      
-|Subject 0 GATAC-----ATTAGA---CACAGATACA--- 20 
-| Query0 0              aga---cacaTataca    12
-| Query1 0 -------------aga---cacaTatacaCAG 15
-| Query2 5 gatac-----attagaGACcacagataca    28
-| Query3 0 gatacGATACattagaGACcacagataca    28
+|Subject 0 GATAC-----ATTAGA---CACAGATACA--- 20  Score 
+| Query0 0              aga---cacaTataca    12  10
+| Query1 0 -------------aga---cacaTatacaCAG 15  12
+| Query2 5 gatac-----attagaGACcacagataca    28  14
+| Query3 0 gatacGATACattagaGACcacagataca    28  16
         """.trimMargin().lines().map { it.trimEnd() }
 
         val expectedSplit = listOf(
             """
 |Quality   78778  
-|Subject 0 GATAC 4 
-| Query1 0 ----- 0
-| Query2 5 gatac 9
-| Query3 0 gatac 4
+|Subject 0 GATAC 4  Score
+| Query1 0 ----- 0  12
+| Query2 5 gatac 9  14
+| Query3 0 gatac 4  16
         """.trimMargin(),
             """
 |Quality            
-|Subject  5 ----- 5  
-| Query1  0 ----- 0 
-| Query2 10 ----- 10
-| Query3  5 GATAC 9 
+|Subject  5 ----- 5   Score
+| Query1  0 ----- 0   12
+| Query2 10 ----- 10  14
+| Query3  5 GATAC 9   16
             """.trimMargin(),
             """
 |Quality    87877   
-|Subject  5 ATTAG 9  
-| Query0  0    ag 1 
-| Query1  0 ---ag 1 
-| Query2 10 attag 14
-| Query3 10 attag 14
+|Subject  5 ATTAG 9   Score
+| Query0  0    ag 1   10 
+| Query1  0 ---ag 1   12
+| Query2 10 attag 14  14
+| Query3 10 attag 14  16
 """.trimMargin(),
             """
 |Quality    7   7   
-|Subject 10 A---C 11 
-| Query0  2 a---c 3 
-| Query1  2 a---c 3 
-| Query2 15 aGACc 19
-| Query3 15 aGACc 19
+|Subject 10 A---C 11  Score
+| Query0  2 a---c 3   10
+| Query1  2 a---c 3   12
+| Query2 15 aGACc 19  14
+| Query3 15 aGACc 19  16
             """.trimMargin(),
             """
 |Quality    77888   
-|Subject 12 ACAGA 16 
-| Query0  4 acaTa 8 
-| Query1  4 acaTa 8 
-| Query2 20 acaga 24
-| Query3 20 acaga 24
+|Subject 12 ACAGA 16  Score
+| Query0  4 acaTa 8   10
+| Query1  4 acaTa 8   12
+| Query2 20 acaga 24  14
+| Query3 20 acaga 24  16
             """.trimMargin(),
             """
 |Quality    7878    
-|Subject 17 TACA- 20 
-| Query0  9 taca  12
-| Query1  9 tacaC 13
-| Query2 25 taca  28
-| Query3 25 taca  28
+|Subject 17 TACA- 20  Score
+| Query0  9 taca  12  10
+| Query1  9 tacaC 13  12
+| Query2 25 taca  28  14
+| Query3 25 taca  28  16
             """.trimMargin(),
             """
 |Quality         
-|Subject 21 -- 21 
-| Query1 14 AG 15
+|Subject 21 -- 21  Score
+| Query1 14 AG 15  12
             """.trimMargin()
         )
 
         helper.split(5).forEachIndexed { index, spl ->
-            spl.formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainInOrder
+            spl.format(linesFormatter = MultiAlignmentHelper.LinesFormatter()).also { println(it) }.lines()
+                .map { it.trimEnd() } shouldContainInOrder
                     expectedSplit[index].lines().map { it.trimEnd() }
         }
 
         MultiAlignmentHelper.build(
             MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
-            leftTitle = "",
+            name = "",
             *inputs
-        ).formatLines().also { println(it) }.lines().map { it.trimEnd() } shouldContainInOrder """
-|       0 GATAC-----ATTAGA---CACAGATACA--- 20 
-|Query0 0              ...---....T.....    12
-|Query1 0 -------------...---....T.....CAG 15
-|Query2 5 .....-----......GAC..........    28
-|Query3 0 .....GATAC......GAC..........    28
+        ).format(linesFormatter = MultiAlignmentHelper.LinesFormatter()).also { println(it) }.lines()
+            .map { it.trimEnd() } shouldContainInOrder """
+|       0 GATAC-----ATTAGA---CACAGATACA--- 20  Score 
+|Query0 0              ...---....T.....    12  10
+|Query1 0 -------------...---....T.....CAG 15  12
+|Query2 5 .....-----......GAC..........    28  14
+|Query3 0 .....GATAC......GAC..........    28  16
         """.trimMargin().lines().map { it.trimEnd() }
 
-        run {
-            val build = MultiAlignmentHelper.build(
-                MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
-                leftTitle = "",
-                seq0
-            )
-            build.addAnnotation(build.makeQualityLine("", seq0qual))
-                .formatLines().also { println(it) }.lines().map { it.trimEnd() }
-        } shouldContainInOrder """
-|   787788787777778887878   
-| 0 GATACATTAGACACAGATACA 20 
+        val build = MultiAlignmentHelper.build(
+            MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
+            name = "",
+            seq0
+        )
+        build.addAnnotation(build.makeQualityLine(seq0qual))
+            .format(linesFormatter = MultiAlignmentHelper.LinesFormatter()).also { println(it) }.lines()
+            .map { it.trimEnd() } shouldContainInOrder """
+|Quality   787788787777778887878   
+|        0 GATACATTAGACACAGATACA 20  Score
             """.trimMargin().lines().map { it.trimEnd() }
     }
 
@@ -170,20 +175,23 @@ class MultiAlignmentHelperTest {
         val seq2 = NucleotideSequence("CGATCCTTCGGTGACAAAGCGTTCGGACC")
         val seq3 = NucleotideSequence("CATCAGGTATCGCCCTGGTACG")
         val inputs = arrayOf(
-            Input(
+            MultiAlignmentHelper.AlignmentInput(
                 "",
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq1),
-                null
+                10,
+                20
             ),
-            Input(
+            MultiAlignmentHelper.AlignmentInput(
                 "",
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq2),
-                null
+                12,
+                30
             ),
-            Input(
+            MultiAlignmentHelper.AlignmentInput(
                 "",
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq3),
-                null
+                14,
+                30
             )
         )
         for (input in inputs) {
@@ -193,13 +201,14 @@ class MultiAlignmentHelperTest {
         MultiAlignmentHelper.build(
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, seq0.size()),
-            leftTitle = "",
+            name = "",
             *inputs
-        ).formatLines().lines().also { println(it) }.map { it.trimEnd() } shouldContainInOrder """
-| 0 AACGATGGGCGCAAATATAGGGAGAACTCCGATCGACATCGGGTATCGCCCTGGTACGATCC--CGGTGACAAAGCGTTCGGACCTGTCTGGACGCTAGAACGC 101 
-| 0                tatagggag--ctccgatcgacatcg                                                                23 
-| 0                                                         cgatccTTcggtgacaaagcgttcggacc                    28 
-| 0                                     catcAggtatcgccctggtacg                                               21 
+        ).format(linesFormatter = MultiAlignmentHelper.LinesFormatter()).also { println(it) }.lines()
+            .map { it.trimEnd() } shouldContainInOrder """
+| 0 AACGATGGGCGCAAATATAGGGAGAACTCCGATCGACATCGGGTATCGCCCTGGTACGATCC--CGGTGACAAAGCGTTCGGACCTGTCTGGACGCTAGAACGC 101  Score
+| 0                tatagggag--ctccgatcgacatcg                                                                23   10
+| 0                                                         cgatccTTcggtgacaaagcgttcggacc                    28   12
+| 0                                     catcAggtatcgccctggtacg                                               21   14
         """.trimMargin().lines().map { it.trimEnd() }
     }
 }

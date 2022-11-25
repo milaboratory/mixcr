@@ -110,43 +110,9 @@ class MultiAlignmentHelper private constructor(
         val outOfRangeChar: Char
     )
 
-    override fun toString(): String = formatLines()
+    override fun toString(): String = LinesFormatter().formatLines(this)
 
-    fun formatLines(minimalPositionWidth: Int = 0): String {
-        val aCount = queries.size
-        val asSize = annotations.size
-        val lines: Array<String> = Array(aCount + 1 + asSize) { "" }
-        lines[asSize] = "" + subject.firstPosition
-        for (i in 0 until aCount)
-            lines[i + 1 + asSize] = "" + queries[i].firstPosition
-        val width = fixedWidthL(lines, minimalPositionWidth)
-        for (i in 0 until asSize)
-            lines[i] = annotations[i].leftTitle + spaces(width + 1)
-        lines[asSize] = subject.leftTitle + " " + lines[asSize]
-        for (i in 0 until aCount)
-            lines[i + 1 + asSize] = queries[i].leftTitle + " " + lines[i + 1 + asSize]
-        fixedWidthL(lines)
-
-        for (i in 0 until asSize)
-            lines[i] += " " + annotations[i].content
-        lines[asSize] += " ${subject.content} ${subject.lastPosition}"
-        for (i in 0 until aCount)
-            lines[i + 1 + asSize] += " ${queries[i].content} ${queries[i].lastPosition}"
-
-        fixedWidthR(lines)
-        lines[asSize] += "  ${subject.rightTitle}"
-        for (i in 0 until aCount) {
-            if (queries[i].rightTitle != null) {
-                lines[i + 1 + asSize] += "  " + queries[i].rightTitle
-            }
-        }
-        val result = StringBuilder()
-        for (i in lines.indices) {
-            if (i != 0) result.append("\n")
-            result.append(lines[i])
-        }
-        return result.toString()
-    }
+    fun format(linesFormatter: LinesFormatter): String = linesFormatter.formatLines(this)
 
     companion object {
         private fun aabs(pos: Int): Int {
@@ -190,15 +156,13 @@ class MultiAlignmentHelper private constructor(
         @SafeVarargs
         fun <S : Sequence<S>> build(
             settings: Settings, subjectRange: Range,
-            leftTitle: String,
-            addHitScore: Boolean,
+            name: String,
             vararg alignments: Input<S>
         ): MultiAlignmentHelper =
             build(
                 settings,
                 subjectRange,
-                leftTitle,
-                addHitScore,
+                name,
                 alignments[0].alignment.sequence1,
                 *alignments
             )
@@ -208,8 +172,7 @@ class MultiAlignmentHelper private constructor(
         fun <S : Sequence<S>> build(
             settings: Settings,
             subjectRange: Range,
-            leftTitle: String,
-            addHitScore: Boolean,
+            name: String,
             subject: S,
             vararg inputs: Input<S>
         ): MultiAlignmentHelper {
@@ -327,8 +290,7 @@ class MultiAlignmentHelper private constructor(
                         content = queryStrings[i].toString(),
                         positions = queryPositions[i].toArray(),
                         alignmentScore = input.alignmentScore,
-                        hitScore = input.hitScore,
-                        addHitScore = addHitScore
+                        hitScore = input.hitScore
                     )
                     is ReadInput -> ReadLine(
                         index = input.index,
@@ -339,10 +301,9 @@ class MultiAlignmentHelper private constructor(
             }
             return MultiAlignmentHelper(
                 SubjectLine(
-                    leftTitle = leftTitle,
+                    name = name,
                     content = subjectString.toString(),
-                    positions = subjectPositions.toArray(),
-                    addHitScore = addHitScore
+                    positions = subjectPositions.toArray()
                 ),
                 queryStringsArray,
                 matchesBAs
@@ -356,28 +317,39 @@ class MultiAlignmentHelper private constructor(
         }
     }
 
-    data class AnnotationLine(
-        val type: Type,
-        val leftTitle: String,
+    sealed interface AnnotationLine {
         val content: String
-    ) {
-        fun subRange(from: Int, to: Int) = copy(
+        fun subRange(from: Int, to: Int): AnnotationLine
+    }
+
+    data class QualityLine(
+        override val content: String
+    ) : AnnotationLine {
+        override fun subRange(from: Int, to: Int) = copy(
             content = content.substring(from, to)
         )
+    }
 
-        enum class Type {
-            QUALITY,
-            AMINO_ACIDS,
-            REFERENCE_POINTS_POSITIONS
-        }
+    data class AminoAcidsLine(
+        override val content: String
+    ) : AnnotationLine {
+        override fun subRange(from: Int, to: Int) = copy(
+            content = content.substring(from, to)
+        )
+    }
+
+    data class ReferencePointsLine(
+        override val content: String
+    ) : AnnotationLine {
+        override fun subRange(from: Int, to: Int) = copy(
+            content = content.substring(from, to)
+        )
     }
 
     sealed interface LineWithPositions {
-        val leftTitle: String
         val content: String
         val positions: IntArray
         fun subRange(from: Int, to: Int): LineWithPositions
-        val rightTitle: String?
 
         val firstPosition: Int
             get() {
@@ -399,19 +371,15 @@ class MultiAlignmentHelper private constructor(
     }
 
     class SubjectLine(
-        override val leftTitle: String,
+        val name: String,
         override val content: String,
-        override val positions: IntArray,
-        private val addHitScore: Boolean
+        override val positions: IntArray
     ) : LineWithPositions {
         override fun subRange(from: Int, to: Int) = SubjectLine(
-            leftTitle = leftTitle,
+            name = name,
             content = content.substring(from, to),
-            positions = positions.copyOfRange(from, to),
-            addHitScore = addHitScore
+            positions = positions.copyOfRange(from, to)
         )
-
-        override val rightTitle: String = "Score" + if (addHitScore) " (hit score)" else ""
     }
 
     class AlignmentLine(
@@ -419,21 +387,14 @@ class MultiAlignmentHelper private constructor(
         override val content: String,
         override val positions: IntArray,
         val alignmentScore: Int,
-        val hitScore: Int,
-        private val addHitScore: Boolean
+        val hitScore: Int
     ) : QueryLine {
-        override val leftTitle: String
-            get() = geneName
-
-        override val rightTitle: String = "" + alignmentScore + if (addHitScore) " ($hitScore)" else ""
-
         override fun subRange(from: Int, to: Int) = AlignmentLine(
             geneName = geneName,
             content = content.substring(from, to),
             positions = positions.copyOfRange(from, to),
             alignmentScore = alignmentScore,
-            hitScore = hitScore,
-            addHitScore = addHitScore
+            hitScore = hitScore
         )
     }
 
@@ -448,10 +409,6 @@ class MultiAlignmentHelper private constructor(
             content = content.substring(from, to),
             positions = positions.copyOfRange(from, to)
         )
-
-        override val leftTitle: String
-            get() = index
-        override val rightTitle: String? = null
     }
 
     sealed interface Input<S : Sequence<S>> {
@@ -469,6 +426,68 @@ class MultiAlignmentHelper private constructor(
         val index: String,
         override val alignment: Alignment<S>
     ) : Input<S>
+
+    class LinesFormatter(
+        private val addHitScore: Boolean = false,
+        private val minimalPositionWidth: Int = 0
+    ) {
+
+        private val QueryLine.rightTitle: String?
+            get() = when (this) {
+                is AlignmentLine -> "" + alignmentScore + if (addHitScore) " ($hitScore)" else ""
+                is ReadLine -> null
+            }
+
+        private val QueryLine.leftTitle: String
+            get() = when (this) {
+                is AlignmentLine -> geneName
+                is ReadLine -> index
+            }
+
+        private val AnnotationLine.leftTitle: String?
+            get() = when (this) {
+                is AminoAcidsLine -> null
+                is QualityLine -> "Quality"
+                is ReferencePointsLine -> null
+            }
+
+        fun formatLines(multiAlignmentHelper: MultiAlignmentHelper): String = multiAlignmentHelper.run {
+            val aCount = queries.size
+            val asSize = annotations.size
+            val lines: Array<String> = Array(aCount + 1 + asSize) { "" }
+            lines[asSize] = "" + subject.firstPosition
+            for (i in 0 until aCount)
+                lines[i + 1 + asSize] = "" + queries[i].firstPosition
+            val width = fixedWidthL(lines, minimalPositionWidth)
+            for (i in 0 until asSize) {
+                lines[i] = (annotations[i].leftTitle ?: "") + spaces(width + 1)
+            }
+            lines[asSize] = subject.name + " " + lines[asSize]
+            for (i in 0 until aCount)
+                lines[i + 1 + asSize] = queries[i].leftTitle + " " + lines[i + 1 + asSize]
+            fixedWidthL(lines)
+
+            for (i in 0 until asSize)
+                lines[i] += " " + annotations[i].content
+            lines[asSize] += " ${subject.content} ${subject.lastPosition}"
+            for (i in 0 until aCount)
+                lines[i + 1 + asSize] += " ${queries[i].content} ${queries[i].lastPosition}"
+
+            fixedWidthR(lines)
+            lines[asSize] += "  Score" + if (addHitScore) " (hit score)" else ""
+            for (i in 0 until aCount) {
+                if (queries[i].rightTitle != null) {
+                    lines[i + 1 + asSize] += "  " + queries[i].rightTitle
+                }
+            }
+            val result = StringBuilder()
+            for (i in lines.indices) {
+                if (i != 0) result.append("\n")
+                result.append(lines[i])
+            }
+            return result.toString()
+        }
+    }
 }
 
 

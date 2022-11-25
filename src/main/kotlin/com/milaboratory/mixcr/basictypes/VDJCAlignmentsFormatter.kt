@@ -28,27 +28,22 @@ import io.repseq.core.SequencePartitioning
 import java.util.*
 
 class VDJCAlignmentsFormatter(
-    private val addHitScore: Boolean,
     private val addReads: Boolean
 ) {
     companion object {
         @JvmStatic
         fun getTargetAsMultiAlignment(vdjcObject: VDJCObject, targetId: Int): MultiAlignmentHelper =
             VDJCAlignmentsFormatter(
-                addHitScore = false,
                 addReads = vdjcObject is VDJCAlignments && vdjcObject.getOriginalReads() != null
             ).formatMultiAlignments(vdjcObject, targetId)
 
-        fun MultiAlignmentHelper.makeQualityLine(
-            title: String,
-            quality: SequenceQuality
-        ): AnnotationLine {
+        fun MultiAlignmentHelper.makeQualityLine(quality: SequenceQuality): AnnotationLine {
             val chars = CharArray(size())
             for (i in 0 until size()) chars[i] = when {
                 subject.positions[i] < 0 -> ' '
                 else -> simplifiedQuality(quality.value(subject.positions[i]).toInt())
             }
-            return AnnotationLine(leftTitle = title, content = String(chars), type = AnnotationLine.Type.QUALITY)
+            return MultiAlignmentHelper.QualityLine(content = String(chars))
         }
 
         private fun simplifiedQuality(value: Int): Char {
@@ -117,7 +112,7 @@ class VDJCAlignmentsFormatter(
                         AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition))
                 }
             }
-            return AnnotationLine(leftTitle = "", content = String(line), type = AnnotationLine.Type.AMINO_ACIDS)
+            return MultiAlignmentHelper.AminoAcidsLine(content = String(line))
         }
 
         private fun MultiAlignmentHelper.makePointsLines(
@@ -135,14 +130,11 @@ class VDJCAlignmentsFormatter(
                     result = point.draw(partitioning, this, markers[i++], false)
                 } while (!result)
             }
-            return markers.reversed()
-                .map { marker ->
-                    AnnotationLine(
-                        leftTitle = "",
-                        content = String(marker),
-                        type = AnnotationLine.Type.REFERENCE_POINTS_POSITIONS
-                    )
-                }
+            return markers.reversed().map { marker ->
+                MultiAlignmentHelper.ReferencePointsLine(
+                    content = String(marker)
+                )
+            }
         }
 
         private fun emptyLine(size: Int): CharArray {
@@ -267,8 +259,7 @@ class VDJCAlignmentsFormatter(
         val helper = MultiAlignmentHelper.build(
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, target.size()),
-            leftTitle = "Target$targetId",
-            addHitScore = addHitScore,
+            name = "Target$targetId",
             target.sequence,
             *alignmentsInputs.toTypedArray()
         )
@@ -279,7 +270,7 @@ class VDJCAlignmentsFormatter(
                 }
         }
         helper.addAnnotation(helper.makeAALine(partitioning, target.sequence))
-        helper.addAnnotation(helper.makeQualityLine("Quality", target.quality))
+        helper.addAnnotation(helper.makeQualityLine(target.quality))
         return helper
     }
 
