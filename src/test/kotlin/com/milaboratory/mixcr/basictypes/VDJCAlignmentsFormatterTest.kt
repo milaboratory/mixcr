@@ -96,7 +96,8 @@ class VDJCAlignmentsFormatterTest {
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, seq.size()),
             "",
-            MultiAlignmentHelper.AlignmentInput("", al, 10, 20)
+            al.sequence1.sequence,
+            listOf(MultiAlignmentHelper.AlignmentInput("", al, 10, 20))
         )
         val b = ExtendedReferencePointsBuilder()
         b.setPosition(rp1, 0)
@@ -120,7 +121,8 @@ class VDJCAlignmentsFormatterTest {
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, seq.size()),
             "",
-            MultiAlignmentHelper.AlignmentInput("", al, 20, 30)
+            al.sequence1,
+            listOf(MultiAlignmentHelper.AlignmentInput("", al, 20, 30))
         )
         val b = ExtendedReferencePointsBuilder()
         b.setPosition(rp1, 0)

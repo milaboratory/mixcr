@@ -16,22 +16,24 @@ import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.MutationType
 import com.milaboratory.core.mutations.Mutations
+import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Sequence
+import com.milaboratory.core.sequence.SequenceQuality
 import com.milaboratory.util.BitArray
 import com.milaboratory.util.IntArrayList
-import java.util.*
-import kotlin.math.max
+import io.repseq.core.SequencePartitioning
 import kotlin.math.min
 
-class MultiAlignmentHelper private constructor(
-    val subject: SubjectLine,
-    private val queries: Array<QueryLine>,
-    val match: Array<BitArray>
-) {
+class MultiAlignmentHelper<S : Sequence<S>> private constructor(
     // subject / queries nomenclature seems to be swapped here...
     // subject here corresponds to sequence2 from alignments (so, the query sequence)
     // queries here corresponds to sequence1 from alignments (so, the reference sequence)
-    private val annotations = mutableListOf<AnnotationLine>()
+    val subject: SubjectLine,
+    val queries: Array<QueryLine>,
+    val match: Array<BitArray>,
+    val annotations: MutableList<AnnotationLine> = mutableListOf<AnnotationLine>()
+) {
+
 
     fun getQuery(idx: Int): String = queries[idx].content
 
@@ -39,7 +41,7 @@ class MultiAlignmentHelper private constructor(
         get() = (queries.map { it.firstPosition.toString() } + subject.firstPosition.toString())
             .maxOf { it.length }
 
-    fun addAnnotation(annotationLine: AnnotationLine): MultiAlignmentHelper {
+    fun addAnnotation(annotationLine: AnnotationLine): MultiAlignmentHelper<S> {
         require(annotationLine.content.length == size())
         annotations += annotationLine
         return this
@@ -58,7 +60,7 @@ class MultiAlignmentHelper private constructor(
 
     fun size(): Int = subject.content.length
 
-    fun getRange(from: Int, to: Int): MultiAlignmentHelper {
+    fun getRange(from: Int, to: Int): MultiAlignmentHelper<S> {
         val queriesToExclude = BooleanArray(queries.size)
         var queriesCount = 0
         for (i in queries.indices) {
@@ -85,18 +87,15 @@ class MultiAlignmentHelper private constructor(
         val cMatch: Array<BitArray> = Array(queriesCount) {
             match[indexMapping[it]].getRange(from, to)
         }
-        val result = MultiAlignmentHelper(
+        return MultiAlignmentHelper(
             subject.subRange(from, to),
             cQueries,
-            cMatch
+            cMatch,
+            annotations.map { it.subRange(from, to) }.toMutableList()
         )
-        result.annotations += annotations.map {
-            it.subRange(from, to)
-        }
-        return result
     }
 
-    fun split(length: Int): Array<MultiAlignmentHelper> = Array((size() + length - 1) / length) { i ->
+    fun split(length: Int): Array<MultiAlignmentHelper<S>> = Array((size() + length - 1) / length) { i ->
         val pointer = i * length
         val l = min(length, size() - pointer)
         getRange(pointer, pointer + l)
@@ -110,30 +109,16 @@ class MultiAlignmentHelper private constructor(
         val outOfRangeChar: Char
     )
 
-    override fun toString(): String = LinesFormatter().formatLines(this)
+    override fun toString(): String = format()
 
-    fun format(linesFormatter: LinesFormatter): String = linesFormatter.formatLines(this)
+    @JvmOverloads
+    fun format(linesFormatter: MultiAlignmentFormatter.LinesFormatter = MultiAlignmentFormatter.LinesFormatter()): String =
+        linesFormatter.formatLines(this)
 
     companion object {
         private fun aabs(pos: Int): Int {
             if (pos >= 0) return pos
             return if (pos == -1) -1 else -2 - pos
-        }
-
-        private fun fixedWidthL(strings: Array<String>, minWidth: Int = 0): Int {
-            var length = 0
-            for (string in strings) length = max(length, string.length)
-            length = max(length, minWidth)
-            for (i in strings.indices) strings[i] = spaces(length - strings[i].length) + strings[i]
-            return length
-        }
-
-        private fun fixedWidthR(strings: Array<String>, minWidth: Int = 0): Int {
-            var length = 0
-            for (string in strings) length = max(length, string.length)
-            length = max(length, minWidth)
-            for (i in strings.indices) strings[i] = strings[i] + spaces(length - strings[i].length)
-            return length
         }
 
         @JvmField
@@ -155,27 +140,12 @@ class MultiAlignmentHelper private constructor(
         @JvmStatic
         @SafeVarargs
         fun <S : Sequence<S>> build(
-            settings: Settings, subjectRange: Range,
-            name: String,
-            vararg alignments: Input<S>
-        ): MultiAlignmentHelper =
-            build(
-                settings,
-                subjectRange,
-                name,
-                alignments[0].alignment.sequence1,
-                *alignments
-            )
-
-        @JvmStatic
-        @SafeVarargs
-        fun <S : Sequence<S>> build(
             settings: Settings,
             subjectRange: Range,
             name: String,
             subject: S,
-            vararg inputs: Input<S>
-        ): MultiAlignmentHelper {
+            inputs: List<Input<S>>
+        ): MultiAlignmentHelper<S> {
             for (input in inputs) require(input.alignment.sequence1 == subject)
             var subjectPointer = subjectRange.from
             val subjectPointerTo = subjectRange.to
@@ -309,13 +279,21 @@ class MultiAlignmentHelper private constructor(
                 matchesBAs
             )
         }
-
-        private fun spaces(n: Int): String {
-            val c = CharArray(n)
-            Arrays.fill(c, ' ')
-            return String(c)
-        }
     }
+
+    sealed interface MetaInfoInput<S : Sequence<S>>
+
+    class ReferencePointsInput<S : Sequence<S>>(
+        val partitioning: SequencePartitioning
+    ) : MetaInfoInput<S>
+
+    class AminoAcidInput(
+        val partitioning: SequencePartitioning
+    ) : MetaInfoInput<NucleotideSequence>
+
+    class QualityInput(
+        val quality: SequenceQuality
+    ) : MetaInfoInput<NucleotideSequence>
 
     sealed interface AnnotationLine {
         val content: String
@@ -339,6 +317,7 @@ class MultiAlignmentHelper private constructor(
     }
 
     data class ReferencePointsLine(
+        val partitioning: SequencePartitioning,
         override val content: String
     ) : AnnotationLine {
         override fun subRange(from: Int, to: Int) = copy(
@@ -375,7 +354,7 @@ class MultiAlignmentHelper private constructor(
         override val content: String,
         override val positions: IntArray
     ) : LineWithPositions {
-        override fun subRange(from: Int, to: Int) = SubjectLine(
+        override fun subRange(from: Int, to: Int): SubjectLine = SubjectLine(
             name = name,
             content = content.substring(from, to),
             positions = positions.copyOfRange(from, to)
@@ -426,73 +405,11 @@ class MultiAlignmentHelper private constructor(
         val index: String,
         override val alignment: Alignment<S>
     ) : Input<S>
-
-    class LinesFormatter(
-        private val addHitScore: Boolean = false,
-        private val minimalPositionWidth: Int = 0
-    ) {
-
-        private val QueryLine.rightTitle: String?
-            get() = when (this) {
-                is AlignmentLine -> "" + alignmentScore + if (addHitScore) " ($hitScore)" else ""
-                is ReadLine -> null
-            }
-
-        private val QueryLine.leftTitle: String
-            get() = when (this) {
-                is AlignmentLine -> geneName
-                is ReadLine -> index
-            }
-
-        private val AnnotationLine.leftTitle: String?
-            get() = when (this) {
-                is AminoAcidsLine -> null
-                is QualityLine -> "Quality"
-                is ReferencePointsLine -> null
-            }
-
-        fun formatLines(multiAlignmentHelper: MultiAlignmentHelper): String = multiAlignmentHelper.run {
-            val aCount = queries.size
-            val asSize = annotations.size
-            val lines: Array<String> = Array(aCount + 1 + asSize) { "" }
-            lines[asSize] = "" + subject.firstPosition
-            for (i in 0 until aCount)
-                lines[i + 1 + asSize] = "" + queries[i].firstPosition
-            val width = fixedWidthL(lines, minimalPositionWidth)
-            for (i in 0 until asSize) {
-                lines[i] = (annotations[i].leftTitle ?: "") + spaces(width + 1)
-            }
-            lines[asSize] = subject.name + " " + lines[asSize]
-            for (i in 0 until aCount)
-                lines[i + 1 + asSize] = queries[i].leftTitle + " " + lines[i + 1 + asSize]
-            fixedWidthL(lines)
-
-            for (i in 0 until asSize)
-                lines[i] += " " + annotations[i].content
-            lines[asSize] += " ${subject.content} ${subject.lastPosition}"
-            for (i in 0 until aCount)
-                lines[i + 1 + asSize] += " ${queries[i].content} ${queries[i].lastPosition}"
-
-            fixedWidthR(lines)
-            lines[asSize] += "  Score" + if (addHitScore) " (hit score)" else ""
-            for (i in 0 until aCount) {
-                if (queries[i].rightTitle != null) {
-                    lines[i + 1 + asSize] += "  " + queries[i].rightTitle
-                }
-            }
-            val result = StringBuilder()
-            for (i in lines.indices) {
-                if (i != 0) result.append("\n")
-                result.append(lines[i])
-            }
-            return result.toString()
-        }
-    }
 }
 
 
 // may be used for calculation fo minimalPositionWidth for formatLines
 @Suppress("unused")
-val Array<MultiAlignmentHelper>.maxPositionWidth: Int
+val Array<MultiAlignmentHelper<*>>.maxPositionWidth: Int
     get() = maxOf { it.actualPositionWidth }
 

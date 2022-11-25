@@ -140,12 +140,12 @@ object AirrUtil {
             paddingsByGeneType[gt] = germlinePaddings
         }
 
-        val helper: MultiAlignmentHelper = MultiAlignmentHelper.build(
+        val helper: MultiAlignmentHelper<NucleotideSequence> = MultiAlignmentHelper.build(
             settings,
             Range(0, target.size()),
             "",
             target,
-            *alignments.toTypedArray()
+            alignments
         )
 
         // merging alignments

@@ -66,7 +66,7 @@ public class MiXCRTestUtils {
             MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
             MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
             for (MultiAlignmentHelper spl : split) {
-                System.out.println(spl.format(new MultiAlignmentHelper.LinesFormatter()));
+                System.out.println(spl.format());
                 System.out.println();
             }
         }
