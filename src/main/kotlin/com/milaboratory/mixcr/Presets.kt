@@ -36,6 +36,7 @@ import com.milaboratory.mixcr.cli.CommandExportClones
 import com.milaboratory.mixcr.cli.CommandExtend
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.util.CosineSimilarity
 import com.milaboratory.primitivio.annotations.Serializable
 import org.apache.commons.io.IOUtils
 import java.nio.charset.Charset
@@ -149,8 +150,25 @@ object Presets {
                 }
             }
             throw ApplicationException("Can't find local preset with name \"$name\"")
-        } else
-            return presetCollection[name] ?: throw ApplicationException("No preset with name \"$name\"")
+        } else {
+            val result = presetCollection[name]
+            if (result == null) {
+                val limits = 3..6
+                var candidates: List<String>? = null
+                for (i in (1..10).reversed()) {
+                    val withThreshold = CosineSimilarity.mostSimilar(name, nonAbstractPresetNames, i / 10.0)
+                    if (withThreshold.size in limits) {
+                        candidates = withThreshold
+                        break
+                    }
+                }
+                if (candidates == null) {
+                    candidates = CosineSimilarity.mostSimilar(name, nonAbstractPresetNames).take(limits.last)
+                }
+                throw ApplicationException("""No preset with name "$name". Did you mean: ${candidates.joinToString(" or ")}?""")
+            }
+            return result
+        }
     }
 
     private fun <T : Any> getResolver(prop: KProperty1<MiXCRParamsBundleRaw, RawParams<T>?>): Resolver<T> =
