@@ -119,8 +119,7 @@ object Presets {
         }
     }
 
-    private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
-        val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
+    private val presetCollection: Map<String, MiXCRParamsBundleRaw> = buildMap {
         val files = (Presets.javaClass.getResourceAsStream("/mixcr_presets/file_list.txt")
             ?: throw IllegalStateException("No preset file list")).use { stream ->
             IOUtils.readLines(stream, Charset.defaultCharset())
@@ -130,10 +129,9 @@ object Presets {
                 .use { stream -> K_YAML_OM.readValue<Map<String, MiXCRParamsBundleRaw>>(stream) }
                 .toList()
         }.forEach { (k, v) ->
-            if (map.put(k, v) != null)
+            if (put(k, v) != null)
                 throw RuntimeException("Conflicting preset names in different preset files.")
         }
-        map
     }
 
     val allPresetNames = presetCollection.keys

@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.primitives.Filter
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
@@ -49,6 +50,7 @@ import kotlin.io.path.Path
 object CommandExportClones {
     const val COMMAND_NAME = "exportClones"
 
+    @JsonIgnoreProperties("splitByTags")
     data class Params(
         @JsonProperty("splitByTagType") val splitByTagType: TagType?,
         @JsonProperty("filterOutOfFrames") val filterOutOfFrames: Boolean,

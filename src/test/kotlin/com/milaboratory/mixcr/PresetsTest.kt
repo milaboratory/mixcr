@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -10,8 +11,11 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.test.TestUtil.assertJson
+import io.kotest.assertions.withClue
 import org.junit.Assert
 import org.junit.Test
+import java.nio.file.Paths
+import kotlin.io.path.listDirectoryEntries
 
 class PresetsTest {
     @Test
@@ -93,5 +97,17 @@ class PresetsTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun `backward capability of deserialization of presets`() {
+        val dir = Paths.get(PresetsTest::class.java.getResource("/backward_compatibility/presets/").file)
+        dir.listDirectoryEntries()
+            .flatMap { it.listDirectoryEntries() }
+            .forEach { filesToCheck ->
+                withClue(filesToCheck) {
+                    K_YAML_OM.readValue<MiXCRParamsBundle>(filesToCheck.toFile())
+                }
+            }
     }
 }
