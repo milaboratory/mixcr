@@ -108,7 +108,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                 .flatMap { (_, node) -> node.content.clones }
                 .sumOf { (clone, datasetId) ->
                     val tagsInfo = header.allTagsInfo[datasetId]
-                    val tag: TagInfo = tagsInfo.lastOrNull { it.type == tagType } ?: return@sumOf 0
+                    val tag: TagInfo = tagsInfo.filter { it.type == tagType }.maxByOrNull { it.index } ?: return@sumOf 0
                     val level = tag.index + 1
                     clone.getTagDiversity(level)
                 }

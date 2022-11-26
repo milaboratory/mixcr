@@ -138,7 +138,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                     .flatMap { shmTreeForPostanalysis ->
                         shmTreeForPostanalysis.tree.allNodes()
                             .asSequence()
-                            .filter { !onlyObserved || it.node.isLeaf() }
+                            .filter { !onlyObserved || it.node.content.clones.isNotEmpty() }
                             .flatMap { it.node.content.split(splitByTags) }
                             .map { node -> Wrapper(shmTreeForPostanalysis, node) }
                     }
