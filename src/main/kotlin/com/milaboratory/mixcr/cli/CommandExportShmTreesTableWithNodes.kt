@@ -11,7 +11,9 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
@@ -71,6 +73,15 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         onlyObserved = value
     }
 
+    @Option(
+        description = ["Split clones by tag type. Will be calculated from export columns if not specified."],
+        names = ["--split-by-tags"],
+        paramLabel = Labels.TAG_TYPE,
+        order = OptionsOrder.main + 10_200
+    )
+    private var splitByTagType: TagType? = null
+
+
     override val outputFiles
         get() = listOfNotNull(out)
 
@@ -81,6 +92,34 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                 reader.cloneSetInfos.map { it.tagsInfo },
                 reader.header.allFullyCoveredBy
             )
+
+            val splitByTagType = if (splitByTagType != null) {
+                splitByTagType
+            } else {
+                val tagsExportedByGroups = addedFields
+                    .filter {
+                        it.field.equals("-allTags", ignoreCase = true) ||
+                                it.field.equals("-tags", ignoreCase = true)
+                    }
+                    .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0]) }
+                val newSpitBy = tagsExportedByGroups.maxOrNull()
+                if (newSpitBy != null && out != null) {
+                    println("Clone splitting by ${newSpitBy.name} added automatically because -tags ${newSpitBy.name} field is present in the list.")
+                }
+                newSpitBy
+            }
+            if (splitByTagType != null && headerForExport.allTagsInfo.none { it.hasTagsWithType(splitByTagType) }) {
+                logger.warn("Input has no tags with type $splitByTagType")
+            }
+            val splitByTags = reader.cloneSetInfos
+                .map { it.tagsInfo }
+                .map { tagsInfo ->
+                    when (splitByTagType) {
+                        null -> null
+                        else -> tagsInfo.filter { it.type == splitByTagType }.maxBy { it.index }
+                    }
+                }
+
             InfoWriter.create(
                 out,
                 SplittedTreeNodeFieldsExtractorsFactory.createExtractors(addedFields, headerForExport),
@@ -100,7 +139,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                         shmTreeForPostanalysis.tree.allNodes()
                             .asSequence()
                             .filter { !onlyObserved || it.node.isLeaf() }
-                            .flatMap { it.node.content.split() }
+                            .flatMap { it.node.content.split(splitByTags) }
                             .map { node -> Wrapper(shmTreeForPostanalysis, node) }
                     }
                     .forEach {

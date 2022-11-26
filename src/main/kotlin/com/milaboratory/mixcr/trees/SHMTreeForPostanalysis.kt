@@ -16,6 +16,7 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.BaseNode
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithClones
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
@@ -68,9 +69,15 @@ data class SHMTreeForPostanalysis<T : BaseNode>(
         main = main,
         parent = parent,
     ) {
-        fun split(): Collection<SplittedNode> = when {
+        fun split(byTag: List<TagInfo?>): Collection<SplittedNode> = when {
             clones.isEmpty() -> listOf(withoutClone())
-            else -> clones.map { clone -> withClone(clone) }
+            else -> clones
+                .flatMap { cloneWithDatasetId ->
+                    cloneWithDatasetId.clone
+                        .splitByTag(byTag[cloneWithDatasetId.datasetId])
+                        .map { cloneWithDatasetId.copy(clone = it) }
+                }
+                .map { clone -> withClone(clone) }
         }
 
         private fun withClone(clone: CloneWithDatasetId) = SplittedNode(

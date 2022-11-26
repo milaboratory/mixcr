@@ -16,13 +16,13 @@ import com.milaboratory.mixcr.cli.logger
 
 object TagsUtil {
     fun FieldsCollection<*>.checkTagExists(header: HeaderForExport, tagName: String) {
-        if (header.allTagsInfo.any { it[tagName] != null }) {
+        if (header.allTagsInfo.none { it[tagName] != null }) {
             logger.warn("No tag $tagName in data ($cmdArgName $tagName)")
         }
     }
 
     fun FieldsCollection<*>.checkTagTypeExists(header: HeaderForExport, tagType: TagType) {
-        if (header.allTagsInfo.any { it.hasTagsWithType(tagType) }) {
+        if (header.allTagsInfo.none { it.hasTagsWithType(tagType) }) {
             logger.warn("No tags with type $tagType in data ($cmdArgName $tagType)")
         }
     }

@@ -21,6 +21,7 @@ import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForFeatures
@@ -34,7 +35,6 @@ import com.milaboratory.mixcr.export.ParametersFactory.referencePointParamOption
 import com.milaboratory.mixcr.export.ParametersFactory.relativeGeneFeatureParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
-import com.milaboratory.mixcr.export.ParametersFactory.tagTypeLabel
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeWithDeprecatedTagName
 import com.milaboratory.mixcr.export.TagsUtil.checkTagExists
@@ -886,7 +886,7 @@ object VDJCObjectFieldExtractors {
             validateArgs = { header, tagName ->
                 checkTagExists(header, tagName)
             },
-            deprecation = "`-tag <tag_name>` deprecated, use `-tags $tagTypeLabel` instead"
+            deprecation = "`-tag <tag_name>` deprecated, use `-tags ${Labels.TAG_TYPE}` instead"
         ) { vdjcObject: VDJCObject, tagName: String ->
             val tag = tagsInfo[tagName] ?: return@Field NULL
             val tagValue = vdjcObject.tagCount.singleOrNull(tag.index) ?: return@Field NULL
@@ -902,7 +902,7 @@ object VDJCObjectFieldExtractors {
             validateArgs = { header, tagType ->
                 checkTagTypeExists(header, tagType)
             },
-            deprecation = "`-allTags $tagTypeLabel` deprecated, use `-tags $tagTypeLabel` instead"
+            deprecation = "`-allTags ${Labels.TAG_TYPE}` deprecated, use `-tags ${Labels.TAG_TYPE}` instead"
         ) { tagType ->
             tagNamesWithType(tagType).map { arrayOf(it) }
         }
@@ -946,7 +946,7 @@ object VDJCObjectFieldExtractors {
             validateArgs = { header, tagType ->
                 checkTagTypeExists(header, tagType)
             },
-            deprecation = "`-allUniqueTagsCount $tagTypeLabel` deprecated use `-uniqueTagCount $tagTypeLabel` instead"
+            deprecation = "`-allUniqueTagsCount ${Labels.TAG_TYPE}` deprecated use `-uniqueTagCount ${Labels.TAG_TYPE}` instead"
         ) { tagType ->
             tagNamesWithType(tagType).map { arrayOf(it) }
         }

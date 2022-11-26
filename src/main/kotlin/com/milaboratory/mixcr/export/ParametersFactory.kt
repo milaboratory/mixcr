@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
@@ -21,7 +22,6 @@ import java.util.*
 
 object ParametersFactory {
     const val tagTypeDescription = "Tag type will be used for filtering tags for export."
-    val tagTypeLabel = "<(${TagType.values().joinToString("|")})>"
 
     fun tagParam(
         sPrefix: String,
@@ -35,13 +35,13 @@ object ParametersFactory {
         sPrefix: String,
         sSuffix: String = ""
     ): CommandArgRequired<Pair<String?, TagType?>> = CommandArgRequired(
-        tagTypeLabel,
+        Labels.TAG_TYPE,
         { arg ->
             val tagType = TagType.valueOfCaseInsensitiveOrNull(arg)
             when {
                 tagType != null -> null to tagType
                 else -> {
-                    logger.warn("Use of tag name in $cmdArgName deprecated, use tag type instead: $tagTypeLabel")
+                    logger.warn("Use of tag name in $cmdArgName deprecated, use tag type instead: ${Labels.TAG_TYPE}")
                     arg to null
                 }
             }
@@ -52,7 +52,7 @@ object ParametersFactory {
         sPrefix: String = "",
         sSuffix: String = ""
     ): CommandArgRequired<TagType> = CommandArgRequired(
-        tagTypeLabel,
+        Labels.TAG_TYPE,
         { arg ->
             val tagType = TagType.valueOfCaseInsensitiveOrNull(arg)
             ValidationException.require(tagType != null) {

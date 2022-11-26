@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
-import com.milaboratory.mixcr.export.ParametersFactory.tagTypeLabel
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeWithDeprecatedTagName
 import com.milaboratory.mixcr.export.TagsUtil.checkTagExists
@@ -110,7 +110,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             validateArgs = { header, tagType ->
                 checkTagTypeExists(header, tagType)
             },
-            deprecation = "`-allUniqueTagFractions $tagTypeLabel` deprecated use `-uniqueTagFraction $tagTypeLabel` instead"
+            deprecation = "`-allUniqueTagFractions ${Labels.TAG_TYPE}` deprecated use `-uniqueTagFraction ${Labels.TAG_TYPE}` instead"
         ) { tagType ->
             tagNamesWithType(tagType).map { arrayOf(it) }
         }
