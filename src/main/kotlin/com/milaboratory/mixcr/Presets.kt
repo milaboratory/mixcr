@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.cli.CommandAssemblePartial
 import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
 import com.milaboratory.mixcr.cli.CommandExtend
+import com.milaboratory.mixcr.cli.CommandListPresets
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.CosineSimilarity
@@ -139,6 +140,8 @@ object Presets {
 
     val nonAbstractPresetNames = presetCollection.filter { !it.value.abstract }.keys
 
+    val visiblePresets = nonAbstractPresetNames.filter { "test" !in it && "legacy" !in it }
+
     private fun rawResolve(name: String): MiXCRParamsBundleRaw {
         if (name.startsWith("local:")) {
             val lName = name.removePrefix("local:")
@@ -156,16 +159,16 @@ object Presets {
                 val limits = 3..6
                 var candidates: List<String>? = null
                 for (i in (1..10).reversed()) {
-                    val withThreshold = CosineSimilarity.mostSimilar(name, nonAbstractPresetNames, i / 10.0)
+                    val withThreshold = CosineSimilarity.mostSimilar(name, visiblePresets, i / 10.0)
                     if (withThreshold.size in limits) {
                         candidates = withThreshold
                         break
                     }
                 }
                 if (candidates == null) {
-                    candidates = CosineSimilarity.mostSimilar(name, nonAbstractPresetNames).take(limits.last)
+                    candidates = CosineSimilarity.mostSimilar(name, visiblePresets).take(limits.last)
                 }
-                throw ApplicationException("""No preset with name "$name". Did you mean: ${candidates.joinToString(" or ")}?""")
+                throw ApplicationException("No preset with name \"$name\". Did you mean: ${candidates.joinToString(" or ")}?\nTo list all built-in presets run `mixcr ${CommandListPresets.COMMAND_NAME}`.")
             }
             return result
         }
