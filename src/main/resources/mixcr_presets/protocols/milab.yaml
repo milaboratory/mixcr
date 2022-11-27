@@ -29,6 +29,7 @@
       features: [ "{CDR1Begin:FR4End}" ]
 
 "milab-tcr-rna-race-base":
+  abstract: true
   inheritFrom: bundle-umi-rna-kaligner1-global-x
   mixins:
     - type: SetTagPattern

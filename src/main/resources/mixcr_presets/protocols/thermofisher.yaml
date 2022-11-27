@@ -67,14 +67,12 @@
 "oncomine-human-igh-fr2-j":
   inheritFrom: oncomine-human-bcr-pan-clonality-cdr3
   mixins:
-    - type: MaterialTypeDNA
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR2Begin:CDR3End}" ]
 
 "oncomine-human-igh-fr1-j":
   inheritFrom: oncomine-human-bcr-pan-clonality-cdr3
   mixins:
-    - type: MaterialTypeDNA
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:CDR3End}" ]
 

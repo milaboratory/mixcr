@@ -91,7 +91,7 @@
       value: true
 
 "takara-human-tcr-V1-full-length":
-  inheritFrom: takara-human-tcr-base
+  inheritFrom: takara-tcr-base
   mixins:
     - type: SetSpecies
       species: hs

@@ -84,7 +84,7 @@
 
 
 "nebnext-mouse-bcr-full-length":
-  inheritFrom: nebnext-mouse-bcr-cdr3
+  inheritFrom: nebnext-mouse-bcr-base
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
