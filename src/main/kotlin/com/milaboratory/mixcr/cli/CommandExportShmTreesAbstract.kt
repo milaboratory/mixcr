@@ -32,7 +32,8 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["--filter-min-nodes"],
         description = ["Minimal number of nodes in tree"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 30_000
     )
     private var minNodes: Int? = null
         set(value) {
@@ -43,7 +44,8 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
     @set:Option(
         names = ["--filter-min-height"],
         description = ["Minimal height of the tree "],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 30_100
     )
     private var minHeight: Int? = null
         set(value) {
@@ -55,7 +57,8 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
         names = ["--ids"],
         description = ["Filter specific trees by id"],
         split = ",",
-        paramLabel = "<id>"
+        paramLabel = "<id>",
+        order = OptionsOrder.main + 30_200
     )
     private var treeIds: Set<Int>? = null
 
@@ -64,19 +67,25 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
             @Option(
                 names = ["--filter-aa-pattern"],
                 description = ["Filter specific trees by aa pattern."],
-                paramLabel = "<pattern>"
+                paramLabel = "<pattern>",
+                order = 101
             )
             var seqAa: String? = null
 
             @Option(
                 names = ["--filter-nt-pattern"],
                 description = ["Filter specific trees by nt pattern."],
-                paramLabel = "<pattern>"
+                paramLabel = "<pattern>",
+                order = 102
             )
             var seqNt: String? = null
         }
 
-        @ArgGroup(multiplicity = "1", exclusive = true)
+        @ArgGroup(
+            multiplicity = "1",
+            exclusive = true,
+            order = 1
+        )
         lateinit var pattern: PatternChoice
 
         @Option(
@@ -84,7 +93,8 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
             description = ["Match pattern inside specified gene feature."],
             paramLabel = CommonDescriptions.Labels.GENE_FEATURE,
             defaultValue = "CDR3",
-            showDefaultValue = CommandLine.Help.Visibility.ALWAYS
+            showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
+            order = 2
         )
         lateinit var inFeature: GeneFeature
 
@@ -93,7 +103,8 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
             description = ["Max allowed subs & indels."],
             paramLabel = "<n>",
             showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
-            defaultValue = "0"
+            defaultValue = "0",
+            order = 3
         )
         var maxErrors: Int = 0
     }
@@ -101,7 +112,8 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
     @ArgGroup(
         heading = "Filter by pattern\n",
         exclusive = false,
-        multiplicity = "0..1"
+        multiplicity = "0..1",
+        order = OptionsOrder.main + 30_300
     )
     private var patternOptions: PatternOptions? = null
 

@@ -49,7 +49,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     @Option(
         description = ["Don't print first header line, print only data"],
         names = ["--no-header"],
-        order = 50_000 - 100
+        order = OptionsOrder.exportOptions
     )
     var noHeader = false
 

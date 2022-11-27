@@ -34,7 +34,7 @@ object ParametersFactory {
     ): CommandArgRequired<TagType> = CommandArgRequired(
         "<(${TagType.values().joinToString("|")})>",
         { arg ->
-            val tagType = TagType.values().firstOrNull { arg.lowercase() == it.name.lowercase() }
+            val tagType = TagType.valueOfCaseInsensitiveOrNull(arg)
             ValidationException.require(tagType != null) {
                 "$cmdArgName: unexpected arg $arg, expecting one of ${TagType.values().joinToString(", ") { it.name }}"
             }
@@ -89,6 +89,7 @@ object ParametersFactory {
             },
             { base -> sPrefix + base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) } }
         )
+
         else -> CommandArgRequired(
             "<(${Base.germline}|${Base.mrca})>",
             { arg ->

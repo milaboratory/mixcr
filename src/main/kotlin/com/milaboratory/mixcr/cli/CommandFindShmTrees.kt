@@ -145,7 +145,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         names = ["-O"],
         description = ["Overrides default build SHM parameter values"],
         paramLabel = Labels.OVERRIDES,
-        order = 100_000
+        order = OptionsOrder.overrides
     )
     var overrides: Map<String, String> = mutableMapOf()
 
@@ -155,28 +155,32 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     @Option(
         description = ["List of VGene names to filter clones"],
         names = ["--v-gene-names"],
-        paramLabel = "<gene_name>"
+        paramLabel = "<gene_name>",
+        order = OptionsOrder.main + 10_100
     )
     var VGenesToFilter: Set<String> = mutableSetOf()
 
     @Option(
         description = ["List of JGene names to filter clones"],
         names = ["--j-gene-names"],
-        paramLabel = "<gene_name>"
+        paramLabel = "<gene_name>",
+        order = OptionsOrder.main + 10_200
     )
     var JGenesToFilter: Set<String> = mutableSetOf()
 
     @Option(
         description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
         names = ["--cdr3-lengths"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_300
     )
     var CDR3LengthToFilter: Set<Int> = mutableSetOf()
 
     @Option(
         description = ["Filter clones with counts great or equal to that parameter"],
         names = ["--min-count"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_400
     )
     var minCountForClone: Int? = null
 
@@ -199,11 +203,13 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             "cloneId - clone id in the specified file"
         ],
         names = ["-bf", "--build-from"],
-        paramLabel = "<path>"
+        paramLabel = "<path>",
+        order = OptionsOrder.main + 10_500
     )
     var buildFrom: Path? = null
         set(value) {
             ValidationException.requireFileType(value, InputFileType.TSV)
+            ValidationException.requireFileExists(value)
             field = value
         }
 

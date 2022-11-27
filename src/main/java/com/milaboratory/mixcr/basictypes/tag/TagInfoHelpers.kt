@@ -9,17 +9,15 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.trees
+package com.milaboratory.mixcr.basictypes.tag
 
-data class TreeId(
-    val id: Int,
-    val VJBase: VJBase
-) {
-    fun encode(): String = "${VJBase.geneIds.V.name}-${VJBase.CDR3length}-${VJBase.geneIds.J.name}-${id}"
-
-    companion object {
-        val comparator: Comparator<TreeId> = Comparator
-            .comparing({ treeId: TreeId -> treeId.VJBase }, VJBase.comparator)
-            .thenComparingInt { treeId: TreeId -> treeId.id }
-    }
-}
+val TagsInfo.tagAliases
+    get() = TagType.values()
+        .map { type -> type to filter { it.type == type }.map { it.name } }
+        .filter { it.second.isNotEmpty() }
+        .flatMap { typeToTags ->
+            typeToTags.first.aliases
+                .filter { indexOf(it) == -1 }
+                .map { alias -> alias to typeToTags.second }
+        }
+        .toMap()

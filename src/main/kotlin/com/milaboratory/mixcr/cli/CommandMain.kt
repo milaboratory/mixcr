@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.AppVersionInfo
+import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.core.VDJCLibraryRegistry.ClasspathLibraryResolver
@@ -44,7 +45,7 @@ class CommandMain {
         usageHelp = true,
         description = ["Show this help message and exit."],
         scope = INHERIT,
-        order = 1_000_000
+        order = OptionsOrder.help
     )
     fun setHelpRequested(param: Boolean) {
 

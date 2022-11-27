@@ -26,10 +26,8 @@
         operands:
           - type: filter_groups
             groupingKeys:
-              - CELL1
-              - CELL2
-              - CELL3
-              - UMI
+              - allTags:Cell
+              - allTags:Molecule
             predicates:
               - metrics:
                   - type: group_metric_sum_weight
@@ -40,11 +38,11 @@
                 operator:
                   type: group_operator_otsu1
                   logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
           - type: filter_groups
             groupingKeys:
-              - CELL1
-              - CELL2
-              - CELL3
+              - allTags:Cell
             predicates:
               - metrics:
                   - type: group_metric_nunique
@@ -53,7 +51,7 @@
                       binNumber: 0
                       minBinWidth: 0.2
                     keys:
-                      - UMI
+                      - allTags:Molecule
                 operator:
                   type: group_operator_range
                   lower: 3.0
@@ -66,9 +64,7 @@
           - type: filter_in_groups
             isolationKeys:
               - geneLabel:ReliableChain
-              - tag:CELL1
-              - tag:CELL2
-              - tag:CELL3
+              - allTags:Cell
             nestedFilter:
               type: filter_groups
               groupingKeys:
@@ -77,15 +73,13 @@
                 - metrics:
                     - type: group_metric_nunique
                       keys:
-                        - tag:UMI
+                        - allTags:Molecule
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
           - type: filter_in_groups
             isolationKeys:
-              - tag:CELL1
-              - tag:CELL2
-              - tag:CELL3
+              - allTags:Cell
             nestedFilter:
               type: filter_groups
               groupingKeys:
@@ -94,29 +88,25 @@
                 - metrics:
                     - type: group_metric_nunique
                       keys:
-                        - tag:UMI
+                        - allTags:Molecule
                   operator:
                     type: group_operator_cumtop
                     share: 0.99
           - type: filter_groups
             groupingKeys:
-              - tag:CELL1
-              - tag:CELL2
-              - tag:CELL3
+              - allTags:Cell
               - clone
             predicates:
               - metrics:
                   - type: group_metric_nunique
                     keys:
-                      - tag:UMI
+                      - allTags:Molecule
                 operator:
                   type: group_operator_range
                   lower: 2.0
           - type: filter_groups
             groupingKeys:
-              - tag:CELL1
-              - tag:CELL2
-              - tag:CELL3
+              - allTags:Cell
             predicates:
               - metrics:
                   - type: group_metric_nunique
@@ -130,15 +120,11 @@
     splitFilesBy: [ ]
     fields:
       - field: "-cloneId"
-      - field: "-tag"
-        args: [ "CELL1" ]
-      - field: "-tag"
-        args: [ "CELL2" ]
-      - field: "-tag"
-        args: [ "CELL3" ]
+      - field: "-allTags"
+        args: [ "Cell" ]
       - field: "-readCount"
-      - field: "-uniqueTagCount"
-        args: [ "UMI" ]
+      - field: "-allUniqueTagsCount"
+        args: [ "Molecule" ]
       - field: "-targetSequences"
       - field: "-targetQualities"
       - field: "-vHitsWithScore"

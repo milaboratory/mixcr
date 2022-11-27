@@ -54,28 +54,32 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
     @Option(
         description = ["Limit number of alignments before filtering"],
         names = ["-b", "--limitBefore"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_100
     )
     var limitBefore: Int? = null
 
     @Option(
         description = ["Limit number of filtered alignments; no more than N alignments will be outputted"],
         names = ["-n", "--limit"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_200
     )
     var limitAfter: Int? = null
 
     @Option(
         description = ["Number of output alignments to skip"],
         names = ["-s", "--skip"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_300
     )
     var skipAfter: Int? = null
 
     @Option(
         description = ["List of clone ids to export"],
         names = ["-i", "--clone-ids"],
-        paramLabel = "<id>"
+        paramLabel = "<id>",
+        order = OptionsOrder.main + 10_400
     )
     var ids: List<Int> = mutableListOf()
 
@@ -83,21 +87,24 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
         description = ["Filter export to a specific protein chain gene (e.g. TRA or IGH)."],
         names = ["-c", "--chains"],
         paramLabel = Labels.CHAINS,
-        showDefaultValue = ALWAYS
+        showDefaultValue = ALWAYS,
+        order = OptionsOrder.main + 10_500
     )
     var chains: Chains = Chains.ALL
 
     @Option(
         description = ["Only output clones where CDR3 (not whole clonal sequence) exactly equals to given sequence"],
         names = ["-e", "--cdr3-equals"],
-        paramLabel = "<seq>"
+        paramLabel = "<seq>",
+        order = OptionsOrder.main + 10_600
     )
     var cdr3Equals: NucleotideSequence? = null
 
     @Option(
         description = ["Only output clones where target clonal sequence contains sub-sequence."],
         names = ["-r", "--clonal-sequence-contains"],
-        paramLabel = "<seq>"
+        paramLabel = "<seq>",
+        order = OptionsOrder.main + 10_700
     )
     var csContain: String? = null
 

@@ -54,30 +54,41 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     )
     var out: Path? = null
 
-    @Option(description = ["Output only top hits"], names = ["-t", "--top"])
+    @Option(
+        description = ["Output only top hits"],
+        names = ["-t", "--top"],
+        order = OptionsOrder.main + 10_100
+    )
     var onlyTop = false
 
-    @Option(description = ["Output full gene sequence"], names = ["-a", "--gene"])
+    @Option(
+        description = ["Output full gene sequence"],
+        names = ["-a", "--gene"],
+        order = OptionsOrder.main + 10_200
+    )
     var geneSequence = false
 
     @Option(
         description = ["Limit number of alignments before filtering"],
         names = ["-b", "--limit-before"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_300
     )
     var limitBefore: Int? = null
 
     @Option(
         description = ["Limit number of filtered alignments; no more than N alignments will be outputted"],
         names = ["-n", "--limit"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_400
     )
     var limitAfter: Int? = null
 
     @Option(
         description = ["Number of output alignments to skip"],
         names = ["-s", "--skip"],
-        paramLabel = "<n>"
+        paramLabel = "<n>",
+        order = OptionsOrder.main + 10_500
     )
     var skipAfter: Int? = null
 
@@ -85,52 +96,63 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         description = ["Filter export to a specific protein chain gene (e.g. TRA or IGH)."],
         names = ["-c", "--chains"],
         paramLabel = Labels.CHAINS,
-        showDefaultValue = ALWAYS
+        showDefaultValue = ALWAYS,
+        order = OptionsOrder.main + 10_600
     )
     var chains: Chains = Chains.ALL
 
     @Option(
         description = ["Output only alignments where CDR3 exactly equals to given sequence"],
         names = ["-e", "--cdr3-equals"],
-        paramLabel = "<seq>"
+        paramLabel = "<seq>",
+        order = OptionsOrder.main + 10_700
     )
     var cdr3Equals: NucleotideSequence? = null
 
     @Option(
         description = ["Output only alignments which contain a corresponding gene feature"],
         names = ["-g", "--feature"],
-        paramLabel = Labels.GENE_FEATURE
+        paramLabel = Labels.GENE_FEATURE,
+        order = OptionsOrder.main + 10_800
     )
     var feature: GeneFeature? = null
 
     @Option(
         description = ["Output only alignments where target read contains a given substring"],
         names = ["-r", "--read-contains"],
-        paramLabel = "<seq>"
+        paramLabel = "<seq>",
+        order = OptionsOrder.main + 10_900
     )
     var readContains: String? = null
 
     @Option(
         description = ["Custom filter"],
         names = ["--filter"],
-        paramLabel = "<s>"
+        paramLabel = "<s>",
+        order = OptionsOrder.main + 11_000
     )
     var filter: String? = null
 
-    @Option(description = ["Print read descriptions"], names = ["-d", "--descriptions"])
+    @Option(
+        description = ["Print read descriptions"],
+        names = ["-d", "--descriptions"],
+        order = OptionsOrder.main + 11_100
+    )
     var printDescriptions = false
 
     @Option(
         description = ["List of read ids to export"],
         names = ["-i", "--read-ids"],
-        paramLabel = "<id>"
+        paramLabel = "<id>",
+        order = OptionsOrder.main + 11_200
     )
     var readIds: List<Long> = mutableListOf()
 
     @Option(
         description = ["List of clone ids to export"],
         names = ["--clone-ids"],
-        paramLabel = "<id>"
+        paramLabel = "<id>",
+        order = OptionsOrder.main + 11_300
     )
     var cloneIds: List<Long> = mutableListOf()
 

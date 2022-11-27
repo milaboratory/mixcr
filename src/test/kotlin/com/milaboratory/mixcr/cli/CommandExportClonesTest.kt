@@ -5,6 +5,7 @@ import com.milaboratory.mixcr.util.DummyIntegrationTest
 import com.milaboratory.util.TempFileManager
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.junit.experimental.categories.Category
@@ -22,6 +23,18 @@ class CommandExportClonesTest {
         val columns = output.readLines().first().split("\t")
         columns shouldContainAll listOf("cloneId", "readCount")
         columns shouldContainInOrder listOf("nSeqImputedFR1", "minQualFR1", "nSeqImputedCDR2", "minQualCDR2")
+    }
+
+    @Test
+    fun `use don't impute option`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.contigs.clns").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-impute-germline-on-export --dont-split-files $input ${output.path}")
+        val columns = output.readLines().first().split("\t")
+        columns shouldNotContain listOf("nSeqImputedFR1", "nSeqImputedCDR2")
+        columns shouldContainInOrder listOf("nSeqFR1", "minQualFR1", "nSeqCDR2", "minQualCDR2")
     }
 
     @Test

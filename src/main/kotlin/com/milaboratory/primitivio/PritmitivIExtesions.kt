@@ -30,6 +30,7 @@ import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks
 import com.milaboratory.util.TempFileDest
 import net.jpountz.lz4.LZ4Compressor
+import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.function.Predicate
 
@@ -70,7 +71,7 @@ private fun <T : Any, C : MutableCollection<T>> PrimitivI.readCollection(
     return collection
 }
 
-fun PrimitivO.writeMap(map: Map<*, *>) = Util.writeMap(map, this)
+fun PrimitivO.writeMap(map: SortedMap<*, *>) = Util.writeMap(map, this)
 
 fun <T : Any> PrimitivO.writeArray(array: Array<T>) {
     this.writeInt(array.size)

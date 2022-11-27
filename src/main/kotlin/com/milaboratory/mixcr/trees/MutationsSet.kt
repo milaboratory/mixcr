@@ -19,10 +19,10 @@ import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
-import com.milaboratory.primitivio.Util
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readMap
 import com.milaboratory.primitivio.readObjectRequired
+import com.milaboratory.primitivio.writeMap
 import io.repseq.core.GeneFeature
 
 /**
@@ -42,11 +42,11 @@ data class MutationsSet private constructor(
 
     class SerializerImpl : BasicSerializer<MutationsSet>() {
         override fun write(output: PrimitivO, obj: MutationsSet) {
-            Util.writeMap(obj.mutations.V.mutationsOutsideOfCDR3, output)
+            output.writeMap(obj.mutations.V.mutationsOutsideOfCDR3)
             output.writeObject(obj.mutations.V.partInCDR3)
             output.writeObject(obj.NDNMutations)
             output.writeObject(obj.mutations.J.partInCDR3)
-            Util.writeMap(obj.mutations.J.mutationsOutsideOfCDR3, output)
+            output.writeMap(obj.mutations.J.mutationsOutsideOfCDR3)
         }
 
         override fun read(input: PrimitivI): MutationsSet {

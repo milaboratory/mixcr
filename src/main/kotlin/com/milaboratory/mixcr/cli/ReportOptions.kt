@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.util.Report
 import com.milaboratory.util.ReportUtil
 import picocli.CommandLine.Option
@@ -21,7 +22,7 @@ class ReportOptions {
         description = ["Report file (human readable version, see `-j / --json-report` for machine readable report)."],
         names = ["-r", "--report"],
         paramLabel = "<path>",
-        order = 1_000_000 - 7
+        order = OptionsOrder.report
     )
     private var plain: Path? = null
 
@@ -29,7 +30,7 @@ class ReportOptions {
         description = ["JSON formatted report file."],
         names = ["-j", "--json-report"],
         paramLabel = "<path>",
-        order = 1_000_000 - 6
+        order = OptionsOrder.report + 1
     )
     private var json: Path? = null
 

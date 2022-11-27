@@ -70,18 +70,24 @@ class CommandExportQcChainUsage : CommandExportQc() {
     )
     var inOut: List<Path> = mutableListOf()
 
-    @Option(names = ["--absolute-values"], description = ["Plot in absolute values instead of percent"])
+    @Option(
+        names = ["--absolute-values"],
+        description = ["Plot in absolute values instead of percent"],
+        order = OptionsOrder.main + 10_100
+    )
     var absoluteValues = false
 
     @Option(
         names = ["--align-chain-usage"],
-        description = ["When specifying .clnx files on input force to plot chain usage for alignments"]
+        description = ["When specifying .clnx files on input force to plot chain usage for alignments"],
+        order = OptionsOrder.main + 10_200
     )
     var alignChainUsage = false
 
     @Option(
         names = ["--hide-non-functional"],
-        description = ["Hide fractions of non-functional CDR3s (out-of-frames and containing stops)"]
+        description = ["Hide fractions of non-functional CDR3s (out-of-frames and containing stops)"],
+        order = OptionsOrder.main + 10_300
     )
     var hideNonFunctional = false
 

@@ -41,7 +41,8 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
             names = ["--preset-name"],
             description = ["Preset name to export."],
             paramLabel = "preset",
-            required = true
+            required = true,
+            order = 1
         )
         var presetName: String? = null
 
@@ -49,17 +50,31 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
             names = ["--mixcr-file"],
             description = ["File that was processed by MiXCR."],
             paramLabel = "<input.(vdjca|clns|clna)>",
-            required = true
+            required = true,
+            order = 2
         )
         var input: Path? = null
             set(value) {
                 ValidationException.requireFileType(value, InputFileType.VDJCA, InputFileType.CLNX)
+                ValidationException.requireFileExists(value)
                 field = value
             }
     }
 
-    @ArgGroup(exclusive = true, multiplicity = "1")
+    @ArgGroup(
+        exclusive = true,
+        multiplicity = "1",
+        order = OptionsOrder.main + 10_100
+    )
     lateinit var presetInput: PresetInput
+
+    @Option(
+        names = ["--no-validation"],
+        description = ["Don't validate preset before export."],
+        arity = "0",
+        order = OptionsOrder.main + 10_200
+    )
+    var noValidation: Boolean = false
 
     @set:Parameters(
         description = ["Path where to write preset yaml file. Will write to output if omitted."],
@@ -76,20 +91,45 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
 
     override val outputFiles get() = listOfNotNull(outputFile)
 
-    @ArgGroup(validate = false, heading = PipelineMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = PipelineMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.pipeline
+    )
     var pipelineMixins: List<PipelineMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AlignMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = AlignMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.align
+    )
     var alignMixins: List<AlignMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AssembleMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = AssembleMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.assemble
+    )
     var assembleMixins: List<AssembleMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = AssembleContigsMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
+    @ArgGroup(
+        validate = false,
+        heading = AssembleContigsMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.assembleContigs
+    )
     var assembleContigsMixins: List<AssembleContigsMiXCRMixins> = mutableListOf()
 
-    @ArgGroup(validate = false, heading = ExportMiXCRMixins.DESCRIPTION, multiplicity = "0..*")
-    var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
+    @ArgGroup(
+        validate = false,
+        heading = ExportMiXCRMixins.DESCRIPTION,
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.exports
+    )
+    var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
     @Mixin
     var genericMixins: GenericMiXCRMixins? = null
@@ -97,32 +137,29 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     override fun run0() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
                 assembleContigsMixins + exportMixins + pipelineMixins
-        val bundle: MiXCRParamsBundle = when {
-            presetInput.presetName != null -> {
-                paramsResolver.resolve(
-                    MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins),
-                    printParameters = false
-                ).first
-            }
+        val spec: MiXCRParamsSpec = when {
+            presetInput.presetName != null -> MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins)
             else -> {
-                val paramsSpec = presetInput.input?.let { inputFile ->
-                    when (IOUtil.extractFileType(inputFile)) {
-                        VDJCA -> VDJCAlignmentsReader(inputFile)
-                            .use { reader -> reader.header }
-                        CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
-                            .use { reader -> reader.header }
-                        CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
-                            .use { reader -> reader.header }
-                        SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
-                    }
-                }!!.paramsSpec
+                val inputFile = presetInput.input!!
+                val paramsSpec = when (IOUtil.extractFileType(inputFile)) {
+                    VDJCA -> VDJCAlignmentsReader(inputFile)
+                        .use { reader -> reader.header }
+                    CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
+                        .use { reader -> reader.header }
+                    CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
+                        .use { reader -> reader.header }
+                    SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
+                }.paramsSpec
 
-                paramsResolver.resolve(
-                    MiXCRParamsSpec(paramsSpec.presetAddress, mixins = paramsSpec.mixins + mixinsFromArgs.mixins),
-                    printParameters = false
-                ).first
+                MiXCRParamsSpec(paramsSpec.presetAddress, mixins = paramsSpec.mixins + mixinsFromArgs.mixins)
             }
         }
+
+        val bundle = paramsResolver.resolve(
+            spec,
+            printParameters = false,
+            validate = !noValidation
+        ).first
 
         val of = outputFile
         if (of != null)

@@ -46,19 +46,32 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
     @Option(
         names = ["--step"],
         description = ["Export report only for a specific step"],
-        paramLabel = "<step>"
+        paramLabel = "<step>",
+        order = OptionsOrder.main + 10_100
     )
     private var step: String? = null
 
     internal class OutputFormatFlags {
-        @Option(names = ["--yaml"], description = ["Export as yaml"])
+        @Option(
+            names = ["--yaml"],
+            description = ["Export as yaml"],
+            order = 1
+        )
         var yaml = false
 
-        @Option(names = ["--json"], description = ["Export as json"])
+        @Option(
+            names = ["--json"],
+            description = ["Export as json"],
+            order = 2
+        )
         var json = false
     }
 
-    @ArgGroup(exclusive = true, multiplicity = "0..1")
+    @ArgGroup(
+        exclusive = true,
+        multiplicity = "0..1",
+        order = OptionsOrder.main + 10_200
+    )
     private var outputFormatFlags: OutputFormatFlags? = null
 
     override val inputFiles

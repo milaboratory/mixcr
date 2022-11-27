@@ -35,7 +35,8 @@ abstract class CommandPaExport : MiXCRCommand() {
     @Option(
         description = ["Export only for specified immunological chains."],
         names = ["--chains"],
-        paramLabel = Labels.CHAIN
+        paramLabel = Labels.CHAIN,
+        order = OptionsOrder.main + 5_000
     )
     var chains: Set<String>? = null
 

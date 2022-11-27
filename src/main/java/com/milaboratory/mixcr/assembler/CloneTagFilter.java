@@ -19,6 +19,7 @@ import com.milaboratory.mixcr.basictypes.tag.*;
 import com.milaboratory.mixcr.util.Tuple2;
 import com.milaboratory.util.sorting.SortingUtil;
 import gnu.trove.iterator.TObjectDoubleIterator;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +31,12 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/** Applies a clone*tag filtering to a list of clones */
+import static com.milaboratory.mixcr.basictypes.tag.TagsInfo.ALL_TAGS_OF_TYPE;
+import static com.milaboratory.mixcr.basictypes.tag.TagsInfo.TAGS_KEY_PREFIX;
+
+/**
+ * Applies a clone*tag filtering to a list of clones
+ */
 public final class CloneTagFilter {
     private CloneTagFilter() {
     }
@@ -166,15 +172,28 @@ public final class CloneTagFilter {
         }
     }
 
+    public static final String GENE_LABEL_KEY_PREFIX = "geneLabel:";
+    public static final String CLONE_KEY = "clone";
+
     public static CloneTagKey getKeyByName(TagsInfo tagsInfo, String key) {
-        if (key.startsWith("tag:")) {
-            String tagName = key.substring(4);
+        if (key.startsWith(ALL_TAGS_OF_TYPE)) {
+            String typeS = key.substring(ALL_TAGS_OF_TYPE.length());
+            TagType tagType = TagType.valueOfCaseInsensitiveOrNull(typeS);
+            if (tagType == null)
+                throw new IllegalArgumentException("Unrecognized tag type: " + typeS);
+            TIntArrayList indices = new TIntArrayList();
+            for (TagInfo ti : tagsInfo)
+                if (ti.getType() == tagType)
+                    indices.add(ti.getIndex());
+            return new TagsExtractor(indices.toArray());
+        } else if (key.startsWith(TAGS_KEY_PREFIX)) {
+            String tagName = key.substring(TAGS_KEY_PREFIX.length());
             TagInfo tagInfo = Objects.requireNonNull(tagsInfo.get(tagName));
-            return new TagExtractor(TagValue.class, tagInfo.getIndex());
-        } else if (key.equals("clone"))
+            return new TagExtractor(tagInfo.getIndex());
+        } else if (key.equals(CLONE_KEY))
             return new CloneIdExtractor();
-        else if (key.startsWith("geneLabel:"))
-            return new GeneLabelExtractor(key.substring(10));
+        else if (key.startsWith(GENE_LABEL_KEY_PREFIX))
+            return new GeneLabelExtractor(key.substring(GENE_LABEL_KEY_PREFIX.length()));
         else
             throw new IllegalArgumentException("Unrecognized key: " + key);
     }
@@ -186,19 +205,39 @@ public final class CloneTagFilter {
         }
     }
 
+    public static final class TagsExtractor implements CloneTagKey {
+        private final int[] indices;
+
+        public TagsExtractor(int[] indices) {
+            this.indices = indices;
+        }
+
+        @NotNull
+        @Override
+        public Class<?> getClazz() {
+            return List.class;
+        }
+
+        @Override
+        public Object get(CloneTag obj) {
+            ArrayList<TagValue> values = new ArrayList<>(indices.length);
+            for (int i : indices)
+                values.add(obj.tags.get(i));
+            return values;
+        }
+    }
+
     public static final class TagExtractor implements CloneTagKey {
-        private final Class<?> valueType;
         private final int index;
 
-        public TagExtractor(Class<?> valueType, int index) {
-            this.valueType = valueType;
+        public TagExtractor(int index) {
             this.index = index;
         }
 
         @NotNull
         @Override
         public Class<?> getClazz() {
-            return valueType;
+            return TagValue.class;
         }
 
         @Override

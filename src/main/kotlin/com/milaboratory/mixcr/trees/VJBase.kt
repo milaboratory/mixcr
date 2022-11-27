@@ -38,7 +38,8 @@ data class VJBase(
 
 
     companion object {
-        val comparator: Comparator<VJBase> = Comparator.comparing { VJBase: VJBase -> VJBase.geneIds.V }
+        val comparator: Comparator<VJBase> = Comparator
+            .comparing { VJBase: VJBase -> VJBase.geneIds.V }
             .thenComparing { VJBase: VJBase -> VJBase.geneIds.J }
             .thenComparingInt { it.CDR3length }
     }

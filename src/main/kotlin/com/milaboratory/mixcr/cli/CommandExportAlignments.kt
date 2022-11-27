@@ -75,7 +75,8 @@ object CommandExportAlignments {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["-c", "--chains"],
-            paramLabel = Labels.CHAINS
+            paramLabel = Labels.CHAINS,
+            order = OptionsOrder.main + 10_100
         )
         private var chains: String? = null
 
@@ -114,6 +115,9 @@ object CommandExportAlignments {
                 field = value
             }
 
+        @Mixin
+        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecific
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -128,7 +132,7 @@ object CommandExportAlignments {
             openAlignmentsPort(inputFile).use { data ->
                 val info = data.info
                 val (_, params) = paramsResolver.resolve(
-                    info.paramsSpec,
+                    info.paramsSpec.addMixins(exportMixins.mixins),
                     printParameters = logger.verbose && outputFile != null
                 )
 

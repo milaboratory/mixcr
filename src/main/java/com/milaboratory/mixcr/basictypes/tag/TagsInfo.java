@@ -17,10 +17,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.primitivio.annotations.Serializable;
 
-import java.util.AbstractCollection;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
 
 @Serializable(asJson = true)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -30,6 +27,16 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
 public final class TagsInfo extends AbstractCollection<TagInfo> {
+    /**
+     * Common prefix to use in contexts where there is a need to specify
+     * all tags of a specific type as a single entity (i.e. in different group  filters)
+     */
+    public static final String ALL_TAGS_OF_TYPE = "allTags:";
+    /**
+     * Universal prefix to be used in contexts where not only tags can be used as a [grouping] key
+     */
+    public static final String TAGS_KEY_PREFIX = "tag:";
+
     public static final TagsInfo NO_TAGS = new TagsInfo(0);
 
     @JsonProperty("sortingLevel")
@@ -68,6 +75,14 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
                 return ti;
             }
         return null;
+    }
+
+    public List<TagInfo> allTagsOfType(TagType type) {
+        ArrayList<TagInfo> res = new ArrayList<>();
+        for (TagInfo tag : tags)
+            if (tag.getType() == type)
+                res.add(tag);
+        return res;
     }
 
     @Override

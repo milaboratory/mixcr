@@ -81,9 +81,7 @@
       postFilter:
         type: filter_groups
         groupingKeys:
-          - CELL1ROW
-          - CELL2COLUMN
-          - CELL3PLATE
+          - allTags:Cell
         predicates:
           - metrics:
               - type: group_metric_sum_weight
@@ -125,9 +123,7 @@
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - tag:CELL1ROW
-              - tag:CELL2COLUMN
-              - tag:CELL3PLATE
+              - allTags:Cell
             nestedFilter:
               type: filter_groups
               groupingKeys:
