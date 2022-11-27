@@ -1,96 +1,106 @@
-"nebnext-human-bcr-cdr3":
+"nebnext-human-bcr-base":
   inheritFrom: bundle-umi-rna-kaligner2-global-c
   mixins:
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
-      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
-
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
+      tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)\
     - type: SetSplitClonesBy
       geneType: C
       value: true
 
-"nebnext-human-bcr-full-length":
-  inheritFrom: nebnext-human-bcr-cdr3
-  mixins:
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
-
-"nebnext-human-tcr-cdr3":
+"nebnext-human-tcr-base":
   inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
       tagPattern: ^N{19}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
-
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
     - type: SetSplitClonesBy
       geneType: C
       value: true
 
-"nebnext-human-tcr-full-length":
-  inheritFrom: nebnext-human-tcr-cdr3
-  mixins:
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
-
-
-"nebnext-mouse-bcr-cdr3":
+"nebnext-mouse-bcr-base":
   inheritFrom: bundle-umi-rna-kaligner2-global-c
   mixins:
     - type: SetSpecies
       species: mmu
     - type: SetTagPattern
       tagPattern: ^N{22}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
-
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
     - type: SetSplitClonesBy
       geneType: C
       value: true
 
-"nebnext-mouse-bcr-full-length":
-  inheritFrom: nebnext-mouse-bcr-cdr3
-  mixins:
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
-
-"nebnext-mouse-tcr-cdr3":
+"nebnext-mouse-tcr-base":
   inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
     - type: SetSpecies
       species: mmu
     - type: SetTagPattern
       tagPattern: ^N{24}(R1:*) \ ^(UMI:N{17})N{10}(R2:*)
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
+"nebnext-human-bcr-cdr3":
+  inheritFrom: nebnext-human-bcr-base
+  mixins:
     - type: SetSplitClonesBy
       geneType: V
       value: true
     - type: SetSplitClonesBy
       geneType: J
       value: true
+
+"nebnext-human-bcr-full-length":
+  inheritFrom: nebnext-human-bcr-base
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+"nebnext-human-tcr-cdr3":
+  inheritFrom: nebnext-human-tcr-base
+  mixins:
     - type: SetSplitClonesBy
       geneType: C
       value: true
 
+"nebnext-human-tcr-full-length":
+  inheritFrom: nebnext-human-tcr-base
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+
+"nebnext-mouse-bcr-cdr3":
+  inheritFrom: nebnext-mouse-bcr-base
+  mixins:
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+
+"nebnext-mouse-bcr-full-length":
+  inheritFrom: nebnext-mouse-bcr-base
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+"nebnext-mouse-tcr-cdr3":
+  inheritFrom: nebnext-mouse-tcr-base
+  mixins:
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
 "nebnext-mouse-tcr-full-length":
-  inheritFrom: nebnext-mouse-tcr-cdr3
+  inheritFrom: nebnext-mouse-tcr-base
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]

@@ -1,4 +1,4 @@
-"qiaseq-human-tcr-abstract":
+"qiaseq-human-tcr-base":
   abstract: true
   inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
@@ -23,7 +23,7 @@
         ^N{:4}ttccatttttcatgacaaaaacggatggtttggt(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
 
 "qiaseq-human-tcr-cdr3":
-  inheritFrom: qiaseq-human-tcr-abstract
+  inheritFrom: qiaseq-human-tcr-base
   mixins:
     - type: SetSplitClonesBy
       geneType: V
@@ -33,12 +33,12 @@
       value: true
 
 "qiaseq-human-tcr-full-length":
-  inheritFrom: qiaseq-human-tcr-abstract
+  inheritFrom: qiaseq-human-tcr-base
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
 
-"qiaseq-mouse-tcr-abstract":
+"qiaseq-mouse-tcr-base":
   abstract: true
   inheritFrom: bundle-umi-rna-kaligner1-global-c
   mixins:
@@ -63,7 +63,7 @@
         ^N{:4}cacctctttagggtagaaatctttcaccagacaag(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
 
 "qiaseq-mouse-tcr-cdr3":
-  inheritFrom: qiaseq-mouse-tcr-abstract
+  inheritFrom: qiaseq-mouse-tcr-base
   mixins:
     - type: SetSplitClonesBy
       geneType: V
@@ -73,7 +73,7 @@
       value: true
 
 "qiaseq-mouse-tcr-full-length":
-  inheritFrom: qiaseq-mouse-tcr-abstract
+  inheritFrom: qiaseq-mouse-tcr-base
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]

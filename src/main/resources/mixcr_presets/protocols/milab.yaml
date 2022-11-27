@@ -1,50 +1,48 @@
-"milab-human-bcr-multiplex-cdr3":
+"milab-human-bcr-multiplex-base":
+  abstract: true
   inheritFrom: bundle-umi-rna-kaligner2-global-c
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+
+"milab-human-bcr-multiplex-cdr3":
+  inheritFrom: milab-human-bcr-multiplex-base
   mixins:
     - type: SetSpecies
       species: hs
-    - type: SetTagPattern
-      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
-
     - type: SetSplitClonesBy
       geneType: V
       value: true
     - type: SetSplitClonesBy
       geneType: J
       value: true
-    - type: SetSplitClonesBy
-      geneType: C
-      value: true
 
 "milab-human-bcr-multiplex-full-length":
-  inheritFrom: bundle-umi-rna-kaligner2-global-c
+  inheritFrom: milab-human-bcr-multiplex-base
   mixins:
     - type: SetSpecies
       species: hs
-    - type: SetTagPattern
-      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
-
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
 
-    - type: SetSplitClonesBy
-      geneType: C
-      value: true
-
-"milab-human-tcr-rna-race-cdr3":
-  inheritFrom: bundle-umi-rna-kaligner1-global-c
+"milab-tcr-rna-race-base":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner1-global-x
   mixins:
-    - type: SetSpecies
-      species: hs
     - type: SetTagPattern
       tagPattern: ^(R1:*) \ ^tggtatcaacgcagagt(UMI:N{14})N{10}(R2:*)
-
-    - type: MaterialTypeRNA
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+
+"milab-human-tcr-rna-race-cdr3":
+  inheritFrom: milab-tcr-rna-race-base
+  mixins:
+    - type: SetSpecies
+      species: hs
     - type: SetSplitClonesBy
       geneType: V
       value: true
@@ -53,8 +51,10 @@
       value: true
 
 "milab-human-tcr-rna-race-full-length":
-  inheritFrom: milab-human-tcr-rna-race-cdr3
+  inheritFrom:  milab-tcr-rna-race-base
   mixins:
+    - type: SetSpecies
+      species: hs
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
 
@@ -66,7 +66,6 @@
       species: hs
     - type: SetTagPattern
       tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{21}(R1:*) \ ^N{20}(R2:*)
-
     - type: SetSplitClonesBy
       geneType: V
       value: true
@@ -79,7 +78,6 @@
   mixins:
     - type: SetSpecies
       species: hs
-
     - type: MaterialTypeDNA
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
@@ -88,13 +86,21 @@
       geneType: J
 
 "milab-mouse-tcr-rna-race-cdr3":
-  inheritFrom: milab-human-tcr-rna-race-cdr3
+  inheritFrom: milab-tcr-rna-race-base
   mixins:
     - type: SetSpecies
       species: mmu
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
 
 "milab-mouse-tcr-rna-race-full-length":
-  inheritFrom: milab-human-tcr-rna-race-full-length
+  inheritFrom: milab-tcr-rna-race-base
   mixins:
     - type: SetSpecies
       species: mmu
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
