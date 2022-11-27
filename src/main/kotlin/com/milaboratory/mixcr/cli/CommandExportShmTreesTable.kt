@@ -61,13 +61,12 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
-            val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS)
+            val headerForExport =
+                HeaderForExport(reader.cloneSetInfos.map { it.tagsInfo }, reader.header.allFullyCoveredBy)
+            val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport)
             InfoWriter.create(
                 out,
-                SHMTreeFieldsExtractorsFactory.createExtractors(
-                    addedFields,
-                    HeaderForExport(emptyList(), reader.header.allFullyCoveredBy)
-                ),
+                SHMTreeFieldsExtractorsFactory.createExtractors(addedFields, headerForExport),
                 !noHeader,
             ) { rowMetaForExport }.use { output ->
                 reader.readTrees()

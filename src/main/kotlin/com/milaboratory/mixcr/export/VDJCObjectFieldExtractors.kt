@@ -19,6 +19,9 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.TranslationParameters
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCObject
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForFeatures
@@ -33,6 +36,9 @@ import com.milaboratory.mixcr.export.ParametersFactory.relativeGeneFeatureParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagParam
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeDescription
 import com.milaboratory.mixcr.export.ParametersFactory.tagTypeParam
+import com.milaboratory.mixcr.export.ParametersFactory.tagTypeWithDeprecatedTagName
+import com.milaboratory.mixcr.export.TagsUtil.checkTagExists
+import com.milaboratory.mixcr.export.TagsUtil.checkTagTypeExists
 import gnu.trove.map.hash.TObjectFloatHashMap
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -876,7 +882,11 @@ object VDJCObjectFieldExtractors {
             Order.tags + 300,
             "-tag",
             "Tag value (i.e. CELL barcode or UMI sequence)",
-            tagParam("tagValue")
+            tagParam("tagValue"),
+            validateArgs = { header, tagName ->
+                checkTagExists(header, tagName)
+            },
+            deprecation = "`-tag <tag_name>` deprecated, use `-tags ${Labels.TAG_TYPE}` instead"
         ) { vdjcObject: VDJCObject, tagName: String ->
             val tag = tagsInfo[tagName] ?: return@Field NULL
             val tagValue = vdjcObject.tagCount.singleOrNull(tag.index) ?: return@Field NULL
@@ -888,8 +898,24 @@ object VDJCObjectFieldExtractors {
             "-allTags",
             "Tag values (i.e. CELL barcode or UMI sequence) for all available tags in separate columns.%n$tagTypeDescription",
             tagField,
-            tagTypeParam()
+            tagTypeParam(),
+            validateArgs = { header, tagType ->
+                checkTagTypeExists(header, tagType)
+            },
+            deprecation = "`-allTags ${Labels.TAG_TYPE}` deprecated, use `-tags ${Labels.TAG_TYPE}` instead"
         ) { tagType ->
+            tagNamesWithType(tagType).map { arrayOf(it) }
+        }
+        this += FieldsCollection(
+            Order.tags + 302,
+            "-tags",
+            "All tags values (i.e. CELL barcode or UMI sequence)",
+            tagField,
+            tagTypeParam(),
+            validateArgs = { header, tagType ->
+                checkTagTypeExists(header, tagType)
+            },
+        ) { tagType: TagType ->
             tagNamesWithType(tagType).map { arrayOf(it) }
         }
 
@@ -897,9 +923,16 @@ object VDJCObjectFieldExtractors {
             Order.tags + 400,
             "-uniqueTagCount",
             "Unique tag count",
-            tagParam("unique", sSuffix = "Count")
-        ) { vdjcObject: VDJCObject, tagName: String ->
-            val tag = tagsInfo[tagName] ?: return@Field NULL
+            tagTypeWithDeprecatedTagName("unique", sSuffix = "Count"),
+            validateArgs = { header, (tagName, tagType) ->
+                tagType?.let { checkTagTypeExists(header, it) }
+                tagName?.let { checkTagExists(header, it) }
+            },
+        ) { vdjcObject: VDJCObject, (tagName, tagType) ->
+            val tag: TagInfo = when {
+                tagType != null -> tagsInfo.lastOrNull { it.type == tagType }
+                else -> tagsInfo[tagName]
+            } ?: return@Field NULL
             val level = tag.index + 1
             vdjcObject.getTagDiversity(level).toString()
         }
@@ -909,7 +942,11 @@ object VDJCObjectFieldExtractors {
             "-allUniqueTagsCount",
             "Unique tag count for all available tags in separate columns.%n$tagTypeDescription",
             uniqueTagCountField,
-            tagTypeParam()
+            tagTypeParam(),
+            validateArgs = { header, tagType ->
+                checkTagTypeExists(header, tagType)
+            },
+            deprecation = "`-allUniqueTagsCount ${Labels.TAG_TYPE}` deprecated use `-uniqueTagCount ${Labels.TAG_TYPE}` instead"
         ) { tagType ->
             tagNamesWithType(tagType).map { arrayOf(it) }
         }

@@ -33,10 +33,9 @@ mixcr analyze 10x-vdj-bcr \
 assert "cat base_single_cell.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "7"
 
 assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.contigs.clns | wc -l" "7"
-assert "mixcr exportClones --no-header --split-by-tag CELL base_single_cell.vdjcontigs.contigs.clns | wc -l" "7"
-assert "mixcr exportClones --no-header --split-by-tag UMI base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
-assert "mixcr exportClones --no-header -tag UMI base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
-assert "mixcr exportClones --no-header -allTags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
+assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.contigs.clns | wc -l" "7"
+assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
+assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
 
 #mixcr refineTagsAndSort base_single_cell.aligned-vdjca base_single_cell.corrected-vdjca
 #

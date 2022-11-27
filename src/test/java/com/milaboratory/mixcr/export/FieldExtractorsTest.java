@@ -82,7 +82,7 @@ public class FieldExtractorsTest {
                     System.out.println();
                 }
 
-                String val = extractor.extractValue(new RowMetaForExport(TagsInfo.NO_TAGS), al);
+                String val = extractor.extractValue(new RowMetaForExport(TagsInfo.NO_TAGS, new HeaderForExport(Collections.emptyList(), null)), al);
 
                 if (print)
                     System.out.println(val);

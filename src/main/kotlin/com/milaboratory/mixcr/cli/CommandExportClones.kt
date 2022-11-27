@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.primitives.Filter
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
@@ -20,7 +21,7 @@ import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -44,15 +45,14 @@ import picocli.CommandLine.Model
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
-import java.util.*
-import java.util.stream.Stream
 import kotlin.io.path.Path
 
 object CommandExportClones {
     const val COMMAND_NAME = "exportClones"
 
+    @JsonIgnoreProperties("splitByTags")
     data class Params(
-        @JsonProperty("splitByTags") val splitByTags: String?,
+        @JsonProperty("splitByTagType") val splitByTagType: TagType?,
         @JsonProperty("filterOutOfFrames") val filterOutOfFrames: Boolean,
         @JsonProperty("filterStops") val filterStops: Boolean,
         @JsonProperty("chains") val chains: String,
@@ -114,6 +114,7 @@ object CommandExportClones {
         )
         private var filterStops = false
 
+        @Suppress("unused", "UNUSED_PARAMETER")
         @Option(
             description = [
                 "Split clones by tag values.",
@@ -121,9 +122,23 @@ object CommandExportClones {
             ],
             names = ["--split-by-tag"],
             paramLabel = "<tag>",
-            order = OptionsOrder.main + 10_400
+            order = OptionsOrder.main + 10_400,
+            hidden = true
         )
-        private var splitByTag: String? = null
+        fun setSplitByTag(ignored: String) {
+            throw ValidationException("`--split-by-tag <tag>` is deprecated, use `--split-by-tags ${Labels.TAG_TYPE}`")
+        }
+
+        @Option(
+            description = [
+                "Split clones by tag type. Will be calculated from export columns if not specified.",
+                DEFAULT_VALUE_FROM_PRESET
+            ],
+            names = ["--split-by-tags"],
+            paramLabel = Labels.TAG_TYPE,
+            order = OptionsOrder.main + 10_401
+        )
+        private var splitByTagType: TagType? = null
 
         @Option(
             description = [
@@ -150,7 +165,7 @@ object CommandExportClones {
                 Params::chains setIfNotNull chains
                 Params::filterOutOfFrames setIfTrue filterOutOfFrames
                 Params::filterStops setIfTrue filterStops
-                Params::splitByTags setIfNotNull splitByTag
+                Params::splitByTagType setIfNotNull splitByTagType
                 Params::splitFilesBy setIfNotEmpty splitFilesBy
                 Params::noHeader setIfTrue exportDefaults.noHeader
                 Params::fields updateBy exportDefaults
@@ -220,35 +235,39 @@ object CommandExportClones {
                 }
             }
 
-            val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(
-                params.fields,
-                HeaderForExport(listOf(header.tagsInfo), header.allFullyCoveredBy)
-            )
+            val headerForExport = HeaderForExport(header)
+            val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, headerForExport)
 
             fun runExport(set: CloneSet, outFile: Path?) {
-                val rowMetaForExport = RowMetaForExport(set.tagsInfo)
+                val rowMetaForExport = RowMetaForExport(set.tagsInfo, headerForExport)
                 InfoWriter.create(outFile, fieldExtractors, !params.noHeader) { rowMetaForExport }.use { writer ->
-                    val splitByTag = if (params.splitByTags != null) {
-                        header.tagsInfo[params.splitByTags]
+                    val splitByTagType = if (params.splitByTagType != null) {
+                        params.splitByTagType
                     } else {
-                        val individualTagsForExport = params.fields
-                            .filter { it.field.equals("-tag", ignoreCase = true) }
-                            .map { header.tagsInfo[it.args[0]] }
                         val tagsExportedByGroups = params.fields
-                            .filter { it.field.equals("-allTags", ignoreCase = true) }
-                            .map { TagType.valueOf(it.args[0]) }
-                            .flatMap { tagType -> header.tagsInfo.filter { it.type == tagType } }
-                        val newSpitBy = (individualTagsForExport + tagsExportedByGroups).maxByOrNull { it.index }
+                            .filter {
+                                it.field.equals("-allTags", ignoreCase = true) ||
+                                        it.field.equals("-tags", ignoreCase = true)
+                            }
+                            .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0]) }
+                        val newSpitBy = tagsExportedByGroups.maxOrNull()
                         if (newSpitBy != null && outputFile != null) {
-                            println("Clone splitting by ${newSpitBy.name} added automatically because -tag ${newSpitBy.name} field is present in the list.")
+                            println("Clone splitting by ${newSpitBy.name} added automatically because -tags ${newSpitBy.name} field is present in the list.")
                         }
                         newSpitBy
                     }
 
-                    val exportClones = ExportClones(
-                        set, writer, Long.MAX_VALUE,
-                        if (splitByTag == null) 0 else splitByTag.index + 1
-                    )
+                    val splitByTag = when {
+                        splitByTagType == null -> null
+                        !header.tagsInfo.hasTagsWithType(splitByTagType) -> {
+                            logger.warn("Input has no tags with type $splitByTagType")
+                            null
+                        }
+                        else -> header.tagsInfo
+                            .filter { it.type == splitByTagType }
+                            .maxBy { it.index }
+                    }
+                    val exportClones = ExportClones(set, writer, Long.MAX_VALUE, splitByTag)
                     SmartProgressReporter.startProgressReport(exportClones, System.err)
                     exportClones.run()
                     if (initialSet.size() > set.size()) {
@@ -300,7 +319,7 @@ object CommandExportClones {
             val clones: CloneSet,
             val writer: InfoWriter<Clone>,
             val limit: Long,
-            private val splitByLevel: Int
+            private val splitByTag: TagInfo?
         ) : CanReportProgressAndStage {
             val size: Long = clones.size().toLong()
 
@@ -317,21 +336,8 @@ object CommandExportClones {
                 var currentLocal = current
                 for (clone in clones.clones) {
                     if (currentLocal == limit) break
-                    var stream = Stream.of(clone)
-                    if (splitByLevel > 0) {
-                        stream = stream.flatMap { cl: Clone ->
-                            val tagCount = cl.tagCount
-                            val sum = tagCount.sum()
-                            Arrays.stream(tagCount.splitBy(splitByLevel))
-                                .map { tc: TagCount ->
-                                    Clone(
-                                        clone.targets, clone.hits,
-                                        tc, 1.0 * cl.count * tc.sum() / sum, clone.id, clone.group
-                                    )
-                                }
-                        }
-                    }
-                    stream.forEach { t: Clone -> writer.put(t) }
+                    clone.splitByTag(splitByTag)
+                        .forEach { writer.put(it) }
                     ++currentLocal
                     current = currentLocal
                 }

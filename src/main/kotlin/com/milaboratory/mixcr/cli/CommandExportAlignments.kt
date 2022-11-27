@@ -136,17 +136,15 @@ object CommandExportAlignments {
                     printParameters = logger.verbose && outputFile != null
                 )
 
-                val rowMetaForExport = RowMetaForExport(info.tagsInfo)
+                val headerForExport = HeaderForExport(
+                    allTagsInfo = listOf(info.tagsInfo),
+                    //in case of input clna file, allFullyCoveredBy has nothing to do with alignments
+                    allFullyCoveredBy = null
+                )
+                val rowMetaForExport = RowMetaForExport(info.tagsInfo, headerForExport)
                 InfoWriter.create(
                     outputFile,
-                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
-                        params.fields,
-                        HeaderForExport(
-                            allTagsInfo = listOf(info.tagsInfo),
-                            //in case of input clna file, allFullyCoveredBy has nothing to do with alignments
-                            allFullyCoveredBy = null
-                        )
-                    ),
+                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(params.fields, headerForExport),
                     !params.noHeader
                 ) { rowMetaForExport }.use { writer ->
                     val reader = data.port
