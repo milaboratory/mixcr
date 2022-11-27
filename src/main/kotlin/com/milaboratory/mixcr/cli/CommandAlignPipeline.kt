@@ -218,7 +218,7 @@ object CommandAlignPipeline {
             // Creating row of string to map against the mapping table
             val row = ArrayList<String>(matchingTagIds.size)
             for (i in matchingTagIds)
-                row.add(values[i].toString())
+                row.add(values[i].extractKey().toString())
 
             // Do mapping
             val match = mapping[row]
