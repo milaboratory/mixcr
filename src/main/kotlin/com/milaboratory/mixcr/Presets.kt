@@ -168,7 +168,15 @@ object Presets {
                 if (candidates == null) {
                     candidates = CosineSimilarity.mostSimilar(name, visiblePresets).take(limits.last)
                 }
-                throw ApplicationException("No preset with name \"$name\". Did you mean: ${candidates.joinToString(" or ")}?\nTo list all built-in presets run `mixcr ${CommandListPresets.COMMAND_NAME}`.")
+                throw ApplicationException(
+                    """
+No preset with name "$name".
+Here are supported presets with similar names:
+${candidates.joinToString("\n") { "- $it" }}
+
+To list all built-in presets run `mixcr ${CommandListPresets.COMMAND_NAME}`.
+                    """.trimIndent()
+                )
             }
             return result
         }
