@@ -11,6 +11,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.test.TestUtil.assertJson
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import org.junit.Assert
 import org.junit.Test
@@ -106,7 +107,9 @@ class PresetsTest {
             .flatMap { it.listDirectoryEntries() }
             .forEach { filesToCheck ->
                 withClue(filesToCheck) {
-                    K_YAML_OM.readValue<MiXCRParamsBundle>(filesToCheck.toFile())
+                    shouldNotThrowAny {
+                        K_YAML_OM.readValue<MiXCRParamsBundle>(filesToCheck.toFile())
+                    }
                 }
             }
     }
