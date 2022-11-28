@@ -17,6 +17,7 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.VJPair
+import com.milaboratory.mixcr.util.plus
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
@@ -39,6 +40,17 @@ data class MutationsSet private constructor(
         NDNMutations: NDNMutations,
         JMutations: JGeneMutations
     ) : this(VJPair(VMutations, JMutations), NDNMutations)
+
+    fun buildCDR3(rootInfo: RootInfo) = MutationsUtils.buildSequence(
+        rootInfo.sequence1.V,
+        mutations.V.partInCDR3.mutations,
+        rootInfo.rangeInCDR3.V
+    ) + NDNMutations.mutations.mutate(rootInfo.reconstructedNDN) +
+            MutationsUtils.buildSequence(
+                rootInfo.sequence1.J,
+                mutations.J.partInCDR3.mutations,
+                rootInfo.rangeInCDR3.J
+            )
 
     class SerializerImpl : BasicSerializer<MutationsSet>() {
         override fun write(output: PrimitivO, obj: MutationsSet) {

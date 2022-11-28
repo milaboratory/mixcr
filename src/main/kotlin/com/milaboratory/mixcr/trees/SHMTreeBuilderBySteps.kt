@@ -461,6 +461,7 @@ internal class SHMTreeBuilderBySteps(
         val originalTreesCopy = originalTrees
             .sortedByDescending { it.clonesCount() }
             .toMutableList()
+        TreesCombinationDebug().debugCombiningTrees(originalTrees)
         //TODO sort by entropy in NDN sequence (or calculate it by pairs with broad NDN and sort pairs)
         //trying to grow the biggest trees first, because we know more about NDN sequence
         while (originalTreesCopy.isNotEmpty()) {

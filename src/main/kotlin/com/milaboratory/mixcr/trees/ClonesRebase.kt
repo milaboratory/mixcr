@@ -17,7 +17,6 @@ import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.mixcr.util.plus
 
 class ClonesRebase(
     private val sequence1: VJPair<NucleotideSequence>,
@@ -150,15 +149,4 @@ class ClonesRebase(
         }
         return result
     }
-
-    private fun MutationsSet.buildCDR3(rootInfo: RootInfo) = MutationsUtils.buildSequence(
-        rootInfo.sequence1.V,
-        mutations.V.partInCDR3.mutations,
-        rootInfo.rangeInCDR3.V
-    ) + NDNMutations.mutations.mutate(rootInfo.reconstructedNDN) +
-            MutationsUtils.buildSequence(
-                rootInfo.sequence1.J,
-                mutations.J.partInCDR3.mutations,
-                rootInfo.rangeInCDR3.J
-            )
 }
