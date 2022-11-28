@@ -336,7 +336,7 @@ object CommandRefineTagsAndSort {
                             Array(tagNames.size) { tIdx -> // <- local index for the procedure
                                 val tagValue = tagTuple[tIdx]
                                 if (correctionEnabled[tIdx]) (tagValue as SequenceAndQualityTagValue).data
-                                else tagValue
+                                else tagValue.extractKey() // converting any tag type to a key tag
                             }
                         }
 

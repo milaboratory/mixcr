@@ -417,9 +417,11 @@
       - field: "-cloneId"
       - field: "-readCount"
       - field: "-readFraction"
-      - field: "-allUniqueTagsCount"
+      - field: "-tags"
+        args: [ "Sample" ]
+      - field: "-uniqueTagCount"
         args: [ "Molecule" ]
-      - field: "-allUniqueTagFractions"
+      - field: "-uniqueTagFraction"
         args: [ "Molecule" ]
       - field: "-targetSequences"
       - field: "-targetQualities"

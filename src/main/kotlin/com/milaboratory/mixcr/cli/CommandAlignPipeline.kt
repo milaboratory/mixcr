@@ -328,7 +328,7 @@ object CommandAlignPipeline {
 
             return bundle.copy(
                 sequence = newSeq,
-                tags = TagTuple(*tags.toTypedArray())
+                tags = TagTuple(*mappedTags.toTypedArray())
             )
         }
     }
