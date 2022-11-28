@@ -13,7 +13,6 @@
 
 package com.milaboratory.mixcr.trees
 
-import com.google.common.collect.Sets
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.mitool.pattern.search.BasicSerializer
@@ -159,7 +158,7 @@ data class CloneWithDatasetId(
 
 fun Clone.containsStopsOrAbsent(feature: GeneFeature, VJBase: VJBase): Boolean {
     val codingFeature = GeneFeature.getCodingGeneFeature(feature) ?: return true
-    val partitionedTargets = getPartitionedTargets(VJBase.geneIds.V, VJBase.geneIds.J)
+    val partitionedTargets = getPartitionedTargets(VJBase.geneIds.V, VJBase.geneIds.J)!!
     for (i in partitionedTargets.indices) {
         val codingSeq = partitionedTargets[i].getFeature(codingFeature) ?: continue
         val tr = partitionedTargets[i].partitioning.getTranslationParameters(codingFeature) ?: return true
@@ -174,13 +173,13 @@ fun Clone.isOutOfFrameOrAbsent(feature: GeneFeature, VJBase: VJBase): Boolean {
 }
 
 fun Clone.getHit(VJBase: VJBase, geneType: GeneType): VDJCHit =
-    getHit(geneType, VJBase.geneIds[geneType])
+    getHit(geneType, VJBase.geneIds[geneType])!!
 
-private fun Clone.getHit(geneType: GeneType, geneId: VDJCGeneId): VDJCHit =
-    getHits(geneType).first { it.gene.id == geneId }
+private fun Clone.getHit(geneType: GeneType, geneId: VDJCGeneId): VDJCHit? =
+    getHits(geneType).firstOrNull() { it.gene.id == geneId }
 
-fun Clone.getFeature(geneFeature: GeneFeature, VJBase: VJBase): NSequenceWithQuality? =
-    getFeature(geneFeature, VJBase.geneIds.V, VJBase.geneIds.J)
+fun Clone.getFeature(geneFeature: GeneFeature, VJBase: VJBase, DGeneId: VDJCGeneId? = null): NSequenceWithQuality? =
+    getFeature(geneFeature, VJBase.geneIds.V, VJBase.geneIds.J, DGeneId)
 
 fun Clone.ntLengthOf(geneFeature: GeneFeature, VGeneId: VDJCGeneId, JGeneId: VDJCGeneId): Int =
     getFeature(geneFeature, VGeneId, JGeneId)?.size() ?: -1
@@ -188,23 +187,33 @@ fun Clone.ntLengthOf(geneFeature: GeneFeature, VGeneId: VDJCGeneId, JGeneId: VDJ
 private fun Clone.getFeature(
     geneFeature: GeneFeature,
     VGeneId: VDJCGeneId,
-    JGeneId: VDJCGeneId
+    JGeneId: VDJCGeneId,
+    DGeneId: VDJCGeneId? = null
 ): NSequenceWithQuality? {
-    val partitionedTargets = getPartitionedTargets(VGeneId, JGeneId)
+    val partitionedTargets = getPartitionedTargets(VGeneId, JGeneId, DGeneId) ?: return null
     val tcf = getTargetContainingFeature(partitionedTargets, geneFeature)
     return if (tcf == -1) null else partitionedTargets[tcf].getFeature(geneFeature)
 }
 
 private fun Clone.getPartitionedTargets(
     VGeneId: VDJCGeneId,
-    JGeneId: VDJCGeneId
-): Array<VDJCPartitionedSequence> {
+    JGeneId: VDJCGeneId,
+    DGeneId: VDJCGeneId? = null
+): Array<VDJCPartitionedSequence>? {
     val topHits = EnumMap<GeneType, VDJCGene>(GeneType::class.java)
-    topHits[Variable] = getHit(Variable, VGeneId).gene
-    topHits[Joining] = getHit(Joining, JGeneId).gene
-    for (geneType in Sets.newHashSet(Constant, Diversity)) {
-        val hit = getBestHit(geneType)
-        if (hit != null) topHits[geneType] = hit.gene
+    topHits[Variable] = getHit(Variable, VGeneId)!!.gene
+    topHits[Joining] = getHit(Joining, JGeneId)!!.gene
+    if (DGeneId != null) {
+        topHits[Diversity] = getHit(Diversity, DGeneId)?.gene ?: return null
+        val cHit = getBestHit(Constant)
+        if (cHit != null) {
+            topHits[Constant] = cHit.gene
+        }
+    } else {
+        for (geneType in arrayOf(Constant, Diversity)) {
+            val hit = getBestHit(geneType)
+            if (hit != null) topHits[geneType] = hit.gene
+        }
     }
     val partitionedTargets = Array<VDJCPartitionedSequence>(targets.size) { i ->
         getPartitionedTarget(i, topHits)

@@ -66,9 +66,9 @@
         ^NN(CELL2COLUMN:N{5})gagatctctgcttctgatggctc(R2:*)
   refineTagsAndSort:
     whitelists:
-      CELL3PLATE: builtin:cell-3-plate-han-2014
-      CELL1ROW: builtin:cell-1-row-han-2014
-      CELL2COLUMN: builtin:cell-2-column-han-2014
+      CELL3PLATE: builtin:han-2014-cell3-plate
+      CELL1ROW: builtin:han-2014-cell1-row
+      CELL2COLUMN: builtin:han-2014-cell2-column
     runCorrection: true
     parameters:
       correctionPower: 0.001
