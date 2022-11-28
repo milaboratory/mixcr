@@ -69,7 +69,7 @@ object XSV {
             columnsPositions[columnsFromFile[i]] = i
         }
         for (column in columns) {
-            ApplicationException.check(columnsPositions.containsKey(column)) { "no column with name $column, got $columns ($input)" }
+            ApplicationException.check(columnsPositions.containsKey(column)) { "no column with name $column, got ${columnsPositions.keys} ($input)" }
         }
         return lines.drop(1)
             .map { row: String ->
