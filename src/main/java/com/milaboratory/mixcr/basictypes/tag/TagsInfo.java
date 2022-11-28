@@ -53,7 +53,7 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
     public TagsInfo(@JsonProperty("sortingLevel") int sortingLevel, @JsonProperty("tags") TagInfo... tags) {
         Objects.requireNonNull(tags);
         this.sortingLevel = sortingLevel;
-        this.tags = tags;
+        this.tags = tags.clone();
         for (int i = 0; i < tags.length; i++)
             if (tags[i].getIndex() != i)
                 throw new IllegalArgumentException("Wrong tag index.");

@@ -17,7 +17,7 @@ import org.junit.Test;
 public class TagInfoTest {
     @Test
     public void test1() {
-        TestUtil.assertJson(new TagInfo(TagType.Sample, TagValueType.SequenceAndQuality, "TEST", 2));
-        TestUtil.assertJson(new TagsInfo(12, new TagInfo(TagType.Sample, TagValueType.SequenceAndQuality, "TEST", 2)));
+        TestUtil.assertJson(new TagInfo(TagType.Sample, TagValueType.SequenceAndQuality, "TEST", 0));
+        TestUtil.assertJson(new TagsInfo(0, new TagInfo(TagType.Sample, TagValueType.SequenceAndQuality, "TEST", 0)));
     }
 }

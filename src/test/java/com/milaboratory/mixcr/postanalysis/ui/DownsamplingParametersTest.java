@@ -23,7 +23,7 @@ public class DownsamplingParametersTest {
     public void test1() {
         DownsamplingParameters.parse(
                 "count-umi-auto",
-                new TagsInfo(2, new TagInfo(TagType.Molecule, TagValueType.NonSequence, "UMI", 1)),
+                new TagsInfo(2, new TagInfo(TagType.Molecule, TagValueType.NonSequence, "UMI", 0)),
                 false,
                 true
         );
