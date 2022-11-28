@@ -125,7 +125,7 @@ for filename in $FILES; do
 done
 cd ../
 
-FILES=`ls trees_1/debug/*`
+FILES=`ls trees_1/debug/step_*`
 for filename in $FILES; do
   filename=${filename#trees_1/debug/*}
   if ! cmp "trees_1/debug_sorted/$filename" "trees_2/debug_sorted/$filename"; then
