@@ -58,6 +58,7 @@ mixcr exportShmTreesWithNodes base_build_trees.shmt trees/trees_with_nodes.tsv
 
 assert "mixcr exportShmTreesWithNodes -readFraction base_build_trees.shmt | grep -c 'NaN'" "0"
 
+# no other columns if something specified
 assert "mixcr exportShmTreesWithNodes -cloneId base_build_trees.shmt | head -n 1 | wc -w" "1"
 
 mixcr exportPlots shmTrees base_build_trees.shmt trees/plots.pdf
@@ -74,8 +75,8 @@ for filename in $FILES; do
   mixcr align -p mikelov-et-al-2021 -b alleles_library.json trees_samples/$R1 trees_samples/$R2 align_by_alleles/$id.vdjca
 done
 
-assert "cat alleles/report.json | head -n 1 | jq -r .foundAlleles" "3"
-assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
+assert "head -n 1 alleles/report.json | jq -r .foundAlleles" "3"
+assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
 assert "grep 'IGHV2-70' alleles/description.tsv | awk '{print \$6}'" "ST311G\nSG170AST259CST311GSA335T"
 assert "grep 'IGHJ6' alleles/description.tsv | awk '{print \$6}'" "SG37TSG38AST39CSC55A"
@@ -83,6 +84,5 @@ assert "grep 'IGHJ6' alleles/description.tsv | awk '{print \$6}'" "SG37TSG38AST3
 # biggest tree
 # `tail +2` - skip first line with column names
 # `sort -n -r -k 2` - reverse numeric sort by second column (uniqClonesCount)
-assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | awk '{print \$2}'" "13"
-assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | awk '{print \$6}'" "TGTGCCAGAGAAGGATCAGATAGTGCCGGGGGTGCTTTTGATGTCTGG"
-
+assert "tail +2 trees/trees.tsv | sort -n -r -k 2 | head -n 1 | awk '{print \$2}'" "13"
+assert "tail +2 trees/trees.tsv | sort -n -r -k 2 | head -n 1 | awk '{print \$6}'" "TGTGCCAGAGAAGGATCAGATAGTGCCGGGGGTGCTTTTGATGTCTGG"

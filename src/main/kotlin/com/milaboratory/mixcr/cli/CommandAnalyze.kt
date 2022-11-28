@@ -136,7 +136,7 @@ object CommandAnalyze {
             multiplicity = "0..*",
             order = OptionsOrder.mixins.exports
         )
-        var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
+        var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
         @Mixin
         var genericMixins: GenericMiXCRMixins? = null
@@ -287,6 +287,7 @@ object CommandAnalyze {
                         // Terminating execution if one of the steps resulted in error
                         exitProcess(exitCode)
                 }
+                println("Analysis finished successfully.")
             }
         }
 

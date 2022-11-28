@@ -115,6 +115,9 @@ object CommandExportAlignments {
                 field = value
             }
 
+        @Mixin
+        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecific
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -129,21 +132,19 @@ object CommandExportAlignments {
             openAlignmentsPort(inputFile).use { data ->
                 val info = data.info
                 val (_, params) = paramsResolver.resolve(
-                    info.paramsSpec,
+                    info.paramsSpec.addMixins(exportMixins.mixins),
                     printParameters = logger.verbose && outputFile != null
                 )
 
-                val rowMetaForExport = RowMetaForExport(info.tagsInfo)
+                val headerForExport = HeaderForExport(
+                    allTagsInfo = listOf(info.tagsInfo),
+                    //in case of input clna file, allFullyCoveredBy has nothing to do with alignments
+                    allFullyCoveredBy = null
+                )
+                val rowMetaForExport = RowMetaForExport(info.tagsInfo, headerForExport)
                 InfoWriter.create(
                     outputFile,
-                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
-                        params.fields,
-                        HeaderForExport(
-                            allTagsInfo = listOf(info.tagsInfo),
-                            //in case of input clna file, allFullyCoveredBy has nothing to do with alignments
-                            allFullyCoveredBy = null
-                        )
-                    ),
+                    VDJCAlignmentsFieldsExtractorsFactory.createExtractors(params.fields, headerForExport),
                     !params.noHeader
                 ) { rowMetaForExport }.use { writer ->
                     val reader = data.port

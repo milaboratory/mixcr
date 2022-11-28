@@ -61,7 +61,7 @@ object SHMTreeNodeFieldsExtractor {
         this += Field(
             Order.treeNodeSpecific + 300,
             "-distance",
-            "Distance from another node",
+            "Distance from another node in number of mutations.",
             nodeTypeParam("DistanceFrom")
         ) { node, base ->
             node.distanceFrom(base)?.toString() ?: NULL

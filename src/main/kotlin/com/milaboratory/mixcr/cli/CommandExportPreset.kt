@@ -68,6 +68,14 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     )
     lateinit var presetInput: PresetInput
 
+    @Option(
+        names = ["--no-validation"],
+        description = ["Don't validate preset before export."],
+        arity = "0",
+        order = OptionsOrder.main + 10_200
+    )
+    var noValidation: Boolean = false
+
     @set:Parameters(
         description = ["Path where to write preset yaml file. Will write to output if omitted."],
         arity = "0..1",
@@ -121,7 +129,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         multiplicity = "0..*",
         order = OptionsOrder.mixins.exports
     )
-    var exportMixins: List<ExportMiXCRMixins> = mutableListOf()
+    var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
     @Mixin
     var genericMixins: GenericMiXCRMixins? = null
@@ -129,32 +137,29 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     override fun run0() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
                 assembleContigsMixins + exportMixins + pipelineMixins
-        val bundle: MiXCRParamsBundle = when {
-            presetInput.presetName != null -> {
-                paramsResolver.resolve(
-                    MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins),
-                    printParameters = false
-                ).first
-            }
+        val spec: MiXCRParamsSpec = when {
+            presetInput.presetName != null -> MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins)
             else -> {
-                val paramsSpec = presetInput.input?.let { inputFile ->
-                    when (IOUtil.extractFileType(inputFile)) {
-                        VDJCA -> VDJCAlignmentsReader(inputFile)
-                            .use { reader -> reader.header }
-                        CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
-                            .use { reader -> reader.header }
-                        CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
-                            .use { reader -> reader.header }
-                        SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
-                    }
-                }!!.paramsSpec
+                val inputFile = presetInput.input!!
+                val paramsSpec = when (IOUtil.extractFileType(inputFile)) {
+                    VDJCA -> VDJCAlignmentsReader(inputFile)
+                        .use { reader -> reader.header }
+                    CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
+                        .use { reader -> reader.header }
+                    CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
+                        .use { reader -> reader.header }
+                    SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
+                }.paramsSpec
 
-                paramsResolver.resolve(
-                    MiXCRParamsSpec(paramsSpec.presetAddress, mixins = paramsSpec.mixins + mixinsFromArgs.mixins),
-                    printParameters = false
-                ).first
+                MiXCRParamsSpec(paramsSpec.presetAddress, mixins = paramsSpec.mixins + mixinsFromArgs.mixins)
             }
         }
+
+        val bundle = paramsResolver.resolve(
+            spec,
+            printParameters = false,
+            validate = !noValidation
+        ).first
 
         val of = outputFile
         if (of != null)

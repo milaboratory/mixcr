@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.GroupingCriteria
@@ -253,6 +254,8 @@ object CommandRefineTagsAndSort {
 
                 // All tag names
                 val tagNames = header.tagsInfo.map { it.name }
+                // Building tag aliases for each specific tag type
+                val tagAliases = header.tagsInfo.tagAliases
 
                 // Indices to be corrected
                 val correctionIndicesBuilder = TIntArrayList()
@@ -297,7 +300,8 @@ object CommandRefineTagsAndSort {
                             tempDest.addSuffix("tags"),
                             whitelists,
                             memoryBudget,
-                            4, 4
+                            4, 4,
+                            tagAliases
                         )
 
                         SmartProgressReporter.startProgressReport(corrector)

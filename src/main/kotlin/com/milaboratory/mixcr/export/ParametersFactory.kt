@@ -12,7 +12,9 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
@@ -29,18 +31,36 @@ object ParametersFactory {
         { tagName -> tagName }
     ) { tagName -> sPrefix + tagName + sSuffix }
 
-    fun tagTypeParam(
-        sPrefix: String = ""
-    ): CommandArgRequired<TagType> = CommandArgRequired(
-        "<(${TagType.values().joinToString("|")})>",
+    fun tagTypeWithDeprecatedTagName(
+        sPrefix: String,
+        sSuffix: String = ""
+    ): CommandArgRequired<Pair<String?, TagType?>> = CommandArgRequired(
+        Labels.TAG_TYPE,
         { arg ->
-            val tagType = TagType.values().firstOrNull { arg.lowercase() == it.name.lowercase() }
+            val tagType = TagType.valueOfCaseInsensitiveOrNull(arg)
+            when {
+                tagType != null -> null to tagType
+                else -> {
+                    logger.warn("Use of tag name in $cmdArgName deprecated, use tag type instead: ${Labels.TAG_TYPE}")
+                    arg to null
+                }
+            }
+        }
+    ) { (tagName, tagType) -> sPrefix + (tagName ?: tagType) + sSuffix }
+
+    fun tagTypeParam(
+        sPrefix: String = "",
+        sSuffix: String = ""
+    ): CommandArgRequired<TagType> = CommandArgRequired(
+        Labels.TAG_TYPE,
+        { arg ->
+            val tagType = TagType.valueOfCaseInsensitiveOrNull(arg)
             ValidationException.require(tagType != null) {
                 "$cmdArgName: unexpected arg $arg, expecting one of ${TagType.values().joinToString(", ") { it.name }}"
             }
             tagType
         },
-        { sPrefix + it.name }
+        { sPrefix + it.name + sSuffix }
     )
 
     fun geneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeature> = CommandArgRequired(
@@ -89,6 +109,7 @@ object ParametersFactory {
             },
             { base -> sPrefix + base.name.replaceFirstChar { it.titlecase(Locale.getDefault()) } }
         )
+
         else -> CommandArgRequired(
             "<(${Base.germline}|${Base.mrca})>",
             { arg ->

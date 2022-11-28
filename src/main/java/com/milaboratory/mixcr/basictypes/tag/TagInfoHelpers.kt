@@ -9,16 +9,15 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis
+package com.milaboratory.mixcr.basictypes.tag
 
-import picocli.CommandLine.Option
-
-abstract class CommandPaExportPlotsHeatmapWithGroupBy : CommandPaExportPlotsHeatmap() {
-//     @Option(
-//         description = ["Group heatmaps by specific metadata properties."],
-//         names = ["--group-by"],
-//         paramLabel = "<s>",
-//         order = OptionsOrder.main + 25_000
-//     )
-    var groupBy: List<String>? = null
-}
+val TagsInfo.tagAliases
+    get() = TagType.values()
+        .map { type -> type to filter { it.type == type }.map { it.name } }
+        .filter { it.second.isNotEmpty() }
+        .flatMap { typeToTags ->
+            typeToTags.first.aliases
+                .filter { indexOf(it) == -1 }
+                .map { alias -> alias to typeToTags.second }
+        }
+        .toMap()
