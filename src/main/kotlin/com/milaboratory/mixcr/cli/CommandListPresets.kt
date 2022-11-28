@@ -9,16 +9,22 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.cli.postanalysis
+package com.milaboratory.mixcr.cli
 
-import picocli.CommandLine.Option
+import com.milaboratory.mixcr.Presets
+import picocli.CommandLine.Command
 
-abstract class CommandPaExportPlotsHeatmapWithGroupBy : CommandPaExportPlotsHeatmap() {
-//     @Option(
-//         description = ["Group heatmaps by specific metadata properties."],
-//         names = ["--group-by"],
-//         paramLabel = "<s>",
-//         order = OptionsOrder.main + 25_000
-//     )
-    var groupBy: List<String>? = null
+@Command(
+    description = ["Show all available presets"]
+)
+class CommandListPresets : MiXCRCommand() {
+    companion object {
+        const val COMMAND_NAME = "listPresets"
+    }
+
+    override fun run0() {
+        Presets.visiblePresets.sorted().forEach {
+            println(it)
+        }
+    }
 }

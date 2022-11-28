@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.basictypes;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
+import com.milaboratory.mixcr.basictypes.tag.TagInfo;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.primitivio.annotations.Serializable;
 import gnu.trove.iterator.TObjectDoubleIterator;
@@ -54,7 +55,9 @@ public final class Clone extends VDJCObject {
         return r;
     }
 
-    /** Returns new instance with parent clone set set to null */
+    /**
+     * Returns new instance with parent clone set set to null
+     */
     public Clone resetParentCloneSet() {
         return new Clone(targets, hits, tagCount, count, id, group);
     }
@@ -123,6 +126,23 @@ public final class Clone extends VDJCObject {
 
     public int getId() {
         return id;
+    }
+
+    public Clone[] splitByTag(TagInfo tag) {
+        if (tag == null) {
+            return new Clone[]{this};
+        } else {
+            double sum = tagCount.sum();
+            TagCount[] splittedTagCounts = tagCount.splitBy(tag.getIndex() + 1);
+            Clone[] result = new Clone[splittedTagCounts.length];
+            for (int i = 0; i < splittedTagCounts.length; i++) {
+                TagCount tc = splittedTagCounts[i];
+                Clone splitted = new Clone(targets, hits, tc, 1.0 * count * tc.sum() / sum, id, group);
+                splitted.setParentCloneSet(getParentCloneSet());
+                result[i] = splitted;
+            }
+            return result;
+        }
     }
 
     @Override

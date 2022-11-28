@@ -46,6 +46,7 @@ import com.milaboratory.mixcr.export.AirrColumns.SequenceAlignmentBoundary
 import com.milaboratory.mixcr.export.AirrColumns.VDJCCalls
 import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper
 import com.milaboratory.mixcr.export.FieldExtractor
+import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.CanReportProgress
@@ -269,7 +270,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
             progressReporter = SmartProgressReporter.extractProgress(clop)
         }
         SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter)
-        val rowMetaForExport = RowMetaForExport(header.tagsInfo)
+        val rowMetaForExport = RowMetaForExport(header.tagsInfo, HeaderForExport(header))
         (out?.let { PrintStream(it.toFile()) } ?: System.out).use { output ->
             closeable.use {
                 port.use {
