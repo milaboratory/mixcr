@@ -34,8 +34,10 @@ import com.milaboratory.mixcr.cli.CommandAssemblePartial
 import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
 import com.milaboratory.mixcr.cli.CommandExtend
+import com.milaboratory.mixcr.cli.CommandListPresets
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.util.CosineSimilarity
 import com.milaboratory.primitivio.annotations.Serializable
 import org.apache.commons.io.IOUtils
 import java.nio.charset.Charset
@@ -119,8 +121,7 @@ object Presets {
         }
     }
 
-    private val presetCollection: Map<String, MiXCRParamsBundleRaw> = run {
-        val map = mutableMapOf<String, MiXCRParamsBundleRaw>()
+    private val presetCollection: Map<String, MiXCRParamsBundleRaw> = buildMap {
         val files = (Presets.javaClass.getResourceAsStream("/mixcr_presets/file_list.txt")
             ?: throw IllegalStateException("No preset file list")).use { stream ->
             IOUtils.readLines(stream, Charset.defaultCharset())
@@ -130,15 +131,16 @@ object Presets {
                 .use { stream -> K_YAML_OM.readValue<Map<String, MiXCRParamsBundleRaw>>(stream) }
                 .toList()
         }.forEach { (k, v) ->
-            if (map.put(k, v) != null)
+            if (put(k, v) != null)
                 throw RuntimeException("Conflicting preset names in different preset files.")
         }
-        map
     }
 
     val allPresetNames = presetCollection.keys
 
     val nonAbstractPresetNames = presetCollection.filter { !it.value.abstract }.keys
+
+    val visiblePresets = nonAbstractPresetNames.filter { "test" !in it && "legacy" !in it }
 
     private fun rawResolve(name: String): MiXCRParamsBundleRaw {
         if (name.startsWith("local:")) {
@@ -151,8 +153,33 @@ object Presets {
                 }
             }
             throw ApplicationException("Can't find local preset with name \"$name\"")
-        } else
-            return presetCollection[name] ?: throw ApplicationException("No preset with name \"$name\"")
+        } else {
+            val result = presetCollection[name]
+            if (result == null) {
+                val limits = 3..6
+                var candidates: List<String>? = null
+                for (i in (1..10).reversed()) {
+                    val withThreshold = CosineSimilarity.mostSimilar(name, visiblePresets, i / 10.0)
+                    if (withThreshold.size in limits) {
+                        candidates = withThreshold
+                        break
+                    }
+                }
+                if (candidates == null) {
+                    candidates = CosineSimilarity.mostSimilar(name, visiblePresets).take(limits.last)
+                }
+                throw ApplicationException(
+                    """
+No preset with name "$name".
+Here are supported presets with similar names:
+${candidates.joinToString("\n") { "- $it" }}
+
+To list all built-in presets run `mixcr ${CommandListPresets.COMMAND_NAME}`.
+                    """.trimIndent()
+                )
+            }
+            return result
+        }
     }
 
     private fun <T : Any> getResolver(prop: KProperty1<MiXCRParamsBundleRaw, RawParams<T>?>): Resolver<T> =

@@ -179,8 +179,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     @Mixin
     lateinit var reportOptions: ReportOptions
 
-    @Option(names = ["--debugDir"], hidden = true)
-    var debugDir: Path? = null
+    @Mixin
+    lateinit var debugDir: DebugDirOption
 
     private val outputClnsFiles: List<Path> by lazy {
         val template = outputClnsOptions.outputTemplate ?: return@lazy emptyList()
@@ -236,10 +236,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     override fun initialize() {
         findAllelesParameters
-        debugDir?.let { debugDir ->
-            debugDir.toFile().deleteRecursively()
-            debugDir.toFile().mkdirs()
-        }
     }
 
     override fun run0() {
@@ -306,8 +302,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             scoring,
             datasets.flatMap { it.usedGenes }.distinct(),
             featureToAlign,
-            allFullyCoveredBy,
-            debugDir
+            allFullyCoveredBy
         )
 
         val progressAndStage = ProgressAndStage("Grouping by the same J gene", 0.0)

@@ -63,5 +63,7 @@ data class VJBase(
         }
     }
 
+    fun encode() = "${geneIds.V.name}-${CDR3length}-${geneIds.J.name}"
+
     override fun toString(): String = "VJBase(V=${geneIds.V.name}, J=${geneIds.J.name}, CDR3length=$CDR3length)"
 }

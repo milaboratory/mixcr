@@ -84,7 +84,7 @@ public final class VDJCAlignerWithMerge extends VDJCAligner {
                                                 : merged.getOffset(),
                                         merged.getErrors())
                         },
-                        parameters.isSaveOriginalReads() ? new NSQTuple[]{input} : null);
+                        parameters.isSaveOriginalSequence() ? new NSQTuple[]{input} : null);
             }
             return alignment;
         } else
