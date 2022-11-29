@@ -290,7 +290,9 @@ public final class PartialAlignmentsAssemblerAligner extends VDJCAlignerAbstract
                 vResult,
                 dResult,
                 jResult,
-                cutRelativeScore(vdjcHits.get(GeneType.Constant), parameters.getCAlignerParameters().getRelativeMinScore(), parameters.getMaxHits()),
+                parameters.getCAlignerParameters() == null
+                        ? null
+                        : cutRelativeScore(vdjcHits.get(GeneType.Constant), parameters.getCAlignerParameters().getRelativeMinScore(), parameters.getMaxHits()),
                 TagCount.NO_TAGS_1,
                 targets
         );
