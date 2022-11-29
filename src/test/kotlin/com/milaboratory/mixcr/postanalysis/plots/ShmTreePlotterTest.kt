@@ -1,6 +1,7 @@
 package com.milaboratory.mixcr.postanalysis.plots
 
 import com.milaboratory.miplots.writePDF
+import com.milaboratory.mixcr.trees.TreeFilter
 import io.repseq.core.GeneFeature
 import org.junit.Ignore
 import org.junit.Test

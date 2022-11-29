@@ -12,8 +12,9 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.postanalysis.plots.SeqPattern
-import com.milaboratory.mixcr.postanalysis.plots.TreeFilter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
+import com.milaboratory.mixcr.trees.TreeFilter
+import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
@@ -117,6 +118,16 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
     )
     private var patternOptions: PatternOptions? = null
 
+    @Option(
+        description = [
+            "Export only trees that contains clones with specific chain (e.g. TRA or IGH)."
+        ],
+        names = ["-c", "--chains"],
+        paramLabel = CommonDescriptions.Labels.CHAINS,
+        order = OptionsOrder.main + 30_400
+    )
+    private var chains: Chains? = null
+
     private val pattern by lazy {
         patternOptions?.let { options ->
             if (options.pattern.seqNt != null)
@@ -127,14 +138,15 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
     }
 
     protected val treeFilter by lazy {
-        if (minNodes == null && minHeight == null && treeIds == null && pattern == null)
+        if (minNodes == null && minHeight == null && treeIds == null && pattern == null && chains == null)
             null
         else
             TreeFilter(
                 minNodes = minNodes,
                 minHeight = minHeight,
                 treeIds = treeIds,
-                seqPattern = pattern
+                seqPattern = pattern,
+                chains = chains
             )
     }
 
