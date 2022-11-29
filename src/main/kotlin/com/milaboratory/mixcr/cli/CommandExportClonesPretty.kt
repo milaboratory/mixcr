@@ -16,7 +16,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MultiAlignmentFormatter
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter
+import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.and
@@ -190,8 +190,7 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
             }
             output.println()
             for (i in 0 until clone.numberOfTargets()) {
-                val targetAsMultiAlignment = VDJCAlignmentsFormatter(addReads = false)
-                    .formatMultiAlignments(clone, i)
+                val targetAsMultiAlignment = MultiAlignmentHelper.Builder.formatMultiAlignments(clone, i)
                 val split = targetAsMultiAlignment.split(80)
                 for (spl in split) {
                     output.println(spl.format(MultiAlignmentFormatter.LinesFormatter(addHitScore = true)))

@@ -15,7 +15,7 @@ import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper.Companion.build
+import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper.Builder.build
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 import io.repseq.core.ExtendedReferencePointsBuilder

@@ -59,7 +59,7 @@ class MultiAlignmentHelperTest {
             println(input.alignment.alignmentHelper)
             println()
         }
-        val helper = MultiAlignmentHelper.build(
+        val helper = MultiAlignmentHelper.Builder.build(
             MultiAlignmentHelper.DEFAULT_SETTINGS, Range(0, seq0.size()),
             name = "Subject",
             inputs.first().alignment.sequence1,
@@ -137,7 +137,7 @@ class MultiAlignmentHelperTest {
                     expectedSplit[index].lines().map { it.trimEnd() }
         }
 
-        MultiAlignmentHelper.build(
+        MultiAlignmentHelper.Builder.build(
             MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
             name = "",
             inputs.first().alignment.sequence1,
@@ -152,7 +152,7 @@ class MultiAlignmentHelperTest {
 |Query3 0 .....GATAC......GAC..........    28  16
         """.trimMargin().lines().map { it.trimEnd() }
 
-        val build = MultiAlignmentHelper.build(
+        val build = MultiAlignmentHelper.Builder.build(
             MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
             name = "",
             seq0,
@@ -202,7 +202,7 @@ class MultiAlignmentHelperTest {
             println(input.alignment.alignmentHelper)
             println()
         }
-        MultiAlignmentHelper.build(
+        MultiAlignmentHelper.Builder.build(
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, seq0.size()),
             name = "",

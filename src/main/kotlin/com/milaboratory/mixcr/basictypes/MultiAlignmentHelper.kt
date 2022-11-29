@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.basictypes
 
 import com.milaboratory.core.Range
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring
+import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.MutationType
@@ -21,6 +23,7 @@ import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.SequenceQuality
 import com.milaboratory.util.BitArray
 import com.milaboratory.util.IntArrayList
+import io.repseq.core.GeneType
 import io.repseq.core.SequencePartitioning
 import kotlin.math.min
 
@@ -112,8 +115,6 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
             if (pos >= 0) return pos
             return if (pos == -1) -1 else -2 - pos
         }
-
-        @JvmField
         val DEFAULT_SETTINGS = Settings(
             markMatchWithSpecialLetter = false,
             lowerCaseMatch = true,
@@ -128,6 +129,174 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
             specialMatchChar = '.',
             outOfRangeChar = ' '
         )
+    }
+
+    sealed interface MetaInfoInput<S : Sequence<S>>
+
+    class ReferencePointsInput<S : Sequence<S>>(
+        val partitioning: SequencePartitioning
+    ) : MetaInfoInput<S>
+
+    class AminoAcidInput(
+        val partitioning: SequencePartitioning
+    ) : MetaInfoInput<NucleotideSequence>
+
+    class QualityInput(
+        val quality: SequenceQuality
+    ) : MetaInfoInput<NucleotideSequence>
+
+    sealed interface LineWithPositions {
+        val content: String
+        val positions: IntArray
+        fun subRange(from: Int, to: Int): LineWithPositions
+
+        val firstPosition: Int
+            get() {
+                for (pos in positions) if (pos >= 0) return pos
+                for (pos in positions) if (pos < -1) return -2 - pos
+                return -1
+            }
+
+        val lastPosition: Int
+            get() {
+                for (i in positions.indices.reversed()) if (positions[i] >= 0) return positions[i]
+                for (i in positions.indices.reversed()) if (positions[i] < -1) return -2 - positions[i]
+                return -1
+            }
+    }
+
+    sealed interface QueryLine : LineWithPositions {
+        override fun subRange(from: Int, to: Int): QueryLine
+    }
+
+    class SubjectLine<S : Sequence<S>>(
+        val name: String,
+        val source: S,
+        override val content: String,
+        override val positions: IntArray
+    ) : LineWithPositions {
+        override fun subRange(from: Int, to: Int): SubjectLine<S> = SubjectLine(
+            name = name,
+            source = source,
+            content = content.substring(from, to),
+            positions = positions.copyOfRange(from, to)
+        )
+    }
+
+    class AlignmentLine(
+        val geneName: String,
+        override val content: String,
+        override val positions: IntArray,
+        val alignmentScore: Int,
+        val hitScore: Int
+    ) : QueryLine {
+        override fun subRange(from: Int, to: Int) = AlignmentLine(
+            geneName = geneName,
+            content = content.substring(from, to),
+            positions = positions.copyOfRange(from, to),
+            alignmentScore = alignmentScore,
+            hitScore = hitScore
+        )
+    }
+
+
+    class ReadLine(
+        val index: String,
+        override val content: String,
+        override val positions: IntArray
+    ) : QueryLine {
+        override fun subRange(from: Int, to: Int) = ReadLine(
+            index = index,
+            content = content.substring(from, to),
+            positions = positions.copyOfRange(from, to)
+        )
+    }
+
+    sealed interface Input<S : Sequence<S>> {
+        val alignment: Alignment<S>
+    }
+
+    class AlignmentInput<S : Sequence<S>>(
+        val geneName: String,
+        override val alignment: Alignment<S>,
+        val alignmentScore: Int,
+        val hitScore: Int
+    ) : Input<S> {
+        companion object {
+            fun buildInputs(vdjcObject: VDJCObject, targetId: Int): List<AlignmentInput<NucleotideSequence>> {
+                val target = vdjcObject.getTarget(targetId)
+                return GeneType.values().flatMap { gt ->
+                    vdjcObject.getHits(gt).mapNotNull { hit ->
+                        val alignment = hit.getAlignment(targetId) ?: return@mapNotNull null
+                        AlignmentInput(
+                            hit.gene.name,
+                            alignment.invert(target.sequence),
+                            hit.getAlignment(targetId).score.toInt(),
+                            hit.score.toInt()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    class ReadInput<S : Sequence<S>>(
+        val index: String,
+        override val alignment: Alignment<S>
+    ) : Input<S> {
+        companion object {
+            fun buildInputs(vdjcObject: VDJCObject, targetId: Int): List<ReadInput<NucleotideSequence>> {
+                val target = vdjcObject.getTarget(targetId)
+                val vdjcAlignments = vdjcObject as VDJCAlignments
+                val history = vdjcAlignments.getHistory(targetId)
+                val reads = history.rawReads()
+                return reads.map { read ->
+                    val seq = vdjcAlignments.getOriginalSequence(read.index).sequence
+                    val offset = history.offset(read.index)
+                    val alignment = Aligner.alignOnlySubstitutions(
+                        target.sequence, seq, offset, seq.size(), 0, seq.size(),
+                        AffineGapAlignmentScoring.IGBLAST_NUCLEOTIDE_SCORING
+                    )
+                    ReadInput(
+                        read.index.toString(),
+                        alignment
+                    )
+                }
+            }
+        }
+    }
+
+    object Builder {
+        @JvmStatic
+        @JvmOverloads
+        fun formatMultiAlignments(
+            vdjcObject: VDJCObject,
+            targetId: Int,
+            addReads: Boolean = false
+        ): MultiAlignmentHelper<NucleotideSequence> {
+            require(!(addReads && vdjcObject !is VDJCAlignments)) { "Read alignments supported only for VDJCAlignments." }
+            val target = vdjcObject.getTarget(targetId)
+            val partitioning = vdjcObject.getPartitionedTarget(targetId).partitioning
+            val inputs = mutableListOf<Input<NucleotideSequence>>()
+            inputs += AlignmentInput.buildInputs(vdjcObject, targetId)
+
+            // Adding read information
+            if (addReads) {
+                inputs += ReadInput.buildInputs(vdjcObject, targetId)
+            }
+            return build(
+                DEFAULT_SETTINGS,
+                Range(0, target.size()),
+                name = "Target$targetId",
+                target.sequence,
+                inputs,
+                listOf(
+                    ReferencePointsInput(partitioning),
+                    AminoAcidInput(partitioning),
+                    QualityInput(target.quality)
+                )
+            )
+        }
 
         @JvmStatic
         @SafeVarargs
@@ -220,11 +389,13 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
                                     queryPositions[i].add(queryPointers[i]++)
                                     matches[i].add(false)
                                 }
+
                                 Mutation.RAW_MUTATION_TYPE_DELETION -> {
                                     queryStrings[i].append('-')
                                     queryPositions[i].add(-2 - queryPointers[i])
                                     matches[i].add(false)
                                 }
+
                                 else -> assert(false)
                             }
                             mutationPointers[i]++
@@ -255,6 +426,7 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
                         alignmentScore = input.alignmentScore,
                         hitScore = input.hitScore
                     )
+
                     is ReadInput -> ReadLine(
                         index = input.index,
                         content = queryStrings[i].toString(),
@@ -275,132 +447,6 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
             )
         }
     }
-
-    sealed interface MetaInfoInput<S : Sequence<S>>
-
-    class ReferencePointsInput<S : Sequence<S>>(
-        val partitioning: SequencePartitioning
-    ) : MetaInfoInput<S>
-
-    class AminoAcidInput(
-        val partitioning: SequencePartitioning
-    ) : MetaInfoInput<NucleotideSequence>
-
-    class QualityInput(
-        val quality: SequenceQuality
-    ) : MetaInfoInput<NucleotideSequence>
-
-    sealed interface AnnotationLine {
-        val content: String
-        fun subRange(from: Int, to: Int): AnnotationLine
-    }
-
-    data class QualityLine(
-        override val content: String
-    ) : AnnotationLine {
-        override fun subRange(from: Int, to: Int) = copy(
-            content = content.substring(from, to)
-        )
-    }
-
-    data class AminoAcidsLine(
-        override val content: String
-    ) : AnnotationLine {
-        override fun subRange(from: Int, to: Int) = copy(
-            content = content.substring(from, to)
-        )
-    }
-
-    data class ReferencePointsLine(
-        override val content: String
-    ) : AnnotationLine {
-        override fun subRange(from: Int, to: Int) = copy(
-            content = content.substring(from, to)
-        )
-    }
-
-    sealed interface LineWithPositions {
-        val content: String
-        val positions: IntArray
-        fun subRange(from: Int, to: Int): LineWithPositions
-
-        val firstPosition: Int
-            get() {
-                for (pos in positions) if (pos >= 0) return pos
-                for (pos in positions) if (pos < -1) return -2 - pos
-                return -1
-            }
-
-        val lastPosition: Int
-            get() {
-                for (i in positions.indices.reversed()) if (positions[i] >= 0) return positions[i]
-                for (i in positions.indices.reversed()) if (positions[i] < -1) return -2 - positions[i]
-                return -1
-            }
-    }
-
-    sealed interface QueryLine : LineWithPositions {
-        override fun subRange(from: Int, to: Int): QueryLine
-    }
-
-    class SubjectLine<S : Sequence<S>>(
-        val name: String,
-        val source: S,
-        override val content: String,
-        override val positions: IntArray
-    ) : LineWithPositions {
-        override fun subRange(from: Int, to: Int): SubjectLine<S> = SubjectLine(
-            name = name,
-            source = source,
-            content = content.substring(from, to),
-            positions = positions.copyOfRange(from, to)
-        )
-    }
-
-    class AlignmentLine(
-        val geneName: String,
-        override val content: String,
-        override val positions: IntArray,
-        val alignmentScore: Int,
-        val hitScore: Int
-    ) : QueryLine {
-        override fun subRange(from: Int, to: Int) = AlignmentLine(
-            geneName = geneName,
-            content = content.substring(from, to),
-            positions = positions.copyOfRange(from, to),
-            alignmentScore = alignmentScore,
-            hitScore = hitScore
-        )
-    }
-
-
-    class ReadLine(
-        val index: String,
-        override val content: String,
-        override val positions: IntArray
-    ) : QueryLine {
-        override fun subRange(from: Int, to: Int) = ReadLine(
-            index = index,
-            content = content.substring(from, to),
-            positions = positions.copyOfRange(from, to)
-        )
-    }
-
-    sealed interface Input<S : Sequence<S>> {
-        val alignment: Alignment<S>
-    }
-
-    class AlignmentInput<S : Sequence<S>>(
-        val geneName: String,
-        override val alignment: Alignment<S>,
-        val alignmentScore: Int,
-        val hitScore: Int
-    ) : Input<S>
-
-    class ReadInput<S : Sequence<S>>(
-        val index: String,
-        override val alignment: Alignment<S>
-    ) : Input<S>
 }
 
 

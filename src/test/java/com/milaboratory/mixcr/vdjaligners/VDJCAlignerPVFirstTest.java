@@ -20,7 +20,6 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import io.repseq.core.Chains;
@@ -86,8 +85,8 @@ public class VDJCAlignerPVFirstTest {
 
         for (VDJCAlignments alignments : alignemntsList) {
             for (int target = 0; target < alignments.numberOfTargets(); target++) {
-                MultiAlignmentHelper helperBig = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, target);
-                for (MultiAlignmentHelper helper : helperBig.split(80)) {
+                MultiAlignmentHelper<?> helperBig = MultiAlignmentHelper.Builder.formatMultiAlignments(alignments, target);
+                for (MultiAlignmentHelper<?> helper : helperBig.split(80)) {
                     System.out.println(helper.format());
                     System.out.println();
                     if (--k < 0)
@@ -136,7 +135,7 @@ public class VDJCAlignerPVFirstTest {
 
         for (VDJCAlignments al : align.alignments) {
             for (int i = 0; i < al.numberOfTargets(); i++) {
-                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i).format());
+                System.out.println(MultiAlignmentHelper.Builder.formatMultiAlignments(al, i).format());
                 System.out.println();
             }
             System.out.println();

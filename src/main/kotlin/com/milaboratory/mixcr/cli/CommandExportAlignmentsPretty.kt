@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.primitives.Filter
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.afiltering.AFilter
@@ -268,7 +268,8 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     """.trimIndent()
                 )
             }
-            val targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i)
+            val targetAsMultiAlignment = MultiAlignmentHelper.Builder
+                .formatMultiAlignments(alignments, i, addReads = alignments.originalReads != null)
             val split = targetAsMultiAlignment.split(80)
             for (spl in split) {
                 output.println(spl.format())
