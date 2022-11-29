@@ -33,6 +33,11 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
      */
     public static final String ALL_TAGS_OF_TYPE = "allTags:";
     /**
+     * Common prefix to use in contexts where there is a need to specify
+     * all tags of a specific type and higher (i.e. in different group filters)
+     */
+    public static final String ALL_TAGS_UP_TO_TYPE = "allTagsUpTo:";
+    /**
      * Universal prefix to be used in contexts where not only tags can be used as a [grouping] key
      */
     public static final String TAGS_KEY_PREFIX = "tag:";
@@ -48,7 +53,10 @@ public final class TagsInfo extends AbstractCollection<TagInfo> {
     public TagsInfo(@JsonProperty("sortingLevel") int sortingLevel, @JsonProperty("tags") TagInfo... tags) {
         Objects.requireNonNull(tags);
         this.sortingLevel = sortingLevel;
-        this.tags = tags;
+        this.tags = tags.clone();
+        for (int i = 0; i < tags.length; i++)
+            if (tags[i].getIndex() != i)
+                throw new IllegalArgumentException("Wrong tag index.");
     }
 
     public boolean hasTagsWithType(TagType groupingLevel) {

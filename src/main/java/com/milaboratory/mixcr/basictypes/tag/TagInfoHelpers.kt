@@ -12,12 +12,15 @@
 package com.milaboratory.mixcr.basictypes.tag
 
 val TagsInfo.tagAliases
-    get() = TagType.values()
+    get() = (TagType.values()
         .map { type -> type to filter { it.type == type }.map { it.name } }
         .filter { it.second.isNotEmpty() }
         .flatMap { typeToTags ->
             typeToTags.first.aliases
                 .filter { indexOf(it) == -1 }
                 .map { alias -> alias to typeToTags.second }
-        }
+        } +
+            TagType.values().map { tagType ->
+                (TagsInfo.ALL_TAGS_UP_TO_TYPE + tagType.name) to (0 until getDepthFor(tagType)).map { get(it).name }
+            })
         .toMap()

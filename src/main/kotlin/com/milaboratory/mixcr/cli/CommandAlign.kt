@@ -113,18 +113,33 @@ import kotlin.math.max
 object CommandAlign {
     const val COMMAND_NAME = "align"
 
+    /** Defines specific mapping between tag values and sample name (i.e. one row from sample table) */
+    data class SampleTableRow(
+        @JsonProperty("matchingTagValues") val matchingTagValues: List<String>,
+        @JsonProperty("sampleName") val sampleName: String
+    )
+
+    /** Whole set of sample tag values to sample name mappings (i.e. sample table) */
+    data class SampleTable(
+        @JsonProperty("matchingTagNames") val matchingTagNames: List<String>,
+        @JsonProperty("sampleTagName") val sampleTagName: String,
+        @JsonProperty("samples") val samples: List<SampleTableRow>
+    )
+
     data class Params(
         @JsonProperty("species") val species: String = "",
         @JsonProperty("libraryName") val library: String = "default",
         @JsonProperty("trimmingQualityThreshold") val trimmingQualityThreshold: Byte,
         @JsonProperty("trimmingWindowSize") val trimmingWindowSize: Byte,
         @JsonProperty("chains") val chains: String = "ALL",
+        @JsonProperty("replaceWildcards") val replaceWildcards: Boolean = true,
         @JsonProperty("overlapPairedReads") val overlapPairedReads: Boolean = true,
         @JsonProperty("bamDropNonVDJ") val bamDropNonVDJ: Boolean = false,
         @JsonProperty("writeFailedAlignments") val writeFailedAlignments: Boolean = false,
         @JsonProperty("tagPattern") val tagPattern: String? = null,
         @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
         @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
+        @JsonProperty("sampleTable") val sampleTable: SampleTable? = null,
         @JsonProperty("readIdAsCellTag") val readIdAsCellTag: Boolean = false,
         @JsonProperty("limit") val limit: Long? = null,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
@@ -701,7 +716,7 @@ object CommandAlign {
                     SingleFastqReader.DEFAULT_QUALITY_FORMAT,
                     CompressionType.detectCompressionType(path.name),
                     false, readBufferSize,
-                    true, true
+                    cmdParams.replaceWildcards, true
                 )
             }
 
@@ -711,7 +726,7 @@ object CommandAlign {
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
                     MiXCRMain.lm.reportApplicationInputs(files)
-                    BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, true)
+                    BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
                         .map { ProcessingBundle(it) }
                 }
 
@@ -722,7 +737,7 @@ object CommandAlign {
                     MiXCRMain.lm.reportApplicationInputs(listOf(inputFile))
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
-                        true
+                        cmdParams.replaceWildcards
                     )
                         .map { ProcessingBundle(it) }
                 }
@@ -865,7 +880,7 @@ object CommandAlign {
                         inputHash,
                         paramsSpec,
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
-                        TagsInfo(0, *tagsExtractor.tagInfos.toTypedArray()),
+                        tagsExtractor.tagsInfo,
                         aligner.parameters,
                         aligner.parameters.featuresToAlignMap,
                         null,
