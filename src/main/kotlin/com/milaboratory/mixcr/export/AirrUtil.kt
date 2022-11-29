@@ -145,7 +145,8 @@ object AirrUtil {
             Range(0, target.size()),
             "",
             target,
-            alignments
+            alignments,
+            emptyList()
         )
 
         // merging alignments

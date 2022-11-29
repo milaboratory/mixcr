@@ -16,7 +16,6 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.SequenceQuality
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter.Companion.makeQualityLine
 import io.kotest.matchers.collections.shouldContainInOrder
 import org.junit.Test
 
@@ -64,9 +63,9 @@ class MultiAlignmentHelperTest {
             MultiAlignmentHelper.DEFAULT_SETTINGS, Range(0, seq0.size()),
             name = "Subject",
             inputs.first().alignment.sequence1,
-            inputs
+            inputs,
+            listOf(MultiAlignmentHelper.QualityInput(seq0qual))
         )
-        helper.addAnnotation(helper.makeQualityLine(seq0qual))
 
         helper.format().also { println(it) }.lines()
             .map { it.trimEnd() } shouldContainInOrder """
@@ -142,7 +141,8 @@ class MultiAlignmentHelperTest {
             MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
             name = "",
             inputs.first().alignment.sequence1,
-            inputs
+            inputs,
+            emptyList()
         ).format().also { println(it) }.lines()
             .map { it.trimEnd() } shouldContainInOrder """
 |       0 GATAC-----ATTAGA---CACAGATACA--- 20  Score 
@@ -156,9 +156,10 @@ class MultiAlignmentHelperTest {
             MultiAlignmentHelper.DOT_MATCH_SETTINGS, Range(0, seq0.size()),
             name = "",
             seq0,
-            emptyList()
+            emptyList(),
+            listOf(MultiAlignmentHelper.QualityInput(seq0qual))
         )
-        build.addAnnotation(build.makeQualityLine(seq0qual))
+        build
             .format().also { println(it) }.lines()
             .map { it.trimEnd() } shouldContainInOrder """
 |Quality   787788787777778887878   
@@ -206,7 +207,8 @@ class MultiAlignmentHelperTest {
             Range(0, seq0.size()),
             name = "",
             inputs.first().alignment.sequence1,
-            inputs
+            inputs,
+            emptyList()
         ).format().also { println(it) }.lines()
             .map { it.trimEnd() } shouldContainInOrder """
 | 0 AACGATGGGCGCAAATATAGGGAGAACTCCGATCGACATCGGGTATCGCCCTGGTACGATCC--CGGTGACAAAGCGTTCGGACCTGTCTGGACGCTAGAACGC 101  Score

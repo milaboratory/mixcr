@@ -16,7 +16,6 @@ import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper.Companion.build
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter.Companion.makeAALine
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 import io.repseq.core.ExtendedReferencePointsBuilder
@@ -92,19 +91,20 @@ class VDJCAlignmentsFormatterTest {
             seq, Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
             Range(0, seq.size()), Range(0, seq.size()), 100.0f
         )
+        val b = ExtendedReferencePointsBuilder()
+        b.setPosition(rp1, 0)
+        b.setPosition(rp2, seq.size())
+        val partitioning = b.build()
         val ml = build(
             MultiAlignmentHelper.DEFAULT_SETTINGS,
             Range(0, seq.size()),
             "",
             al.sequence1.sequence,
-            listOf(MultiAlignmentHelper.AlignmentInput("", al, 10, 20))
+            listOf(MultiAlignmentHelper.AlignmentInput("", al, 10, 20)),
+            listOf(MultiAlignmentHelper.AminoAcidInput(partitioning))
         )
-        val b = ExtendedReferencePointsBuilder()
-        b.setPosition(rp1, 0)
-        b.setPosition(rp2, seq.size())
-        ml.addAnnotation(ml.makeAALine(b.build(), seq))
         if (show) println(ml)
-        return ml.getAnnotationString(0)
+        return MultiAlignmentFormatter.LinesFormatter().buildAnnotationLines(ml)[0].content
     }
 
     private fun testWithLeftover(
@@ -117,20 +117,21 @@ class VDJCAlignmentsFormatterTest {
             seq, Mutations.EMPTY_NUCLEOTIDE_MUTATIONS,
             Range(0, seq.size()), Range(0, seq.size()), 100.0f
         )
-        val ml = build(
-            MultiAlignmentHelper.DEFAULT_SETTINGS,
-            Range(0, seq.size()),
-            "",
-            al.sequence1,
-            listOf(MultiAlignmentHelper.AlignmentInput("", al, 20, 30))
-        )
         val b = ExtendedReferencePointsBuilder()
         b.setPosition(rp1, 0)
         b.setPosition(rp2, seqStr1.length)
         b.setPosition(rp3, seqStr1.length + 10)
         b.setPosition(rp4, seqStr1.length + 10 + seqStr2.length)
-        ml.addAnnotation(ml.makeAALine(b.build(), seq))
+        val partitioning = b.build()
+        val ml = build(
+            MultiAlignmentHelper.DEFAULT_SETTINGS,
+            Range(0, seq.size()),
+            "",
+            al.sequence1,
+            listOf(MultiAlignmentHelper.AlignmentInput("", al, 20, 30)),
+            listOf(MultiAlignmentHelper.AminoAcidInput(partitioning))
+        )
         if (show) println(ml)
-        return ml.getAnnotationString(0)
+        return MultiAlignmentFormatter.LinesFormatter().buildAnnotationLines(ml)[0].content
     }
 }

@@ -297,9 +297,8 @@ class FullSeqAssemblerTest {
         val outputStream = ByteArrayOutputStream()
         outputCompact(PrintStream(outputStream), clone)
         val result = outputStream.toString()
-        println(result)
 
-        result.lines().map { it.trimEnd() } shouldContainInOrder """
+        result.also { println(it) }.lines().map { it.trimEnd() } shouldContainInOrder """
 |>>> Clone id: 0
 |>>> Abundance, reads (fraction): 2.0 (NaN)
 |
@@ -324,7 +323,6 @@ class FullSeqAssemblerTest {
 |IGHD3-22*00  46                                            tagtggttattactacg                     62   85 (85)
 |   IGHJ4*00  25                                                               tttgactactggggccag 42   215 (215)
 |
-|                                                                  
 |                                 FR4>                             
 |             G  T  L  V  T  V  S  S _                             
 | Quality    99999999999999999999999999999999999999999999999999    

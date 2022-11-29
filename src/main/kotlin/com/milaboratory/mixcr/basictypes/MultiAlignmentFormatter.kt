@@ -13,7 +13,11 @@ package com.milaboratory.mixcr.basictypes
 
 import cc.redberry.primitives.Filter
 import cc.redberry.primitives.FilterUtil
+import com.milaboratory.core.sequence.AminoAcidAlphabet
+import com.milaboratory.core.sequence.AminoAcidSequence
+import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Sequence
+import com.milaboratory.core.sequence.SequenceQuality
 import io.repseq.core.ReferencePoint
 import io.repseq.core.SequencePartitioning
 import java.util.*
@@ -71,6 +75,8 @@ object MultiAlignmentFormatter {
         fun <S : Sequence<S>> formatLines(
             multiAlignmentHelper: MultiAlignmentHelper<S>
         ): String = multiAlignmentHelper.run {
+            val annotations = buildAnnotationLines(this)
+
             val aCount = queries.size
             val asSize = annotations.size
             val lines: Array<String> = Array(aCount + 1 + asSize) { "" }
@@ -105,6 +111,137 @@ object MultiAlignmentFormatter {
                 result.append(lines[i])
             }
             return result.toString()
+        }
+
+        fun <S : Sequence<S>> buildAnnotationLines(multiAlignmentHelper: MultiAlignmentHelper<S>): List<MultiAlignmentHelper.AnnotationLine> =
+            multiAlignmentHelper.metaInfo.flatMap { meta ->
+                when (meta) {
+                    is MultiAlignmentHelper.AminoAcidInput -> listOf(
+                        multiAlignmentHelper.makeAALine(
+                            meta.partitioning,
+                            multiAlignmentHelper.subject.source as NucleotideSequence
+                        )
+                    )
+
+                    is MultiAlignmentHelper.QualityInput -> listOf(
+                        multiAlignmentHelper.makeQualityLine(meta.quality)
+                    )
+
+                    is MultiAlignmentHelper.ReferencePointsInput -> multiAlignmentHelper.makePointsLines(
+                        this.pointsToDraw,
+                        meta.partitioning
+                    )
+                }
+            }
+
+        private fun MultiAlignmentHelper<*>.makeQualityLine(quality: SequenceQuality): MultiAlignmentHelper.AnnotationLine {
+            val chars = CharArray(size())
+            for (i in 0 until size()) chars[i] = when {
+                subject.positions[i] < 0 -> ' '
+                else -> simplifiedQuality(quality.value(subject.positions[i]).toInt())
+            }
+            return MultiAlignmentHelper.QualityLine(content = String(chars))
+        }
+
+        private fun simplifiedQuality(value: Int): Char {
+            var result = value
+            result /= 5
+            if (result > 9) result = 9
+            return result.toString()[0]
+        }
+
+        private fun MultiAlignmentHelper<*>.makeAALine(
+            partitioning: SequencePartitioning,
+            target: NucleotideSequence
+        ): MultiAlignmentHelper.AnnotationLine {
+            val trParams = partitioning.getTranslationParameters(target.size())
+            val line = CharArray(size())
+            Arrays.fill(line, ' ')
+            for (trParam in trParams) {
+                if (subject.firstPosition !in trParam.range && subject.lastPosition !in trParam.range) continue
+                val mainSequence = target.getRange(trParam.range)
+                val leftover = trParam.codonLeftoverRange?.let { target.getRange(it) }
+                val bigSeq = when {
+                    leftover == null -> mainSequence
+                    trParam.leftIncompleteCodonRange() != null -> leftover.concatenate(mainSequence)
+                    else -> mainSequence.concatenate(leftover)
+                }
+                val aa = AminoAcidSequence.translate(bigSeq, trParam.translationParameters)
+                var aaPosition = 0
+                var ntPosition = trParam.range.from + AminoAcidSequence.convertAAPositionToNt(
+                    aaPosition, mainSequence.size(), trParam.translationParameters
+                )
+                if (aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON) {
+                    val position = subjectToAlignmentPosition(ntPosition)
+                    if (position != -1) {
+                        line[position] = AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition)) // '_'
+                    }
+                    ++aaPosition
+                }
+                while (aaPosition < aa.size() && (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON)) {
+                    ntPosition = trParam.range.from + AminoAcidSequence.convertAAPositionToNt(
+                        aaPosition, bigSeq.size(), trParam.translationParameters
+                    )
+                    if (leftover != null && trParam.leftIncompleteCodonRange() != null) {
+                        ntPosition -= trParam.leftIncompleteCodonRange().length()
+                    }
+                    var isLeftover = false
+                    if (leftover != null) {
+                        isLeftover = when {
+                            trParam.leftIncompleteCodonRange() != null -> aaPosition == 0
+                            else -> aaPosition == aa.size() - 1
+                        }
+                    }
+                    if (aa.codeAt(aaPosition) != AminoAcidAlphabet.INCOMPLETE_CODON) {
+                        ++ntPosition
+                    }
+                    var c = AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition))
+                    if (isLeftover) c = c.lowercaseChar()
+                    val position = subjectToAlignmentPosition(ntPosition)
+                    if (position != -1) {
+                        line[position] = c
+                    }
+                    ++aaPosition
+                }
+                if (aaPosition < aa.size() && (aaPosition < aa.size() - 1 || aa.codeAt(aaPosition) == AminoAcidAlphabet.INCOMPLETE_CODON)) {
+                    ntPosition = trParam.range.from + AminoAcidSequence.convertAAPositionToNt(
+                        aaPosition, mainSequence.size(), trParam.translationParameters
+                    )
+                    val position = subjectToAlignmentPosition(ntPosition)
+                    if (position != -1) {
+                        line[position] = AminoAcidSequence.ALPHABET.codeToSymbol(aa.codeAt(aaPosition))
+                    }
+                }
+            }
+            return MultiAlignmentHelper.AminoAcidsLine(content = String(line))
+        }
+
+        private fun MultiAlignmentHelper<*>.makePointsLines(
+            pointsToDraw: Array<out PointToDraw>,
+            partitioning: SequencePartitioning
+        ): List<MultiAlignmentHelper.AnnotationLine> {
+            val markers = mutableListOf<CharArray>()
+            markers += emptyLine(size())
+            var result: Boolean
+            var i: Int
+            for (point in pointsToDraw) {
+                i = 0
+                do {
+                    if (markers.size == i) markers += emptyLine(size())
+                    result = point.draw(partitioning, this, markers[i++], false)
+                } while (!result)
+            }
+            return markers.reversed().map { marker ->
+                MultiAlignmentHelper.ReferencePointsLine(
+                    content = String(marker)
+                )
+            }
+        }
+
+        private fun emptyLine(size: Int): CharArray {
+            val markers = CharArray(size)
+            Arrays.fill(markers, ' ')
+            return markers
         }
     }
 

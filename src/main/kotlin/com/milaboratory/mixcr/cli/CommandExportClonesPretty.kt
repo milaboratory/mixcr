@@ -178,7 +178,6 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
     }
 
     companion object {
-        @JvmStatic
         fun outputCompact(output: PrintStream, clone: Clone) {
             output.println(">>> Clone id: " + clone.id)
             output.println(">>> Abundance, reads (fraction): " + clone.count + " (" + clone.fraction + ")")

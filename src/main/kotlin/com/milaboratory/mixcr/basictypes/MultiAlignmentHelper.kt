@@ -28,10 +28,10 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
     // subject / queries nomenclature seems to be swapped here...
     // subject here corresponds to sequence2 from alignments (so, the query sequence)
     // queries here corresponds to sequence1 from alignments (so, the reference sequence)
-    val subject: SubjectLine,
+    val subject: SubjectLine<S>,
     val queries: Array<QueryLine>,
     val match: Array<BitArray>,
-    val annotations: MutableList<AnnotationLine> = mutableListOf<AnnotationLine>()
+    val metaInfo: List<MetaInfoInput<S>>
 ) {
 
 
@@ -41,12 +41,6 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
         get() = (queries.map { it.firstPosition.toString() } + subject.firstPosition.toString())
             .maxOf { it.length }
 
-    fun addAnnotation(annotationLine: AnnotationLine): MultiAlignmentHelper<S> {
-        require(annotationLine.content.length == size())
-        annotations += annotationLine
-        return this
-    }
-
     fun subjectToAlignmentPosition(subjectPosition: Int): Int {
         for (i in subject.positions.indices) if (subject.positions[i] == subjectPosition) return i
         return -1
@@ -55,8 +49,6 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
     fun getAbsSubjectPositionAt(position: Int): Int = aabs(subject.positions[position])
 
     fun getAbsQueryPositionAt(index: Int, position: Int): Int = aabs(queries[index].positions[position])
-
-    fun getAnnotationString(i: Int): String = annotations[i].content
 
     fun size(): Int = subject.content.length
 
@@ -91,7 +83,7 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
             subject.subRange(from, to),
             cQueries,
             cMatch,
-            annotations.map { it.subRange(from, to) }.toMutableList()
+            metaInfo
         )
     }
 
@@ -144,7 +136,8 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
             subjectRange: Range,
             name: String,
             subject: S,
-            inputs: List<Input<S>>
+            inputs: List<Input<S>>,
+            metaInfo: List<MetaInfoInput<S>>
         ): MultiAlignmentHelper<S> {
             for (input in inputs) require(input.alignment.sequence1 == subject)
             var subjectPointer = subjectRange.from
@@ -272,11 +265,13 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
             return MultiAlignmentHelper(
                 SubjectLine(
                     name = name,
+                    source = subject,
                     content = subjectString.toString(),
                     positions = subjectPositions.toArray()
                 ),
                 queryStringsArray,
-                matchesBAs
+                matchesBAs,
+                metaInfo
             )
         }
     }
@@ -317,7 +312,6 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
     }
 
     data class ReferencePointsLine(
-        val partitioning: SequencePartitioning,
         override val content: String
     ) : AnnotationLine {
         override fun subRange(from: Int, to: Int) = copy(
@@ -349,13 +343,15 @@ class MultiAlignmentHelper<S : Sequence<S>> private constructor(
         override fun subRange(from: Int, to: Int): QueryLine
     }
 
-    class SubjectLine(
+    class SubjectLine<S : Sequence<S>>(
         val name: String,
+        val source: S,
         override val content: String,
         override val positions: IntArray
     ) : LineWithPositions {
-        override fun subRange(from: Int, to: Int): SubjectLine = SubjectLine(
+        override fun subRange(from: Int, to: Int): SubjectLine<S> = SubjectLine(
             name = name,
+            source = source,
             content = content.substring(from, to),
             positions = positions.copyOfRange(from, to)
         )
