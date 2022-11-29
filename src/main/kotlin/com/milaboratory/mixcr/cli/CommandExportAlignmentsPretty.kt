@@ -15,6 +15,7 @@ import cc.redberry.primitives.Filter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.afiltering.AFilter
 import com.milaboratory.mixcr.util.and
@@ -230,7 +231,10 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
                         .take(countAfter)
                         .forEach { alignments ->
                             ++filtered
-                            if (logger.verbose) outputVerbose(output, alignments) else outputCompact(output, alignments)
+                            when {
+                                logger.verbose -> outputVerbose(output, alignments, readerAndHeader.info.tagsInfo)
+                                else -> outputCompact(output, alignments, readerAndHeader.info.tagsInfo)
+                            }
                         }
 
 
@@ -240,7 +244,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         }
     }
 
-    fun outputCompact(output: PrintStream, alignments: VDJCAlignments) {
+    fun outputCompact(output: PrintStream, alignments: VDJCAlignments, tagsInfo: TagsInfo) {
         output.println(
             ">>> Read ids: " + Arrays.toString(alignments.readIds)
                 .replace("[", "")
@@ -252,6 +256,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
             output.print(" ")
             output.println(alignments.mappingType)
         }
+        output.printTags(tagsInfo, alignments)
         output.println()
         output.println()
         for (i in 0 until alignments.numberOfTargets()) {
@@ -272,12 +277,13 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         }
     }
 
-    private fun outputVerbose(output: PrintStream, alignments: VDJCAlignments) {
+    private fun outputVerbose(output: PrintStream, alignments: VDJCAlignments, tagsInfo: TagsInfo) {
         output.println(
             ">>> Read ids: " + Arrays.toString(alignments.readIds)
                 .replace("[", "")
                 .replace("]", "")
         )
+        output.printTags(tagsInfo, alignments)
         output.println()
         output.println(">>> Target sequences (input sequences):")
         output.println()
@@ -332,6 +338,16 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         Arrays.fill(ll, '=')
         output.println(ll)
         output.println()
+    }
+
+    private fun PrintStream.printTags(tagsInfo: TagsInfo, alignments: VDJCAlignments) {
+        if (tagsInfo != TagsInfo.NO_TAGS) {
+            println()
+            println(">>> Tags:")
+            tagsInfo.forEach { tag ->
+                println(">>> ${tag.name}: ${alignments.tagCount.singleOrNull(tag.index)}")
+            }
+        }
     }
 
     private fun printGeneFeatures(output: PrintStream, prefix: String, containsFilter: Filter<GeneFeature>) {

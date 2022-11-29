@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.CommandExportAlignmentsPretty;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import io.repseq.core.GeneFeature;
@@ -95,7 +96,7 @@ public class VDJCObjectTest {
         assertNotNull(align.alignments.get(3).getIncompleteFeature(new GeneFeature(new GeneFeature(FR3Begin, FR3End.move(-10)), CDR3)));
         //new ActionExportAlignmentsPretty().outputCompact(System.out, al);
 
-        new CommandExportAlignmentsPretty().outputCompact(System.out, align.alignments.get(0));
+        new CommandExportAlignmentsPretty().outputCompact(System.out, align.alignments.get(0), TagsInfo.NO_TAGS);
         System.out.println(align.alignments.get(0).getIncompleteFeature(CDR3));
         System.out.println(align.alignments.get(0).getIncompleteFeature(VDJRegion));
     }

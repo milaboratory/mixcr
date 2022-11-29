@@ -26,6 +26,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter.Companion.getTargetAsMultiAlignment
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommandExportClonesPretty.Companion.outputCompact
 import com.milaboratory.mixcr.util.RunMiXCR
 import com.milaboratory.mixcr.util.RunMiXCR.RunMiXCRAnalysis
@@ -295,7 +296,7 @@ class FullSeqAssemblerTest {
         clones shouldHaveSize 1
         val clone = clones.first()
         val outputStream = ByteArrayOutputStream()
-        outputCompact(PrintStream(outputStream), clone)
+        outputCompact(PrintStream(outputStream), clone, TagsInfo.NO_TAGS)
         val result = outputStream.toString()
 
         result.also { println(it) }.lines().map { it.trimEnd() } shouldContainInOrder """
@@ -379,7 +380,7 @@ class FullSeqAssemblerTest {
             println()
         }
         for (clone in assemble.cloneSet) {
-            outputCompact(System.out, clone)
+            outputCompact(System.out, clone, TagsInfo.NO_TAGS)
         }
 
         //Assert.assertEquals(1, assemble.cloneSet.size());
@@ -417,7 +418,7 @@ class FullSeqAssemblerTest {
             .sortedWith(Comparator.comparingDouble { obj: Clone -> obj.count }
                 .reversed())
         for (clone in clones) {
-            outputCompact(System.out, clone!!)
+            outputCompact(System.out, clone!!, TagsInfo.NO_TAGS)
             println()
             println(" ================================================ ")
             println()

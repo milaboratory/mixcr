@@ -17,6 +17,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MultiAlignmentFormatter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.and
 import gnu.trove.set.hash.TIntHashSet
@@ -170,7 +171,7 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
                 .take(countAfter)
                 .forEach { clone ->
                     ++filtered
-                    outputCompact(output, clone)
+                    outputCompact(output, clone, cloneSet.tagsInfo)
                 }
 
             output.println("Filtered: " + filtered + " / " + total + " = " + 100.0 * filtered / total + "%")
@@ -178,9 +179,15 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
     }
 
     companion object {
-        fun outputCompact(output: PrintStream, clone: Clone) {
+        fun outputCompact(output: PrintStream, clone: Clone, tagsInfo: TagsInfo) {
             output.println(">>> Clone id: " + clone.id)
             output.println(">>> Abundance, reads (fraction): " + clone.count + " (" + clone.fraction + ")")
+            if (tagsInfo != TagsInfo.NO_TAGS) {
+                println(">>> Tags:")
+                tagsInfo.forEach { tag ->
+                    output.println(">>> ${tag.name}: ${clone.tagCount.getTagDiversity(tag.index + 1)}")
+                }
+            }
             output.println()
             for (i in 0 until clone.numberOfTargets()) {
                 val targetAsMultiAlignment = VDJCAlignmentsFormatter(addReads = false)
