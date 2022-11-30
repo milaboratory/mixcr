@@ -136,8 +136,11 @@ object AirrUtil {
             }
             if (!validPaddings) continue
             val germlinePaddings = IMGTPadding.calculateForSequence(gene.partitioning, refGeneFeature)
-            if (germlinePaddings == null) validPaddings = false
-            paddingsByGeneType[gt] = germlinePaddings
+            if (germlinePaddings == null) {
+                validPaddings = false
+            } else {
+                paddingsByGeneType[gt] = germlinePaddings
+            }
         }
 
         val helper: MultiAlignmentHelper<NucleotideSequence> = MultiAlignmentHelper.Builder.build(

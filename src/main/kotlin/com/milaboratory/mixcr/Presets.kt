@@ -37,6 +37,7 @@ import com.milaboratory.mixcr.cli.CommandExtend
 import com.milaboratory.mixcr.cli.CommandListPresets
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.util.CosineSimilarity
 import com.milaboratory.primitivio.annotations.Serializable
 import org.apache.commons.io.IOUtils
@@ -168,7 +169,7 @@ object Presets {
                 if (candidates == null) {
                     candidates = CosineSimilarity.mostSimilar(name, visiblePresets).take(limits.last)
                 }
-                throw ApplicationException(
+                throw ValidationException(
                     """
 No preset with name "$name".
 Here are supported presets with similar names:
