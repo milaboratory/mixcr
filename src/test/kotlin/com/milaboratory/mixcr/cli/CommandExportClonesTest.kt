@@ -160,4 +160,13 @@ class CommandExportClonesTest {
         TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -nFeature CDR1 $input ${output.path}")
         output.readLines()[1].split("\t") shouldBe listOf("")
     }
+
+    @Test
+    fun `complex feature`() {
+        val input =
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
+        val output = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
+        output.delete()
+        TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -nFeature CDR1+CDR2+CDR3 $input ${output.path}")
+    }
 }

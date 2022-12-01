@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.tests;
 
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.SingleRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -64,12 +63,10 @@ public class MiXCRTestUtils {
             // if (alignments.getTargetDescriptions() != null)
             //     System.out.println(">>> Description: " + alignments.getTargetDescriptions()[i] + "\n");
 
-            MultiAlignmentHelper targetAsMultiAlignment = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, i);
-            if (targetAsMultiAlignment == null)
-                continue;
-            MultiAlignmentHelper[] split = targetAsMultiAlignment.split(80);
-            for (MultiAlignmentHelper spl : split) {
-                System.out.println(spl);
+            MultiAlignmentHelper<?> targetAsMultiAlignment = MultiAlignmentHelper.Builder.formatMultiAlignments(alignments, i);
+            MultiAlignmentHelper<?>[] split = targetAsMultiAlignment.split(80);
+            for (MultiAlignmentHelper<?> spl : split) {
+                System.out.println(spl.format());
                 System.out.println();
             }
         }
