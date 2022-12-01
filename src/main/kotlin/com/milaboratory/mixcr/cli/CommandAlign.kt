@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.io.CompressionType
+import com.milaboratory.core.io.sequence.MultiReader
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.io.sequence.SequenceReadUtil
 import com.milaboratory.core.io.sequence.SequenceReaderCloseable
@@ -56,11 +57,12 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.QuadEndFastq
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.SingleEndFastq
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.TripleEndFastq
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundle
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotAligned
@@ -165,13 +167,17 @@ object CommandAlign {
                     f0.matches(InputFileType.BAM) -> BAM
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
-            } else if (first.size == 2) {
-                val f0 = first[0]
-                val f1 = first[0]
-                if (f0.matches(InputFileType.FASTQ) && f0.matches(InputFileType.FASTQ))
-                    PairedEndFastq
-                else
-                    throw ValidationException("Only fastq supports paired end input, can't recognise: $f0 + $f1")
+            } else if (first.size <= 4) {
+                first.forEach { f ->
+                    if (!f.matches(InputFileType.FASTQ))
+                        throw ValidationException("Only fastq supports multiple end inputs, can't recognise: $f")
+                }
+                when (first.size) {
+                    2 -> PairedEndFastq
+                    3 -> TripleEndFastq
+                    4 -> QuadEndFastq
+                    else -> throw ValidationException("Too many inputs")
+                }
             } else
                 throw ValidationException("Too many inputs")
         }
@@ -179,10 +185,34 @@ object CommandAlign {
 
     class PathsForNotAligned {
         @set:Option(
+            description = ["Pipe not aligned I1 reads into separate file."],
+            names = ["--not-aligned-I1"],
+            paramLabel = "<path.fastq[.gz]>",
+            order = OptionsOrder.notAligned + 101
+        )
+        var notAlignedReadsI1: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
+
+        @set:Option(
+            description = ["Pipe not aligned I2 reads into separate file."],
+            names = ["--not-aligned-I2"],
+            paramLabel = "<path.fastq[.gz]>",
+            order = OptionsOrder.notAligned + 102
+        )
+        var notAlignedReadsI2: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
+
+        @set:Option(
             description = ["Pipe not aligned R1 reads into separate file."],
             names = ["--not-aligned-R1"],
             paramLabel = "<path.fastq[.gz]>",
-            order = OptionsOrder.notAligned + 101
+            order = OptionsOrder.notAligned + 103
         )
         var notAlignedReadsR1: Path? = null
             set(value) {
@@ -194,9 +224,33 @@ object CommandAlign {
             description = ["Pipe not aligned R2 reads into separate file."],
             names = ["--not-aligned-R2"],
             paramLabel = "<path.fastq[.gz]>",
-            order = OptionsOrder.notAligned + 102
+            order = OptionsOrder.notAligned + 104
         )
         var notAlignedReadsR2: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
+
+        @set:Option(
+            description = ["Pipe not parsed I1 reads into separate file."],
+            names = ["--not-parsed-I1"],
+            paramLabel = "<path.fastq[.gz]>",
+            order = OptionsOrder.notAligned + 201
+        )
+        var notParsedReadsI1: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.FASTQ)
+                field = value
+            }
+
+        @set:Option(
+            description = ["Pipe not parsed I2 reads into separate file."],
+            names = ["--not-parsed-I2"],
+            paramLabel = "<path.fastq[.gz]>",
+            order = OptionsOrder.notAligned + 202
+        )
+        var notParsedReadsI2: Path? = null
             set(value) {
                 ValidationException.requireFileType(value, InputFileType.FASTQ)
                 field = value
@@ -206,7 +260,7 @@ object CommandAlign {
             description = ["Pipe not parsed R1 reads into separate file."],
             names = ["--not-parsed-R1"],
             paramLabel = "<path.fastq[.gz]>",
-            order = OptionsOrder.notAligned + 201
+            order = OptionsOrder.notAligned + 203
         )
         var notParsedReadsR1: Path? = null
             set(value) {
@@ -218,7 +272,7 @@ object CommandAlign {
             description = ["Pipe not parsed R2 reads into separate file."],
             names = ["--not-parsed-R2"],
             paramLabel = "<path.fastq[.gz]>",
-            order = OptionsOrder.notAligned + 202
+            order = OptionsOrder.notAligned + 204
         )
         var notParsedReadsR2: Path? = null
             set(value) {
@@ -226,8 +280,31 @@ object CommandAlign {
                 field = value
             }
 
+        private val allowedStates = listOf(
+            "R1",
+            "R1,R2",
+            "I1,R1,R2",
+            "I1,I2,R1,R2",
+        )
+
         fun validate(inputType: Cmd.InputType) {
-            fun checkFailedReadsOptions(optionPrefix: String, r1: Path?, r2: Path?) {
+            fun Any?.tl(value: String) = if (this == null) emptyList() else listOf(value)
+
+            fun checkFailedReadsOptions(
+                optionPrefix: String,
+                i1: Path?, i2: Path?,
+                r1: Path?, r2: Path?
+            ) {
+                val states =
+                    (i1.tl("I1") + i2.tl("I2") + r1.tl("R1") + r2.tl("R2"))
+                        .joinToString(",")
+
+                if (!allowedStates.contains(states))
+                    throw ValidationException(
+                        "Unsupported combination of reads in ${optionPrefix}-*: found $states expected one of " +
+                                allowedStates.joinToString(" ")
+                    )
+
                 if (r1 != null) {
                     when {
                         r2 == null && inputType == PairedEndFastq -> throw ValidationException(
@@ -246,11 +323,15 @@ object CommandAlign {
             }
             checkFailedReadsOptions(
                 "--not-aligned",
+                notAlignedReadsI1,
+                notAlignedReadsI2,
                 notAlignedReadsR1,
                 notAlignedReadsR2
             )
             checkFailedReadsOptions(
                 "--not-parsed",
+                notParsedReadsI1,
+                notParsedReadsI2,
                 notParsedReadsR1,
                 notParsedReadsR2
             )
@@ -275,7 +356,8 @@ object CommandAlign {
         }
     }
 
-    const val inputsLabel = "(file_R1.fastq[.gz] file_R2.fastq[.gz]|file_RN.(fastq[.gz]|fasta|bam|sam))"
+    const val inputsLabel =
+        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|fasta|bam|sam))"
 
     private const val outputLabel = "alignments.vdjca"
 
@@ -538,7 +620,7 @@ object CommandAlign {
 
         @Parameters(
             index = "0",
-            arity = "2..3",
+            arity = "2..5",
             paramLabel = "$inputsLabel $outputLabel",
             hideParamSyntax = true,
             // help is covered by mkCommandSpec
@@ -639,11 +721,21 @@ object CommandAlign {
                 ?.toHexString()
         }
 
-        enum class InputType(val pairedRecords: Boolean, val isFastq: Boolean) {
-            SingleEndFastq(false, true),
-            PairedEndFastq(true, true),
-            Fasta(false, false),
-            BAM(true, false)
+        /** pairedRecords == null - means input files can't be directly used in analysis */
+        enum class InputType(val numberOfReads: Int, val isFastq: Boolean) {
+            SingleEndFastq(1, true),
+            PairedEndFastq(2, true),
+            TripleEndFastq(3, true),
+            QuadEndFastq(4, true),
+            Fasta(1, false),
+            BAM(2, false);
+
+            val pairedRecords: Boolean?
+                get() = when (numberOfReads) {
+                    1 -> false
+                    2 -> true
+                    else -> null
+                }
         }
 
         abstract class FastqGroupReader(fileGroups: List<FileGroup>) :
@@ -760,6 +852,17 @@ object CommandAlign {
                             ) as SequenceReaderCloseable<SequenceRead>
                     }
                 }
+
+                else -> {
+                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles)
+                    assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
+                    object : FastqGroupReader(inputFileGroups.fileGroups) {
+                        override fun nextReader(fileGroup: FileGroup) =
+                            MultiReader(
+                                *fileGroup.files.map(fastqReaderFactory).toTypedArray()
+                            ) as SequenceReaderCloseable<SequenceRead>
+                    }
+                }
             }
         }
 
@@ -812,7 +915,9 @@ object CommandAlign {
             val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups.tags)
 
             // true if final NSQTuple will have two reads, false otherwise
-            val pairedPayload = tagsExtractor.pairedPatternPayload ?: inputFileGroups.inputType.pairedRecords
+            val pairedPayload = tagsExtractor.pairedPatternPayload
+                ?: inputFileGroups.inputType.pairedRecords
+                ?: throw ValidationException("Triple and quad fastq inputs require tag pattern for parsing.")
 
             // Creating aligner
             val aligner = VDJCAligner.createAligner(
