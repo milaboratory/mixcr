@@ -60,11 +60,14 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
-            val fieldExtractors = SHMTreeFieldsExtractorsFactory.createExtractors(
-                addedFields,
-                MetaForExport(emptyList(), reader.header.allFullyCoveredBy, reader.footer.reports)
-            )
-            InfoWriter.create(out, fieldExtractors, !noHeader) { RowMetaForExport.empty }.use { output ->
+            val headerForExport =
+                HeaderForExport(reader.cloneSetInfos.map { it.tagsInfo }, reader.header.allFullyCoveredBy)
+            val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport)
+            InfoWriter.create(
+                out,
+                SHMTreeFieldsExtractorsFactory.createExtractors(addedFields, headerForExport),
+                !noHeader,
+            ) { rowMetaForExport }.use { output ->
                 reader.readTrees()
                     .filter { treeFilter?.match(it.treeId) != false }
                     .map { shmTree ->

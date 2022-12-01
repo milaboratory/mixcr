@@ -66,9 +66,9 @@
         ^NN(CELL2COLUMN:N{5})gagatctctgcttctgatggctc(R2:*)
   refineTagsAndSort:
     whitelists:
-      CELL3PLATE: builtin:cell-3-plate-han-2014
-      CELL1ROW: builtin:cell-1-row-han-2014
-      CELL2COLUMN: builtin:cell-2-column-han-2014
+      CELL3PLATE: builtin:han-2014-cell3-plate
+      CELL1ROW: builtin:han-2014-cell1-row
+      CELL2COLUMN: builtin:han-2014-cell2-column
     runCorrection: true
     parameters:
       correctionPower: 0.001
@@ -81,9 +81,7 @@
       postFilter:
         type: filter_groups
         groupingKeys:
-          - CELL1ROW
-          - CELL2COLUMN
-          - CELL3PLATE
+          - allTags:Cell
         predicates:
           - metrics:
               - type: group_metric_sum_weight
@@ -125,9 +123,7 @@
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - tag:CELL1ROW
-              - tag:CELL2COLUMN
-              - tag:CELL3PLATE
+              - allTags:Cell
             nestedFilter:
               type: filter_groups
               groupingKeys:
@@ -147,12 +143,8 @@
     splitFilesBy: [ ]
     fields:
       - field: "-cloneId"
-      - field: "-tag"
-        args: [ "CELL1ROW" ]
-      - field: "-tag"
-        args: [ "CELL2COLUMN" ]
-      - field: "-tag"
-        args: [ "CELL3PLATE" ]
+      - field: "-tags"
+        args: [ "Cell" ]
       - field: "-readCount"
       - field: "-targetSequences"
       - field: "-targetQualities"
@@ -212,3 +204,23 @@
   inheritFrom: han-et-al-2014-tcr
   align:
     inheritFrom: bundle-kaligner2-v1-base
+
+"vergani-et-al-2017-cdr3":
+  inheritFrom: bundle-umi-rna-kaligner2-global-c
+  mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: SetTagPattern
+      tagPattern: ^(UMI:N{16})N{10}(R1:*)\^N{19}(R2:*)
+  align:
+    inheritFrom: align-kaligner2-base-v1
+    overrides:
+      parameters:
+        vParameters:
+          geneFeatureToAlign: VRegionWithP
+
+"vergani-et-al-2017-full-length":
+  inheritFrom: vergani-et-al-2017-cdr3
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{FR1Begin:FR4End}" ]

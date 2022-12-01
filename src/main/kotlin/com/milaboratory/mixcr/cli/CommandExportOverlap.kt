@@ -204,11 +204,9 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
             extractors += TotalTagFraction(cellLevel, "CELL")
         }
 
-        val fileInfo = extractFileInfo(samples[0])
-        val fieldExtractors: List<FieldExtractor<Clone>> = CloneFieldsExtractorsFactory.createExtractors(
-            addedFields,
-            MetaForExport(listOf(fileInfo.header.tagsInfo), fileInfo.header.allFullyCoveredBy, fileInfo.footer.reports)
-        )
+        val header = IOUtil.extractHeader(samples[0])
+        val headerForExport = HeaderForExport(header)
+        val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(addedFields, headerForExport)
 
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
 
@@ -224,7 +222,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         }
 
         val overlap = OverlapUtil.overlap(samples.map { it.toString() }, { true }, criteria.ordering())
-        val rowMetaForExport = RowMetaForExport(fileInfo.header.tagsInfo)
+        val rowMetaForExport = RowMetaForExport(fileInfo.header.tagsInfo, headerForExport)
         overlap.mkElementsPort().use { port ->
             overlapBrowser.overlap(countsByChain, port).forEach { row ->
                 for ((ch, cloneOverlapGroup) in row) {

@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.basictypes
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import com.milaboratory.mitool.helpers.readList
 import com.milaboratory.mitool.helpers.writeList
@@ -22,7 +23,7 @@ import com.milaboratory.primitivio.annotations.Serializable
 import io.repseq.core.GeneFeature
 
 @Serializable(by = GeneFeatures.SerializerImpl::class)
-data class GeneFeatures(
+data class GeneFeatures @JsonCreator constructor(
     @JsonValue val features: List<GeneFeature>
 ) {
     constructor(geneFeature: GeneFeature) : this(listOf(geneFeature))
@@ -89,6 +90,7 @@ data class GeneFeatures(
 
     companion object {
         @JvmStatic
+        @JsonCreator // for JsonOverrider
         fun parse(value: String): GeneFeatures = if (value.startsWith("[")) {
             if (!value.endsWith("]"))
                 throw IllegalArgumentException("Malformed GeneFeatures: $value")

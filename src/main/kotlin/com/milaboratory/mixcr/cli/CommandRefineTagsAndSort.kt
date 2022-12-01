@@ -16,10 +16,12 @@ import cc.redberry.pipe.util.CountingOutputPort
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.pattern.Whitelist
 import com.milaboratory.mitool.pattern.WhitelistFromAddress
+import com.milaboratory.mitool.refinement.TagCorrectionPlan
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
@@ -33,7 +35,9 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.tag.TagValue
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
+import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.GroupingCriteria
@@ -44,7 +48,6 @@ import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
-import gnu.trove.list.array.TIntArrayList
 import org.apache.commons.io.FileUtils
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -248,27 +251,31 @@ object CommandRefineTagsAndSort {
             var thresholds: Map<CriticalThresholdKey, Double> = emptyMap()
             VDJCAlignmentsReader(inputFile).use { mainReader ->
                 val header = mainReader.header
-                require(!header.tagsInfo.hasNoTags()) { "input file has no tags" }
+                val tagsInfo = header.tagsInfo
+                require(!tagsInfo.hasNoTags()) { "input file has no tags" }
                 cmdParams = paramsResolver.resolve(header.paramsSpec, printParameters = logger.verbose).second
 
-                // All tag names
-                val tagNames = header.tagsInfo.map { it.name }
+                // These tags will be corrected, other used as grouping keys
+                val correctionEnabled = tagsInfo.map { it.valueType == TagValueType.SequenceAndQuality }
 
-                // Indices to be corrected
-                val correctionIndicesBuilder = TIntArrayList()
-                for (ti in header.tagsInfo.indices) {
-                    val tag = header.tagsInfo[ti]
-                    assert(ti == tag.index) /* just in case */
-                    if (tag.valueType == TagValueType.SequenceAndQuality) correctionIndicesBuilder.add(ti)
-                }
-                // Indices of tags to be corrected
-                val correctionTagIndices = correctionIndicesBuilder.toArray()
+                // All tag names
+                val tagNames = tagsInfo.map { it.name }
+
+                // // Indices to be corrected
+                // val correctionIndicesBuilder = TIntArrayList()
+                // for (ti in tagsInfo.indices) {
+                //     val tag = tagsInfo[ti]
+                //     assert(ti == tag.index) /* just in case */
+                //     if (tag.valueType == TagValueType.SequenceAndQuality) correctionIndicesBuilder.add(ti)
+                // }
+                // // Indices of tags to be corrected
+                // val correctionTagIndices = correctionIndicesBuilder.toArray()
 
                 if (cmdParams.runCorrection)
-                    println(
-                        "Correction will be applied to the following tags: " +
-                                correctionTagIndices.joinToString(", ") { tagNames[it] }
-                    )
+                    println("Correction will be applied to the following tags: " +
+                            correctionEnabled
+                                .mapIndexedNotNull { i, b -> tagNames[i].takeIf { b } }
+                                .joinToString(", "))
                 println("Sorting will be applied to the following tags: ${tagNames.joinToString(", ")}")
 
                 val (corrected, progress: CanReportProgress, numberOfAlignments) = when {
@@ -280,10 +287,10 @@ object CommandRefineTagsAndSort {
                     else -> {
                         // Running correction
                         val whitelists = mutableMapOf<Int, ShortSequenceSet>()
-                        for (i in tagNames.indices) {
-                            val t = cmdParams.whitelists[tagNames[i]]
+                        tagNames.forEachIndexed { i, tn ->
+                            val t = cmdParams.whitelists[tn]
                             if (t != null) {
-                                println("The following whitelist will be used for ${tagNames[i]}: $t")
+                                println("The following whitelist will be used for $tn: $t")
                                 whitelists[i] = t.load()
                             }
                         }
@@ -291,11 +298,28 @@ object CommandRefineTagsAndSort {
                         if (cmdParams.parameters == null)
                             throw ValidationException("No correction parameters provided.")
 
+                        val correctionPlan = TagCorrectionPlan(
+                            tagNames,
+                            correctionEnabled.map { en ->
+                                if (en)
+                                // Sequence&quality tags will be unwrapped for correction
+                                    NSequenceWithQuality::class.java
+                                else
+                                // Other tags will be left unchanged to be used as grouping keys
+                                    TagValue::class.java
+                            },
+                            whitelists,
+                            // For now all sequence&quality tags are corrected,
+                            // more flexibility will be added in the future
+                            correctionEnabled,
+                            // Tag aliases for each specific tag type and alike
+                            tagsInfo.tagAliases, caseInsensitiveTagAliases = true
+                        )
+
                         val corrector = TagCorrector(
                             cmdParams.parameters,
-                            tagNames,
+                            correctionPlan,
                             tempDest.addSuffix("tags"),
-                            whitelists,
                             memoryBudget,
                             4, 4
                         )
@@ -303,14 +327,16 @@ object CommandRefineTagsAndSort {
                         SmartProgressReporter.startProgressReport(corrector)
 
                         // Will read the input stream once and extract all the required information from it
-                        corrector.initialize(mainReader, { al -> al.alignmentsIndex }) {
-                            if (it.tagCount.size() != 1) throw ApplicationException(
+                        corrector.initialize(mainReader, { al -> al.alignmentsIndex }) { als ->
+                            if (als.tagCount.size() != 1) throw ApplicationException(
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
                             )
-                            val tagTuple = it.tagCount.tuples().iterator().next()
-                            Array(correctionTagIndices.size) { tIdxIdx -> // <- local index for the procedure
-                                (tagTuple[correctionTagIndices[tIdxIdx]] as SequenceAndQualityTagValue).data
+                            val tagTuple = als.tagCount.tuples().iterator().next()
+                            Array(tagNames.size) { tIdx -> // <- local index for the procedure
+                                val tagValue = tagTuple[tIdx]
+                                if (correctionEnabled[tIdx]) (tagValue as SequenceAndQualityTagValue).data
+                                else tagValue.extractKey() // converting any tag type to a key tag
                             }
                         }
 
@@ -331,13 +357,15 @@ object CommandRefineTagsAndSort {
                                 { al -> al.alignmentsIndex }) { al, newTagValues ->
                                 // starting off the copy of original alignment tags array
                                 val updatedTags = al.tagCount.singletonTuple.asArray()
-                                correctionTagIndices.forEachIndexed { tIdxIdx, tIdx ->
-                                    // tIdxIdx - local index for the procedure
-                                    // tIdx - index inside the alignment object
-                                    updatedTags[tIdx] = SequenceAndQualityTagValue(newTagValues[tIdxIdx])
+                                tagNames.indices.forEach { tIdx ->
+                                    if (correctionEnabled[tIdx])
+                                        updatedTags[tIdx] =
+                                            SequenceAndQualityTagValue(newTagValues[tIdx] as NSequenceWithQuality)
+                                    else
+                                        assert(updatedTags[tIdx] == newTagValues[tIdx])
                                 }
                                 // Applying updated tags values and returning updated alignments object
-                                al.setTagCount(TagCount(TagTuple(*updatedTags)))
+                                al.setTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
                             },
                             secondaryReader,
                             corrector.report.outputRecords

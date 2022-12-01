@@ -12,15 +12,14 @@
 package com.milaboratory.mixcr.vdjaligners;
 
 import cc.redberry.pipe.CUtils;
-import com.milaboratory.core.alignment.MultiAlignmentHelper;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SingleReadImpl;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
+import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.basictypes.VDJCAlignmentsFormatter;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import io.repseq.core.Chains;
@@ -86,11 +85,9 @@ public class VDJCAlignerPVFirstTest {
 
         for (VDJCAlignments alignments : alignemntsList) {
             for (int target = 0; target < alignments.numberOfTargets(); target++) {
-                MultiAlignmentHelper helperBig = VDJCAlignmentsFormatter.getTargetAsMultiAlignment(alignments, target);
-                if (helperBig == null)
-                    continue;
-                for (MultiAlignmentHelper helper : helperBig.split(80)) {
-                    System.out.println(helper);
+                MultiAlignmentHelper<?> helperBig = MultiAlignmentHelper.Builder.formatMultiAlignments(alignments, target);
+                for (MultiAlignmentHelper<?> helper : helperBig.split(80)) {
+                    System.out.println(helper.format());
                     System.out.println();
                     if (--k < 0)
                         return;
@@ -138,7 +135,7 @@ public class VDJCAlignerPVFirstTest {
 
         for (VDJCAlignments al : align.alignments) {
             for (int i = 0; i < al.numberOfTargets(); i++) {
-                System.out.println(VDJCAlignmentsFormatter.getTargetAsMultiAlignment(al, i));
+                System.out.println(MultiAlignmentHelper.Builder.formatMultiAlignments(al, i).format());
                 System.out.println();
             }
             System.out.println();

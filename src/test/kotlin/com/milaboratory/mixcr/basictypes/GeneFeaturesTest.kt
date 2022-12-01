@@ -2,11 +2,12 @@ package com.milaboratory.mixcr.basictypes
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mitool.helpers.K_OM
-import com.milaboratory.util.GlobalObjectMappers
+import com.milaboratory.util.JsonOverrider
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.JCDR3Part
 import io.repseq.core.GeneFeature.VCDR3Part
+import io.repseq.core.GeneFeature.VDJRegion
 import org.junit.Test
 
 class GeneFeaturesTest {
@@ -23,4 +24,47 @@ class GeneFeaturesTest {
         K_OM.writeValueAsString(geneFeatures) shouldBe """["VCDR3Part","JCDR3Part"]"""
         K_OM.readValue<GeneFeatures>("""["VCDR3Part","JCDR3Part"]""") shouldBe geneFeatures
     }
+
+    @Test
+    fun `json override if original was set`() {
+        val original = Container("was set", GeneFeatures(CDR3))
+        val asArray =
+            JsonOverrider.override(K_OM, original, Container::class.java, mapOf("features" to """[VDJRegion]"""))
+        asArray.features shouldBe GeneFeatures(VDJRegion)
+        val asArrayWithMany =
+            JsonOverrider.override(
+                K_OM,
+                original,
+                Container::class.java,
+                mapOf("features" to """[VCDR3Part,JCDR3Part]""")
+            )
+        asArrayWithMany.features shouldBe GeneFeatures(listOf(VCDR3Part, JCDR3Part))
+
+        val asString = JsonOverrider.override(K_OM, original, Container::class.java, mapOf("features" to "VDJRegion"))
+        asString.features shouldBe GeneFeatures(VDJRegion)
+    }
+
+    @Test
+    fun `json override if original was null`() {
+        val original = Container("was null", null)
+        val asArray =
+            JsonOverrider.override(K_OM, original, Container::class.java, mapOf("features" to """[VDJRegion]"""))
+        asArray.features shouldBe GeneFeatures(VDJRegion)
+        val asArrayWithMany =
+            JsonOverrider.override(
+                K_OM,
+                original,
+                Container::class.java,
+                mapOf("features" to """[VCDR3Part,JCDR3Part]""")
+            )
+        asArrayWithMany.features shouldBe GeneFeatures(listOf(VCDR3Part, JCDR3Part))
+
+        val asString = JsonOverrider.override(K_OM, original, Container::class.java, mapOf("features" to "VDJRegion"))
+        asString.features shouldBe GeneFeatures(VDJRegion)
+    }
+
+    data class Container(
+        val name: String,
+        val features: GeneFeatures?
+    )
 }

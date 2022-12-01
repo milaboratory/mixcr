@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -10,8 +11,12 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.test.TestUtil.assertJson
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.withClue
 import org.junit.Assert
 import org.junit.Test
+import java.nio.file.Paths
+import kotlin.io.path.listDirectoryEntries
 
 class PresetsTest {
     @Test
@@ -80,7 +85,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields,
-                        MetaForExport(listOf(header.tagsInfo), header.allFullyCoveredBy, MiXCRStepReports())
+                        HeaderForExport(header)
                     ).size
                 )
             }
@@ -88,10 +93,24 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
-                        MetaForExport(listOf(header.tagsInfo), header.allFullyCoveredBy, MiXCRStepReports())
+                        HeaderForExport(header)
                     ).size
                 )
             }
         }
+    }
+
+    @Test
+    fun `backward capability of deserialization of presets`() {
+        val dir = Paths.get(PresetsTest::class.java.getResource("/backward_compatibility/presets/").file)
+        dir.listDirectoryEntries()
+            .flatMap { it.listDirectoryEntries() }
+            .forEach { filesToCheck ->
+                withClue(filesToCheck) {
+                    shouldNotThrowAny {
+                        K_YAML_OM.readValue<MiXCRParamsBundle>(filesToCheck.toFile())
+                    }
+                }
+            }
     }
 }

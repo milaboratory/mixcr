@@ -211,6 +211,7 @@ object Main {
                     .addSubcommand("versionInfo", CommandVersionInfo::class.java)
                     .addSubcommand("slice", CommandSlice::class.java)
                     .addSubcommand("exportPreset", CommandExportPreset::class.java)
+                    .addSubcommand(CommandListPresets.COMMAND_NAME, CommandListPresets::class.java)
             )
 
             //hidden

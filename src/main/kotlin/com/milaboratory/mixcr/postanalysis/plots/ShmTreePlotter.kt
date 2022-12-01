@@ -15,7 +15,6 @@ import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.motif.BitapPattern
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.miplots.Position
 import com.milaboratory.miplots.color.Palettes
 import com.milaboratory.miplots.dendro.GGDendroPlot
@@ -29,11 +28,11 @@ import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Abundance
 import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Alignment
 import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Isotype
-import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.SplittedNode
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.Tree
+import com.milaboratory.mixcr.trees.TreeFilter
 import com.milaboratory.mixcr.trees.forPostanalysisSplitted
 import com.milaboratory.primitivio.asSequence
 import com.milaboratory.util.StringUtil
@@ -70,42 +69,6 @@ data class SeqPattern(
 
     internal fun bitapQ(seq: com.milaboratory.core.sequence.Sequence<*>) =
         bitapPattern.substitutionAndIndelMatcherLast(maxErrors, seq)?.findNext() != -1
-}
-
-class TreeFilter(
-    /** minimal number of nodes in tree */
-    val minNodes: Int? = null,
-    /** minimal height of the tree */
-    val minHeight: Int? = null,
-    /** filter specific trees by id */
-    val treeIds: Set<Int>? = null,
-    /** filter specific trees by pattern */
-    val seqPattern: SeqPattern? = null,
-) {
-    fun match(treeId: Int): Boolean = treeIds?.contains(treeId) != false
-
-    fun match(tree: SHMTreeForPostanalysis<*>): Boolean {
-        if (minNodes != null && tree.tree.allNodes().count() < minNodes)
-            return false
-        if (minHeight != null && tree.tree.root.height() < minHeight)
-            return false
-        if (treeIds != null && !treeIds.contains(tree.meta.treeId))
-            return false
-        if (seqPattern != null) {
-            return tree.tree.allNodes()
-                .asSequence()
-                .map { it.node.content }
-                .any { node ->
-                    val sequence: Sequence<*>? = if (seqPattern.isAA)
-                        node.mutationsFromGermline().targetAASequence(seqPattern.feature)
-                    else
-                        node.mutationsFromGermline().targetNSequence(seqPattern.feature)
-                    if (sequence == null) return false
-                    seqPattern.bitapQ(sequence)
-                }
-        }
-        return true
-    }
 }
 
 data class StatOption(

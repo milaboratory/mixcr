@@ -184,13 +184,17 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     )
     var minCountForClone: Int? = null
 
-    @Option(description = ["Path to directory to store debug info"], names = ["--debugDir"], hidden = true)
-    var debugDir: Path? = null
+    @Mixin
+    lateinit var debugDir: DebugDirOption
 
     private val debugDirectoryPath: Path by lazy {
-        val result = debugDir ?: tempDest.resolvePath("trees_debug")
-        result.createDirectories()
-        result
+        var result: Path? = null
+        debugDir { path ->
+            result = path
+        }
+        result ?: tempDest.resolvePath("trees_debug").also {
+            it.createDirectories()
+        }
     }
 
     @set:Option(
@@ -254,9 +258,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             }
             if (minCountForClone != null) {
                 throw ValidationException("--min-count must be empty if --build-from is specified")
-            }
-            if (debugDir != null) {
-                logger.warn("argument --debugDir will not be used with --build-from")
             }
         }
     }
