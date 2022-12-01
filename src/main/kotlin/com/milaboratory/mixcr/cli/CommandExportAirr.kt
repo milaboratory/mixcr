@@ -23,7 +23,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.export.AirrColumns
@@ -46,7 +46,7 @@ import com.milaboratory.mixcr.export.AirrColumns.SequenceAlignmentBoundary
 import com.milaboratory.mixcr.export.AirrColumns.VDJCCalls
 import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper
 import com.milaboratory.mixcr.export.FieldExtractor
-import com.milaboratory.mixcr.export.HeaderForExport
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.CanReportProgress
@@ -225,7 +225,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         var port: OutputPortCloseable<out VDJCObject>
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val cPort: CountingOutputPort<out VDJCObject>
-        val header: MiXCRHeader
+        val fileInfo: MiXCRFileInfo
         var progressReporter: CanReportProgress? = null
         when (fileType) {
             CLNA -> {
@@ -234,7 +234,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                 cPort = CountingOutputPort(clnaReader.readClones())
                 port = cPort
                 closeable = clnaReader
-                header = clnaReader.header
+                fileInfo = clnaReader
                 progressReporter = SmartProgressReporter.extractProgress(cPort, clnaReader.numberOfClones().toLong())
             }
             CLNS -> {
@@ -251,13 +251,13 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                 cPort = CountingOutputPort(clnsReader.readClones())
                 port = cPort
                 closeable = clnsReader
-                header = clnsReader.header
+                fileInfo = clnsReader
                 progressReporter = SmartProgressReporter.extractProgress(cPort, maxCount.toLong())
             }
             VDJCA -> {
                 extractors = alignmentsExtractors()
                 val alignmentsReader = VDJCAlignmentsReader(input, libraryRegistry)
-                header = alignmentsReader.header
+                fileInfo = alignmentsReader
                 port = alignmentsReader
                 closeable = alignmentsReader
                 progressReporter = alignmentsReader
@@ -270,7 +270,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
             progressReporter = SmartProgressReporter.extractProgress(clop)
         }
         SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter)
-        val rowMetaForExport = RowMetaForExport(header.tagsInfo, HeaderForExport(header))
+        val rowMetaForExport = RowMetaForExport(fileInfo.header.tagsInfo, MetaForExport(fileInfo))
         (out?.let { PrintStream(it.toFile()) } ?: System.out).use { output ->
             closeable.use {
                 port.use {

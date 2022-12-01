@@ -15,6 +15,7 @@ import com.milaboratory.mixcr.StepDataCollection
 import com.milaboratory.mixcr.allReports
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
@@ -32,6 +33,7 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 
 @Command(
+    hidden = true,
     description = [
         "Export reports from file in tabular format.",
         "There will be one row per input file and exported step."
@@ -98,11 +100,11 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
             m.addReportsFromInput(input.toString(), footer)
         }.build().reports
 
-        val fieldExtractors = ReportFieldsExtractors.createExtractors(
-            addedFields,
-            MetaForExport(emptyList(), null, allReports)
-        )
-        InfoWriter.create(out, fieldExtractors, !noHeader) { RowMetaForExport.empty }.use { output ->
+        val metaForExport = MetaForExport(emptyList(), null, allReports)
+        val fieldExtractors = ReportFieldsExtractors.createExtractors(addedFields, metaForExport)
+        InfoWriter.create(out, fieldExtractors, !noHeader) {
+            RowMetaForExport(TagsInfo.NO_TAGS, metaForExport)
+        }.use { output ->
             inputFiles.forEach { input ->
                 val footer = IOUtil.extractFooter(input)
                 if (withUpstreams) {

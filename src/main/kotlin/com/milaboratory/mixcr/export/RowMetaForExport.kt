@@ -13,13 +13,13 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 
 class RowMetaForExport(
     val tagsInfo: TagsInfo,
-    val header: HeaderForExport
+    val header: MetaForExport
 )
 
 class MetaForExport(
@@ -27,7 +27,11 @@ class MetaForExport(
     val allFullyCoveredBy: GeneFeatures?,
     val allReports: MiXCRStepReports
 ) {
-    constructor(origin: MiXCRHeader) : this(listOf(origin.tagsInfo), origin.allFullyCoveredBy)
+    constructor(origin: MiXCRFileInfo) : this(
+        listOf(origin.header.tagsInfo),
+        origin.header.allFullyCoveredBy,
+        origin.footer.reports
+    )
 
     fun tagNamesWithType(tagType: TagType) = allTagsInfo.flatten()
         .filter { it.type == tagType }

@@ -3,7 +3,6 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
@@ -70,22 +69,16 @@ class PresetsTest {
                 TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI2", 9),
                 TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI3", 10),
             )
-            val header = MiXCRHeader(
-                "hashA123",
-                MiXCRParamsSpec(presetName),
-                MiXCRStepParams().add(MiXCRCommandDescriptor.align, bundle.align!!),
-                tagsInfo,
-                bundle.align!!.parameters,
-                bundle.align!!.parameters.featuresToAlignMap,
+            val metaForExport = MetaForExport(
+                listOf(tagsInfo),
                 null,
-                null,
-                null
+                MiXCRStepReports()
             )
             bundle.exportAlignments?.let { al ->
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields,
-                        HeaderForExport(header)
+                        metaForExport
                     ).size
                 )
             }
@@ -93,7 +86,7 @@ class PresetsTest {
                 println(
                     CloneFieldsExtractorsFactory.createExtractors(
                         al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
-                        HeaderForExport(header)
+                        metaForExport
                     ).size
                 )
             }

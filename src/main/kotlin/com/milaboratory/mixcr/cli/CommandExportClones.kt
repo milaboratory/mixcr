@@ -235,7 +235,7 @@ object CommandExportClones {
                 }
             }
 
-            val headerForExport = HeaderForExport(header)
+            val headerForExport = MetaForExport(initialSet)
             val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, headerForExport)
 
             fun runExport(set: CloneSet, outFile: Path?) {

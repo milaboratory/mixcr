@@ -231,9 +231,10 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
                         .take(countAfter)
                         .forEach { alignments ->
                             ++filtered
+                            val tagsInfo = readerAndHeader.info.header.tagsInfo
                             when {
-                                logger.verbose -> outputVerbose(output, alignments, readerAndHeader.info.tagsInfo)
-                                else -> outputCompact(output, alignments, readerAndHeader.info.tagsInfo)
+                                logger.verbose -> outputVerbose(output, alignments, tagsInfo)
+                                else -> outputCompact(output, alignments, tagsInfo)
                             }
                         }
 

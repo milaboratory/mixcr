@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.MiXCRStepReports
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner
 import com.milaboratory.mixcr.tests.MiXCRTestUtils
 import com.milaboratory.mixcr.tests.TargetBuilder
@@ -82,7 +83,12 @@ class FieldExtractorsTest {
                     println("-------------------------------------------")
                     println()
                 }
-                val `val` = extractor.extractValue(RowMetaForExport.empty, al)
+                val `val` = extractor.extractValue(
+                    RowMetaForExport(
+                        TagsInfo.NO_TAGS,
+                        MetaForExport(emptyList(), null, MiXCRStepReports())
+                    ), al
+                )
                 if (print) println(`val`)
                 val spl = `val`.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 val result = Array(spl.size) { arrayOfNulls<Int>(ReferencePoint.DefaultReferencePoints.size) }
@@ -153,7 +159,6 @@ class FieldExtractorsTest {
 
     @Ignore
     @Test
-    @Throws(Exception::class)
     fun hits() {
         for (type in GeneType.values()) {
             val u = type.name.substring(0, 1).uppercase(Locale.getDefault())
@@ -188,7 +193,6 @@ class FieldExtractorsTest {
 
     @Ignore
     @Test
-    @Throws(Exception::class)
     fun alignments() {
         for (type in GeneType.values()) {
             val u = type.name.substring(0, 1).uppercase(Locale.getDefault())

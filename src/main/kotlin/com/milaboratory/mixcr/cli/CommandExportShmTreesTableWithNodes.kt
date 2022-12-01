@@ -88,9 +88,10 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
-            val headerForExport = HeaderForExport(
+            val headerForExport = MetaForExport(
                 reader.cloneSetInfos.map { it.tagsInfo },
-                reader.header.allFullyCoveredBy
+                reader.header.allFullyCoveredBy,
+                reader.footer.reports
             )
 
             val splitByTagType = if (splitByTagType != null) {

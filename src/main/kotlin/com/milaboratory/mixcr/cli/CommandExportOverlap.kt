@@ -204,8 +204,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
             extractors += TotalTagFraction(cellLevel, "CELL")
         }
 
-        val header = IOUtil.extractHeader(samples[0])
-        val headerForExport = HeaderForExport(header)
+        val fileInfo = extractFileInfo(samples[0])
+        val headerForExport = MetaForExport(fileInfo)
         val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(addedFields, headerForExport)
 
         extractors += fieldExtractors.map { ExtractorPerSample(it) }
