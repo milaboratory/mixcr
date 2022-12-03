@@ -19,6 +19,7 @@ import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRPipeline
+import com.milaboratory.mixcr.cli.CommandAlign.bySampleName
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -236,17 +237,30 @@ object CommandAnalyze {
                 !noReports, !noJsonReports,
                 inputTemplates, threadsOption, useLocalTemp
             )
+
+            // Calculating samples
+            val samples =
+                if (bundle.align!!.splitBySample)
+                    bundle.align.sampleTable?.samples?.bySampleName()?.keys?.toList() ?: emptyList()
+                else
+                    emptyList()
+
             // Adding "align" step
             planBuilder.addStep(
                 MiXCRCommandDescriptor.align,
                 listOf("--preset", presetName) + mixins.flatMap { it.cmdArgs } + listOf(
+                    "--not-aligned-I1" to pathsForNotAligned.notAlignedReadsI1,
+                    "--not-aligned-I2" to pathsForNotAligned.notAlignedReadsI2,
                     "--not-aligned-R1" to pathsForNotAligned.notAlignedReadsR1,
                     "--not-aligned-R2" to pathsForNotAligned.notAlignedReadsR2,
+                    "--not-parsed-I1" to pathsForNotAligned.notParsedReadsI1,
+                    "--not-parsed-I2" to pathsForNotAligned.notParsedReadsI2,
                     "--not-parsed-R1" to pathsForNotAligned.notParsedReadsR1,
                     "--not-parsed-R2" to pathsForNotAligned.notParsedReadsR2,
                 )
                     .filter { it.second != null }
-                    .flatMap { listOf(it.first, it.second!!.toString()) }
+                    .flatMap { listOf(it.first, it.second!!.toString()) },
+                samples
             )
             // Adding all other steps
             pipeline.drop(1).forEach { cmd ->
@@ -284,12 +298,14 @@ object CommandAnalyze {
                     val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
                     val exitCode = Main.mkCmd().execute(*actualArgs)
                     if (exitCode != 0)
-                        // Terminating execution if one of the steps resulted in error
+                    // Terminating execution if one of the steps resulted in error
                         exitProcess(exitCode)
                 }
                 println("Analysis finished successfully.")
             }
         }
+
+        class InputFileSet(val sampleName: String, val fileNames: List<String>)
 
         class PlanBuilder(
             private val paramsBundle: MiXCRParamsBundle,
@@ -303,9 +319,13 @@ object CommandAnalyze {
         ) {
             val executionPlan = mutableListOf<ExecutionStep>()
             private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
-            private var nextInputs: List<String> = initialInputs.map { it.toString() }
+            private var nextInputs: List<InputFileSet> = listOf(InputFileSet("", initialInputs.map { it.toString() }))
 
-            fun addStep(cmd: AnyMiXCRCommand, extraArgs: List<String> = emptyList()) {
+            fun addStep(
+                cmd: AnyMiXCRCommand,
+                extraArgs: List<String> = emptyList(),
+                vdjcaSamples: List<String> = emptyList(),
+            ) {
                 val round = rounds.compute(cmd) { c, p ->
                     if (p == null)
                         0
@@ -315,42 +335,74 @@ object CommandAnalyze {
                         p + 1
                     }
                 }!!
-                val output =
-                    listOf(outputFolder.resolve(cmd.outputName(outputNamePrefix, paramsBundle, round)).toString())
 
-                val arguments = mutableListOf<String>()
+                val nextInputsBuilder = mutableListOf<InputFileSet>()
 
-                if (outputReports)
-                    cmd.reportName(outputNamePrefix, paramsBundle, round)
-                        ?.let {
-                            arguments += listOf("--report", outputFolder.resolve(it).toString())
+                nextInputs.forEach { inputs ->
+                    val outputNamePrefixFull = if (inputs.sampleName != "")
+                        outputNamePrefix + "." + inputs.sampleName else outputNamePrefix
+
+                    val arguments = mutableListOf<String>()
+
+                    if (outputReports)
+                        cmd.reportName(outputNamePrefixFull, paramsBundle, round)
+                            ?.let {
+                                arguments += listOf("--report", outputFolder.resolve(it).toString())
+                            }
+
+                    if (outputJsonReports)
+                        cmd.jsonReportName(outputNamePrefixFull, paramsBundle, round)
+                            ?.let {
+                                arguments += listOf("--json-report", outputFolder.resolve(it).toString())
+                            }
+
+                    if (cmd.hasThreadsOption && threadsOption.isSet) {
+                        arguments += listOf("--threads", threadsOption.value.toString())
+                    }
+
+                    if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
+                        arguments += "--use-local-temp"
+                    }
+
+                    val output =
+                        listOf(
+                            outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round)).toString()
+                        )
+
+                    executionPlan += ExecutionStep(
+                        cmd.command,
+                        round,
+                        arguments,
+                        extraArgs,
+                        inputs.fileNames,
+                        output,
+                    )
+
+                    if (vdjcaSamples.isEmpty())
+                        nextInputsBuilder +=
+                            InputFileSet(
+                                inputs.sampleName, listOf(
+                                    outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round))
+                                        .toString()
+                                )
+                            )
+                    else {
+                        assert(inputs.sampleName == "")
+                        nextInputsBuilder += vdjcaSamples.map { sampleName ->
+                            val outputName = cmd.outputName(outputNamePrefixFull, paramsBundle, round)
+                            InputFileSet(
+                                sampleName, listOf(
+                                    outputFolder.resolve(CommandAlign.addSampleToFileName(outputName, sampleName))
+                                        .toString()
+                                )
+                            )
                         }
-
-                if (outputJsonReports)
-                    cmd.jsonReportName(outputNamePrefix, paramsBundle, round)
-                        ?.let {
-                            arguments += listOf("--json-report", outputFolder.resolve(it).toString())
-                        }
-
-                if (cmd.hasThreadsOption && threadsOption.isSet) {
-                    arguments += listOf("--threads", threadsOption.value.toString())
+                    }
                 }
 
-                if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
-                    arguments += "--use-local-temp"
-                }
-
-                executionPlan += ExecutionStep(
-                    cmd.command,
-                    round,
-                    arguments,
-                    extraArgs,
-                    nextInputs,
-                    output,
-                )
-
-                nextInputs = output
+                nextInputs = nextInputsBuilder
             }
+
         }
 
         data class ExecutionStep(
