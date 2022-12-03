@@ -158,7 +158,7 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
             helper.writePercentAndAbsoluteField("Paired-end alignment conflicts eliminated", pairedEndAlignmentConflicts, total);
 
         for (VDJCAlignmentFailCause cause : VDJCAlignmentFailCause.values())
-            if (notAlignedReasons.get(cause) != 0)
+            if (notAlignedReasons.get(cause) != null && notAlignedReasons.get(cause) != 0)
                 helper.writePercentAndAbsoluteField(cause.reportLine, notAlignedReasons.get(cause), total);
 
         helper.writePercentAndAbsoluteField("Overlapped", overlapped, total);
