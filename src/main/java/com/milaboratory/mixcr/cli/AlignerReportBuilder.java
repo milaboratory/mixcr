@@ -19,6 +19,7 @@ import io.repseq.core.GeneType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
@@ -43,6 +44,7 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
     private ReadTrimmerReportBuilder trimmingReportBuilder;
 
     private ParseReport tagReport = null;
+    private SortedMap<String, Long> sampleStat = null;
 
     public AlignerReportBuilder() {
     }
@@ -51,12 +53,13 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
         this.trimmingReportBuilder = trimmingReport;
     }
 
-    public ParseReport getTagReportBuilder() {
-        return tagReport;
+    public AlignerReportBuilder setTagReport(ParseReport tagReport) {
+        this.tagReport = tagReport;
+        return this;
     }
 
-    public AlignerReportBuilder setTagReportBuilder(ParseReport tagReport) {
-        this.tagReport = tagReport;
+    public AlignerReportBuilder setSampleStat(SortedMap<String, Long> sampleStat) {
+        this.sampleStat = sampleStat;
         return this;
     }
 
@@ -191,7 +194,8 @@ public final class AlignerReportBuilder extends AbstractCommandReportBuilder<Ali
                 realignedWithForcedNonFloatingLeftBoundInRightRead.get(),
                 noCDR3PartsAlignments.get(),
                 partialAlignments.get(),
-                tagReport
+                tagReport,
+                sampleStat
         );
     }
 }

@@ -374,14 +374,16 @@
     overrides:
       tagPattern: ^(SMPL:N{16})(UMI:N{10})\^(R2:*)
       sampleTable:
-        matchingTagNames: [ "SMPL" ]
         sampleTagName: SAMPLE
         samples:
-          - matchingTagValues: [ "GGATTACTCATTGCCC" ]
+          - matchTags:
+              SMPL: "GGATTACTCATTGCCC"
             sampleName: sample0
-          - matchingTagValues: [ "CTGAAGTTCAAGGTAA" ]
+          - matchTags:
+              SMPL: "CTGAAGTTCAAGGTAA"
             sampleName: sample1
-          - matchingTagValues: [ "AACTCCCAGATCCTGT" ]
+          - matchTags:
+              SMPL: "AACTCCCAGATCCTGT"
             sampleName: sample2
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base

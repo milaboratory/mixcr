@@ -68,6 +68,7 @@ import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundle
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotAligned
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotParsed
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.SampleNotMatched
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
@@ -118,13 +119,17 @@ object CommandAlign {
 
     /** Defines specific mapping between tag values and sample name (i.e. one row from sample table) */
     data class SampleTableRow(
-        @JsonProperty("matchingTagValues") val matchingTagValues: List<String>,
+        @JsonProperty("matchTags") val matchTags: Map<String, String>,
+        @JsonProperty("matchVariantId") val matchVariantId: Int?,
         @JsonProperty("sampleName") val sampleName: String
-    )
+    ) {
+        init {
+            require(matchTags.isNotEmpty() || matchVariantId != null)
+        }
+    }
 
     /** Whole set of sample tag values to sample name mappings (i.e. sample table) */
     data class SampleTable(
-        @JsonProperty("matchingTagNames") val matchingTagNames: List<String>,
         @JsonProperty("sampleTagName") val sampleTagName: String,
         @JsonProperty("samples") val samples: List<SampleTableRow>
     )
@@ -1042,6 +1047,8 @@ object CommandAlign {
                         val parsed = tagsExtractor.parse(it)
                         if (parsed.status == NotParsed)
                             reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.NoBarcode)
+                        if (parsed.status == SampleNotMatched)
+                            reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.SampleNotMatched)
                         parsed
                     }
 
@@ -1143,7 +1150,8 @@ object CommandAlign {
 
                 writer?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
-                if (tagsExtractor.reportAgg != null) reportBuilder.tagReportBuilder = tagsExtractor.reportAgg.report
+                if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
+                reportBuilder.setSampleStat(tagsExtractor.sampleStat)
                 val report = reportBuilder.buildReport()
                 writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 

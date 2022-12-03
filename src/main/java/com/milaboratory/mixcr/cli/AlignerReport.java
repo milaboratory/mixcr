@@ -19,6 +19,7 @@ import com.milaboratory.util.ReportHelper;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.SortedMap;
 
 public final class AlignerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("trimmingReport")
@@ -81,6 +82,8 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
     @JsonProperty("tagParsingReport")
     public final ParseReport tagParsingReport;
 
+    public final SortedMap<String, Long> sampleStat;
+
     @JsonCreator
     public AlignerReport(@JsonProperty("date") Date date,
                          @JsonProperty("commandLine") String commandLine,
@@ -107,7 +110,8 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
                          @JsonProperty("realignedWithForcedNonFloatingLeftBoundInRightRead") long realignedWithForcedNonFloatingLeftBoundInRightRead,
                          @JsonProperty("noCDR3PartsAlignments") long noCDR3PartsAlignments,
                          @JsonProperty("partialAlignments") long partialAlignments,
-                         @JsonProperty("tagParsingReport") ParseReport tagParsingReport) {
+                         @JsonProperty("tagParsingReport") ParseReport tagParsingReport,
+                         @JsonProperty("sampleStat") SortedMap<String, Long> sampleStat) {
         super(date, commandLine, inputFiles, outputFiles, executionTimeMillis, version);
         this.trimmingReport = trimmingReport;
         this.totalReadsProcessed = totalReadsProcessed;
@@ -129,6 +133,7 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
         this.noCDR3PartsAlignments = noCDR3PartsAlignments;
         this.partialAlignments = partialAlignments;
         this.tagParsingReport = tagParsingReport;
+        this.sampleStat = sampleStat;
     }
 
     @Override
@@ -184,6 +189,14 @@ public final class AlignerReport extends AbstractMiXCRCommandReport {
         if (tagParsingReport != null) {
             helper.println("Tag parsing report:");
             tagParsingReport.writeReport(helper.indentedHelper());
+        }
+
+        if (sampleStat != null && !sampleStat.isEmpty()) {
+            long sampleMatched = sampleStat.values().stream().mapToLong(a -> a).sum();
+            helper.writePercentAndAbsoluteField("Matched sample", sampleMatched, total);
+            helper.println("Sample stat:");
+            ReportHelper helper1 = helper.indentedHelper();
+            sampleStat.forEach((s, c) -> helper1.writePercentAndAbsoluteField(s, c, sampleMatched));
         }
     }
 }
