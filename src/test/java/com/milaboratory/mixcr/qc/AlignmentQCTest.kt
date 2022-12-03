@@ -26,6 +26,7 @@ class AlignmentQCTest {
             VDJCAlignmentFailCause.VAndJOnDifferentTargets,
             VDJCAlignmentFailCause.LowTotalScore,
             VDJCAlignmentFailCause.NoBarcode,
+            VDJCAlignmentFailCause.SampleNotMatched
         )
         Assert.assertEquals(VDJCAlignmentFailCause.values().toSet(), all)
     }
