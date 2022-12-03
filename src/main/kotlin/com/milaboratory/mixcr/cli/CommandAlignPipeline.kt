@@ -32,7 +32,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
 import jetbrains.datalore.plot.config.asMutable
-import java.util.TreeMap
+import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicLongArray
 import java.util.regex.Matcher
@@ -116,8 +116,11 @@ object CommandAlignPipeline {
 
         val originalTagsInfo = TagsInfo(0, *finalExtractors.map { it.tagInfo }.toTypedArray())
 
+        if (originalTagsInfo.any { it.type == TagType.Sample } && sampleTable == null)
+            throw ValidationException("Sample barcodes without sample table are not supported")
+
         val (tagMapper, tagsInfo) =
-            sampleTable?.toTagMapper(originalTagsInfo) ?: (null to originalTagsInfo)
+            sampleTable?.toTagMapper(originalTagsInfo, !cmdParams.splitBySample) ?: (null to originalTagsInfo)
 
         if (sampleTable != null) {
             println("The following tags and their roles were recognised after sample mapping:")
@@ -225,25 +228,25 @@ object CommandAlignPipeline {
     class TagMapper(
         private val matchingTagIds: IntArray,
         private val matchers: List<TagMapperMatcher>,
-        private val mappingValues: List<String>,
-        private val originalTagMapping: LongArray,
-        private val mappingValueIndex: Int
+        val samples: List<String>,
+        private val originalTagMapping: IntArray,
+        private val mappingValueIndex: Int,
+        private val newTagsCount: Int
     ) {
         init {
-            require(mappingValueIndex >= 0)
-            require(mappingValues.toSet().size == mappingValues.size)
+            require(samples.toSet().size == samples.size)
         }
 
         val miss = AtomicLong()
-        val matches = AtomicLongArray(mappingValues.size)
+        val matches = AtomicLongArray(samples.size)
 
-        val sampleStat get() = mappingValues.mapIndexed { i, s -> s to matches[i] }.toMap(TreeMap())
+        val sampleStat get() = samples.mapIndexed { i, s -> s to matches[i] }.toMap(TreeMap())
 
-        fun apply(variantId: Int, values: List<TagValue>): List<TagValue>? {
+        fun apply(variantId: Int, oldTags: List<TagValue>): Pair<List<TagValue>, String>? {
             // Creating row of string to map against the mapping table
             val row = ArrayList<String>(matchingTagIds.size)
             for (i in matchingTagIds)
-                row.add(values[i].extractKey().toString())
+                row.add(oldTags[i].extractKey().toString())
 
             // Do mapping
             val matched = matchers.firstOrNull { it.match(variantId, row) }
@@ -254,16 +257,24 @@ object CommandAlignPipeline {
             matches.incrementAndGet(matched.mappingIdx)
 
             // Creating mapped tag values vector
-            val result = arrayOfNulls<TagValue>(originalTagMapping.size + 1)
-            result[mappingValueIndex] = StringTagValue(mappingValues[matched.mappingIdx])
-            for (m in originalTagMapping)
-                result[(m and 0xFFFFFFFFL).toInt()] = values[(m ushr 32).toInt()]
+            val result = arrayOfNulls<TagValue>(newTagsCount)
+            val sample = samples[matched.mappingIdx]
+            if (mappingValueIndex != -1)
+                result[mappingValueIndex] = StringTagValue(sample)
+            for (oldIdx in originalTagMapping.indices) {
+                val newIdx = originalTagMapping[oldIdx]
+                if (newIdx != -1)
+                    result[newIdx] = oldTags[oldIdx]
+            }
 
-            return result.requireNoNulls().toList()
+            return result.requireNoNulls().toList() to sample
         }
     }
 
-    private fun CommandAlign.SampleTable.toTagMapper(originalInfo: TagsInfo): Pair<TagMapper, TagsInfo> = run {
+    private fun CommandAlign.SampleTable.toTagMapper(
+        originalInfo: TagsInfo,
+        addSampleTag: Boolean
+    ): Pair<TagMapper, TagsInfo> = run {
         // Tags appearing at least once in the list of tags to be matched (sorted)
         val matchingTagNames = samples.flatMap { it.matchTags.keys }
             .toSortedSet()
@@ -287,26 +298,42 @@ object CommandAlignPipeline {
             )
         }
 
-        val sampleTagInfo = TagInfo(TagType.Sample, TagValueType.NonSequence, sampleTagName, -1)
+        val sampleTagInfo =
+            if (addSampleTag)
+                listOf(TagInfo(TagType.Sample, TagValueType.NonSequence, sampleTagName, -1))
+            else
+                emptyList()
+
         val tagsInfosTmp =
             (originalInfo
                 // Important note: now all the original sample tags are removed in all cases
                 .filter { it.type != TagType.Sample }
                 .toList()
-                    + listOf(sampleTagInfo)).sorted()
+                    + sampleTagInfo).sorted()
+
         var mappingValueIndex = -1
-        val originalTagMapping = LongArray(tagsInfosTmp.size - 1)
-        var i = 0
+        val originalTagMapping = IntArray(originalInfo.size) { -1 }
         val tagsInfosAfterMapping = tagsInfosTmp.mapIndexed { newIdx, tagInfo ->
             if (tagInfo.index == -1) {
                 assert(mappingValueIndex == -1)
                 mappingValueIndex = newIdx
-            } else
-                originalTagMapping[i++] = (tagInfo.index.toLong() shl 32) or newIdx.toLong()
+            } else {
+                assert(originalTagMapping[tagInfo.index] == -1)
+                originalTagMapping[tagInfo.index] = newIdx
+            }
             tagInfo.withIndex(newIdx)
         }
-        TagMapper(matchingTagIds, matchers, sampleNames, originalTagMapping, mappingValueIndex) to
-                TagsInfo(0, *tagsInfosAfterMapping.toTypedArray())
+
+        assert((mappingValueIndex != -1) == (addSampleTag))
+
+        TagMapper(
+            matchingTagIds,
+            matchers,
+            sampleNames,
+            originalTagMapping,
+            mappingValueIndex,
+            tagsInfosAfterMapping.size
+        ) to TagsInfo(0, *tagsInfosAfterMapping.toTypedArray())
     }
 
     class TagsExtractor(
@@ -325,6 +352,8 @@ object CommandAlignPipeline {
                 "At most two payload reads are supported."
             }
         }
+
+        val samples: List<String>? = tagMapper?.samples
 
         val pairedPatternPayload = readShortcuts?.size?.let { it == 2 }
 
@@ -365,16 +394,17 @@ object CommandAlignPipeline {
                     )
                 }
 
-            val mappedTags =
+            val (mappedTags, sample) =
                 if (tagMapper == null)
-                    tags
+                    tags to ""
                 else
                     tagMapper.apply(variantId, tags)
                         ?: return bundle.copy(status = ProcessingBundleStatus.SampleNotMatched)
 
             return bundle.copy(
                 sequence = newSeq,
-                tags = TagTuple(*mappedTags.toTypedArray())
+                tags = TagTuple(*mappedTags.toTypedArray()),
+                sample = sample
             )
         }
 
@@ -405,6 +435,7 @@ object CommandAlignPipeline {
         val originalReadId: Long = read.id,
         val sequence: NSQTuple = read.toTuple(),
         val tags: TagTuple = TagTuple.NO_TAGS,
+        val sample: String = "",
         val alignment: VDJCAlignments? = null,
         val status: ProcessingBundleStatus = Good,
     ) {

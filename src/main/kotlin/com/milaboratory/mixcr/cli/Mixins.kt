@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.AlignMixins
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
 import com.milaboratory.mixcr.AlignMixins.DropNonCDR3Alignments
 import com.milaboratory.mixcr.AlignMixins.KeepNonCDR3Alignments
@@ -121,6 +122,24 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     )
     fun library(library: String) =
         mixIn(SetLibrary(library))
+
+    @Option(
+        description = ["Split output alignments files by sample."],
+        names = [AlignMixins.SetSplitBySample.CMD_OPTION_TRUE],
+        arity = "0",
+        order = OptionsOrder.mixins.align + 300
+    )
+    fun splitBySample(@Suppress("UNUSED_PARAMETER") f: Boolean) =
+        mixIn(AlignMixins.SetSplitBySample(true))
+
+    @Option(
+        description = ["Don't split output alignments files by sample."],
+        names = [AlignMixins.SetSplitBySample.CMD_OPTION_FALSE],
+        arity = "0",
+        order = OptionsOrder.mixins.align + 310
+    )
+    fun dontSplitBySample(@Suppress("UNUSED_PARAMETER") f: Boolean) =
+        mixIn(AlignMixins.SetSplitBySample(false))
 
     //
     // Material type

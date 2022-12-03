@@ -15,8 +15,6 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.util.CountLimitingOutputPort
-import cc.redberry.pipe.util.StatusReporter
-import cc.redberry.pipe.util.StatusReporter.StatusProvider
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
@@ -94,6 +92,7 @@ import io.repseq.core.GeneFeature.VRegion
 import io.repseq.core.GeneFeature.VRegionWithP
 import io.repseq.core.GeneFeature.encode
 import io.repseq.core.GeneType
+import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
@@ -107,6 +106,7 @@ import java.io.FileInputStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.Semaphore
 import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.set
@@ -119,13 +119,19 @@ object CommandAlign {
 
     /** Defines specific mapping between tag values and sample name (i.e. one row from sample table) */
     data class SampleTableRow(
-        @JsonProperty("matchTags") val matchTags: Map<String, String>,
-        @JsonProperty("matchVariantId") val matchVariantId: Int?,
+        @JsonProperty("matchTags") val matchTags: SortedMap<String, String> = TreeMap(),
+        @JsonProperty("matchVariantId") val matchVariantId: Int? = null,
         @JsonProperty("sampleName") val sampleName: String
     ) {
         init {
             require(matchTags.isNotEmpty() || matchVariantId != null)
         }
+
+        fun matchingInfoString() =
+            matchVariantId.toString() + " " + matchTags.entries.joinToString("|") { it.key + "-" + it.value }
+
+        override fun toString() =
+            sampleName + " " + matchingInfoString()
     }
 
     /** Whole set of sample tag values to sample name mappings (i.e. sample table) */
@@ -133,6 +139,8 @@ object CommandAlign {
         @JsonProperty("sampleTagName") val sampleTagName: String,
         @JsonProperty("samples") val samples: List<SampleTableRow>
     )
+
+    fun List<SampleTableRow>.bySampleName() = groupBy { it.sampleName }
 
     data class Params(
         @JsonProperty("species") val species: String = "",
@@ -148,6 +156,7 @@ object CommandAlign {
         @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
         @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
         @JsonProperty("sampleTable") val sampleTable: SampleTable? = null,
+        @JsonProperty("splitBySample") val splitBySample: Boolean = true,
         @JsonProperty("readIdAsCellTag") val readIdAsCellTag: Boolean = false,
         @JsonProperty("limit") val limit: Long? = null,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
@@ -832,12 +841,21 @@ object CommandAlign {
                 )
             }
 
+            val sampleDescriptions = cmdParams.sampleTable?.samples
+                ?.bySampleName()
+                ?.values?.map { matchers ->
+                    matchers.joinToString(" | ") { it.matchingInfoString() }
+                }
+                ?: emptyList()
+
+            val keyParamter = cmdParams.tagPattern.toString()
+
             return when (inputFileGroups.inputType) {
                 BAM -> {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    MiXCRMain.lm.reportApplicationInputs(files)
+                    MiXCRMain.lm.reportApplicationInputs(files, keyParamter, sampleDescriptions)
                     BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
                         .map { ProcessingBundle(it) }
                 }
@@ -846,7 +864,7 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
-                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFile))
+                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFile), keyParamter, sampleDescriptions)
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
@@ -855,7 +873,7 @@ object CommandAlign {
                 }
 
                 SingleEndFastq -> {
-                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles)
+                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParamter, sampleDescriptions)
                     object : FastqGroupReader(inputFileGroups.fileGroups) {
                         override fun nextReader(fileGroup: FileGroup) =
                             fastqReaderFactory(fileGroup.files[0]) as SequenceReaderCloseable<SequenceRead>
@@ -863,7 +881,7 @@ object CommandAlign {
                 }
 
                 PairedEndFastq -> {
-                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles)
+                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParamter, sampleDescriptions)
                     object : FastqGroupReader(inputFileGroups.fileGroups) {
                         override fun nextReader(fileGroup: FileGroup) =
                             PairedFastqReader(
@@ -874,7 +892,7 @@ object CommandAlign {
                 }
 
                 else -> { // More than 2 reads
-                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles)
+                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParamter, sampleDescriptions)
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     object : FastqGroupReader(inputFileGroups.fileGroups) {
                         override fun nextReader(fileGroup: FileGroup) =
@@ -1003,8 +1021,15 @@ object CommandAlign {
                     pathsForNotAligned.notParsedReadsR1,
                     pathsForNotAligned.notParsedReadsR2
                 )
-            ) { reader, writer, notAlignedWriter, notParsedWriter ->
-                writer?.writeHeader(
+            ) { reader, writers, notAlignedWriter, notParsedWriter ->
+                // Pre-create all writers
+                val samples = tagsExtractor.samples
+                if (samples == null || !cmdParams.splitBySample)
+                    writers?.get("")
+                else
+                    samples.forEach { sample -> writers?.get(sample) }
+
+                writers?.writeHeader(
                     MiXCRHeader(
                         inputHash,
                         paramsSpec,
@@ -1080,42 +1105,42 @@ object CommandAlign {
                         it
                 }
 
-                if (reportBuffers) {
-                    checkNotNull(writer)
-                    println("Analysis threads: $threads")
-                    val reporter = StatusReporter()
-                    reporter.addBuffer(
-                        "Input (chunked; chunk size = 64)",
-                        mainInputReads.bufferStatusProvider
-                    )
-                    reporter.addBuffer(
-                        "Alignment result (chunked; chunk size = 64)",
-                        step2.outputBufferStatusProvider
-                    )
-                    reporter.addCustomProvider(object : StatusProvider {
-                        @Suppress("ObjectPropertyName")
-                        @Volatile
-                        var _status: String = ""
-
-                        @Volatile
-                        var isClosed = false
-                        override fun updateStatus() {
-                            _status = "Busy encoders: " + writer.busyEncoders + " / " + writer.encodersCount
-                            isClosed = writer.isClosed
-                        }
-
-                        override fun isFinished(): Boolean = isClosed
-
-                        override fun getStatus(): String = _status
-                    })
-                    reporter.start()
-                }
+                //if (reportBuffers) {
+                //    checkNotNull(writer)
+                //    println("Analysis threads: $threads")
+                //    val reporter = StatusReporter()
+                //    reporter.addBuffer(
+                //        "Input (chunked; chunk size = 64)",
+                //        mainInputReads.bufferStatusProvider
+                //    )
+                //    reporter.addBuffer(
+                //        "Alignment result (chunked; chunk size = 64)",
+                //        step2.outputBufferStatusProvider
+                //    )
+                //    reporter.addCustomProvider(object : StatusProvider {
+                //        @Suppress("ObjectPropertyName")
+                //        @Volatile
+                //        var _status: String = ""
+                //
+                //        @Volatile
+                //        var isClosed = false
+                //        override fun updateStatus() {
+                //            _status = "Busy encoders: " + writer.busyEncoders + " / " + writer.encodersCount
+                //            isClosed = writer.isClosed
+                //        }
+                //
+                //        override fun isFinished(): Boolean = isClosed
+                //
+                //        override fun getStatus(): String = _status
+                //    })
+                //    reporter.start()
+                //}
 
                 step2
                     .unchunked()
                     .ordered { it.read.id }
                     .forEach { bundle ->
-                        if (bundle.status == NotParsed)
+                        if (bundle.status == NotParsed || bundle.status == SampleNotMatched)
                             notParsedWriter?.write(bundle.read)
                         if (bundle.status == NotAligned)
                             notAlignedWriter?.write(bundle.read)
@@ -1145,15 +1170,15 @@ object CommandAlign {
                         if (alignment.isChimera)
                             reportBuilder.onChimera()
 
-                        writer?.write(alignment)
+                        writers?.get(if (cmdParams.splitBySample) bundle.sample else "")?.write(alignment)
                     }
 
-                writer?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
+                writers?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
                 reportBuilder.setSampleStat(tagsExtractor.sampleStat)
                 val report = reportBuilder.buildReport()
-                writer?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
+                writers?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)
@@ -1176,16 +1201,85 @@ object CommandAlign {
                 }
             }
 
-        private fun alignedWriter(outputFile: Path) = when (outputFile.toString()) {
-            "." -> null
-            else -> VDJCAlignmentsWriter(
-                outputFile, max(1, threads.value / 8),
-                VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
-            )
+        private fun alignedWriter(outputFile: Path): Writers? =
+            when (outputFile.toString()) {
+                "." -> null
+                else -> {
+                    object : Writers() {
+                        override fun writerFactory(sampleName: String) = run {
+                            VDJCAlignmentsWriter(
+                                outputFile.resolveSibling(
+                                    addSampleToFileName(outputFile.fileName.toString(), sampleName)
+                                ),
+                                concurrencyLimiter, VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
+                            )
+                        }
+                    }
+                }
+            }
+
+        abstract inner class Writers : AutoCloseable {
+            private var header: MiXCRHeader? = null
+            private var genes: List<VDJCGene>? = null
+            private val writers = mutableMapOf<String, VDJCAlignmentsWriter>()
+            protected val concurrencyLimiter: Semaphore = Semaphore(max(1, threads.value / 8))
+
+            abstract fun writerFactory(sampleName: String): VDJCAlignmentsWriter
+
+            fun writeHeader(header: MiXCRHeader, genes: List<VDJCGene>) {
+                if (this.header != null)
+                    throw IllegalStateException()
+
+                for (writer in writers.values)
+                    writer.writeHeader(header, genes)
+                this.header = header
+                this.genes = genes
+            }
+
+            operator fun get(sample: String) =
+                writers.computeIfAbsent(sample) {
+                    val writer = writerFactory(it)
+                    if (header != null)
+                        writer.writeHeader(header!!, genes!!)
+                    writer
+                }
+
+            fun setFooter(footer: MiXCRFooter) {
+                for (writer in writers.values)
+                    writer.setFooter(footer)
+            }
+
+            fun setNumberOfProcessedReads(value: Long) {
+                for (writer in writers.values)
+                    writer.setNumberOfProcessedReads(value)
+            }
+
+            override fun close() {
+                var re: Exception? = null
+                for (w in writers.values)
+                    try {
+                        w.close()
+                    } catch (e: Exception) {
+                        if (re == null)
+                            re = e
+                        else
+                            re.addSuppressed(e)
+                    }
+                if (re != null)
+                    throw RuntimeException(re)
+            }
         }
 
         companion object {
             private val libraryNameEnding: Pattern = Pattern.compile("\\.json(?:\\.gz|)$")
         }
+    }
+
+    fun addSampleToFileName(fileName: String, sampleName: String): String {
+        val dotIndex = fileName.lastIndexOf('.')
+        val prefix = fileName.substring(0, dotIndex)
+        val extension = fileName.substring(dotIndex)
+        val insert = if (sampleName == "") "" else ".$sampleName"
+        return prefix + insert + extension
     }
 }

@@ -443,6 +443,22 @@ object AlignMixins {
 
         const val CMD_OPTION = "--drop-non-CDR3-alignments"
     }
+
+    @JsonTypeName("SetSplitBySample")
+    data class SetSplitBySample(val value: Boolean) : MiXCRMixinBase(10) {
+        override val cmdArgs get() = if (value) listOf(CMD_OPTION_TRUE) else listOf(CMD_OPTION_FALSE)
+
+        override fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::align.update {
+                CommandAlign.Params::splitBySample setTo value
+            }
+        }
+
+        companion object {
+            const val CMD_OPTION_TRUE = "--split-by-sample"
+            const val CMD_OPTION_FALSE = "--dont-split-by-sample"
+        }
+    }
 }
 
 object AssembleMixins {
