@@ -28,6 +28,7 @@ import com.milaboratory.core.io.sequence.SequenceReaderCloseable
 import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
+import com.milaboratory.core.io.sequence.fastq.MultiFastqWriter
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqReader
@@ -281,6 +282,7 @@ object CommandAlign {
             }
 
         private val allowedStates = listOf(
+            "",
             "R1",
             "R1,R2",
             "I1,R1,R2",
@@ -302,7 +304,7 @@ object CommandAlign {
                 if (!allowedStates.contains(states))
                     throw ValidationException(
                         "Unsupported combination of reads in ${optionPrefix}-*: found $states expected one of " +
-                                allowedStates.joinToString(" ")
+                                allowedStates.joinToString(" / ")
                     )
 
                 if (r1 != null) {
@@ -350,6 +352,19 @@ object CommandAlign {
             2 -> {
                 ValidationException.requireFileType(paths[0], InputFileType.FASTQ)
                 ValidationException.requireFileType(paths[1], InputFileType.FASTQ)
+            }
+
+            3 -> {
+                ValidationException.requireFileType(paths[0], InputFileType.FASTQ)
+                ValidationException.requireFileType(paths[1], InputFileType.FASTQ)
+                ValidationException.requireFileType(paths[2], InputFileType.FASTQ)
+            }
+
+            4 -> {
+                ValidationException.requireFileType(paths[0], InputFileType.FASTQ)
+                ValidationException.requireFileType(paths[1], InputFileType.FASTQ)
+                ValidationException.requireFileType(paths[2], InputFileType.FASTQ)
+                ValidationException.requireFileType(paths[3], InputFileType.FASTQ)
             }
 
             else -> throw ValidationException("Required 1 or 2 input files, got $paths")
@@ -853,7 +868,7 @@ object CommandAlign {
                     }
                 }
 
-                else -> {
+                else -> { // More than 2 reads
                     MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles)
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     object : FastqGroupReader(inputFileGroups.fileGroups) {
@@ -972,10 +987,14 @@ object CommandAlign {
                 createReader(),
                 alignedWriter(outputFile),
                 failedReadsWriter(
+                    pathsForNotAligned.notAlignedReadsI1,
+                    pathsForNotAligned.notAlignedReadsI2,
                     pathsForNotAligned.notAlignedReadsR1,
                     pathsForNotAligned.notAlignedReadsR2
                 ),
                 failedReadsWriter(
+                    pathsForNotAligned.notParsedReadsI1,
+                    pathsForNotAligned.notParsedReadsI2,
                     pathsForNotAligned.notParsedReadsR1,
                     pathsForNotAligned.notParsedReadsR2
                 )
@@ -1135,16 +1154,19 @@ object CommandAlign {
         }
 
         @Suppress("UNCHECKED_CAST")
-        private fun failedReadsWriter(r1: Path?, r2: Path?): SequenceWriter<SequenceRead>? = when (r1) {
-            null -> null
-            else -> when (inputFileGroups.inputType) {
-                PairedEndFastq -> PairedFastqWriter(r1.toFile(), r2!!.toFile()) as SequenceWriter<SequenceRead>
-                SingleEndFastq -> SingleFastqWriter(r1.toFile()) as SequenceWriter<SequenceRead>
-                else -> throw ApplicationException(
-                    "Export of reads for which alignment / parsing failed allowed only for fastq inputs."
-                ) // must never happen because of parameters validation
+        private fun failedReadsWriter(i1: Path?, i2: Path?, r1: Path?, r2: Path?): SequenceWriter<SequenceRead>? =
+            when (r1) {
+                null -> null
+                else -> when (inputFileGroups.inputType) {
+                    PairedEndFastq -> PairedFastqWriter(r1.toFile(), r2!!.toFile()) as SequenceWriter<SequenceRead>
+                    SingleEndFastq -> SingleFastqWriter(r1.toFile()) as SequenceWriter<SequenceRead>
+                    TripleEndFastq -> MultiFastqWriter(i1!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    QuadEndFastq -> MultiFastqWriter(i1!!, i2!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    else -> throw ApplicationException(
+                        "Export of reads for which alignment / parsing failed allowed only for fastq inputs."
+                    ) // must never happen because of parameters validation
+                }
             }
-        }
 
         private fun alignedWriter(outputFile: Path) = when (outputFile.toString()) {
             "." -> null

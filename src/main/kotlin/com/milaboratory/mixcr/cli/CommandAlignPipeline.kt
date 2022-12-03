@@ -282,12 +282,15 @@ object CommandAlignPipeline {
     ) {
         init {
             require((plan != null) == (readShortcuts != null))
+            require(readShortcuts == null || readShortcuts.size <= 2) {
+                "At most two payload reads are supported."
+            }
         }
 
         val pairedPatternPayload = readShortcuts?.size?.let { it == 2 }
 
         val inputReads = AtomicLong()
-        val matchedHeaders = AtomicLong()
+        private val matchedHeaders = AtomicLong()
         val reportAgg = plan?.let { ParseReportAggregator(it) }
 
         fun parse(bundle: ProcessingBundle): ProcessingBundle {
