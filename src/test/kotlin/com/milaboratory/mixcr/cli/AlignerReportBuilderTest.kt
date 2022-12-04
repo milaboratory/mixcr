@@ -54,7 +54,7 @@ class AlignerReportBuilderTest {
     @Test
     fun testSerializeProjections() {
         val rep = reportBuilder()
-            .setTagReportBuilder(
+            .setTagReport(
                 ParseReport(
                     0L,
                     0L,

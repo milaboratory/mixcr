@@ -230,6 +230,11 @@ object CommandExportClones {
                     it.startsWith("geneLabel:", ignoreCase = true) ->
                         CloneGeneLabelSplittingKey(it.substring(10))
 
+                    it.startsWith("tag:", ignoreCase = true) ->{
+                        val tagName = it.substring(4)
+                        CloneTagSplittingKey(header.tagsInfo.get(tagName).index)
+                    }
+
                     else ->
                         throw ApplicationException("Unsupported splitting key: $it")
                 }
@@ -263,6 +268,7 @@ object CommandExportClones {
                             logger.warn("Input has no tags with type $splitByTagType")
                             null
                         }
+
                         else -> header.tagsInfo
                             .filter { it.type == splitByTagType }
                             .maxBy { it.index }
@@ -351,6 +357,11 @@ object CommandExportClones {
 
     private class CloneGeneLabelSplittingKey(private val labelName: String) : CloneSplittingKey {
         override fun getLabel(clone: Clone): String = clone.getGeneLabel(labelName)
+    }
+
+    private class CloneTagSplittingKey(private val tagIdx: Int) : CloneSplittingKey {
+        override fun getLabel(clone: Clone): String =
+            clone.tagFractions.asKeyPrefixOrError(tagIdx + 1).get(tagIdx).toString()
     }
 
     @JvmStatic

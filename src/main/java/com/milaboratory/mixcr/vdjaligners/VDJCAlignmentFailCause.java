@@ -21,7 +21,8 @@ public enum VDJCAlignmentFailCause {
     NoJHits("Alignment failed because of absence of J hits", "No J hits"),
     VAndJOnDifferentTargets("No target with both V and J alignments", "No target with both V and J"),
     LowTotalScore("Alignment failed because of low total score", "Low total score"),
-    NoBarcode("Absent barcode", "Absent barcode");
+    NoBarcode("Absent barcode", "Absent barcode"),
+    SampleNotMatched("Sample not matched", "Sample not matched");
     public final String reportLine;
     public final String shortReportLine;
 
