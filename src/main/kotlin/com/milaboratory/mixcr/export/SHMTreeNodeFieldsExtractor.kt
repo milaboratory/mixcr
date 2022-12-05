@@ -86,9 +86,8 @@ object SHMTreeNodeFieldsExtractor {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
-            node.mutationsFromGermlineTo(what)
-                ?.targetNSequence(geneFeature)
-                ?.toString() ?: NULL
+            val mutations = node.mutationsFromGermlineTo(what) ?: return@Field NULL
+            mutations.targetNSequence(geneFeature)?.toString() ?: notCoveredRegionText
         }
         this += nFeatureField
         this += FieldsCollection(
@@ -116,9 +115,8 @@ object SHMTreeNodeFieldsExtractor {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
-            node.mutationsFromGermlineTo(what)
-                ?.targetAASequence(geneFeature)
-                ?.toString() ?: NULL
+            val mutations = node.mutationsFromGermlineTo(what) ?: return@Field NULL
+            mutations.targetAASequence(geneFeature)?.toString() ?: notCoveredRegionText
         }
         this += aaFeatureField
         this += FieldsCollection(
@@ -145,9 +143,8 @@ object SHMTreeNodeFieldsExtractor {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, what: Base? ->
-            node.mutationsFromGermlineTo(what)
-                ?.targetNSequence(geneFeature)?.size()
-                ?.toString() ?: NULL
+            val mutations = node.mutationsFromGermlineTo(what) ?: return@Field NULL
+            mutations.targetNSequence(geneFeature)?.size()?.toString() ?: notCoveredRegionText
         }
         this += lengthOfField
         this += FieldsCollection(
@@ -175,10 +172,10 @@ object SHMTreeNodeFieldsExtractor {
                 checkFeaturesForAlignment(feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, base: Base ->
-            node.mutationsFrom(base)
-                ?.nAlignment(geneFeature)
+            val mutations = node.mutationsFrom(base) ?: return@Field NULL
+            mutations.nAlignment(geneFeature)
                 ?.absoluteMutations
-                ?.encode() ?: "-"
+                ?.encode() ?: notCoveredRegionTextForMutations
         }
         this += nMutationsField
         this += FieldsCollection(
@@ -203,10 +200,10 @@ object SHMTreeNodeFieldsExtractor {
                 checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            node.mutationsFrom(base)
-                ?.nAlignment(geneFeature, relativeTo)
+            val mutations = node.mutationsFrom(base) ?: return@Field NULL
+            mutations.nAlignment(geneFeature, relativeTo)
                 ?.absoluteMutations
-                ?.encode() ?: "-"
+                ?.encode() ?: notCoveredRegionTextForMutations
         }
 
 
@@ -221,9 +218,9 @@ object SHMTreeNodeFieldsExtractor {
                 checkFeaturesForAlignment(feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, base: Base ->
-            node.mutationsFrom(base)
-                ?.aaAlignment(geneFeature)
-                ?.absoluteMutations?.encode(",") ?: "-"
+            val mutations = node.mutationsFrom(base) ?: return@Field NULL
+            mutations.aaAlignment(geneFeature)
+                ?.absoluteMutations?.encode(",") ?: notCoveredRegionTextForMutations
         }
         this += aaMutationsField
         this += FieldsCollection(
@@ -248,9 +245,9 @@ object SHMTreeNodeFieldsExtractor {
                 checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            node.mutationsFrom(base)
-                ?.aaAlignment(geneFeature, relativeTo)
-                ?.absoluteMutations?.encode(",") ?: "-"
+            val mutations = node.mutationsFrom(base) ?: return@Field NULL
+            mutations.aaAlignment(geneFeature, relativeTo)
+                ?.absoluteMutations?.encode(",") ?: notCoveredRegionTextForMutations
         }
 
         val detailedMutationsFormat =
@@ -268,9 +265,9 @@ object SHMTreeNodeFieldsExtractor {
                 checkFeaturesForAlignment(feature)
             }
         ) { node: SHMTreeForPostanalysis.SplittedNode, geneFeature: GeneFeature, base: Base ->
-            node.mutationsFrom(base)
-                ?.aaMutationsDetailed(geneFeature)
-                ?.encode(",") ?: "-"
+            val mutations = node.mutationsFrom(base) ?: return@Field NULL
+            mutations.aaMutationsDetailed(geneFeature)
+                ?.encode(",") ?: notCoveredRegionTextForMutations
         }
         this += mutationsDetailedField
         this += FieldsCollection(
@@ -295,9 +292,9 @@ object SHMTreeNodeFieldsExtractor {
                 checkFeaturesForAlignment(feature, relativeTo)
             }
         ) { node, geneFeature, relativeTo, base ->
-            node.mutationsFrom(base)
-                ?.aaMutationsDetailed(geneFeature, relativeTo)
-                ?.encode(",") ?: "-"
+            val mutations = node.mutationsFrom(base) ?: return@Field NULL
+            mutations.aaMutationsDetailed(geneFeature, relativeTo)
+                ?.encode(",") ?: notCoveredRegionTextForMutations
         }
     }
 }

@@ -262,6 +262,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                 closeable = alignmentsReader
                 progressReporter = alignmentsReader
             }
+
             SHMT -> throw UnsupportedOperationException(".shmt file unsupported")
         }.exhaustive
         if (limit != null) {
@@ -270,7 +271,11 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
             progressReporter = SmartProgressReporter.extractProgress(clop)
         }
         SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter)
-        val rowMetaForExport = RowMetaForExport(fileInfo.header.tagsInfo, MetaForExport(fileInfo))
+        val rowMetaForExport = RowMetaForExport(
+            fileInfo.header.tagsInfo,
+            MetaForExport(fileInfo),
+            true
+        )
         (out?.let { PrintStream(it.toFile()) } ?: System.out).use { output ->
             closeable.use {
                 port.use {

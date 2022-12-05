@@ -244,7 +244,7 @@ object CommandExportClones {
             val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, headerForExport)
 
             fun runExport(set: CloneSet, outFile: Path?) {
-                val rowMetaForExport = RowMetaForExport(set.tagsInfo, headerForExport)
+                val rowMetaForExport = RowMetaForExport(set.tagsInfo, headerForExport, exportDefaults.notCoveredAsEmpty)
                 InfoWriter.create(outFile, fieldExtractors, !params.noHeader) { rowMetaForExport }.use { writer ->
                     val splitByTagType = if (params.splitByTagType != null) {
                         params.splitByTagType

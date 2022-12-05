@@ -262,7 +262,7 @@ object VDJCObjectFieldExtractors {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { vdjcObject: VDJCObject, feature ->
-            vdjcObject.getFeature(feature)?.sequence?.toString() ?: NULL
+            vdjcObject.getFeature(feature)?.sequence?.toString() ?: notCoveredRegionText
         }
         if (!forTreesExport) {
             this += nFeatureField
@@ -289,7 +289,7 @@ object VDJCObjectFieldExtractors {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { vdjcObject: VDJCObject, feature ->
-            vdjcObject.getFeature(feature)?.quality?.toString() ?: NULL
+            vdjcObject.getFeature(feature)?.quality?.toString() ?: notCoveredRegionText
         }
         this += qFeatureField
         if (!forTreesExport) {
@@ -327,14 +327,14 @@ object VDJCObjectFieldExtractors {
                     warnIfFeatureNotCovered(header, feature)
                 }
             ) { vdjcObject: VDJCObject, geneFeature ->
-                val feature = vdjcObject.getFeature(geneFeature) ?: return@Field NULL
+                val feature = vdjcObject.getFeature(geneFeature) ?: return@Field notCoveredRegionText
                 val targetId = vdjcObject.getTargetContainingFeature(geneFeature)
                 val tr = if (targetId == -1) {
                     TranslationParameters.FromLeftWithIncompleteCodon
                 } else {
                     vdjcObject.getPartitionedTarget(targetId).partitioning.getTranslationParameters(geneFeature)
                 }
-                if (tr == null) return@Field NULL
+                if (tr == null) return@Field notCoveredRegionText
                 AminoAcidSequence.translate(feature.sequence, tr).toString()
             }
             this += aaFeatureField
@@ -362,7 +362,7 @@ object VDJCObjectFieldExtractors {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { vdjcObject: VDJCObject, geneFeature ->
-            vdjcObject.getIncompleteFeature(geneFeature)?.toString() ?: NULL
+            vdjcObject.getIncompleteFeature(geneFeature)?.toString() ?: notCoveredRegionText
         }
         this += nFeatureImputedField
         if (!forTreesExport) {
@@ -400,7 +400,7 @@ object VDJCObjectFieldExtractors {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { vdjcObject: VDJCObject, geneFeature ->
-            vdjcObject.getIncompleteFeature(geneFeature)?.toAminoAcidString() ?: NULL
+            vdjcObject.getIncompleteFeature(geneFeature)?.toAminoAcidString() ?: notCoveredRegionText
         }
         this += aaFeatureImputedField
         if (!forTreesExport) {
@@ -438,7 +438,7 @@ object VDJCObjectFieldExtractors {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { vdjcObject: VDJCObject, feature ->
-            vdjcObject.getFeature(feature)?.quality?.minValue()?.toString() ?: NULL
+            vdjcObject.getFeature(feature)?.quality?.minValue()?.toString() ?: notCoveredRegionText
         }
         this += minFeatureQualityField
         if (!forTreesExport) {
@@ -521,7 +521,7 @@ object VDJCObjectFieldExtractors {
                 warnIfFeatureNotCovered(header, feature)
             }
         ) { vdjcObject: VDJCObject, feature ->
-            vdjcObject.getFeature(feature)?.quality?.meanValue()?.toString() ?: NULL
+            vdjcObject.getFeature(feature)?.quality?.meanValue()?.toString() ?: notCoveredRegionText
         }
         this += avrgFeatureQualityField
         if (!forTreesExport) {
@@ -560,7 +560,7 @@ object VDJCObjectFieldExtractors {
                     warnIfFeatureNotCovered(header, feature)
                 }
             ) { vdjcObject: VDJCObject, feature ->
-                vdjcObject.getFeature(feature)?.size()?.toString() ?: NULL
+                vdjcObject.getFeature(feature)?.size()?.toString() ?: notCoveredRegionText
             }
             this += lengthOf
             this += FieldsCollection(
@@ -587,7 +587,7 @@ object VDJCObjectFieldExtractors {
                     validateFeaturesForMutationsExtraction(geneFeature)
                 }
             ) { obj: VDJCObject, geneFeature ->
-                obj.nMutations(geneFeature)?.encode(",") ?: "-"
+                obj.nMutations(geneFeature)?.encode(",") ?: notCoveredRegionTextForMutations
             }
             this += nMutationsField
             this += FieldsCollection(
@@ -616,7 +616,7 @@ object VDJCObjectFieldExtractors {
                     validateFeaturesForMutationsExtraction(geneFeature, relativeTo)
                 }
             ) { obj: VDJCObject, geneFeature, relativeTo ->
-                obj.nMutations(geneFeature, relativeTo)?.encode(",") ?: "-"
+                obj.nMutations(geneFeature, relativeTo)?.encode(",") ?: notCoveredRegionTextForMutations
             }
             val aaMutationsFiled = Field(
                 Order.`-aaMutations`,
@@ -628,7 +628,7 @@ object VDJCObjectFieldExtractors {
                     validateFeaturesForMutationsExtraction(geneFeature)
                 }
             ) { obj: VDJCObject, geneFeature ->
-                obj.aaMutations(geneFeature)?.encode(",") ?: "-"
+                obj.aaMutations(geneFeature)?.encode(",") ?: notCoveredRegionTextForMutations
             }
             this += aaMutationsFiled
             this += FieldsCollection(
@@ -657,7 +657,7 @@ object VDJCObjectFieldExtractors {
                     validateFeaturesForMutationsExtraction(geneFeature, relativeTo)
                 }
             ) { obj: VDJCObject, geneFeature, relativeTo ->
-                obj.aaMutations(geneFeature, relativeTo)?.encode(",") ?: "-"
+                obj.aaMutations(geneFeature, relativeTo)?.encode(",") ?: notCoveredRegionTextForMutations
             }
             val detailedMutationsFormat =
                 "Format <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>, where <aa_mutation_individual> is an expected amino acid " +
@@ -673,7 +673,7 @@ object VDJCObjectFieldExtractors {
                     validateFeaturesForMutationsExtraction(geneFeature)
                 }
             ) { obj: VDJCObject, geneFeature ->
-                obj.mutationsDetailed(geneFeature) ?: "-"
+                obj.mutationsDetailed(geneFeature) ?: notCoveredRegionTextForMutations
             }
             this += mutationsDetailedField
             this += FieldsCollection(
@@ -702,7 +702,7 @@ object VDJCObjectFieldExtractors {
                     validateFeaturesForMutationsExtraction(geneFeature, relativeTo)
                 }
             ) { obj: VDJCObject, geneFeature, relativeTo ->
-                obj.mutationsDetailed(geneFeature, relativeTo) ?: "-"
+                obj.mutationsDetailed(geneFeature, relativeTo) ?: notCoveredRegionTextForMutations
             }
         }
         val positionInReferenceOfField = Field(
@@ -888,8 +888,9 @@ object VDJCObjectFieldExtractors {
             },
             deprecation = "`-tag <tag_name>` deprecated, use `-tags ${Labels.TAG_TYPE}` instead"
         ) { vdjcObject: VDJCObject, tagName: String ->
-            val tag = tagsInfo[tagName] ?: return@Field NULL
-            val tagValue = vdjcObject.tagCount.singleOrNull(tag.index) ?: return@Field NULL
+            val tag = tagsInfo[tagName] ?: return@Field noTagText
+            val tagValue = vdjcObject.tagCount.singleOrNull(tag.index)
+                ?: return@Field if (notCoveredAsEmpty) "" else "cant_count_need_to_be_split"
             tagValue.toString()
         }
         this += tagField
@@ -932,7 +933,7 @@ object VDJCObjectFieldExtractors {
             val tag: TagInfo = when {
                 tagType != null -> tagsInfo.lastOrNull { it.type == tagType }
                 else -> tagsInfo[tagName]
-            } ?: return@Field NULL
+            } ?: return@Field noTagText
             val level = tag.index + 1
             vdjcObject.getTagDiversity(level).toString()
         }

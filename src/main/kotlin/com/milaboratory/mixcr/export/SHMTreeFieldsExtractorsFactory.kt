@@ -144,7 +144,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                     Base.parent -> throw UnsupportedOperationException()
                 }
                     .targetNSequence(geneFeature)
-                    ?.toString() ?: NULL
+                    ?.toString() ?: notCoveredRegionText
             }
             this += nFeatureField
             this += FieldsCollection(
@@ -174,7 +174,7 @@ object SHMTreeFieldsExtractorsFactory : FieldExtractorsFactoryWithPresets<SHMTre
                     Base.parent -> throw UnsupportedOperationException()
                 }
                     .targetAASequence(geneFeature)
-                    ?.toString() ?: NULL
+                    ?.toString() ?: notCoveredRegionText
             }
             this += aaFeatureField
             this += FieldsCollection(

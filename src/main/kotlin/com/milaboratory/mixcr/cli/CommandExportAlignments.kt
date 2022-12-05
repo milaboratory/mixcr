@@ -142,7 +142,11 @@ object CommandExportAlignments {
                     allFullyCoveredBy = null,
                     data.info.footer.reports
                 )
-                val rowMetaForExport = RowMetaForExport(header.tagsInfo, headerForExport)
+                val rowMetaForExport = RowMetaForExport(
+                    header.tagsInfo,
+                    headerForExport,
+                    exportDefaults.notCoveredAsEmpty
+                )
                 InfoWriter.create(
                     outputFile,
                     VDJCAlignmentsFieldsExtractorsFactory.createExtractors(params.fields, headerForExport),

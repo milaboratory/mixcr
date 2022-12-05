@@ -15,5 +15,5 @@ const val NULL = ""
 
 interface FieldExtractor<in T : Any> {
     val header: String
-    fun extractValue(header: RowMetaForExport, obj: T): String
+    fun extractValue(meta: RowMetaForExport, obj: T): String
 }

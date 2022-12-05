@@ -103,7 +103,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
         val metaForExport = MetaForExport(emptyList(), null, allReports)
         val fieldExtractors = ReportFieldsExtractors.createExtractors(addedFields, metaForExport)
         InfoWriter.create(out, fieldExtractors, !noHeader) {
-            RowMetaForExport(TagsInfo.NO_TAGS, metaForExport)
+            RowMetaForExport(TagsInfo.NO_TAGS, metaForExport, false)
         }.use { output ->
             inputFiles.forEach { input ->
                 val footer = IOUtil.extractFooter(input)

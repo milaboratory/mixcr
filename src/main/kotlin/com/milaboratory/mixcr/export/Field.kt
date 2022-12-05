@@ -179,7 +179,7 @@ private class FieldParameterless<T : Any>(
         args: Array<String>
     ): FieldExtractor<T> = object : FieldExtractor<T> {
         override val header = sHeader
-        override fun extractValue(header: RowMetaForExport, obj: T): String = header.extract(obj)
+        override fun extractValue(meta: RowMetaForExport, obj: T): String = meta.extract(obj)
     }
 
     override val metaVars: String = ""
@@ -206,7 +206,7 @@ private abstract class FieldWithParameters<T : Any, P>(
         val params = getParameters(headerData, args)
         return object : FieldExtractor<T> {
             override val header = getHeader(params)
-            override fun extractValue(header: RowMetaForExport, obj: T): String = header.extractValue(obj, params)
+            override fun extractValue(meta: RowMetaForExport, obj: T): String = meta.extractValue(obj, params)
         }
     }
 }

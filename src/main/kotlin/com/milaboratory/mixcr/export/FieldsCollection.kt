@@ -308,9 +308,9 @@ fun <T : Any, R : Any> FieldsCollection<T>.fromProperty(
             return delegates.map { delegate ->
                 object : FieldExtractor<R> {
                     override val header: String = delegate.header
-                    override fun extractValue(header: RowMetaForExport, obj: R): String {
+                    override fun extractValue(meta: RowMetaForExport, obj: R): String {
                         val propertyVal = property(obj) ?: return NULL
-                        return delegate.extractValue(header, propertyVal)
+                        return delegate.extractValue(meta, propertyVal)
                     }
                 }
             }

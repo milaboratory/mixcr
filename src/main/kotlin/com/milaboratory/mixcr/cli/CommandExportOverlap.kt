@@ -122,6 +122,14 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
     )
     var onlyProductive = false
 
+    @Option(
+        description = ["Export not covered regions as empty text."],
+        names = ["--not-covered-as-empty"],
+        arity = "0",
+        order = OptionsOrder.exportOptions + 400
+    )
+    var notCoveredAsEmpty: Boolean = false
+
     private val output get() = inOut.last()
 
     public override val inputFiles
@@ -166,7 +174,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
             object : FieldExtractor<Clone> {
                 override val header = (if (criteria.isAA) "aaSeq" else "nSeq") + GeneFeature.encode(criteria.feature)
 
-                override fun extractValue(header: RowMetaForExport, obj: Clone) = when {
+                override fun extractValue(meta: RowMetaForExport, obj: Clone) = when {
                     criteria.isAA -> obj.getAAFeature(criteria.feature).toString()
                     else -> obj.getNFeature(criteria.feature).toString()
                 }
@@ -177,7 +185,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
                 object : FieldExtractor<Clone> {
                     override val header = "vGene"
 
-                    override fun extractValue(header: RowMetaForExport, obj: Clone) = obj.getBestHit(Variable).gene.name
+                    override fun extractValue(meta: RowMetaForExport, obj: Clone) = obj.getBestHit(Variable).gene.name
                 }
             )
         }
@@ -186,7 +194,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
                 object : FieldExtractor<Clone> {
                     override val header: String = "jGene"
 
-                    override fun extractValue(header: RowMetaForExport, obj: Clone) = obj.getBestHit(Joining).gene.name
+                    override fun extractValue(meta: RowMetaForExport, obj: Clone) = obj.getBestHit(Joining).gene.name
                 }
             )
         }
@@ -222,7 +230,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         }
 
         val overlap = OverlapUtil.overlap(samples.map { it.toString() }, { true }, criteria.ordering())
-        val rowMetaForExport = RowMetaForExport(fileInfo.header.tagsInfo, headerForExport)
+        val rowMetaForExport = RowMetaForExport(fileInfo.header.tagsInfo, headerForExport, notCoveredAsEmpty)
         overlap.mkElementsPort().use { port ->
             overlapBrowser.overlap(countsByChain, port).forEach { row ->
                 for ((ch, cloneOverlapGroup) in row) {
