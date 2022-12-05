@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import static com.milaboratory.mixcr.basictypes.IOUtil.MAGIC_VDJC;
 
@@ -55,8 +56,11 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
      */
     long numberOfProcessedReads = -1;
 
-    /** Writer settings */
-    final int encoderThreads, alignmentsInBlock;
+    /** Writer settings: concurrency */
+    final Semaphore concurrencyLimiter;
+
+    /** Writer settings: block size */
+    final int alignmentsInBlock;
 
     /** Counter of alignments */
     long numberOfAlignments = 0;
@@ -73,15 +77,15 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
     boolean closed = false;
 
     public VDJCAlignmentsWriter(String fileName) throws IOException {
-        this(fileName, DEFAULT_ENCODER_THREADS, DEFAULT_ALIGNMENTS_IN_BLOCK);
+        this(fileName, new Semaphore(DEFAULT_ENCODER_THREADS), DEFAULT_ALIGNMENTS_IN_BLOCK);
     }
 
-    public VDJCAlignmentsWriter(String fileName, int encoderThreads, int alignmentsInBlock) throws IOException {
-        this(new PrimitivOHybrid(Paths.get(fileName)), encoderThreads, alignmentsInBlock, false);
+    public VDJCAlignmentsWriter(String fileName, Semaphore concurrencyLimiter, int alignmentsInBlock) throws IOException {
+        this(new PrimitivOHybrid(Paths.get(fileName)), concurrencyLimiter, alignmentsInBlock, false);
     }
 
-    public VDJCAlignmentsWriter(String fileName, int encoderThreads, int alignmentsInBlock, boolean highCompression) throws IOException {
-        this(new PrimitivOHybrid(Paths.get(fileName)), encoderThreads, alignmentsInBlock, highCompression);
+    public VDJCAlignmentsWriter(String fileName, Semaphore concurrencyLimiter, int alignmentsInBlock, boolean highCompression) throws IOException {
+        this(new PrimitivOHybrid(Paths.get(fileName)), concurrencyLimiter, alignmentsInBlock, highCompression);
     }
 
     public VDJCAlignmentsWriter(File file) throws IOException {
@@ -89,21 +93,21 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
     }
 
     public VDJCAlignmentsWriter(Path file) throws IOException {
-        this(file.toFile(), DEFAULT_ENCODER_THREADS, DEFAULT_ALIGNMENTS_IN_BLOCK);
+        this(file.toFile(), new Semaphore(DEFAULT_ENCODER_THREADS), DEFAULT_ALIGNMENTS_IN_BLOCK);
     }
 
-    public VDJCAlignmentsWriter(File file, int encoderThreads, int alignmentsInBlock) throws IOException {
-        this(new PrimitivOHybrid(file.toPath()), encoderThreads, alignmentsInBlock, false);
+    public VDJCAlignmentsWriter(File file, Semaphore concurrencyLimiter, int alignmentsInBlock) throws IOException {
+        this(new PrimitivOHybrid(file.toPath()), concurrencyLimiter, alignmentsInBlock, false);
     }
 
-    public VDJCAlignmentsWriter(Path file, int encoderThreads, int alignmentsInBlock, boolean highCompression) throws IOException {
-        this(new PrimitivOHybrid(file), encoderThreads, alignmentsInBlock, highCompression);
+    public VDJCAlignmentsWriter(Path file, Semaphore concurrencyLimiter, int alignmentsInBlock, boolean highCompression) throws IOException {
+        this(new PrimitivOHybrid(file), concurrencyLimiter, alignmentsInBlock, highCompression);
     }
 
-    public VDJCAlignmentsWriter(PrimitivOHybrid output, int encoderThreads, int alignmentsInBlock, boolean highCompression) {
+    public VDJCAlignmentsWriter(PrimitivOHybrid output, Semaphore concurrencyLimiter, int alignmentsInBlock, boolean highCompression) {
         this.highCompression = highCompression;
         this.output = output;
-        this.encoderThreads = encoderThreads;
+        this.concurrencyLimiter = concurrencyLimiter;
         this.alignmentsInBlock = alignmentsInBlock;
     }
 
@@ -148,7 +152,7 @@ public final class VDJCAlignmentsWriter implements VDJCAlignmentsWriterI, HasPos
             IOUtil.stdVDJCPrimitivOStateInit(o, genes, header.getFeaturesToAlign());
         }
 
-        writer = output.beginPrimitivOBlocks(encoderThreads, alignmentsInBlock,
+        writer = output.beginPrimitivOBlocks(concurrencyLimiter, alignmentsInBlock,
                 highCompression
                         ? PrimitivIOBlocksUtil.highLZ4Compressor()
                         : PrimitivIOBlocksUtil.fastLZ4Compressor());

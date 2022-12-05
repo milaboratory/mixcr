@@ -11,6 +11,7 @@
     tagPattern: null
     tagUnstranded: false
     tagMaxBudget: 10
+    splitBySample: false
     parameters:
       fixSeed: true
       libraryStructure: Unknown
@@ -135,6 +136,7 @@
     tagPattern: null
     tagUnstranded: false
     tagMaxBudget: 10
+    splitBySample: false
     parameters:
       fixSeed: true
       libraryStructure: Unknown
@@ -259,6 +261,7 @@
     tagPattern: null
     tagUnstranded: false
     tagMaxBudget: 10
+    splitBySample: false
     parameters:
       fixSeed: true
       libraryStructure: Unknown
@@ -395,6 +398,7 @@
     tagPattern: null
     tagUnstranded: false
     tagMaxBudget: 10
+    splitBySample: false
     parameters:
       fixSeed: true
       libraryStructure: R1V
@@ -532,6 +536,7 @@
     tagPattern: null
     tagUnstranded: false
     tagMaxBudget: 10
+    splitBySample: false
     parameters:
       fixSeed: true
       libraryStructure: Unknown
@@ -665,7 +670,7 @@
     writeFailedAlignments: false
     tagUnstranded: false
     tagMaxBudget: 10.0
-    limit: null
+    splitBySample: false
     parameters:
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
@@ -796,7 +801,7 @@
     writeFailedAlignments: false
     tagUnstranded: false
     tagMaxBudget: 10.0
-    limit: null
+    splitBySample: false
     parameters:
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
