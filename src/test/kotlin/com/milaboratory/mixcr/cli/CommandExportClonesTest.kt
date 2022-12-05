@@ -158,7 +158,7 @@ class CommandExportClonesTest {
         val output = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportClones.COMMAND_NAME} --dont-split-files --drop-default-fields -nFeature CDR1 $input ${output.path}")
-        output.readLines()[1].split("\t") shouldBe listOf("")
+        output.readLines()[1].split("\t") shouldBe listOf("region_not_covered")
     }
 
     @Test
