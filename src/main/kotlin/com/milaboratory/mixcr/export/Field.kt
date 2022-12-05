@@ -14,9 +14,9 @@ package com.milaboratory.mixcr.export
 import picocli.CommandLine
 
 abstract class Field<in T : Any> : FieldsCollection<T> {
-    abstract fun create(headerData: HeaderForExport, args: Array<String>): FieldExtractor<T>
+    abstract fun create(headerData: MetaForExport, args: Array<String>): FieldExtractor<T>
 
-    final override fun createFields(headerData: HeaderForExport, args: Array<String>): List<FieldExtractor<T>> =
+    final override fun createFields(headerData: MetaForExport, args: Array<String>): List<FieldExtractor<T>> =
         listOf(create(headerData, args))
 
     companion object {
@@ -34,14 +34,14 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             command: String,
             description: String,
             parameter1: CommandArgRequired<P1>,
-            validateArgs: Field<T>.(HeaderForExport, P1) -> Unit = { _, _ -> },
+            validateArgs: Field<T>.(MetaForExport, P1) -> Unit = { _, _ -> },
             deprecation: String? = null,
             extract: RowMetaForExport.(T, P1) -> String
         ): Field<T> = object :
             FieldWithParameters<T, P1>(priority, command, description, CommandLine.Range.valueOf("1"), deprecation) {
             override val metaVars: String = parameter1.meta
 
-            override fun getParameters(headerData: HeaderForExport, args: Array<String>): P1 {
+            override fun getParameters(headerData: MetaForExport, args: Array<String>): P1 {
                 val arg1 = parameter1.decodeAndValidate(this, args[0])
                 validateArgs(headerData, arg1)
                 return arg1
@@ -59,7 +59,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             description: String,
             parameter1: CommandArgRequired<P1>,
             parameter2: CommandArgRequired<P2>,
-            validateArgs: Field<T>.(HeaderForExport, P1, P2) -> Unit = { _, _, _ -> },
+            validateArgs: Field<T>.(MetaForExport, P1, P2) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: RowMetaForExport.(T, P1, P2) -> String
         ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2>>(
@@ -71,7 +71,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
         ) {
             override val metaVars: String = parameter1.meta + " " + parameter2.meta
 
-            override fun getParameters(headerData: HeaderForExport, args: Array<String>): Pair<P1, P2> {
+            override fun getParameters(headerData: MetaForExport, args: Array<String>): Pair<P1, P2> {
                 val arg1 = parameter1.decodeAndValidate(this, args[0])
                 val arg2 = parameter2.decodeAndValidate(this, args[1])
                 validateArgs(headerData, arg1, arg2)
@@ -91,7 +91,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             description: String,
             parameter1: CommandArgRequired<P1>,
             parameter2: CommandArgOptional<P2?>,
-            validateArgs: Field<T>.(HeaderForExport, P1, P2?) -> Unit = { _, _, _ -> },
+            validateArgs: Field<T>.(MetaForExport, P1, P2?) -> Unit = { _, _, _ -> },
             deprecation: String? = null,
             extract: RowMetaForExport.(T, P1, P2?) -> String
         ): Field<T> = object : FieldWithParameters<T, Pair<P1, P2?>>(
@@ -111,7 +111,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
                 }
             }
 
-            override fun getParameters(headerData: HeaderForExport, args: Array<String>): Pair<P1, P2?> {
+            override fun getParameters(headerData: MetaForExport, args: Array<String>): Pair<P1, P2?> {
                 val arg1 = parameter1.decodeAndValidate(this, args[0])
                 val arg2 = args.getOrNull(1)?.let { arg -> parameter2.decodeAndValidate(this, arg) }
                 validateArgs(headerData, arg1, arg2)
@@ -132,7 +132,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             parameter1: CommandArgRequired<P1>,
             parameter2: CommandArgRequired<P2>,
             parameter3: CommandArgRequired<P3>,
-            validateArgs: Field<T>.(HeaderForExport, P1, P2, P3) -> Unit = { _, _, _, _ -> },
+            validateArgs: Field<T>.(MetaForExport, P1, P2, P3) -> Unit = { _, _, _, _ -> },
             deprecation: String? = null,
             extract: RowMetaForExport.(T, P1, P2, P3) -> String
         ): Field<T> =
@@ -145,7 +145,7 @@ abstract class Field<in T : Any> : FieldsCollection<T> {
             ) {
                 override val metaVars: String = parameter1.meta + " " + parameter2.meta + " " + parameter3.meta
 
-                override fun getParameters(headerData: HeaderForExport, args: Array<String>): Triple<P1, P2, P3> {
+                override fun getParameters(headerData: MetaForExport, args: Array<String>): Triple<P1, P2, P3> {
                     val arg1 = parameter1.decodeAndValidate(this, args[0])
                     val arg2 = parameter2.decodeAndValidate(this, args[1])
                     val arg3 = parameter3.decodeAndValidate(this, args[2])
@@ -175,7 +175,7 @@ private class FieldParameterless<T : Any>(
     override val arity: CommandLine.Range = CommandLine.Range.valueOf("0")
 
     override fun create(
-        headerData: HeaderForExport,
+        headerData: MetaForExport,
         args: Array<String>
     ): FieldExtractor<T> = object : FieldExtractor<T> {
         override val header = sHeader
@@ -192,12 +192,12 @@ private abstract class FieldWithParameters<T : Any, P>(
     override val arity: CommandLine.Range,
     override val deprecation: String? = null
 ) : Field<T>() {
-    protected abstract fun getParameters(headerData: HeaderForExport, args: Array<String>): P
+    protected abstract fun getParameters(headerData: MetaForExport, args: Array<String>): P
     protected abstract fun getHeader(parameters: P): String
     protected abstract fun RowMetaForExport.extractValue(`object`: T, parameters: P): String
 
     override fun create(
-        headerData: HeaderForExport,
+        headerData: MetaForExport,
         args: Array<String>
     ): FieldExtractor<T> {
         require(arity.min() <= args.size && args.size <= arity.max()) {

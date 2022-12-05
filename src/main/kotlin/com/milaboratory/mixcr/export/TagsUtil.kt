@@ -15,13 +15,13 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.logger
 
 object TagsUtil {
-    fun FieldsCollection<*>.checkTagExists(header: HeaderForExport, tagName: String) {
+    fun FieldsCollection<*>.checkTagExists(header: MetaForExport, tagName: String) {
         if (header.allTagsInfo.none { it[tagName] != null }) {
             logger.warn("No tag $tagName in data ($cmdArgName $tagName)")
         }
     }
 
-    fun FieldsCollection<*>.checkTagTypeExists(header: HeaderForExport, tagType: TagType) {
+    fun FieldsCollection<*>.checkTagTypeExists(header: MetaForExport, tagType: TagType) {
         if (header.allTagsInfo.none { it.hasTagsWithType(tagType) }) {
             logger.warn("No tags with type $tagType in data ($cmdArgName $tagType)")
         }

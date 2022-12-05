@@ -142,6 +142,9 @@ public final class VDJCAlignmentsReader implements
                 case MAGIC_V20:
                     BackwardCompatibilityUtils.register41_0Serializers(pi.getSerializersManager());
                     break;
+                case MAGIC_V21:
+                    BackwardCompatibilityUtils.register41_1Serializers(pi.getSerializersManager());
+                    break;
                 case MAGIC:
                     break;
                 default:

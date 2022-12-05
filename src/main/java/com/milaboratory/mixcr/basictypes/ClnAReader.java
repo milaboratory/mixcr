@@ -96,6 +96,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
             switch (magicString) {
                 case ClnAWriter.MAGIC_V9: // see below for custom serializers registration
                 case ClnAWriter.MAGIC_V10: // see below for custom serializers registration
+                case ClnAWriter.MAGIC_V11: // see below for custom serializers registration
                 case ClnAWriter.MAGIC:
                     break;
                 default:
@@ -153,6 +154,9 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
                     break;
                 case ClnAWriter.MAGIC_V10:
                     BackwardCompatibilityUtils.register41_0Serializers(pi.getSerializersManager());
+                    break;
+                case ClnAWriter.MAGIC_V11:
+                    BackwardCompatibilityUtils.register41_1Serializers(pi.getSerializersManager());
                     break;
                 case ClnAWriter.MAGIC:
                     break;

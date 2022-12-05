@@ -28,8 +28,8 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.CanReportProgressAndStage
@@ -240,7 +240,7 @@ object CommandExportClones {
                 }
             }
 
-            val headerForExport = HeaderForExport(header)
+            val headerForExport = MetaForExport(initialSet)
             val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, headerForExport)
 
             fun runExport(set: CloneSet, outFile: Path?) {

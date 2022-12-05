@@ -256,12 +256,12 @@ data class MiXCRFooter(
 }
 
 class MiXCRFooterMerger {
-    private val upstreamReports = mutableListOf<MiXCRStepReports>()
+    private val upstreamReports = mutableListOf<Pair<String, MiXCRStepReports>>()
     private var reports: MiXCRStepReports? = null
 
-    fun addReportsFromInput(inputIdx: Int, inputName: String, footer: MiXCRFooter) = run {
+    fun addReportsFromInput(fileName: String, footer: MiXCRFooter) = run {
         check(reports == null)
-        upstreamReports += footer.reports
+        upstreamReports += fileName to footer.reports
         this
     }
 

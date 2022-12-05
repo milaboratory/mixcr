@@ -21,15 +21,15 @@ import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ExportDefaultOptions
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.util.Concurrency
@@ -130,18 +130,19 @@ object CommandExportAlignments {
 
         override fun run0() {
             openAlignmentsPort(inputFile).use { data ->
-                val info = data.info
+                val header = data.info.header
                 val (_, params) = paramsResolver.resolve(
-                    info.paramsSpec.addMixins(exportMixins.mixins),
+                    header.paramsSpec.addMixins(exportMixins.mixins),
                     printParameters = logger.verbose && outputFile != null
                 )
 
-                val headerForExport = HeaderForExport(
-                    allTagsInfo = listOf(info.tagsInfo),
+                val headerForExport = MetaForExport(
+                    allTagsInfo = listOf(header.tagsInfo),
                     //in case of input clna file, allFullyCoveredBy has nothing to do with alignments
-                    allFullyCoveredBy = null
+                    allFullyCoveredBy = null,
+                    data.info.footer.reports
                 )
-                val rowMetaForExport = RowMetaForExport(info.tagsInfo, headerForExport)
+                val rowMetaForExport = RowMetaForExport(header.tagsInfo, headerForExport)
                 InfoWriter.create(
                     outputFile,
                     VDJCAlignmentsFieldsExtractorsFactory.createExtractors(params.fields, headerForExport),
@@ -162,7 +163,7 @@ object CommandExportAlignments {
     data class AlignmentsAndMetaInfo(
         val port: OutputPortCloseable<VDJCAlignments>,
         val closeable: AutoCloseable,
-        val info: MiXCRHeader
+        val info: MiXCRFileInfo
     ) : AutoCloseable by closeable
 
     @JvmStatic
@@ -173,7 +174,7 @@ object CommandExportAlignments {
                     inputFile,
                     VDJCLibraryRegistry.getDefault()
                 )
-                AlignmentsAndMetaInfo(vdjcaReader, vdjcaReader, vdjcaReader.header)
+                AlignmentsAndMetaInfo(vdjcaReader, vdjcaReader, vdjcaReader)
             }
 
             IOUtil.MiXCRFileType.CLNA -> {
@@ -187,7 +188,7 @@ object CommandExportAlignments {
 
                     override fun take(): VDJCAlignments? = source.take()
                 }
-                AlignmentsAndMetaInfo(port, clnaReader, clnaReader.header)
+                AlignmentsAndMetaInfo(port, clnaReader, clnaReader)
             }
 
             IOUtil.MiXCRFileType.CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $inputFile")

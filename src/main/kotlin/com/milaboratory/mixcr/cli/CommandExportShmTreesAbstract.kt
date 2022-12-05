@@ -122,7 +122,7 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
         description = [
             "Export only trees that contains clones with specific chain (e.g. TRA or IGH)."
         ],
-        names = ["-c", "--chains"],
+        names = ["--chains"],
         paramLabel = CommonDescriptions.Labels.CHAINS,
         order = OptionsOrder.main + 30_400
     )

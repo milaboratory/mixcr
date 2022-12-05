@@ -88,7 +88,7 @@ abstract class FieldExtractorsFactory<T : Any> {
     /** Creates field extractors from field descriptions */
     open fun createExtractors(
         fields: List<ExportFieldDescription>,
-        header: HeaderForExport
+        header: MetaForExport
     ): List<FieldExtractor<T>> =
         fields
             .flatMap { fieldDescription ->
@@ -201,7 +201,7 @@ abstract class FieldExtractorsFactoryWithPresets<T : Any> : FieldExtractorsFacto
 
     override fun createExtractors(
         fields: List<ExportFieldDescription>,
-        header: HeaderForExport
+        header: MetaForExport
     ): List<FieldExtractor<T>> =
         super.createExtractors(fields.ifEmpty { presets[defaultPreset]!! }, header)
 

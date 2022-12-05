@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.Base
+import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
 import java.util.*
@@ -62,6 +63,11 @@ object ParametersFactory {
         },
         { sPrefix + it.name + sSuffix }
     )
+
+    fun chainsParam(sPrefix: String): CommandArgRequired<Chains> = CommandArgRequired(
+        "<chain>",
+        { arg -> Chains.getByName(arg) }
+    ) { sPrefix + it }
 
     fun geneFeatureParam(sPrefix: String): CommandArgRequired<GeneFeature> = CommandArgRequired(
         "<gene_feature>",

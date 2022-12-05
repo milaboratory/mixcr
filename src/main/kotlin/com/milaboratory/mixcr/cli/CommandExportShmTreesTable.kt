@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.export.HeaderForExport
 import com.milaboratory.mixcr.export.InfoWriter
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
@@ -61,8 +61,11 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     override fun run0() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
-            val headerForExport =
-                HeaderForExport(reader.cloneSetInfos.map { it.tagsInfo }, reader.header.allFullyCoveredBy)
+            val headerForExport = MetaForExport(
+                reader.cloneSetInfos.map { it.tagsInfo },
+                reader.header.allFullyCoveredBy,
+                reader.footer.reports
+            )
             val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport)
             InfoWriter.create(
                 out,

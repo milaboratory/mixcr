@@ -14,6 +14,8 @@ package com.milaboratory.mixcr.trees
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mitool.pattern.search.readObject
+import com.milaboratory.mixcr.MiXCRStepParams
+import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
@@ -51,11 +53,16 @@ class SHMTreesReader(
     )
 
     init {
+        var overrideSourceNames = false
         input.beginPrimitivI(true).use { i ->
             val magicBytes = ByteArray(SHMTreesWriter.MAGIC_LENGTH)
             i.readFully(magicBytes)
             when (val magicString = String(magicBytes)) {
                 SHMTreesWriter.MAGIC_V4 -> BackwardCompatibilityUtils.register41_0Serializers(i.serializersManager)
+                SHMTreesWriter.MAGIC_V5 -> {
+                    BackwardCompatibilityUtils.register41_1Serializers(i.serializersManager)
+                    overrideSourceNames = true
+                }
                 SHMTreesWriter.MAGIC -> {}
                 else -> throw ApplicationException(
                     "Unsupported file format; .shmt file of version " + magicString +
@@ -75,8 +82,17 @@ class SHMTreesReader(
 
         input.beginPrimitivI(true).use { i ->
             versionInfo = i.readUTF()
-            header = i.readObjectRequired()
+            val originalHeader = i.readObjectRequired<MiXCRHeader>()
             fileNames = i.readList(PrimitivI::readObjectRequired)
+            header = if (overrideSourceNames) {
+                originalHeader.copy(
+                    stepParams = MiXCRStepParams(
+                        originalHeader.stepParams.collection.replaceUpstreamFileNames(fileNames)
+                    )
+                )
+            } else {
+                originalHeader
+            }
             cloneSetInfos = i.readList(PrimitivI::readObjectRequired)
 
             val libraries = cloneSetInfos.mapNotNull { it.header.foundAlleles }
@@ -93,7 +109,14 @@ class SHMTreesReader(
         }
 
         input.beginRandomAccessPrimitivI(reportsStartPosition).use { pi ->
-            footer = pi.readObject<MiXCRFooter>()
+            val originalFooter = pi.readObject<MiXCRFooter>()
+            footer = if (overrideSourceNames) {
+                originalFooter.copy(
+                    reports = MiXCRStepReports(originalFooter.reports.collection.replaceUpstreamFileNames(fileNames))
+                )
+            } else {
+                originalFooter
+            }
         }
 
         treesPosition = input.position

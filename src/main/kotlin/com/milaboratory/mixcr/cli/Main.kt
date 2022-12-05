@@ -182,6 +182,10 @@ object Main {
                     .addSubcommand("exportShmTreesNewick", CommandExportShmTreesNewick::class.java)
                     .addSubcommand("exportReports", CommandExportReports::class.java)
                     .addSubcommand(
+                        CommandExportReportsAsTable.COMMAND_NAME,
+                        CommandExportReportsAsTable.mkCommandSpec()
+                    )
+                    .addSubcommand(
                         "exportQc",
                         CommandLine(CommandExportQcMain::class.java)
                             .addSubcommand("align", CommandExportQcAlign.mkCommandSpec())
