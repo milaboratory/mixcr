@@ -40,6 +40,14 @@ class ExportDefaultOptions : (List<ExportFieldDescription>) -> List<ExportFieldD
     )
     private var prependColumns: Boolean? = null
 
+    @Option(
+        description = ["Export not covered regions as empty text."],
+        names = ["--not-covered-as-empty"],
+        arity = "0",
+        order = OptionsOrder.exportOptions + 400
+    )
+    var notCoveredAsEmpty: Boolean = false
+
     val addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
     override fun invoke(defaultFields: List<ExportFieldDescription>): List<ExportFieldDescription> {

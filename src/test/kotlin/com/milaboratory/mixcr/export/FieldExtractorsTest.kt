@@ -86,7 +86,8 @@ class FieldExtractorsTest {
                 val `val` = extractor.extractValue(
                     RowMetaForExport(
                         TagsInfo.NO_TAGS,
-                        MetaForExport(emptyList(), null, MiXCRStepReports())
+                        MetaForExport(emptyList(), null, MiXCRStepReports()),
+                        false
                     ), al
                 )
                 if (print) println(`val`)

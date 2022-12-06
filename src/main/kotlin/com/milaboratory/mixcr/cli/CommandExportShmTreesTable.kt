@@ -53,6 +53,14 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     )
     var noHeader = false
 
+    @Option(
+        description = ["Export not covered regions as empty text."],
+        names = ["--not-covered-as-empty"],
+        arity = "0",
+        order = OptionsOrder.exportOptions + 400
+    )
+    var notCoveredAsEmpty: Boolean = false
+
     val addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
     override val outputFiles
@@ -66,7 +74,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                 reader.header.allFullyCoveredBy,
                 reader.footer.reports
             )
-            val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport)
+            val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport, notCoveredAsEmpty)
             InfoWriter.create(
                 out,
                 SHMTreeFieldsExtractorsFactory.createExtractors(addedFields, headerForExport),

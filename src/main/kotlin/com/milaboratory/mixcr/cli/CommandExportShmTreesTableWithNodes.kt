@@ -81,6 +81,13 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     )
     private var splitByTagType: TagType? = null
 
+    @Option(
+        description = ["Export not covered regions as empty text."],
+        names = ["--not-covered-as-empty"],
+        arity = "0",
+        order = OptionsOrder.exportOptions + 400
+    )
+    var notCoveredAsEmpty: Boolean = false
 
     override val outputFiles
         get() = listOfNotNull(out)
@@ -127,7 +134,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                 !noHeader,
             ) { (_, node) ->
                 val tagsInfo = node.clone?.datasetId?.let { reader.cloneSetInfos[it].tagsInfo } ?: TagsInfo.NO_TAGS
-                RowMetaForExport(tagsInfo, headerForExport)
+                RowMetaForExport(tagsInfo, headerForExport, notCoveredAsEmpty)
             }.use { output ->
                 reader.readTrees()
                     .asSequence()

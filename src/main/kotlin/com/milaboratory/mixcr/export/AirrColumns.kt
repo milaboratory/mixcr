@@ -30,21 +30,21 @@ object AirrColumns {
     class CloneId : FieldExtractor<AirrVDJCObjectWrapper> {
         override val header = "sequence_id"
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String =
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String =
             "clone." + obj.asClone().id
     }
 
     class AlignmentId : FieldExtractor<AirrVDJCObjectWrapper> {
         override val header = "sequence_id"
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String =
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String =
             "read." + obj.asAlignment().minReadId
     }
 
     class Sequence(private val targetId: Int) : FieldExtractor<AirrVDJCObjectWrapper> {
         override val header = "sequence"
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
             val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
             return obj.`object`.getTarget(resolvedTargetId).sequence.toString()
         }
@@ -53,13 +53,13 @@ object AirrColumns {
     class RevComp : FieldExtractor<AirrVDJCObjectWrapper> {
         override val header = "rev_comp"
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String = "F"
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String = "F"
     }
 
     class Productive : FieldExtractor<AirrVDJCObjectWrapper> {
         override val header = "productive"
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
             val cdr3nt = obj.`object`.getFeature(GeneFeature.CDR3)
             val cdr3aa = obj.`object`.getAAFeature(GeneFeature.CDR3)
             return airrBoolean(
@@ -71,14 +71,14 @@ object AirrColumns {
     class VDJCCalls(private val gt: GeneType) : FieldExtractor<AirrVDJCObjectWrapper> {
         override val header = gt.letterLowerCase.toString() + "_call"
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String =
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String =
             obj.`object`.getHits(gt).joinToString(",") { it.gene.name }
     }
 
     abstract class AirrAlignmentExtractor(private val targetId: Int, protected val withPadding: Boolean) :
         FieldExtractor<AirrVDJCObjectWrapper> {
         abstract fun extractValue(obj: AirrAlignment): String?
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
             val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
             val alignment = obj.getAirrAlignment(resolvedTargetId, withPadding) ?: return ""
             return airrStr(extractValue(alignment))
@@ -189,11 +189,12 @@ object AirrColumns {
             header
         )
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String = when {
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String = when {
             feature != null -> when (val feature = obj.`object`.getFeature(feature)) {
                 null -> ""
                 else -> extractValue(feature.sequence)
             }
+
             else -> {
                 val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
                 check(from != null && to != null)
@@ -244,7 +245,7 @@ object AirrColumns {
     class AAFeature(private val feature: GeneFeature, override val header: String) :
         FieldExtractor<AirrVDJCObjectWrapper> {
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
             val feature = obj.`object`.getAAFeature(feature) ?: return ""
             return feature.toString()
         }
@@ -252,7 +253,7 @@ object AirrColumns {
 
     abstract class AlignmentColumn(protected val targetId: Int, protected val geneType: GeneType) :
         FieldExtractor<AirrVDJCObjectWrapper> {
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
             val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
             val bestHit = obj.`object`.getBestHit(geneType) ?: return ""
             val alignment = bestHit.getAlignment(resolvedTargetId) ?: return ""
@@ -308,14 +309,14 @@ object AirrColumns {
     class CloneCount : FieldExtractor<AirrVDJCObjectWrapper> {
         override val header = "duplicate_count"
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String =
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String =
             "" + obj.asClone().count.roundToInt()
     }
 
     class CompleteVDJ(private val targetId: Int) : FieldExtractor<AirrVDJCObjectWrapper> {
         override val header = "complete_vdj"
 
-        override fun extractValue(header: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
+        override fun extractValue(meta: RowMetaForExport, obj: AirrVDJCObjectWrapper): String {
             val resolvedTargetId = if (targetId == -1) obj.bestTarget else targetId
             val partitionedTarget = obj.`object`.getPartitionedTarget(resolvedTargetId)
             return airrBoolean(partitionedTarget.partitioning.isAvailable(GeneFeature.VDJRegion))

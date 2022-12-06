@@ -19,8 +19,13 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 
 class RowMetaForExport(
     val tagsInfo: TagsInfo,
-    val header: MetaForExport
-)
+    val header: MetaForExport,
+    val notCoveredAsEmpty: Boolean
+) {
+    val noTagText: String get() = if (notCoveredAsEmpty) "" else "no_tag"
+    val notCoveredRegionText: String get() = if (notCoveredAsEmpty) "" else "region_not_covered"
+    val notCoveredRegionTextForMutations: String get() = if (notCoveredAsEmpty) "-" else "region_not_covered"
+}
 
 class MetaForExport(
     val allTagsInfo: List<TagsInfo>,

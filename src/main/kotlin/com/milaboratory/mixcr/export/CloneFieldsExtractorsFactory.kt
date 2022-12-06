@@ -96,7 +96,7 @@ object CloneFieldsExtractorsFactory : FieldExtractorsFactory<Clone>() {
             val tag: TagInfo = when {
                 tagType != null -> tagsInfo.lastOrNull { it.type == tagType }
                 else -> tagsInfo[tagName]
-            } ?: return@Field NULL
+            } ?: return@Field noTagText
             val level = tag.index + 1
             clone.getTagDiversityFraction(level).toString()
         }
