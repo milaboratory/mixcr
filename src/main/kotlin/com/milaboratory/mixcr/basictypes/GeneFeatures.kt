@@ -13,13 +13,13 @@ package com.milaboratory.mixcr.basictypes
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
-import com.milaboratory.mitool.helpers.readList
-import com.milaboratory.mitool.helpers.writeList
 import com.milaboratory.mitool.pattern.search.BasicSerializer
-import com.milaboratory.mitool.pattern.search.readObject
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
+import com.milaboratory.primitivio.readList
+import com.milaboratory.primitivio.readObjectRequired
+import com.milaboratory.primitivio.writeCollection
 import io.repseq.core.GeneFeature
 
 @Serializable(by = GeneFeatures.SerializerImpl::class)
@@ -73,14 +73,14 @@ data class GeneFeatures @JsonCreator constructor(
 
     class SerializerImpl : BasicSerializer<GeneFeatures>() {
         override fun write(output: PrimitivO, obj: GeneFeatures) {
-            output.writeList(obj.features) {
+            output.writeCollection(obj.features) {
                 writeObject(it)
             }
         }
 
         override fun read(input: PrimitivI): GeneFeatures {
-            val features = input.readList<GeneFeature> {
-                readObject<GeneFeature>()
+            val features: List<GeneFeature> = input.readList {
+                readObjectRequired()
             }
             return GeneFeatures(features)
         }

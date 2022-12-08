@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mitool.exhaustive
-import com.milaboratory.mitool.pattern.search.readObject
 import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
@@ -24,7 +23,6 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VirtualCloneSet
 import com.milaboratory.mixcr.cli.ApplicationException
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils
-import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.onEach
 import com.milaboratory.primitivio.readList
@@ -83,7 +81,7 @@ class SHMTreesReader(
         input.beginPrimitivI(true).use { i ->
             versionInfo = i.readUTF()
             val originalHeader = i.readObjectRequired<MiXCRHeader>()
-            fileNames = i.readList(PrimitivI::readObjectRequired)
+            fileNames = i.readList { readObjectRequired() }
             header = if (overrideSourceNames) {
                 originalHeader.copy(
                     stepParams = MiXCRStepParams(
@@ -93,7 +91,7 @@ class SHMTreesReader(
             } else {
                 originalHeader
             }
-            cloneSetInfos = i.readList(PrimitivI::readObjectRequired)
+            cloneSetInfos = i.readList { readObjectRequired() }
 
             val libraries = cloneSetInfos.mapNotNull { it.header.foundAlleles }
             libraries.forEach { (name, libraryData) ->
@@ -109,7 +107,7 @@ class SHMTreesReader(
         }
 
         input.beginRandomAccessPrimitivI(reportsStartPosition).use { pi ->
-            val originalFooter = pi.readObject<MiXCRFooter>()
+            val originalFooter = pi.readObjectRequired<MiXCRFooter>()
             footer = if (overrideSourceNames) {
                 originalFooter.copy(
                     reports = MiXCRStepReports(originalFooter.reports.collection.replaceUpstreamFileNames(fileNames))

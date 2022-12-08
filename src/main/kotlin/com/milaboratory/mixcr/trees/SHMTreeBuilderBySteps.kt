@@ -716,7 +716,7 @@ internal class SHMTreeBuilderBySteps(
             }
 
             override fun read(input: PrimitivI): Cluster {
-                val clones = input.readList<CloneWrapper>(PrimitivI::readObjectRequired)
+                val clones = input.readList<CloneWrapper> { readObjectRequired() }
                 return Cluster(clones)
             }
         }

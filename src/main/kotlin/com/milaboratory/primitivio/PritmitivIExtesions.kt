@@ -30,66 +30,8 @@ import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil
 import com.milaboratory.primitivio.blocks.PrimitivOBlocks
 import com.milaboratory.util.TempFileDest
 import net.jpountz.lz4.LZ4Compressor
-import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.function.Predicate
-
-inline fun <reified T : Any> PrimitivI.readObjectOptional(): T? = readObject(T::class.java)
-
-inline fun <reified T : Any> PrimitivI.readObjectRequired(): T {
-    val result = readObject(T::class.java)
-    if (result != null) {
-        return result
-    } else {
-        throw IllegalStateException("Error on read ${T::class}, expected not null, but was null")
-    }
-}
-
-inline fun <reified K : Any, reified V : Any> PrimitivI.readMap(): Map<K, V> =
-    Util.readMap(this, K::class.java, V::class.java)
-
-fun <T : Any> PrimitivI.readList(reader: PrimitivI.() -> T): List<T> = readCollection(::ArrayList, reader)
-
-fun <T : Any> PrimitivI.readSet(reader: PrimitivI.() -> T): Set<T> = readCollection(::HashSet, reader)
-
-fun <T> PrimitivO.writeCollection(collection: Collection<T>, writer: PrimitivO.(T) -> Unit) {
-    this.writeInt(collection.size)
-    collection.forEach {
-        writer(it)
-    }
-}
-
-private fun <T : Any, C : MutableCollection<T>> PrimitivI.readCollection(
-    supplier: (size: Int) -> C,
-    reader: PrimitivI.() -> T
-): C {
-    val size = this.readInt()
-    val collection = supplier(size)
-    repeat(size) {
-        collection.add(reader())
-    }
-    return collection
-}
-
-fun PrimitivO.writeMap(map: SortedMap<*, *>) = Util.writeMap(map, this)
-
-fun <T : Any> PrimitivO.writeArray(array: Array<T>) {
-    this.writeInt(array.size)
-    for (o in array) this.writeObject(o)
-}
-
-fun PrimitivO.writeIntArray(array: IntArray) {
-    this.writeInt(array.size)
-    for (o in array) this.writeInt(o)
-}
-
-inline fun <reified T : Any> PrimitivI.readArray(): Array<T> = Array(readInt()) {
-    readObject(T::class.java)
-}
-
-fun PrimitivI.readIntArray(): IntArray = IntArray(readInt()) {
-    readInt()
-}
 
 operator fun <T : Any, E : T, R : Any> Processor<T, R>.invoke(input: E): R = process(input)
 

@@ -375,8 +375,8 @@ class CellGroup(
         }
 
         override fun read(input: PrimitivI): CellGroup {
-            val heavy = input.readList<Clone>(PrimitivI::readObjectRequired)
-            val light = input.readList<Clone>(PrimitivI::readObjectRequired)
+            val heavy = input.readList<Clone> { readObjectRequired() }
+            val light = input.readList<Clone> { readObjectRequired() }
             val cellBarcode = input.readObjectRequired<CellBarcodeWithDatasetId>()
             return CellGroup(
                 heavy,
@@ -427,7 +427,7 @@ class GroupOfCells(
 
         override fun read(input: PrimitivI): GroupOfCells {
             val chainPairKey = input.readObjectRequired<ChainPairKey>()
-            val cellBarcodes = input.readList<CellBarcodeWithDatasetId>(PrimitivI::readObjectRequired)
+            val cellBarcodes = input.readList<CellBarcodeWithDatasetId> { readObjectRequired() }
             return GroupOfCells(
                 chainPairKey,
                 cellBarcodes
