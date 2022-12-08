@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.util;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.blocks.ParallelProcessor;
 import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.OrderedOutputPort;
@@ -432,8 +431,8 @@ public final class RunMiXCR {
         }
     }
 
-    private static <T> OutputPortCloseable<T> opCloseable(final OutputPort<T> op) {
-        return new OutputPortCloseable<T>() {
+    private static <T> OutputPort<T> opCloseable(final OutputPort<T> op) {
+        return new OutputPort<T>() {
             @Override
             public void close() {
             }

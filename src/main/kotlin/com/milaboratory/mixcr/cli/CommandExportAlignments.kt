@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPortCloseable
+import cc.redberry.pipe.OutputPort
 import cc.redberry.primitives.Filter
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
@@ -165,7 +165,7 @@ object CommandExportAlignments {
     }
 
     data class AlignmentsAndMetaInfo(
-        val port: OutputPortCloseable<VDJCAlignments>,
+        val port: OutputPort<VDJCAlignments>,
         val closeable: AutoCloseable,
         val info: MiXCRFileInfo
     ) : AutoCloseable by closeable
@@ -184,7 +184,7 @@ object CommandExportAlignments {
             IOUtil.MiXCRFileType.CLNA -> {
                 val clnaReader = ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4))
                 val source = clnaReader.readAllAlignments()
-                val port = object : OutputPortCloseable<VDJCAlignments> {
+                val port = object : OutputPort<VDJCAlignments> {
                     override fun close() {
                         source.close()
                         clnaReader.close()

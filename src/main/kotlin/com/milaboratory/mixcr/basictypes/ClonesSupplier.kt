@@ -11,11 +11,11 @@
  */
 package com.milaboratory.mixcr.basictypes
 
-import cc.redberry.pipe.OutputPortCloseable
+import cc.redberry.pipe.OutputPort
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 
 interface ClonesSupplier {
-    fun readClones(): OutputPortCloseable<Clone>
+    fun readClones(): OutputPort<Clone>
 
     fun numberOfClones(): Int
 

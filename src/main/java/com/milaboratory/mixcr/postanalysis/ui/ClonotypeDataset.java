@@ -11,9 +11,8 @@
  */
 package com.milaboratory.mixcr.postanalysis.ui;
 
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.LambdaSemaphore;
@@ -81,7 +80,7 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
     }
 
     @Override
-    public OutputPortCloseable<Clone> readClones() {
+    public OutputPort<Clone> readClones() {
         return mkElementsPort();
     }
 

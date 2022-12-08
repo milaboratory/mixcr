@@ -13,7 +13,6 @@ package com.milaboratory.primitivio
 
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.Processor
 import cc.redberry.pipe.blocks.Buffer
 import cc.redberry.pipe.blocks.FilteringPort
@@ -43,7 +42,7 @@ inline operator fun <T : Any, reified R : Any> Processor<T, R>.invoke(chunk: Chu
 val <T : Any> Iterable<T>.port: OutputPort<T>
     get() = CUtils.asOutputPort(this)
 
-fun <T : Any, R : Any> OutputPort<T>.map(function: (T) -> R): OutputPortCloseable<R> = CUtils.wrap(this, function)
+fun <T : Any, R : Any> OutputPort<T>.map(function: (T) -> R): OutputPort<R> = CUtils.wrap(this, function)
 
 fun <T : Any, R : Any> OutputPort<T>.mapInParallelOrdered(
     threads: Int,
@@ -63,7 +62,7 @@ fun <T : Any, R : Any> OutputPort<Chunk<T>>.mapChunksInParallel(
     function: (T) -> R
 ): ParallelProcessor<Chunk<T>, Chunk<R>> = ParallelProcessor(this, CUtils.chunked(function), bufferSize, threads)
 
-fun <T : Any, R : Any> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPortCloseable<R> = flatMap {
+fun <T : Any, R : Any> OutputPort<T>.mapNotNull(function: (T) -> R?): OutputPort<R> = flatMap {
     listOfNotNull(function(it)).port
 }
 
@@ -76,21 +75,21 @@ fun <T : Any> OutputPort<T>.buffered(bufferSize: Int): Merger<T> = CUtils.buffer
 
 fun <T : Any> OutputPort<T>.ordered(indexer: Indexer<T>): OutputPort<T> = OrderedOutputPort(this, indexer)
 
-fun <T : Any> List<OutputPort<T>>.flatten(): OutputPortCloseable<T> =
+fun <T : Any> List<OutputPort<T>>.flatten(): OutputPort<T> =
     FlatteningOutputPort(this.port)
 
-fun <T : Any> OutputPort<List<T>>.flatten(): OutputPortCloseable<T> = flatMap { it.port }
+fun <T : Any> OutputPort<List<T>>.flatten(): OutputPort<T> = flatMap { it.port }
 
-fun <T : Any, R : Any> OutputPort<T>.flatMap(function: (element: T) -> OutputPort<R>): OutputPortCloseable<R> =
+fun <T : Any, R : Any> OutputPort<T>.flatMap(function: (element: T) -> OutputPort<R>): OutputPort<R> =
     FlatteningOutputPort(CUtils.wrap(this) {
         function(it)
     })
 
-fun <T : Any> OutputPort<T>.filter(test: Filter<T>): OutputPortCloseable<T> =
+fun <T : Any> OutputPort<T>.filter(test: Filter<T>): OutputPort<T> =
     FilteringPort(this, test)
 
 fun <T : Any> Predicate<T>.asFilter(): Filter<T> = Filter { this.test(it) }
-fun <T : Any> OutputPort<T>.limit(limit: Long): OutputPortCloseable<T> = object : OutputPortCloseable<T> {
+fun <T : Any> OutputPort<T>.limit(limit: Long): OutputPort<T> = object : OutputPort<T> {
     private var count = 0L
 
     override fun take(): T? = when {
@@ -104,14 +103,14 @@ fun <T : Any> OutputPort<T>.limit(limit: Long): OutputPortCloseable<T> = object 
     }
 
     override fun close() {
-        (this@limit as? OutputPortCloseable)?.close()
+        this@limit.close()
     }
 }
 
 fun <T : Any> OutputPort<T>.forEach(action: (element: T) -> Unit): Unit =
     CUtils.it(this).forEach(action)
 
-fun <T : Any> OutputPort<T>.onEach(action: (element: T) -> Unit): OutputPortCloseable<T> =
+fun <T : Any> OutputPort<T>.onEach(action: (element: T) -> Unit): OutputPort<T> =
     map {
         action(it)
         it
@@ -162,6 +161,6 @@ inline fun <reified T : Any, R> OutputPort<T>.cached(
         }
     }
     tempFile.toFile().delete()
-    (this as? OutputPortCloseable)?.close()
+    close()
     return result
 }

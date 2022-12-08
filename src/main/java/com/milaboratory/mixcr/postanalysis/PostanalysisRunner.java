@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.postanalysis;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.InputPort;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
@@ -126,7 +126,7 @@ public class PostanalysisRunner<T> implements CanReportProgressAndStage {
 
             for (int i = 0; i < datasets.length; i++) {
                 Dataset<T> ds = datasets[i];
-                try (OutputPortCloseable<T> port = ds.mkElementsPort()) {
+                try (OutputPort<T> port = ds.mkElementsPort()) {
                     for (T t : CUtils.it(port)) {
                         for (InputPort<T> c : inputConsumers.get(i)) {
                             c.put(t);

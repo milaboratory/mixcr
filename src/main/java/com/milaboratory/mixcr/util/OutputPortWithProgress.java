@@ -12,14 +12,13 @@
 package com.milaboratory.mixcr.util;
 
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.util.CanReportProgress;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.ToLongFunction;
 
-public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanReportProgress {
+public interface OutputPortWithProgress<T> extends OutputPort<T>, CanReportProgress {
     /**
      * @return number of returned elemens so far
      */
@@ -68,9 +67,7 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
             @Override
             public void close() {
                 isFinished.set(true);
-                if (inner instanceof OutputPortCloseable) {
-                    ((OutputPortCloseable<?>) inner).close();
-                }
+                inner.close();
             }
         };
     }
@@ -113,9 +110,7 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
             @Override
             public void close() {
                 isFinished.set(true);
-                if (inner instanceof OutputPortCloseable) {
-                    ((OutputPortCloseable<?>) inner).close();
-                }
+                inner.close();
             }
         };
     }
@@ -158,9 +153,7 @@ public interface OutputPortWithProgress<T> extends OutputPortCloseable<T>, CanRe
             @Override
             public void close() {
                 isFinished.set(true);
-                if (inner instanceof OutputPortCloseable) {
-                    ((OutputPortCloseable<?>) inner).close();
-                }
+                inner.close();
             }
         };
     }

@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.trees
 
-import cc.redberry.pipe.OutputPortCloseable
+import cc.redberry.pipe.OutputPort
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.MiXCRStepReports
@@ -122,7 +122,7 @@ class SHMTreesReader(
 
     val alignerParameters: HasFeatureToAlign get() = header.featuresToAlign
 
-    fun readTrees(): OutputPortCloseable<SHMTreeResult> =
+    fun readTrees(): OutputPort<SHMTreeResult> =
         input.beginRandomAccessPrimitivIBlocks(SHMTreeResult::class.java, treesPosition)
             .onEach { tree ->
                 tree.tree.allNodes().forEach { (_, node) ->

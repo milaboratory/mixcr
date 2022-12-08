@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
@@ -131,9 +131,9 @@ public final class OverlapUtil {
             }
 
             @Override
-            public OutputPortCloseable<Clone> readClones() {
-                OutputPortCloseable<Clone> in = inner.readClones();
-                return new OutputPortCloseable<Clone>() {
+            public OutputPort<Clone> readClones() {
+                OutputPort<Clone> in = inner.readClones();
+                return new OutputPort<Clone>() {
                     @Override
                     public void close() {
                         in.close();

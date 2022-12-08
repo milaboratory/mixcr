@@ -13,7 +13,6 @@ package com.milaboratory.primitivio
 
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.OutputPortCloseable
 import com.milaboratory.mixcr.util.OutputPortWithProgress
 import com.milaboratory.util.ObjectSerializer
 import com.milaboratory.util.ProgressAndStage
@@ -65,7 +64,7 @@ inline fun <reified T : Any> OutputPort<T>.hashGrouping(
         Runtime.getRuntime().maxMemory() > 10 * FileUtils.ONE_GB -> Runtime.getRuntime().maxMemory() / 8L
         else -> 256 * FileUtils.ONE_MB
     }
-): OutputPortCloseable<T> {
+): OutputPort<T> {
     // todo check memory budget
     return HashSorter(
         T::class.java,
@@ -153,9 +152,9 @@ fun <T : Any> OutputPort<T>.groupBySortedData(groupingCriteria: GroupingCriteria
 
     var cluster: MutableList<T> = mutableListOf()
 
-    return CUtils.makeSynchronized(object : OutputPortCloseable<List<T>> {
+    return CUtils.makeSynchronized(object : OutputPort<List<T>> {
         override fun close() {
-            (this@groupBySortedData as? OutputPortCloseable)?.close()
+            this@groupBySortedData.close()
         }
 
         override fun take(): List<T>? {

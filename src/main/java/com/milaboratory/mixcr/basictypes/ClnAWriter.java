@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
 import com.milaboratory.mixcr.util.MiXCRDebug;
@@ -90,7 +89,7 @@ public final class ClnAWriter implements
      */
     private volatile TIntHashSet cloneIds = null;
     private volatile HashSorter<VDJCAlignments> collator;
-    private volatile OutputPortCloseable<VDJCAlignments> collatedAlignments = null;
+    private volatile OutputPort<VDJCAlignments> collatedAlignments = null;
     private volatile long numberOfAlignments = -1, numberOfAlignmentsWritten = 0;
     private volatile boolean finished = false;
 

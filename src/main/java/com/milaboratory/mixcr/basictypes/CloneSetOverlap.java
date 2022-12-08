@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
@@ -113,7 +113,7 @@ public final class CloneSetOverlap {
         } else {
             MergeStrategy<Clone> strategy = MergeStrategy.calculateStrategy(ordering.getProperties(), by);
             @SuppressWarnings("resource")
-            OutputPortCloseable<List<List<Clone>>> joinedPort = strategy.join(individualPorts.
+            OutputPort<List<List<Clone>>> joinedPort = strategy.join(individualPorts.
                     stream()
                     .map(it -> new FilteringPort<>(it, cloneFilter))
                     .collect(Collectors.toList()));

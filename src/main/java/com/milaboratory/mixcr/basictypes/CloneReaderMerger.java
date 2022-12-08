@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
 import io.repseq.core.VDJCGene;
 
@@ -37,7 +37,7 @@ public class CloneReaderMerger implements CloneReader {
     }
 
     @Override
-    public OutputPortCloseable<Clone> readClones() {
+    public OutputPort<Clone> readClones() {
         return new FlatteningOutputPort<>(CUtils.asOutputPort(readers.stream().map(CloneReader::readClones).collect(Collectors.toList())));
     }
 

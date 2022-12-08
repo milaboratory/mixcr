@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.cli
 
 
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.OutputPortCloseable
 import cc.redberry.pipe.util.CountLimitingOutputPort
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -767,8 +766,7 @@ object CommandAlign {
                 }
         }
 
-        abstract class FastqGroupReader(fileGroups: List<FileGroup>) :
-            OutputPortCloseable<ProcessingBundle>, CanReportProgress {
+        abstract class FastqGroupReader(fileGroups: List<FileGroup>) : OutputPort<ProcessingBundle>, CanReportProgress {
             private val fileGroupIt = fileGroups.iterator()
             private val readerCount = fileGroups.size
             private var currentReaderIdx = -1
@@ -829,7 +827,7 @@ object CommandAlign {
         }
 
         @Suppress("UNCHECKED_CAST")
-        private fun createReader(): OutputPortCloseable<ProcessingBundle> {
+        private fun createReader(): OutputPort<ProcessingBundle> {
             // Common single fastq reader constructor
             val fastqReaderFactory: (Path) -> SingleFastqReader = { path: Path ->
                 SingleFastqReader(

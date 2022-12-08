@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.assembler;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.util.TempFileManager;
 
 import java.io.*;
@@ -100,7 +100,7 @@ public final class AssemblerEventLogger {
         };
     }
 
-    public OutputPortCloseable<AssemblerEvent> createEventsPort() {
+    public OutputPort<AssemblerEvent> createEventsPort() {
         try {
             return new EventsPort(new BufferedInputStream(new FileInputStream(file)));
         } catch (FileNotFoundException e) {
@@ -136,7 +136,7 @@ public final class AssemblerEventLogger {
         file.delete();
     }
 
-    private static final class EventsPort implements OutputPortCloseable<AssemblerEvent> {
+    private static final class EventsPort implements OutputPort<AssemblerEvent> {
         volatile boolean closed = false;
         final InputStream is;
         long counter = 0;

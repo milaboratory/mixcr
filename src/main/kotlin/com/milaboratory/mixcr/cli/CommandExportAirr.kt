@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPortCloseable
+import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.CountLimitingOutputPort
 import cc.redberry.pipe.util.CountingOutputPort
 import com.milaboratory.mitool.exhaustive
@@ -222,7 +222,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
     override fun run0() {
         val extractors: List<FieldExtractor<AirrVDJCObjectWrapper>>
         val closeable: AutoCloseable
-        var port: OutputPortCloseable<out VDJCObject>
+        var port: OutputPort<out VDJCObject>
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val cPort: CountingOutputPort<out VDJCObject>
         val fileInfo: MiXCRFileInfo

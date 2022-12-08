@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.postanalysis;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.IteratorOutputPortAdapter;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import org.apache.commons.math3.random.RandomDataGenerator;
@@ -36,7 +36,7 @@ public class TestDataset<T> implements Dataset<T>, Iterable<T> {
 
     public TestDataset(Dataset<T> data) {
         this.data = new ArrayList<>();
-        try (OutputPortCloseable<T> port = data.mkElementsPort()) {
+        try (OutputPort<T> port = data.mkElementsPort()) {
             for (T t : CUtils.it(port)) {
                 this.data.add(t);
             }
@@ -61,7 +61,7 @@ public class TestDataset<T> implements Dataset<T>, Iterable<T> {
     @Override
     public OutputPortWithProgress<T> mkElementsPort() {
         final IteratorOutputPortAdapter<T> adapter = new IteratorOutputPortAdapter<>(data);
-        return OutputPortWithProgress.wrap(data.size(), new OutputPortCloseable<T>() {
+        return OutputPortWithProgress.wrap(data.size(), new OutputPort<T>() {
             @Override
             public void close() {
             }

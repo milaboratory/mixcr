@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.postanalysis;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.InputPort;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -113,7 +113,7 @@ public interface SetPreprocessor<T> {
                     .collect(Collectors.toList());
 
             for (int i = 0; i < initial.size(); i++) {
-                try (OutputPortCloseable<T> port = initial.get(i).mkElementsPort()) {
+                try (OutputPort<T> port = initial.get(i).mkElementsPort()) {
                     for (T t : CUtils.it(port)) {
                         consumers.get(i).put(t);
                     }

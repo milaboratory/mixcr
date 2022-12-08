@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.cli.ApplicationException;
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader implements
-        OutputPortCloseable<VDJCAlignments>,
+        OutputPort<VDJCAlignments>,
         AlignmentsProvider,
         MiXCRFileInfo,
         CanReportProgress {

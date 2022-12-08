@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.assembler.preclone;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.InputPort;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.Buffer;
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
@@ -73,9 +73,9 @@ public final class FilePreCloneWriter implements AutoCloseable, CanReportProgres
 
     private volatile Thread alignmentSortingThread, cloneSortingThread;
     private volatile HashSorter<VDJCAlignments> alignmentCollator;
-    private volatile OutputPortCloseable<VDJCAlignments> sortedAlignments;
+    private volatile OutputPort<VDJCAlignments> sortedAlignments;
     private volatile HashSorter<PreCloneImpl> cloneCollator;
-    private volatile OutputPortCloseable<PreCloneImpl> sortedClones;
+    private volatile OutputPort<PreCloneImpl> sortedClones;
 
     private volatile boolean finished = false;
 

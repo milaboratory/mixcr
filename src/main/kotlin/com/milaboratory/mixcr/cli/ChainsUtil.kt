@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPortCloseable
+import cc.redberry.pipe.OutputPort
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCObject
@@ -27,7 +27,7 @@ object ChainsUtil {
     /**
      * Extract all distinct chains from list of VDJCObject ports
      */
-    fun <T : VDJCObject> allChains(ports: List<OutputPortCloseable<T>>) = run {
+    fun <T : VDJCObject> allChains(ports: List<OutputPort<T>>) = run {
         val result = mutableSetOf<Chains>()
         for (port in ports) {
             port.use {
