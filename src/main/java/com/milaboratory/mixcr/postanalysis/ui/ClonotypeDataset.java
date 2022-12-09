@@ -14,8 +14,9 @@ package com.milaboratory.mixcr.postanalysis.ui;
 import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.postanalysis.Dataset;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.OutputPortWithExpectedSizeKt;
+import com.milaboratory.util.OutputPortWithProgress;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 
@@ -71,7 +72,7 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
                     }
             }
         }
-        return OutputPortWithProgress.wrap(reader.numberOfClones(), reader.readClones());
+        return OutputPortWithExpectedSizeKt.withExpectedSize(reader.readClones(), reader.numberOfClones());
     }
 
     @Override

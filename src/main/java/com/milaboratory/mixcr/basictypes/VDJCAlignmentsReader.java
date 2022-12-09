@@ -11,18 +11,16 @@
  */
 package com.milaboratory.mixcr.basictypes;
 
-import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.cli.ApplicationException;
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivIState;
 import com.milaboratory.primitivio.blocks.PrimitivIBlocks;
 import com.milaboratory.primitivio.blocks.PrimitivIBlocksStats;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
-import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.OutputPortWithProgress;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.jetbrains.annotations.NotNull;
@@ -41,10 +39,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter.*;
 
 public final class VDJCAlignmentsReader implements
-        OutputPort<VDJCAlignments>,
+        OutputPortWithProgress<VDJCAlignments>,
         AlignmentsProvider,
-        MiXCRFileInfo,
-        CanReportProgress {
+        MiXCRFileInfo {
     public static final int DEFAULT_CONCURRENCY = 4;
     public static final int DEFAULT_READ_AHEAD_BLOCKS = 5;
 
@@ -326,16 +323,6 @@ public final class VDJCAlignmentsReader implements
                     return al.setAlignmentsIndex(counter.getAndIncrement());
                 }
             }
-        }
-
-        @Override
-        public long currentIndex() {
-            return counter.get();
-        }
-
-        @Override
-        public void finish() {
-            finished = true;
         }
 
         @Override

@@ -14,8 +14,8 @@ package com.milaboratory.mixcr.postanalysis.overlap;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.OutputPortWithProgress;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -46,16 +46,6 @@ public final class OverlapUtil {
                 OutputPortWithProgress<List<List<Clone>>> port = CloneSetOverlap.overlap(by, readers);
                 SimpleProcessorWrapper<List<List<Clone>>, OverlapGroup<Clone>> processor = new SimpleProcessorWrapper<>(port, OverlapGroup::new);
                 return new OutputPortWithProgress<OverlapGroup<Clone>>() {
-                    @Override
-                    public long currentIndex() {
-                        return port.currentIndex();
-                    }
-
-                    @Override
-                    public void finish() {
-
-                    }
-
                     @Override
                     public void close() {
                         processor.close();

@@ -14,7 +14,7 @@ package com.milaboratory.mixcr.postanalysis;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.InputPort;
 import cc.redberry.pipe.OutputPort;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
+import com.milaboratory.util.OutputPortWithProgress;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.Arrays;
@@ -70,16 +70,6 @@ public interface SetPreprocessor<T> {
                                 @Override
                                 public boolean isFinished() {
                                     return inner.isFinished();
-                                }
-
-                                @Override
-                                public long currentIndex() {
-                                    return inner.currentIndex();
-                                }
-
-                                @Override
-                                public void finish() {
-                                    inner.finish();
                                 }
 
                                 @Override

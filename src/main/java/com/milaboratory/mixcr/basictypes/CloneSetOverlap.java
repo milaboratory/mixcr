@@ -14,8 +14,10 @@ package com.milaboratory.mixcr.basictypes;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
+import com.milaboratory.util.OutputPortWithExpectedSize;
+import com.milaboratory.util.OutputPortWithExpectedSizeKt;
+import com.milaboratory.util.OutputPortWithProgress;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.sorting.MergeStrategy;
 import com.milaboratory.util.sorting.UnorderedMerger;
@@ -33,9 +35,9 @@ public final class CloneSetOverlap {
             List<? extends VDJCSProperties.VDJCSProperty<? super Clone>> by,
             List<? extends CloneReader> readers) {
 
-        List<OutputPortWithProgress<Clone>> individualPorts = readers
+        List<OutputPortWithExpectedSize<Clone>> individualPorts = readers
                 .stream()
-                .map(r -> OutputPortWithProgress.wrap(r.numberOfClones(), r.readClones()))
+                .map(r -> OutputPortWithExpectedSizeKt.withExpectedSize(r.readClones(), r.numberOfClones()))
                 .collect(Collectors.toList());
 
 
@@ -76,16 +78,6 @@ public final class CloneSetOverlap {
             AtomicLong index = new AtomicLong(0);
             return new OutputPortWithProgress<List<List<Clone>>>() {
                 @Override
-                public long currentIndex() {
-                    return index.get();
-                }
-
-                @Override
-                public void finish() {
-
-                }
-
-                @Override
                 public void close() {
                     merger.close();
                 }
@@ -122,16 +114,6 @@ public final class CloneSetOverlap {
             long totalClones = readers.stream().mapToLong(CloneReader::numberOfClones).sum();
             return new OutputPortWithProgress<List<List<Clone>>>() {
                 @Override
-                public long currentIndex() {
-                    return index.get();
-                }
-
-                @Override
-                public void finish() {
-
-                }
-
-                @Override
                 public void close() {
                     joinedPort.close();
                 }
@@ -149,7 +131,7 @@ public final class CloneSetOverlap {
 
                 @Override
                 public double getProgress() {
-                    return 1.0 * individualPorts.stream().mapToLong(OutputPortWithProgress::currentIndex).sum() / totalClones;
+                    return 1.0 * individualPorts.stream().mapToLong(OutputPortWithExpectedSize::getCurrentIndex).sum() / totalClones;
                 }
 
                 @Override

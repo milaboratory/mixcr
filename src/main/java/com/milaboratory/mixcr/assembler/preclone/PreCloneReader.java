@@ -14,7 +14,7 @@ package com.milaboratory.mixcr.assembler.preclone;
 import com.milaboratory.mixcr.assembler.AlignmentsProvider;
 import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
+import com.milaboratory.util.OutputPortWithProgress;
 import io.repseq.core.GeneFeature;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,9 +30,6 @@ public interface PreCloneReader extends AutoCloseable {
      * alignments before all assigned.
      */
     OutputPortWithProgress<VDJCAlignments> readAlignments();
-
-    /** Total number of reads (not alignments). Used for reporting. */
-    long getTotalNumberOfReads();
 
     /**
      * Returns a PreCloneReader view of a given VDJCAlignmentsReader representing a set of pre-clones that are formed as
@@ -61,16 +58,6 @@ public interface PreCloneReader extends AutoCloseable {
                 //noinspection resource
                 OutputPortWithProgress<VDJCAlignments> alignmentReader = readAlignments();
                 return new OutputPortWithProgress<PreClone>() {
-                    @Override
-                    public long currentIndex() {
-                        return alignmentReader.currentIndex();
-                    }
-
-                    @Override
-                    public void finish() {
-                        alignmentReader.finish();
-                    }
-
                     @Override
                     public PreClone take() {
                         VDJCAlignments al;
@@ -110,16 +97,6 @@ public interface PreCloneReader extends AutoCloseable {
                 OutputPortWithProgress<VDJCAlignments> reader = alignmentsReader.readAlignments();
                 return new OutputPortWithProgress<VDJCAlignments>() {
                     @Override
-                    public long currentIndex() {
-                        return reader.currentIndex();
-                    }
-
-                    @Override
-                    public void finish() {
-                        reader.finish();
-                    }
-
-                    @Override
                     public VDJCAlignments take() {
                         synchronized (sync) {
                             VDJCAlignments al = reader.take();
@@ -150,11 +127,6 @@ public interface PreCloneReader extends AutoCloseable {
                         return reader.isFinished();
                     }
                 };
-            }
-
-            @Override
-            public long getTotalNumberOfReads() {
-                return alignmentsReader.getNumberOfReads();
             }
 
             @Override

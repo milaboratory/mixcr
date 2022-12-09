@@ -14,7 +14,8 @@ package com.milaboratory.mixcr.postanalysis;
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.IteratorOutputPortAdapter;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
+import com.milaboratory.util.OutputPortWithExpectedSizeKt;
+import com.milaboratory.util.OutputPortWithProgress;
 import org.apache.commons.math3.random.RandomDataGenerator;
 
 import java.util.*;
@@ -61,16 +62,7 @@ public class TestDataset<T> implements Dataset<T>, Iterable<T> {
     @Override
     public OutputPortWithProgress<T> mkElementsPort() {
         final IteratorOutputPortAdapter<T> adapter = new IteratorOutputPortAdapter<>(data);
-        return OutputPortWithProgress.wrap(data.size(), new OutputPort<T>() {
-            @Override
-            public void close() {
-            }
-
-            @Override
-            public T take() {
-                return adapter.take();
-            }
-        });
+        return OutputPortWithExpectedSizeKt.withExpectedSize(adapter, data.size());
     }
 
     public static ToIntFunction<RandomDataGenerator> DEFAULT_SIZE_GEN = r -> r.nextInt(1, 5000);

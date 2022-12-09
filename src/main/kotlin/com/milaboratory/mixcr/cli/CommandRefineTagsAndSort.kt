@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.util.CountingOutputPort
+import cc.redberry.pipe.util.withCounting
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
@@ -407,9 +407,7 @@ object CommandRefineTagsAndSort {
                     )
 
                     // Running initial hash sorter
-                    var sorted = CountingOutputPort(
-                        corrected.hashSort(tagNames.size - 1)
-                    )
+                    var sorted = corrected.hashSort(tagNames.size - 1).withCounting()
                     corrected.close()
 
                     // Sorting by other tags
@@ -418,7 +416,7 @@ object CommandRefineTagsAndSort {
                             "Sorting alignments by " + tagNames[tIdx],
                             SmartProgressReporter.extractProgress(sorted, numberOfAlignments)
                         )
-                        sorted = CountingOutputPort(sorted.hashSort(tIdx))
+                        sorted = sorted.hashSort(tIdx).withCounting()
                     }
                     SmartProgressReporter.startProgressReport(
                         "Writing result",

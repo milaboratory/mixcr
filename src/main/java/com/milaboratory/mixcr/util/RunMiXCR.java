@@ -18,7 +18,7 @@ import cc.redberry.pipe.util.Chunk;
 import cc.redberry.pipe.util.OrderedOutputPort;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.SequenceRead;
-import com.milaboratory.core.io.sequence.SequenceReaderCloseable;
+import com.milaboratory.core.io.sequence.SequenceReader;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
@@ -46,6 +46,8 @@ import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.OutputPortWithExpectedSizeKt;
+import com.milaboratory.util.OutputPortWithProgress;
 import com.milaboratory.util.SmartProgressReporter;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCGene;
@@ -90,7 +92,7 @@ public final class RunMiXCR {
             AlignmentsProvider aProvider = new AlignmentsProvider() {
                 @Override
                 public OutputPortWithProgress<VDJCAlignments> readAlignments() {
-                    return OutputPortWithProgress.wrap(align.alignments.size(), CUtils.asOutputPort(align.alignments));
+                    return OutputPortWithExpectedSizeKt.withExpectedSize(CUtils.asOutputPort(align.alignments), align.alignments.size());
                 }
 
                 @Override
@@ -230,7 +232,7 @@ public final class RunMiXCR {
                 .setOutputFiles();
         aligner.setEventsListener(reportBuilder);
 
-        try (SequenceReaderCloseable<? extends SequenceRead> reader = parameters.getReader()) {
+        try (SequenceReader<? extends SequenceRead> reader = parameters.getReader()) {
 
             //start progress reporting
             if (reader instanceof CanReportProgress)
@@ -373,7 +375,7 @@ public final class RunMiXCR {
         public String species = "hs";
         public boolean isFunctionalOnly = false;
         public int threads = Runtime.getRuntime().availableProcessors();
-        public final SequenceReaderCloseable<? extends SequenceRead> reader;
+        public final SequenceReader<? extends SequenceRead> reader;
         public final boolean isInputPaired;
 
         public RunMiXCRAnalysis(String... inputFiles) throws IOException {
@@ -392,19 +394,15 @@ public final class RunMiXCR {
             cloneAssemblerParameters.updateFrom(alignerParameters);
         }
 
-        public RunMiXCRAnalysis(SequenceReaderCloseable<? extends SequenceRead> reader, boolean isInputPaired) {
+        public RunMiXCRAnalysis(SequenceReader<? extends SequenceRead> reader, boolean isInputPaired) {
             this.reader = reader;
             this.isInputPaired = isInputPaired;
             cloneAssemblerParameters.updateFrom(alignerParameters);
         }
 
         public RunMiXCRAnalysis(final SequenceRead... input) {
-            this.reader = new SequenceReaderCloseable<SequenceRead>() {
+            this.reader = new SequenceReader<SequenceRead>() {
                 int counter = 0;
-
-                @Override
-                public void close() {
-                }
 
                 @Override
                 public long getNumberOfReads() {
@@ -426,7 +424,7 @@ public final class RunMiXCR {
             return isInputPaired;
         }
 
-        public SequenceReaderCloseable<? extends SequenceRead> getReader() throws IOException {
+        public SequenceReader<? extends SequenceRead> getReader() throws IOException {
             return reader;
         }
     }

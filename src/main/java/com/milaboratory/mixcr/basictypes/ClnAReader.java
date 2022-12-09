@@ -17,8 +17,8 @@ import com.milaboratory.mixcr.cli.ApplicationException;
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
-import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.OutputPortWithProgress;
 import gnu.trove.map.hash.TIntIntHashMap;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
@@ -313,7 +313,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
     }
 
     public final class CloneAlignmentsPort
-            implements OutputPort<CloneAlignments>, CanReportProgress {
+            implements OutputPortWithProgress<CloneAlignments> {
         private final AtomicLong processedAlignments = new AtomicLong();
         private final CloneSet fakeCloneSet;
         private final PrimitivIBlocks<Clone>.Reader clones;

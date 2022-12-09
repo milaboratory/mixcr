@@ -11,8 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.util.CountLimitingOutputPort
 import cc.redberry.primitives.Filter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
@@ -21,8 +19,8 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.primitivio.buffered
 import com.milaboratory.primitivio.forEach
-import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.limit
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
@@ -137,17 +135,12 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
     override fun run0() {
         inputReader.use { reader ->
             outputWriter.use { writer ->
-                val sReads: OutputPort<VDJCAlignments> = when {
-                    limit != 0L -> CountLimitingOutputPort(reader, limit)
+                val sReads = when {
+                    limit != 0L -> reader.limit(limit)
                     else -> reader
                 }
-                val progress = when (sReads) {
-                    is CountLimitingOutputPort -> SmartProgressReporter.extractProgress(sReads)
-                    is CanReportProgress -> sReads
-                    else -> throw IllegalArgumentException()
-                }
                 writer.inheritHeaderAndFooterFrom(reader)
-                SmartProgressReporter.startProgressReport("Filtering", progress)
+                SmartProgressReporter.startProgressReport("Filtering", sReads)
                 var total = 0
                 var passed = 0
                 sReads.buffered(2048).forEach { vdjcAlignments ->

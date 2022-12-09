@@ -205,7 +205,7 @@ public final class ClnAWriter implements
 
             // Sorting alignments by cloneId and then by mapping type (core alignments will be written before all others)
             // and saving sorting output port
-            this.toCollator = new CountingOutputPort<>(alignments);
+            this.toCollator = CountingOutputPort.wrap(alignments);
 
             // Optimize serialization of genes and corresponding subject sequences from alignments
             PrimitivIOStateBuilder stateBuilder = new PrimitivIOStateBuilder();
@@ -394,7 +394,7 @@ public final class ClnAWriter implements
             if (toCollator == null)
                 return Double.NaN;
             else
-                return 1.0 * toCollator.getCount() / numberOfAlignments;
+                return 1.0 * toCollator.getCurrentIndex() / numberOfAlignments;
         } else
             return 1.0 * numberOfAlignmentsWritten / numberOfAlignments;
     }

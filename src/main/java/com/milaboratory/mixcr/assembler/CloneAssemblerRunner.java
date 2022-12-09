@@ -18,8 +18,8 @@ import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.CloneSet;
 import com.milaboratory.mixcr.basictypes.MiXCRFooter;
 import com.milaboratory.mixcr.basictypes.MiXCRHeader;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.CanReportProgressAndStage;
+import com.milaboratory.util.OutputPortWithProgress;
 import com.milaboratory.util.ProgressAndStage;
 
 public class CloneAssemblerRunner implements CanReportProgressAndStage {

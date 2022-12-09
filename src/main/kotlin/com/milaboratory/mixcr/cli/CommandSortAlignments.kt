@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.util.CountingOutputPort
+import cc.redberry.pipe.util.withCounting
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
@@ -64,7 +64,7 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
                         reader.header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) },
                         reader.usedGenes
                     )
-                    val counter = CountingOutputPort(sorted)
+                    val counter = sorted.withCounting()
                     SmartProgressReporter.startProgressReport(
                         "Writing sorted alignments",
                         SmartProgressReporter.extractProgress(counter, reader.numberOfReads)

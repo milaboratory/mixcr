@@ -107,7 +107,7 @@ public class ClnAReaderTest {
         assertEquals(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile),
                 reader.getVersionInfo());
 
-        assertEquals(alsc.getCount(), reader.numberOfAlignments());
+        assertEquals(alsc.getCurrentIndex(), reader.numberOfAlignments());
         assertEquals(newCloneSet.size(), reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {

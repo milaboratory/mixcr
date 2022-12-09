@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.assembler;
 
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
+import com.milaboratory.util.OutputPortWithProgress;
 
 public interface AlignmentsProvider extends AutoCloseable {
     /** Creates new alignments reader */

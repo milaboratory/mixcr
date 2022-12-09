@@ -12,14 +12,16 @@
 package com.milaboratory.mixcr.assembler.preclone;
 
 
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.basictypes.IOUtil;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHeaderActions;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
+import com.milaboratory.util.OutputPortWithExpectedSizeKt;
+import com.milaboratory.util.OutputPortWithProgress;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -98,44 +100,40 @@ public final class FilePreCloneReader implements PreCloneReader {
     }
 
     public OutputPortWithProgress<VDJCAlignments> readUnassignedAlignments() {
-        return OutputPortWithProgress.wrap(numberOfAlignments - numberOfAssignedAlignments,
-                input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsStartPosition,
-                        h -> h.getSpecialByte(0) == UNASSIGNED_ALIGNMENTS_END_MARK_BYTE_0
-                                ? PrimitivIHeaderActions.stopReading()
-                                : PrimitivIHeaderActions.error()));
+        OutputPort<VDJCAlignments> port = input.beginRandomAccessPrimitivIBlocks(
+                VDJCAlignments.class, alignmentsStartPosition,
+                h -> h.getSpecialByte(0) == UNASSIGNED_ALIGNMENTS_END_MARK_BYTE_0
+                        ? PrimitivIHeaderActions.stopReading()
+                        : PrimitivIHeaderActions.error());
+        return OutputPortWithExpectedSizeKt.withExpectedSize(port, numberOfAlignments - numberOfAssignedAlignments);
     }
 
     public OutputPortWithProgress<VDJCAlignments> readAssignedAlignments() {
-        return OutputPortWithProgress.wrap(numberOfAssignedAlignments,
-                input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, assignedAlignmentsStartPosition,
-                        h -> h.getSpecialByte(0) == ALIGNMENTS_END_MARK_BYTE_0
-                                ? PrimitivIHeaderActions.stopReading()
-                                : PrimitivIHeaderActions.error()));
+        OutputPort<VDJCAlignments> port = input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, assignedAlignmentsStartPosition,
+                h -> h.getSpecialByte(0) == ALIGNMENTS_END_MARK_BYTE_0
+                        ? PrimitivIHeaderActions.stopReading()
+                        : PrimitivIHeaderActions.error());
+        return OutputPortWithExpectedSizeKt.withExpectedSize(port, numberOfAssignedAlignments);
     }
 
     @Override
     public OutputPortWithProgress<VDJCAlignments> readAlignments() {
-        return OutputPortWithProgress.wrap(numberOfAlignments,
-                input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsStartPosition,
-                        h -> h.getSpecialByte(0) == UNASSIGNED_ALIGNMENTS_END_MARK_BYTE_0
-                                ? PrimitivIHeaderActions.skip()
-                                : h.getSpecialByte(0) == ALIGNMENTS_END_MARK_BYTE_0
-                                ? PrimitivIHeaderActions.stopReading()
-                                : PrimitivIHeaderActions.error()));
+        OutputPort<VDJCAlignments> port = input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, alignmentsStartPosition,
+                h -> h.getSpecialByte(0) == UNASSIGNED_ALIGNMENTS_END_MARK_BYTE_0
+                        ? PrimitivIHeaderActions.skip()
+                        : h.getSpecialByte(0) == ALIGNMENTS_END_MARK_BYTE_0
+                        ? PrimitivIHeaderActions.stopReading()
+                        : PrimitivIHeaderActions.error());
+        return OutputPortWithExpectedSizeKt.withExpectedSize(port, numberOfAlignments);
     }
 
     @Override
     public OutputPortWithProgress<PreClone> readPreClones() {
-        return OutputPortWithProgress.wrap(numberOfClones,
-                input.beginRandomAccessPrimitivIBlocks(PreCloneImpl.class, clonesStartPosition,
-                        h -> h.getSpecialByte(0) == CLONES_END_MARK_BYTE_0
-                                ? PrimitivIHeaderActions.stopReading()
-                                : PrimitivIHeaderActions.error()));
-    }
-
-    @Override
-    public long getTotalNumberOfReads() {
-        return numberOfReads;
+        OutputPort<PreCloneImpl> port = input.beginRandomAccessPrimitivIBlocks(PreCloneImpl.class, clonesStartPosition,
+                h -> h.getSpecialByte(0) == CLONES_END_MARK_BYTE_0
+                        ? PrimitivIHeaderActions.stopReading()
+                        : PrimitivIHeaderActions.error());
+        return OutputPortWithExpectedSizeKt.withExpectedSize(port, numberOfClones);
     }
 
     @Override
