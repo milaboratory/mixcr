@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.asSequence
 import cc.redberry.primitives.Filter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
@@ -19,7 +20,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.afiltering.AFilter
 import com.milaboratory.mixcr.util.and
-import com.milaboratory.primitivio.asSequence
 import com.milaboratory.util.NSequenceWithQualityPrintHelper
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains

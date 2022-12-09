@@ -11,11 +11,11 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.forEach
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.group
-import com.milaboratory.mitool.helpers.map
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
@@ -28,7 +28,6 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import picocli.CommandLine.Command

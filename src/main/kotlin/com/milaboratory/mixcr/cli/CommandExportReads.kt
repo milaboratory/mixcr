@@ -11,13 +11,13 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.SmartProgressReporter
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters

@@ -11,12 +11,12 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.primitivio.forEach
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.nio.file.Path

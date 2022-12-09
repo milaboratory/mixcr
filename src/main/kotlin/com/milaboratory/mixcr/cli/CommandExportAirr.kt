@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.CountingOutputPort
+import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.withCounting
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -48,7 +49,6 @@ import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper
 import com.milaboratory.mixcr.export.FieldExtractor
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.limit

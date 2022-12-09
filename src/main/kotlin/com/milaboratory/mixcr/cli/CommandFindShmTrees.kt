@@ -15,6 +15,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.InputPort
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
@@ -42,7 +43,6 @@ import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.toHexString
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.ReportUtil

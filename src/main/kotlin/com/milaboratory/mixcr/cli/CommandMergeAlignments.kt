@@ -11,10 +11,10 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCLibraryRegistry

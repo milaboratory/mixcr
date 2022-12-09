@@ -14,13 +14,10 @@ package com.milaboratory.primitivio
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.OutputPort
 import com.milaboratory.util.ObjectSerializer
-import com.milaboratory.util.OutputPortWithProgress
-import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sorting.HashSorter
 import com.milaboratory.util.sorting.Sorter
-import com.milaboratory.util.withExpectedSize
 import org.apache.commons.io.FileUtils
 import java.io.File
 
@@ -117,33 +114,6 @@ inline fun <reified T : Any> OutputPort<T>.groupBy(
 ): OutputPort<List<T>> =
     hashGrouping(groupingCriteria, stateBuilder, tempFileDest, readerConcurrency, writerConcurrency)
         .groupBySortedData(groupingCriteria)
-
-fun <T : Any, R> OutputPort<T>.withProgress(
-    expectedSize: Long,
-    progressAndStage: ProgressAndStage,
-    stage: String,
-    function: (OutputPort<T>) -> R
-): R {
-    val withProgress = this.withExpectedSize(expectedSize)
-    progressAndStage.delegate(stage, withProgress)
-    val result = function(withProgress)
-    withProgress.close()
-    return result
-}
-
-fun <T : Any, R> OutputPort<T>.withProgress(
-    expectedSize: Long,
-    progressAndStage: ProgressAndStage,
-    stage: String,
-    countPerElement: (T) -> Long,
-    function: (OutputPort<T>) -> R
-): R {
-    val withProgress = OutputPortWithProgress.notLinerProgress(this, expectedSize, countPerElement)
-    progressAndStage.delegate(stage, withProgress)
-    val result = function(withProgress)
-    withProgress.close()
-    return result
-}
 
 /**
  * Call only after `sort`

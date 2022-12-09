@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.withCounting
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -42,7 +43,6 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.hashGrouping
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.ReportHelper

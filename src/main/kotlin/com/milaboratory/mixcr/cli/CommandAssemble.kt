@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.StatusReporter
+import cc.redberry.pipe.util.map
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
@@ -38,7 +39,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.primitivio.map
 import com.milaboratory.util.ArraysUtils
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter

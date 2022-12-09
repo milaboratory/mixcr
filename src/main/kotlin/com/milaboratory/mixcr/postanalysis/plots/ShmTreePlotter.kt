@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.postanalysis.plots
 
+import cc.redberry.pipe.util.asSequence
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.motif.BitapPattern
 import com.milaboratory.core.sequence.AminoAcidSequence
@@ -34,7 +35,6 @@ import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.Tree
 import com.milaboratory.mixcr.trees.TreeFilter
 import com.milaboratory.mixcr.trees.forPostanalysisSplitted
-import com.milaboratory.primitivio.asSequence
 import com.milaboratory.util.StringUtil
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType

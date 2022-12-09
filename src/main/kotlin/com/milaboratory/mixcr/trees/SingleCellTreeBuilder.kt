@@ -12,6 +12,14 @@
 package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.filter
+import cc.redberry.pipe.util.flatMap
+import cc.redberry.pipe.util.flatten
+import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.mapInParallelOrdered
+import cc.redberry.pipe.util.mapNotNull
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
@@ -25,21 +33,13 @@ import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.cached
-import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.flatMap
-import com.milaboratory.primitivio.flatten
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.groupBy
-import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.mapInParallelOrdered
-import com.milaboratory.primitivio.mapNotNull
-import com.milaboratory.primitivio.port
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.sort
 import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.cached
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
@@ -109,7 +109,7 @@ class SingleCellTreeBuilder(
                     .clustersWithSameVJAndCDR3Length(cellBarcodesToGroupChainPair)
                     .flatMap { cellGroups ->
                         val rebasedChainPairs = groupDuplicatesAndRebaseFromGermline(cellGroups)
-                        clustersBuilder.buildClusters(rebasedChainPairs).port
+                        clustersBuilder.buildClusters(rebasedChainPairs).asOutputPort()
                     }
                     .mapInParallelOrdered(threads) { clusterOfCells ->
                         //TODO build linked topology
@@ -205,7 +205,7 @@ class SingleCellTreeBuilder(
                         cellGroup.cellBarcode
                     )
                 }
-            }.port
+            }.asOutputPort()
         }
             //group by chain pairs. Groups will have intersection
             .groupBy(
@@ -267,7 +267,7 @@ class SingleCellTreeBuilder(
                     .map { (cellBarcode, umiCount) ->
                         CloneAndCellTag(clone, CellBarcodeWithDatasetId(cellBarcode, datasetId), umiCount)
                     }
-                    .port
+                    .asOutputPort()
             }
             .groupBy(
                 stateBuilder,

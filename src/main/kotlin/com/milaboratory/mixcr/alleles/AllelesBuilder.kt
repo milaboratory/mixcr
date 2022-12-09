@@ -14,6 +14,12 @@
 package com.milaboratory.mixcr.alleles
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.asSequence
+import cc.redberry.pipe.util.filter
+import cc.redberry.pipe.util.flatMap
+import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.mapInParallel
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
@@ -34,16 +40,11 @@ import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.GroupingCriteria
-import com.milaboratory.primitivio.asSequence
-import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.flatMap
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.groupBy
-import com.milaboratory.primitivio.mapInParallel
-import com.milaboratory.primitivio.port
-import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.withExpectedSize
+import com.milaboratory.util.withNotLinerProgress
 import io.repseq.core.BaseSequence
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -93,23 +94,17 @@ class AllelesBuilder(
         //assumption: there are no allele genes in library
         //TODO how to check assumption?
         return datasets.filteredClones(clonesFilter) { filteredClones ->
-            filteredClones.withProgress(
-                totalClonesCount,
-                progress,
-                "Grouping by the same ${geneType.letter} gene"
-            ) { clones ->
-                clones.groupBy(
-                    stateBuilder,
-                    tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}"),
-                    GroupingCriteria.groupBy { it.getBestHit(geneType).gene }
-                )
-            }
-                .withProgress(
-                    totalClonesCount,
-                    progress,
-                    "Searching for ${geneType.letter} alleles",
-                    countPerElement = { it.size.toLong() }
-                ) { clustersWithTheSameV ->
+            filteredClones
+                .withExpectedSize(totalClonesCount)
+                .reportProgress(progress, "Grouping by the same ${geneType.letter} gene") { clones ->
+                    clones.groupBy(
+                        stateBuilder,
+                        tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}"),
+                        GroupingCriteria.groupBy { it.getBestHit(geneType).gene }
+                    )
+                }
+                .withNotLinerProgress(totalClonesCount) { it.size.toLong() }
+                .reportProgress(progress, "Searching for ${geneType.letter} alleles") { clustersWithTheSameV ->
                     clustersWithTheSameV.mapInParallel(threads) { cluster ->
                         val geneId = cluster[0].getBestHit(geneType).gene.name
                         geneId to findAlleles(
@@ -143,6 +138,7 @@ class AllelesBuilder(
                         .alignments
                         .filterNotNull()
                         .all { it.absoluteMutations == EMPTY_NUCLEOTIDE_MUTATIONS }
+
                     else -> alleles.any {
                         CloneRebuild.alignmentsChange(clone, it, scoring[complimentaryGeneType(geneType)]).naive
                     }
@@ -189,6 +185,7 @@ class AllelesBuilder(
                     searchMutationsInCDR3Parameters,
                     geneDiversity[complimentaryGeneType(geneType)]
                 )
+
                 else -> MutationsInCDR3.empty
             }
             buildAllele(
@@ -361,6 +358,7 @@ class AllelesBuilder(
                     }
                     shiftedPosition
                 }
+
                 Joining -> {
                     val CDR3EndPosition = partitioning.getPosition(CDR3End)
                     val shifterPosition = CDR3EndPosition - i - 1
@@ -370,6 +368,7 @@ class AllelesBuilder(
                     }
                     shifterPosition
                 }
+
                 else -> throw UnsupportedOperationException()
             }
             lastKnownShift = i
@@ -411,6 +410,7 @@ class AllelesBuilder(
                 GeneFeatures(toAdd)
             }
         }
+
         Joining -> {
             val toAdd = GeneFeatures(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
             val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
@@ -420,6 +420,7 @@ class AllelesBuilder(
                 toAdd
             }
         }
+
         else -> throw UnsupportedOperationException()
     }
 
@@ -488,7 +489,7 @@ class AllelesBuilder(
         private fun <R> List<ClonesSupplier>.filteredClones(
             filter: ClonesFilter,
             function: (OutputPort<Clone>) -> R
-        ): R = port
+        ): R = asOutputPort()
             .flatMap { cloneReader ->
                 cloneReader.readClones().filter { clone ->
                     filter.match(clone, cloneReader.tagsInfo)

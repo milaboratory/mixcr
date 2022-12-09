@@ -281,7 +281,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
      */
     public OutputPort<VDJCAlignments> readAlignmentsOfClone(int cloneIndex) {
         if (cloneIndex == -1 && !cloneIdIndex.containsKey(-1))
-            return CUtils.EMPTY_OUTPUT_PORT;
+            return CUtils.emptyOutputPort();
         return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class,
                 index[cloneIdIndex.get(cloneIndex)],
                 HEADER_ACTION_STOP_AT_ALIGNMENT_BLOCK_END);

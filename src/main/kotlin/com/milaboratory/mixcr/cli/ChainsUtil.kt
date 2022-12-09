@@ -12,10 +12,10 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCObject
-import com.milaboratory.primitivio.forEach
 import io.repseq.core.Chains
 import io.repseq.core.VDJCLibraryRegistry
 import java.nio.file.Path

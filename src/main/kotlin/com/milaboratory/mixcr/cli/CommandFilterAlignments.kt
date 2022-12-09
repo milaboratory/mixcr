@@ -11,14 +11,14 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.buffered
+import cc.redberry.pipe.util.forEach
 import cc.redberry.primitives.Filter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.primitivio.buffered
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.limit
 import gnu.trove.set.hash.TLongHashSet
@@ -165,18 +165,18 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
         private val readsIds: TLongHashSet?,
         private val chimerasOnly: Boolean
     ) : Filter<VDJCAlignments> {
-        override fun accept(`object`: VDJCAlignments): Boolean {
-            if (readsIds != null && `object`.readIds.none { readId -> readId in readsIds }) return false
+        override fun accept(obj: VDJCAlignments): Boolean {
+            if (readsIds != null && obj.readIds.none { readId -> readId in readsIds }) return false
             val lMatch = GeneType.VDJC_REFERENCE
-                .mapNotNull { `object`.getBestHit(it) }
+                .mapNotNull { obj.getBestHit(it) }
                 .any { bestHit -> chains.intersects(bestHit.gene.chains) }
             if (!lMatch) return false
-            if (containsFeature != null && `object`.getFeature(containsFeature) == null) return false
+            if (containsFeature != null && obj.getFeature(containsFeature) == null) return false
             if (cdr3Equals != null) {
-                val cdr3 = `object`.getFeature(GeneFeature.CDR3) ?: return false
+                val cdr3 = obj.getFeature(GeneFeature.CDR3) ?: return false
                 if (cdr3.sequence != cdr3Equals) return false
             }
-            if (chimerasOnly && !`object`.isChimera) return false
+            if (chimerasOnly && !obj.isChimera) return false
             return true
         }
 

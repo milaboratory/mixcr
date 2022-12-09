@@ -12,6 +12,13 @@
 package com.milaboratory.mixcr.cli
 
 
+import cc.redberry.pipe.util.buffered
+import cc.redberry.pipe.util.chunked
+import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.mapChunksInParallel
+import cc.redberry.pipe.util.mapUnchunked
+import cc.redberry.pipe.util.ordered
+import cc.redberry.pipe.util.unchunked
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
@@ -34,8 +41,6 @@ import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.mitool.helpers.FileGroup
 import com.milaboratory.mitool.helpers.PathPatternExpandException
-import com.milaboratory.mitool.helpers.map
-import com.milaboratory.mitool.helpers.mapUnchunked
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.use
 import com.milaboratory.mixcr.AlignMixins.LimitInput
@@ -73,12 +78,6 @@ import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.primitivio.buffered
-import com.milaboratory.primitivio.chunked
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapChunksInParallel
-import com.milaboratory.primitivio.ordered
-import com.milaboratory.primitivio.unchunked
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.LightFileDescriptor
 import com.milaboratory.util.OutputPortWithProgress

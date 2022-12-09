@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.withCounting
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -20,7 +21,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.primitivio.PipeReader
 import com.milaboratory.primitivio.PipeWriter
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.primitivio.sort
 import com.milaboratory.util.ObjectSerializer
 import com.milaboratory.util.SmartProgressReporter

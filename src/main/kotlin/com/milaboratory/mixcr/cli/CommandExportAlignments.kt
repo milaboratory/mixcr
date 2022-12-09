@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.filter
+import cc.redberry.pipe.util.forEach
 import cc.redberry.primitives.Filter
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
@@ -33,8 +35,6 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
@@ -58,14 +58,12 @@ object CommandExportAlignments {
         override val command get() = MiXCRCommandDescriptor.exportAlignments
     }
 
-    fun Params.mkFilter(): Filter<VDJCAlignments> {
-        return Filter {
-            for (gt in GeneType.VJC_REFERENCE) {
-                val bestHit = it.getBestHit(gt)
-                if (bestHit != null && Chains.parse(chains).intersects(bestHit.gene.chains)) return@Filter true
-            }
-            false
+    fun Params.mkFilter(): Filter<VDJCAlignments> = Filter {
+        for (gt in GeneType.VJC_REFERENCE) {
+            val bestHit = it.getBestHit(gt)
+            if (bestHit != null && Chains.parse(chains).intersects(bestHit.gene.chains)) return@Filter true
         }
+        false
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
