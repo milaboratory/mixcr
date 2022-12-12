@@ -95,7 +95,7 @@ public class ClnAReaderTest {
         writer.writeClones(newCloneSet);
 
         OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
-        CountingOutputPort<VDJCAlignments> alsc = new CountingOutputPort<>(als);
+        CountingOutputPort<VDJCAlignments> alsc = CountingOutputPort.wrap(als);
         writer.collateAlignments(alsc, align.alignments.size());
         writer.setFooter(emptyFooter());
         writer.writeAlignmentsAndIndex();

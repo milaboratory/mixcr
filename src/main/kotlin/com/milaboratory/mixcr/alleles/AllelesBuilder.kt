@@ -16,6 +16,7 @@ package com.milaboratory.mixcr.alleles
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.asSequence
+import cc.redberry.pipe.util.buffered
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.flatMap
 import cc.redberry.pipe.util.forEach
@@ -39,8 +40,7 @@ import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.primitivio.GroupingCriteria
-import com.milaboratory.primitivio.groupBy
+import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.withExpectedSize
@@ -97,23 +97,24 @@ class AllelesBuilder(
             filteredClones
                 .withExpectedSize(totalClonesCount)
                 .reportProgress(progress, "Grouping by the same ${geneType.letter} gene") { clones ->
-                    clones.groupBy(
+                    clones.groupByOnDisk(
                         stateBuilder,
-                        tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}"),
-                        GroupingCriteria.groupBy { it.getBestHit(geneType).gene }
-                    )
+                        tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}")
+                    ) { it.getBestHit(geneType).gene }
                 }
                 .withNotLinerProgress(totalClonesCount) { it.size.toLong() }
                 .reportProgress(progress, "Searching for ${geneType.letter} alleles") { clustersWithTheSameV ->
-                    clustersWithTheSameV.mapInParallel(threads) { cluster ->
-                        val geneId = cluster[0].getBestHit(geneType).gene.name
-                        geneId to findAlleles(
-                            cluster,
-                            complementaryAlleles,
-                            geneType,
-                            reportBuilder
-                        ).sortedBy { it.name }
-                    }
+                    clustersWithTheSameV
+                        .buffered(1) //also make take() from upstream synchronized
+                        .mapInParallel(threads) { cluster ->
+                            val geneId = cluster[0].getBestHit(geneType).gene.name
+                            geneId to findAlleles(
+                                cluster,
+                                complementaryAlleles,
+                                geneType,
+                                reportBuilder
+                            ).sortedBy { it.name }
+                        }
                         .asSequence()
                         .sortedBy { it.first }
                         .toMap()

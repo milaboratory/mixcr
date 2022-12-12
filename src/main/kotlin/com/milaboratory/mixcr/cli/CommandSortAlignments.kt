@@ -21,7 +21,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.primitivio.PipeReader
 import com.milaboratory.primitivio.PipeWriter
-import com.milaboratory.primitivio.sort
+import com.milaboratory.primitivio.sortOnDisk
 import com.milaboratory.util.ObjectSerializer
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCGene
@@ -55,7 +55,7 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
     override fun run0() {
         VDJCAlignmentsReader(input).use { reader ->
             SmartProgressReporter.startProgressReport("Reading vdjca", reader)
-            reader.sort(
+            reader.sortOnDisk(
                 Comparator.comparing { it.minReadId },
                 VDJCAlignmentsSerializer(reader)
             ) { sorted ->

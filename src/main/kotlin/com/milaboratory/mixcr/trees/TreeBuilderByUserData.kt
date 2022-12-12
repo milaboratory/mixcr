@@ -14,6 +14,7 @@
 package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.buffered
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.mapInParallel
@@ -23,9 +24,8 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
-import com.milaboratory.primitivio.groupBy
+import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.util.TempFileDest
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
@@ -50,6 +50,7 @@ class TreeBuilderByUserData(
             asCloneWrappers(cluster, treeId) to treeId
         }
         .filter { it.first.isNotEmpty() }
+        .buffered(1) //also make take() from upstream synchronized
         .mapInParallel(threads) { (cluster, treeId) ->
             val rebasedFromGermline = cluster
                 .map { cloneWrapper -> cloneWrapper.rebaseFromGermline(assemblingFeatures) }
@@ -123,11 +124,11 @@ class TreeBuilderByUserData(
                 treeId = treeId,
                 datasetId = cloneWithDatasetId.datasetId
             )
-        }.groupBy(
-            stateBuilder,
-            tempDest.addSuffix("tree.builder.userInput"),
-            GroupingCriteria.groupBy { it.treeId }
-        )
+        }
+            .groupByOnDisk(
+                stateBuilder,
+                tempDest.addSuffix("tree.builder.userInput")
+            ) { it.treeId }
 
     private fun List<Clone>.bestGeneForClones(geneType: GeneType): VDJCGeneId =
         flatMap { clone -> clone.getHits(geneType).map { it.gene.id } }

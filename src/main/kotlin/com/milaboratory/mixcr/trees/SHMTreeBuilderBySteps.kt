@@ -15,6 +15,7 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.buffered
 import cc.redberry.pipe.util.count
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.flatMap
@@ -39,12 +40,11 @@ import com.milaboratory.mixcr.trees.TreeWithMetaBuilder.MetricDecisionInfo
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder.ZeroStepDecisionInfo
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
-import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.groupBy
+import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeCollection
@@ -60,12 +60,6 @@ import java.io.PrintStream
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.max
 import kotlin.math.min
-
-private val groupingCriteria: GroupingCriteria<CloneWrapper> = object : GroupingCriteria<CloneWrapper> {
-    override fun hashCodeForGroup(entity: CloneWrapper): Int = entity.VJBase.hashCode()
-
-    override val comparator: Comparator<CloneWrapper> = Comparator.comparing({ c -> c.VJBase }, VJBase.comparator)
-}
 
 /**
  * Algorithm has several steps.
@@ -141,6 +135,7 @@ internal class SHMTreeBuilderBySteps(
         clones
             .groupByTheSameTargets(progressAndStage)
             .groupByTheSameVJBase(progressAndStage)
+            .buffered(1) //also make take() from upstream synchronized
             .cached(
                 tempDest.addSuffix("tree.builder.grouping.by.the.same.VJ.CDR3Length"),
                 stateBuilder,
@@ -215,11 +210,11 @@ internal class SHMTreeBuilderBySteps(
                     .flatMap { clones -> clones.asCloneWrappers().asOutputPort() }
                     //filter by user defined parameters
                     .filter { c -> clonesFilter.match(c) }
-                    .groupBy(
+                    .groupByOnDisk(
                         stateBuilder,
                         tempDest.addSuffix("tree.builder.grouping.by.the.same.VJ.CDR3Length"),
-                        groupingCriteria
-                    )
+                        VJBase.comparator
+                    ) { it.VJBase }
                     .map { Cluster(it) }
             }
 
@@ -251,11 +246,10 @@ internal class SHMTreeBuilderBySteps(
         withExpectedSize(clonesCount)
             .reportProgress(progressAndStage, "Search for clones with the same targets") { allClones ->
                 //group efficiently the same clones
-                allClones.groupBy(
+                allClones.groupByOnDisk(
                     stateBuilder,
-                    tempDest.addSuffix("tree.builder.grouping.clones.with.the.same.targets"),
-                    GroupingCriteria.groupBy { it.clone.targets.reduce(NSequenceWithQuality::concatenate) }
-                )
+                    tempDest.addSuffix("tree.builder.grouping.clones.with.the.same.targets")
+                ) { it.clone.targets.reduce(NSequenceWithQuality::concatenate) }
             }
 
     /**

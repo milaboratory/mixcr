@@ -13,14 +13,14 @@ package com.milaboratory.mixcr.assembler.preclone;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.milaboratory.mitool.helpers.GroupOP;
-import com.milaboratory.mitool.helpers.PipeKt;
 import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.primitivio.GroupByPipeKt;
+import com.milaboratory.primitivio.GroupOP;
 import com.milaboratory.util.CanReportProgressAndStage;
 import com.milaboratory.util.ProgressAndStage;
 import com.milaboratory.util.TempFileDest;
@@ -90,7 +90,7 @@ public final class PreCloneAssemblerRunner implements CanReportProgressAndStage,
 
     public void run() throws IOException {
         try (FilePreCloneWriter writer = new FilePreCloneWriter(outputFile, tempDest)) {
-            OutputPort<GroupOP<VDJCAlignments, TagTuple>> alGroups = PipeKt.group(
+            OutputPort<GroupOP<VDJCAlignments, TagTuple>> alGroups = GroupByPipeKt.groupAlreadySorted(
                     CUtils.wrap(reader3, VDJCAlignments::ensureKeyTags), assembler.getGroupingFunction());
             writer.init(alignments, assemblingFeatures, outputTagsInfo);
 
