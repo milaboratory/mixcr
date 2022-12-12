@@ -24,7 +24,7 @@ interface HasFeatureToAlign {
     fun getFeatureToAlign(geneType: GeneType): GeneFeature?
 
     companion object {
-        operator fun invoke(featuresToAlign: Map<GeneType, GeneFeature>) = object : HasFeatureToAlign {
+        operator fun invoke(featuresToAlign: Map<GeneType, GeneFeature?>) = object : HasFeatureToAlign {
             override fun getFeatureToAlign(geneType: GeneType): GeneFeature? = featuresToAlign[geneType]
         }
     }

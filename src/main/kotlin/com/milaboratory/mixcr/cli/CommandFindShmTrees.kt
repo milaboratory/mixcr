@@ -435,7 +435,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 private class MiXCRHeaderMerger {
     private var inputHashAccumulator: MessageDigest? = MessageDigest.getInstance("MD5")
     private var upstreamParams = mutableListOf<Pair<String, MiXCRStepParams>>()
-    private var featuresToAlignMap: Map<GeneType, GeneFeature>? = null
+    private var featuresToAlignMap: Map<GeneType, GeneFeature?>? = null
     private var foundAlleles: MiXCRHeader.FoundAlleles? = null
     private var allFullyCoveredBy: GeneFeatures? = null
 

@@ -63,7 +63,7 @@ data class MiXCRHeader(
     /** Aligner parameters */
     val alignerParameters: VDJCAlignerParameters?,
     /** Aligner parameters */
-    val featuresToAlignMap: Map<GeneType, GeneFeature>,
+    val featuresToAlignMap: Map<GeneType, GeneFeature?>,
     /** Clone assembler parameters  */
     val assemblerParameters: CloneAssemblerParameters? = null,
     /** Library produced by search of alleles */
@@ -198,8 +198,8 @@ data class MiXCRHeader(
             val stepParams = input.readObjectRequired<MiXCRStepParams>()
             val tagsInfo = input.readObjectRequired<TagsInfo>()
             val alignerParameters = input.readObjectOptional<VDJCAlignerParameters>()
-            val featuresToAlign: Map<GeneType, GeneFeature> =
-                input.readEnumMap({ readObjectRequired() }, { readObjectRequired() })
+            val featuresToAlign: Map<GeneType, GeneFeature?> =
+                input.readEnumMap({ readObjectRequired() }, { readObjectOptional() })
             val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
             val foundAlleles = input.readObjectOptional<FoundAlleles>()
             val allFullyCoveredBy = input.readObjectOptional<GeneFeatures>()
