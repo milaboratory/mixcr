@@ -30,16 +30,32 @@ interface FieldsCollection<in T : Any> {
             priority: Int,
             command: String,
             description: String,
-            delegate: Field<T>,
+            delegate: FieldsCollection<T>,
             deprecation: String? = null,
             extract: MetaForExport.() -> List<Array<String>>
         ): FieldsCollection<T> = FieldsCollectionParameterless(
             priority,
             command,
             description,
-            delegate,
+            deprecation
+        ) {
+            extract().flatMap { args ->
+                delegate.createFields(this, args)
+            }
+        }
+
+        operator fun <T : Any> invoke(
+            priority: Int,
+            command: String,
+            description: String,
+            deprecation: String? = null,
+            delegates: MetaForExport.() -> List<FieldExtractor<T>>
+        ): FieldsCollection<T> = FieldsCollectionParameterless(
+            priority,
+            command,
+            description,
             deprecation,
-            extract
+            delegates
         )
 
         operator fun <T : Any, P1 : Any> invoke(
@@ -268,18 +284,15 @@ private class FieldsCollectionParameterless<T : Any>(
     override val priority: Int,
     override val cmdArgName: String,
     override val description: String,
-    private val delegate: Field<T>,
     override val deprecation: String? = null,
-    private val argsSupplier: MetaForExport.() -> List<Array<String>>
+    private val delegates: MetaForExport.() -> List<FieldExtractor<T>>
 ) : FieldsCollection<T> {
     override val arity: CommandLine.Range = CommandLine.Range.valueOf("0")
 
     override fun createFields(
         headerData: MetaForExport,
         args: Array<String>
-    ): List<FieldExtractor<T>> = argsSupplier(headerData).map { argsForDelegate ->
-        delegate.create(headerData, argsForDelegate)
-    }
+    ): List<FieldExtractor<T>> = delegates(headerData)
 
     override val metaVars: String = ""
 }
@@ -306,12 +319,9 @@ fun <T : Any, R : Any> FieldsCollection<T>.fromProperty(
         ): List<FieldExtractor<R>> {
             val delegates = that.createFields(headerData, args)
             return delegates.map { delegate ->
-                object : FieldExtractor<R> {
-                    override val header: String = delegate.header
-                    override fun extractValue(meta: RowMetaForExport, obj: R): String {
-                        val propertyVal = property(obj) ?: return NULL
-                        return delegate.extractValue(meta, propertyVal)
-                    }
+                FieldExtractor(delegate.header) { obj ->
+                    val propertyVal = property(obj) ?: return@FieldExtractor NULL
+                    delegate.extractValue(this, propertyVal)
                 }
             }
         }

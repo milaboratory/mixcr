@@ -177,10 +177,7 @@ private class FieldParameterless<T : Any>(
     override fun create(
         headerData: MetaForExport,
         args: Array<String>
-    ): FieldExtractor<T> = object : FieldExtractor<T> {
-        override val header = sHeader
-        override fun extractValue(meta: RowMetaForExport, obj: T): String = meta.extract(obj)
-    }
+    ): FieldExtractor<T> = FieldExtractor(sHeader, extract)
 
     override val metaVars: String = ""
 }
@@ -204,9 +201,8 @@ private abstract class FieldWithParameters<T : Any, P>(
             "$cmdArgName requires $arity arguments, got ${args.joinToString(" ")}"
         }
         val params = getParameters(headerData, args)
-        return object : FieldExtractor<T> {
-            override val header = getHeader(params)
-            override fun extractValue(meta: RowMetaForExport, obj: T): String = meta.extractValue(obj, params)
+        return FieldExtractor(getHeader(params)) {
+            extractValue(it, params)
         }
     }
 }
