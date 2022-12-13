@@ -134,7 +134,7 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(out, InputFileType.VDJCA)
     }
 
-    override fun run0() {
+    override fun run1() {
         inputReader.use { reader ->
             outputWriter.use { writer ->
                 val sReads: OutputPort<VDJCAlignments> = when {

@@ -52,7 +52,7 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(out, InputFileType.VDJCA)
     }
 
-    override fun run0() {
+    override fun run1() {
         VDJCAlignmentsReader(input).use { reader ->
             SmartProgressReporter.startProgressReport("Reading vdjca", reader)
             reader.sort(

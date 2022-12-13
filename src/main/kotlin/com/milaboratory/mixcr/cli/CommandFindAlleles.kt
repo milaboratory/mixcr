@@ -238,7 +238,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         findAllelesParameters
     }
 
-    override fun run0() {
+    override fun run1() {
         val clonesFilter: AllelesBuilder.ClonesFilter = object : AllelesBuilder.ClonesFilter {
             override fun match(clone: Clone, tagsInfo: TagsInfo): Boolean {
                 if (findAllelesParameters.productiveOnly) {

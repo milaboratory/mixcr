@@ -88,7 +88,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
         }
     }
 
-    override fun run0() {
+    override fun run1() {
         out?.toAbsolutePath()?.parent?.createDirectories()
 
         val allReports = inputFiles.fold(MiXCRFooterMerger()) { m, input ->

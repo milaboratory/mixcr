@@ -160,7 +160,7 @@ object CommandExtend {
             )
         }
 
-        override fun run0() {
+        override fun run1() {
             when (IOUtil.extractFileType(inputFile)) {
                 VDJCA -> processVDJCA()
                 CLNS -> processClns()

@@ -66,7 +66,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     override val outputFiles
         get() = listOfNotNull(out)
 
-    override fun run0() {
+    override fun run1() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             val headerForExport = MetaForExport(

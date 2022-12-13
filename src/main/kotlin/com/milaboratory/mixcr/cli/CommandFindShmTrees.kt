@@ -267,7 +267,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", !useLocalTemp.value)
     }
 
-    override fun run0() {
+    override fun run1() {
         val reportBuilder = BuildSHMTreeReport.Builder()
             .setCommandLine(commandLineArguments)
             .setInputFiles(inputFiles)

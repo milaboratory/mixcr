@@ -62,8 +62,10 @@ abstract class MiXCRCommandWithOutputs : MiXCRCommand() {
             throw ValidationException("File \"$outFile\" already exists. Use -f / --force-overwrite option to overwrite it.")
     }
 
-    final override fun run() {
+    final override fun run0() {
         validateInputsOutputs()
-        super.run()
+        run1()
     }
+
+    abstract fun run1()
 }

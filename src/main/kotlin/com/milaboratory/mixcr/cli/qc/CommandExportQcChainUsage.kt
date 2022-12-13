@@ -106,7 +106,7 @@ class CommandExportQcChainUsage : CommandExportQc() {
         ValidationException.requireFileType(output, InputFileType.exportTypes)
     }
 
-    override fun run0() {
+    override fun run1() {
         val fileTypes = inputFiles.map { IOUtil.extractFileType(it) }
         if (fileTypes.distinct().size != 1) {
             throw ValidationException("Input files should have the same file type, got ${fileTypes.distinct()}")

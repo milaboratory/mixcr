@@ -165,7 +165,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
 
     var addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
-    override fun run0() {
+    override fun run1() {
         val samples = inputFiles
         val chains = this.chains?.let { ChainsFilter.parseChainsList(this.chains) }
         val criteria = OverlapUtil.parseCriteria(overlapCriteria)
