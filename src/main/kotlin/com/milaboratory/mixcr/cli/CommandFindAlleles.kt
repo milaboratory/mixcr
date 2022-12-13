@@ -337,6 +337,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                                     writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
                                 }
                             }
+
                             else -> {
                                 val range = Range(
                                     gene.partitioning.firstAvailablePosition,
@@ -400,6 +401,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             printAllelesMutationsOutput(
                 resultLibrary,
                 reportBuilder.overallAllelesStatistics,
+                report,
                 allelesMutationsOutput
             )
         }
@@ -410,6 +412,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private fun printAllelesMutationsOutput(
         resultLibrary: VDJCLibrary,
         allelesStatistics: OverallAllelesStatistics,
+        report: FindAllelesReport,
         allelesMutationsOutput: Path
     ) {
         PrintStream(allelesMutationsOutput.toFile()).use { output ->
@@ -417,6 +420,11 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 this["alleleName"] = { it.name }
                 this["geneName"] = { it.geneName }
                 this["type"] = { it.geneType }
+                this["enoughInfo"] = { gene ->
+                    val sourceOfAllele = gene.data.meta[metaKeyAlleleVariantOf]?.first() ?: gene.name
+                    val history = report.searchHistoryForBCells[sourceOfAllele]
+                    history?.alleles?.result?.isNotEmpty() ?: false
+                }
                 this[metaKeyForAlleleMutationsReliableRanges] = { gene ->
                     gene.data.meta[metaKeyForAlleleMutationsReliableRanges]
                 }

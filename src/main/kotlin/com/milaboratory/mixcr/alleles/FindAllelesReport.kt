@@ -41,7 +41,7 @@ class FindAllelesReport(
     outputFiles: Array<String>,
     executionTimeMillis: Long?,
     version: String,
-    private val searchHistoryForBCells: Map<String, SearchHistoryForBCells>,
+    val searchHistoryForBCells: Map<String, SearchHistoryForBCells>,
     private val clonesCountWithNoChangeOfScore: Long,
     private val clonesCountWithNegativeScoreChange: Long,
     private val clonesScoreDeltaStats: MiXCRCommandReport.StandardStats,
@@ -71,6 +71,13 @@ class FindAllelesReport(
                     alleles.result.isEmpty()
                 }
                 .keys
+        )
+        helper.writePercentAndAbsoluteField(
+            "Genes with enough information for allele search",
+            searchHistoryForBCells.values.count { (alleles) ->
+                alleles.result.isNotEmpty()
+            }.toLong(),
+            searchHistoryForBCells.size.toLong()
         )
         helper.writeField("The same mutations in almost all clones, but not enough naive clones",
             searchHistoryForBCells
