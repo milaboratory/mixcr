@@ -274,9 +274,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             .setOutputFiles(outputFiles)
             .setStartMillis(System.currentTimeMillis())
 
-        val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { path ->
-            ClnsReader(path, vdjcLibraryRegistry)
+            ClnsReader(path, VDJCLibraryRegistry.getDefault())
         }
 
         reportBuilder.totalClonesProcessed = datasets.sumOf { it.numberOfClones() }

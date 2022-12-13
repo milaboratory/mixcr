@@ -197,7 +197,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .map { Paths.get(it) }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
-            throw ValidationException("Output clns files are not uniq: $clnsFiles")
+            var message = "Output clns files are not uniq: $clnsFiles"
+            message += "\nTry to use `{file_name}` and/or `{file_dir_path}` in template to get different output paths for every input. See help for more details"
+            throw ValidationException(message)
         }
         clnsFiles
     }
