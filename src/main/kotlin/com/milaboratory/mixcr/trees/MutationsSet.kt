@@ -54,19 +54,21 @@ data class MutationsSet private constructor(
 
     class SerializerImpl : BasicSerializer<MutationsSet>() {
         override fun write(output: PrimitivO, obj: MutationsSet) {
-            output.writeMap(obj.mutations.V.mutationsOutsideOfCDR3)
+            output.writeMap(obj.mutations.V.mutationsOutsideOfCDR3, { writeObject(it) }, { writeObject(it) })
             output.writeObject(obj.mutations.V.partInCDR3)
             output.writeObject(obj.NDNMutations)
             output.writeObject(obj.mutations.J.partInCDR3)
-            output.writeMap(obj.mutations.J.mutationsOutsideOfCDR3)
+            output.writeMap(obj.mutations.J.mutationsOutsideOfCDR3, { writeObject(it) }, { writeObject(it) })
         }
 
         override fun read(input: PrimitivI): MutationsSet {
-            val VMutations = input.readMap<GeneFeature, Mutations<NucleotideSequence>>()
+            val VMutations: Map<GeneFeature, Mutations<NucleotideSequence>> =
+                input.readMap({ readObjectRequired() }, { readObjectRequired() })
             val VPartInCDR3 = input.readObjectRequired<PartInCDR3>()
             val NDNMutations = input.readObjectRequired<NDNMutations>()
             val JPartInCDR3 = input.readObjectRequired<PartInCDR3>()
-            val JMutations = input.readMap<GeneFeature, Mutations<NucleotideSequence>>()
+            val JMutations: Map<GeneFeature, Mutations<NucleotideSequence>> =
+                input.readMap({ readObjectRequired() }, { readObjectRequired() })
             return MutationsSet(
                 VGeneMutations(
                     VMutations,

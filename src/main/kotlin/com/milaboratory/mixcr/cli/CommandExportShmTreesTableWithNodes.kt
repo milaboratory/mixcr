@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.asSequence
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -22,7 +23,6 @@ import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wrapper
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
-import com.milaboratory.primitivio.asSequence
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec

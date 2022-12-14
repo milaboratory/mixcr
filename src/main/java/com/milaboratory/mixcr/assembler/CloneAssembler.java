@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.VoidProcessor;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.core.Range;
@@ -362,7 +362,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         );
     }
 
-    public OutputPortCloseable<ReadToCloneMapping> getAssembledReadsPort() {
+    public OutputPort<ReadToCloneMapping> getAssembledReadsPort() {
         return new AssembledReadsPort(globalLogger.createEventsPort(), deferredAlignmentsLogger == null ? null : deferredAlignmentsLogger.createEventsPort(), idMapping, preClustered);
     }
 

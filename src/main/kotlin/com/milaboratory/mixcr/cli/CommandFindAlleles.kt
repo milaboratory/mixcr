@@ -13,6 +13,7 @@
 
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.asOutputPort
 import com.milaboratory.core.Range
 import com.milaboratory.core.io.sequence.fasta.FastaRecord
 import com.milaboratory.core.io.sequence.fasta.FastaWriter
@@ -40,8 +41,6 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
-import com.milaboratory.primitivio.port
-import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
@@ -49,6 +48,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
@@ -369,25 +369,22 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 cloneReader.header.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
-                val withRecalculatedScores = port.withProgress(
-                    cloneReader.numberOfClones().toLong(),
-                    progressAndStage,
-                    "Recalculating scores ${inputFiles[i]}"
-                ) { clones ->
-                    cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
-                }
-                if (outputClnsOptions.outputTemplate != null) {
-                    withRecalculatedScores.port.withProgress(
-                        cloneReader.numberOfClones().toLong(),
-                        progressAndStage,
-                        "Realigning ${inputFiles[i]}"
-                    ) { clonesWithScores ->
-                        val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
-                        outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
-                        val callback = outputClnsFiles[i].toFile()
-                            .writeMappedClones(mapperClones, resultLibrary, cloneReader)
-                        writerCloseCallbacks += callback
+                val withRecalculatedScores = port.withExpectedSize(cloneReader.numberOfClones().toLong())
+                    .reportProgress(progressAndStage, "Recalculating scores ${inputFiles[i]}")
+                    .use { clones ->
+                        cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
                     }
+                if (outputClnsOptions.outputTemplate != null) {
+                    withRecalculatedScores.asOutputPort()
+                        .withExpectedSize(cloneReader.numberOfClones().toLong())
+                        .reportProgress(progressAndStage, "Realigning ${inputFiles[i]}")
+                        .use { clonesWithScores ->
+                            val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
+                            outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
+                            val callback = outputClnsFiles[i].toFile()
+                                .writeMappedClones(mapperClones, resultLibrary, cloneReader)
+                            writerCloseCallbacks += callback
+                        }
                 }
             }
         }

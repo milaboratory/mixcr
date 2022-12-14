@@ -12,10 +12,9 @@
 package com.milaboratory.mixcr.assembler;
 
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 
-public final class AlignmentsMappingMerger implements OutputPortCloseable<VDJCAlignments> {
+public final class AlignmentsMappingMerger implements OutputPort<VDJCAlignments> {
     final OutputPort<VDJCAlignments> alignments;
     final OutputPort<ReadToCloneMapping> readToCloneMappings;
     ReadToCloneMapping lastMapping;

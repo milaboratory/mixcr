@@ -12,6 +12,11 @@
 package com.milaboratory.mixcr.alleles
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.asSequence
+import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.mapInParallel
+import cc.redberry.pipe.util.mapInParallelOrdered
+import cc.redberry.pipe.util.toList
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.alignment.AlignmentScoring
@@ -29,11 +34,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.primitivio.asSequence
-import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.mapInParallel
-import com.milaboratory.primitivio.mapInParallelOrdered
-import com.milaboratory.primitivio.toList
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
@@ -55,7 +55,7 @@ class CloneRebuild(
     assemblingFeatures: GeneFeatures,
     private val threads: Int,
     cloneFactoryParameters: CloneFactoryParameters,
-    featuresToAlign: Map<GeneType, GeneFeature>
+    featuresToAlign: Map<GeneType, GeneFeature?>
 ) {
     private val cloneFactory = CloneFactory(
         cloneFactoryParameters,

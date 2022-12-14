@@ -12,6 +12,17 @@
 package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.buffered
+import cc.redberry.pipe.util.filter
+import cc.redberry.pipe.util.flatMap
+import cc.redberry.pipe.util.flatten
+import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.mapInParallelOrdered
+import cc.redberry.pipe.util.mapNotNull
+import cc.redberry.pipe.util.synchronized
+import cc.redberry.pipe.util.toList
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
@@ -20,31 +31,22 @@ import com.milaboratory.mixcr.basictypes.tag.SequenceTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.cached
-import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.flatMap
-import com.milaboratory.primitivio.flatten
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.groupBy
-import com.milaboratory.primitivio.map
-import com.milaboratory.primitivio.mapInParallelOrdered
-import com.milaboratory.primitivio.mapNotNull
-import com.milaboratory.primitivio.port
+import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
-import com.milaboratory.primitivio.sort
 import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.cached
+import com.milaboratory.util.pairComparator
+import com.milaboratory.util.sortOnDisk
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import java.util.*
 
 class SingleCellTreeBuilder(
     private val parameters: SHMTreeBuilderParameters.SingleCell.SimpleClustering,
@@ -66,19 +68,22 @@ class SingleCellTreeBuilder(
 
         clones
             .groupByCellBarcodes(cellTageIndex)
+            .synchronized()
             .formCellGroups()
             .cached(
                 tempDest.addSuffix("tree.builder.sc.cellGroups"),
                 stateBuilder,
                 blockSize = 100
-            ) { cache ->
+            )
+            .use { cache ->
                 val cellBarcodesToGroupChainPair = mutableMapOf<CellBarcodeWithDatasetId, ChainPairKey>()
-                cache()
+                cache.createPort()
                     .groupCellsByChainPairs()
                     //on resolving intersection prefer larger groups
-                    .sort(
+                    .sortOnDisk(
                         Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed(),
-                        tempDest.resolveFile("tree.builder.sc.sort_by_cell_barcodes_count")
+                        tempFile = tempDest.resolveFile("tree.builder.sc.sort_by_cell_barcodes_count"),
+                        chunkSize = 1024 * 1024
                     ) { sortedCellGroups ->
                         //decision about every barcode, to what pair of heavy and light chains it belongs
                         sortedCellGroups.forEach { cellGroup ->
@@ -100,17 +105,19 @@ class SingleCellTreeBuilder(
                 val clustersBuilder = when (parameters.algorithm) {
                     is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.BronKerbosch ->
                         ClustersBuilder.BronKerbosch(clusterPredictor)
+
                     is SHMTreeBuilderParameters.ClusterizationAlgorithmForSingleCell.SingleLinkage ->
                         ClustersBuilder.SingleLinkage(clusterPredictor)
                 }
 
-                val result = cache()
+                val result = cache.createPort()
                     //read clones with barcodes and group them accordingly to decisions
                     .clustersWithSameVJAndCDR3Length(cellBarcodesToGroupChainPair)
                     .flatMap { cellGroups ->
                         val rebasedChainPairs = groupDuplicatesAndRebaseFromGermline(cellGroups)
-                        clustersBuilder.buildClusters(rebasedChainPairs).port
+                        clustersBuilder.buildClusters(rebasedChainPairs).asOutputPort()
                     }
+                    .buffered(1) //also make take() from upstream synchronized
                     .mapInParallelOrdered(threads) { clusterOfCells ->
                         //TODO build linked topology
                         //TODO what to do with the same clones that exists in several nodes because mutations was in other chain
@@ -182,14 +189,12 @@ class SingleCellTreeBuilder(
                     .first { it.clone.asVJBase() == chainPairKey.light }
             )
         }
-        .groupBy(
+        .groupByOnDisk(
             stateBuilder,
             tempDest.addSuffix("tree.builder.sc.group_by_found_chain_pairs"),
-            GroupingCriteria.groupBy(
-                Comparator.comparing({ (first, _): Pair<VJBase, VJBase> -> first }, VJBase.comparator)
-                    .thenComparing({ it.second }, VJBase.comparator)
-            ) { it.heavy.clone.asVJBase() to it.light.clone.asVJBase() }
-        )
+            pairComparator(VJBase.comparator)
+        ) { it.heavy.clone.asVJBase() to it.light.clone.asVJBase() }
+        .map { it.toList() }
 
     private fun OutputPort<CellGroup>.groupCellsByChainPairs(): OutputPort<GroupOfCells> =
         flatMap { cellGroup ->
@@ -205,27 +210,19 @@ class SingleCellTreeBuilder(
                         cellGroup.cellBarcode
                     )
                 }
-            }.port
+            }.asOutputPort()
         }
             //group by chain pairs. Groups will have intersection
-            .groupBy(
+            .groupByOnDisk(
                 stateBuilder,
                 tempDest.addSuffix("tree.builder.sc.group_cells_by_chain_pairs"),
-                object : GroupingCriteria<ChainPairKeyWithCellBarcode> {
-                    override fun hashCodeForGroup(entity: ChainPairKeyWithCellBarcode): Int =
-                        Objects.hash(entity.chainPairKey)
-
-                    override val comparator: Comparator<ChainPairKeyWithCellBarcode> = Comparator
-                        .comparing(
-                            { it.chainPairKey },
-                            Comparator
-                                .comparing({ (heavy, _): ChainPairKey -> heavy }, VJBase.comparator)
-                                .thenComparing({ it.light }, VJBase.comparator)
-                        )
-                }
-            )
+                Comparator
+                    .comparing({ (heavy, _): ChainPairKey -> heavy }, VJBase.comparator)
+                    .thenComparing({ it.light }, VJBase.comparator)
+            ) { it.chainPairKey }
             //we search for clusters, so we not need groups with size 1
-            .filter { it.size > 1 }
+            .filter { it.count > 1 }
+            .map { it.toList() }
             .map { chainPairKeys ->
                 GroupOfCells(
                     chainPairKeys.first().chainPairKey,
@@ -267,14 +264,14 @@ class SingleCellTreeBuilder(
                     .map { (cellBarcode, umiCount) ->
                         CloneAndCellTag(clone, CellBarcodeWithDatasetId(cellBarcode, datasetId), umiCount)
                     }
-                    .port
+                    .asOutputPort()
             }
-            .groupBy(
+            .groupByOnDisk(
                 stateBuilder,
                 tempDest.addSuffix("tree.builder.sc.group_by_cell_barcodes"),
-                GroupingCriteria.groupBy(CellBarcodeWithDatasetId.comparator) { it.cellBarcode }
-            )
-
+                CellBarcodeWithDatasetId.comparator
+            ) { it.cellBarcode }
+            .map { it.toList() }
 }
 
 private fun Clone.asVJBase() = VJBase(
@@ -375,8 +372,8 @@ class CellGroup(
         }
 
         override fun read(input: PrimitivI): CellGroup {
-            val heavy = input.readList<Clone>(PrimitivI::readObjectRequired)
-            val light = input.readList<Clone>(PrimitivI::readObjectRequired)
+            val heavy = input.readList<Clone> { readObjectRequired() }
+            val light = input.readList<Clone> { readObjectRequired() }
             val cellBarcode = input.readObjectRequired<CellBarcodeWithDatasetId>()
             return CellGroup(
                 heavy,
@@ -427,7 +424,7 @@ class GroupOfCells(
 
         override fun read(input: PrimitivI): GroupOfCells {
             val chainPairKey = input.readObjectRequired<ChainPairKey>()
-            val cellBarcodes = input.readList<CellBarcodeWithDatasetId>(PrimitivI::readObjectRequired)
+            val cellBarcodes = input.readList<CellBarcodeWithDatasetId> { readObjectRequired() }
             return GroupOfCells(
                 chainPairKey,
                 cellBarcodes

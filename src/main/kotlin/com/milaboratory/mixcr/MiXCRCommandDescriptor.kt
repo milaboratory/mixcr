@@ -22,10 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
-import com.milaboratory.mitool.helpers.readList
-import com.milaboratory.mitool.helpers.writeList
 import com.milaboratory.mitool.pattern.search.BasicSerializer
-import com.milaboratory.mitool.pattern.search.readObject
 import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport
@@ -49,6 +46,9 @@ import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
+import com.milaboratory.primitivio.readList
+import com.milaboratory.primitivio.readObjectRequired
+import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.ReportHelper
 import kotlin.reflect.KClass
 
@@ -434,11 +434,11 @@ class StepDataCollection<D : Any>(
 
     object SerializerImpl {
         fun writeRecursive(output: PrimitivO, obj: StepDataCollection<*>) {
-            output.writeList(obj.upstreamCollections) { (fileName, collection) ->
+            output.writeCollection(obj.upstreamCollections) { (fileName, collection) ->
                 writeObject(fileName)
                 writeRecursive(output, collection)
             }
-            output.writeList(obj.perStepData) {
+            output.writeCollection(obj.perStepData) {
                 writeUTF(it.first)
                 writeObject(it.second)
             }
@@ -447,7 +447,7 @@ class StepDataCollection<D : Any>(
         fun <T : Any> readRecursive(input: PrimitivI, withFileNames: Boolean = true): StepDataCollection<T> {
             val upstreams = input.readList { index ->
                 val fileName = if (withFileNames) {
-                    readObject<String>()
+                    readObjectRequired()
                 } else {
                     index.toString()
                 }
@@ -456,7 +456,7 @@ class StepDataCollection<D : Any>(
             }
             val steps = input.readList {
                 val step = readUTF()
-                val content = readObject<ByteArray>()
+                val content = readObjectRequired<ByteArray>()
                 step to content
             }
             return StepDataCollection(upstreams, steps)

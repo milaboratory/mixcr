@@ -11,16 +11,16 @@
  */
 package com.milaboratory.mixcr.assembler;
 
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import gnu.trove.map.hash.TIntIntHashMap;
 
-public final class AssembledReadsPort implements OutputPortCloseable<ReadToCloneMapping> {
-    final OutputPortCloseable<AssemblerEvent> initialEvents, mappingEvents;
+public final class AssembledReadsPort implements OutputPort<ReadToCloneMapping> {
+    final OutputPort<AssemblerEvent> initialEvents, mappingEvents;
     final TIntIntHashMap idMapping;
     final TIntIntHashMap preClustered;
 
-    public AssembledReadsPort(OutputPortCloseable<AssemblerEvent> initialEvents,
-                              OutputPortCloseable<AssemblerEvent> mappingEvents,
+    public AssembledReadsPort(OutputPort<AssemblerEvent> initialEvents,
+                              OutputPort<AssemblerEvent> mappingEvents,
                               TIntIntHashMap idMapping,
                               TIntIntHashMap preClustered) {
         this.initialEvents = initialEvents;

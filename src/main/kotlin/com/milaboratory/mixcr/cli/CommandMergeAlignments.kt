@@ -11,12 +11,11 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
@@ -101,7 +100,7 @@ class CommandMergeAlignments : MiXCRCommandWithOutputs() {
     }
 
     // Not thread-safe !
-    private class MultiReader(val files: List<Path>) : OutputPort<VDJCAlignments>, CanReportProgress, AutoCloseable {
+    private class MultiReader(val files: List<Path>) : OutputPortWithProgress<VDJCAlignments> {
         init {
             require(files.isNotEmpty())
         }

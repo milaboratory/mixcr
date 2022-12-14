@@ -13,13 +13,12 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.OutputPortCloseable;
 import com.milaboratory.mixcr.cli.ApplicationException;
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
-import com.milaboratory.util.CanReportProgress;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.OutputPortWithProgress;
 import gnu.trove.map.hash.TIntIntHashMap;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
@@ -271,7 +270,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
      * Constructs output port to read clones one by one as a stream
      */
     @Override
-    public OutputPortCloseable<Clone> readClones() {
+    public OutputPort<Clone> readClones() {
         return input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
     }
 
@@ -280,9 +279,9 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
      *
      * @param cloneIndex index of clone; -1 to read unassembled alignments
      */
-    public OutputPortCloseable<VDJCAlignments> readAlignmentsOfClone(int cloneIndex) {
+    public OutputPort<VDJCAlignments> readAlignmentsOfClone(int cloneIndex) {
         if (cloneIndex == -1 && !cloneIdIndex.containsKey(-1))
-            return CUtils.EMPTY_OUTPUT_PORT_CLOSEABLE;
+            return CUtils.emptyOutputPort();
         return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class,
                 index[cloneIdIndex.get(cloneIndex)],
                 HEADER_ACTION_STOP_AT_ALIGNMENT_BLOCK_END);
@@ -291,17 +290,17 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
     /**
      * Constructs output port to read all alignments form the file. Alignments are sorted by cloneIndex.
      */
-    public OutputPortCloseable<VDJCAlignments> readAllAlignments() {
+    public OutputPort<VDJCAlignments> readAllAlignments() {
         return input.beginRandomAccessPrimitivIBlocks(VDJCAlignments.class, index[0]);
     }
 
     /**
      * Constructs output port to read alignments that are not attached to any clone. Alignments are sorted by
      * cloneIndex.
-     *
+     * <p>
      * Returns: readAlignmentsOfClone(-1)
      */
-    public OutputPortCloseable<VDJCAlignments> readNotAssembledAlignments() {
+    public OutputPort<VDJCAlignments> readNotAssembledAlignments() {
         return readAlignmentsOfClone(-1);
     }
 
@@ -314,7 +313,7 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
     }
 
     public final class CloneAlignmentsPort
-            implements OutputPort<CloneAlignments>, CanReportProgress {
+            implements OutputPortWithProgress<CloneAlignments> {
         private final AtomicLong processedAlignments = new AtomicLong();
         private final CloneSet fakeCloneSet;
         private final PrimitivIBlocks<Clone>.Reader clones;

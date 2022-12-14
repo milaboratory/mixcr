@@ -11,6 +11,10 @@
  */
 package com.milaboratory.mixcr.cli.qc
 
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.flatten
+import cc.redberry.pipe.util.mapInParallelOrdered
+import cc.redberry.pipe.util.toList
 import com.milaboratory.miplots.ExportType
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.miplots.writePDF
@@ -18,10 +22,6 @@ import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.qc.Coverage.coveragePlot
-import com.milaboratory.primitivio.flatten
-import com.milaboratory.primitivio.mapInParallelOrdered
-import com.milaboratory.primitivio.port
-import com.milaboratory.primitivio.toList
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec
@@ -102,7 +102,7 @@ class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
 
     override fun run1() {
         val inputFiles = inputFiles.map { it }
-        val plots = inputFiles.port
+        val plots = inputFiles.asOutputPort()
             .mapInParallelOrdered(Runtime.getRuntime().availableProcessors()) {
                 coveragePlot(it, showAlignmentBoundaries)
             }

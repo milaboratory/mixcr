@@ -14,14 +14,12 @@ package com.milaboratory.mixcr.basictypes
 import com.milaboratory.mitool.data.CriticalThresholdCollection
 import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.pattern.search.BasicSerializer
-import com.milaboratory.mitool.pattern.search.readObject
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
-import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -29,7 +27,7 @@ import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.readMap
+import com.milaboratory.primitivio.readEnumMap
 import com.milaboratory.primitivio.readObjectOptional
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeMap
@@ -65,7 +63,7 @@ data class MiXCRHeader(
     /** Aligner parameters */
     val alignerParameters: VDJCAlignerParameters?,
     /** Aligner parameters */
-    val featuresToAlignMap: Map<GeneType, GeneFeature>,
+    val featuresToAlignMap: Map<GeneType, GeneFeature?>,
     /** Clone assembler parameters  */
     val assemblerParameters: CloneAssemblerParameters? = null,
     /** Library produced by search of alleles */
@@ -126,7 +124,7 @@ data class MiXCRHeader(
 
         override fun read(input: PrimitivI): MiXCRHeader {
             val paramsSpec = input.readObjectRequired<MiXCRParamsSpec>()
-            val stepParams = input.readObject<MiXCRStepParams>()
+            val stepParams = input.readObjectRequired<MiXCRStepParams>()
             val tagsInfo = input.readObjectRequired<TagsInfo>()
             val alignerParameters = input.readObjectRequired<VDJCAlignerParameters>()
             val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
@@ -161,7 +159,7 @@ data class MiXCRHeader(
         override fun read(input: PrimitivI): MiXCRHeader {
             val inputHash = input.readObjectOptional<String>()
             val paramsSpec = input.readObjectRequired<MiXCRParamsSpec>()
-            val stepParams = input.readObject<MiXCRStepParams>()
+            val stepParams = input.readObjectRequired<MiXCRStepParams>()
             val tagsInfo = input.readObjectRequired<TagsInfo>()
             val alignerParameters = input.readObjectRequired<VDJCAlignerParameters>()
             val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
@@ -188,7 +186,7 @@ data class MiXCRHeader(
             output.writeObject(obj.stepParams)
             output.writeObject(obj.tagsInfo)
             output.writeObject(obj.alignerParameters)
-            output.writeMap(TreeMap(obj.featuresToAlignMap))
+            output.writeMap(obj.featuresToAlignMap, Comparator.naturalOrder(), { writeObject(it) }, { writeObject(it) })
             output.writeObject(obj.assemblerParameters)
             output.writeObject(obj.foundAlleles)
             output.writeObject(obj.allFullyCoveredBy)
@@ -197,10 +195,11 @@ data class MiXCRHeader(
         override fun read(input: PrimitivI): MiXCRHeader {
             val inputHash = input.readObjectOptional<String>()
             val paramsSpec = input.readObjectRequired<MiXCRParamsSpec>()
-            val stepParams = input.readObject<MiXCRStepParams>()
+            val stepParams = input.readObjectRequired<MiXCRStepParams>()
             val tagsInfo = input.readObjectRequired<TagsInfo>()
             val alignerParameters = input.readObjectOptional<VDJCAlignerParameters>()
-            val featuresToAlign = input.readMap<GeneType, GeneFeature>()
+            val featuresToAlign: Map<GeneType, GeneFeature?> =
+                input.readEnumMap({ readObjectRequired() }, { readObjectOptional() })
             val assemblerParameters = input.readObjectOptional<CloneAssemblerParameters>()
             val foundAlleles = input.readObjectOptional<FoundAlleles>()
             val allFullyCoveredBy = input.readObjectOptional<GeneFeatures>()
@@ -243,8 +242,8 @@ data class MiXCRFooter(
             }
 
             override fun read(input: PrimitivI): MiXCRFooter {
-                val reports = input.readObject<MiXCRStepReports>()
-                val thresholds = input.readObject<CriticalThresholdCollection>()
+                val reports = input.readObjectRequired<MiXCRStepReports>()
+                val thresholds = input.readObjectRequired<CriticalThresholdCollection>()
                 return MiXCRFooter(reports, thresholds)
             }
 

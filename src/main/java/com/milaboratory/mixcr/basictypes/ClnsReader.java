@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.cli.ApplicationException;
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.primitivio.PrimitivI;
@@ -129,7 +129,7 @@ public class ClnsReader implements CloneReader, AutoCloseable {
     }
 
     @Override
-    public OutputPortCloseable<Clone> readClones() {
+    public OutputPort<Clone> readClones() {
         return input.beginRandomAccessPrimitivIBlocks(Clone.class, clonesPosition);
     }
 

@@ -20,8 +20,6 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitool.consensus.ConsensusResult;
 import com.milaboratory.mitool.consensus.GConsensusAssembler;
-import com.milaboratory.mitool.helpers.GroupOP;
-import com.milaboratory.mitool.helpers.PipeKt;
 import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.assembler.VDJCGeneAccumulator;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
@@ -31,6 +29,8 @@ import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import com.milaboratory.mixcr.basictypes.tag.TagTuple;
+import com.milaboratory.primitivio.GroupByPipeKt;
+import com.milaboratory.primitivio.GroupOP;
 import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TObjectDoubleIterator;
@@ -79,8 +79,8 @@ public final class PreCloneAssembler {
         this.assemblingFeatures = assemblingFeatures;
         this.groupingLevel = groupingLevel;
         this.groupingFunction = groupingFunction(groupingLevel);
-        this.alignmentsReader1 = PipeKt.group(alignmentsReader1, groupingFunction);
-        this.alignmentsReader2 = PipeKt.group(alignmentsReader2, groupingFunction);
+        this.alignmentsReader1 = GroupByPipeKt.groupAlreadySorted(alignmentsReader1, groupingFunction);
+        this.alignmentsReader2 = GroupByPipeKt.groupAlreadySorted(alignmentsReader2, groupingFunction);
         this.relativeMinScores = relativeMinScores;
     }
 

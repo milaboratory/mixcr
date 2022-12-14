@@ -11,11 +11,11 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.OutputPortWithProgress;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
@@ -46,16 +46,6 @@ public final class OverlapUtil {
                 OutputPortWithProgress<List<List<Clone>>> port = CloneSetOverlap.overlap(by, readers);
                 SimpleProcessorWrapper<List<List<Clone>>, OverlapGroup<Clone>> processor = new SimpleProcessorWrapper<>(port, OverlapGroup::new);
                 return new OutputPortWithProgress<OverlapGroup<Clone>>() {
-                    @Override
-                    public long currentIndex() {
-                        return port.currentIndex();
-                    }
-
-                    @Override
-                    public void finish() {
-
-                    }
-
                     @Override
                     public void close() {
                         processor.close();
@@ -131,9 +121,9 @@ public final class OverlapUtil {
             }
 
             @Override
-            public OutputPortCloseable<Clone> readClones() {
-                OutputPortCloseable<Clone> in = inner.readClones();
-                return new OutputPortCloseable<Clone>() {
+            public OutputPort<Clone> readClones() {
+                OutputPort<Clone> in = inner.readClones();
+                return new OutputPort<Clone>() {
                     @Override
                     public void close() {
                         in.close();

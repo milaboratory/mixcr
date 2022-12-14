@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.extractFileInfo
@@ -25,7 +26,6 @@ import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.util.OverlapBrowser
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature

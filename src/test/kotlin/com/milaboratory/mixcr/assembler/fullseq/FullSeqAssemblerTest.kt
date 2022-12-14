@@ -15,7 +15,7 @@ import cc.redberry.pipe.CUtils
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SequenceRead
-import com.milaboratory.core.io.sequence.SequenceReaderCloseable
+import com.milaboratory.core.io.sequence.SequenceReader
 import com.milaboratory.core.io.sequence.SingleReadImpl
 import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -165,9 +165,8 @@ class FullSeqAssemblerTest {
         val reads: MutableList<SequenceRead> = ArrayList()
         for (i in readsOrig.indices) reads.add(readsOrig[perm[i]])
         val params = RunMiXCRAnalysis(
-            object : SequenceReaderCloseable<SequenceRead> {
+            object : SequenceReader<SequenceRead> {
                 var counter = 0
-                override fun close() {}
                 override fun getNumberOfReads(): Long {
                     return counter.toLong()
                 }
