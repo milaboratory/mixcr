@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Spec
 
@@ -23,9 +22,6 @@ abstract class MiXCRCommand : Runnable {
     val commandLineArguments: String
         get() = spec.commandLine().parseResult.originalArgs().joinToString(" ")
 
-    @Mixin
-    private lateinit var logger: logger
-
     /** Validate injected parameters and options */
     open fun validate() {
     }
@@ -34,11 +30,9 @@ abstract class MiXCRCommand : Runnable {
     open fun initialize() {
     }
 
-    override fun run() {
+    final override fun run() {
         validate()
         initialize()
-        logger.printWarningQueue()
-        logger.running = true
         run0()
     }
 

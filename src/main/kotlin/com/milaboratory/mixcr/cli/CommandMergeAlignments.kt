@@ -86,7 +86,7 @@ class CommandMergeAlignments : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(output, InputFileType.VDJCA)
     }
 
-    override fun run0() {
+    override fun run1() {
         MultiReader(inputFiles).use { reader ->
             VDJCAlignmentsWriter(output).use { writer ->
                 SmartProgressReporter.startProgressReport("Merging", reader)

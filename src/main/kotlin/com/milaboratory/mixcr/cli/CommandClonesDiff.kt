@@ -93,7 +93,7 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(in2, InputFileType.CLNX)
     }
 
-    override fun run0() {
+    override fun run1() {
         (report?.let { PrintStream(it.toFile()) } ?: System.out).use { report ->
             val cs1 = CloneSetIO.read(in1)
             val cs2 = CloneSetIO.read(in2)

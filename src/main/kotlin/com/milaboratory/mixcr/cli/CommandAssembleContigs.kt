@@ -155,7 +155,7 @@ object CommandAssembleContigs {
             ValidationException.requireFileType(outputFile, InputFileType.CLNS)
         }
 
-        override fun run0() {
+        override fun run1() {
             val beginTimestamp = System.currentTimeMillis()
 
             val cmdParams: Params

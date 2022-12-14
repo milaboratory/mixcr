@@ -152,7 +152,7 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(input, InputFileType.CLNX)
     }
 
-    override fun run0() {
+    override fun run1() {
         val filter = mkFilter()
         var total: Long = 0
         var filtered: Long = 0

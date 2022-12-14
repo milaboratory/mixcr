@@ -87,8 +87,8 @@ assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount
 assert "head -n 1 alleles/report.json | jq -r .foundAlleles" "3"
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
-assert "grep 'IGHV2-70' alleles/description.tsv | awk '{print \$6}'" "ST311G\nSG170AST259CST311GSA335T"
-assert "grep 'IGHJ6' alleles/description.tsv | awk '{print \$6}'" "SG37TSG38AST39CSC55A"
+assert "grep 'IGHV2-70' alleles/description.tsv | awk '{print \$7}'" "ST311G\nSG170AST259CST311GSA335T"
+assert "grep 'IGHJ6' alleles/description.tsv | awk '{print \$7}'" "SG37TSG38AST39CSC55A"
 
 # biggest tree
 # `tail +2` - skip first line with column names

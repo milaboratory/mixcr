@@ -129,7 +129,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(in2, InputFileType.VDJCA)
     }
 
-    override fun run0() {
+    override fun run1() {
         VDJCAlignmentsReader(in1).use { reader1 ->
             VDJCAlignmentsReader(in2).use { reader2 ->
                 (onlyFirst?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { only1 ->

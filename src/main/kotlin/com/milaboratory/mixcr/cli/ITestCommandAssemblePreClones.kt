@@ -59,7 +59,7 @@ class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
     override val outputFiles
         get() = files.subList(1, 3)
 
-    override fun run0() {
+    override fun run1() {
         var params = PreCloneAssemblerParameters.getDefaultParameters(cellLevel)
         if (preCloneAssemblerOverrides.isNotEmpty()) {
             params = JsonOverrider.override(

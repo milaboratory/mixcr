@@ -300,7 +300,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
             availableChains.intersect(ChainsFilter.parseChainsList(this.chains))
     }
 
-    override fun run0() {
+    override fun run1() {
         val chainsColumn = chainsColumn()
         val results: List<PaResultByGroup> = groupSamples().flatMap { group ->
             val chainsForGroup = when {
