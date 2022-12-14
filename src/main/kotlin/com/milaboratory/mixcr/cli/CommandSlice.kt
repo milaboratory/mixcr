@@ -118,7 +118,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
         )
     }
 
-    override fun run0() {
+    override fun run1() {
         when (IOUtil.extractFileType(input)) {
             VDJCA -> sliceVDJCA()
             CLNS -> sliceClns()

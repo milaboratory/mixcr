@@ -130,7 +130,7 @@ object CommandAssemblePartial {
             ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
         }
 
-        override fun run0() {
+        override fun run1() {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
             val cmdParams: Params

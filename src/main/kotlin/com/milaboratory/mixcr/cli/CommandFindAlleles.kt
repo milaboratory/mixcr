@@ -197,7 +197,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .map { Paths.get(it) }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
-            throw ValidationException("Output clns files are not uniq: $clnsFiles")
+            var message = "Output clns files are not uniq: $clnsFiles"
+            message += "\nTry to use `{file_name}` and/or `{file_dir_path}` in template to get different output paths for every input. See help for more details"
+            throw ValidationException(message)
         }
         clnsFiles
     }
@@ -238,7 +240,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         findAllelesParameters
     }
 
-    override fun run0() {
+    override fun run1() {
         val clonesFilter: AllelesBuilder.ClonesFilter = object : AllelesBuilder.ClonesFilter {
             override fun match(clone: Clone, tagsInfo: TagsInfo): Boolean {
                 if (findAllelesParameters.productiveOnly) {
@@ -398,6 +400,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             printAllelesMutationsOutput(
                 resultLibrary,
                 reportBuilder.overallAllelesStatistics,
+                report,
                 allelesMutationsOutput
             )
         }
@@ -408,6 +411,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private fun printAllelesMutationsOutput(
         resultLibrary: VDJCLibrary,
         allelesStatistics: OverallAllelesStatistics,
+        report: FindAllelesReport,
         allelesMutationsOutput: Path
     ) {
         PrintStream(allelesMutationsOutput.toFile()).use { output ->
@@ -415,6 +419,11 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 this["alleleName"] = { it.name }
                 this["geneName"] = { it.geneName }
                 this["type"] = { it.geneType }
+                this["enoughInfo"] = { gene ->
+                    val sourceOfAllele = gene.data.meta[metaKeyAlleleVariantOf]?.first() ?: gene.name
+                    val history = report.searchHistoryForBCells[sourceOfAllele]
+                    history?.alleles?.result?.isNotEmpty() ?: false
+                }
                 this[metaKeyForAlleleMutationsReliableRanges] = { gene ->
                     gene.data.meta[metaKeyForAlleleMutationsReliableRanges]
                 }

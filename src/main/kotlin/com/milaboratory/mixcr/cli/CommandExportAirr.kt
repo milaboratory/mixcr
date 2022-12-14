@@ -220,7 +220,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(out, InputFileType.TSV)
     }
 
-    override fun run0() {
+    override fun run1() {
         val extractors: List<FieldExtractor<AirrVDJCObjectWrapper>>
         val closeable: AutoCloseable
         var port: OutputPort<out VDJCObject>

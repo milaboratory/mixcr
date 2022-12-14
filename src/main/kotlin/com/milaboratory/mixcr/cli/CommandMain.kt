@@ -26,14 +26,16 @@ import picocli.CommandLine.ScopeType.INHERIT
     name = "mixcr",
     versionProvider = CommandMain.VersionProvider::class,
     scope = INHERIT,
-    sortOptions = false
+    sortOptions = false,
+    separator = " "
 )
 class CommandMain {
     @Suppress("unused", "UNUSED_PARAMETER")
     @Option(
         names = ["-v", "--version"],
         versionHelp = true,
-        description = ["Print version information and exit"]
+        description = ["Print version information and exit"],
+        order = OptionsOrder.help + 1
     )
     fun setVersionRequested(param: Boolean) {
 

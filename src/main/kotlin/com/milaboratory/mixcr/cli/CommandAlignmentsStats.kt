@@ -80,7 +80,7 @@ class CommandAlignmentsStats : MiXCRCommandWithOutputs() {
     override val outputFiles
         get() = listOfNotNull(out)
 
-    override fun run0() {
+    override fun run1() {
         val collectors = targetFeatures.map { GeneFeatureCoverageCollector(it) } +
                 targetReferencePoints.map { ReferencePointCoverageCollector(it, 40, 40) }
 

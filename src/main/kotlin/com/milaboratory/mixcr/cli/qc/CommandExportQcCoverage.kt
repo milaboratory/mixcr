@@ -100,7 +100,7 @@ class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(output, InputFileType.exportTypes)
     }
 
-    override fun run0() {
+    override fun run1() {
         val inputFiles = inputFiles.map { it }
         val plots = inputFiles.asOutputPort()
             .mapInParallelOrdered(Runtime.getRuntime().availableProcessors()) {

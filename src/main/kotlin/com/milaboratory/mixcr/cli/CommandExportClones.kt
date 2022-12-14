@@ -215,7 +215,7 @@ object CommandExportClones {
             ValidationException.requireFileType(inputFile, InputFileType.CLNX)
         }
 
-        override fun run0() {
+        override fun run1() {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val header = initialSet.header
             val (_, params) = paramsResolver.resolve(

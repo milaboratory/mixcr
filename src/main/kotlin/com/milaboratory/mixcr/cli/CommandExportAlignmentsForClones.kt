@@ -71,7 +71,7 @@ class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(out, InputFileType.VDJCA)
     }
 
-    override fun run0() {
+    override fun run1() {
         ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             VDJCAlignmentsWriter(out).use { writer ->
                 writer.writeHeader(clna.header, clna.usedGenes)

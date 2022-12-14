@@ -930,7 +930,7 @@ object CommandAlign {
                 cmdParams.trimmingWindowSize.toInt()
             )
 
-        override fun run0() {
+        override fun run1() {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
 

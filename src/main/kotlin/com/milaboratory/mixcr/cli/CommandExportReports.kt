@@ -92,7 +92,7 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
         }
     }
 
-    override fun run0() {
+    override fun run1() {
         val footer = IOUtil.extractFooter(inputPath)
         when (outputPath) {
             null -> CloseShieldOutputStream.wrap(System.out)

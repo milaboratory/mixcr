@@ -43,7 +43,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
         ValidationException.requireNoExtension(out.toString())
     }
 
-    override fun run0() {
+    override fun run1() {
         out.createDirectories()
 
         val newickTreePrinter = NewickTreePrinter<SHMTreeForPostanalysis.BaseNode> {

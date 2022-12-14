@@ -111,7 +111,7 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(out, InputFileType.exportTypes)
     }
 
-    override fun run0() {
+    override fun run1() {
         val parameters = DownsamplingParameters.parse(
             downsampling,
             CommandPa.extractTagsInfo(inputFiles, !downsampling.equals("none", ignoreCase = true)),

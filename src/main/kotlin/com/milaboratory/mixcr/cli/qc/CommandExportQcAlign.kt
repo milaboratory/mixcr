@@ -87,7 +87,7 @@ class CommandExportQcAlign : CommandExportQc() {
         ValidationException.requireFileType(output, InputFileType.exportTypes)
     }
 
-    override fun run0() {
+    override fun run1() {
         val plt = alignQc(
             inputFiles.map { it },
             !absoluteValues,

@@ -126,7 +126,7 @@ object CommandExportAlignments {
             ValidationException.requireFileType(inputFile, InputFileType.VDJCA, InputFileType.CLNA)
         }
 
-        override fun run0() {
+        override fun run1() {
             openAlignmentsPort(inputFile).use { data ->
                 val header = data.info.header
                 val (_, params) = paramsResolver.resolve(

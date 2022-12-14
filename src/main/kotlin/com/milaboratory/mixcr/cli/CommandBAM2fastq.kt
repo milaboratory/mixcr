@@ -83,7 +83,7 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
     override val outputFiles
         get() = listOf(fastq1, fastq2, fastqUnpaired)
 
-    override fun run0() {
+    override fun run1() {
         BAMReader(bamFiles, dropNonVDJ, !keepWildcards).use { converter ->
             PairedFastqWriter(fastq1.toFile(), fastq2.toFile()).use { wr ->
                 SingleFastqWriter(fastqUnpaired.toFile()).use { swr ->

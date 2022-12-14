@@ -19,6 +19,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.mixcr.basictypes.GeneFeatures
+import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter
 import com.milaboratory.mixcr.cli.postanalysis.CommandPa.CommandPostanalysisMain
@@ -224,7 +225,83 @@ object Main {
             .addSubcommand("exportAllPresets", CommandExportAllPresets::class.java)
             .addSubcommand("exportSchemas", CommandExportSchemas::class.java)
 
-        cmd.setHelpSectionRenderRecursively(SECTION_KEY_SYNOPSIS) { help ->
+        cmd.helpSectionMap.remove(SECTION_KEY_COMMAND_LIST_HEADING)
+        cmd.helpSectionMap[SECTION_KEY_COMMAND_LIST] = IHelpSectionRenderer { help ->
+            var result = help.createHeading("Base commands:\n")
+            val groupedCommands = groups.map { it.second }.flatten().toSet()
+            result += help.commandList(help.subcommands().filterKeys { it !in groupedCommands })
+            help.subcommands()
+                .forEach { (_, helpForCommand) ->
+                    if (helpForCommand.subcommands().isNotEmpty()) {
+                        val editedDescription = helpForCommand.commandSpec().usageMessage().description()
+                        editedDescription[editedDescription.size - 1] =
+                            editedDescription[editedDescription.size - 1] + " This command has subcommands, use -h to see more"
+                        helpForCommand.commandSpec().usageMessage().description(*editedDescription)
+                    }
+                }
+            groups.forEach { (groupHeader, commands) ->
+                result += help.createHeading("$groupHeader:\n")
+                result += help.commandList(help.subcommands().filterKeys { it in commands })
+            }
+            result
+        }
+
+        return cmd
+            .registerLogger()
+            .overrideSynopsysHelp()
+            .registerConvertors()
+            .registerExceptionHandlers()
+    }
+
+    private fun CommandLine.registerExceptionHandlers(): CommandLine {
+        val defaultParameterExceptionHandler = parameterExceptionHandler
+        setParameterExceptionHandler { ex, args ->
+            when (val cause = ex.cause) {
+                is ValidationException -> ex.commandLine.handleValidationException(cause)
+                else -> defaultParameterExceptionHandler.handleParseException(ex, args)
+            }
+        }
+        setExecutionExceptionHandler { ex, commandLine, _ ->
+            when (ex) {
+                is ValidationException -> commandLine.handleValidationException(ex)
+                is ApplicationException -> {
+                    commandLine.printErrorMessage(ex.message)
+                    if (ex.printHelp) {
+                        commandLine.printHelp()
+                    }
+                    if (logger.verbose) {
+                        ex.printStackTrace()
+                    }
+                    commandLine.commandSpec.exitCodeOnExecutionException()
+                }
+
+                else -> throw CommandLine.ExecutionException(
+                    commandLine,
+                    "Error while running command ${commandLine.commandName} $ex", ex
+                )
+            }
+        }
+        return this
+    }
+
+    private fun CommandLine.registerConvertors(): CommandLine {
+        registerConverter { ReferencePoint.parse(it) }
+        registerConverter { GeneFeatures.parse(it) }
+        registerConverter { GeneFeature.parse(it) }
+        registerConverter { GeneType.parse(it) }
+        registerConverter { Chains.parse(it) }
+        registerConverter { NucleotideSequence(it) }
+        registerConverter { AminoAcidSequence(it) }
+        registerConverter { arg ->
+            StandardPlots.PlotType.values().find { it.cliName == arg.lowercase() }
+                ?: throw ValidationException("unknown plot type: $arg")
+        }
+        isCaseInsensitiveEnumValuesAllowed = true
+        return this
+    }
+
+    private fun CommandLine.overrideSynopsysHelp(): CommandLine {
+        setHelpSectionRenderRecursively(SECTION_KEY_SYNOPSIS) { help ->
             val commandSpec = help.commandSpec()
             when {
                 !commandSpec.usageMessage().customSynopsis().isNullOrEmpty() -> help.customSynopsis()
@@ -235,6 +312,7 @@ object Main {
                         .thenComparing { option: OptionSpec -> option.order() },
                     false
                 )
+
                 else -> {
                     //try to use long names for options. It's too expensive to rewrite picocli code, so temporary remove short aliases from options
                     val optionsToConvert = commandSpec.options().toList()
@@ -242,7 +320,7 @@ object Main {
                             try {
                                 commandSpec.remove(it)
                                 true
-                            } catch (e: java.lang.UnsupportedOperationException) {
+                            } catch (e: UnsupportedOperationException) {
                                 check(e.message == "Cannot remove ArgSpec that is part of an ArgGroup")
                                 //can't remove option from argGroup
                                 false
@@ -269,70 +347,41 @@ object Main {
                 }
             }
         }
-
-        cmd.helpSectionMap.remove(SECTION_KEY_COMMAND_LIST_HEADING)
-        cmd.helpSectionMap[SECTION_KEY_COMMAND_LIST] = IHelpSectionRenderer { help ->
-            var result = help.createHeading("Base commands:\n")
-            val groupedCommands = groups.map { it.second }.flatten().toSet()
-            result += help.commandList(help.subcommands().filterKeys { it !in groupedCommands })
-            help.subcommands()
-                .forEach { (_, helpForCommand) ->
-                    if (helpForCommand.subcommands().isNotEmpty()) {
-                        val editedDescription = helpForCommand.commandSpec().usageMessage().description()
-                        editedDescription[editedDescription.size - 1] =
-                            editedDescription[editedDescription.size - 1] + " This command has subcommands, use -h to see more"
-                        helpForCommand.commandSpec().usageMessage().description(*editedDescription)
-                    }
-                }
-            groups.forEach { (groupHeader, commands) ->
-                result += help.createHeading("$groupHeader:\n")
-                result += help.commandList(help.subcommands().filterKeys { it in commands })
-            }
-            result
-        }
-
-        cmd.separator = " "
-        cmd.registerConverter { ReferencePoint.parse(it) }
-        cmd.registerConverter { GeneFeatures.parse(it) }
-        cmd.registerConverter { GeneFeature.parse(it) }
-        cmd.registerConverter { GeneType.parse(it) }
-        cmd.registerConverter { Chains.parse(it) }
-        cmd.registerConverter { NucleotideSequence(it) }
-        cmd.registerConverter { AminoAcidSequence(it) }
-        cmd.registerConverter { arg ->
-            StandardPlots.PlotType.values().find { it.cliName == arg.lowercase() }
-                ?: throw ValidationException("unknown plot type: $arg")
-        }
-        cmd.isCaseInsensitiveEnumValuesAllowed = true
-        val defaultParameterExceptionHandler = cmd.parameterExceptionHandler
-        cmd.setParameterExceptionHandler { ex, args ->
-            when (val cause = ex.cause) {
-                is ValidationException -> ex.commandLine.handleValidationException(cause)
-                else -> defaultParameterExceptionHandler.handleParseException(ex, args)
-            }
-        }
-        cmd.setExecutionExceptionHandler { ex, commandLine, _ ->
-            when (ex) {
-                is ValidationException -> commandLine.handleValidationException(ex)
-                is ApplicationException -> {
-                    commandLine.printErrorMessage(ex.message)
-                    if (ex.printHelp) {
-                        commandLine.printHelp()
-                    }
-                    if (logger.verbose) {
-                        ex.printStackTrace()
-                    }
-                    commandLine.commandSpec.exitCodeOnExecutionException()
-                }
-                else -> throw CommandLine.ExecutionException(
-                    commandLine,
-                    "Error while running command ${commandLine.commandName} $ex", ex
-                )
-            }
-        }
-
-        return cmd
+        return this
     }
+
+    private fun CommandLine.registerLogger(): CommandLine {
+        setExecutionStrategy { parseResult ->
+            logger.verbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
+            logger.noWarnings = parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            CommandLine.RunLast().execute(parseResult)
+        }
+
+        registerLoggerOptions(subcommands.values)
+        return this
+    }
+
+    private fun registerLoggerOptions(commandLines: Collection<CommandLine>) {
+        for (commandLine in commandLines) {
+            commandLine.commandSpec
+                .addOption(
+                    OptionSpec
+                        .builder("--no-warnings")
+                        .description("Suppress all warning messages.")
+                        .order(OptionsOrder.logger)
+                        .build()
+                )
+                .addOption(
+                    OptionSpec
+                        .builder("--verbose")
+                        .description("Verbose messages.")
+                        .order(OptionsOrder.logger + 1)
+                        .build()
+                )
+            registerLoggerOptions(commandLine.subcommands.values)
+        }
+    }
+
 
     private fun CommandLine.setHelpSectionRenderRecursively(name: String, renderer: IHelpSectionRenderer) {
         helpSectionMap[name] = renderer

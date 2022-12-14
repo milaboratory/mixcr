@@ -267,16 +267,15 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", !useLocalTemp.value)
     }
 
-    override fun run0() {
+    override fun run1() {
         val reportBuilder = BuildSHMTreeReport.Builder()
             .setCommandLine(commandLineArguments)
             .setInputFiles(inputFiles)
             .setOutputFiles(outputFiles)
             .setStartMillis(System.currentTimeMillis())
 
-        val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { path ->
-            ClnsReader(path, vdjcLibraryRegistry)
+            ClnsReader(path, VDJCLibraryRegistry.getDefault())
         }
 
         reportBuilder.totalClonesProcessed = datasets.sumOf { it.numberOfClones() }

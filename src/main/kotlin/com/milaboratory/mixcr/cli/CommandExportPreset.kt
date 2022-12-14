@@ -134,7 +134,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     @Mixin
     var genericMixins: GenericMiXCRMixins? = null
 
-    override fun run0() {
+    override fun run1() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
                 assembleContigsMixins + exportMixins + pipelineMixins
         val spec: MiXCRParamsSpec = when {
@@ -144,6 +144,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                 val paramsSpec = when (IOUtil.extractFileType(inputFile)) {
                     VDJCA -> VDJCAlignmentsReader(inputFile)
                         .use { reader -> reader.header }
+
                     CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
                         .use { reader -> reader.header }
                     CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)

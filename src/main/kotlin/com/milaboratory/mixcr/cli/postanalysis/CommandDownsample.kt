@@ -124,7 +124,7 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         ValidationException.requireNoExtension(outPath?.toString())
     }
 
-    override fun run0() {
+    override fun run1() {
         val datasets =
             inputFiles.map { file -> ClonotypeDataset(file.toString(), file, VDJCLibraryRegistry.getDefault()) }
         val preprocessor = DownsamplingParameters

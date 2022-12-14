@@ -18,14 +18,12 @@ import com.milaboratory.mixcr.cli.AlignerReport
 import com.milaboratory.mixcr.cli.CloneAssemblerReport
 import com.milaboratory.mixcr.cli.CommandExportReportsAsTable
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
-import com.milaboratory.mixcr.export.ParametersFactory.chainsParam
 import com.milaboratory.mixcr.export.ReportFieldsExtractors.ReportsWithSource
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause.NoHits
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause.NoJHits
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause.NoVHits
 import com.milaboratory.util.ReportHelper
-import io.repseq.core.Chains
 import picocli.CommandLine
 
 private fun Double.formatPercentage(): String = ReportHelper.PERCENT_FORMAT.format(this * 100)
@@ -44,6 +42,7 @@ object ReportFieldsExtractors : FieldExtractorsFactoryWithPresets<ReportsWithSou
         )
         this["full"] = allAvailableFields()
             .sortedBy { it.priority }
+            .filter { it.deprecation == null }
             .onEach { check(it.arity == CommandLine.Range.valueOf("0")) }
             .map { it.cmdArgName }
             .map { ExportFieldDescription(it) }
@@ -83,15 +82,15 @@ object ReportFieldsExtractors : FieldExtractorsFactoryWithPresets<ReportsWithSou
         ) { reports ->
             reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum().toString()
         }
-        this += Field(
+        this += FieldsCollection(
             100_200,
             "-patternMatchedReads",
-            "Percentage of reads that match pattern.",
-            "patternMatchedReads"
-        ) { reports ->
-            asPercentage(
-                reports.extract<AlignerReport, _> { it.tagParsingReport?.matchedReads ?: 0L }.sum(),
-                reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum()
+            "Percentage of reads that match pattern."
+        ) {
+            columnsForPercentage(
+                "patternMatchedReads",
+                { reports -> reports.extract<AlignerReport, _> { it.tagParsingReport?.matchedReads ?: 0L }.sum() },
+                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
 //        this += Field(
@@ -116,92 +115,91 @@ object ReportFieldsExtractors : FieldExtractorsFactoryWithPresets<ReportsWithSou
 //            "totalUMIsAfterCorrectionAndFiltering"
 //        ) { reports ->
 //        }
-        this += Field(
+        this += FieldsCollection(
             100_600,
             "-overlapped",
-            "Percentage of overlapped reads.",
-            "overlapped"
-        ) { reports ->
-            asPercentage(
-                reports.extract<AlignerReport, _> { it.overlapped }.sum(),
-                reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum()
+            "Percentage of overlapped reads."
+        ) {
+            columnsForPercentage(
+                "overlapped",
+                { reports -> reports.extract<AlignerReport, _> { it.overlapped }.sum() },
+                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
-        this += Field(
+        this += FieldsCollection(
             100_700,
             "-overlappedAndAligned",
-            "Percentage of overlapped and aligned reads.",
-            "overlappedAndAligned"
-        ) { reports ->
-            asPercentage(
-                reports.extract<AlignerReport, _> { it.overlappedAligned }.sum(),
-                reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum()
+            "Percentage of overlapped and aligned reads."
+        ) {
+            columnsForPercentage(
+                "overlappedAndAligned",
+                { reports -> reports.extract<AlignerReport, _> { it.overlappedAligned }.sum() },
+                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
-        this += Field(
+        this += FieldsCollection(
             100_800,
             "-alignmentFailedNoHits",
-            "Percentage of reads that not aligned because of no hits.",
-            "alignmentFailedNoHits"
-        ) { reports ->
-            asPercentage(
-                reports.extract<AlignerReport, _> { it.notAlignedReasons[NoHits] ?: 0L }.sum(),
-                reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum()
+            "Percentage of reads that not aligned because of no hits."
+        ) {
+            columnsForPercentage(
+                "alignmentFailedNoHits",
+                { reports -> reports.extract<AlignerReport, _> { it.notAlignedReasons[NoHits] ?: 0L }.sum() },
+                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
-        this += Field(
+        this += FieldsCollection(
             100_801,
             "-alignmentFailedNoVHits",
-            "Percentage of reads that not aligned because of no V hits.",
-            "alignmentFailedNoVHits"
-        ) { reports ->
-            asPercentage(
-                reports.extract<AlignerReport, _> { it.notAlignedReasons[NoVHits] ?: 0L }.sum(),
-                reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum()
+            "Percentage of reads that not aligned because of no V hits."
+        ) {
+            columnsForPercentage(
+                "alignmentFailedNoVHits",
+                { reports -> reports.extract<AlignerReport, _> { it.notAlignedReasons[NoVHits] ?: 0L }.sum() },
+                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
-        this += Field(
+        this += FieldsCollection(
             100_802,
             "-alignmentFailedNoJHits",
-            "Percentage of reads that not aligned because of no J hits.",
-            "alignmentFailedNoJHits"
-        ) { reports ->
-            asPercentage(
-                reports.extract<AlignerReport, _> { it.notAlignedReasons[NoJHits] ?: 0L }.sum(),
-                reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum()
+            "Percentage of reads that not aligned because of no V hits."
+        ) {
+            columnsForPercentage(
+                "alignmentFailedNoJHits",
+                { reports -> reports.extract<AlignerReport, _> { it.notAlignedReasons[NoJHits] ?: 0L }.sum() },
+                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
-        this += Field(
+        this += FieldsCollection(
             100_900,
             "-successAligned",
-            "Percentage of aligned reads.",
-            "successAligned"
-        ) { reports ->
-            asPercentage(
-                reports.extract<AlignerReport, _> { it.aligned }.sum(),
-                reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum()
+            "Percentage of aligned reads."
+        ) {
+            columnsForPercentage(
+                "successAligned",
+                { reports -> reports.extract<AlignerReport, _> { it.aligned }.sum() },
+                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
         this += FieldsCollection(
             101_000,
             "-readsWithChain",
-            "Percentage of reads aligned on specific chain. Will be exported all found chains.",
-            Field(
-                //delegate can't be used separately
-                -1, "-", "none", chainsParam("readsWithChain")
-            ) { reports: ReportsWithSource, chains: Chains ->
-                asPercentage(
-                    reports.extract<AlignerReport, _> { it.chainUsage.chains[chains]!!.total }.sum(),
-                    reports.extract<AlignerReport, _> { it.aligned }.sum()
-                )
-            }
+            "Percentage of reads aligned on specific chain. Will be exported all found chains."
         ) {
             allReports.collection.allReports()
                 .extract<AlignerReport, _> { it.chainUsage.chains.keys }
                 .flatten()
                 .distinct()
                 .sorted()
-                .map { arrayOf(it.toString()) }
+                .flatMap { chains ->
+                    columnsForPercentage(
+                        "readsWithChain$chains",
+                        { reports ->
+                            reports.extract<AlignerReport, _> { it.chainUsage.chains[chains]?.total ?: 0L }.sum()
+                        },
+                        { reports -> reports.extract<AlignerReport, _> { it.aligned }.sum() }
+                    )
+                }
         }
         this += Field(
             200_000,
@@ -211,59 +209,59 @@ object ReportFieldsExtractors : FieldExtractorsFactoryWithPresets<ReportsWithSou
         ) { reports ->
             reports.extract<CloneAssemblerReport, _> { it.inputFiles }.flatMap { it.toList() }.joinToString(",")
         }
-        this += Field(
+        this += FieldsCollection(
             200_100,
             "-readsClusteredInCorrection",
-            "Reads pre-clustered due to the similar VJC-lists, percent of used.",
-            "readsClusteredInCorrection"
-        ) { reports ->
-            asPercentage(
-                reports.extract<CloneAssemblerReport, _> { it.readsPreClustered }.sum(),
-                reports.extract<CloneAssemblerReport, _> { it.readsInClones }.sum()
+            "Reads pre-clustered due to the similar VJC-lists, percent of used."
+        ) {
+            columnsForPercentage(
+                "readsClusteredInCorrection",
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.readsPreClustered }.sum() },
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.readsInClones }.sum() },
             )
         }
-        this += Field(
+        this += FieldsCollection(
             200_200,
             "-droppedNoClonalSeq",
-            "Reads dropped due to the lack of a clone sequence, percent of total.",
-            "droppedNoClonalSeq"
-        ) { reports ->
-            asPercentage(
-                reports.extract<CloneAssemblerReport, _> { it.readsDroppedNoTargetSequence }.sum(),
-                reports.extract<CloneAssemblerReport, _> { it.totalReadsProcessed }.sum()
+            "Reads dropped due to the lack of a clone sequence, percent of total."
+        ) {
+            columnsForPercentage(
+                "droppedNoClonalSeq",
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.readsDroppedNoTargetSequence }.sum() },
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
-        this += Field(
+        this += FieldsCollection(
             200_300,
             "-droppedShortSeq",
-            "Reads dropped due to a too short clonal sequence, percent of total.",
-            "droppedShortSeq"
-        ) { reports ->
-            asPercentage(
-                reports.extract<CloneAssemblerReport, _> { it.readsDroppedTooShortClonalSequence }.sum(),
-                reports.extract<CloneAssemblerReport, _> { it.totalReadsProcessed }.sum()
+            "Reads dropped due to a too short clonal sequence, percent of total."
+        ) {
+            columnsForPercentage(
+                "droppedShortSeq",
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.readsDroppedTooShortClonalSequence }.sum() },
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
-        this += Field(
+        this += FieldsCollection(
             200_400,
             "-droppedLowQual",
-            "Reads dropped due to low quality, percent of total.",
-            "droppedLowQual"
-        ) { reports ->
-            asPercentage(
-                reports.extract<CloneAssemblerReport, _> { it.clonesDroppedAsLowQuality }.sum().toLong(),
-                reports.extract<CloneAssemblerReport, _> { it.totalReadsProcessed }.sum()
+            "Reads dropped due to low quality, percent of total."
+        ) {
+            columnsForPercentage(
+                "droppedLowQual",
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.clonesDroppedAsLowQuality }.sum().toLong() },
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
-        this += Field(
+        this += FieldsCollection(
             200_500,
             "-droppedFailedMapping",
-            "Reads dropped due to failed mapping, percent of total",
-            "droppedFailedMapping"
-        ) { reports ->
-            asPercentage(
-                reports.extract<CloneAssemblerReport, _> { it.readsDroppedFailedMapping }.sum(),
-                reports.extract<CloneAssemblerReport, _> { it.totalReadsProcessed }.sum()
+            "Reads dropped due to failed mapping, percent of total"
+        ) {
+            columnsForPercentage(
+                "droppedFailedMapping",
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.readsDroppedFailedMapping }.sum() },
+                { reports -> reports.extract<CloneAssemblerReport, _> { it.totalReadsProcessed }.sum() }
             )
         }
         this += Field(
@@ -309,23 +307,24 @@ object ReportFieldsExtractors : FieldExtractorsFactoryWithPresets<ReportsWithSou
             400_300,
             "-clonesWithChain",
             "Percentage of clones aligned on specific chain (`assemble` command). Will be exported all found chains.",
-            Field(
-                //delegate can't be used separately
-                -1, "-", "none", chainsParam("clonesWithChain")
-            ) { reports: ReportsWithSource, chains: Chains ->
-                //TODO write the same info into FullSeqAssemblerReport
-                asPercentage(
-                    reports.extract<CloneAssemblerReport, _> { it.clonalChainUsage.chains[chains]!!.total }.sum(),
-                    reports.extract<CloneAssemblerReport, _> { it.clones }.sum().toLong()
-                )
-            }
         ) {
             allReports.collection.allReports()
                 .extract<CloneAssemblerReport, _> { it.clonalChainUsage.chains.keys }
                 .flatten()
                 .distinct()
                 .sorted()
-                .map { arrayOf(it.toString()) }
+                .flatMap { chains ->
+                    //TODO write the same info into FullSeqAssemblerReport
+                    columnsForPercentage(
+                        "clonesWithChain$chains",
+                        { reports ->
+                            reports
+                                .extract<CloneAssemblerReport, _> { it.clonalChainUsage.chains[chains]?.total ?: 0L }
+                                .sum()
+                        },
+                        { reports -> reports.extract<CloneAssemblerReport, _> { it.clones }.sum().toLong() }
+                    )
+                }
         }
 //        this += Field(
 //            700,
@@ -367,6 +366,23 @@ object ReportFieldsExtractors : FieldExtractorsFactoryWithPresets<ReportsWithSou
             reports.extract<BuildSHMTreeReport, _> { it.totalClonesCountInTrees() }.sum().toString()
         }
     }
+
+    private fun <T : Any> columnsForPercentage(
+        header: String,
+        value: RowMetaForExport.(T) -> Long,
+        base: RowMetaForExport.(T) -> Long
+    ): List<FieldExtractor<T>> =
+        listOf(
+            FieldExtractor(header) { reports ->
+                value(reports).toString()
+            },
+            FieldExtractor("${header}Percents") { reports ->
+                asPercentage(
+                    value(reports),
+                    base(reports)
+                )
+            }
+        )
 
     class ReportsWithSource(
         val source: String,

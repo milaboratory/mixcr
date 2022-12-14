@@ -59,7 +59,7 @@ class CommandExportReads : MiXCRCommandWithOutputs() {
         }
     }
 
-    override fun run0() {
+    override fun run1() {
         VDJCAlignmentsReader(inputFiles.first()).use { reader ->
             createWriter().use { writer ->
                 SmartProgressReporter.startProgressReport("Extracting reads", reader, System.err)

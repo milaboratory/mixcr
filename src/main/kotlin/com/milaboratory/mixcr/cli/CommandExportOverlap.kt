@@ -165,16 +165,16 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
 
     var addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
-    override fun run0() {
+    override fun run1() {
         val samples = inputFiles
         val chains = this.chains?.let { ChainsFilter.parseChainsList(this.chains) }
         val criteria = OverlapUtil.parseCriteria(overlapCriteria)
         val extractors = mutableListOf<OverlapFieldExtractor>()
         extractors += ExtractorUnique(
-            object : FieldExtractor<Clone> {
-                override val header = (if (criteria.isAA) "aaSeq" else "nSeq") + GeneFeature.encode(criteria.feature)
-
-                override fun extractValue(meta: RowMetaForExport, obj: Clone) = when {
+            FieldExtractor(
+                (if (criteria.isAA) "aaSeq" else "nSeq") + GeneFeature.encode(criteria.feature)
+            ) { obj ->
+                when {
                     criteria.isAA -> obj.getAAFeature(criteria.feature).toString()
                     else -> obj.getNFeature(criteria.feature).toString()
                 }
@@ -182,19 +182,15 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         )
         if (criteria.withV) {
             extractors += ExtractorUnique(
-                object : FieldExtractor<Clone> {
-                    override val header = "vGene"
-
-                    override fun extractValue(meta: RowMetaForExport, obj: Clone) = obj.getBestHit(Variable).gene.name
+                FieldExtractor("vGene") {
+                    it.getBestHit(Variable).gene.name
                 }
             )
         }
         if (criteria.withJ) {
             extractors += ExtractorUnique(
-                object : FieldExtractor<Clone> {
-                    override val header: String = "jGene"
-
-                    override fun extractValue(meta: RowMetaForExport, obj: Clone) = obj.getBestHit(Joining).gene.name
+                FieldExtractor("jGene") {
+                    it.getBestHit(Joining).gene.name
                 }
             )
         }
