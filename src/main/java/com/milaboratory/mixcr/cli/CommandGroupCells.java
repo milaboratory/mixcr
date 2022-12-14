@@ -140,7 +140,7 @@ package com.milaboratory.mixcr.cli;
 //
 //             writer.writeClones(resultCloneSet);
 //
-//             OutputPortCloseable<VDJCAlignments> alignments = reader.readAllAlignments();
+//             OutputPort<VDJCAlignments> alignments = reader.readAllAlignments();
 //             writer.collateAlignments(() -> {
 //                 VDJCAlignments als = alignments.take();
 //                 if (als == null)

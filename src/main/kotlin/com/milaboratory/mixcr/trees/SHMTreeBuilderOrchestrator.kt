@@ -14,6 +14,8 @@
 package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.flatten
+import cc.redberry.pipe.util.map
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -26,8 +28,6 @@ import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.flatten
-import com.milaboratory.primitivio.map
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest

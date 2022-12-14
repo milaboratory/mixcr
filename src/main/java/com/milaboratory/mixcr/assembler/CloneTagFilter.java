@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.assembler;
 
 import cc.redberry.pipe.CUtils;
-import com.milaboratory.mitool.helpers.PipeKt;
 import com.milaboratory.mitool.refinement.gfilter.*;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.tag.*;
@@ -31,6 +30,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static cc.redberry.pipe.OutputPortFactoryKt.asOutputPortFactory;
 import static com.milaboratory.mixcr.basictypes.tag.TagsInfo.*;
 
 /**
@@ -100,7 +100,7 @@ public final class CloneTagFilter {
         List<CloneTag> grouped = SortingUtil.hGroup(cloneTags, keys);
         CloneTagStreamGrouping streamGrouping = new CloneTagStreamGrouping(expectedSorting, keys);
         KeyedFilterContext<CloneTag> ctx = new KeyedFilterContext<>(null, streamGrouping, new CloneSequenceExtractor(), Collections.emptyList());
-        FilteredOutputPortFactory<CloneTag> filtered = filter.filter(ctx, PipeKt.asOutputPortFactory(grouped));
+        FilteredOutputPortFactory<CloneTag> filtered = filter.filter(ctx, asOutputPortFactory(grouped));
         List<CloneTag> result = CUtils.toList(filtered.createPort());
         KeyedFilterReport report = filtered.getReport();
         return new Tuple2<>(result, report);

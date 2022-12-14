@@ -12,9 +12,13 @@
 package com.milaboratory.mixcr.cli
 
 
-import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.OutputPortCloseable
-import cc.redberry.pipe.util.CountLimitingOutputPort
+import cc.redberry.pipe.util.buffered
+import cc.redberry.pipe.util.chunked
+import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.mapChunksInParallel
+import cc.redberry.pipe.util.mapUnchunked
+import cc.redberry.pipe.util.ordered
+import cc.redberry.pipe.util.unchunked
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
@@ -22,7 +26,7 @@ import com.milaboratory.core.io.CompressionType
 import com.milaboratory.core.io.sequence.MultiReader
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.io.sequence.SequenceReadUtil
-import com.milaboratory.core.io.sequence.SequenceReaderCloseable
+import com.milaboratory.core.io.sequence.SequenceReader
 import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
@@ -37,8 +41,6 @@ import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.mitool.helpers.FileGroup
 import com.milaboratory.mitool.helpers.PathPatternExpandException
-import com.milaboratory.mitool.helpers.map
-import com.milaboratory.mitool.helpers.mapUnchunked
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.use
 import com.milaboratory.mixcr.AlignMixins.LimitInput
@@ -76,17 +78,13 @@ import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.primitivio.buffered
-import com.milaboratory.primitivio.chunked
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.mapChunksInParallel
-import com.milaboratory.primitivio.ordered
-import com.milaboratory.primitivio.unchunked
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.LightFileDescriptor
+import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.limit
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.VRegion
 import io.repseq.core.GeneFeature.VRegionWithP
@@ -767,15 +765,14 @@ object CommandAlign {
                 }
         }
 
-        abstract class FastqGroupReader(fileGroups: List<FileGroup>) :
-            OutputPortCloseable<ProcessingBundle>, CanReportProgress {
+        abstract class FastqGroupReader(fileGroups: List<FileGroup>) : OutputPortWithProgress<ProcessingBundle> {
             private val fileGroupIt = fileGroups.iterator()
             private val readerCount = fileGroups.size
             private var currentReaderIdx = -1
 
             // -1 used to indicate closed stream
             private var id = 0L
-            private var currentReader: SequenceReaderCloseable<SequenceRead>? = null
+            private var currentReader: SequenceReader<SequenceRead>? = null
             private var currentFileTags: List<Pair<String, String>>? = null
 
             override fun take(): ProcessingBundle? {
@@ -808,7 +805,7 @@ object CommandAlign {
                 }
             }
 
-            abstract fun nextReader(fileGroup: FileGroup): SequenceReaderCloseable<SequenceRead>
+            abstract fun nextReader(fileGroup: FileGroup): SequenceReader<SequenceRead>
 
             override fun close() {
                 synchronized(fileGroupIt) {
@@ -829,7 +826,7 @@ object CommandAlign {
         }
 
         @Suppress("UNCHECKED_CAST")
-        private fun createReader(): OutputPortCloseable<ProcessingBundle> {
+        private fun createReader(): OutputPortWithProgress<ProcessingBundle> {
             // Common single fastq reader constructor
             val fastqReaderFactory: (Path) -> SingleFastqReader = { path: Path ->
                 SingleFastqReader(
@@ -876,7 +873,7 @@ object CommandAlign {
                     MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParamter, sampleDescriptions)
                     object : FastqGroupReader(inputFileGroups.fileGroups) {
                         override fun nextReader(fileGroup: FileGroup) =
-                            fastqReaderFactory(fileGroup.files[0]) as SequenceReaderCloseable<SequenceRead>
+                            fastqReaderFactory(fileGroup.files[0]) as SequenceReader<SequenceRead>
                     }
                 }
 
@@ -887,7 +884,7 @@ object CommandAlign {
                             PairedFastqReader(
                                 fastqReaderFactory(fileGroup.files[0]),
                                 fastqReaderFactory(fileGroup.files[1])
-                            ) as SequenceReaderCloseable<SequenceRead>
+                            ) as SequenceReader<SequenceRead>
                     }
                 }
 
@@ -898,7 +895,7 @@ object CommandAlign {
                         override fun nextReader(fileGroup: FileGroup) =
                             MultiReader(
                                 *fileGroup.files.map(fastqReaderFactory).toTypedArray()
-                            ) as SequenceReaderCloseable<SequenceRead>
+                            ) as SequenceReader<SequenceRead>
                     }
                 }
             }
@@ -933,7 +930,7 @@ object CommandAlign {
                 cmdParams.trimmingWindowSize.toInt()
             )
 
-        override fun run0() {
+        override fun run1() {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
 
@@ -1043,15 +1040,9 @@ object CommandAlign {
                     ),
                     aligner.usedGenes
                 )
-                val sReads: OutputPort<ProcessingBundle> = when {
-                    cmdParams.limit != null -> CountLimitingOutputPort(reader, cmdParams.limit!!)
+                val sReads = when {
+                    cmdParams.limit != null -> reader.limit(cmdParams.limit!!)
                     else -> reader
-                }
-
-                val progress: CanReportProgress = when (sReads) {
-                    is CountLimitingOutputPort -> SmartProgressReporter.extractProgress(sReads)
-                    is CanReportProgress -> sReads
-                    else -> throw IllegalArgumentException()
                 }
 
                 // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
@@ -1062,7 +1053,7 @@ object CommandAlign {
                 for (gt in GeneType.values()) if (alignerParameters.getGeneAlignerParameters(gt) != null) emptyHits[gt] =
                     arrayOfNulls(0)
                 val readsLayout = alignerParameters.readsLayout
-                SmartProgressReporter.startProgressReport("Alignment", progress)
+                SmartProgressReporter.startProgressReport("Alignment", sReads)
                 val mainInputReads = sReads
                     .chunked(64)
                     .buffered(max(16, threads.value))

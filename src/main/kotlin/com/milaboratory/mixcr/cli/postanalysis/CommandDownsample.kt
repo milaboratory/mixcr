@@ -11,7 +11,9 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mitool.helpers.drainToAndClose
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.drainToAndClose
+import cc.redberry.pipe.util.toList
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.InputFileType
@@ -22,8 +24,6 @@ import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
 import com.milaboratory.mixcr.postanalysis.ui.ClonotypeDataset
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
-import com.milaboratory.primitivio.port
-import com.milaboratory.primitivio.toList
 import io.repseq.core.Chains
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
@@ -124,7 +124,7 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         ValidationException.requireNoExtension(outPath?.toString())
     }
 
-    override fun run0() {
+    override fun run1() {
         val datasets =
             inputFiles.map { file -> ClonotypeDataset(file.toString(), file, VDJCLibraryRegistry.getDefault()) }
         val preprocessor = DownsamplingParameters
@@ -142,7 +142,7 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
                     datasets[i].usedGenes,
                     downsampled.size
                 )
-                downsampled.port.drainToAndClose(clnsWriter.cloneWriter())
+                downsampled.asOutputPort().drainToAndClose(clnsWriter.cloneWriter())
                 clnsWriter.setFooter(datasets[i].footer)
             }
         }

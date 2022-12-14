@@ -12,7 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.util.CountingOutputPort
+import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.withCounting
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
@@ -42,14 +43,12 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
-import com.milaboratory.primitivio.GroupingCriteria
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.hashGrouping
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.sortByHashOnDisk
 import org.apache.commons.io.FileUtils
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -243,7 +242,7 @@ object CommandRefineTagsAndSort {
             ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
         }
 
-        override fun run0() {
+        override fun run1() {
             val startTimeMillis = System.currentTimeMillis()
 
             val cmdParams: Params
@@ -384,11 +383,7 @@ object CommandRefineTagsAndSort {
                     // Reusable routine to perform has-based soring of alignments by tag with specific index
                     val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> =
                         { tIdx -> // <- index inside the alignment object
-                            hashGrouping(
-                                GroupingCriteria.groupBy { al ->
-                                    val tagTuple = al.tagCount.singletonTuple
-                                    tagTuple[tIdx].extractKey()
-                                },
+                            sortByHashOnDisk(
                                 alPioState,
                                 tempDest.addSuffix("hashsorter.$tIdx"),
                                 bitsPerStep = 4,
@@ -396,7 +391,10 @@ object CommandRefineTagsAndSort {
                                 writerConcurrency = 4,
                                 objectSizeInitialGuess = 10_000,
                                 memoryBudget = memoryBudget
-                            )
+                            ) { al ->
+                                val tagTuple = al.tagCount.singletonTuple
+                                tagTuple[tIdx].extractKey()
+                            }
                         }
 
                     // Progress reporter for the first sorting step
@@ -409,9 +407,7 @@ object CommandRefineTagsAndSort {
                     )
 
                     // Running initial hash sorter
-                    var sorted = CountingOutputPort(
-                        corrected.hashSort(tagNames.size - 1)
-                    )
+                    var sorted = corrected.hashSort(tagNames.size - 1).withCounting()
                     corrected.close()
 
                     // Sorting by other tags
@@ -420,7 +416,7 @@ object CommandRefineTagsAndSort {
                             "Sorting alignments by " + tagNames[tIdx],
                             SmartProgressReporter.extractProgress(sorted, numberOfAlignments)
                         )
-                        sorted = CountingOutputPort(sorted.hashSort(tIdx))
+                        sorted = sorted.hashSort(tIdx).withCounting()
                     }
                     SmartProgressReporter.startProgressReport(
                         "Writing result",

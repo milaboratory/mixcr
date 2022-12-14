@@ -11,60 +11,23 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
-import picocli.CommandLine.Model.CommandSpec
-import picocli.CommandLine.Option
-import picocli.CommandLine.Spec
-import picocli.CommandLine.Spec.Target.MIXEE
-
 @Suppress("ClassName")
 object logger {
-    @Option(
-        names = ["-nw", "--no-warnings"],
-        description = ["Suppress all warning messages."],
-        order = OptionsOrder.logger
-    )
-    var quiet = false
+    var noWarnings = false
 
-    @Option(
-        description = ["Verbose warning messages."],
-        names = ["--verbose"],
-        order = OptionsOrder.logger + 1
-    )
     var verbose = false
-
-    @Spec(MIXEE)
-    lateinit var spec: CommandSpec
-
-    /** queue of warning messages  */
-    private val warningsQueue: MutableList<String> = ArrayList()
-
-    /** flag that signals we are entered the run method  */
-    var running = false
 
     fun warn(message: String) {
         val formattedMessage = "WARNING: $message"
-        if (quiet) return
-        if (!running) // add to a queue
-            warningsQueue.add(formattedMessage) else  // print immediately
-            printWarn(formattedMessage)
+        printWarn(formattedMessage)
     }
 
     fun warnUnfomatted(message: String) {
-        if (quiet) return
-        if (!running) // add to a queue
-            warningsQueue.add(message) else  // print immediately
-            printWarn(message)
+        printWarn(message)
     }
 
     private fun printWarn(message: String) {
-        if (!quiet) spec.commandLine().err.println(message)
-    }
-
-    fun printWarningQueue() {
-        if (!quiet) {
-            for (m in warningsQueue) printWarn(m)
-        }
-        warningsQueue.clear()
+        if (!noWarnings)
+            System.err.println(message)
     }
 }

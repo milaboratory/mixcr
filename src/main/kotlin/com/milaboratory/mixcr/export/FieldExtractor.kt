@@ -16,4 +16,13 @@ const val NULL = ""
 interface FieldExtractor<in T : Any> {
     val header: String
     fun extractValue(meta: RowMetaForExport, obj: T): String
+
+    companion object {
+        operator fun <T : Any> invoke(header: String, extract: RowMetaForExport.(T) -> String): FieldExtractor<T> =
+            object : FieldExtractor<T> {
+                override val header: String = header
+
+                override fun extractValue(meta: RowMetaForExport, obj: T): String = extract(meta, obj)
+            }
+    }
 }

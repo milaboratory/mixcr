@@ -11,12 +11,12 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.primitivio.forEach
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.nio.file.Path
@@ -83,7 +83,7 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
     override val outputFiles
         get() = listOf(fastq1, fastq2, fastqUnpaired)
 
-    override fun run0() {
+    override fun run1() {
         BAMReader(bamFiles, dropNonVDJ, !keepWildcards).use { converter ->
             PairedFastqWriter(fastq1.toFile(), fastq2.toFile()).use { wr ->
                 SingleFastqWriter(fastqUnpaired.toFile()).use { swr ->

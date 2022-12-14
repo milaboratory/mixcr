@@ -87,9 +87,9 @@ class CloneWrapper(
         }
 
         override fun read(input: PrimitivI): CloneWrapper {
-            val clones = input.readList<CloneWithDatasetId>(PrimitivI::readObjectRequired)
+            val clones = input.readList<CloneWithDatasetId> { readObjectRequired() }
             val VJBase = input.readObjectRequired<VJBase>()
-            val candidateVJBases = input.readList<VJBase>(PrimitivI::readObjectRequired)
+            val candidateVJBases = input.readList<VJBase> { readObjectRequired() }
             return CloneWrapper(
                 clones,
                 VJBase,

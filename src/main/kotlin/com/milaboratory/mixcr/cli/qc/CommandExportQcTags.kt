@@ -96,7 +96,7 @@ class CommandExportQcTags : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(outputFiles.first(), InputFileType.exportTypes)
     }
 
-    override fun run0() {
+    override fun run1() {
         val plots = inputFiles.mapNotNull { file ->
             val info = IOUtil.extractFileInfo(file)
             val report = info.footer.reports[MiXCRCommandDescriptor.refineTagsAndSort]

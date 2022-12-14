@@ -34,7 +34,7 @@ class CloneOrFoundAncestor(
 
         override fun read(input: PrimitivI): CloneOrFoundAncestor {
             val id = input.readInt()
-            val clones = input.readList<CloneWithDatasetId>(PrimitivI::readObjectRequired)
+            val clones = input.readList<CloneWithDatasetId> { readObjectRequired() }
             val mutationsSet = input.readObjectRequired<MutationsSet>()
             return CloneOrFoundAncestor(
                 id,

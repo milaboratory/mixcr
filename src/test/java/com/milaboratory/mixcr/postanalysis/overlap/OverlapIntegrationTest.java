@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.postanalysis.overlap;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.basictypes.ClnsReader;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.VDJCObject;
@@ -26,13 +26,10 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCLibraryRegistry;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -78,7 +75,7 @@ public class OverlapIntegrationTest {
             Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.overlap(samples, by, readers);
             TIntIntHashMap hist = new TIntIntHashMap();
             long totalSum = 0;
-            try (final OutputPortCloseable<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
+            try (final OutputPort<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {
                 for (OverlapGroup<Clone> cloneOverlapGroup : CUtils.it(port)) {
                     int sum = cloneOverlapGroup.elements.stream().mapToInt(l -> l.isEmpty() ? 0 : 1).sum();
                     totalSum += cloneOverlapGroup.elements.stream().mapToInt(List::size).sum();

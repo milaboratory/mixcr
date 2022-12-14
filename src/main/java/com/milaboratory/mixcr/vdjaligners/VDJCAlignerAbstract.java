@@ -15,7 +15,6 @@ import cc.redberry.primitives.Filter;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
-import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.util.BitArray;
@@ -185,8 +184,8 @@ public abstract class VDJCAlignerAbstract extends VDJCAligner {
                 if (aligner != null)
                     f.put(chain, aligner.createFilter(new Filter<VDJCGene>() {
                         @Override
-                        public boolean accept(VDJCGene object) {
-                            return object.getChains().contains(chain);
+                        public boolean accept(VDJCGene obj) {
+                            return obj.getChains().contains(chain);
                         }
                     }));
             }

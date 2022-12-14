@@ -11,6 +11,9 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.filter
+import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.map
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
@@ -19,9 +22,6 @@ import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
-import com.milaboratory.primitivio.filter
-import com.milaboratory.primitivio.forEach
-import com.milaboratory.primitivio.map
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -66,7 +66,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     override val outputFiles
         get() = listOfNotNull(out)
 
-    override fun run0() {
+    override fun run1() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
             val headerForExport = MetaForExport(

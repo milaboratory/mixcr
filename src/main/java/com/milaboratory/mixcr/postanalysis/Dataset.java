@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.postanalysis;
 
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
+import com.milaboratory.util.OutputPortWithProgress;
 
 /**
  *
@@ -37,16 +37,6 @@ public interface Dataset<T> {
             @Override
             public OutputPortWithProgress<K> mkElementsPort() {
                 return new OutputPortWithProgress<K>() {
-                    @Override
-                    public long currentIndex() {
-                        return 0;
-                    }
-
-                    @Override
-                    public void finish() {
-
-                    }
-
                     @Override
                     public double getProgress() {
                         return 0.0;

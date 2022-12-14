@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.postanalysis.overlap;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import cc.redberry.pipe.OutputPortCloseable;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.postanalysis.PostanalysisResult;
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner;
@@ -24,7 +23,7 @@ import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup;
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult;
 import com.milaboratory.mixcr.postanalysis.ui.OutputTable;
 import com.milaboratory.mixcr.postanalysis.ui.OverlapSummary;
-import com.milaboratory.mixcr.util.OutputPortWithProgress;
+import com.milaboratory.util.OutputPortWithProgress;
 import com.milaboratory.util.sorting.MergeStrategy;
 import com.milaboratory.util.sorting.SortingProperty;
 import com.milaboratory.util.sorting.SortingPropertyRelation;
@@ -65,7 +64,7 @@ public class OverlapCharacteristicTest {
                 .toArray(TestDataset[]::new),
                 targetGroupping);
 
-        OutputPortCloseable<List<List<Element>>> join = strategy
+        OutputPort<List<List<Element>>> join = strategy
                 .join(Arrays.stream(ovp.datasets)
                         .map(TestDataset::mkElementsPort)
                         .collect(Collectors.toList()));
@@ -122,7 +121,7 @@ public class OverlapCharacteristicTest {
                 .toArray(TestDataset[]::new),
                 targetGroupping);
 
-//        OutputPortCloseable<List<List<Element>>> join = strategy
+//        OutputPort<List<List<Element>>> join = strategy
 //                .join(Arrays.stream(ovp.datasets)
 //                        .map(OverlapCharacteristicTest::asOutputPort)
 //                        .collect(Collectors.toList()));
@@ -145,22 +144,12 @@ public class OverlapCharacteristicTest {
         PostanalysisResult paResult = runner.run(new OverlapDataset<Element>(datasetIds) {
             @Override
             public OutputPortWithProgress<OverlapGroup<Element>> mkElementsPort() {
-                OutputPortCloseable<OverlapGroup<Element>> inner = new SimpleProcessorWrapper<>(strategy
+                OutputPort<OverlapGroup<Element>> inner = new SimpleProcessorWrapper<>(strategy
                         .join(Arrays.stream(ovp.datasets)
                                 .map(TestDataset::mkElementsPort)
                                 .collect(Collectors.toList())), OverlapGroup::new);
 
                 return new OutputPortWithProgress<OverlapGroup<Element>>() {
-                    @Override
-                    public long currentIndex() {
-                        return 0;
-                    }
-
-                    @Override
-                    public void finish() {
-
-                    }
-
                     @Override
                     public void close() {
                         inner.close();
@@ -266,9 +255,9 @@ public class OverlapCharacteristicTest {
         }
     }
 
-    private static <T> OutputPortCloseable<T> asOutputPort(List<T> l) {
+    private static <T> OutputPort<T> asOutputPort(List<T> l) {
         OutputPort<T> p = CUtils.asOutputPort(l);
-        return new OutputPortCloseable<T>() {
+        return new OutputPort<T>() {
             @Override
             public void close() {
             }

@@ -11,8 +11,6 @@
  */
 package com.milaboratory.mixcr.util
 
-import com.milaboratory.mitool.helpers.repeatCollect
-
 object SubstitutionHelper {
     private data class SubstitutionValue(val index: Int, val value: String)
 
@@ -78,18 +76,18 @@ object SubstitutionHelper {
                 SubstitutionReadyString(listOf(fileName), emptyList())
             else {
                 val extensionBegin = fileName.lastIndexOf('.')
-                val fallbackGroupNames = fallbackNumberOfGroups.repeatCollect { "${it + 1}" }
+                val fallbackGroupNames = Array(fallbackNumberOfGroups) { "${it + 1}" }.toList()
                 if (extensionBegin == -1)
                     SubstitutionReadyString(
                         listOf("${fileName}$fallbackSeparator")
-                                + (fallbackNumberOfGroups - 1).repeatCollect { fallbackSeparator }
+                                + generateSequence { fallbackSeparator }.take(fallbackNumberOfGroups - 1)
                                 + listOf(""),
                         fallbackGroupNames
                     )
                 else
                     SubstitutionReadyString(
                         listOf("${fileName.substring(0, extensionBegin)}$fallbackSeparator")
-                                + (fallbackNumberOfGroups - 1).repeatCollect { fallbackSeparator }
+                                + generateSequence { fallbackSeparator }.take(fallbackNumberOfGroups - 1)
                                 + listOf(fileName.substring(extensionBegin)),
                         fallbackGroupNames
                     )

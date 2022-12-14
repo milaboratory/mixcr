@@ -13,6 +13,7 @@
 
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.asOutputPort
 import com.milaboratory.core.Range
 import com.milaboratory.core.io.sequence.fasta.FastaRecord
 import com.milaboratory.core.io.sequence.fasta.FastaWriter
@@ -40,8 +41,6 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV.chooseDelimiter
 import com.milaboratory.mixcr.util.XSV.writeXSV
-import com.milaboratory.primitivio.port
-import com.milaboratory.primitivio.withProgress
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
@@ -49,6 +48,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
@@ -197,7 +197,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .map { Paths.get(it) }
             .toList()
         if (clnsFiles.distinct().count() < clnsFiles.size) {
-            throw ValidationException("Output clns files are not uniq: $clnsFiles")
+            var message = "Output clns files are not uniq: $clnsFiles"
+            message += "\nTry to use `{file_name}` and/or `{file_dir_path}` in template to get different output paths for every input. See help for more details"
+            throw ValidationException(message)
         }
         clnsFiles
     }
@@ -238,7 +240,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         findAllelesParameters
     }
 
-    override fun run0() {
+    override fun run1() {
         val clonesFilter: AllelesBuilder.ClonesFilter = object : AllelesBuilder.ClonesFilter {
             override fun match(clone: Clone, tagsInfo: TagsInfo): Boolean {
                 if (findAllelesParameters.productiveOnly) {
@@ -337,6 +339,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                                     writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
                                 }
                             }
+
                             else -> {
                                 val range = Range(
                                     gene.partitioning.firstAvailablePosition,
@@ -366,25 +369,22 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 cloneReader.header.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
-                val withRecalculatedScores = port.withProgress(
-                    cloneReader.numberOfClones().toLong(),
-                    progressAndStage,
-                    "Recalculating scores ${inputFiles[i]}"
-                ) { clones ->
-                    cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
-                }
-                if (outputClnsOptions.outputTemplate != null) {
-                    withRecalculatedScores.port.withProgress(
-                        cloneReader.numberOfClones().toLong(),
-                        progressAndStage,
-                        "Realigning ${inputFiles[i]}"
-                    ) { clonesWithScores ->
-                        val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
-                        outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
-                        val callback = outputClnsFiles[i].toFile()
-                            .writeMappedClones(mapperClones, resultLibrary, cloneReader)
-                        writerCloseCallbacks += callback
+                val withRecalculatedScores = port.withExpectedSize(cloneReader.numberOfClones().toLong())
+                    .reportProgress(progressAndStage, "Recalculating scores ${inputFiles[i]}")
+                    .use { clones ->
+                        cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
                     }
+                if (outputClnsOptions.outputTemplate != null) {
+                    withRecalculatedScores.asOutputPort()
+                        .withExpectedSize(cloneReader.numberOfClones().toLong())
+                        .reportProgress(progressAndStage, "Realigning ${inputFiles[i]}")
+                        .use { clonesWithScores ->
+                            val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
+                            outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
+                            val callback = outputClnsFiles[i].toFile()
+                                .writeMappedClones(mapperClones, resultLibrary, cloneReader)
+                            writerCloseCallbacks += callback
+                        }
                 }
             }
         }
@@ -400,6 +400,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             printAllelesMutationsOutput(
                 resultLibrary,
                 reportBuilder.overallAllelesStatistics,
+                report,
                 allelesMutationsOutput
             )
         }
@@ -410,6 +411,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private fun printAllelesMutationsOutput(
         resultLibrary: VDJCLibrary,
         allelesStatistics: OverallAllelesStatistics,
+        report: FindAllelesReport,
         allelesMutationsOutput: Path
     ) {
         PrintStream(allelesMutationsOutput.toFile()).use { output ->
@@ -417,6 +419,11 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 this["alleleName"] = { it.name }
                 this["geneName"] = { it.geneName }
                 this["type"] = { it.geneType }
+                this["enoughInfo"] = { gene ->
+                    val sourceOfAllele = gene.data.meta[metaKeyAlleleVariantOf]?.first() ?: gene.name
+                    val history = report.searchHistoryForBCells[sourceOfAllele]
+                    history?.alleles?.result?.isNotEmpty() ?: false
+                }
                 this[metaKeyForAlleleMutationsReliableRanges] = { gene ->
                     gene.data.meta[metaKeyForAlleleMutationsReliableRanges]
                 }

@@ -15,6 +15,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.InputPort
 import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
@@ -42,7 +43,6 @@ import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.toHexString
-import com.milaboratory.primitivio.forEach
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.ReportUtil
@@ -267,16 +267,15 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", !useLocalTemp.value)
     }
 
-    override fun run0() {
+    override fun run1() {
         val reportBuilder = BuildSHMTreeReport.Builder()
             .setCommandLine(commandLineArguments)
             .setInputFiles(inputFiles)
             .setOutputFiles(outputFiles)
             .setStartMillis(System.currentTimeMillis())
 
-        val vdjcLibraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { path ->
-            ClnsReader(path, vdjcLibraryRegistry)
+            ClnsReader(path, VDJCLibraryRegistry.getDefault())
         }
 
         reportBuilder.totalClonesProcessed = datasets.sumOf { it.numberOfClones() }
@@ -435,7 +434,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 private class MiXCRHeaderMerger {
     private var inputHashAccumulator: MessageDigest? = MessageDigest.getInstance("MD5")
     private var upstreamParams = mutableListOf<Pair<String, MiXCRStepParams>>()
-    private var featuresToAlignMap: Map<GeneType, GeneFeature>? = null
+    private var featuresToAlignMap: Map<GeneType, GeneFeature?>? = null
     private var foundAlleles: MiXCRHeader.FoundAlleles? = null
     private var allFullyCoveredBy: GeneFeatures? = null
 

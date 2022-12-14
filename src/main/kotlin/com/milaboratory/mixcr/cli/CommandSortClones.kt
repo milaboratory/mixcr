@@ -60,7 +60,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
     }
 
 
-    override fun run0() {
+    override fun run1() {
         when (IOUtil.extractFileType(input)) {
             CLNS -> ClnsReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
                 ClnsWriter(out).use { writer ->

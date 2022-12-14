@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.assembler;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring;
 import com.milaboratory.core.io.sequence.SequenceRead;
 import com.milaboratory.core.io.sequence.SequenceReader;
@@ -128,7 +128,7 @@ public class CloneAssemblerRunnerTest {
 
         assertCSEquals(cloneSet, cloneSetDeserialized);
 
-        OutputPortCloseable<ReadToCloneMapping> rrr = assemblerRunner.assembler.getAssembledReadsPort();
+        OutputPort<ReadToCloneMapping> rrr = assemblerRunner.assembler.getAssembledReadsPort();
         ReadToCloneMapping take;
         while ((take = rrr.take()) != null)
             System.out.println(take);

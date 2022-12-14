@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ *
+ * Before downloading or accessing the software, please read carefully the
+ * License Agreement available at:
+ * https://github.com/milaboratory/mixcr/blob/develop/LICENSE
+ *
+ * By downloading or accessing the software, you accept and agree to be bound
+ * by the terms of the License Agreement. If you do not want to agree to the terms
+ * of the Licensing Agreement, you must not download or access the software.
+ */
 package com.milaboratory.mixcr.bam;
 
 import cc.redberry.pipe.CUtils;
@@ -10,7 +21,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.core.sequence.SequencesUtils;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
-import com.milaboratory.util.CanReportProgress;
+import com.milaboratory.util.OutputPortWithProgress;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.sorting.HashSorter;
 import htsjdk.samtools.SAMFileHeader;
@@ -28,7 +39,7 @@ import static com.milaboratory.core.sequence.NucleotideSequence.ALPHABET;
 import static com.milaboratory.core.sequence.SequenceQuality.BAD_QUALITY_VALUE;
 import static com.milaboratory.core.sequence.SequenceQuality.GOOD_QUALITY_VALUE;
 
-public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanReportProgress {
+public class BAMReader implements SequenceReader<SequenceRead>, OutputPortWithProgress<SequenceRead> {
     private final AtomicLong numberOfProcessedAlignments = new AtomicLong(0);
     private final AtomicLong numberOfPairedReads = new AtomicLong(0);
     private final AtomicLong numberOfUnpairedReads = new AtomicLong(0);
@@ -81,7 +92,7 @@ public class BAMReader implements SequenceReaderCloseable<SequenceRead>, CanRepo
                     });
         }
 
-        progressChecker = new CountingOutputPort<>(filteredSamRecordOutputPort);
+        progressChecker = CountingOutputPort.wrap(filteredSamRecordOutputPort);
 
         // Converting SAMRecord to SingleRead
         singleReadImplOutputPort = CUtils.wrap(progressChecker, rec -> {

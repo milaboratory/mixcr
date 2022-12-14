@@ -11,10 +11,10 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.primitivio.forEach
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -71,7 +71,7 @@ class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(out, InputFileType.VDJCA)
     }
 
-    override fun run0() {
+    override fun run1() {
         ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             VDJCAlignmentsWriter(out).use { writer ->
                 writer.writeHeader(clna.header, clna.usedGenes)

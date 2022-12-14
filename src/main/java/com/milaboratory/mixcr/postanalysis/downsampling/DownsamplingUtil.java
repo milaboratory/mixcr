@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPortCloseable;
+import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import org.apache.commons.math3.random.RandomGenerator;
 
@@ -25,7 +25,7 @@ public final class DownsamplingUtil {
 
     public static <T> long total(ToLongFunction<T> getCount, Dataset<T> set) {
         long total = 0;
-        try (OutputPortCloseable<T> port = set.mkElementsPort()) {
+        try (OutputPort<T> port = set.mkElementsPort()) {
             for (T t : CUtils.it(port))
                 total += getCount.applyAsLong(t);
             return total;
