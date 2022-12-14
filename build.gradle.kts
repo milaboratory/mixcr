@@ -98,12 +98,12 @@ repositories {
     }
 }
 
-val milibVersion = "2.2.0-17-refactoring"
+val milibVersion = "2.2.0-19-refactoring"
 val repseqioVersion = "1.6.0-3-refactoring"
 val miplotsVersion = "1.2.0"
-val mitoolVersion = "1.5.0-8-refactoring"
+val mitoolVersion = "1.5.0-9-refactoring"
 val jacksonBomVersion = "2.14.1"
-val redberryPipeVersion = "1.3.0-5-refactoring"
+val redberryPipeVersion = "1.3.0-7-refactoring"
 
 dependencies {
     api("cc.redberry:pipe:$redberryPipeVersion")

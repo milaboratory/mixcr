@@ -20,7 +20,9 @@ import cc.redberry.pipe.util.buffered
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.flatMap
 import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.mapInParallel
+import cc.redberry.pipe.util.toList
 import com.milaboratory.core.alignment.AlignmentScoring
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
@@ -44,7 +46,7 @@ import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.withExpectedSize
-import com.milaboratory.util.withNotLinerProgress
+import com.milaboratory.util.withNonLinerProgress
 import io.repseq.core.BaseSequence
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -96,14 +98,18 @@ class AllelesBuilder(
         return datasets.filteredClones(clonesFilter) { filteredClones ->
             filteredClones
                 .withExpectedSize(totalClonesCount)
-                .reportProgress(progress, "Grouping by the same ${geneType.letter} gene") { clones ->
-                    clones.groupByOnDisk(
-                        stateBuilder,
-                        tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}")
-                    ) { it.getBestHit(geneType).gene }
+                .reportProgress(progress, "Grouping by the same ${geneType.letter} gene")
+                .use { clones ->
+                    clones
+                        .groupByOnDisk(
+                            stateBuilder,
+                            tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}")
+                        ) { it.getBestHit(geneType).gene }
+                        .map { it.toList() }
                 }
-                .withNotLinerProgress(totalClonesCount) { it.size.toLong() }
-                .reportProgress(progress, "Searching for ${geneType.letter} alleles") { clustersWithTheSameV ->
+                .withNonLinerProgress(totalClonesCount) { it.size.toLong() }
+                .reportProgress(progress, "Searching for ${geneType.letter} alleles")
+                .use { clustersWithTheSameV ->
                     clustersWithTheSameV
                         .buffered(1) //also make take() from upstream synchronized
                         .mapInParallel(threads) { cluster ->

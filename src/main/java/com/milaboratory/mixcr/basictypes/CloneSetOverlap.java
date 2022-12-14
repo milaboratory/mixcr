@@ -131,7 +131,7 @@ public final class CloneSetOverlap {
 
                 @Override
                 public double getProgress() {
-                    return 1.0 * individualPorts.stream().mapToLong(OutputPortWithExpectedSize::getCurrentIndex).sum() / totalClones;
+                    return 1.0 * individualPorts.stream().mapToLong(OutputPortWithExpectedSize::getCount).sum() / totalClones;
                 }
 
                 @Override

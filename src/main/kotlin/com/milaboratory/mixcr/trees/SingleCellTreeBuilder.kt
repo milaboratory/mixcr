@@ -22,6 +22,7 @@ import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.mapInParallelOrdered
 import cc.redberry.pipe.util.mapNotNull
 import cc.redberry.pipe.util.synchronized
+import cc.redberry.pipe.util.toList
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
@@ -37,11 +38,11 @@ import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
-import com.milaboratory.primitivio.sortOnDisk
 import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.cached
 import com.milaboratory.util.pairComparator
+import com.milaboratory.util.sortOnDisk
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
@@ -73,14 +74,16 @@ class SingleCellTreeBuilder(
                 tempDest.addSuffix("tree.builder.sc.cellGroups"),
                 stateBuilder,
                 blockSize = 100
-            ) { cache ->
+            )
+            .use { cache ->
                 val cellBarcodesToGroupChainPair = mutableMapOf<CellBarcodeWithDatasetId, ChainPairKey>()
-                cache()
+                cache.createPort()
                     .groupCellsByChainPairs()
                     //on resolving intersection prefer larger groups
                     .sortOnDisk(
                         Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed(),
-                        tempDest.resolveFile("tree.builder.sc.sort_by_cell_barcodes_count")
+                        tempFile = tempDest.resolveFile("tree.builder.sc.sort_by_cell_barcodes_count"),
+                        chunkSize = 1024 * 1024
                     ) { sortedCellGroups ->
                         //decision about every barcode, to what pair of heavy and light chains it belongs
                         sortedCellGroups.forEach { cellGroup ->
@@ -107,7 +110,7 @@ class SingleCellTreeBuilder(
                         ClustersBuilder.SingleLinkage(clusterPredictor)
                 }
 
-                val result = cache()
+                val result = cache.createPort()
                     //read clones with barcodes and group them accordingly to decisions
                     .clustersWithSameVJAndCDR3Length(cellBarcodesToGroupChainPair)
                     .flatMap { cellGroups ->
@@ -191,6 +194,7 @@ class SingleCellTreeBuilder(
             tempDest.addSuffix("tree.builder.sc.group_by_found_chain_pairs"),
             pairComparator(VJBase.comparator)
         ) { it.heavy.clone.asVJBase() to it.light.clone.asVJBase() }
+        .map { it.toList() }
 
     private fun OutputPort<CellGroup>.groupCellsByChainPairs(): OutputPort<GroupOfCells> =
         flatMap { cellGroup ->
@@ -217,7 +221,8 @@ class SingleCellTreeBuilder(
                     .thenComparing({ it.light }, VJBase.comparator)
             ) { it.chainPairKey }
             //we search for clusters, so we not need groups with size 1
-            .filter { it.size > 1 }
+            .filter { it.count > 1 }
+            .map { it.toList() }
             .map { chainPairKeys ->
                 GroupOfCells(
                     chainPairKeys.first().chainPairKey,
@@ -266,6 +271,7 @@ class SingleCellTreeBuilder(
                 tempDest.addSuffix("tree.builder.sc.group_by_cell_barcodes"),
                 CellBarcodeWithDatasetId.comparator
             ) { it.cellBarcode }
+            .map { it.toList() }
 }
 
 private fun Clone.asVJBase() = VJBase(

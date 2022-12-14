@@ -368,13 +368,15 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             )
             cloneReader.readClones().use { port ->
                 val withRecalculatedScores = port.withExpectedSize(cloneReader.numberOfClones().toLong())
-                    .reportProgress(progressAndStage, "Recalculating scores ${inputFiles[i]}") { clones ->
+                    .reportProgress(progressAndStage, "Recalculating scores ${inputFiles[i]}")
+                    .use { clones ->
                         cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
                     }
                 if (outputClnsOptions.outputTemplate != null) {
                     withRecalculatedScores.asOutputPort()
                         .withExpectedSize(cloneReader.numberOfClones().toLong())
-                        .reportProgress(progressAndStage, "Realigning ${inputFiles[i]}") { clonesWithScores ->
+                        .reportProgress(progressAndStage, "Realigning ${inputFiles[i]}")
+                        .use { clonesWithScores ->
                             val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
                             outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
                             val callback = outputClnsFiles[i].toFile()

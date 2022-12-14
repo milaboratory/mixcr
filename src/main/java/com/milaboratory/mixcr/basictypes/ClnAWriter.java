@@ -394,7 +394,7 @@ public final class ClnAWriter implements
             if (toCollator == null)
                 return Double.NaN;
             else
-                return 1.0 * toCollator.getCurrentIndex() / numberOfAlignments;
+                return 1.0 * toCollator.getCount() / numberOfAlignments;
         } else
             return 1.0 * numberOfAlignmentsWritten / numberOfAlignments;
     }

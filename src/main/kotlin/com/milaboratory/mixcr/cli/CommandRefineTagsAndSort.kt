@@ -42,11 +42,11 @@ import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
-import com.milaboratory.primitivio.sortByHashOnDisk
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.sortByHashOnDisk
 import org.apache.commons.io.FileUtils
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin

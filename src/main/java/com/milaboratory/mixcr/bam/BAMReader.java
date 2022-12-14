@@ -203,7 +203,7 @@ public class BAMReader implements SequenceReader<SequenceRead>, OutputPortWithPr
 
     @Override
     public double getProgress() {
-        return (numberOfPairedReads.get() * 2. + numberOfUnpairedReads.get()) / progressChecker.getCurrentIndex();
+        return (numberOfPairedReads.get() * 2. + numberOfUnpairedReads.get()) / progressChecker.getCount();
     }
 
     @Override

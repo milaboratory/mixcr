@@ -20,6 +20,7 @@ import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.mapInParallel
 import cc.redberry.pipe.util.mapNotNull
 import cc.redberry.pipe.util.ordered
+import cc.redberry.pipe.util.toList
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.logger
@@ -129,6 +130,7 @@ class TreeBuilderByUserData(
                 stateBuilder,
                 tempDest.addSuffix("tree.builder.userInput")
             ) { it.treeId }
+            .map { it.toList() }
 
     private fun List<Clone>.bestGeneForClones(geneType: GeneType): VDJCGeneId =
         flatMap { clone -> clone.getHits(geneType).map { it.gene.id } }
