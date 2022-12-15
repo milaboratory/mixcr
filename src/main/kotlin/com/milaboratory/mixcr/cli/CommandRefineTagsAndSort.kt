@@ -26,6 +26,8 @@ import com.milaboratory.mitool.refinement.TagCorrectionPlan
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
+import com.milaboratory.mitool.refinement.gfilter.SequenceExtractor
+import com.milaboratory.mitool.refinement.gfilter.SequenceExtractorsFactory
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
@@ -326,7 +328,7 @@ object CommandRefineTagsAndSort {
                         SmartProgressReporter.startProgressReport(corrector)
 
                         // Will read the input stream once and extract all the required information from it
-                        corrector.initialize(mainReader, { al -> al.alignmentsIndex }) { als ->
+                        corrector.initialize(mainReader, AlignmentSequenceExtractor, { al -> al.alignmentsIndex }) { als ->
                             if (als.tagCount.size() != 1) throw ApplicationException(
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
@@ -448,6 +450,14 @@ object CommandRefineTagsAndSort {
             }
             refineTagsAndSortReport.writeReport(ReportHelper.STDOUT)
             reportOptions.appendToFiles(refineTagsAndSortReport)
+        }
+    }
+
+    object AlignmentSequenceExtractor : SequenceExtractorsFactory<VDJCAlignments> {
+        override fun getSequenceExtractor(seqKey: String) = run {
+            if (!"targets".equals(seqKey, ignoreCase = true))
+                throw IllegalArgumentException("Unknown sequence key: $seqKey")
+            SequenceExtractor<VDJCAlignments> { it.targets }
         }
     }
 }

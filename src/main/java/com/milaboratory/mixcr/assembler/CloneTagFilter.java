@@ -99,11 +99,20 @@ public final class CloneTagFilter {
                 .collect(Collectors.toList());
         List<CloneTag> grouped = SortingUtil.hGroup(cloneTags, keys);
         CloneTagStreamGrouping streamGrouping = new CloneTagStreamGrouping(expectedSorting, keys);
-        KeyedFilterContext<CloneTag> ctx = new KeyedFilterContext<>(null, streamGrouping, Collections.emptyList());
+        KeyedFilterContext<CloneTag> ctx = new KeyedFilterContext<>(null, streamGrouping, new CloneSequenceExtractor(), Collections.emptyList());
         FilteredOutputPortFactory<CloneTag> filtered = filter.filter(ctx, asOutputPortFactory(grouped));
         List<CloneTag> result = CUtils.toList(filtered.createPort());
         KeyedFilterReport report = filtered.getReport();
         return new Tuple2<>(result, report);
+    }
+
+    private static final class CloneSequenceExtractor implements SequenceExtractorsFactory<CloneTag> {
+        @Override
+        public SequenceExtractor<CloneTag> getSequenceExtractor(String seqKey) {
+            if (!seqKey.equalsIgnoreCase("targets"))
+                throw new IllegalArgumentException("Unknown sequence key: " + seqKey);
+            return obj -> obj.clone.getTargets();
+        }
     }
 
     private static final class CloneTagStreamGrouping implements StreamGrouping<CloneTag> {
