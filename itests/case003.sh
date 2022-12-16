@@ -19,4 +19,3 @@ mixcr analyze generic-tcr-amplicon \
   test_R1.fastq test_R2.fastq case3
 
 [[ -f case3.clna ]] || exit 1
-
