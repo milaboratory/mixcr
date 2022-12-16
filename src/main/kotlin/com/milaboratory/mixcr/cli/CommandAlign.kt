@@ -386,6 +386,12 @@ object CommandAlign {
     const val inputsLabel =
         "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|fasta|bam|sam))"
 
+    val inputsDescription = arrayOf(
+        "Two fastq files for paired reads or one file for single read data.",
+        "Use {{n}} if you want to concatenate files from multiple lanes, like:",
+        "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"
+    )
+
     private const val outputLabel = "alignments.vdjca"
 
     fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(Cmd::class.java)
@@ -397,11 +403,7 @@ object CommandAlign {
                 .type(Path::class.java)
                 .paramLabel(inputsLabel)
                 .hideParamSyntax(true)
-                .description(
-                    "Two fastq files for paired reads or one file for single read data.",
-                    "Use {{n}} if you want to concatenate files from multiple lanes, like:",
-                    "my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz"
-                )
+                .description(*inputsDescription)
                 .build()
         )
         .addPositional(
