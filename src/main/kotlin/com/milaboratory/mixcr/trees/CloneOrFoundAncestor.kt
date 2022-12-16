@@ -11,9 +11,9 @@
  */
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
@@ -25,7 +25,7 @@ class CloneOrFoundAncestor(
     val clones: List<CloneWithDatasetId>,
     val mutationsSet: MutationsSet
 ) {
-    class SerializerImpl : BasicSerializer<CloneOrFoundAncestor>() {
+    class SerializerImpl : Serializer<CloneOrFoundAncestor> {
         override fun write(output: PrimitivO, obj: CloneOrFoundAncestor) {
             output.writeInt(obj.id)
             output.writeCollection(obj.clones, PrimitivO::writeObject)

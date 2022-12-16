@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsReader
@@ -26,6 +25,7 @@ import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.util.ArraysUtils
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.exhaustive
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining

@@ -15,12 +15,12 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NSequenceWithQuality
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.VDJCPartitionedSequence
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
@@ -79,7 +79,7 @@ class CloneWrapper(
         val ids: List<CloneWithDatasetId.ID>
     )
 
-    class SerializerImpl : BasicSerializer<CloneWrapper>() {
+    class SerializerImpl : Serializer<CloneWrapper> {
         override fun write(output: PrimitivO, obj: CloneWrapper) {
             output.writeCollection(obj.clones, PrimitivO::writeObject)
             output.writeObject(obj.VJBase)
@@ -139,7 +139,7 @@ data class CloneWithDatasetId(
         override fun toString() = encode()
     }
 
-    class SerializerImpl : BasicSerializer<CloneWithDatasetId>() {
+    class SerializerImpl : Serializer<CloneWithDatasetId> {
         override fun write(output: PrimitivO, obj: CloneWithDatasetId) {
             output.writeObject(obj.clone)
             output.writeInt(obj.datasetId)

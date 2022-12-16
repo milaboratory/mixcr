@@ -15,12 +15,12 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.Range
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.readPair
 import com.milaboratory.mixcr.util.writePair
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.ReferencePoints
@@ -47,7 +47,7 @@ data class RootInfo(
     val reconstructedNDN: NucleotideSequence,
     val VJBase: VJBase
 ) {
-    class SerializerImpl : BasicSerializer<RootInfo>() {
+    class SerializerImpl : Serializer<RootInfo> {
         override fun write(output: PrimitivO, obj: RootInfo) {
             output.writePair(obj.sequence1)
             output.writePair(obj.partitioning)

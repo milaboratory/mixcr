@@ -11,10 +11,10 @@
  */
 package com.milaboratory.mixcr.basictypes
 
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readIntArray
 import com.milaboratory.primitivio.readObjectOptional
@@ -31,7 +31,7 @@ class VirtualCloneSet(
 ) : CloneSetInfo {
     override fun getTagDiversity(level: Int): Int = tagDiversity[level]
 
-    class SerializerImpl : BasicSerializer<VirtualCloneSet>() {
+    class SerializerImpl : Serializer<VirtualCloneSet> {
         override fun write(output: PrimitivO, obj: VirtualCloneSet) {
             output.writeDouble(obj.totalCount)
             output.writeObject(obj.totalTagCounts)

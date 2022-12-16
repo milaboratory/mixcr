@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -21,6 +20,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.trees.SHMTreesReader
+import com.milaboratory.util.exhaustive
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters

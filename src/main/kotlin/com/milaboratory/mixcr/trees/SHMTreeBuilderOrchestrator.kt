@@ -19,7 +19,6 @@ import cc.redberry.pipe.util.map
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.ClonesSupplier
 import com.milaboratory.mixcr.basictypes.GeneFeatures
@@ -27,6 +26,7 @@ import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.util.ProgressAndStage
@@ -263,7 +263,7 @@ class CloneFromUserInput(
 ) {
     val id get() = CloneWithDatasetId.ID(clone.id, datasetId)
 
-    class SerializerImpl : BasicSerializer<CloneFromUserInput>() {
+    class SerializerImpl : Serializer<CloneFromUserInput> {
         override fun write(output: PrimitivO, obj: CloneFromUserInput) {
             output.writeObject(obj.clone)
             output.writeInt(obj.datasetId)
