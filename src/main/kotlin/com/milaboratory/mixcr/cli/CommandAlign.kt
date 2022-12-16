@@ -384,7 +384,7 @@ object CommandAlign {
     }
 
     const val inputsLabel =
-        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|fasta|bam|sam))"
+        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam))"
 
     val inputsDescription = arrayOf(
         "Two fastq files for paired reads or one file for single read data.",
