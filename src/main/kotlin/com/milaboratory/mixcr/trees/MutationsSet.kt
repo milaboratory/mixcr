@@ -15,11 +15,11 @@ package com.milaboratory.mixcr.trees
 
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.plus
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readMap
 import com.milaboratory.primitivio.readObjectRequired
@@ -52,7 +52,7 @@ data class MutationsSet private constructor(
                 rootInfo.rangeInCDR3.J
             )
 
-    class SerializerImpl : BasicSerializer<MutationsSet>() {
+    class SerializerImpl : Serializer<MutationsSet> {
         override fun write(output: PrimitivO, obj: MutationsSet) {
             output.writeMap(obj.mutations.V.mutationsOutsideOfCDR3, { writeObject(it) }, { writeObject(it) })
             output.writeObject(obj.mutations.V.partInCDR3)
@@ -90,7 +90,7 @@ data class NDNMutations(
 ) {
     fun buildSequence(rootInfo: RootInfo): NucleotideSequence = mutations.mutate(rootInfo.reconstructedNDN)
 
-    class SerializerImpl : BasicSerializer<NDNMutations>() {
+    class SerializerImpl : Serializer<NDNMutations> {
         override fun write(output: PrimitivO, obj: NDNMutations) {
             output.writeObject(obj.mutations)
         }

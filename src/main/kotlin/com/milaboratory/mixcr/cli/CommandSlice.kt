@@ -17,7 +17,6 @@ import cc.redberry.pipe.util.flatten
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.it
 import cc.redberry.pipe.util.map
-import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsReader
@@ -36,6 +35,7 @@ import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.exhaustive
 import gnu.trove.map.hash.TIntIntHashMap
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.VDJCLibraryRegistry

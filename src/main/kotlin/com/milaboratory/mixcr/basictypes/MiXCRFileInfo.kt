@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.basictypes
 
 import com.milaboratory.mitool.data.CriticalThresholdCollection
 import com.milaboratory.mitool.data.CriticalThresholdKey
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsSpec
@@ -92,7 +91,7 @@ data class MiXCRHeader(
     ) {
         val libraryIdWithoutChecksum: VDJCLibraryId get() = VDJCLibraryId(libraryName, libraryData.taxonId)
 
-        class SerializerImpl : BasicSerializer<FoundAlleles>() {
+        class SerializerImpl : Serializer<FoundAlleles> {
             override fun write(output: PrimitivO, obj: FoundAlleles) {
                 output.writeObject(obj.libraryName)
                 output.writeObject(obj.libraryData)
@@ -111,7 +110,7 @@ data class MiXCRHeader(
         }
     }
 
-    class SerializerV1Impl : BasicSerializer<MiXCRHeader>() {
+    class SerializerV1Impl : Serializer<MiXCRHeader> {
         override fun write(output: PrimitivO, obj: MiXCRHeader) {
             output.writeObject(obj.paramsSpec)
             output.writeObject(obj.stepParams)
@@ -144,7 +143,7 @@ data class MiXCRHeader(
         }
     }
 
-    class SerializerV2Impl : BasicSerializer<MiXCRHeader>() {
+    class SerializerV2Impl : Serializer<MiXCRHeader> {
         override fun write(output: PrimitivO, obj: MiXCRHeader) {
             output.writeObject(obj.inputHash)
             output.writeObject(obj.paramsSpec)
@@ -179,7 +178,7 @@ data class MiXCRHeader(
         }
     }
 
-    class SerializerV3Impl : BasicSerializer<MiXCRHeader>() {
+    class SerializerV3Impl : Serializer<MiXCRHeader> {
         override fun write(output: PrimitivO, obj: MiXCRHeader) {
             output.writeObject(obj.inputHash)
             output.writeObject(obj.paramsSpec)

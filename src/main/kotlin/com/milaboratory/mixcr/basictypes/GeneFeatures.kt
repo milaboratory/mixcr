@@ -13,9 +13,9 @@ package com.milaboratory.mixcr.basictypes
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
@@ -71,7 +71,7 @@ data class GeneFeatures @JsonCreator constructor(
 
     override fun toString() = encode()
 
-    class SerializerImpl : BasicSerializer<GeneFeatures>() {
+    class SerializerImpl : Serializer<GeneFeatures> {
         override fun write(output: PrimitivO, obj: GeneFeatures) {
             output.writeCollection(obj.features) {
                 writeObject(it)
