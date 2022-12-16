@@ -1,0 +1,30 @@
+>>> Read ids: 0
+
+
+               <L1
+               <5'UTR                                        L1><L2  L2><FR1
+                M  S  I  S  L  L  C  C  A  A  F  P  L  L  W  A  G  P  V  N  A  G  V  T  Q  T  P
+   Quality     88656687786788626887676485655887777867767875777666768777777776777846878875768776
+   Target0   0 ATGAGCATCAGCCTCCTGTGCTGTGCAGCCTTTCCTCTCCTGTGGGCAGGTCCAGTGAATGCTGGTGTCACTCAGACCCC 79   Score
+TRBV6-6*00 100 atgagcatcagcctcctgtgctgtgcagcctttcctctcctgtgggcaggtccagtgaatgctggtgtcactcagacccc 179  1293
+
+                                                                  FR1><CDR1     CDR1><
+                 K  F  R  I  L  K  I  G  Q  S  M  T  L  Q  V  T  Q  D   R  T _  E  Y _
+   Quality     78787577877765588658885576788778678647458664785878868585 56678788855776
+   Target0  80 AAAATTCCGCATCCTGAAGATAGGACAGAGCATGACACTGCAAGTTACCCAGGATA-GAACCATGAATACA 149  Score
+TRBV6-6*00 180 aaaattccgcatcctgaagataggacagagcatgacactgcaGTGtacccaggataTgaaccatAaCtaca 250  1293
+
+
+                E  W  L  Q  C  L  Q  I  N  H  R  G  F  P  T  Q  A  G  V  G  C  S   S  *  T  S
+   Quality     877787857778788588583777858688825657878788585665668487878777776857 3677884856887
+   Target1   0 GAATGGCTACAATGTCTCCAGATCAACCACAGAGGATTTCCCACTCAGGCTGGAGTTGGCTGCTCC-TCCTAGACATCTG 78   Score
+TRBV6-6*00 339 gaatggctacaaCgtctccagatcaaccacagaggatttcccGctcaggctggagttggctgctccCtccCagacatctg 418  783
+
+                   FR3><CDR3     V>      <J           CDR3><FR4                    FR4>
+               V  N  V  C  A  S  S  Q  F  N  S  P  L  H  F  G  N  G  T   G  S  Q  *  Q
+   Quality     77568687862687778756468635788788778687487788787787778767 675678758644686
+   Target1  79 TGAACGTCTGTGCCAGCAGTCAATTCAATTCACCCCTCCACTTTGGGAACGGGACC-GGCTCACAGTGACAG 149  Score
+TRBV6-6*00 419 tgTacTtctgtgccagcagt                                                     438  783
+TRBJ1-6*00  27                           aattcacccctccactttgggaacgggaccAggctcacTgtgacag 72   359
+
+Filtered: 1 / 1 = 100.0%
