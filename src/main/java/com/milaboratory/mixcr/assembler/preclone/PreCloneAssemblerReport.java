@@ -24,10 +24,16 @@ import java.util.Map;
 public class PreCloneAssemblerReport implements MiXCRReport {
     @JsonProperty("inputGroups")
     public final long inputGroups;
+    @JsonProperty("groupsWithNoAssemblingFeature")
+    public final long groupsWithNoAssemblingFeature;
     @JsonProperty("inputAlignments")
     public final long inputAlignments;
+    @JsonProperty("inputAssemblingFeatureSequences")
+    public final long inputAssemblingFeatureSequences;
     @JsonProperty("clonotypes")
     public final long clonotypes;
+    @JsonProperty("assemblingFeatureSequencesInZeroPreClones")
+    public final long assemblingFeatureSequencesInZeroPreClones;
     @JsonProperty("clonotypesPerGroup")
     public final Map<Integer, Long> clonotypesPerGroup;
     @JsonProperty("coreAlignments")
@@ -60,8 +66,11 @@ public class PreCloneAssemblerReport implements MiXCRReport {
     @JsonCreator
     public PreCloneAssemblerReport(
             @JsonProperty("inputGroups") long inputGroups,
+            @JsonProperty("groupsWithNoAssemblingFeature") long groupsWithNoAssemblingFeature,
             @JsonProperty("inputAlignments") long inputAlignments,
+            @JsonProperty("inputAssemblingFeatureSequences") long inputAssemblingFeatureSequences,
             @JsonProperty("clonotypes") long clonotypes,
+            @JsonProperty("assemblingFeatureSequencesInZeroPreClones") long assemblingFeatureSequencesInZeroPreClones,
             @JsonProperty("clonotypesPerGroup") Map<Integer, Long> clonotypesPerGroup,
             @JsonProperty("coreAlignments") long coreAlignments,
             @JsonProperty("discardedCoreAlignments") long discardedCoreAlignments,
@@ -78,8 +87,11 @@ public class PreCloneAssemblerReport implements MiXCRReport {
             @JsonProperty("coreAlignmentsDroppedByTagSuffix") long coreAlignmentsDroppedByTagSuffix
     ) {
         this.inputGroups = inputGroups;
+        this.groupsWithNoAssemblingFeature = groupsWithNoAssemblingFeature;
         this.inputAlignments = inputAlignments;
+        this.inputAssemblingFeatureSequences = inputAssemblingFeatureSequences;
         this.clonotypes = clonotypes;
+        this.assemblingFeatureSequencesInZeroPreClones = assemblingFeatureSequencesInZeroPreClones;
         this.clonotypesPerGroup = clonotypesPerGroup;
         this.coreAlignments = coreAlignments;
         this.discardedCoreAlignments = discardedCoreAlignments;
@@ -99,11 +111,17 @@ public class PreCloneAssemblerReport implements MiXCRReport {
     @Override
     public void writeReport(ReportHelper helper) {
         helper.writeField("Number of input groups", inputGroups);
+        helper.writeField("Number of groups with no assembling feature", groupsWithNoAssemblingFeature);
         helper.writeField("Number of input alignments", inputAlignments);
         helper.writeField("Number of output pre-clonotypes", clonotypes);
+        helper.writePercentAndAbsoluteField("Number alignments with assembling feature",
+                inputAssemblingFeatureSequences,
+                inputAlignments);
         helper.print("Number of clonotypes per group:");
         helper.print(ReportKt.format(clonotypesPerGroup, "  ",
                 new StringBuilder(), new FormatSettings(0.0, Integer.MAX_VALUE, 0.05)).toString());
+        helper.writeField("Number of assembling feature sequences in groups with zero pre-clonotypes",
+                assemblingFeatureSequencesInZeroPreClones);
         helper.writePercentAndAbsoluteField("Number of core alignments", coreAlignments, inputAlignments);
         helper.writePercentAndAbsoluteField("Discarded core alignments", discardedCoreAlignments, coreAlignments);
         helper.writePercentAndAbsoluteField("Empirically assigned alignments", empiricallyAssignedAlignments, inputAlignments);
