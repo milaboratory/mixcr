@@ -27,7 +27,6 @@ import cc.redberry.pipe.util.toList
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.AttachClonesByDistanceChange
@@ -44,6 +43,7 @@ import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.primitivio.readList
@@ -707,7 +707,7 @@ internal class SHMTreeBuilderBySteps(
     private class Cluster(
         val clones: List<CloneWrapper>
     ) {
-        class SerializerImpl : BasicSerializer<Cluster>() {
+        class SerializerImpl : Serializer<Cluster> {
             override fun write(output: PrimitivO, obj: Cluster) {
                 output.writeCollection(obj.clones, PrimitivO::writeObject)
             }

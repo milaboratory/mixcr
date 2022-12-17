@@ -33,13 +33,14 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 
 @Command(
-    description = ["Export reports from file in tabular format."]
+    description = ["Export reports from files in tabular format."]
 )
 class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
     @Parameters(
         paramLabel = "$inputsLabel $outputLabel",
         index = "0",
-        arity = "1..*"
+        arity = "1..*",
+        hidden = true
     )
     private lateinit var inOut: List<Path>
 

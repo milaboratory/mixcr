@@ -13,10 +13,10 @@
 
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.VDJCGeneId
@@ -44,7 +44,7 @@ data class VJBase(
             .thenComparingInt { it.CDR3length }
     }
 
-    class SerializerImpl : BasicSerializer<VJBase>() {
+    class SerializerImpl : Serializer<VJBase> {
         override fun write(output: PrimitivO, obj: VJBase) {
             output.writeObject(obj.geneIds.V)
             output.writeObject(obj.geneIds.J)
