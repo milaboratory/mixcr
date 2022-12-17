@@ -3,7 +3,7 @@
   "kOffset": -7,
   "minimalAssembleOverlap": 12,
   "minimalNOverlap": 7,
-  "minimalNOverlapShare": 0.65,
+  "minimalNOverlapShare": 0.45,
   "minimalAlignmentMergeIdentity": 0.85,
   "mergerParameters": {
     "qualityMergingAlgorithm": "SumSubtraction",
