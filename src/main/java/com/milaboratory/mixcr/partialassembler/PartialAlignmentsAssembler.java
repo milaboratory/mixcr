@@ -44,6 +44,7 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
     final int kOffset;
     final int minimalAssembleOverlap;
     final int minimalNOverlap;
+    final float minimalNOverlapShare;
     final boolean writePartial, overlappedOnly;
     final VDJCAlignerParameters alignerParameters;
     final TargetMerger targetMerger;
@@ -81,6 +82,7 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
         this.kOffset = params.getKOffset();
         this.minimalAssembleOverlap = params.getMinimalAssembleOverlap();
         this.minimalNOverlap = params.getMinimalNOverlap();
+        this.minimalNOverlapShare = params.getMinimalNOverlapShare();
         this.alignerParameters = alignerParameters;
         this.targetMerger = new TargetMerger(params.getMergerParameters(), alignerParameters, params.getMinimalAlignmentMergeIdentity());
         this.usedGenes = usedGenes;
@@ -217,8 +219,10 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
 
             int actualNRegionLength = nRegion.totalLength();
             int minimalN = Math.min(minimalNOverlap, actualNRegionLength);
+            int actualNRegionLengthInOverlap = nRegionInOverlap.totalLength();
 
-            if (nRegionInOverlap.totalLength() < minimalN) {
+            if (actualNRegionLengthInOverlap < minimalN ||
+                    1.0f * actualNRegionLengthInOverlap / actualNRegionLength < minimalNOverlapShare) {
                 droppedSmallOverlapNRegion.incrementAndGet();
                 cancelCurrentResult.run();
                 continue;

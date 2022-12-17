@@ -25,7 +25,7 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class PartialAlignmentsAssemblerParameters {
     private int kValue, kOffset, minimalAssembleOverlap, minimalNOverlap;
-    private float minimalAlignmentMergeIdentity;
+    private float minimalNOverlapShare, minimalAlignmentMergeIdentity;
     private MergerParameters mergerParameters;
     private long maxLeftParts;
     private int maxLeftMatches;
@@ -36,6 +36,7 @@ public class PartialAlignmentsAssemblerParameters {
             @JsonProperty("kOffset") int kOffset,
             @JsonProperty("minimalAssembleOverlap") int minimalAssembleOverlap,
             @JsonProperty("minimalNOverlap") int minimalNOverlap,
+            @JsonProperty("minimalNOverlapShare") float minimalNOverlapShare,
             @JsonProperty("minimalAlignmentMergeIdentity") float minimalAlignmentMergeIdentity,
             @JsonProperty("mergerParameters") MergerParameters mergerParameters,
             @JsonProperty("maxLeftParts") long maxLeftParts,
@@ -44,6 +45,7 @@ public class PartialAlignmentsAssemblerParameters {
         this.kOffset = kOffset;
         this.minimalAssembleOverlap = minimalAssembleOverlap;
         this.minimalNOverlap = minimalNOverlap;
+        this.minimalNOverlapShare = minimalNOverlapShare;
         this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
         this.mergerParameters = mergerParameters;
         this.maxLeftParts = maxLeftParts;
@@ -90,6 +92,14 @@ public class PartialAlignmentsAssemblerParameters {
         this.minimalNOverlap = minimalNOverlap;
     }
 
+    public float getMinimalNOverlapShare() {
+        return minimalNOverlapShare;
+    }
+
+    public void setMinimalNOverlapShare(float minimalNOverlapShare) {
+        this.minimalNOverlapShare = minimalNOverlapShare;
+    }
+
     public float getMinimalAlignmentMergeIdentity() {
         return minimalAlignmentMergeIdentity;
     }
@@ -123,6 +133,7 @@ public class PartialAlignmentsAssemblerParameters {
                 kOffset == that.kOffset &&
                 minimalAssembleOverlap == that.minimalAssembleOverlap &&
                 minimalNOverlap == that.minimalNOverlap &&
+                Float.compare(that.minimalNOverlapShare, minimalNOverlapShare) == 0 &&
                 Float.compare(that.minimalAlignmentMergeIdentity, minimalAlignmentMergeIdentity) == 0 &&
                 maxLeftParts == that.maxLeftParts &&
                 maxLeftMatches == that.maxLeftMatches &&
@@ -131,7 +142,7 @@ public class PartialAlignmentsAssemblerParameters {
 
     @Override
     public int hashCode() {
-        return Objects.hash(kValue, kOffset, minimalAssembleOverlap, minimalNOverlap, minimalAlignmentMergeIdentity, mergerParameters, maxLeftParts, maxLeftMatches);
+        return Objects.hash(kValue, kOffset, minimalAssembleOverlap, minimalNOverlap, minimalNOverlapShare, minimalAlignmentMergeIdentity, mergerParameters, maxLeftParts, maxLeftMatches);
     }
 
     @Override

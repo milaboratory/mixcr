@@ -15,6 +15,7 @@ import cc.redberry.primitives.Filter;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseParameters;
 import com.milaboratory.core.alignment.batch.BatchAlignerWithBaseWithFilter;
+import com.milaboratory.core.alignment.batch.LeftmostBatchAlignerAdapter;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mixcr.basictypes.HasGene;
 import com.milaboratory.util.BitArray;
@@ -168,7 +169,10 @@ public abstract class VDJCAlignerAbstract extends VDJCAligner {
             singleDAligner = new SingleDAligner(dAlignerParameters,
                     genesToAlign.get(GeneType.Diversity));
         vAligner = createKAligner(GeneType.Variable);
-        jAligner = createKAligner(GeneType.Joining);
+        jAligner = new LeftmostBatchAlignerAdapter<>(
+                createKAligner(GeneType.Joining),
+                0.6f
+        );
         cAligner = createKAligner(GeneType.Constant);
 
         Chains chains = new Chains();
