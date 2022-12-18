@@ -1,0 +1,57 @@
+>>> Read ids: 0
+
+
+                                      <5'UTR                                           5'UTR><L    
+                                                                                              M    
+    Quality    22226665677777777767645467726746777767777777777465222677777522226464256776747727    
+    Target0  0 TAGATCGAATTTGATCTTGGGGGACCCAACAACCACATCCCTCCTCTAGAGAATCCCCTGAAAGCACAGCTCCTCACCAT 79   Score
+IGHV1-45*00 45                        acccaacaaccacatccctcctctagagaatcccctgaaagcacagctcctcaccat 101  2193
+
+                                                         L1><L2     L2><FR1                         
+                  D  W  T  W  I  I  L  F  L  V  A  A  A  T  D  A  Y  S  P  M  Q  L  V  Q  S  G      
+    Quality     52257422567745224777777777754725777667676774672777777774243646226722626267772222    
+    Target0  80 GGACTGGACCTGGATAATCCTCTTCTTGGTTGCAGCAGCCACAGATGCCTACTCCCCGATGCAGCTGGTTCAGTCTGGGG 159  Score
+IGHV1-45*00 102 ggactggacctggaGaatcctcttcttggtGgcagcagccacagatgcctactcccAgatgcagctggtGcagtctgggg 181  2193
+
+                                                              FR1><CDR1              CDR1><FR2      
+                A  E  V  N  K  T  G  S  S  L  K  V  S  C  N  A  S  G  Y  T  F  T  Y  R  Y  L  H     
+    Quality     46232575222234255242657776253223667766725223257677131615454777156736656416464113    
+    Target0 160 CTGAGGTGAATAAGACTGGGTCCTCATTGAAGGTTTCCTGCAATGCTTCCGGCTACACCTTCACCTACCGCTACCTGCAC 239  Score
+IGHV1-45*00 182 ctgaggtgaaGaagactgggtcctcaGtgaaggtttcctgcaaGgcttccggAtacaccttcacctaccgctacctgcac 261  2193
+
+                                                         FR2><CDR2              CDR2><    
+                 L  V  R  P  S  P  R  P  P  L  E  W  L  G  W  F  T  P  Y  N  C  N  S _    
+    Quality     5134557111111314441213221312341113411321123121241412357131141121121411    
+    Target0 240 TTGGTTCGCCCGTCCCCCCGACCACCTCTTGAGTGGTTGGGCTGGTTCACACCTTACAATTGTAACTCCC 309  Score
+IGHV1-45*00 262 tGggtGcgAcAgGcccccGgacAaGcGcttgagtggAtgggAtggAtcacaccttTcaatGgtaacAcc  330  2193
+
+                                                                                             
+          _ K  R  K  R  G  G  G  G  G  G  G  G  G  G  G  R  G  E  G  G  R  K  R  K  K  K     
+Quality   22222222221111111111111111111112111111111221211111111111111111211113131112423211   
+Target1 0 AAAAAGAAAAAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGAAGGGGGGAGGGGGGGAGGAAAAGAAAGAAAAAAG 79  Score
+
+                                                                                                    
+                G  K  R  R  K  E  R  E  G  R  E  R  G  T  N  A  R  E  K  G  K  S  K  A  D  M  E     
+    Quality     21151311513131311311111111335141443115413111112341543153414414111144311151167541    
+    Target1  80 GAAAAAGAAGAAAAGAAAGAGAAGGCAGGGAAAGGGGAACAAATGCGAGAGAAAAGGGAAAGAGCAAAGCAGACATGGAA 159  Score
+IGHV1-45*00 384                                                              gagcaCagcCTacatggaG 402  219
+
+                                                                                   JP><J            
+                                                                        <D        D> <JP            
+                 L  G  S  M  R  T  E  E  T  A  G  *  *  W  E  R  T  E  L  Y  S  R  D  Y  Y  F  E    
+    Quality     13315245232253322123456242324252226224234252554322242222255264246266226224222263    
+    Target1 160 CTGGGCAGCATGAGAACGGAGGAAACAGCAGGGTAGTAATGGGAAAGAACAGAACTGTATAGTAGGGATTATTACTTTGA 239  Score
+IGHV1-45*00 403 ctgAgcagcCtgagaTcTgaggaCacagc                                                    431  219
+IGHD1-26*00  21                                                         gtatagt-ggga             31   43
+IGHD3-22*00   0                                 gtagtaat                                         7    40
+   IGHJ4*00  19                                                                      taCtactttga 29   345
+
+               CDR3><FR4                       FR4><C                                  
+               S  W  G  Q  G  T  L  V  T  V  S  S  A  S  P  T  S  P  K  V  F  P  L     
+ Quality     4222276764676777627276622622524226427767462567746777525777726544426224    
+ Target1 240 GTCCTGGGGACAGGGAACACTGGTCACCGTCTCCTCAGCATCCCCGACCAGCCCCAAGGTCTTCCCGCTG 309  Score
+IGHJ4*00  30 CtActggggCcagggaacCctggtcaccgtctcctcag                                 67   345
+IGHA1*00   0                                       catccccgaccagccccaaggtcttcccgctg 31   160
+IGHA2*00   0                                       catccccgaccagccccaaggtcttcccgctg 31   160
+
+Filtered: 1 / 1 = 100.0%
