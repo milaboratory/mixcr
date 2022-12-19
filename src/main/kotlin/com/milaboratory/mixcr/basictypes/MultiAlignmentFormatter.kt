@@ -183,7 +183,6 @@ object MultiAlignmentFormatter {
                 val line = CharArray(multiAlignmentHelper.size())
                 Arrays.fill(line, ' ')
                 for (trParam in trParams) {
-                    if (multiAlignmentHelper.subject.firstPosition !in trParam.range && multiAlignmentHelper.subject.lastPosition !in trParam.range) continue
                     val mainSequence = target.getRange(trParam.range)
                     val leftover = trParam.codonLeftoverRange?.let { target.getRange(it) }
                     val bigSeq = when {

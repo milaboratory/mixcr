@@ -11,9 +11,9 @@
  */
 package com.milaboratory.mixcr.trees
 
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 
@@ -29,7 +29,7 @@ class SHMTreeResult(
             else -> tree.root
         }.content
 
-    class SerializerImpl : BasicSerializer<SHMTreeResult>() {
+    class SerializerImpl : Serializer<SHMTreeResult> {
         override fun write(output: PrimitivO, obj: SHMTreeResult) {
             TreeSerializer.writeTree(output, obj.tree)
             output.writeObject(obj.rootInfo)

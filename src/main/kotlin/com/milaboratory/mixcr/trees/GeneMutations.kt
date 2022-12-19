@@ -14,11 +14,11 @@ package com.milaboratory.mixcr.trees
 import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 import io.repseq.core.GeneFeature
@@ -94,7 +94,7 @@ data class PartInCDR3(
     val range: Range,
     val mutations: Mutations<NucleotideSequence>
 ) {
-    class SerializerImpl : BasicSerializer<PartInCDR3>() {
+    class SerializerImpl : Serializer<PartInCDR3> {
         override fun write(output: PrimitivO, obj: PartInCDR3) {
             output.writeObject(obj.range)
             output.writeObject(obj.mutations)

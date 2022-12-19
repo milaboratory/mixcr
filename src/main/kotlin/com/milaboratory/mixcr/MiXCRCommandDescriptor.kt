@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport
 import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport
@@ -45,6 +44,7 @@ import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
@@ -495,7 +495,7 @@ class MiXCRStepReports(
             MiXCRStepReports(StepDataCollection(upstreams.map { (fileName, reports) -> fileName to reports.collection }))
     }
 
-    class SerializerV1Impl : BasicSerializer<MiXCRStepReports>() {
+    class SerializerV1Impl : Serializer<MiXCRStepReports> {
         override fun write(output: PrimitivO, obj: MiXCRStepReports) =
             StepDataCollection.SerializerImpl.writeRecursive(output, obj.collection)
 
@@ -503,7 +503,7 @@ class MiXCRStepReports(
             MiXCRStepReports(StepDataCollection.SerializerImpl.readRecursive(input, withFileNames = false))
     }
 
-    class SerializerV2Impl : BasicSerializer<MiXCRStepReports>() {
+    class SerializerV2Impl : Serializer<MiXCRStepReports> {
         override fun write(output: PrimitivO, obj: MiXCRStepReports) =
             StepDataCollection.SerializerImpl.writeRecursive(output, obj.collection)
 
@@ -531,7 +531,7 @@ class MiXCRStepParams(
             MiXCRStepParams(StepDataCollection(upstreams.map { (fileName, params) -> fileName to params.collection }))
     }
 
-    class SerializerV1Impl : BasicSerializer<MiXCRStepParams>() {
+    class SerializerV1Impl : Serializer<MiXCRStepParams> {
         override fun write(output: PrimitivO, obj: MiXCRStepParams) =
             StepDataCollection.SerializerImpl.writeRecursive(output, obj.collection)
 
@@ -539,7 +539,7 @@ class MiXCRStepParams(
             MiXCRStepParams(StepDataCollection.SerializerImpl.readRecursive(input, withFileNames = false))
     }
 
-    class SerializerV2Impl : BasicSerializer<MiXCRStepParams>() {
+    class SerializerV2Impl : Serializer<MiXCRStepParams> {
         override fun write(output: PrimitivO, obj: MiXCRStepParams) =
             StepDataCollection.SerializerImpl.writeRecursive(output, obj.collection)
 

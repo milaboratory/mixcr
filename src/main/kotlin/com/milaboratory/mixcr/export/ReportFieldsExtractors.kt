@@ -20,9 +20,7 @@ import com.milaboratory.mixcr.cli.CommandExportReportsAsTable
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.mixcr.export.ReportFieldsExtractors.ReportsWithSource
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause.NoHits
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause.NoJHits
-import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause.NoVHits
+import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
 import com.milaboratory.util.ReportHelper
 import picocli.CommandLine
 
@@ -139,36 +137,17 @@ object ReportFieldsExtractors : FieldExtractorsFactoryWithPresets<ReportsWithSou
         }
         this += FieldsCollection(
             100_800,
-            "-alignmentFailedNoHits",
-            "Percentage of reads that not aligned because of no hits."
+            "-alignmentsFailed",
+            "Percentage of reads that not aligned because of different reasons (columns for each reason)."
         ) {
-            columnsForPercentage(
-                "alignmentFailedNoHits",
-                { reports -> reports.extract<AlignerReport, _> { it.notAlignedReasons[NoHits] ?: 0L }.sum() },
-                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
-            )
-        }
-        this += FieldsCollection(
-            100_801,
-            "-alignmentFailedNoVHits",
-            "Percentage of reads that not aligned because of no V hits."
-        ) {
-            columnsForPercentage(
-                "alignmentFailedNoVHits",
-                { reports -> reports.extract<AlignerReport, _> { it.notAlignedReasons[NoVHits] ?: 0L }.sum() },
-                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
-            )
-        }
-        this += FieldsCollection(
-            100_802,
-            "-alignmentFailedNoJHits",
-            "Percentage of reads that not aligned because of no V hits."
-        ) {
-            columnsForPercentage(
-                "alignmentFailedNoJHits",
-                { reports -> reports.extract<AlignerReport, _> { it.notAlignedReasons[NoJHits] ?: 0L }.sum() },
-                { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
-            )
+            VDJCAlignmentFailCause.values()
+                .flatMap { reason ->
+                    columnsForPercentage(
+                        "alignmentFailed$reason",
+                        { reports -> reports.extract<AlignerReport, _> { it.notAlignedReasons[reason] ?: 0L }.sum() },
+                        { reports -> reports.extract<AlignerReport, _> { it.totalReadsProcessed }.sum() }
+                    )
+                }
         }
         this += FieldsCollection(
             100_900,

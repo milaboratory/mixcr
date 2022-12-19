@@ -24,7 +24,6 @@ import cc.redberry.pipe.util.mapNotNull
 import cc.redberry.pipe.util.synchronized
 import cc.redberry.pipe.util.toList
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mitool.pattern.search.BasicSerializer
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.tag.SequenceTagValue
@@ -34,6 +33,7 @@ import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.primitivio.readList
@@ -287,7 +287,7 @@ class ChainPairKeyWithCellBarcode(
     val chainPairKey: ChainPairKey,
     val cellBarcode: CellBarcodeWithDatasetId
 ) {
-    class SerializerImpl : BasicSerializer<ChainPairKeyWithCellBarcode>() {
+    class SerializerImpl : Serializer<ChainPairKeyWithCellBarcode> {
         override fun write(output: PrimitivO, obj: ChainPairKeyWithCellBarcode) {
             output.writeObject(obj.chainPairKey)
             output.writeObject(obj.cellBarcode)
@@ -309,7 +309,7 @@ data class ChainPairKey(
     val heavy: VJBase,
     val light: VJBase
 ) {
-    class SerializerImpl : BasicSerializer<ChainPairKey>() {
+    class SerializerImpl : Serializer<ChainPairKey> {
         override fun write(output: PrimitivO, obj: ChainPairKey) {
             output.writeObject(obj.heavy)
             output.writeObject(obj.light)
@@ -340,7 +340,7 @@ class ChainPair(
         check(heavy.datasetId == light.datasetId)
     }
 
-    class SerializerImpl : BasicSerializer<ChainPair>() {
+    class SerializerImpl : Serializer<ChainPair> {
         override fun write(output: PrimitivO, obj: ChainPair) {
             output.writeObject(obj.heavy)
             output.writeObject(obj.light)
@@ -364,7 +364,7 @@ class CellGroup(
     val cellBarcode: CellBarcodeWithDatasetId
 ) {
 
-    class SerializerImpl : BasicSerializer<CellGroup>() {
+    class SerializerImpl : Serializer<CellGroup> {
         override fun write(output: PrimitivO, obj: CellGroup) {
             output.writeCollection(obj.heavy, PrimitivO::writeObject)
             output.writeCollection(obj.light, PrimitivO::writeObject)
@@ -391,7 +391,7 @@ class CloneAndCellTag(
     val tagCount: Int
 ) {
 
-    class SerializerImpl : BasicSerializer<CloneAndCellTag>() {
+    class SerializerImpl : Serializer<CloneAndCellTag> {
         override fun write(output: PrimitivO, obj: CloneAndCellTag) {
             output.writeObject(obj.clone)
             output.writeObject(obj.cellBarcode)
@@ -416,7 +416,7 @@ class GroupOfCells(
     val chainPairKey: ChainPairKey,
     val cellBarcodes: List<CellBarcodeWithDatasetId>
 ) {
-    class SerializerImpl : BasicSerializer<GroupOfCells>() {
+    class SerializerImpl : Serializer<GroupOfCells> {
         override fun write(output: PrimitivO, obj: GroupOfCells) {
             output.writeObject(obj.chainPairKey)
             output.writeCollection(obj.cellBarcodes, PrimitivO::writeObject)
@@ -444,7 +444,7 @@ data class CellBarcodeWithDatasetId(
             .thenComparingInt { it.datasetId }
     }
 
-    class SerializerImpl : BasicSerializer<CellBarcodeWithDatasetId>() {
+    class SerializerImpl : Serializer<CellBarcodeWithDatasetId> {
         override fun write(output: PrimitivO, obj: CellBarcodeWithDatasetId) {
             output.writeObject(obj.cellBarcode)
             output.writeInt(obj.datasetId)

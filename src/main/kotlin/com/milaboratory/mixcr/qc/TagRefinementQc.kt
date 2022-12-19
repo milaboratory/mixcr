@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.qc
 
-import com.milaboratory.mitool.exhaustive
 import com.milaboratory.mitool.refinement.gfilter.AndKeyedFilter
 import com.milaboratory.mitool.refinement.gfilter.AndTaggedFilterReport
 import com.milaboratory.mitool.refinement.gfilter.GenericHistOpReport
@@ -57,22 +56,20 @@ object TagRefinementQc {
         filter: KeyedRecordFilter,
         rep: KeyedFilterReport,
         log: Boolean = false,
-    ): List<Plot> = run {
-        when (filter) {
-            is AndKeyedFilter -> {
-                rep as AndTaggedFilterReport
-                filter.filters.flatMapIndexed { idx, f ->
-                    tagRefinementQc(f, rep.nestedReports[idx], log)
-                }
+    ): List<Plot> = when (filter) {
+        is AndKeyedFilter -> {
+            rep as AndTaggedFilterReport
+            filter.filters.flatMapIndexed { idx, f ->
+                tagRefinementQc(f, rep.nestedReports[idx], log)
             }
+        }
 
-            is GroupFilter -> {
-                rep as GroupFilterReport
-                groupFilterQc(filter, rep, log)
-            }
+        is GroupFilter -> {
+            rep as GroupFilterReport
+            groupFilterQc(filter, rep, log)
+        }
 
-            else -> throw UnsupportedOperationException("${filter.javaClass} QC is not supported yet")
-        }.exhaustive
+        else -> throw UnsupportedOperationException("${filter.javaClass} QC is not supported yet")
     }
 
     private fun groupFilterQc(filter: GroupFilter, rep: GroupFilterReport, log: Boolean) =

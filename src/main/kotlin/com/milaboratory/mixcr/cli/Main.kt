@@ -363,22 +363,25 @@ object Main {
 
     private fun registerLoggerOptions(commandLines: Collection<CommandLine>) {
         for (commandLine in commandLines) {
-            commandLine.commandSpec
-                .addOption(
-                    OptionSpec
-                        .builder("--no-warnings")
-                        .description("Suppress all warning messages.")
-                        .order(OptionsOrder.logger)
-                        .build()
-                )
-                .addOption(
-                    OptionSpec
-                        .builder("--verbose")
-                        .description("Verbose messages.")
-                        .order(OptionsOrder.logger + 1)
-                        .build()
-                )
-            registerLoggerOptions(commandLine.subcommands.values)
+            if (commandLine.subcommands.isEmpty()) {
+                commandLine.commandSpec
+                    .addOption(
+                        OptionSpec
+                            .builder("-nw", "--no-warnings")
+                            .description("Suppress all warning messages.")
+                            .order(OptionsOrder.logger)
+                            .build()
+                    )
+                    .addOption(
+                        OptionSpec
+                            .builder("--verbose")
+                            .description("Verbose messages.")
+                            .order(OptionsOrder.logger + 1)
+                            .build()
+                    )
+            } else {
+                registerLoggerOptions(commandLine.subcommands.values)
+            }
         }
     }
 
