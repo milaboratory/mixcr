@@ -3,5 +3,5 @@
   extend:
     vAnchor: CDR3Begin
     jAnchor: CDR3End
-    minimalVScore: 50
-    minimalJScore: 50
+    minimalVScore: 100
+    minimalJScore: 70
