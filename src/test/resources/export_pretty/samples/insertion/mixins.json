@@ -1,0 +1,8 @@
+[
+  "--species",
+  "hs",
+  "--rna",
+  "--floating-left-alignment-boundary",
+  "--floating-right-alignment-boundary",
+  "C"
+]

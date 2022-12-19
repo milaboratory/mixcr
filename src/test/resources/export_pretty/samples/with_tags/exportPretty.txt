@@ -1,0 +1,20 @@
+>>> Read ids: 0
+
+>>> Tags:
+>>> CELL: GGATTACTCATTGCCC F:FFFFFFFFFFFFFF
+>>> UMI: ATGCCTAGGG F:FFFFFFFF
+
+
+               <5'UTR             5'UTR><L1                                           L1><L2       
+                                         M  D  S  W  T  F  C  C  V  S  L  C  I  L  V  A  K  H      
+    Quality    77777775777777777777777777777777777777777777777777777777777777777777777777777777    
+    Target0  0 ATTCCACATCTGCTCTCACTCTGCCATGGACTCCTGGACCTTCTGCTGTGTGTCCCTTTGCATCCTGGTAGCGAAGCATA 79   Score
+TRBV12-3*00 75 attccacatctgctctcactctgccatggactcctggaccttctgctgtgtgtccctttgcatcctggtagcgaagcata 154  900
+
+                2><FR1        
+                T  D  A _     
+    Quality     7777777777    
+    Target0  80 CAGATGCTGG 89   Score
+TRBV12-3*00 155 cagatgctgg 164  900
+
+Filtered: 1 / 1 = 100.0%

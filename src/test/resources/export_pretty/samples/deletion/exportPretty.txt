@@ -1,0 +1,53 @@
+>>> Read ids: 0
+
+
+                                   <5'UTR                              5'UTR><L1                   
+                                                                              M  K  P  L  W  F     
+    Quality    42256777777777777767777777777777777777777777777777777777777777676677777777776777    
+    Target0  0 TAGGTCAAGTGAAATCTTGGGGGAAATACTTTCTGAGAGTCCTGGACCTCCTGTGCAAGAACATGAAACCCCTGTGGTTC 79   Score
+IGHV4-31*00 58                     gggaaatactttctgagagtcctggacctcctgtgcaagaacatgaaacAcctgtggttc 117  2349
+
+                                         L1><L2     L2><FR1                                         
+                 F  L  L  L  V  A  A  P  R  W  V  L  S  Q  V  Q  L  Q  E  S  G  P  G  L  V  K  P    
+    Quality     77767777777777777777777777777777777777777777577677777777777567777667777777672677    
+    Target0  80 TTCCTCCTGCTGGTGGCAGCTCCCAGATGGGTCCTGTCCCAGGTGCAGCTGCAGGAGTCGGGCCCGGGACTAGTAAAGCC 159  Score
+IGHV4-31*00 118 ttcctcctgctggtggcagctcccagatgggtcctgtcccaggtgcagctgcaggagtcgggcccAggactGgtGaagcc 197  2349
+
+                                              FR1><CDR1                    CDR1><FR2                
+                  S  Q  T  L  S  L  T  C  A  V  S  G  A  S  I  N  S  G  A  Y  Y  C  S  W  I  R      
+    Quality     77647474767777777777777477777676676477766772772254567777777646456323257551566464    
+    Target0 160 TTCACAGACCCTGTCCCTCACCTGCGCTGTCTCTGGTGCCTCCATCAACAGTGGTGCTTACTACTGTAGCTGGATCCGCC 239  Score
+IGHV4-31*00 198 ttcacagaccctgtccctcacctgcActgtctctggtgGctccatcaGcagtggtgGttactactgGagctggatccgcc 277  2349
+
+                                               FR2><CDR2           CDR2><FR3                 
+                Q  H  P  G  T  G  L  D  W  I  G  Y  I  Y  Y  S    E   P  Y  Y  T  P  S _     
+    Quality     514345454311114144544145611453413241122114113122  311 2241231412313122311    
+    Target0 240 AGCACCCCGGGACGGGCCTGGATTGGATTGGGTACATCTATTACAGTG--AAC-CCTACTACACCCCGTCCCC 309  Score
+IGHV4-31*00 278 agcacccAgggaAgggcctggaGtggattgggtacatctattacagtgGGaGcAcctactacaAcccgtccc  349  2349
+
+                                                                                             
+          _  G  E  E  K  G  G  G  G  G  G  G  G  G  G  R  G  E  E  G  R  G  E  K  N  K  R    
+Quality   22222222222211122221211111111111111111132221111111111211121111211111111111111421   
+Target1 0 AAGGAGAGGAAAAGGGGGGAGGGGGGGGGGGGGGGGGGGGGGGAAGGGGAGAGGAGGGGAGAGGAGAAAAAAATAAAAGG 79  Score
+
+                                                                                               
+            E  R  E  E  N  P  A  L  R  K  G  R  S  I  S  V  D  T  C  K  N  Q  V  S  L  K  L    
+Quality    24411535212112211111111111221133211213131111122232121212112131111113145411443321    
+Target1 80 GAAAGAGAAGAAAACCCGGCCCTGAGGAAGGGACGTTCAATATCAGTTGACACGTGCAAGAACCAGGTCTCCCTGAAGCT 159  Score
+
+                                                                      <D           D>  <J           
+                  N  S  G  K  A  A  E  T  A  V  Y  Y  C  E  G  A  P  R  V  R  G  V  M  N  Y  F      
+    Quality     25321113111111125362327625556262744642634262645542277666462746557677677774646447    
+    Target1 160 GAACTCTGGGAAGGCCGCGGAAACGGCCGTATATTACTGTGAGGGAGCCCCAAGGGTTCGTGGAGTTATGAACTACTTTG 239  Score
+IGHD3-10*00  41                                                       ggttcAGggagttat            55   47
+IGHD3-16*00  57                                                              ggagttat            64   40
+   IGHJ4*00  20                                                                        actactttg 28   451
+
+                CDR3><FR4                       FR4><C                                 
+             D  F  W  G  Q  G  T  L  V  T  V  S  S  G  S  A  S  A  P  T  L  F  P _     
+ Quality     7667477777767777777647766677676777777776777476747777777777776777766642    
+ Target1 240 ACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGGGAGTGCATCCGCCCCAACCCTTTTCCCCCG 309  Score
+IGHJ4*00  29 actActggggccagggaaccctggtcaccgtctcctcag                                67   451
+ IGHM*00   0                                        ggagtgcatccgccccaacccttttccccc  29   150
+
+Filtered: 1 / 1 = 100.0%
