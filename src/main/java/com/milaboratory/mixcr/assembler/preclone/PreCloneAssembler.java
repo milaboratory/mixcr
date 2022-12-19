@@ -167,10 +167,12 @@ public final class PreCloneAssembler {
 
         assert alignmentInfos.size() == assemblerInput.size();
 
+        report.inputAssemblingFeatureSequences.addAndGet(alignmentInfos.size());
         report.inputAlignments.addAndGet(localIdx + 1);
 
         if (assemblerInput.isEmpty()) {
             CUtils.drainWithoutClose(alignmentsReader2.take(), DummyInputPort.INSTANCE);
+            report.groupsWithNoAssemblingFeature.incrementAndGet();
             return new PreCloneAssemblerResult(Collections.emptyList(), null);
         }
 
@@ -237,6 +239,8 @@ public final class PreCloneAssembler {
         int numberOfClones = consensuses.size();
         report.clonotypes.addAndGet(numberOfClones);
         report.clonotypesPerGroup.get(numberOfClones).incrementAndGet();
+        if (numberOfClones == 0)
+            report.assemblingFeatureSequencesInZeroPreClones.addAndGet(alignmentInfos.size());
 
         // Accumulates V, J and C gene information for each consensus
         // noinspection unchecked

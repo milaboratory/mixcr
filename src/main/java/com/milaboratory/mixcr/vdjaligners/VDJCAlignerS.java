@@ -219,7 +219,7 @@ public final class VDJCAlignerS extends VDJCAlignerAbstract {
                 if (!vResult.hasHits())
                     return new KVJResultsForSingle(target,
                             vResult, // V result is empty
-                            // If -OallowPartialAlignments=true try align J gene
+                            // If -OallowPartialAlignments=true try to align J gene
                             parameters.getAllowPartialAlignments() ?
                                     jAligner.align(sequence) : null);
 

@@ -44,7 +44,6 @@ public class PartialAlignmentsAssemblerAlignerTest {
         TargetBuilder.VDJCGenes genes = new TargetBuilder.VDJCGenes(lib,
                 "TRBV12-3*00", "TRBD1*00", "TRBJ1-3*00", "TRBC2*00");
 
-
         //                                 | 305
         // 250V + 55CDR3 (20V 7N 10D 3N 15J) + 28J + 100C
         NucleotideSequence baseSeq = TargetBuilder.generateSequence(genes, "{CDR3Begin(-250)}V*270 NNNNNNN {DBegin(0)}D*10 NNN {CDR3End(-15):FR4End} {CBegin}C*100", rg);

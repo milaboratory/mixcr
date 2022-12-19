@@ -15,6 +15,7 @@ import cc.redberry.pipe.util.forEach
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mitool.use
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
@@ -134,71 +135,75 @@ object CommandAssemblePartial {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
             val cmdParams: Params
-            VDJCAlignmentsReader(inputFile).use { reader1 ->
-                cmdParams = paramsResolver.resolve(reader1.header.paramsSpec, printParameters = logger.verbose).second
-                VDJCAlignmentsReader(inputFile).use { reader2 ->
-                    VDJCAlignmentsWriter(outputFile).use { writer ->
-                        val groupingDepth =
-                            reader1.header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
-                        writer.writeHeader(
-                            reader1.header
-                                .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
-                                .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams),
-                            reader1.usedGenes
-                        )
-                        val assembler = PartialAlignmentsAssembler(
-                            cmdParams.parameters, reader1.parameters,
-                            reader1.usedGenes, !cmdParams.dropPartial, cmdParams.overlappedOnly
-                        ) { alignment: VDJCAlignments -> writer.write(alignment) }
+            use(
+                VDJCAlignmentsReader(inputFile),
+                VDJCAlignmentsWriter(outputFile)
+            ) { reader, writer ->
+                val header = reader.header
+                cmdParams = paramsResolver.resolve(header.paramsSpec, printParameters = logger.verbose).second
+                val groupingDepth =
+                    header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
+                writer.writeHeader(
+                    header
+                        .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
+                        .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams),
+                    reader.usedGenes
+                )
+                val assembler = PartialAlignmentsAssembler(
+                    cmdParams.parameters, reader.parameters,
+                    reader.usedGenes, !cmdParams.dropPartial, cmdParams.overlappedOnly
+                ) { alignment: VDJCAlignments -> writer.write(alignment) }
 
-                        @Suppress("UnnecessaryVariable")
-                        val reportBuilder = assembler
-                        reportBuilder.setStartMillis(beginTimestamp)
-                        reportBuilder.setInputFiles(inputFile)
-                        reportBuilder.setOutputFiles(outputFile)
-                        reportBuilder.commandLine = commandLineArguments
-                        if (!reader1.header.tagsInfo.hasNoTags()) {
-                            SmartProgressReporter.startProgressReport("Running assemble partial", reader1)
+                @Suppress("UnnecessaryVariable")
+                val reportBuilder = assembler
+                reportBuilder.setStartMillis(beginTimestamp)
+                reportBuilder.setInputFiles(inputFile)
+                reportBuilder.setOutputFiles(outputFile)
+                reportBuilder.commandLine = commandLineArguments
 
-                            // This processor strips all non-key information from the
-                            val key: (VDJCAlignments) -> TagTuple = { al ->
-                                al.tagCount.asKeyPrefixOrError(groupingDepth)
+                use(reader.readAlignments(), reader.readAlignments()) { reader1, reader2 ->
+                    if (!header.tagsInfo.hasNoTags()) {
+
+                        SmartProgressReporter.startProgressReport("Running assemble partial", reader1)
+
+                        // This processor strips all non-key information from the
+                        val key: (VDJCAlignments) -> TagTuple = { al ->
+                            al.tagCount.asKeyPrefixOrError(groupingDepth)
+                        }
+                        val groups1 = reader1
+                            .map { it.ensureKeyTags() }
+                            .groupAlreadySorted(key)
+                        val groups2 = reader2
+                            .map { it.ensureKeyTags() }
+                            .groupAlreadySorted(key)
+                        groups1.forEach { grp1 ->
+                            assembler.buildLeftPartsIndex(grp1)
+                            grp1.close() // Drain leftover alignments in the group if not yet done
+                            groups2.take().use { grp2 ->
+                                assert(grp2.key == grp1.key) { grp1.key.toString() + " != " + grp2.key }
+                                assembler.searchOverlaps(grp2)
                             }
-                            val groups1 = reader1
-                                .map { it.ensureKeyTags() }
-                                .groupAlreadySorted(key)
-                            val groups2 = reader2
-                                .map { it.ensureKeyTags() }
-                                .groupAlreadySorted(key)
-                            groups1.forEach { grp1 ->
-                                assembler.buildLeftPartsIndex(grp1)
-                                grp1.close() // Drain leftover alignments in the group if not yet done
-                                groups2.take().use { grp2 ->
-                                    assert(grp2.key == grp1.key) { grp1.key.toString() + " != " + grp2.key }
-                                    assembler.searchOverlaps(grp2)
-                                }
-                            }
-                        } else {
-                            SmartProgressReporter.startProgressReport("Building index", reader1)
-                            assembler.buildLeftPartsIndex(reader1)
-                            SmartProgressReporter.startProgressReport("Searching for overlaps", reader2)
-                            assembler.searchOverlaps(reader2)
                         }
-                        reportBuilder.setFinishMillis(System.currentTimeMillis())
-                        val report = reportBuilder.buildReport()
-                        // Writing report to stout
-                        ReportUtil.writeReportToStdout(report)
-                        if (assembler.leftPartsLimitReached()) {
-                            logger.warn("too many partial alignments detected, consider skipping assemblePartial (enriched library?). /leftPartsLimitReached/")
-                        }
-                        if (assembler.maxRightMatchesLimitReached()) {
-                            logger.warn("too many partial alignments detected, consider skipping assemblePartial (enriched library?). /maxRightMatchesLimitReached/")
-                        }
-                        reportOptions.appendToFiles(report)
-                        writer.setNumberOfProcessedReads(reader1.numberOfReads - assembler.overlapped.get())
-                        writer.setFooter(reader1.footer.addStepReport(MiXCRCommandDescriptor.assemblePartial, report))
+                    } else {
+                        SmartProgressReporter.startProgressReport("Building index", reader1)
+                        assembler.buildLeftPartsIndex(reader1)
+                        SmartProgressReporter.startProgressReport("Searching for overlaps", reader2)
+                        assembler.searchOverlaps(reader2)
                     }
                 }
+                reportBuilder.setFinishMillis(System.currentTimeMillis())
+                val report = reportBuilder.buildReport()
+                // Writing report to stout
+                ReportUtil.writeReportToStdout(report)
+                if (assembler.leftPartsLimitReached()) {
+                    logger.warn("too many partial alignments detected, consider skipping assemblePartial (enriched library?). /leftPartsLimitReached/")
+                }
+                if (assembler.maxRightMatchesLimitReached()) {
+                    logger.warn("too many partial alignments detected, consider skipping assemblePartial (enriched library?). /maxRightMatchesLimitReached/")
+                }
+                reportOptions.appendToFiles(report)
+                writer.setNumberOfProcessedReads(reader.numberOfReads - assembler.overlapped.get())
+                writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.assemblePartial, report))
             }
         }
     }
