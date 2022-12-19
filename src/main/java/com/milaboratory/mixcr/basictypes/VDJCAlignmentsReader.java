@@ -286,7 +286,7 @@ public final class VDJCAlignmentsReader implements
         return new SecondaryReader(false);
     }
 
-    public SecondaryReader createRawSecondaryReader() {
+    private SecondaryReader createRawSecondaryReader() {
         ensureInitialized();
         return new SecondaryReader(true);
     }

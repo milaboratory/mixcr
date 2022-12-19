@@ -26,19 +26,14 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.app.matches
+import com.milaboratory.cli.FastqGroupReader
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.core.io.CompressionType
-import com.milaboratory.core.io.sequence.MultiReader
 import com.milaboratory.core.io.sequence.SequenceRead
-import com.milaboratory.core.io.sequence.SequenceReadUtil
-import com.milaboratory.core.io.sequence.SequenceReader
 import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.MultiFastqWriter
-import com.milaboratory.core.io.sequence.fastq.PairedFastqReader
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
-import com.milaboratory.core.io.sequence.fastq.SingleFastqReader
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
@@ -83,7 +78,6 @@ import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
-import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.LightFileDescriptor
 import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ReportHelper
@@ -105,7 +99,6 @@ import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.io.FileInputStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
@@ -113,7 +106,6 @@ import java.util.concurrent.Semaphore
 import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.set
-import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.math.max
 
@@ -772,79 +764,8 @@ object CommandAlign {
                 }
         }
 
-        abstract class FastqGroupReader(fileGroups: List<FileGroup>) : OutputPortWithProgress<ProcessingBundle> {
-            private val fileGroupIt = fileGroups.iterator()
-            private val readerCount = fileGroups.size
-            private var currentReaderIdx = -1
-
-            // -1 used to indicate closed stream
-            private var id = 0L
-            private var currentReader: SequenceReader<SequenceRead>? = null
-            private var currentFileTags: List<Pair<String, String>>? = null
-
-            override fun take(): ProcessingBundle? {
-                synchronized(fileGroupIt) {
-                    if (id == -1L)
-                        return null
-                    while (true) {
-                        currentReader
-                            ?.take()
-                            ?.let {
-                                return ProcessingBundle(
-                                    SequenceReadUtil.setReadId(id++, it),
-                                    currentFileTags!!,
-                                    it.id
-                                )
-                            }
-                        // Terminating the stream if there are no more reads and readers
-                        if (!fileGroupIt.hasNext()) {
-                            id = -1L
-                            return null
-                        }
-                        // Closing existing reader, if any
-                        currentReader?.close()
-                        val nextGroup = fileGroupIt.next()
-                        // Opening new reader and saving nexct files tags
-                        currentReader = nextReader(nextGroup)
-                        currentFileTags = nextGroup.tags
-                        currentReaderIdx++
-                    }
-                }
-            }
-
-            abstract fun nextReader(fileGroup: FileGroup): SequenceReader<SequenceRead>
-
-            override fun close() {
-                synchronized(fileGroupIt) {
-                    // Closing existing reader, if any
-                    currentReader?.close()
-                    // Prevents any values to be returned by the stream
-                    id = -1L
-                }
-            }
-
-            override fun getProgress(): Double {
-                if (currentReaderIdx == -1)
-                    return 0.0
-                return (currentReaderIdx + (currentReader as CanReportProgress).progress) / readerCount
-            }
-
-            override fun isFinished() = id == -1L
-        }
-
         @Suppress("UNCHECKED_CAST")
         private fun createReader(): OutputPortWithProgress<ProcessingBundle> {
-            // Common single fastq reader constructor
-            val fastqReaderFactory: (Path) -> SingleFastqReader = { path: Path ->
-                SingleFastqReader(
-                    FileInputStream(path.toFile()),
-                    SingleFastqReader.DEFAULT_QUALITY_FORMAT,
-                    CompressionType.detectCompressionType(path.name),
-                    false, readBufferSize,
-                    cmdParams.replaceWildcards, true
-                )
-            }
-
             val sampleDescriptions = cmdParams.sampleTable?.samples
                 ?.bySampleName()
                 ?.values?.map { matchers ->
@@ -852,14 +773,14 @@ object CommandAlign {
                 }
                 ?: emptyList()
 
-            val keyParamter = cmdParams.tagPattern.toString()
+            val keyParameter = cmdParams.tagPattern.toString()
 
             return when (inputFileGroups.inputType) {
                 BAM -> {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    MiXCRMain.lm.reportApplicationInputs(files, keyParamter, sampleDescriptions)
+                    MiXCRMain.lm.reportApplicationInputs(files, keyParameter, sampleDescriptions)
                     BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
                         .map { ProcessingBundle(it) }
                 }
@@ -868,7 +789,7 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
-                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFile), keyParamter, sampleDescriptions)
+                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFile), keyParameter, sampleDescriptions)
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
@@ -876,34 +797,11 @@ object CommandAlign {
                         .map { ProcessingBundle(it) }
                 }
 
-                SingleEndFastq -> {
-                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParamter, sampleDescriptions)
-                    object : FastqGroupReader(inputFileGroups.fileGroups) {
-                        override fun nextReader(fileGroup: FileGroup) =
-                            fastqReaderFactory(fileGroup.files[0]) as SequenceReader<SequenceRead>
-                    }
-                }
-
-                PairedEndFastq -> {
-                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParamter, sampleDescriptions)
-                    object : FastqGroupReader(inputFileGroups.fileGroups) {
-                        override fun nextReader(fileGroup: FileGroup) =
-                            PairedFastqReader(
-                                fastqReaderFactory(fileGroup.files[0]),
-                                fastqReaderFactory(fileGroup.files[1])
-                            ) as SequenceReader<SequenceRead>
-                    }
-                }
-
-                else -> { // More than 2 reads
-                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParamter, sampleDescriptions)
+                else -> { // All fastq file types
+                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParameter, sampleDescriptions)
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
-                    object : FastqGroupReader(inputFileGroups.fileGroups) {
-                        override fun nextReader(fileGroup: FileGroup) =
-                            MultiReader(
-                                *fileGroup.files.map(fastqReaderFactory).toTypedArray()
-                            ) as SequenceReader<SequenceRead>
-                    }
+                    FastqGroupReader(inputFileGroups.fileGroups, cmdParams.replaceWildcards, readBufferSize)
+                        .map { ProcessingBundle(it.read, it.fileTags, it.originalReadId) }
                 }
             }
         }

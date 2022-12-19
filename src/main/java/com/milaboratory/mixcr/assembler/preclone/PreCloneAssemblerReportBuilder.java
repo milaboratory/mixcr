@@ -22,8 +22,11 @@ import java.util.concurrent.atomic.AtomicLongArray;
 
 public final class PreCloneAssemblerReportBuilder implements ReportBuilder {
     final AtomicLong inputGroups = new AtomicLong();
+    final AtomicLong groupsWithNoAssemblingFeature = new AtomicLong();
     final AtomicLong inputAlignments = new AtomicLong();
+    final AtomicLong inputAssemblingFeatureSequences = new AtomicLong();
     final AtomicLong clonotypes = new AtomicLong();
+    final AtomicLong assemblingFeatureSequencesInZeroPreClones = new AtomicLong();
     final ConcurrentAtomicLongMap<Integer> clonotypesPerGroup = new ConcurrentAtomicLongMap<>();
     final AtomicLong coreAlignments = new AtomicLong();
     final AtomicLong discardedCoreAlignments = new AtomicLong();
@@ -54,8 +57,11 @@ public final class PreCloneAssemblerReportBuilder implements ReportBuilder {
     public PreCloneAssemblerReport buildReport() {
         return new PreCloneAssemblerReport(
                 inputGroups.get(),
+                groupsWithNoAssemblingFeature.get(),
                 inputAlignments.get(),
+                inputAssemblingFeatureSequences.get(),
                 clonotypes.get(),
+                assemblingFeatureSequencesInZeroPreClones.get(),
                 clonotypesPerGroup.getImmutable(),
                 coreAlignments.get(),
                 discardedCoreAlignments.get(),
