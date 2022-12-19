@@ -11,8 +11,8 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mixcr.cli.InputFileType
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroupResult
 import picocli.CommandLine.Command

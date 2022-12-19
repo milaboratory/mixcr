@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.postanalysis.plots.SeqPattern
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.TreeFilter

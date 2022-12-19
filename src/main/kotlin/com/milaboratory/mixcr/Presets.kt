@@ -14,6 +14,8 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.milaboratory.app.ApplicationException
+import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.AbstractPresetBundleRaw
 import com.milaboratory.cli.ParamsBundleSpec
 import com.milaboratory.cli.RawParams
@@ -26,7 +28,6 @@ import com.milaboratory.mixcr.AlignMixins.MaterialTypeDNA
 import com.milaboratory.mixcr.AlignMixins.MaterialTypeRNA
 import com.milaboratory.mixcr.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.AlignMixins.SetTagPattern
-import com.milaboratory.mixcr.cli.ApplicationException
 import com.milaboratory.mixcr.cli.CommandAlign
 import com.milaboratory.mixcr.cli.CommandAssemble
 import com.milaboratory.mixcr.cli.CommandAssembleContigs
@@ -37,7 +38,6 @@ import com.milaboratory.mixcr.cli.CommandExtend
 import com.milaboratory.mixcr.cli.CommandListPresets
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.util.CosineSimilarity
 import com.milaboratory.primitivio.annotations.Serializable
 import org.apache.commons.io.IOUtils

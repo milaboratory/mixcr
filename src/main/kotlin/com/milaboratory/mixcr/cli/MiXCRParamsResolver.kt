@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
 import com.milaboratory.mixcr.Flags

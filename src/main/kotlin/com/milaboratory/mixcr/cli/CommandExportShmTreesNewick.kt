@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.map
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.trees.NewickTreePrinter
 import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
 import com.milaboratory.mixcr.trees.SHMTreesReader

@@ -11,8 +11,8 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.cli.logger
 
 object TagsUtil {
     fun FieldsCollection<*>.checkTagExists(header: MetaForExport, tagName: String) {

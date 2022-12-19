@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.PathPatternExpandException
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern

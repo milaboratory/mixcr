@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.assembler;
 
+import com.milaboratory.app.ValidationException;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.alignment.*;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
@@ -19,7 +20,6 @@ import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.VDJCHit;
 import com.milaboratory.mixcr.basictypes.tag.TagCount;
-import com.milaboratory.mixcr.cli.ValidationException;
 import com.milaboratory.mixcr.vdjaligners.SingleDAligner;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import io.repseq.core.*;

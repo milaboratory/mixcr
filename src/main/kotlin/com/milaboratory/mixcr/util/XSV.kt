@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.util
 
-import com.milaboratory.mixcr.cli.ApplicationException
+import com.milaboratory.app.ApplicationException
 import java.io.File
 import java.io.PrintStream
 import java.nio.file.Files

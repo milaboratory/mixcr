@@ -11,9 +11,9 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
-import com.milaboratory.mixcr.cli.ValidationException
 import picocli.CommandLine.Option
 
 class ExportDefaultOptions : (List<ExportFieldDescription>) -> List<ExportFieldDescription> {

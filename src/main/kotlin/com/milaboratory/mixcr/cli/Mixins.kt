@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.AlignMixins
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
 import com.milaboratory.mixcr.AlignMixins.DropNonCDR3Alignments

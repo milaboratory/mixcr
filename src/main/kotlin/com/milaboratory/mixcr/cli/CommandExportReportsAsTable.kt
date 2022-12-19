@@ -11,6 +11,9 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
+import com.milaboratory.app.matches
 import com.milaboratory.mixcr.StepDataCollection
 import com.milaboratory.mixcr.allReports
 import com.milaboratory.mixcr.basictypes.IOUtil

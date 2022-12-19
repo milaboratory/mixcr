@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.postanalysis.plots.AlignmentOption

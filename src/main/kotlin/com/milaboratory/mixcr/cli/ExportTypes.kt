@@ -11,23 +11,11 @@
  */
 package com.milaboratory.mixcr.cli
 
-@Suppress("ClassName")
-object logger {
-    var noWarnings = false
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.InputFileType.EPS
+import com.milaboratory.app.InputFileType.JPEG
+import com.milaboratory.app.InputFileType.PDF
+import com.milaboratory.app.InputFileType.PNG
+import com.milaboratory.app.InputFileType.SVG
 
-    var verbose = false
-
-    fun warn(message: String) {
-        val formattedMessage = "WARNING: $message"
-        printWarn(formattedMessage)
-    }
-
-    fun warnUnfomatted(message: String) {
-        printWarn(message)
-    }
-
-    private fun printWarn(message: String) {
-        if (!noWarnings)
-            System.err.println(message)
-    }
-}
+val InputFileType.Companion.exportTypes get() = arrayOf(PDF, SVG, EPS, PNG, JPEG)

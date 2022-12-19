@@ -13,9 +13,9 @@
 package com.milaboratory.mixcr.cli.postanalysis
 
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.cli.InputFileType
+import com.milaboratory.app.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommand
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters

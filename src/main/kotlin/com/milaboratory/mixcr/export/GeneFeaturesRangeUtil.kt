@@ -11,8 +11,8 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
 

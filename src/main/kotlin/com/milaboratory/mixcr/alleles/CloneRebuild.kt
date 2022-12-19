@@ -17,6 +17,7 @@ import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.mapInParallel
 import cc.redberry.pipe.util.mapInParallelOrdered
 import cc.redberry.pipe.util.toList
+import com.milaboratory.app.logger
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.alignment.AlignmentScoring
@@ -31,7 +32,6 @@ import com.milaboratory.mixcr.basictypes.GeneAndScore
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.util.asSequence
 import io.repseq.core.GeneFeature

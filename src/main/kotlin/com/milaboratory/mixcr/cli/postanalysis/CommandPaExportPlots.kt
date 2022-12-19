@@ -11,10 +11,12 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.cli.InputFileType
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.exportTypes
 import com.milaboratory.mixcr.postanalysis.plots.parseFilter
 import com.milaboratory.mixcr.postanalysis.plots.readMetadata
 import com.milaboratory.util.StringUtil
@@ -73,7 +75,7 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     @Parameters(
         description = ["Output PDF/EPS/PNG/JPEG file name."],
         index = "1",
-        paramLabel = "output.${InputFileType.exportTypesLabel}"
+        paramLabel = "output.${Labels.EXPORT_TYPES}"
     )
     lateinit var out: Path
 

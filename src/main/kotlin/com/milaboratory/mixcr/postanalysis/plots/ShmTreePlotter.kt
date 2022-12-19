@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.postanalysis.plots
 
 import cc.redberry.pipe.util.asSequence
+import com.milaboratory.app.ValidationException
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.motif.BitapPattern
 import com.milaboratory.core.sequence.AminoAcidSequence
@@ -25,7 +26,6 @@ import com.milaboratory.miplots.dendro.withAlignmentLayer
 import com.milaboratory.miplots.dendro.withLabels
 import com.milaboratory.miplots.dendro.withTextLayer
 import com.milaboratory.miplots.stat.util.TestMethod
-import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Abundance
 import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Alignment
 import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta.Isotype

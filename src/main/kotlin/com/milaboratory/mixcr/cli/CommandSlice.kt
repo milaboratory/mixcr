@@ -17,6 +17,8 @@ import cc.redberry.pipe.util.flatten
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.it
 import cc.redberry.pipe.util.map
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsReader

@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.ValidationException
 import java.nio.file.Path
 import kotlin.io.path.extension
 

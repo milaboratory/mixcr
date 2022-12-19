@@ -11,9 +11,9 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.cli.MiXCRCommand
-import com.milaboratory.mixcr.cli.ValidationException
-import com.milaboratory.mixcr.cli.logger
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.*
 import picocli.CommandLine

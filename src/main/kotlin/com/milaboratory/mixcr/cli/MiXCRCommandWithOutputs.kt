@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import picocli.CommandLine.Option
 import java.nio.file.Path
 import kotlin.io.path.exists

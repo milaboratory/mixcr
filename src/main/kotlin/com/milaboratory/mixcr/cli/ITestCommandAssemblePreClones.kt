@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.CUtils
+import com.milaboratory.app.ApplicationException
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.assembler.preclone.FilePreCloneReader
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner

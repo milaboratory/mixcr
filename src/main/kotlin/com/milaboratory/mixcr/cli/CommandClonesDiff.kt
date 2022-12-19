@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet

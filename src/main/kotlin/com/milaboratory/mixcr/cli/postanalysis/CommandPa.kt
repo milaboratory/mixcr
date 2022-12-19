@@ -16,10 +16,10 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.cli.InputFileType
+import com.milaboratory.app.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
-import com.milaboratory.mixcr.cli.ValidationException
-import com.milaboratory.mixcr.cli.matches
+import com.milaboratory.app.ValidationException
+import com.milaboratory.app.matches
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil

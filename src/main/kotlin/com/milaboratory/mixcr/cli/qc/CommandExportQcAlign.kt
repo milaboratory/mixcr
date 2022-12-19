@@ -11,9 +11,11 @@
  */
 package com.milaboratory.mixcr.cli.qc
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.writeFile
-import com.milaboratory.mixcr.cli.InputFileType
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.exportTypes
 import com.milaboratory.mixcr.qc.AlignmentQC.alignQc
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -27,7 +29,7 @@ class CommandExportQcAlign : CommandExportQc() {
     companion object {
         private const val inputsLabel = "sample.(vdjca|clns|clna)..."
 
-        private const val outputLabel = "align.${InputFileType.exportTypesLabel}"
+        private const val outputLabel = "align.${Labels.EXPORT_TYPES}"
 
         fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcAlign::class.java)
             .addPositional(

@@ -11,15 +11,17 @@
  */
 package com.milaboratory.mixcr.cli.qc
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.ExportType
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
-import com.milaboratory.mixcr.cli.InputFileType
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.cli.exportTypes
 import com.milaboratory.mixcr.qc.TagRefinementQc
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -36,7 +38,7 @@ class CommandExportQcTags : MiXCRCommandWithOutputs() {
     companion object {
         private const val inputsLabel = "sample.(vdjca|clns|clna)..."
 
-        private const val outputLabel = "coverage.${InputFileType.exportTypesLabel}"
+        private const val outputLabel = "coverage.${Labels.EXPORT_TYPES}"
 
         fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcTags::class.java)
             .addPositional(

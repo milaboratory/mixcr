@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.MiXCRCommandDescriptor

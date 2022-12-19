@@ -12,6 +12,9 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.util.asSequence
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels

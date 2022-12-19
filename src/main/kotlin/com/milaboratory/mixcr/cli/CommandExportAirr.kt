@@ -15,6 +15,8 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.CountingOutputPort
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.withCounting
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.IOUtil
