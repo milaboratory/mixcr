@@ -1,0 +1,12 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+allOf:
+- type: "object"
+  properties:
+    step:
+      type: "string"
+- type: "object"
+  properties:
+    type:
+      const: "AddPipelineStep"
+  required:
+  - "type"

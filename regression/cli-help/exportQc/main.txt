@@ -1,0 +1,8 @@
+Usage: mixcr exportQc [-h] COMMAND
+Export QC plots. This command has subcommands, use -h to see more
+  -h, --help   Show this help message and exit.
+Commands:
+  align       QC plot for alignments.
+  chainUsage  Chain usage plot.
+  tags        Tag refinement statistics plots.
+  coverage    Exports anchor points coverage by the library.

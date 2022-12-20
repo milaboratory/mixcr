@@ -1,0 +1,22 @@
+Usage: mixcr exportReadsForClones [--id [<id>...]]... [--separate] [--force-overwrite]
+                                  [--no-warnings] [--verbose] [--help] input.clna output.(fastq[.gz]
+                                  |fasta)
+Export reads for particular clones from "clones & alignments" (*.clna) file.
+Note that such export is possible only from `.clna` files, produced by MiXCR `assemble` command
+with option `--write-alignments`.
+      input.clna           Path to input file
+      output.(fastq[.gz]|fasta)
+                           Output file name will be transformed into `_R1`/`_R2` pair in case of
+                             paired end reads.
+      --id [<id>...]       Clone ids to export.
+                           If no clone ids are specified all reads assigned to clonotypes will be
+                             exported.
+                           Use --id -1 to export alignments not assigned to any clone (not
+                             assembled).
+  -s, --separate           Create separate files for each clone. File or pair of `_R1`/`_R2` files,
+                             with `_clnN` suffix, where N is clone index, will be created for each
+                             clone index.
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

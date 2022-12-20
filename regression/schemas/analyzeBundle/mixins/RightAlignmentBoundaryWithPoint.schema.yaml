@@ -1,0 +1,44 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+allOf:
+- type: "object"
+  properties:
+    anchorPoint:
+      type: "object"
+      properties:
+        basicPoint:
+          type: "string"
+          enum:
+          - "V5UTRBegin"
+          - "V5UTRBeginTrimmed"
+          - "V5UTREndL1Begin"
+          - "L1EndVIntronBegin"
+          - "VIntronEndL2Begin"
+          - "L2EndFR1Begin"
+          - "FR1EndCDR1Begin"
+          - "CDR1EndFR2Begin"
+          - "FR2EndCDR2Begin"
+          - "CDR2EndFR3Begin"
+          - "FR3EndCDR3Begin"
+          - "VEndTrimmed"
+          - "VEnd"
+          - "DBegin"
+          - "DBeginTrimmed"
+          - "DEndTrimmed"
+          - "DEnd"
+          - "JBegin"
+          - "JBeginTrimmed"
+          - "CDR3EndFR4Begin"
+          - "FR4End"
+          - "CBegin"
+          - "CExon1End"
+          - "CEnd"
+        offset:
+          type: "integer"
+    floating:
+      type: "boolean"
+- type: "object"
+  properties:
+    type:
+      const: "RightAlignmentBoundaryWithPoint"
+  required:
+  - "type"

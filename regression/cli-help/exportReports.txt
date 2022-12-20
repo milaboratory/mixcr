@@ -1,0 +1,15 @@
+Usage: mixcr exportReports [--step <step>] [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                           [--yaml | --json] data.(vdjca|clns|clna|shmt) [report.
+                           (txt|json|yaml|yml)]
+Export MiXCR reports.
+      data.(vdjca|clns|clna|shmt)
+                           Path to input file.
+      [report.(txt|json|yaml|yml)]
+                           Path where to write reports. Print in stdout if omitted.
+      --yaml               Export as yaml
+      --json               Export as json
+      --step <step>        Export report only for a specific step
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

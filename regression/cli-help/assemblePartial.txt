@@ -1,0 +1,25 @@
+Usage: mixcr assemblePartial [--overlapped-only] [--drop-partial] [--cell-level] [-O
+                             <key=value>]... [--report <path>] [--json-report <path>]
+                             [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.
+                             vdjca alignments.recovered.vdjca
+Assembles partially aligned reads into longer sequences.
+      alignments.vdjca       Path to input alignments file.
+      alignments.recovered.vdjca
+                             Path where to write recovered alignments.
+  -o, --overlapped-only      Write only overlapped sequences (needed for testing).
+                               Default value determined by the preset.
+  -d, --drop-partial         Drop partial sequences which were not assembled. Can be used to reduce
+                               output file size if no additional rounds of `assemblePartial` are
+                               required.
+                               Default value determined by the preset.
+      --cell-level           Overlap sequences on the cell level instead of UMIs for tagged data
+                               with molecular and cell barcodes.
+                               Default value determined by the preset.
+  -O  <key=value>            Overrides default parameter values.
+  -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
+                               machine readable report).
+  -j, --json-report <path>   JSON formatted report file.
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.

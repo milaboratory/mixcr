@@ -1,0 +1,37 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$defs:
+  MetricParameters:
+    type: "object"
+    properties:
+      downsampling:
+        type: "string"
+      dropOutliers:
+        type: "boolean"
+      onlyProductive:
+        type: "boolean"
+      weightFunction:
+        type: "string"
+type: "object"
+properties:
+  defaultDownsampling:
+    type: "string"
+  defaultDropOutliers:
+    type: "boolean"
+  defaultOnlyProductive:
+    type: "boolean"
+  defaultWeightFunction:
+    type: "string"
+  f1Index:
+    $ref: "#/$defs/MetricParameters"
+  f2Index:
+    $ref: "#/$defs/MetricParameters"
+  jaccardIndex:
+    $ref: "#/$defs/MetricParameters"
+  pearson:
+    $ref: "#/$defs/MetricParameters"
+  pearsonAll:
+    $ref: "#/$defs/MetricParameters"
+  relativeDiversity:
+    $ref: "#/$defs/MetricParameters"
+  sharedClonotypes:
+    $ref: "#/$defs/MetricParameters"

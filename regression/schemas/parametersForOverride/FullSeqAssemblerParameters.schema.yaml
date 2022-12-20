@@ -1,0 +1,75 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$defs:
+  GeneFeatures:
+    type: "object"
+    properties:
+      features:
+        type: "array"
+        items:
+          type: "string"
+type: "object"
+properties:
+  alignedSequenceEdgeDelta:
+    type: "integer"
+  alignmentEdgeRegionSize:
+    type: "integer"
+  assemblingRegions:
+    $ref: "#/$defs/GeneFeatures"
+  branchingMinimalQualityShare:
+    type: "number"
+  branchingMinimalSumQuality:
+    type: "integer"
+  decisiveBranchingSumQualityThreshold:
+    type: "integer"
+  isAlignedRegionsOnly:
+    type: "boolean"
+  minimalContigLength:
+    type: "integer"
+  minimalMeanNormalizedQuality:
+    type: "number"
+  minimalNonEdgePointsFraction:
+    type: "number"
+  outputMinimalQualityShare:
+    type: "number"
+  outputMinimalSumQuality:
+    type: "integer"
+  postFiltering:
+    anyOf:
+    - allOf:
+      - type: "object"
+        properties:
+          minimalLength:
+            type: "integer"
+      - type: "object"
+        properties:
+          type:
+            const: "MinimalContigLength"
+        required:
+        - "type"
+    - type: "object"
+      properties:
+        type:
+          const: "NoFiltering"
+      required:
+      - "type"
+    - type: "object"
+      properties:
+        type:
+          const: "OnlyFullyAssembled"
+      required:
+      - "type"
+    - type: "object"
+      properties:
+        type:
+          const: "OnlyFullyDefined"
+      required:
+      - "type"
+  subCloningRegions:
+    $ref: "#/$defs/GeneFeatures"
+  trimmingParameters:
+    type: "object"
+    properties:
+      averageQualityThreshold:
+        type: "number"
+      windowSize:
+        type: "integer"

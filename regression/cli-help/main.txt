@@ -1,0 +1,53 @@
+Usage: mixcr [-h] [-v] [COMMAND]
+  -h, --help      Show this help message and exit.
+  -v, --version   Print version information and exit
+Base commands:
+  analyze            Run full MiXCR pipeline for specific input.
+  align              Builds alignments with V,D,J and C genes for input sequencing reads.
+  refineTagsAndSort  Applies error correction algorithm for tag sequences and sorts resulting file
+                       by tags.
+  assemblePartial    Assembles partially aligned reads into longer sequences.
+  extend             Impute alignments or clones with germline sequences.
+  assemble           Assemble clones.
+  assembleContigs    Assemble full sequences.
+  findAlleles        Find allele variants in clnx.
+  findShmTrees       Builds SHM trees.
+  downsample         Downsample clonesets.
+Postanalysis commands:
+  postanalysis  Run postanalysis routines. This command has subcommands, use -h to see more
+Export commands:
+  exportTables             CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap
+  exportPreprocTables      Export preprocessing summary tables.
+  exportPlots              Export postanalysis plots. This command has subcommands, use -h to see
+                             more
+  overlapScatterPlot       Plot overlap scatter-plot.
+  exportAlignments         Export V/D/J/C alignments into tab delimited file.
+  exportAlignmentsPretty   Export verbose information about alignments.
+  exportClones             Export assembled clones into tab delimited file.
+  exportClonesPretty       Export verbose information about clones.
+  exportShmTreesWithNodes  Export SHMTree as a table with a row for every node
+  exportShmTrees           Export SHMTree as a table with a row for every table
+  exportShmTreesNewick     Export SHMTree as newick
+  exportReports            Export MiXCR reports.
+  exportReportsTable       Export reports from files in tabular format.
+  exportQc                 Export QC plots. This command has subcommands, use -h to see more
+  exportClonesOverlap      Build cloneset overlap and export into tab delimited file.
+  exportAirr               Exports a clns, clna or vdjca file to Airr formatted tsv file.
+Util commands:
+  exportReadsForClones       Export reads for particular clones from "clones & alignments" (*.clna)
+                               file.
+  exportAlignmentsForClones  Export alignments for particular clones from "clones & alignments" (*.
+                               clna) file.
+  exportReads                Export original reads from vdjca file.
+  mergeAlignments            Merge several *.vdjca files with alignments into a single alignments
+                               file.
+  filterAlignments           Filter alignments.
+  sortAlignments             Sort alignments in vdjca file by read id.
+  sortClones                 Sort clones by sequence. Clones in the output file will be sorted by
+                               clonal sequence, which allows to build overlaps between clonesets.
+  alignmentsDiff             Calculates the difference between two .vdjca files.
+  clonesDiff                 Calculates the difference between two .clns files.
+  versionInfo                Output information about MiXCR version which generated the file.
+  slice                      Slice vdjca|clns|clna|shmt file.
+  exportPreset               Export a preset file given the preset name and a set of mix-ins
+  listPresets                Show all available presets

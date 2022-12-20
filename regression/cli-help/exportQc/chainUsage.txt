@@ -1,0 +1,20 @@
+Usage: mixcr exportQc chainUsage [--absolute-values] [--align-chain-usage] [--hide-non-functional]
+                                 [--force-overwrite] [--no-warnings] [--verbose] [--help] [--width
+                                 <n> --height <n>] sample.(vdjca|clns|clna)... usage.
+                                 (pdf|eps|svg|png|jpeg)
+Chain usage plot.
+      sample.(vdjca|clns|clna)...
+                            Paths to input files
+      usage.(pdf|eps|svg|png|jpeg)
+                            Path where to write output plots
+      --absolute-values     Plot in absolute values instead of percent
+      --align-chain-usage   When specifying .clnx files on input force to plot chain usage for
+                              alignments
+      --hide-non-functional Hide fractions of non-functional CDR3s (out-of-frames and containing
+                              stops)
+      --width <n>           Plot width
+      --height <n>          Plot height
+  -f, --force-overwrite     Force overwrite of output file(s).
+      -nw, --no-warnings    Suppress all warning messages.
+      --verbose             Verbose messages.
+  -h, --help                Show this help message and exit.

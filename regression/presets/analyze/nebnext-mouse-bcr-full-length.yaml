@@ -1,0 +1,365 @@
+flags: []
+pipeline:
+- "align"
+- "refineTagsAndSort"
+- "assemble"
+- "exportClones"
+align:
+  species: "mmu"
+  libraryName: "default"
+  trimmingQualityThreshold: 0
+  trimmingWindowSize: 6
+  chains: "ALL"
+  replaceWildcards: true
+  overlapPairedReads: true
+  bamDropNonVDJ: false
+  writeFailedAlignments: false
+  tagPattern: "^N{22}(R1:*) \\ ^(UMI:N{17})N{10}(R2:*)"
+  tagUnstranded: false
+  tagMaxBudget: 10.0
+  sampleTable: null
+  splitBySample: false
+  readIdAsCellTag: false
+  limit: null
+  parameters:
+    vParameters:
+      geneFeatureToAlign: "VTranscriptWithP"
+      minSumScore: 150
+      relativeMinScore: 0.97
+      parameters:
+        type: "kaligner2"
+        mapperNValue: 8
+        mapperKValue: 1
+        floatingLeftBound: false
+        floatingRightBound: true
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
+        scoring:
+          type: "affine"
+          alphabet: "nucleotide"
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
+    dParameters:
+      geneFeatureToAlign: "DRegionWithP"
+      relativeMinScore: 0.85
+      absoluteMinScore: 25.0
+      maxHits: 3
+      scoring:
+        type: "linear"
+        alphabet: "nucleotide"
+        subsMatrix: "simple(match = 5, mismatch = -9)"
+        gapPenalty: -12
+    jParameters:
+      geneFeatureToAlign: "JRegionWithP"
+      minSumScore: 150
+      relativeMinScore: 0.97
+      parameters:
+        type: "kaligner2"
+        mapperNValue: 8
+        mapperKValue: 1
+        floatingLeftBound: true
+        floatingRightBound: false
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
+        scoring:
+          type: "affine"
+          alphabet: "nucleotide"
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
+    cParameters:
+      geneFeatureToAlign: "CExon1"
+      minSumScore: 40
+      relativeMinScore: 0.97
+      parameters:
+        type: "kaligner"
+        mapperKValue: 5
+        floatingLeftBound: false
+        floatingRightBound: false
+        mapperAbsoluteMinScore: 1.5
+        mapperRelativeMinScore: 0.75
+        mapperMatchScore: 1.0
+        mapperMismatchPenalty: -0.1
+        mapperOffsetShiftPenalty: -0.3
+        mapperMinSeedsDistance: 4
+        mapperMaxSeedsDistance: 10
+        minAlignmentLength: 15
+        maxAdjacentIndels: 2
+        alignmentStopPenalty: -1000
+        absoluteMinScore: 40.0
+        relativeMinScore: 0.87
+        maxHits: 7
+        scoring:
+          type: "linear"
+          alphabet: "nucleotide"
+          subsMatrix: "simple(match = 5, mismatch = -9)"
+          gapPenalty: -12
+    vjAlignmentOrder: "VThenJ"
+    libraryStructure: "Unknown"
+    includeDScore: false
+    includeCScore: false
+    minSumScore: 120.0
+    maxHits: 5
+    relativeMinVFR3CDR3Score: 0.7
+    allowPartialAlignments: false
+    allowNoCDR3PartAlignments: false
+    allowChimeras: false
+    readsLayout: "Opposite"
+    mergerParameters:
+      qualityMergingAlgorithm: "MaxSubtraction"
+      partsLayout: null
+      minimalOverlap: 17
+      maxQuality: 50
+      minimalIdentity: 0.9
+      identityType: "Unweighted"
+    fixSeed: true
+    alignmentBoundaryTolerance: 5
+    minChimeraDetectionScore: 120
+    vjOverlapWindow: 3
+    saveOriginalSequence: false
+    saveOriginalReads: false
+    smartForceEdgeAlignments: true
+refineTagsAndSort:
+  whitelists: {}
+  runCorrection: true
+  parameters:
+    correctionPower: 0.001
+    backgroundSubstitutionRate: 0.001
+    backgroundIndelRate: 1.0E-5
+    minQuality: 12
+    maxSubstitutions: 2
+    maxIndels: 2
+    maxTotalErrors: 3
+    postFilter:
+      type: "filter_groups"
+      groupingKeys:
+      - "UMI"
+      predicates:
+      - metrics:
+        - type: "group_metric_sum_weight"
+          reportHist:
+            log: true
+            binNumber: 0
+            minBinWidth: 0.2
+            multiplyWeightByKey: false
+        operator:
+          type: "group_operator_otsu1"
+          logX: true
+          minimalSample: 30
+          fallbackThreshold: 1.0
+assemblePartial:
+  overlappedOnly: false
+  dropPartial: false
+  cellLevel: false
+  parameters:
+    kValue: 12
+    kOffset: -7
+    minimalAssembleOverlap: 12
+    minimalNOverlap: 7
+    minimalNOverlapShare: 0.65
+    minimalAlignmentMergeIdentity: 0.85
+    mergerParameters:
+      qualityMergingAlgorithm: "SumSubtraction"
+      partsLayout: "CollinearDirect"
+      minimalOverlap: 20
+      maxQuality: 45
+      minimalIdentity: 0.95
+      identityType: "Unweighted"
+    maxLeftParts: 256000
+    maxLeftMatches: 6144
+extend:
+  vAnchor: "CDR3Begin"
+  jAnchor: "FR4Begin"
+  minimalVScore: 50
+  minimalJScore: 50
+assemble:
+  sortBySequence: false
+  clnaOutput: false
+  cellLevel: false
+  consensusAssemblerParameters:
+    assembler:
+      aAssemblerParameters:
+        bandWidth: 4
+        scoring:
+          type: "linear"
+          alphabet: "nucleotide"
+          subsMatrix: "simple(match = 5, mismatch = -4)"
+          gapPenalty: -14
+        minAlignmentScore: 40
+        maxNormalizedAlignmentPenalty: 0.15
+        trimMinimalSumQuality: 0
+        trimReferenceRegion: false
+        maxQuality: 45
+      maxIterations: 6
+      minAltSeedQualityScore: 11
+      minAltSeedNormalizedPenalty: 0.35
+      altSeedPenaltyTolerance: 0.3
+      minRecordSharePerConsensus: 0.2
+      minRecordsPerConsensus: 0
+      minRecursiveRecordShare: 0.4
+      minQualityScore: 0
+      maxConsensuses: 3
+    minTagSuffixShare: 0.0
+  cloneAssemblerParameters:
+    assemblingFeatures:
+    - "VDJRegion"
+    minimalClonalSequenceLength: 12
+    qualityAggregationType: "Max"
+    cloneClusteringParameters:
+      searchDepth: 2
+      allowedMutationsInNRegions: 1
+      minimalTagSetOverlap: -1.0
+      searchParameters: "twoMismatchesOrIndels"
+      clusteringFilter:
+        type: "relativeConcentration"
+        specificMutationProbability: 1.0E-4
+    cloneFactoryParameters:
+      vParameters:
+        relativeMinScore: null
+        scoring: null
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      jParameters:
+        relativeMinScore: null
+        scoring: null
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      cParameters:
+        relativeMinScore: null
+        scoring: null
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      dParameters:
+        relativeMinScore: null
+        absoluteMinScore: null
+        maxHits: null
+        scoring: null
+      vdcParameters:
+        Variable:
+          relativeMinScore: null
+          scoring: null
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+        Joining:
+          relativeMinScore: null
+          scoring: null
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+        Constant:
+          relativeMinScore: null
+          scoring: null
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+    separateByV: false
+    separateByJ: false
+    separateByC: true
+    maximalPreClusteringRatio: 1.0
+    preClusteringScoreFilteringRatio: 2.0
+    preClusteringCountFilteringRatio: 2.0
+    addReadsCountOnClustering: false
+    badQualityThreshold: 20
+    maxBadPointsPercent: 0.7
+    mappingThreshold: "2of5"
+    minimalQuality: 0
+    postFilters: null
+  inferMinRecordsPerConsensus: true
+assembleContigs:
+  ignoreTags: false
+  parameters:
+    branchingMinimalQualityShare: 0.1
+    branchingMinimalSumQuality: 60
+    decisiveBranchingSumQualityThreshold: 120
+    alignedSequenceEdgeDelta: 3
+    alignmentEdgeRegionSize: 7
+    minimalNonEdgePointsFraction: 0.25
+    minimalMeanNormalizedQuality: 5.0
+    outputMinimalQualityShare: 0.75
+    outputMinimalSumQuality: 0
+    subCloningRegions: null
+    assemblingRegions: null
+    postFiltering:
+      type: "NoFiltering"
+    trimmingParameters:
+      averageQualityThreshold: 10.0
+      windowSize: 8
+    minimalContigLength: 20
+    alignedRegionsOnly: false
+exportAlignments:
+  chains: "ALL"
+  noHeader: false
+  fields:
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"
+exportClones:
+  splitByTagType: null
+  filterOutOfFrames: false
+  filterStops: false
+  chains: "ALL"
+  noHeader: false
+  splitFilesBy:
+  - "geneLabel:ReliableChain"
+  fields:
+  - field: "-cloneId"
+  - field: "-readCount"
+  - field: "-readFraction"
+  - field: "-uniqueTagCount"
+    args:
+    - "Molecule"
+  - field: "-uniqueTagFraction"
+    args:
+    - "Molecule"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"

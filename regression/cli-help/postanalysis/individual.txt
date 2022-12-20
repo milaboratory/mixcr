@@ -1,0 +1,49 @@
+Usage: mixcr postanalysis individual --default-downsampling (<type>|none) --default-weight-function
+                                     (<read>|<Tag>|none) [--only-productive] [--drop-outliers]
+                                     [--chains <chain>[,<chain>...]]... [--metadata <path>]
+                                     [--group <group>]... [--tables <path.(tsv|csv)>]
+                                     [--preproc-tables <path.(tsv|csv)>] [-O <key=value>]...
+                                     [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                                     (cloneset.(clns|clna)|directory)... result.json[.gz]
+Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype metrics
+      (cloneset.(clns|clna)|directory)...
+                           Paths to input clnx files or to directories with clnx files. Files in
+                             directories will not be filtered by extension.
+      result.json[.gz]     Path where to write postanalysis result.
+      --default-downsampling (<type>|none)
+                           Default downsampling applied to normalize the clonesets. Possible
+                             values:
+                           count-[reads|TAG]-[auto|min|fixed][-<number>]
+                            top-[reads|TAG]-[<number>]
+                            cumtop-[reads|TAG]-[percent]
+      --default-weight-function (<read>|<Tag>|none)
+                           Default clonotype weight function
+      --only-productive    Filter out-of-frame sequences and sequences with stop-codons.
+      --drop-outliers      Drop samples which are below downsampling value as computed according to
+                             specified default downsampling option.
+      --chains <chain>[,<chain>...]
+                           Limit analysis to specific chains (e.g. TRA or IGH) (fractions will be
+                             recalculated). Possible values (multiple values allowed): TRA, TRD,
+                             TRAD (for human), TRG, IGH, IGK, IGL
+      --metadata <path>    Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form. Must
+                             contain `sample` column which matches names of input files. Optionally
+                             may have `chains` column.
+      --group <group>      Metadata column used to group samples into isolation groups;
+                             postanalysis will be performed in each of the groups separately. It is
+                             possible to specify several isolation groups.
+      --tables <path.(tsv|csv)>
+                           Results output path.
+                           By default, will be `{outputDir}/{outputFileName}.tsv`.
+                           For each `chain` and `metric` will be generated file with path `{dir}/
+                             {fileName}.{metric}.{chain}.(tsv|csv)`
+      --preproc-tables <path.(tsv|csv)>
+                           Output path for the preprocessing summary tables (filtering and
+                             downsampling)
+                           By default, will be `{outputDir}/{outputFileName}.preproc.tsv`.
+                           For each `chain` will be generated file with path `{dir}/{fileName}.
+                             {chain}.(tsv|csv)`
+  -O  <key=value>          Overrides default postanalysis settings
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

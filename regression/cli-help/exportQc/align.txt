@@ -1,0 +1,15 @@
+Usage: mixcr exportQc align [--absolute-values] [--force-overwrite] [--no-warnings] [--verbose]
+                            [--help] [--width <n> --height <n>] sample.(vdjca|clns|clna)... align.
+                            (pdf|eps|svg|png|jpeg)
+QC plot for alignments.
+      sample.(vdjca|clns|clna)...
+                           Paths to input files with alignments
+      align.(pdf|eps|svg|png|jpeg)
+                           Path where to write output plots
+      --absolute-values    Plot in absolute values instead of percent
+      --width <n>          Plot width
+      --height <n>         Plot height
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

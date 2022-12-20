@@ -1,0 +1,21 @@
+Usage: mixcr downsample --downsampling <type> --chains <chains> [--only-productive] [--summary
+                        <path>] [--suffix <s>] [--out <path_prefix>] [--force-overwrite]
+                        [--no-warnings] [--verbose] [--help] cloneset.(clns|clna)...
+Downsample clonesets.
+      cloneset.(clns|clna)...
+                            Paths to input files.
+      --downsampling <type> Choose downsampling applied to normalize the clonesets. Possible
+                              values:
+                            count-[reads|TAG]-[auto|min|fixed][-<number>]
+                             top-[reads|TAG]-[<number>]
+                             cumtop-[reads|TAG]-[percent]
+  -c, --chains <chains>     Specify chains
+      --only-productive     Filter out-of-frame sequences and sequences with stop-codons.
+      --summary <path>      Write downsampling summary tsv/csv table.
+      --suffix <s>          Suffix to add to output clns file.
+                              Default: downsampled
+      --out <path_prefix>   Output path prefix.
+  -f, --force-overwrite     Force overwrite of output file(s).
+      -nw, --no-warnings    Suppress all warning messages.
+      --verbose             Verbose messages.
+  -h, --help                Show this help message and exit.

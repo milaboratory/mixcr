@@ -1,0 +1,448 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$defs:
+  Alphabet(NucleotideSequence):
+    type: "object"
+    properties:
+      alphabetId:
+        type: "string"
+      alphabetName:
+        type: "string"
+      basicMaskToWildcard:
+        type: "object"
+      codeToSymbol:
+        type: "array"
+        items:
+          type: "string"
+      codeToWildcard:
+        type: "array"
+        items:
+          $ref: "#/$defs/Wildcard"
+      countOfBasicLetters:
+        type: "integer"
+      empty:
+        type: "object"
+        properties:
+          data:
+            type: "array"
+            items:
+              type: "string"
+      hashCode:
+        type: "integer"
+      symbolToCode:
+        type: "object"
+        properties:
+          _autoCompactRemovesRemaining:
+            type: "integer"
+          _autoCompactionFactor:
+            type: "number"
+          _loadFactor:
+            type: "number"
+          _maxSize:
+            type: "integer"
+          consumeFreeSlot:
+            type: "boolean"
+          no_entry_key:
+            type: "string"
+          no_entry_value:
+            type: "string"
+      wildcardForAnyLetter:
+        $ref: "#/$defs/Wildcard"
+      wildcardsList:
+        type: "array"
+        items:
+          $ref: "#/$defs/Wildcard"
+  AndKeyedFilter-1:
+    type: "object"
+    properties:
+      filters:
+        type: "array"
+        items:
+          anyOf:
+          - $ref: "#/$defs/AndKeyedFilter-2"
+          - $ref: "#/$defs/GroupFilter"
+          - $ref: "#/$defs/InGroupsFilter-2"
+  AndKeyedFilter-2:
+    $ref: "#/$defs/AndKeyedFilter-1"
+    type: "object"
+    properties:
+      type:
+        const: "filter_and"
+    required:
+    - "type"
+  CumtopMetric-1:
+    type: "object"
+    properties:
+      calculateMetricSum:
+        type: "boolean"
+      keys:
+        type: "array"
+        items:
+          type: "string"
+      rankingMetric:
+        anyOf:
+        - $ref: "#/$defs/CumtopMetric-2"
+        - $ref: "#/$defs/KMerDiversity"
+        - $ref: "#/$defs/NUnique"
+        - $ref: "#/$defs/SumWeight"
+      reportHist:
+        $ref: "#/$defs/HistCollectionSpec"
+      share:
+        type: "number"
+  CumtopMetric-2:
+    $ref: "#/$defs/CumtopMetric-1"
+    type: "object"
+    properties:
+      type:
+        const: "group_metric_cumtop"
+    required:
+    - "type"
+  GroupFilter:
+    allOf:
+    - type: "object"
+      properties:
+        groupingKeys:
+          type: "array"
+          items:
+            type: "string"
+        predicates:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              metrics:
+                type: "array"
+                items:
+                  anyOf:
+                  - $ref: "#/$defs/CumtopMetric-2"
+                  - $ref: "#/$defs/KMerDiversity"
+                  - $ref: "#/$defs/NUnique"
+                  - $ref: "#/$defs/SumWeight"
+              operator:
+                anyOf:
+                - allOf:
+                  - type: "object"
+                    properties:
+                      share:
+                        type: "number"
+                  - type: "object"
+                    properties:
+                      type:
+                        const: "group_operator_cumtop"
+                    required:
+                    - "type"
+                - type: "object"
+                  properties:
+                    type:
+                      const: "dummy_group_operator"
+                  required:
+                  - "type"
+                - allOf:
+                  - type: "object"
+                    properties:
+                      minimalShare:
+                        type: "number"
+                  - type: "object"
+                    properties:
+                      type:
+                        const: "group_operator_minimal_recursive_share"
+                    required:
+                    - "type"
+                - allOf:
+                  - type: "object"
+                    properties:
+                      fallbackThreshold:
+                        type: "number"
+                      logX:
+                        type: "boolean"
+                      minimalSample:
+                        type: "integer"
+                      multiplyWeightByKey:
+                        type: "boolean"
+                  - type: "object"
+                    properties:
+                      type:
+                        const: "group_operator_otsu1"
+                    required:
+                    - "type"
+                - allOf:
+                  - type: "object"
+                    properties:
+                      lower:
+                        type: "number"
+                      lowerExclusive:
+                        type: "boolean"
+                      upper:
+                        type: "number"
+                      upperExclusive:
+                        type: "boolean"
+                  - type: "object"
+                    properties:
+                      type:
+                        const: "group_operator_range"
+                    required:
+                    - "type"
+                - allOf:
+                  - type: "object"
+                    properties:
+                      "n":
+                        type: "integer"
+                  - type: "object"
+                    properties:
+                      type:
+                        const: "group_operator_top"
+                    required:
+                    - "type"
+    - type: "object"
+      properties:
+        type:
+          const: "filter_groups"
+      required:
+      - "type"
+  HistCollectionSpec:
+    type: "object"
+    properties:
+      binNumber:
+        type: "integer"
+      log:
+        type: "boolean"
+      minBinWidth:
+        type: "number"
+      multiplyWeightByKey:
+        type: "boolean"
+  InGroupsFilter-1:
+    type: "object"
+    properties:
+      aggregateReport:
+        type: "boolean"
+      isolationKeys:
+        type: "array"
+        items:
+          type: "string"
+      nestedFilter:
+        anyOf:
+        - $ref: "#/$defs/AndKeyedFilter-2"
+        - $ref: "#/$defs/GroupFilter"
+        - $ref: "#/$defs/InGroupsFilter-2"
+  InGroupsFilter-2:
+    $ref: "#/$defs/InGroupsFilter-1"
+    type: "object"
+    properties:
+      type:
+        const: "filter_in_groups"
+    required:
+    - "type"
+  KMerDiversity:
+    allOf:
+    - type: "object"
+      properties:
+        k:
+          type: "integer"
+        minimalQuality:
+          type: "integer"
+        reportHist:
+          $ref: "#/$defs/HistCollectionSpec"
+        sequences:
+          type: "array"
+          items:
+            type: "string"
+        topShare:
+          type: "number"
+    - type: "object"
+      properties:
+        type:
+          const: "group_metric_kmer_diversity"
+      required:
+      - "type"
+  NUnique:
+    allOf:
+    - type: "object"
+      properties:
+        keys:
+          type: "array"
+          items:
+            type: "string"
+        reportHist:
+          $ref: "#/$defs/HistCollectionSpec"
+    - type: "object"
+      properties:
+        type:
+          const: "group_metric_nunique"
+      required:
+      - "type"
+  SubstitutionMatrix:
+    type: "object"
+    properties:
+      data:
+        type: "array"
+        items:
+          type: "integer"
+  SumWeight:
+    allOf:
+    - type: "object"
+      properties:
+        reportHist:
+          $ref: "#/$defs/HistCollectionSpec"
+    - type: "object"
+      properties:
+        type:
+          const: "group_metric_sum_weight"
+      required:
+      - "type"
+  Wildcard:
+    type: "object"
+    properties:
+      bSymbol:
+        type: "string"
+      basicMask:
+        type: "integer"
+      basicMatchingCodes:
+        type: "array"
+        items:
+          type: "string"
+      basicSize:
+        type: "string"
+      cSymbol:
+        type: "string"
+      code:
+        type: "string"
+      mask:
+        type: "integer"
+      matchingCodes:
+        type: "array"
+        items:
+          type: "string"
+type: "object"
+properties:
+  addReadsCountOnClustering:
+    type: "boolean"
+  assemblingFeatures:
+    type: "array"
+    items:
+      type: "string"
+  badQualityThreshold:
+    type: "string"
+  cloneClusteringParameters:
+    type: "object"
+    properties:
+      allowedMutationsInNRegions:
+        type: "integer"
+      clusteringFilter:
+        allOf:
+        - type: "object"
+          properties:
+            specificMutationProbability:
+              type: "number"
+        - type: "object"
+          properties:
+            type:
+              const: "relativeConcentration"
+          required:
+          - "type"
+      minimalTagSetOverlap:
+        type: "number"
+      searchDepth:
+        type: "integer"
+      searchParameters:
+        type: "object"
+        properties:
+          differencesCombination:
+            type: "array"
+            items:
+              type: "array"
+              items:
+                type: "string"
+          greedy:
+            type: "boolean"
+          maxErrors:
+            type: "array"
+            items:
+              type: "integer"
+          maxPenalty:
+            type: "number"
+          penalty:
+            type: "array"
+            items:
+              type: "number"
+  cloneFactoryParameters:
+    type: "object"
+    properties:
+      dParameters:
+        type: "object"
+        properties:
+          absoluteMinScore:
+            type: "number"
+          maxHits:
+            type: "integer"
+          relativeMinScore:
+            type: "number"
+          scoring:
+            anyOf:
+            - allOf:
+              - type: "object"
+                properties:
+                  alphabet:
+                    $ref: "#/$defs/Alphabet(NucleotideSequence)"
+                  gapPenalty:
+                    type: "integer"
+                  subsMatrix:
+                    $ref: "#/$defs/SubstitutionMatrix"
+              - type: "object"
+                properties:
+                  type:
+                    const: "linear"
+                required:
+                - "type"
+            - allOf:
+              - type: "object"
+                properties:
+                  alphabet:
+                    $ref: "#/$defs/Alphabet(NucleotideSequence)"
+                  gapExtensionPenalty:
+                    type: "integer"
+                  gapOpenPenalty:
+                    type: "integer"
+                  subsMatrix:
+                    $ref: "#/$defs/SubstitutionMatrix"
+              - type: "object"
+                properties:
+                  type:
+                    const: "affine"
+                required:
+                - "type"
+      vdcParameters:
+        type: "object"
+  mappingThreshold:
+    type: "string"
+  maxBadPointsPercent:
+    type: "number"
+  maximalPreClusteringRatio:
+    type: "number"
+  minimalClonalSequenceLength:
+    type: "integer"
+  minimalQuality:
+    type: "string"
+  postFilters:
+    type: "array"
+    items:
+      anyOf:
+      - $ref: "#/$defs/AndKeyedFilter-2"
+      - $ref: "#/$defs/GroupFilter"
+      - $ref: "#/$defs/InGroupsFilter-2"
+  preClusteringCountFilteringRatio:
+    type: "number"
+  preClusteringScoreFilteringRatio:
+    type: "number"
+  qualityAggregationType:
+    type: "string"
+    enum:
+    - "Min"
+    - "Max"
+    - "Sum"
+    - "Average"
+    - "MiniMax"
+  separateByC:
+    type: "boolean"
+  separateByJ:
+    type: "boolean"
+  separateByV:
+    type: "boolean"

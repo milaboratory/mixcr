@@ -1,0 +1,31 @@
+Usage: mixcr extend [--v-anchor <anchor_point>] [--j-anchor <anchor_point>] [--min-v-score <n>]
+                    [--min-j-score <n>] [--chains <chains>] [--quality <n>] [--report <path>]
+                    [--json-report <path>] [--threads <n>] [--force-overwrite] [--no-warnings]
+                    [--verbose] [--help] data.(vdjca|clns|clna) extendeed.(vdjca|clns|clna)
+Impute alignments or clones with germline sequences.
+      data.(vdjca|clns|clna) Path to input file.
+      extendeed.(vdjca|clns|clna)
+                             Path where to write output. Will have the same file type.
+      --v-anchor <anchor_point>
+                             V extension anchor point.
+                               Default value determined by the preset.
+      --j-anchor <anchor_point>
+                             J extension anchor point.
+                               Default value determined by the preset.
+      --min-v-score <n>      Minimal V hit score to perform left extension.
+                               Default value determined by the preset.
+      --min-j-score <n>      Minimal J hit score to perform right extension.
+                               Default value determined by the preset.
+  -c, --chains <chains>      Apply procedure only to alignments with specific
+                               immunological-receptor chains.
+                               Default: TCR
+  -q, --quality <n>          Quality score value to assign imputed sequences.
+                               Default: 30
+  -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
+                               machine readable report).
+  -j, --json-report <path>   JSON formatted report file.
+  -t, --threads <n>          Processing threads
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.

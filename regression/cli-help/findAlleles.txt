@@ -1,0 +1,44 @@
+Usage: mixcr findAlleles [--export-library <path.(json|fasta)>]... [--export-alleles-mutations
+                         <path>] [-O <key=value>]... [--report <path>] [--json-report <path>]
+                         [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
+                         [--verbose] [--help] (--output-template <template.clns> |
+                         --no-clns-output) (input_file.(clns|clna)|directory)...
+Find allele variants in clnx.
+All inputs must be fully covered by the same feature, have the same align library, the same scoring
+of V and J genes and the same features to align.
+      (input_file.(clns|clna)|directory)...
+                             Input files or directory with files for allele search.
+                             In case of directory no filter by file type will be applied.
+      --output-template <template.clns>
+                             Output template may contain {file_name} and {file_dir_path},
+                             outputs for '-o /output/folder/{file_name}_with_alleles.clns
+                               input_file.clns input_file2.clns' will be
+                               /output/folder/input_file_with_alleles.clns and
+                               /output/folder/input_file2_with_alleles.clns,
+                             outputs for '-o {file_dir_path}/{file_name}_with_alleles.clns
+                               /some/folder1/input_file.clns /some/folder2/input_file2.clns' will
+                               be /seme/folder1/input_file_with_alleles.clns and
+                               /some/folder2/input_file2_with_alleles.clns
+                             Resulted outputs must be uniq
+      --no-clns-output       Command will not realign input clns files. Must be specified if
+                               `--output-template` is omitted.
+      --export-library <path.(json|fasta)>
+                             Paths where to write library with found alleles and other genes that
+                               exits in inputs.
+                             For `.json` library will be written in reqpseqio format.
+                             For `.fasta` library will be written in FASTA format with gene name
+                               and reliable range in description. There will be several records for
+                               one gene if clnx were assembled by composite gene feature.
+      --export-alleles-mutations <path>
+                             Path where to write descriptions and stats for all result alleles,
+                               existed and new.
+  -O  <key=value>            Overrides default build SHM parameter values
+  -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
+                               machine readable report).
+  -j, --json-report <path>   JSON formatted report file.
+      --use-local-temp       Put temporary files in the same folder as the output files.
+  -t, --threads <n>          Processing threads
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.

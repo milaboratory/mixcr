@@ -1,0 +1,258 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$defs:
+  AndTaggedFilterReport-1:
+    type: "object"
+    properties:
+      nestedReports:
+        type: "array"
+        items:
+          anyOf:
+          - $ref: "#/$defs/AndTaggedFilterReport-2"
+          - $ref: "#/$defs/DummyKeyedFilterReport"
+          - $ref: "#/$defs/GenericHistOpReport"
+          - $ref: "#/$defs/GroupFilterReport-2"
+          - $ref: "#/$defs/InGroupsFilterReport-2"
+  AndTaggedFilterReport-2:
+    $ref: "#/$defs/AndTaggedFilterReport-1"
+    type: "object"
+    properties:
+      type:
+        const: "and_report"
+    required:
+    - "type"
+  DummyKeyedFilterReport:
+    type: "object"
+    properties:
+      type:
+        const: "dummy_report"
+    required:
+    - "type"
+  GenericHistOpReport:
+    allOf:
+    - type: "object"
+      properties:
+        threshold:
+          type: "number"
+    - type: "object"
+      properties:
+        type:
+          const: "generic_hist_report"
+      required:
+      - "type"
+  GroupFilterReport-1:
+    type: "object"
+    properties:
+      groupingKeys:
+        type: "array"
+        items:
+          type: "string"
+      numberOfGroups:
+        type: "integer"
+      numberOfGroupsAccepted:
+        type: "integer"
+      operatorReports:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            hist:
+              type: "array"
+              items:
+                type: "object"
+                properties:
+                  bins:
+                    type: "array"
+                    items:
+                      type: "object"
+                      properties:
+                        from:
+                          type: "number"
+                        to:
+                          type: "number"
+                        weight:
+                          type: "number"
+                  collectionSpec:
+                    type: "object"
+                    properties:
+                      binNumber:
+                        type: "integer"
+                      log:
+                        type: "boolean"
+                      minBinWidth:
+                        type: "number"
+                      multiplyWeightByKey:
+                        type: "boolean"
+            operatorReport:
+              anyOf:
+              - $ref: "#/$defs/AndTaggedFilterReport-2"
+              - $ref: "#/$defs/DummyKeyedFilterReport"
+              - $ref: "#/$defs/GenericHistOpReport"
+              - $ref: "#/$defs/GroupFilterReport-2"
+              - $ref: "#/$defs/InGroupsFilterReport-2"
+      totalWeight:
+        type: "number"
+      totalWeightAccepted:
+        type: "number"
+  GroupFilterReport-2:
+    $ref: "#/$defs/GroupFilterReport-1"
+    type: "object"
+    properties:
+      type:
+        const: "filter_groups_report"
+    required:
+    - "type"
+  InGroupsFilterReport-1:
+    type: "object"
+    properties:
+      nestedAggregatedReport:
+        anyOf:
+        - $ref: "#/$defs/AndTaggedFilterReport-2"
+        - $ref: "#/$defs/DummyKeyedFilterReport"
+        - $ref: "#/$defs/GenericHistOpReport"
+        - $ref: "#/$defs/GroupFilterReport-2"
+        - $ref: "#/$defs/InGroupsFilterReport-2"
+      nestedPerGroupReports:
+        type: "object"
+      numberOfGroups:
+        type: "integer"
+  InGroupsFilterReport-2:
+    $ref: "#/$defs/InGroupsFilterReport-1"
+    type: "object"
+    properties:
+      type:
+        const: "filter_in_groups_report"
+    required:
+    - "type"
+type: "object"
+properties:
+  alignmentsFilteredByTagPrefix:
+    type: "integer"
+  clonalChainUsage:
+    allOf:
+    - type: "object"
+      properties:
+        chains:
+          type: "object"
+        chimeras:
+          type: "integer"
+        total:
+          type: "integer"
+    - type: "object"
+      properties:
+        type:
+          const: "chainUsage"
+      required:
+      - "type"
+  clones:
+    type: "integer"
+  clonesClustered:
+    type: "integer"
+  clonesDroppedAsLowQuality:
+    type: "integer"
+  clonesFilteredInPostFiltering:
+    type: "integer"
+  clonesPreClustered:
+    type: "integer"
+  commandLine:
+    type: "string"
+  coreReads:
+    type: "integer"
+  date:
+    type: "string"
+  executionTimeMillis:
+    type: "integer"
+  initialClonesCreated:
+    type: "integer"
+  inputFiles:
+    type: "array"
+    items:
+      type: "string"
+  lowQualityRescued:
+    type: "integer"
+  outputFiles:
+    type: "array"
+    items:
+      type: "string"
+  postFilteringReports:
+    type: "array"
+    items:
+      anyOf:
+      - $ref: "#/$defs/AndTaggedFilterReport-2"
+      - $ref: "#/$defs/DummyKeyedFilterReport"
+      - $ref: "#/$defs/GenericHistOpReport"
+      - $ref: "#/$defs/GroupFilterReport-2"
+      - $ref: "#/$defs/InGroupsFilterReport-2"
+  preCloneAssemblerReport:
+    allOf:
+    - type: "object"
+      properties:
+        assemblingFeatureSequencesInZeroPreClones:
+          type: "integer"
+        clonotypes:
+          type: "integer"
+        clonotypesPerGroup:
+          type: "object"
+        coreAlignments:
+          type: "integer"
+        coreAlignmentsDroppedByTagSuffix:
+          type: "integer"
+        coreClonotypesDroppedByTagSuffix:
+          type: "integer"
+        discardedCoreAlignments:
+          type: "integer"
+        empiricalAssignmentConflicts:
+          type: "integer"
+        empiricallyAssignedAlignments:
+          type: "integer"
+        gatConflicts:
+          type: "integer"
+        gatEmpiricallyAssignedAlignments:
+          type: "integer"
+        geneConflicts:
+          type: "object"
+        groupsWithNoAssemblingFeature:
+          type: "integer"
+        inputAlignments:
+          type: "integer"
+        inputAssemblingFeatureSequences:
+          type: "integer"
+        inputGroups:
+          type: "integer"
+        umiConflicts:
+          type: "integer"
+        umiEmpiricallyAssignedAlignments:
+          type: "integer"
+        unassignedAlignments:
+          type: "integer"
+        vjEmpiricallyAssignedAlignments:
+          type: "integer"
+    - type: "object"
+      properties:
+        type:
+          const: "preCloneAssemblerReport"
+      required:
+      - "type"
+  readsClustered:
+    type: "integer"
+  readsDroppedFailedMapping:
+    type: "integer"
+  readsDroppedLowQuality:
+    type: "integer"
+  readsDroppedNoTargetSequence:
+    type: "integer"
+  readsDroppedTooShortClonalSequence:
+    type: "integer"
+  readsDroppedWithLowQualityClones:
+    type: "integer"
+  readsFilteredInPostFiltering:
+    type: "number"
+  readsInClones:
+    type: "integer"
+  readsInClonesBeforeClustering:
+    type: "integer"
+  readsPreClustered:
+    type: "integer"
+  totalReadsProcessed:
+    type: "integer"
+  version:
+    type: "string"

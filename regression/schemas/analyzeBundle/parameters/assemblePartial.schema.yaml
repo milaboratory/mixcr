@@ -1,0 +1,58 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+type: "object"
+properties:
+  cellLevel:
+    type: "boolean"
+  dropPartial:
+    type: "boolean"
+  overlappedOnly:
+    type: "boolean"
+  parameters:
+    type: "object"
+    properties:
+      kOffset:
+        type: "integer"
+      kValue:
+        type: "integer"
+      maxLeftMatches:
+        type: "integer"
+      maxLeftParts:
+        type: "integer"
+      mergerParameters:
+        type: "object"
+        properties:
+          identityType:
+            type: "string"
+            enum:
+            - "Unweighted"
+            - "MinimalQualityWeighted"
+          maxQuality:
+            type: "integer"
+          minimalIdentity:
+            type: "number"
+          minimalOverlap:
+            type: "integer"
+          partsLayout:
+            type: "string"
+            enum:
+            - "DirectOnly"
+            - "ReverseOnly"
+            - "Opposite"
+            - "Collinear"
+            - "CollinearDirect"
+            - "Unknown"
+          qualityMergingAlgorithm:
+            type: "string"
+            enum:
+            - "SumMax"
+            - "SumSubtraction"
+            - "MaxSubtraction"
+            - "MaxMax"
+      minimalAlignmentMergeIdentity:
+        type: "number"
+      minimalAssembleOverlap:
+        type: "integer"
+      minimalNOverlap:
+        type: "integer"
+      minimalNOverlapShare:
+        type: "number"
