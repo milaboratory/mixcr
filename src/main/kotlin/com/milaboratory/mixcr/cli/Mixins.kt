@@ -456,6 +456,8 @@ object ExportMiXCRMixins {
 }
 
 class GenericMiXCRMixins : MiXCRMixinCollector() {
+    private val keysAdded = mutableMapOf<String, String>()
+
     @Option(
         description = ["Overrides preset parameters"],
         names = [GenericMixin.CMD_OPTION],
@@ -464,7 +466,15 @@ class GenericMiXCRMixins : MiXCRMixinCollector() {
     )
     fun genericMixin(fieldAndOverrides: Map<String, String>) {
         fieldAndOverrides.forEach { (field, override) ->
-            mixIn(GenericMixin(field, override))
+            if (keysAdded.containsKey(field)) {
+                if (keysAdded[field] == override)
+                    return@forEach
+                else
+                    throw IllegalArgumentException("Repeated override of $field.")
+            } else {
+                keysAdded[field] = override
+                mixIn(GenericMixin(field, override))
+            }
         }
     }
 }

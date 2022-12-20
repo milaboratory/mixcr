@@ -112,7 +112,7 @@ public class ReadTrimmerReportBuilder implements ReadTrimmerListener, ReportBuil
             bySideEvents.incrementAndGet(readIndex * 2);
             bySideEvents.incrementAndGet(readIndex * 2 + 1);
             bySideNucleotides.addAndGet(readIndex * 2, originalLength / 2);
-            bySideNucleotides.addAndGet(readIndex * 2, originalLength - (originalLength / 2));
+            bySideNucleotides.addAndGet(readIndex * 2 + 1, originalLength - (originalLength / 2));
         } else {
             if (range.getLower() > 0) {
                 bySideEvents.incrementAndGet(readIndex * 2);
@@ -120,7 +120,7 @@ public class ReadTrimmerReportBuilder implements ReadTrimmerListener, ReportBuil
             }
             if (range.getUpper() < originalLength) {
                 bySideEvents.incrementAndGet(readIndex * 2 + 1);
-                bySideNucleotides.addAndGet(readIndex * 2, originalLength - range.getUpper());
+                bySideNucleotides.addAndGet(readIndex * 2 + 1, originalLength - range.getUpper());
             }
         }
     }
