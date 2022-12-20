@@ -3,12 +3,12 @@ $defs:
   PairedEndReadsLayout:
     type: "string"
     enum:
-      - "DirectOnly"
-      - "ReverseOnly"
-      - "Opposite"
-      - "Collinear"
-      - "CollinearDirect"
-      - "Unknown"
+    - "DirectOnly"
+    - "ReverseOnly"
+    - "Opposite"
+    - "Collinear"
+    - "CollinearDirect"
+    - "Unknown"
 type: "object"
 properties:
   bamDropNonVDJ:
@@ -41,8 +41,8 @@ properties:
       libraryStructure:
         type: "string"
         enum:
-          - "Unknown"
-          - "R1V"
+        - "Unknown"
+        - "R1V"
       maxHits:
         type: "integer"
       mergerParameters:
@@ -51,8 +51,8 @@ properties:
           identityType:
             type: "string"
             enum:
-              - "Unweighted"
-              - "MinimalQualityWeighted"
+            - "Unweighted"
+            - "MinimalQualityWeighted"
           maxQuality:
             type: "integer"
           minimalIdentity:
@@ -64,10 +64,10 @@ properties:
           qualityMergingAlgorithm:
             type: "string"
             enum:
-              - "SumMax"
-              - "SumSubtraction"
-              - "MaxSubtraction"
-              - "MaxMax"
+            - "SumMax"
+            - "SumSubtraction"
+            - "MaxSubtraction"
+            - "MaxMax"
       minChimeraDetectionScore:
         type: "integer"
       minSumScore:
@@ -85,8 +85,8 @@ properties:
       vjAlignmentOrder:
         type: "string"
         enum:
-          - "VThenJ"
-          - "JThenV"
+        - "VThenJ"
+        - "JThenV"
       vjOverlapWindow:
         type: "integer"
   readIdAsCellTag:

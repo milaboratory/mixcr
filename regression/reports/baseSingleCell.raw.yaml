@@ -4,10 +4,10 @@ align:
     \ ./baseSingleCell.raw.align.report.json --preset 10x-vdj-bcr --species hs single_cell_vdj_t_subset_R1.fastq.gz\
     \ single_cell_vdj_t_subset_R2.fastq.gz ./baseSingleCell.raw.vdjca"
   inputFiles:
-    - "single_cell_vdj_t_subset_R1.fastq.gz"
-    - "single_cell_vdj_t_subset_R2.fastq.gz"
+  - "single_cell_vdj_t_subset_R1.fastq.gz"
+  - "single_cell_vdj_t_subset_R2.fastq.gz"
   outputFiles:
-    - "./baseSingleCell.raw.vdjca"
+  - "./baseSingleCell.raw.vdjca"
   trimmingReport: null
   totalReadsProcessed: 46879
   aligned: 40756
@@ -66,51 +66,51 @@ align:
     projections:
       "1,2": 46879
     detailedReport:
-      - nested:
-          "1,2":
-            variantId: 0
-            nested:
-              - - positionDistributions:
-                    CELL:Left:
-                      "0": 46879
-                    CELL:Right:
-                      "16": 46879
-                    UMI:Left:
-                      "16": 46879
-                    UMI:Right:
-                      "26": 46879
-                  lengthDistributions:
-                    CELL:
-                      "16": 46879
-                    UMI:
-                      "10": 46879
-                  costDistributions:
-                    "0": 46879
-                  variantDistribution:
-                    "0": 46879
-              - - positionDistributions:
-                    R2:Left:
-                      "0": 46879
-                    R2:Right:
-                      "90": 46879
-                  lengthDistributions:
-                    R2:
-                      "90": 46879
-                  costDistributions:
-                    "0": 46879
-                  variantDistribution:
-                    "0": 46879
-            costDistributions:
-              "0": 46879
+    - nested:
+        "1,2":
+          variantId: 0
+          nested:
+          - - positionDistributions:
+                CELL:Left:
+                  "0": 46879
+                CELL:Right:
+                  "16": 46879
+                UMI:Left:
+                  "16": 46879
+                UMI:Right:
+                  "26": 46879
+              lengthDistributions:
+                CELL:
+                  "16": 46879
+                UMI:
+                  "10": 46879
+              costDistributions:
+                "0": 46879
+              variantDistribution:
+                "0": 46879
+          - - positionDistributions:
+                R2:Left:
+                  "0": 46879
+                R2:Right:
+                  "90": 46879
+              lengthDistributions:
+                R2:
+                  "90": 46879
+              costDistributions:
+                "0": 46879
+              variantDistribution:
+                "0": 46879
+          costDistributions:
+            "0": 46879
 assemble:
   type: "assemblerReport"
   commandLine: "assemble --report ./baseSingleCell.raw.assemble.report.txt --json-report\
     \ ./baseSingleCell.raw.assemble.report.json ./baseSingleCell.raw.passembled.1.vdjca\
     \ ./baseSingleCell.raw.clna"
   inputFiles:
-    - "./baseSingleCell.raw.passembled.1.vdjca"
+  - "./baseSingleCell.raw.passembled.1.vdjca"
   outputFiles:
-    - "./baseSingleCell.raw.clna"
+  - "./baseSingleCell.raw.clna"
   preCloneAssemblerReport:
     type: "preCloneAssemblerReport"
     inputGroups: 87
@@ -172,40 +172,40 @@ assemble:
   clonesFilteredInPostFiltering: 2
   readsFilteredInPostFiltering: 763.0
   postFilteringReports:
-    - type: "filter_in_groups_report"
-      numberOfGroups: 6
-      nestedAggregatedReport:
-        type: "filter_groups_report"
-        groupingKeys:
-          - "clone"
-        numberOfGroups: 10
-        numberOfGroupsAccepted: 8
-        totalWeight: 17210.0
-        totalWeightAccepted: 16447.0
-        operatorReports:
-          - operatorReport:
-              type: "generic_hist_report"
-              threshold: "NaN"
-            metricHists:
-              - null
-      nestedPerGroupReports: { }
-    - type: "filter_in_groups_report"
-      numberOfGroups: 3
-      nestedAggregatedReport:
-        type: "filter_groups_report"
-        groupingKeys:
-          - "clone"
-        numberOfGroups: 8
-        numberOfGroupsAccepted: 8
-        totalWeight: 16447.0
-        totalWeightAccepted: 16447.0
-        operatorReports:
-          - operatorReport:
-              type: "generic_hist_report"
-              threshold: "NaN"
-            metricHists:
-              - null
-      nestedPerGroupReports: { }
+  - type: "filter_in_groups_report"
+    numberOfGroups: 6
+    nestedAggregatedReport:
+      type: "filter_groups_report"
+      groupingKeys:
+      - "clone"
+      numberOfGroups: 10
+      numberOfGroupsAccepted: 8
+      totalWeight: 17210.0
+      totalWeightAccepted: 16447.0
+      operatorReports:
+      - operatorReport:
+          type: "generic_hist_report"
+          threshold: "NaN"
+        metricHists:
+        - null
+    nestedPerGroupReports: {}
+  - type: "filter_in_groups_report"
+    numberOfGroups: 3
+    nestedAggregatedReport:
+      type: "filter_groups_report"
+      groupingKeys:
+      - "clone"
+      numberOfGroups: 8
+      numberOfGroupsAccepted: 8
+      totalWeight: 16447.0
+      totalWeightAccepted: 16447.0
+      operatorReports:
+      - operatorReport:
+          type: "generic_hist_report"
+          threshold: "NaN"
+        metricHists:
+        - null
+    nestedPerGroupReports: {}
   alignmentsFilteredByTagPrefix: 0
 assembleContigs:
   type: "fullSeqAssemblerReport"
@@ -213,9 +213,9 @@ assembleContigs:
     \ --json-report ./baseSingleCell.raw.assembleContigs.report.json ./baseSingleCell.raw.clna\
     \ ./baseSingleCell.raw.contigs.clns"
   inputFiles:
-    - "./baseSingleCell.raw.clna"
+  - "./baseSingleCell.raw.clna"
   outputFiles:
-    - "./baseSingleCell.raw.contigs.clns"
+  - "./baseSingleCell.raw.contigs.clns"
   clonesWithAmbiguousLetters: 4
   clonesWithAmbiguousLettersInSplittingRegion: 0
   readsWithAmbiguousLetters: 12695.0
@@ -237,9 +237,9 @@ assemblePartial:
     \ --json-report ./baseSingleCell.raw.assemblePartial.report.json ./baseSingleCell.raw.refined.vdjca\
     \ ./baseSingleCell.raw.passembled.1.vdjca"
   inputFiles:
-    - "./baseSingleCell.raw.refined.vdjca"
+  - "./baseSingleCell.raw.refined.vdjca"
   outputFiles:
-    - "./baseSingleCell.raw.passembled.1.vdjca"
+  - "./baseSingleCell.raw.passembled.1.vdjca"
   independentRuns: 87
   totalProcessed: 40648
   outputAlignments: 40427
@@ -261,137 +261,137 @@ refineTagsAndSort:
     \ --json-report ./baseSingleCell.raw.refine.report.json ./baseSingleCell.raw.vdjca\
     \ ./baseSingleCell.raw.refined.vdjca"
   inputFiles:
-    - "./baseSingleCell.raw.vdjca"
+  - "./baseSingleCell.raw.vdjca"
   outputFiles:
-    - "./baseSingleCell.raw.refined.vdjca"
+  - "./baseSingleCell.raw.refined.vdjca"
   correctionReport:
     inputRecords: 40756
     outputRecords: 40648
     steps:
-      - tagName: "CELL"
-        inputGroups: 1
-        inputDiversity: 161
-        inputCount: 40756
-        coreDiversity: 52
-        coreCount: 40539
-        directlyCorrectedDiversity: 156
-        directlyCorrectedCount: 776
-        filteredDiversity: 2
-        filteredCount: 2
-        recursivelyCorrected: 70
-        diversityFilteredByWhitelist: 0
-        outputDiversity: 3
-        outputCount: 40754
-      - tagName: "UMI"
-        inputGroups: 3
-        inputDiversity: 409
-        inputCount: 40754
-        coreDiversity: 166
-        coreCount: 40468
-        directlyCorrectedDiversity: 302
-        directlyCorrectedCount: 359
-        filteredDiversity: 1
-        filteredCount: 1
-        recursivelyCorrected: 13
-        diversityFilteredByWhitelist: 0
-        outputDiversity: 106
-        outputCount: 40753
+    - tagName: "CELL"
+      inputGroups: 1
+      inputDiversity: 161
+      inputCount: 40756
+      coreDiversity: 52
+      coreCount: 40539
+      directlyCorrectedDiversity: 156
+      directlyCorrectedCount: 776
+      filteredDiversity: 2
+      filteredCount: 2
+      recursivelyCorrected: 70
+      diversityFilteredByWhitelist: 0
+      outputDiversity: 3
+      outputCount: 40754
+    - tagName: "UMI"
+      inputGroups: 3
+      inputDiversity: 409
+      inputCount: 40754
+      coreDiversity: 166
+      coreCount: 40468
+      directlyCorrectedDiversity: 302
+      directlyCorrectedCount: 359
+      filteredDiversity: 1
+      filteredCount: 1
+      recursivelyCorrected: 13
+      diversityFilteredByWhitelist: 0
+      outputDiversity: 106
+      outputCount: 40753
     filterReport:
       type: "and_report"
       nestedReports:
-        - type: "filter_groups_report"
-          groupingKeys:
-            - "allTags:Cell"
-            - "allTags:Molecule"
-          numberOfGroups: 106
-          numberOfGroupsAccepted: 87
-          totalWeight: 40753.0
-          totalWeightAccepted: 40648.0
-          operatorReports:
-            - operatorReport:
-                type: "generic_hist_report"
-                threshold: 36.0
-              metricHists:
-                - bins:
-                    - from: 1.0
-                      to: 1.5848931924611136
-                      weight: 11.0
-                    - from: 1.5848931924611136
-                      to: 2.51188643150958
-                      weight: 1.0
-                    - from: 2.51188643150958
-                      to: 3.981071705534973
-                      weight: 0.0
-                    - from: 3.981071705534973
-                      to: 6.309573444801933
-                      weight: 2.0
-                    - from: 6.309573444801933
-                      to: 10.0
-                      weight: 1.0
-                    - from: 10.0
-                      to: 15.848931924611142
-                      weight: 2.0
-                    - from: 15.848931924611142
-                      to: 25.11886431509581
-                      weight: 1.0
-                    - from: 25.11886431509581
-                      to: 39.810717055349734
-                      weight: 3.0
-                    - from: 39.810717055349734
-                      to: 63.09573444801933
-                      weight: 3.0
-                    - from: 63.09573444801933
-                      to: 100.0
-                      weight: 2.0
-                    - from: 100.0
-                      to: 158.48931924611142
-                      weight: 1.0
-                    - from: 158.48931924611142
-                      to: 251.18864315095823
-                      weight: 3.0
-                    - from: 251.18864315095823
-                      to: 398.1071705534973
-                      weight: 12.0
-                    - from: 398.1071705534973
-                      to: 630.9573444801937
-                      weight: 52.0
-                    - from: 630.9573444801937
-                      to: 1000.0
-                      weight: 12.0
-                  collectionSpec:
-                    log: true
-                    binNumber: 0
-                    minBinWidth: 0.2
-                    multiplyWeightByKey: false
-        - type: "filter_groups_report"
-          groupingKeys:
-            - "allTags:Cell"
-          numberOfGroups: 3
-          numberOfGroupsAccepted: 3
-          totalWeight: 40648.0
-          totalWeightAccepted: 40648.0
-          operatorReports:
-            - operatorReport:
-                type: "dummy_report"
-              metricHists:
-                - bins:
-                    - from: 9.0
-                      to: 14.264038732150023
-                      weight: 2.0
-                    - from: 14.264038732150023
-                      to: 22.60697788358622
-                      weight: 0.0
-                    - from: 22.60697788358622
-                      to: 35.82964534981475
-                      weight: 0.0
-                    - from: 35.82964534981475
-                      to: 56.786161003217416
-                      weight: 0.0
-                    - from: 56.786161003217416
-                      to: 89.99999999999997
-                      weight: 1.0
-                  collectionSpec:
-                    log: true
-                    binNumber: 0
-                    minBinWidth: 0.2
-                    multiplyWeightByKey: false
+      - type: "filter_groups_report"
+        groupingKeys:
+        - "allTags:Cell"
+        - "allTags:Molecule"
+        numberOfGroups: 106
+        numberOfGroupsAccepted: 87
+        totalWeight: 40753.0
+        totalWeightAccepted: 40648.0
+        operatorReports:
+        - operatorReport:
+            type: "generic_hist_report"
+            threshold: 36.0
+          metricHists:
+          - bins:
+            - from: 1.0
+              to: 1.5848931924611136
+              weight: 11.0
+            - from: 1.5848931924611136
+              to: 2.51188643150958
+              weight: 1.0
+            - from: 2.51188643150958
+              to: 3.981071705534973
+              weight: 0.0
+            - from: 3.981071705534973
+              to: 6.309573444801933
+              weight: 2.0
+            - from: 6.309573444801933
+              to: 10.0
+              weight: 1.0
+            - from: 10.0
+              to: 15.848931924611142
+              weight: 2.0
+            - from: 15.848931924611142
+              to: 25.11886431509581
+              weight: 1.0
+            - from: 25.11886431509581
+              to: 39.810717055349734
+              weight: 3.0
+            - from: 39.810717055349734
+              to: 63.09573444801933
+              weight: 3.0
+            - from: 63.09573444801933
+              to: 100.0
+              weight: 2.0
+            - from: 100.0
+              to: 158.48931924611142
+              weight: 1.0
+            - from: 158.48931924611142
+              to: 251.18864315095823
+              weight: 3.0
+            - from: 251.18864315095823
+              to: 398.1071705534973
+              weight: 12.0
+            - from: 398.1071705534973
+              to: 630.9573444801937
+              weight: 52.0
+            - from: 630.9573444801937
+              to: 1000.0
+              weight: 12.0
+            collectionSpec:
+              log: true
+              binNumber: 0
+              minBinWidth: 0.2
+              multiplyWeightByKey: false
+      - type: "filter_groups_report"
+        groupingKeys:
+        - "allTags:Cell"
+        numberOfGroups: 3
+        numberOfGroupsAccepted: 3
+        totalWeight: 40648.0
+        totalWeightAccepted: 40648.0
+        operatorReports:
+        - operatorReport:
+            type: "dummy_report"
+          metricHists:
+          - bins:
+            - from: 9.0
+              to: 14.264038732150023
+              weight: 2.0
+            - from: 14.264038732150023
+              to: 22.60697788358622
+              weight: 0.0
+            - from: 22.60697788358622
+              to: 35.82964534981475
+              weight: 0.0
+            - from: 35.82964534981475
+              to: 56.786161003217416
+              weight: 0.0
+            - from: 56.786161003217416
+              to: 89.99999999999997
+              weight: 1.0
+            collectionSpec:
+              log: true
+              binNumber: 0
+              minBinWidth: 0.2
+              multiplyWeightByKey: false

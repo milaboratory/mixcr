@@ -33,54 +33,54 @@ properties:
         type: "number"
       regressionFilter:
         anyOf:
-          - allOf:
-              - type: "object"
-                properties:
-                  allowedSkippedPointsInRegression:
-                    type: "integer"
-                  maxSlopeForHomozygous:
-                    type: "number"
-                  minPValue:
-                    type: "number"
-                  minYInterceptForHeterozygous:
-                    type: "number"
-                  minYInterceptForHomozygous:
-                    type: "number"
-                  windowSizeForRegression:
-                    type: "integer"
-              - type: "object"
-                properties:
-                  type:
-                    const: "byCount"
-                required:
-                  - "type"
-          - allOf:
-              - type: "object"
-                properties:
-                  allowedSkippedPointsInRegression:
-                    type: "integer"
-                  maxSlopeForHomozygous:
-                    type: "number"
-                  minPValue:
-                    type: "number"
-                  minYInterceptForHeterozygous:
-                    type: "number"
-                  minYInterceptForHomozygous:
-                    type: "number"
-                  windowSizeForRegression:
-                    type: "integer"
-              - type: "object"
-                properties:
-                  type:
-                    const: "byDiversity"
-                required:
-                  - "type"
+        - allOf:
+          - type: "object"
+            properties:
+              allowedSkippedPointsInRegression:
+                type: "integer"
+              maxSlopeForHomozygous:
+                type: "number"
+              minPValue:
+                type: "number"
+              minYInterceptForHeterozygous:
+                type: "number"
+              minYInterceptForHomozygous:
+                type: "number"
+              windowSizeForRegression:
+                type: "integer"
           - type: "object"
             properties:
               type:
-                const: "noop"
+                const: "byCount"
             required:
-              - "type"
+            - "type"
+        - allOf:
+          - type: "object"
+            properties:
+              allowedSkippedPointsInRegression:
+                type: "integer"
+              maxSlopeForHomozygous:
+                type: "number"
+              minPValue:
+                type: "number"
+              minYInterceptForHeterozygous:
+                type: "number"
+              minYInterceptForHomozygous:
+                type: "number"
+              windowSizeForRegression:
+                type: "integer"
+          - type: "object"
+            properties:
+              type:
+                const: "byDiversity"
+            required:
+            - "type"
+        - type: "object"
+          properties:
+            type:
+              const: "noop"
+          required:
+          - "type"
       topByDiversity:
         type: "number"
   searchMutationsInCDR3:

@@ -7,11 +7,11 @@ $defs:
         type: "array"
         items:
           anyOf:
-            - $ref: "#/$defs/AndTaggedFilterReport-2"
-            - $ref: "#/$defs/DummyKeyedFilterReport"
-            - $ref: "#/$defs/GenericHistOpReport"
-            - $ref: "#/$defs/GroupFilterReport-2"
-            - $ref: "#/$defs/InGroupsFilterReport-2"
+          - $ref: "#/$defs/AndTaggedFilterReport-2"
+          - $ref: "#/$defs/DummyKeyedFilterReport"
+          - $ref: "#/$defs/GenericHistOpReport"
+          - $ref: "#/$defs/GroupFilterReport-2"
+          - $ref: "#/$defs/InGroupsFilterReport-2"
   AndTaggedFilterReport-2:
     $ref: "#/$defs/AndTaggedFilterReport-1"
     type: "object"
@@ -19,26 +19,26 @@ $defs:
       type:
         const: "and_report"
     required:
-      - "type"
+    - "type"
   DummyKeyedFilterReport:
     type: "object"
     properties:
       type:
         const: "dummy_report"
     required:
-      - "type"
+    - "type"
   GenericHistOpReport:
     allOf:
-      - type: "object"
-        properties:
-          threshold:
-            type: "number"
-      - type: "object"
-        properties:
-          type:
-            const: "generic_hist_report"
-        required:
-          - "type"
+    - type: "object"
+      properties:
+        threshold:
+          type: "number"
+    - type: "object"
+      properties:
+        type:
+          const: "generic_hist_report"
+      required:
+      - "type"
   GroupFilterReport-1:
     type: "object"
     properties:
@@ -84,11 +84,11 @@ $defs:
                         type: "boolean"
             operatorReport:
               anyOf:
-                - $ref: "#/$defs/AndTaggedFilterReport-2"
-                - $ref: "#/$defs/DummyKeyedFilterReport"
-                - $ref: "#/$defs/GenericHistOpReport"
-                - $ref: "#/$defs/GroupFilterReport-2"
-                - $ref: "#/$defs/InGroupsFilterReport-2"
+              - $ref: "#/$defs/AndTaggedFilterReport-2"
+              - $ref: "#/$defs/DummyKeyedFilterReport"
+              - $ref: "#/$defs/GenericHistOpReport"
+              - $ref: "#/$defs/GroupFilterReport-2"
+              - $ref: "#/$defs/InGroupsFilterReport-2"
       totalWeight:
         type: "number"
       totalWeightAccepted:
@@ -100,17 +100,17 @@ $defs:
       type:
         const: "filter_groups_report"
     required:
-      - "type"
+    - "type"
   InGroupsFilterReport-1:
     type: "object"
     properties:
       nestedAggregatedReport:
         anyOf:
-          - $ref: "#/$defs/AndTaggedFilterReport-2"
-          - $ref: "#/$defs/DummyKeyedFilterReport"
-          - $ref: "#/$defs/GenericHistOpReport"
-          - $ref: "#/$defs/GroupFilterReport-2"
-          - $ref: "#/$defs/InGroupsFilterReport-2"
+        - $ref: "#/$defs/AndTaggedFilterReport-2"
+        - $ref: "#/$defs/DummyKeyedFilterReport"
+        - $ref: "#/$defs/GenericHistOpReport"
+        - $ref: "#/$defs/GroupFilterReport-2"
+        - $ref: "#/$defs/InGroupsFilterReport-2"
       nestedPerGroupReports:
         type: "object"
       numberOfGroups:
@@ -122,27 +122,27 @@ $defs:
       type:
         const: "filter_in_groups_report"
     required:
-      - "type"
+    - "type"
 type: "object"
 properties:
   alignmentsFilteredByTagPrefix:
     type: "integer"
   clonalChainUsage:
     allOf:
-      - type: "object"
-        properties:
-          chains:
-            type: "object"
-          chimeras:
-            type: "integer"
-          total:
-            type: "integer"
-      - type: "object"
-        properties:
-          type:
-            const: "chainUsage"
-        required:
-          - "type"
+    - type: "object"
+      properties:
+        chains:
+          type: "object"
+        chimeras:
+          type: "integer"
+        total:
+          type: "integer"
+    - type: "object"
+      properties:
+        type:
+          const: "chainUsage"
+      required:
+      - "type"
   clones:
     type: "integer"
   clonesClustered:
@@ -177,61 +177,61 @@ properties:
     type: "array"
     items:
       anyOf:
-        - $ref: "#/$defs/AndTaggedFilterReport-2"
-        - $ref: "#/$defs/DummyKeyedFilterReport"
-        - $ref: "#/$defs/GenericHistOpReport"
-        - $ref: "#/$defs/GroupFilterReport-2"
-        - $ref: "#/$defs/InGroupsFilterReport-2"
+      - $ref: "#/$defs/AndTaggedFilterReport-2"
+      - $ref: "#/$defs/DummyKeyedFilterReport"
+      - $ref: "#/$defs/GenericHistOpReport"
+      - $ref: "#/$defs/GroupFilterReport-2"
+      - $ref: "#/$defs/InGroupsFilterReport-2"
   preCloneAssemblerReport:
     allOf:
-      - type: "object"
-        properties:
-          assemblingFeatureSequencesInZeroPreClones:
-            type: "integer"
-          clonotypes:
-            type: "integer"
-          clonotypesPerGroup:
-            type: "object"
-          coreAlignments:
-            type: "integer"
-          coreAlignmentsDroppedByTagSuffix:
-            type: "integer"
-          coreClonotypesDroppedByTagSuffix:
-            type: "integer"
-          discardedCoreAlignments:
-            type: "integer"
-          empiricalAssignmentConflicts:
-            type: "integer"
-          empiricallyAssignedAlignments:
-            type: "integer"
-          gatConflicts:
-            type: "integer"
-          gatEmpiricallyAssignedAlignments:
-            type: "integer"
-          geneConflicts:
-            type: "object"
-          groupsWithNoAssemblingFeature:
-            type: "integer"
-          inputAlignments:
-            type: "integer"
-          inputAssemblingFeatureSequences:
-            type: "integer"
-          inputGroups:
-            type: "integer"
-          umiConflicts:
-            type: "integer"
-          umiEmpiricallyAssignedAlignments:
-            type: "integer"
-          unassignedAlignments:
-            type: "integer"
-          vjEmpiricallyAssignedAlignments:
-            type: "integer"
-      - type: "object"
-        properties:
-          type:
-            const: "preCloneAssemblerReport"
-        required:
-          - "type"
+    - type: "object"
+      properties:
+        assemblingFeatureSequencesInZeroPreClones:
+          type: "integer"
+        clonotypes:
+          type: "integer"
+        clonotypesPerGroup:
+          type: "object"
+        coreAlignments:
+          type: "integer"
+        coreAlignmentsDroppedByTagSuffix:
+          type: "integer"
+        coreClonotypesDroppedByTagSuffix:
+          type: "integer"
+        discardedCoreAlignments:
+          type: "integer"
+        empiricalAssignmentConflicts:
+          type: "integer"
+        empiricallyAssignedAlignments:
+          type: "integer"
+        gatConflicts:
+          type: "integer"
+        gatEmpiricallyAssignedAlignments:
+          type: "integer"
+        geneConflicts:
+          type: "object"
+        groupsWithNoAssemblingFeature:
+          type: "integer"
+        inputAlignments:
+          type: "integer"
+        inputAssemblingFeatureSequences:
+          type: "integer"
+        inputGroups:
+          type: "integer"
+        umiConflicts:
+          type: "integer"
+        umiEmpiricallyAssignedAlignments:
+          type: "integer"
+        unassignedAlignments:
+          type: "integer"
+        vjEmpiricallyAssignedAlignments:
+          type: "integer"
+    - type: "object"
+      properties:
+        type:
+          const: "preCloneAssemblerReport"
+      required:
+      - "type"
   readsClustered:
     type: "integer"
   readsDroppedFailedMapping:

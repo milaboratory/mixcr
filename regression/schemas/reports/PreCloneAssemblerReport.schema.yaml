@@ -1,50 +1,50 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 allOf:
-  - type: "object"
-    properties:
-      assemblingFeatureSequencesInZeroPreClones:
-        type: "integer"
-      clonotypes:
-        type: "integer"
-      clonotypesPerGroup:
-        type: "object"
-      coreAlignments:
-        type: "integer"
-      coreAlignmentsDroppedByTagSuffix:
-        type: "integer"
-      coreClonotypesDroppedByTagSuffix:
-        type: "integer"
-      discardedCoreAlignments:
-        type: "integer"
-      empiricalAssignmentConflicts:
-        type: "integer"
-      empiricallyAssignedAlignments:
-        type: "integer"
-      gatConflicts:
-        type: "integer"
-      gatEmpiricallyAssignedAlignments:
-        type: "integer"
-      geneConflicts:
-        type: "object"
-      groupsWithNoAssemblingFeature:
-        type: "integer"
-      inputAlignments:
-        type: "integer"
-      inputAssemblingFeatureSequences:
-        type: "integer"
-      inputGroups:
-        type: "integer"
-      umiConflicts:
-        type: "integer"
-      umiEmpiricallyAssignedAlignments:
-        type: "integer"
-      unassignedAlignments:
-        type: "integer"
-      vjEmpiricallyAssignedAlignments:
-        type: "integer"
-  - type: "object"
-    properties:
-      type:
-        const: "preCloneAssemblerReport"
-    required:
-      - "type"
+- type: "object"
+  properties:
+    assemblingFeatureSequencesInZeroPreClones:
+      type: "integer"
+    clonotypes:
+      type: "integer"
+    clonotypesPerGroup:
+      type: "object"
+    coreAlignments:
+      type: "integer"
+    coreAlignmentsDroppedByTagSuffix:
+      type: "integer"
+    coreClonotypesDroppedByTagSuffix:
+      type: "integer"
+    discardedCoreAlignments:
+      type: "integer"
+    empiricalAssignmentConflicts:
+      type: "integer"
+    empiricallyAssignedAlignments:
+      type: "integer"
+    gatConflicts:
+      type: "integer"
+    gatEmpiricallyAssignedAlignments:
+      type: "integer"
+    geneConflicts:
+      type: "object"
+    groupsWithNoAssemblingFeature:
+      type: "integer"
+    inputAlignments:
+      type: "integer"
+    inputAssemblingFeatureSequences:
+      type: "integer"
+    inputGroups:
+      type: "integer"
+    umiConflicts:
+      type: "integer"
+    umiEmpiricallyAssignedAlignments:
+      type: "integer"
+    unassignedAlignments:
+      type: "integer"
+    vjEmpiricallyAssignedAlignments:
+      type: "integer"
+- type: "object"
+  properties:
+    type:
+      const: "preCloneAssemblerReport"
+  required:
+  - "type"

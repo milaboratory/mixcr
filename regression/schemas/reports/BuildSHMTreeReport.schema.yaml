@@ -52,78 +52,78 @@ properties:
           $ref: "#/$defs/StatsWithQuantiles"
         step:
           anyOf:
-            - allOf:
-                - type: "object"
-                  properties:
-                    maxNDNDistance:
-                      type: "number"
-                    threshold:
-                      type: "number"
-                - type: "object"
-                  properties:
-                    name:
-                      const: "AttachClonesByDistanceChange"
-                  required:
-                    - "name"
-            - allOf:
-                - type: "object"
-                  properties:
-                    maxNDNDistance:
-                      type: "number"
-                - type: "object"
-                  properties:
-                    name:
-                      const: "AttachClonesByNDN"
-                  required:
-                    - "name"
-            - allOf:
-                - type: "object"
-                  properties:
-                    algorithm:
-                      anyOf:
-                        - allOf:
-                            - type: "object"
-                              properties:
-                                commonMutationsCountForClustering:
-                                  type: "integer"
-                                maxNDNDistanceForClustering:
-                                  type: "number"
-                            - type: "object"
-                              properties:
-                                type:
-                                  const: "BronKerbosch"
-                              required:
-                                - "type"
-                        - allOf:
-                            - type: "object"
-                              properties:
-                                commonMutationsCountForClustering:
-                                  type: "integer"
-                                maxNDNDistanceForClustering:
-                                  type: "number"
-                            - type: "object"
-                              properties:
-                                type:
-                                  const: "SingleLinkage"
-                              required:
-                                - "type"
-                - type: "object"
-                  properties:
-                    name:
-                      const: "BuildingInitialTrees"
-                  required:
-                    - "name"
-            - allOf:
-                - type: "object"
-                  properties:
-                    maxNDNDistanceBetweenRoots:
-                      type: "number"
-                - type: "object"
-                  properties:
-                    name:
-                      const: "CombineTrees"
-                  required:
-                    - "name"
+          - allOf:
+            - type: "object"
+              properties:
+                maxNDNDistance:
+                  type: "number"
+                threshold:
+                  type: "number"
+            - type: "object"
+              properties:
+                name:
+                  const: "AttachClonesByDistanceChange"
+              required:
+              - "name"
+          - allOf:
+            - type: "object"
+              properties:
+                maxNDNDistance:
+                  type: "number"
+            - type: "object"
+              properties:
+                name:
+                  const: "AttachClonesByNDN"
+              required:
+              - "name"
+          - allOf:
+            - type: "object"
+              properties:
+                algorithm:
+                  anyOf:
+                  - allOf:
+                    - type: "object"
+                      properties:
+                        commonMutationsCountForClustering:
+                          type: "integer"
+                        maxNDNDistanceForClustering:
+                          type: "number"
+                    - type: "object"
+                      properties:
+                        type:
+                          const: "BronKerbosch"
+                      required:
+                      - "type"
+                  - allOf:
+                    - type: "object"
+                      properties:
+                        commonMutationsCountForClustering:
+                          type: "integer"
+                        maxNDNDistanceForClustering:
+                          type: "number"
+                    - type: "object"
+                      properties:
+                        type:
+                          const: "SingleLinkage"
+                      required:
+                      - "type"
+            - type: "object"
+              properties:
+                name:
+                  const: "BuildingInitialTrees"
+              required:
+              - "name"
+          - allOf:
+            - type: "object"
+              properties:
+                maxNDNDistanceBetweenRoots:
+                  type: "number"
+            - type: "object"
+              properties:
+                name:
+                  const: "CombineTrees"
+              required:
+              - "name"
         surenessOfDecisions:
           $ref: "#/$defs/StatsWithQuantiles"
         treesCountDelta:

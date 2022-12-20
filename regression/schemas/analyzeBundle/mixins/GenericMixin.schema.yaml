@@ -1,14 +1,14 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 allOf:
-  - type: "object"
-    properties:
-      fieldAddress:
-        type: "string"
-      newValue:
-        type: "string"
-  - type: "object"
-    properties:
-      type:
-        const: "GenericMixin"
-    required:
-      - "type"
+- type: "object"
+  properties:
+    fieldAddress:
+      type: "string"
+    newValue:
+      type: "string"
+- type: "object"
+  properties:
+    type:
+      const: "GenericMixin"
+  required:
+  - "type"

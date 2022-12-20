@@ -1,9 +1,9 @@
-flags: [ ]
+flags: []
 pipeline:
-  - "align"
-  - "refineTagsAndSort"
-  - "assemble"
-  - "exportClones"
+- "align"
+- "refineTagsAndSort"
+- "assemble"
+- "exportClones"
 align:
   species: "mmu"
   libraryName: "default"
@@ -151,7 +151,7 @@ align:
     saveOriginalReads: false
     smartForceEdgeAlignments: true
 refineTagsAndSort:
-  whitelists: { }
+  whitelists: {}
   runCorrection: true
   parameters:
     correctionPower: 0.001
@@ -164,20 +164,20 @@ refineTagsAndSort:
     postFilter:
       type: "filter_groups"
       groupingKeys:
-        - "UMI"
+      - "UMI"
       predicates:
-        - metrics:
-            - type: "group_metric_sum_weight"
-              reportHist:
-                log: true
-                binNumber: 0
-                minBinWidth: 0.2
-                multiplyWeightByKey: false
-          operator:
-            type: "group_operator_otsu1"
-            logX: true
-            minimalSample: 30
-            fallbackThreshold: 1.0
+      - metrics:
+        - type: "group_metric_sum_weight"
+          reportHist:
+            log: true
+            binNumber: 0
+            minBinWidth: 0.2
+            multiplyWeightByKey: false
+        operator:
+          type: "group_operator_otsu1"
+          logX: true
+          minimalSample: 30
+          fallbackThreshold: 1.0
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -233,7 +233,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-      - "CDR3"
+    - "CDR3"
     minimalClonalSequenceLength: 12
     qualityAggregationType: "Max"
     cloneClusteringParameters:
@@ -319,19 +319,19 @@ exportAlignments:
   chains: "ALL"
   noHeader: false
   fields:
-    - field: "-targetSequences"
-    - field: "-targetQualities"
-    - field: "-vHitsWithScore"
-    - field: "-dHitsWithScore"
-    - field: "-jHitsWithScore"
-    - field: "-cHitsWithScore"
-    - field: "-vAlignments"
-    - field: "-dAlignments"
-    - field: "-jAlignments"
-    - field: "-cAlignments"
-    - field: "-allNFeaturesWithMinQuality"
-    - field: "-allAAFeatures"
-    - field: "-defaultAnchorPoints"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -339,27 +339,27 @@ exportClones:
   chains: "ALL"
   noHeader: false
   splitFilesBy:
-    - "geneLabel:ReliableChain"
+  - "geneLabel:ReliableChain"
   fields:
-    - field: "-cloneId"
-    - field: "-readCount"
-    - field: "-readFraction"
-    - field: "-uniqueTagCount"
-      args:
-        - "Molecule"
-    - field: "-uniqueTagFraction"
-      args:
-        - "Molecule"
-    - field: "-targetSequences"
-    - field: "-targetQualities"
-    - field: "-vHitsWithScore"
-    - field: "-dHitsWithScore"
-    - field: "-jHitsWithScore"
-    - field: "-cHitsWithScore"
-    - field: "-vAlignments"
-    - field: "-dAlignments"
-    - field: "-jAlignments"
-    - field: "-cAlignments"
-    - field: "-allNFeaturesWithMinQuality"
-    - field: "-allAAFeatures"
-    - field: "-defaultAnchorPoints"
+  - field: "-cloneId"
+  - field: "-readCount"
+  - field: "-readFraction"
+  - field: "-uniqueTagCount"
+    args:
+    - "Molecule"
+  - field: "-uniqueTagFraction"
+    args:
+    - "Molecule"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"

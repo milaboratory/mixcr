@@ -7,20 +7,20 @@ properties:
     type: "integer"
   chainUsage:
     allOf:
-      - type: "object"
-        properties:
-          chains:
-            type: "object"
-          chimeras:
-            type: "integer"
-          total:
-            type: "integer"
-      - type: "object"
-        properties:
-          type:
-            const: "chainUsage"
-        required:
-          - "type"
+    - type: "object"
+      properties:
+        chains:
+          type: "object"
+        chimeras:
+          type: "integer"
+        total:
+          type: "integer"
+    - type: "object"
+      properties:
+        type:
+          const: "chainUsage"
+      required:
+      - "type"
   chimeras:
     type: "integer"
   commandLine:
@@ -85,32 +85,32 @@ properties:
     type: "integer"
   trimmingReport:
     allOf:
-      - type: "object"
-        properties:
-          r1LeftTrimmedEvents:
-            type: "integer"
-          r1LeftTrimmedNucleotides:
-            type: "integer"
-          r1RightTrimmedEvents:
-            type: "integer"
-          r1RightTrimmedNucleotides:
-            type: "integer"
-          r2LeftTrimmedEvents:
-            type: "integer"
-          r2LeftTrimmedNucleotides:
-            type: "integer"
-          r2RightTrimmedEvents:
-            type: "integer"
-          r2RightTrimmedNucleotides:
-            type: "integer"
-          total:
-            type: "integer"
-      - type: "object"
-        properties:
-          type:
-            const: "readTrimmerReport"
-        required:
-          - "type"
+    - type: "object"
+      properties:
+        r1LeftTrimmedEvents:
+          type: "integer"
+        r1LeftTrimmedNucleotides:
+          type: "integer"
+        r1RightTrimmedEvents:
+          type: "integer"
+        r1RightTrimmedNucleotides:
+          type: "integer"
+        r2LeftTrimmedEvents:
+          type: "integer"
+        r2LeftTrimmedNucleotides:
+          type: "integer"
+        r2RightTrimmedEvents:
+          type: "integer"
+        r2RightTrimmedNucleotides:
+          type: "integer"
+        total:
+          type: "integer"
+    - type: "object"
+      properties:
+        type:
+          const: "readTrimmerReport"
+      required:
+      - "type"
   vChimeras:
     type: "integer"
   version:

@@ -41,74 +41,74 @@ properties:
             type: "integer"
           scoring:
             allOf:
-              - type: "object"
-                properties:
-                  alphabet:
-                    type: "object"
-                    properties:
-                      alphabetId:
+            - type: "object"
+              properties:
+                alphabet:
+                  type: "object"
+                  properties:
+                    alphabetId:
+                      type: "string"
+                    alphabetName:
+                      type: "string"
+                    basicMaskToWildcard:
+                      type: "object"
+                    codeToSymbol:
+                      type: "array"
+                      items:
                         type: "string"
-                      alphabetName:
-                        type: "string"
-                      basicMaskToWildcard:
-                        type: "object"
-                      codeToSymbol:
-                        type: "array"
-                        items:
-                          type: "string"
-                      codeToWildcard:
-                        type: "array"
-                        items:
-                          $ref: "#/$defs/Wildcard"
-                      countOfBasicLetters:
-                        type: "integer"
-                      empty:
-                        type: "object"
-                        properties:
-                          data:
-                            type: "array"
-                            items:
-                              type: "string"
-                      hashCode:
-                        type: "integer"
-                      symbolToCode:
-                        type: "object"
-                        properties:
-                          _autoCompactRemovesRemaining:
-                            type: "integer"
-                          _autoCompactionFactor:
-                            type: "number"
-                          _loadFactor:
-                            type: "number"
-                          _maxSize:
-                            type: "integer"
-                          consumeFreeSlot:
-                            type: "boolean"
-                          no_entry_key:
-                            type: "string"
-                          no_entry_value:
-                            type: "string"
-                      wildcardForAnyLetter:
+                    codeToWildcard:
+                      type: "array"
+                      items:
                         $ref: "#/$defs/Wildcard"
-                      wildcardsList:
-                        type: "array"
-                        items:
-                          $ref: "#/$defs/Wildcard"
-                  gapPenalty:
-                    type: "integer"
-                  subsMatrix:
-                    type: "object"
-                    properties:
-                      data:
-                        type: "array"
-                        items:
+                    countOfBasicLetters:
+                      type: "integer"
+                    empty:
+                      type: "object"
+                      properties:
+                        data:
+                          type: "array"
+                          items:
+                            type: "string"
+                    hashCode:
+                      type: "integer"
+                    symbolToCode:
+                      type: "object"
+                      properties:
+                        _autoCompactRemovesRemaining:
                           type: "integer"
-              - type: "object"
-                properties:
-                  type:
-                    const: "linear"
-                required:
-                  - "type"
+                        _autoCompactionFactor:
+                          type: "number"
+                        _loadFactor:
+                          type: "number"
+                        _maxSize:
+                          type: "integer"
+                        consumeFreeSlot:
+                          type: "boolean"
+                        no_entry_key:
+                          type: "string"
+                        no_entry_value:
+                          type: "string"
+                    wildcardForAnyLetter:
+                      $ref: "#/$defs/Wildcard"
+                    wildcardsList:
+                      type: "array"
+                      items:
+                        $ref: "#/$defs/Wildcard"
+                gapPenalty:
+                  type: "integer"
+                subsMatrix:
+                  type: "object"
+                  properties:
+                    data:
+                      type: "array"
+                      items:
+                        type: "integer"
+            - type: "object"
+              properties:
+                type:
+                  const: "linear"
+              required:
+              - "type"
           trimMinimalSumQuality:
             type: "integer"
           trimReferenceRegion:

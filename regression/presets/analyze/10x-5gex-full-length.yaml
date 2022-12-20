@@ -1,11 +1,11 @@
-flags: [ ]
+flags: []
 pipeline:
-  - "align"
-  - "refineTagsAndSort"
-  - "assemblePartial"
-  - "assemble"
-  - "assembleContigs"
-  - "exportClones"
+- "align"
+- "refineTagsAndSort"
+- "assemblePartial"
+- "assemble"
+- "assembleContigs"
+- "exportClones"
 align:
   species: ""
   libraryName: "default"
@@ -216,7 +216,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-      - "CDR3"
+    - "CDR3"
     minimalClonalSequenceLength: 12
     qualityAggregationType: "Max"
     cloneClusteringParameters:
@@ -276,41 +276,41 @@ assemble:
     mappingThreshold: "2of5"
     minimalQuality: 0
     postFilters:
-      - type: "filter_in_groups"
-        isolationKeys:
-          - "geneLabel:ReliableChain"
-          - "allTags:Cell"
-        nestedFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "clone"
-          predicates:
-            - metrics:
-                - type: "group_metric_nunique"
-                  reportHist: null
-                  keys:
-                    - "allTags:Molecule"
-              operator:
-                type: "group_operator_cumtop"
-                share: 0.95
-        aggregateReport: true
-      - type: "filter_in_groups"
-        isolationKeys:
-          - "allTags:Cell"
-        nestedFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "clone"
-          predicates:
-            - metrics:
-                - type: "group_metric_nunique"
-                  reportHist: null
-                  keys:
-                    - "allTags:Molecule"
-              operator:
-                type: "group_operator_cumtop"
-                share: 0.99
-        aggregateReport: true
+    - type: "filter_in_groups"
+      isolationKeys:
+      - "geneLabel:ReliableChain"
+      - "allTags:Cell"
+      nestedFilter:
+        type: "filter_groups"
+        groupingKeys:
+        - "clone"
+        predicates:
+        - metrics:
+          - type: "group_metric_nunique"
+            reportHist: null
+            keys:
+            - "allTags:Molecule"
+          operator:
+            type: "group_operator_cumtop"
+            share: 0.95
+      aggregateReport: true
+    - type: "filter_in_groups"
+      isolationKeys:
+      - "allTags:Cell"
+      nestedFilter:
+        type: "filter_groups"
+        groupingKeys:
+        - "clone"
+        predicates:
+        - metrics:
+          - type: "group_metric_nunique"
+            reportHist: null
+            keys:
+            - "allTags:Molecule"
+          operator:
+            type: "group_operator_cumtop"
+            share: 0.99
+      aggregateReport: true
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -325,9 +325,9 @@ assembleContigs:
     outputMinimalQualityShare: 0.75
     outputMinimalSumQuality: 0
     subCloningRegions:
-      - "VDJRegion"
+    - "VDJRegion"
     assemblingRegions:
-      - "VDJRegion"
+    - "VDJRegion"
     postFiltering:
       type: "OnlyFullyDefined"
     trimmingParameters:
@@ -339,45 +339,45 @@ exportAlignments:
   chains: "ALL"
   noHeader: false
   fields:
-    - field: "-targetSequences"
-    - field: "-targetQualities"
-    - field: "-vHitsWithScore"
-    - field: "-dHitsWithScore"
-    - field: "-jHitsWithScore"
-    - field: "-cHitsWithScore"
-    - field: "-vAlignments"
-    - field: "-dAlignments"
-    - field: "-jAlignments"
-    - field: "-cAlignments"
-    - field: "-allNFeaturesWithMinQuality"
-    - field: "-allAAFeatures"
-    - field: "-defaultAnchorPoints"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
   filterStops: false
   chains: "ALL"
   noHeader: false
-  splitFilesBy: [ ]
+  splitFilesBy: []
   fields:
-    - field: "-cloneId"
-    - field: "-tags"
-      args:
-        - "Cell"
-    - field: "-readCount"
-    - field: "-uniqueTagCount"
-      args:
-        - "Molecule"
-    - field: "-targetSequences"
-    - field: "-targetQualities"
-    - field: "-vHitsWithScore"
-    - field: "-dHitsWithScore"
-    - field: "-jHitsWithScore"
-    - field: "-cHitsWithScore"
-    - field: "-vAlignments"
-    - field: "-dAlignments"
-    - field: "-jAlignments"
-    - field: "-cAlignments"
-    - field: "-allNFeaturesWithMinQuality"
-    - field: "-allAAFeatures"
-    - field: "-defaultAnchorPoints"
+  - field: "-cloneId"
+  - field: "-tags"
+    args:
+    - "Cell"
+  - field: "-readCount"
+  - field: "-uniqueTagCount"
+    args:
+    - "Molecule"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"

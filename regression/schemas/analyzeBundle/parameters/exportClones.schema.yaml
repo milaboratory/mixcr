@@ -23,9 +23,9 @@ properties:
   splitByTagType:
     type: "string"
     enum:
-      - "Sample"
-      - "Cell"
-      - "Molecule"
+    - "Sample"
+    - "Cell"
+    - "Molecule"
   splitFilesBy:
     type: "array"
     items:

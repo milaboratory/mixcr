@@ -1,12 +1,12 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 allOf:
-  - type: "object"
-    properties:
-      number:
-        type: "integer"
-  - type: "object"
-    properties:
-      type:
-        const: "LimitInput"
-    required:
-      - "type"
+- type: "object"
+  properties:
+    number:
+      type: "integer"
+- type: "object"
+  properties:
+    type:
+      const: "LimitInput"
+  required:
+  - "type"

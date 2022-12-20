@@ -1,10 +1,10 @@
 flags:
-  - "species"
+- "species"
 pipeline:
-  - "align"
-  - "refineTagsAndSort"
-  - "assemble"
-  - "exportClones"
+- "align"
+- "refineTagsAndSort"
+- "assemble"
+- "exportClones"
 align:
   species: ""
   libraryName: "default"
@@ -169,18 +169,18 @@ refineTagsAndSort:
     postFilter:
       type: "filter_groups"
       groupingKeys:
-        - "allTags:Cell"
+      - "allTags:Cell"
       predicates:
-        - metrics:
-            - type: "group_metric_sum_weight"
-              reportHist:
-                log: true
-                binNumber: 0
-                minBinWidth: 0.2
-                multiplyWeightByKey: false
-          operator:
-            type: "group_operator_cumtop"
-            share: 0.99
+      - metrics:
+        - type: "group_metric_sum_weight"
+          reportHist:
+            log: true
+            binNumber: 0
+            minBinWidth: 0.2
+            multiplyWeightByKey: false
+        operator:
+          type: "group_operator_cumtop"
+          share: 0.99
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -236,7 +236,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-      - "CDR3"
+    - "CDR3"
     minimalClonalSequenceLength: 12
     qualityAggregationType: "Max"
     cloneClusteringParameters:
@@ -296,25 +296,25 @@ assemble:
     mappingThreshold: "2of5"
     minimalQuality: 0
     postFilters:
-      - type: "filter_in_groups"
-        isolationKeys:
-          - "allTags:Cell"
-        nestedFilter:
-          type: "filter_groups"
-          groupingKeys:
-            - "clone"
-          predicates:
-            - metrics:
-                - type: "group_metric_sum_weight"
-                  reportHist:
-                    log: true
-                    binNumber: 0
-                    minBinWidth: 0.1
-                    multiplyWeightByKey: false
-              operator:
-                type: "group_operator_cumtop"
-                share: 0.99
-        aggregateReport: true
+    - type: "filter_in_groups"
+      isolationKeys:
+      - "allTags:Cell"
+      nestedFilter:
+        type: "filter_groups"
+        groupingKeys:
+        - "clone"
+        predicates:
+        - metrics:
+          - type: "group_metric_sum_weight"
+            reportHist:
+              log: true
+              binNumber: 0
+              minBinWidth: 0.1
+              multiplyWeightByKey: false
+          operator:
+            type: "group_operator_cumtop"
+            share: 0.99
+      aggregateReport: true
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -341,103 +341,103 @@ exportAlignments:
   chains: "ALL"
   noHeader: false
   fields:
-    - field: "-targetSequences"
-    - field: "-targetQualities"
-    - field: "-vHitsWithScore"
-    - field: "-dHitsWithScore"
-    - field: "-jHitsWithScore"
-    - field: "-cHitsWithScore"
-    - field: "-vAlignments"
-    - field: "-dAlignments"
-    - field: "-jAlignments"
-    - field: "-cAlignments"
-    - field: "-allNFeaturesWithMinQuality"
-    - field: "-allAAFeatures"
-    - field: "-defaultAnchorPoints"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
   filterStops: false
   chains: "ALL"
   noHeader: false
-  splitFilesBy: [ ]
+  splitFilesBy: []
   fields:
-    - field: "-cloneId"
-    - field: "-tags"
-      args:
-        - "Cell"
-    - field: "-readCount"
-    - field: "-targetSequences"
-    - field: "-targetQualities"
-    - field: "-vHitsWithScore"
-    - field: "-dHitsWithScore"
-    - field: "-jHitsWithScore"
-    - field: "-cHitsWithScore"
-    - field: "-vAlignments"
-    - field: "-dAlignments"
-    - field: "-jAlignments"
-    - field: "-cAlignments"
-    - field: "-nFeature"
-      args:
-        - "FR1"
-    - field: "-minFeatureQuality"
-      args:
-        - "FR1"
-    - field: "-nFeature"
-      args:
-        - "CDR1"
-    - field: "-minFeatureQuality"
-      args:
-        - "CDR1"
-    - field: "-nFeature"
-      args:
-        - "FR2"
-    - field: "-minFeatureQuality"
-      args:
-        - "FR2"
-    - field: "-nFeature"
-      args:
-        - "CDR2"
-    - field: "-minFeatureQuality"
-      args:
-        - "CDR2"
-    - field: "-nFeature"
-      args:
-        - "FR3"
-    - field: "-minFeatureQuality"
-      args:
-        - "FR3"
-    - field: "-nFeature"
-      args:
-        - "CDR3"
-    - field: "-minFeatureQuality"
-      args:
-        - "CDR3"
-    - field: "-nFeature"
-      args:
-        - "FR4"
-    - field: "-minFeatureQuality"
-      args:
-        - "FR4"
-    - field: "-aaFeature"
-      args:
-        - "FR1"
-    - field: "-aaFeature"
-      args:
-        - "CDR1"
-    - field: "-aaFeature"
-      args:
-        - "FR2"
-    - field: "-aaFeature"
-      args:
-        - "CDR2"
-    - field: "-aaFeature"
-      args:
-        - "FR3"
-    - field: "-aaFeature"
-      args:
-        - "CDR3"
-    - field: "-aaFeature"
-      args:
-        - "FR4"
-    - field: "-defaultAnchorPoints"
+  - field: "-cloneId"
+  - field: "-tags"
+    args:
+    - "Cell"
+  - field: "-readCount"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-nFeature"
+    args:
+    - "FR1"
+  - field: "-minFeatureQuality"
+    args:
+    - "FR1"
+  - field: "-nFeature"
+    args:
+    - "CDR1"
+  - field: "-minFeatureQuality"
+    args:
+    - "CDR1"
+  - field: "-nFeature"
+    args:
+    - "FR2"
+  - field: "-minFeatureQuality"
+    args:
+    - "FR2"
+  - field: "-nFeature"
+    args:
+    - "CDR2"
+  - field: "-minFeatureQuality"
+    args:
+    - "CDR2"
+  - field: "-nFeature"
+    args:
+    - "FR3"
+  - field: "-minFeatureQuality"
+    args:
+    - "FR3"
+  - field: "-nFeature"
+    args:
+    - "CDR3"
+  - field: "-minFeatureQuality"
+    args:
+    - "CDR3"
+  - field: "-nFeature"
+    args:
+    - "FR4"
+  - field: "-minFeatureQuality"
+    args:
+    - "FR4"
+  - field: "-aaFeature"
+    args:
+    - "FR1"
+  - field: "-aaFeature"
+    args:
+    - "CDR1"
+  - field: "-aaFeature"
+    args:
+    - "FR2"
+  - field: "-aaFeature"
+    args:
+    - "CDR2"
+  - field: "-aaFeature"
+    args:
+    - "FR3"
+  - field: "-aaFeature"
+    args:
+    - "CDR3"
+  - field: "-aaFeature"
+    args:
+    - "FR4"
+  - field: "-defaultAnchorPoints"

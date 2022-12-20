@@ -4,4 +4,4 @@ properties:
   type:
     const: "tagReport"
 required:
-  - "type"
+- "type"

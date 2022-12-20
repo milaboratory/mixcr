@@ -1,8 +1,8 @@
-flags: [ ]
+flags: []
 pipeline:
-  - "align"
-  - "assemble"
-  - "exportClones"
+- "align"
+- "assemble"
+- "exportClones"
 align:
   species: "hs"
   libraryName: "default"
@@ -111,7 +111,7 @@ align:
     saveOriginalReads: false
     smartForceEdgeAlignments: true
 refineTagsAndSort:
-  whitelists: { }
+  whitelists: {}
   runCorrection: true
   parameters:
     correctionPower: 0.001
@@ -154,7 +154,7 @@ assemble:
   consensusAssemblerParameters: null
   cloneAssemblerParameters:
     assemblingFeatures:
-      - "{CDR1Begin:FR4End}"
+    - "{CDR1Begin:FR4End}"
     minimalClonalSequenceLength: 12
     qualityAggregationType: "Max"
     cloneClusteringParameters:
@@ -240,19 +240,19 @@ exportAlignments:
   chains: "ALL"
   noHeader: false
   fields:
-    - field: "-targetSequences"
-    - field: "-targetQualities"
-    - field: "-vHitsWithScore"
-    - field: "-dHitsWithScore"
-    - field: "-jHitsWithScore"
-    - field: "-cHitsWithScore"
-    - field: "-vAlignments"
-    - field: "-dAlignments"
-    - field: "-jAlignments"
-    - field: "-cAlignments"
-    - field: "-allNFeaturesWithMinQuality"
-    - field: "-allAAFeatures"
-    - field: "-defaultAnchorPoints"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -260,21 +260,21 @@ exportClones:
   chains: "ALL"
   noHeader: false
   splitFilesBy:
-    - "geneLabel:ReliableChain"
+  - "geneLabel:ReliableChain"
   fields:
-    - field: "-cloneId"
-    - field: "-readCount"
-    - field: "-readFraction"
-    - field: "-targetSequences"
-    - field: "-targetQualities"
-    - field: "-vHitsWithScore"
-    - field: "-dHitsWithScore"
-    - field: "-jHitsWithScore"
-    - field: "-cHitsWithScore"
-    - field: "-vAlignments"
-    - field: "-dAlignments"
-    - field: "-jAlignments"
-    - field: "-cAlignments"
-    - field: "-allNFeaturesWithMinQuality"
-    - field: "-allAAFeatures"
-    - field: "-defaultAnchorPoints"
+  - field: "-cloneId"
+  - field: "-readCount"
+  - field: "-readFraction"
+  - field: "-targetSequences"
+  - field: "-targetQualities"
+  - field: "-vHitsWithScore"
+  - field: "-dHitsWithScore"
+  - field: "-jHitsWithScore"
+  - field: "-cHitsWithScore"
+  - field: "-vAlignments"
+  - field: "-dAlignments"
+  - field: "-jAlignments"
+  - field: "-cAlignments"
+  - field: "-allNFeaturesWithMinQuality"
+  - field: "-allAAFeatures"
+  - field: "-defaultAnchorPoints"
