@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import picocli.CommandLine.Option
 

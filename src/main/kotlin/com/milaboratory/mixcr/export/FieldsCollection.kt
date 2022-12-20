@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.app.ValidationException
 import picocli.CommandLine
 
 interface FieldsCollection<in T : Any> {

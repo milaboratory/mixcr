@@ -13,6 +13,7 @@
 
 package com.milaboratory.mixcr.trees
 
+import com.milaboratory.app.ApplicationException
 import com.milaboratory.core.alignment.Alignment
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.MutationsUtil
@@ -21,7 +22,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Sequence
 import com.milaboratory.core.sequence.TranslationParameters
 import com.milaboratory.miplots.filterNotNull
-import com.milaboratory.mixcr.cli.ApplicationException
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
 import io.repseq.core.ExtendedReferencePoints

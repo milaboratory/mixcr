@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.sequence.NSQTuple
 import com.milaboratory.mitool.pattern.search.MicRecord

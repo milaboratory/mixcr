@@ -11,11 +11,11 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneReaderMerger
 import com.milaboratory.mixcr.cli.CommonDescriptions
-import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.PostanalysisRunner
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapDataset
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapGroup

@@ -14,6 +14,8 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.withCounting
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments

@@ -15,12 +15,14 @@ import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.flatten
 import cc.redberry.pipe.util.mapInParallelOrdered
 import cc.redberry.pipe.util.toList
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.ExportType
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.miplots.writePDF
-import com.milaboratory.mixcr.cli.InputFileType
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.cli.exportTypes
 import com.milaboratory.mixcr.qc.Coverage.coveragePlot
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -40,7 +42,7 @@ class CommandExportQcCoverage : MiXCRCommandWithOutputs() {
     companion object {
         private const val inputsLabel = "sample.vdjca..."
 
-        private const val outputLabel = "coverage.${InputFileType.exportTypesLabel}"
+        private const val outputLabel = "coverage.${Labels.EXPORT_TYPES}"
 
         fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcCoverage::class.java)
             .addPositional(

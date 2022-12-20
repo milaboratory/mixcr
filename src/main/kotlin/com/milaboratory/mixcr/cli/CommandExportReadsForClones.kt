@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.CUtils
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.SingleRead

@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.cli.ChainsUtil
@@ -18,9 +20,8 @@ import com.milaboratory.mixcr.cli.ChainsUtil.name
 import com.milaboratory.mixcr.cli.ChainsUtil.toPath
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.cli.exportTypes
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.overlap.OverlapUtil
 import com.milaboratory.mixcr.postanalysis.plots.OverlapScatter
@@ -46,7 +47,7 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
     @Parameters(paramLabel = "cloneset_2.(clns|clna)", index = "1")
     lateinit var in2: Path
 
-    @Parameters(paramLabel = "output.${InputFileType.exportTypesLabel}", index = "2")
+    @Parameters(paramLabel = "output.${Labels.EXPORT_TYPES}", index = "2")
     lateinit var out: Path
 
     @Option(

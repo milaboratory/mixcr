@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.onEach
+import com.milaboratory.app.ApplicationException
 import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
@@ -21,7 +22,6 @@ import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VirtualCloneSet
-import com.milaboratory.mixcr.cli.ApplicationException
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid
 import com.milaboratory.primitivio.readList

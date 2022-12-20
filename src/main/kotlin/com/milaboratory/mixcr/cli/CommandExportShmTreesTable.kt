@@ -14,6 +14,8 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.map
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter

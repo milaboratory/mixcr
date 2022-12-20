@@ -14,6 +14,10 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.primitives.Filter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.milaboratory.app.ApplicationException
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
@@ -235,8 +239,7 @@ object CommandExportClones {
                         CloneTagSplittingKey(header.tagsInfo.get(tagName).index)
                     }
 
-                    else ->
-                        throw ApplicationException("Unsupported splitting key: $it")
+                    else -> throw ApplicationException("Unsupported splitting key: $it")
                 }
             }
 

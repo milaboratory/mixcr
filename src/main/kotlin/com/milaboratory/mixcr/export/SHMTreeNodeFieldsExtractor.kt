@@ -13,8 +13,8 @@
 
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.app.ValidationException
 import com.milaboratory.core.mutations.MutationsUtil
-import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.geneFeaturesBetweenArgs
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.warnIfFeatureNotCovered

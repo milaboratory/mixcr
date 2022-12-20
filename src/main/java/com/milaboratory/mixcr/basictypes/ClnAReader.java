@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
 import cc.redberry.pipe.OutputPort;
-import com.milaboratory.mixcr.cli.ApplicationException;
+import com.milaboratory.app.ApplicationException;
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;

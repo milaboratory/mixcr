@@ -21,9 +21,9 @@ import cc.redberry.pipe.util.mapInParallel
 import cc.redberry.pipe.util.mapNotNull
 import cc.redberry.pipe.util.ordered
 import cc.redberry.pipe.util.toList
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
-import com.milaboratory.mixcr.cli.logger
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.groupByOnDisk

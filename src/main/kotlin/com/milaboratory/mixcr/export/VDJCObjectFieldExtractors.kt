@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
+import com.milaboratory.app.ValidationException
 import com.milaboratory.core.Range
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.MutationsUtil
@@ -22,7 +23,6 @@ import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.FieldExtractorsFactory.Order
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForFeatures
 import com.milaboratory.mixcr.export.GeneFeaturesRangeUtil.commonDescriptionForReferencePoints

@@ -12,6 +12,8 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.CUtils
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI

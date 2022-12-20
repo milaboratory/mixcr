@@ -28,6 +28,8 @@ public class CommonDescriptions {
         public static final String CHAINS = "<chains>";
         public static final String CHAIN = "<chain>";
         public static final String TAG_TYPE = "<(Molecule|Cell|Sample)>";
+
+        public static final String EXPORT_TYPES = "(pdf|eps|svg|png|jpeg)";
     }
 
     public static final String OVERLAP_CRITERIA = "Overlap criteria. Defines the rules to treat clones as equal. It allows to specify gene feature for overlap (nucleotide or amino acid), and optionally use V and J hits.%nExamples: `CDR3|AA|V|J` (overlap by a.a. CDR3 and V and J), `VDJRegion|AA` (overlap by a.a. `VDJRegion`), `CDR3|NT|V` (overlap by nt CDR3 and V).";

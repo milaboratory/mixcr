@@ -11,14 +11,16 @@
  */
 package com.milaboratory.mixcr.cli.qc
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
-import com.milaboratory.mixcr.cli.InputFileType
-import com.milaboratory.mixcr.cli.ValidationException
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.exportTypes
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAlign
 import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
 import picocli.CommandLine
@@ -33,7 +35,7 @@ class CommandExportQcChainUsage : CommandExportQc() {
     companion object {
         private const val inputsLabel = "sample.(vdjca|clns|clna)..."
 
-        private const val outputLabel = "usage.${InputFileType.exportTypesLabel}"
+        private const val outputLabel = "usage.${Labels.EXPORT_TYPES}"
 
         fun mkCommandSpec(): CommandSpec = CommandSpec.forAnnotatedObject(CommandExportQcChainUsage::class.java)
             .addPositional(

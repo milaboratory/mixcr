@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli;
 
 import com.google.common.collect.Lists;
+import com.milaboratory.app.ValidationException;
 import com.milaboratory.util.TempFileDest;
 import com.milaboratory.util.TempFileManager;
 import org.junit.Before;

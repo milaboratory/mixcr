@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
+import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.Mixin
 import com.milaboratory.cli.POverride
 import com.milaboratory.cli.POverridesBuilderDsl
@@ -31,7 +32,6 @@ import com.milaboratory.mixcr.cli.CommandAssemble
 import com.milaboratory.mixcr.cli.CommandAssembleContigs
 import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
-import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractorsFactory

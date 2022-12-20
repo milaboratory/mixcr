@@ -11,10 +11,10 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.cli.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommand
-import com.milaboratory.mixcr.cli.ValidationException
 import com.milaboratory.mixcr.postanalysis.ui.CharacteristicGroup
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual.CDR3Metrics
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual.Diversity
