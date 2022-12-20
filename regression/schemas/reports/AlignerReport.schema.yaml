@@ -1,0 +1,117 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+type: "object"
+properties:
+  aligned:
+    type: "integer"
+  alignmentAidedOverlaps:
+    type: "integer"
+  chainUsage:
+    allOf:
+      - type: "object"
+        properties:
+          chains:
+            type: "object"
+          chimeras:
+            type: "integer"
+          total:
+            type: "integer"
+      - type: "object"
+        properties:
+          type:
+            const: "chainUsage"
+        required:
+          - "type"
+  chimeras:
+    type: "integer"
+  commandLine:
+    type: "string"
+  date:
+    type: "string"
+  executionTimeMillis:
+    type: "integer"
+  inputFiles:
+    type: "array"
+    items:
+      type: "string"
+  jChimeras:
+    type: "integer"
+  noCDR3PartsAlignments:
+    type: "integer"
+  notAligned:
+    type: "integer"
+  notAlignedReasons:
+    type: "object"
+  outputFiles:
+    type: "array"
+    items:
+      type: "string"
+  overlapped:
+    type: "integer"
+  overlappedAligned:
+    type: "integer"
+  overlappedNotAligned:
+    type: "integer"
+  pairedEndAlignmentConflicts:
+    type: "integer"
+  partialAlignments:
+    type: "integer"
+  realignedWithForcedNonFloatingBound:
+    type: "integer"
+  realignedWithForcedNonFloatingLeftBoundInRightRead:
+    type: "integer"
+  realignedWithForcedNonFloatingRightBoundInLeftRead:
+    type: "integer"
+  sampleStat:
+    type: "object"
+  tagParsingReport:
+    type: "object"
+    properties:
+      detailedReport:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            nested:
+              type: "object"
+      matchedReads:
+        type: "integer"
+      projections:
+        type: "object"
+      totalBitCost:
+        type: "number"
+      totalReads:
+        type: "integer"
+  totalReadsProcessed:
+    type: "integer"
+  trimmingReport:
+    allOf:
+      - type: "object"
+        properties:
+          r1LeftTrimmedEvents:
+            type: "integer"
+          r1LeftTrimmedNucleotides:
+            type: "integer"
+          r1RightTrimmedEvents:
+            type: "integer"
+          r1RightTrimmedNucleotides:
+            type: "integer"
+          r2LeftTrimmedEvents:
+            type: "integer"
+          r2LeftTrimmedNucleotides:
+            type: "integer"
+          r2RightTrimmedEvents:
+            type: "integer"
+          r2RightTrimmedNucleotides:
+            type: "integer"
+          total:
+            type: "integer"
+      - type: "object"
+        properties:
+          type:
+            const: "readTrimmerReport"
+        required:
+          - "type"
+  vChimeras:
+    type: "integer"
+  version:
+    type: "string"

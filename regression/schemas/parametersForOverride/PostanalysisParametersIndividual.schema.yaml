@@ -1,0 +1,83 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$defs:
+  MetricParameters:
+    type: "object"
+    properties:
+      downsampling:
+        type: "string"
+      dropOutliers:
+        type: "boolean"
+      onlyProductive:
+        type: "boolean"
+      weightFunction:
+        type: "string"
+type: "object"
+properties:
+  cdr3Spectratype:
+    $ref: "#/$defs/MetricParameters"
+  cdr3metrics:
+    type: "object"
+    properties:
+      addedNNT:
+        $ref: "#/$defs/MetricParameters"
+      cdr3lenAA:
+        $ref: "#/$defs/MetricParameters"
+      cdr3lenNT:
+        $ref: "#/$defs/MetricParameters"
+      charge:
+        $ref: "#/$defs/MetricParameters"
+      hydrophobicity:
+        $ref: "#/$defs/MetricParameters"
+      ndnLenNT:
+        $ref: "#/$defs/MetricParameters"
+      strength:
+        $ref: "#/$defs/MetricParameters"
+      surface:
+        $ref: "#/$defs/MetricParameters"
+      volume:
+        $ref: "#/$defs/MetricParameters"
+  defaultDownsampling:
+    type: "string"
+  defaultDropOutliers:
+    type: "boolean"
+  defaultOnlyProductive:
+    type: "boolean"
+  defaultWeightFunction:
+    type: "string"
+  diversity:
+    type: "object"
+    properties:
+      chao1:
+        $ref: "#/$defs/MetricParameters"
+      d50:
+        $ref: "#/$defs/MetricParameters"
+      efronThisted:
+        $ref: "#/$defs/MetricParameters"
+      giniIndex:
+        $ref: "#/$defs/MetricParameters"
+      inverseSimpsonIndex:
+        $ref: "#/$defs/MetricParameters"
+      normalizedShannonWienerIndex:
+        $ref: "#/$defs/MetricParameters"
+      observed:
+        $ref: "#/$defs/MetricParameters"
+      shannonWiener:
+        $ref: "#/$defs/MetricParameters"
+  isotypeUsage:
+    $ref: "#/$defs/MetricParameters"
+  jFamilyUsage:
+    $ref: "#/$defs/MetricParameters"
+  jUsage:
+    $ref: "#/$defs/MetricParameters"
+  vFamilyUsage:
+    $ref: "#/$defs/MetricParameters"
+  vSpectratype:
+    $ref: "#/$defs/MetricParameters"
+  vSpectratypeMean:
+    $ref: "#/$defs/MetricParameters"
+  vUsage:
+    $ref: "#/$defs/MetricParameters"
+  vjFamilyUsage:
+    $ref: "#/$defs/MetricParameters"
+  vjUsage:
+    $ref: "#/$defs/MetricParameters"

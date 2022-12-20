@@ -1,0 +1,17 @@
+Usage: mixcr exportAirr [--target <n>] [--imgt-gaps] [--from-alignment] [--limit <n>]
+                        [--force-overwrite] [--no-warnings] [--verbose] [--help] input.
+                        (vdjca|clna|clns) [output.tsv]
+Exports a clns, clna or vdjca file to Airr formatted tsv file.
+      input.(vdjca|clna|clns)
+                           Path to input file
+      [output.tsv]         Path where to write export. Will write to output if omitted.
+  -t, --target <n>         Target id (use -1 to export from the target containing CDR3).
+  -g, --imgt-gaps          If this option is specified, alignment fields will be padded with
+                             IMGT-style gaps.
+  -a, --from-alignment     Get fields like fwr1, cdr2, etc.. from alignment.
+  -n, --limit <n>          Limit number of filtered alignments; no more than N alignments will be
+                             outputted
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

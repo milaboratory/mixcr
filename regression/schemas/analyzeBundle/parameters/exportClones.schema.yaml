@@ -1,0 +1,32 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+type: "object"
+properties:
+  chains:
+    type: "string"
+  fields:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        args:
+          type: "array"
+          items:
+            type: "string"
+        field:
+          type: "string"
+  filterOutOfFrames:
+    type: "boolean"
+  filterStops:
+    type: "boolean"
+  noHeader:
+    type: "boolean"
+  splitByTagType:
+    type: "string"
+    enum:
+      - "Sample"
+      - "Cell"
+      - "Molecule"
+  splitFilesBy:
+    type: "array"
+    items:
+      type: "string"

@@ -1,0 +1,178 @@
+Usage: mixcr align --preset <name> [--trimming-quality-threshold <n>] [--trimming-window-size <n>]
+                   [--write-all] [--tag-pattern-file <path>] [--tag-parse-unstranded]
+                   [--tag-max-budget <n>] [--read-id-as-cell-tag] [--read-buffer <n>]
+                   [--high-compression] [--not-aligned-I1 <path.fastq[.gz]>] [--not-aligned-I2
+                   <path.fastq[.gz]>] [--not-aligned-R1 <path.fastq[.gz]>] [--not-aligned-R2 <path.
+                   fastq[.gz]>] [--not-parsed-I1 <path.fastq[.gz]>] [--not-parsed-I2 <path.fastq[.
+                   gz]>] [--not-parsed-R1 <path.fastq[.gz]>] [--not-parsed-R2 <path.fastq[.gz]>]
+                   [--species <species>] [--library <library>] [--split-by-sample]
+                   [--dont-split-by-sample] [--dna] [--rna] [--floating-left-alignment-boundary
+                   [<anchor_point>]] [--rigid-left-alignment-boundary [<anchor_point>]]
+                   [--floating-right-alignment-boundary (<gene_type>|<anchor_point>)]
+                   [--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)]] [--tag-pattern
+                   <pattern>] [--keep-non-CDR3-alignments] [--drop-non-CDR3-alignments]
+                   [--limit-input <n>] [--assemble-clonotypes-by <gene_features>]
+                   [--split-clones-by <gene_type>]... [--dont-split-clones-by <gene_type>]...
+                   [--assemble-contigs-by <gene_features>] [--impute-germline-on-export]
+                   [--dont-impute-germline-on-export] [--prepend-export-clones-field <field>
+                   [<param>...]]... [--append-export-clones-field <field> [<param>...]]...
+                   [--prepend-export-alignments-field <field> [<param>...]]...
+                   [--append-export-alignments-field <field> [<param>...]]... [-O <key=value>]...
+                   [-M <key=value>]... [--report <path>] [--json-report <path>] [--threads <n>]
+                   [--force-overwrite] [--no-warnings] [--verbose] [--help] ([file_I1.fastq[.gz]
+                   [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
+                   (fasta|bam|sam)) alignments.vdjca
+Builds alignments with V,D,J and C genes for input sequencing reads.
+      ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
+        (fasta|bam|sam))
+                             Two fastq files for paired reads or one file for single read data.
+                             Use {{n}} if you want to concatenate files from multiple lanes, like:
+                             my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz
+      alignments.vdjca       Path where to write output alignments
+  -p, --preset <name>        Analysis preset. Sets all significant parameters of this and all
+                               downstream analysis steps. This is a required parameter. It is very
+                               important to carefully select the most appropriate preset for the
+                               data you analyse.
+      --trimming-quality-threshold <n>
+                             Read pre-processing: trimming quality threshold.
+                             Zero value can be used to skip trimming.
+                               Default value determined by the preset.
+      --trimming-window-size <n>
+                             Read pre-processing: trimming window size.
+                               Default value determined by the preset.
+      --write-all            Write alignment results for all input reads (even if alignment failed).
+                               Default value determined by the preset.
+      --tag-pattern-file <path>
+                             Read tag pattern from a file.
+                               Default tag pattern determined by the preset.
+      --tag-parse-unstranded If paired-end input is used, determines whether to try all
+                               combinations of mate-pairs or only match reads to the corresponding
+                               pattern sections (i.e. first file to first section, etc...).
+                               Default value determined by the preset.
+      --tag-max-budget <n>   Maximal bit budget, higher values allows more substitutions in small
+                               letters.
+                               Default value determined by the preset.
+      --read-id-as-cell-tag  Marks reads, coming from different files, but having the same
+                               positions in those files, as reads coming from the same cells. Main
+                               use-case is protocols with overlapped alpha-beta, gamma-delta or
+                               heavy-light cDNA molecules, where each side was sequenced by
+                               separate mate pairs in a paired-end sequencer. Use special expansion
+                               group CELLSPLIT instead of R index (i.e. "my_file_R{{CELLSPLIT:n}}.
+                               fastq.gz").
+                               Default value determined by the preset.
+      --read-buffer <n>      Size of buffer for FASTQ readers in bytes. Default: 4Mb
+      --high-compression     Use higher compression for output file, 10~25% slower, minus 30~50% of
+                               file size.
+      --not-aligned-I1 <path.fastq[.gz]>
+                             Pipe not aligned I1 reads into separate file.
+      --not-aligned-I2 <path.fastq[.gz]>
+                             Pipe not aligned I2 reads into separate file.
+      --not-aligned-R1 <path.fastq[.gz]>
+                             Pipe not aligned R1 reads into separate file.
+      --not-aligned-R2 <path.fastq[.gz]>
+                             Pipe not aligned R2 reads into separate file.
+      --not-parsed-I1 <path.fastq[.gz]>
+                             Pipe not parsed I1 reads into separate file.
+      --not-parsed-I2 <path.fastq[.gz]>
+                             Pipe not parsed I2 reads into separate file.
+      --not-parsed-R1 <path.fastq[.gz]>
+                             Pipe not parsed R1 reads into separate file.
+      --not-parsed-R2 <path.fastq[.gz]>
+                             Pipe not parsed R2 reads into separate file.
+  -s, --species <species>    Species (organism). Possible values: `hsa` (or HomoSapiens), `mmu` (or
+                               MusMusculus), `rat`, `spalax`, `alpaca`, `lamaGlama`, `mulatta`
+                               (_Macaca Mulatta_), `fascicularis` (_Macaca Fascicularis_) or any
+                               species from IMGT ® library.
+  -b, --library <library>    V/D/J/C gene library. By default, the `default` MiXCR reference
+                               library is used. One can also use external libraries
+      --split-by-sample      Split output alignments files by sample.
+      --dont-split-by-sample Don't split output alignments files by sample.
+      --dna                  For DNA starting material. Setups V gene feature to align to
+                               `VGeneWithP` (full intron) and also instructs MiXCR to skip C gene
+                               alignment since it is too far from CDR3 in DNA data.
+      --rna                  For RNA starting material; setups `VTranscriptWithP` (full exon) gene
+                               feature to align for V gene and `CExon1` for C gene.
+      --floating-left-alignment-boundary [<anchor_point>]
+                             Configures aligners to use semi-local alignment at reads 5'-end.
+                               Typically used with V gene single primer / multiplex protocols, or
+                               if there are non-trimmed adapter sequences at 5'-end. Optional
+                               <anchor_point> may be specified to instruct MiXCR where the primer
+                               is located and strip V feature to align accordingly, resulting in a
+                               more precise alignments.
+      --rigid-left-alignment-boundary [<anchor_point>]
+                             Configures aligners to use global alignment at reads 5'-end. Typically
+                               used for 5'RACE with template switch oligo or a like protocols.
+                               Optional <anchor_point> may be specified to instruct MiXCR how to
+                               strip V feature to align.
+      --floating-right-alignment-boundary (<gene_type>|<anchor_point>)
+                             Configures aligners to use semi-local alignment at reads 3'-end.
+                               Typically used with J or C gene single primer / multiplex protocols,
+                               or if there are non-trimmed adapter sequences at 3'-end. Requires
+                               either gene type (`J` for J primers / `C` for C primers) or
+                               <anchor_point> to be specified. In latter case MiXCR will
+                               additionally strip feature to align accordingly.
+      --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)]
+                             Configures aligners to use global alignment at reads 3'-end. Typically
+                               used for J-C intron single primer / multiplex protocols. Optional
+                               <gene_type> (`J` for J primers / `C` for C primers) or
+                               <anchor_point> may be specified to instruct MiXCR where how to strip
+                               J or C feature to align.
+      --tag-pattern <pattern>
+                             Specify tag pattern for barcoded data.
+      --keep-non-CDR3-alignments
+                             Preserve alignments that do not cover CDR3 region or cover it only
+                               partially in the .vdjca file.
+      --drop-non-CDR3-alignments
+                             Drop all alignments that do not cover CDR3 region or cover it only
+                               partially.
+      --limit-input <n>      Maximal number of reads to process on `align`
+  -O  <key=value>            Overrides aligner parameters from the selected preset
+  -M  <key=value>            Overrides preset parameters
+  -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
+                               machine readable report).
+  -j, --json-report <path>   JSON formatted report file.
+  -t, --threads <n>          Processing threads
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.
+Params for assemble command:
+      --assemble-clonotypes-by <gene_features>
+                             Specify gene features used to assemble clonotypes. One may specify any
+                               custom gene region (e.g. `FR3+CDR3`); target clonal sequence can
+                               even be disjoint. Note that `assemblingFeatures` must cover CDR3
+      --split-clones-by <gene_type>
+                             Clones with equal clonal sequence but different gene will not be
+                               merged.
+      --dont-split-clones-by <gene_type>
+                             Clones with equal clonal sequence but different gene will be merged
+                               into single clone.
+Params for assembleContigs command:
+      --assemble-contigs-by <gene_features>
+                             Selects the region of interest for the action. Clones will be
+                               separated if inconsistent nucleotides will be detected in the
+                               region, assembling procedure will be limited to the region, and only
+                               clonotypes that fully cover the region will be outputted, others
+                               will be filtered out.
+Params for export commands:
+      --impute-germline-on-export
+                             Export nucleotide sequences using letters from germline (marked
+                               lowercase) for uncovered regions
+      --dont-impute-germline-on-export
+                             Export nucleotide sequences only from covered region
+      --prepend-export-clones-field <field> [<param>...]
+                             Add clones export column before other columns. First param is field
+                               name as it is in `exportClones` command, left params are params of
+                               the field
+      --append-export-clones-field <field> [<param>...]
+                             Add clones export column after other columns. First param is field
+                               name as it is in `exportClones` command, left params are params of
+                               the field
+      --prepend-export-alignments-field <field> [<param>...]
+                             Add clones export column before other columns. First param is field
+                               name as it is in `exportAlignments` command, left params are params
+                               of the field
+      --append-export-alignments-field <field> [<param>...]
+                             Add clones export column after other columns. First param is field
+                               name as it is in `exportAlignments` command, left params are params
+                               of the field

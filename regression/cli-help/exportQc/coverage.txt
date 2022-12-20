@@ -1,0 +1,12 @@
+Usage: mixcr exportQc coverage [--show-boundaries] [--force-overwrite] [--no-warnings] [--verbose]
+                               [--help] sample.vdjca... coverage.(pdf|eps|svg|png|jpeg)
+Exports anchor points coverage by the library.
+It separately plots coverage for R1, R2 and overlapping reads.
+      sample.vdjca...      Paths to input files
+      coverage.(pdf|eps|svg|png|jpeg)
+                           Path where to write output plots
+      --show-boundaries    Show V alignment begin and J alignment end
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

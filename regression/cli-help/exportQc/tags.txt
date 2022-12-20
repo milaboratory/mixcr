@@ -1,0 +1,12 @@
+Usage: mixcr exportQc tags [--log] [--force-overwrite] [--no-warnings] [--verbose] [--help] sample.
+                           (vdjca|clns|clna)... coverage.(pdf|eps|svg|png|jpeg)
+Tag refinement statistics plots.
+      sample.(vdjca|clns|clna)...
+                           Paths to input files
+      coverage.(pdf|eps|svg|png|jpeg)
+                           Path where to write output plots
+      --log                Use log10 scale for y-axis
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

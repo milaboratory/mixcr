@@ -1,0 +1,20 @@
+Usage: mixcr filterAlignments [--chains <chains>] [--contains-feature <gene_feature>]
+                              [--cdr3-equals <seq>] [--chimeras-only] [--limit <n>]
+                              [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.
+                              vdjca alignments.filtered.vdjca
+Filter alignments.
+      alignments.vdjca      Path to input file with alignments.
+      alignments.filtered.vdjca
+                            Path where to write filtered alignments.
+  -c, --chains <chains>     Specifies immunological protein chain gene for an alignment. If many,
+                              separated by ','. Available genes: IGH, IGL, IGK, TRA, TRB, TRG, TRD.
+                              Default: ALL
+  -g, --contains-feature <gene_feature>
+                            Include only those alignments that contain specified feature.
+  -e, --cdr3-equals <seq>   Include only those alignments which CDR3 equals to a specified sequence.
+  -x, --chimeras-only       Output only chimeric alignments.
+  -n, --limit <n>           Maximal number of reads to process
+  -f, --force-overwrite     Force overwrite of output file(s).
+      -nw, --no-warnings    Suppress all warning messages.
+      --verbose             Verbose messages.
+  -h, --help                Show this help message and exit.

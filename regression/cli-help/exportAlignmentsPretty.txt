@@ -1,0 +1,30 @@
+Usage: mixcr exportAlignmentsPretty [--top] [--gene] [--limit-before <n>] [--limit <n>] [--skip
+                                    <n>] [--chains <chains>] [--cdr3-equals <seq>] [--feature
+                                    <gene_feature>] [--read-contains <seq>] [--filter <s>]
+                                    [--descriptions] [--read-ids <id>]... [--clone-ids <id>]...
+                                    [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                                    alignments.(vdjca|clna) [output.txt]
+Export verbose information about alignments.
+      alignments.(vdjca|clna)
+                            Path to input file with alignments.
+      [output.txt]          Path where to write export. Will write to output if omitted.
+  -t, --top                 Output only top hits
+  -a, --gene                Output full gene sequence
+  -b, --limit-before <n>    Limit number of alignments before filtering
+  -n, --limit <n>           Limit number of filtered alignments; no more than N alignments will be
+                              outputted
+  -s, --skip <n>            Number of output alignments to skip
+  -c, --chains <chains>     Filter export to a specific protein chain gene (e.g. TRA or IGH).
+                              Default: ALL
+  -e, --cdr3-equals <seq>   Output only alignments where CDR3 exactly equals to given sequence
+  -g, --feature <gene_feature>
+                            Output only alignments which contain a corresponding gene feature
+  -r, --read-contains <seq> Output only alignments where target read contains a given substring
+      --filter <s>          Custom filter
+  -d, --descriptions        Print read descriptions
+  -i, --read-ids <id>       List of read ids to export
+      --clone-ids <id>      List of clone ids to export
+  -f, --force-overwrite     Force overwrite of output file(s).
+      -nw, --no-warnings    Suppress all warning messages.
+      --verbose             Verbose messages.
+  -h, --help                Show this help message and exit.

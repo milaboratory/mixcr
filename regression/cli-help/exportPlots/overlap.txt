@@ -1,0 +1,37 @@
+Usage: mixcr exportPlots overlap [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
+                                 (|>|>=|=|<=|<)value>...]]... [--chains <chain>]... [--no-dendro]
+                                 [--color-key <meta>]... [--fill-diagonal] [--metric <metric>]...
+                                 [--palette <s>] [--h-labels-size <d>] [--v-labels-size <d>]
+                                 [--width <n>] [--height <n>] [--no-warnings] [--verbose] [--help]
+                                 pa.json[.gz] output.(pdf|eps|svg|png|jpeg)
+Export overlap heatmaps
+      pa.json[.gz]          Input file with postanalysis results.
+      output.(pdf|eps|svg|png|jpeg)
+                            Output PDF/EPS/PNG/JPEG file name.
+      --metadata <path>     Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form.
+                              Must contain `sample` column which matches names of input files.
+      --filter <meta(|>|>=|=|<=|<)value>[,<meta(|>|>=|=|<=|<)value>...]
+                            Filter samples to put on a plot by their metadata values. Filter allows
+                              equality (`species=cat`) or arithmetic comparison (`age>=10`) etc.
+      --chains <chain>      Export only for specified immunological chains.
+      --no-dendro           Don't add dendrograms
+      --color-key <meta>    Add color key layer to the heatmap. One may write `--color-key x_meta`
+                              to draw color key horizontally (default) or `--color-key y_meta` to
+                              draw vertically.
+      --fill-diagonal       Fill diagonal line
+      --metric <metric>     Select specific metrics to export.
+                            Possible values are: SharedClonotypes, RelativeDiversity, F1Index,
+                              F2Index, JaccardIndex, Pearson, PearsonAll
+      --palette <s>         Color palette for heatmap. Available names: diverging, viridis2magma,
+                              lime2rose, blue2red, teal2red, softSpectral, sequential, viridis,
+                              magma, sunset, rainbow, salinity, density.
+                              Default: density
+      --h-labels-size <d>   Width of horizontal labels. One unit corresponds to the width of one
+                              tile.
+      --v-labels-size <d>   Height of vertical labels. One unit corresponds to the height of one
+                              tile.
+      --width <n>           Plot width.
+      --height <n>          Plot height.
+      -nw, --no-warnings    Suppress all warning messages.
+      --verbose             Verbose messages.
+  -h, --help                Show this help message and exit.

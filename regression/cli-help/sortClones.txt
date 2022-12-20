@@ -1,0 +1,12 @@
+Usage: mixcr sortClones [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                        clones.(clns|clna) clones.sorted.(clns|clna)
+Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows
+to build overlaps between clonesets.
+      clones.(clns|clna)
+      clones.sorted.(clns|clna)
+
+      --use-local-temp     Put temporary files in the same folder as the output files.
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

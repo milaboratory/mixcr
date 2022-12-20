@@ -1,0 +1,12 @@
+Usage: mixcr exportPlots [-h] COMMAND
+Export postanalysis plots. This command has subcommands, use -h to see more
+  -h, --help   Show this help message and exit.
+Commands:
+  listMetrics   List available metrics
+  cdr3metrics   Export CDR3 metrics
+  diversity     Export diversity metrics
+  vUsage        Export V gene usage
+  jUsage        Export J gene usage
+  isotypeUsage  Export isotype usage heatmap
+  overlap       Export overlap heatmaps
+  shmTrees      Visualize SHM tree and save in PDF format

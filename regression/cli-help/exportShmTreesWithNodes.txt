@@ -1,0 +1,299 @@
+Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecule|Cell|Sample)>]
+                                     [--filter-min-nodes <n>] [--filter-min-height <n>] [--ids <id>
+                                     [,<id>...]]... [--chains <chains>] [--preset <preset>]
+                                     [--preset-file <presetFile>] [--no-header]
+                                     [--not-covered-as-empty] [-treeId] [-numberOfClonesInTree]
+                                     [-totalReadsCountInTree] [-totalUniqueTagCountInTree <
+                                     (Molecule|Cell|Sample)>]... [-nodeId] [-isObserved]
+                                     [-parentId] [-distance <(germline|mrca|parent)>]... [-targets]
+                                     [-vHit] [-dHit] [-jHit] [-cHit] [-vGene] [-dGene] [-jGene]
+                                     [-cGene] [-vFamily] [-dFamily] [-jFamily] [-cFamily]
+                                     [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
+                                     [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore]
+                                     [-cHitsWithScore] [-vHits] [-dHits] [-jHits] [-cHits]
+                                     [-vGenes] [-dGenes] [-jGenes] [-cGenes] [-vFamilies]
+                                     [-dFamilies] [-jFamilies] [-cFamilies] [-vAlignment]
+                                     [-dAlignment] [-jAlignment] [-cAlignment] [-vAlignments]
+                                     [-dAlignments] [-jAlignments] [-cAlignments] [-nFeature
+                                     <gene_feature> [<(germline|mrca|parent)>]]... [-allNFeatures [<
+                                     (germline|mrca|parent)>]]... [-qFeature <gene_feature>]...
+                                     [-allQFeatures] [-aaFeature <gene_feature> [<
+                                     (germline|mrca|parent)>]]... [-allAAFeatures [<
+                                     (germline|mrca|parent)>]]... [-nFeatureImputed
+                                     <gene_feature>]... [-allNFeaturesImputed] [-aaFeatureImputed
+                                     <gene_feature>]... [-allAAFeaturesImputed] [-minFeatureQuality
+                                     <gene_feature>]... [-allMinFeaturesQuality]
+                                     [-avrgFeatureQuality <gene_feature>]...
+                                     [-allAvrgFeaturesQuality] [-lengthOf <gene_feature> [<
+                                     (germline|mrca|parent)>]]... [-allLengthOf [<
+                                     (germline|mrca|parent)>]]... [-nMutations <gene_feature> <
+                                     (germline|mrca|parent)>]... [-allNMutations <
+                                     (germline|mrca|parent)>]... [-nMutationsRelative
+                                     <gene_feature> <relative_to_gene_feature> <
+                                     (germline|mrca|parent)>]... [-aaMutations <gene_feature> <
+                                     (germline|mrca|parent)>]... [-allAAMutations <
+                                     (germline|mrca|parent)>]... [-aaMutationsRelative
+                                     <gene_feature> <relative_to_gene_feature> <
+                                     (germline|mrca|parent)>]... [-mutationsDetailed <gene_feature>
+                                     <(germline|mrca|parent)>]... [-allMutationsDetailed <
+                                     (germline|mrca|parent)>]... [-mutationsDetailedRelative
+                                     <gene_feature> <relative_to_gene_feature> <
+                                     (germline|mrca|parent)>]... [-positionInReferenceOf
+                                     <reference_point>]... [-allPositionsInReference] [-positionOf
+                                     <reference_point>]... [-allPositions] [-defaultAnchorPoints]
+                                     [-fileName] [-cloneId] [-readCount] [-readFraction]
+                                     [-targetSequences] [-targetQualities] [-vIdentityPercents]
+                                     [-dIdentityPercents] [-jIdentityPercents] [-cIdentityPercents]
+                                     [-vBestIdentityPercent] [-dBestIdentityPercent]
+                                     [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains]
+                                     [-topChains] [-geneLabel <label>]... [-tagCounts] [-tags <
+                                     (Molecule|Cell|Sample)>]... [-uniqueTagCount <
+                                     (Molecule|Cell|Sample)>]... [-uniqueTagFraction <
+                                     (Molecule|Cell|Sample)>]... [-cellGroup] [--force-overwrite]
+                                     [--no-warnings] [--verbose] [--help] [[--filter-in-feature
+                                     <gene_feature>] [--pattern-max-errors <n>]
+                                     (--filter-aa-pattern <pattern> | --filter-nt-pattern
+                                     <pattern>)] trees.shmt [trees.tsv]
+Export SHMTree as a table with a row for every node
+      trees.shmt             Input file produced by 'findShmTrees' command.
+      [trees.tsv]            Path where to write output export table. Print in stdout if omitted.
+      --only-observed        Exclude nodes that was reconstructed by algorithm
+      --split-by-tags <(Molecule|Cell|Sample)>
+                             Split clones by tag type. Will be calculated from export columns if
+                               not specified.
+      --filter-min-nodes <n> Minimal number of nodes in tree
+      --filter-min-height <n>
+                             Minimal height of the tree
+      --ids <id>[,<id>...]   Filter specific trees by id
+      --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
+                               or IGH).
+  -p, --preset <preset>      Specify preset of export fields. Possible values: min, full. By
+                               default `full`
+      -pf, --preset-file <presetFile>
+                             Specify preset file of export fields
+      --no-header            Don't print first header line, print only data
+      --not-covered-as-empty Export not covered regions as empty text.
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.
+Filter by pattern
+      --filter-in-feature <gene_feature>
+                             Match pattern inside specified gene feature.
+                               Default: CDR3
+      --pattern-max-errors <n>
+                             Max allowed subs & indels.
+                               Default: 0
+      --filter-aa-pattern <pattern>
+                             Filter specific trees by aa pattern.
+      --filter-nt-pattern <pattern>
+                             Filter specific trees by nt pattern.
+Possible fields to export
+      -treeId                SHM tree id
+      -numberOfClonesInTree  Number of uniq clones in the SHM tree
+      -totalReadsCountInTree Total sum of read counts of clones in the SHM tree
+      -totalUniqueTagCountInTree <(Molecule|Cell|Sample)>
+                             Total count of unique tags in the SHM tree with specified type
+      -nodeId                Node id in SHM tree
+      -isObserved            Is node have clones. All other nodes are reconstructed by algorithm
+      -parentId              Parent node id in SHM tree
+      -distance <(germline|mrca|parent)>
+                             Distance from another node in number of mutations.
+      -targets               Export number of targets (only for nodes with clones)
+      -vHit                  Export best V hit
+      -dHit                  Export best D hit (only for nodes with clones)
+      -jHit                  Export best J hit
+      -cHit                  Export best C hit (only for nodes with clones)
+      -vGene                 Export best V hit gene name (e.g. TRBV12-3 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -dGene                 Export best D hit gene name (e.g. TRBV12-3 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -jGene                 Export best J hit gene name (e.g. TRBV12-3 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -cGene                 Export best C hit gene name (e.g. TRBV12-3 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -vFamily               Export best V hit family name (e.g. TRBV12 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -dFamily               Export best D hit family name (e.g. TRBV12 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -jFamily               Export best J hit family name (e.g. TRBV12 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -cFamily               Export best C hit family name (e.g. TRBV12 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -vHitScore             Export score for best V hit (only for nodes with clones)
+      -dHitScore             Export score for best D hit (only for nodes with clones)
+      -jHitScore             Export score for best J hit (only for nodes with clones)
+      -cHitScore             Export score for best C hit (only for nodes with clones)
+      -vHitsWithScore        Export all V hits with score (only for nodes with clones)
+      -dHitsWithScore        Export all D hits with score (only for nodes with clones)
+      -jHitsWithScore        Export all J hits with score (only for nodes with clones)
+      -cHitsWithScore        Export all C hits with score (only for nodes with clones)
+      -vHits                 Export all V hits (only for nodes with clones)
+      -dHits                 Export all D hits (only for nodes with clones)
+      -jHits                 Export all J hits (only for nodes with clones)
+      -cHits                 Export all C hits (only for nodes with clones)
+      -vGenes                Export all V gene names (e.g. TRBV12-3 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -dGenes                Export all D gene names (e.g. TRBV12-3 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -jGenes                Export all J gene names (e.g. TRBV12-3 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -cGenes                Export all C gene names (e.g. TRBV12-3 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -vFamilies             Export all V gene family anmes (e.g. TRBV12 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -dFamilies             Export all D gene family anmes (e.g. TRBV12 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -jFamilies             Export all J gene family anmes (e.g. TRBV12 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -cFamilies             Export all C gene family anmes (e.g. TRBV12 for TRBV12-3*00) (only for
+                               nodes with clones)
+      -vAlignment            Export best V alignment (only for nodes with clones)
+      -dAlignment            Export best D alignment (only for nodes with clones)
+      -jAlignment            Export best J alignment (only for nodes with clones)
+      -cAlignment            Export best C alignment (only for nodes with clones)
+      -vAlignments           Export all V alignments (only for nodes with clones)
+      -dAlignments           Export all D alignments (only for nodes with clones)
+      -jAlignments           Export all J alignments (only for nodes with clones)
+      -cAlignments           Export all C alignments (only for nodes with clones)
+      -nFeature <gene_feature> [<(germline|mrca|parent)>]
+                             Export nucleotide sequence of specified gene feature.
+                             If second arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+      -allNFeatures [<(germline|mrca|parent)>]
+                             Export nucleotide sequences for all covered gene features.
+                             If second arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+      -qFeature <gene_feature>
+                             Export quality string of specified gene feature (only for nodes with
+                               clones)
+      -allQFeatures          Export quality string for all covered gene features (only for nodes
+                               with clones)
+      -aaFeature <gene_feature> [<(germline|mrca|parent)>]
+                             Export amino acid sequence of specified gene feature.
+                             If second arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+      -allAAFeatures [<(germline|mrca|parent)>]
+                             Export amino acid sequences for all covered gene features.
+                             If second arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+      -nFeatureImputed <gene_feature>
+                             Export nucleotide sequence of specified gene feature using letters
+                               from germline (marked lowercase) for uncovered regions (only for
+                               nodes with clones)
+      -allNFeaturesImputed   Export nucleotide sequence using letters from germline (marked
+                               lowercase) for uncovered regions for all covered features. (only for
+                               nodes with clones)
+      -aaFeatureImputed <gene_feature>
+                             Export amino acid sequence of specified gene feature using letters
+                               from germline (marked lowercase) for uncovered regions (only for
+                               nodes with clones)
+      -allAAFeaturesImputed  Export amino acid sequence using letters from germline (marked
+                               lowercase) for uncovered regions for all covered features (only for
+                               nodes with clones)
+      -minFeatureQuality <gene_feature>
+                             Export minimal quality of specified gene feature (only for nodes with
+                               clones)
+      -allMinFeaturesQuality Export minimal quality for all covered features. (only for nodes with
+                               clones)
+      -avrgFeatureQuality <gene_feature>
+                             Export average quality of specified gene feature (only for nodes with
+                               clones)
+      -allAvrgFeaturesQuality
+                             Export average quality for all covered feautures (only for nodes with
+                               clones)
+      -lengthOf <gene_feature> [<(germline|mrca|parent)>]
+                             Export length of specified gene feature.
+                             If second arg is omitted, then length will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+      -allLengthOf [<(germline|mrca|parent)>]
+                             Export lengths for all covered gene features.
+                             If second arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+      -nMutations <gene_feature> <(germline|mrca|parent)>
+                             Extract nucleotide mutations from specific node for specific gene
+                               feature.
+      -allNMutations <(germline|mrca|parent)>
+                             Extract nucleotide mutations from specific node for all covered gene
+                               features.
+      -nMutationsRelative <gene_feature> <relative_to_gene_feature> <(germline|mrca|parent)>
+                             Extract nucleotide mutations from specific node for specific gene
+                               feature relative to another feature.
+      -aaMutations <gene_feature> <(germline|mrca|parent)>
+                             Extract amino acid mutations from specific node for specific gene
+                               feature
+      -allAAMutations <(germline|mrca|parent)>
+                             Extract amino acid mutations from specific node for all covered gene
+                               features.
+      -aaMutationsRelative <gene_feature> <relative_to_gene_feature> <(germline|mrca|parent)>
+                             Extract amino acid mutations from specific node for specific gene
+                               feature relative to another feature.
+      -mutationsDetailed <gene_feature> <(germline|mrca|parent)>
+                             Detailed list of nucleotide and corresponding amino acid mutations
+                               from specific node. Format <nt_mutation>:<aa_mutation_individual>:
+                               <aa_mutation_cumulative>, where <aa_mutation_individual> is an
+                               expected amino acid mutation given no other mutations have occurred,
+                               and <aa_mutation_cumulative> amino acid mutation is the observed
+                               amino acid mutation combining effect from all other. WARNING: format
+                               may change in following versions.
+      -allMutationsDetailed <(germline|mrca|parent)>
+                             Detailed list of nucleotide and corresponding amino acid mutations
+                               from specific node for all covered gene features.
+      -mutationsDetailedRelative <gene_feature> <relative_to_gene_feature> <(germline|mrca|parent)>
+                             Detailed list of nucleotide and corresponding amino acid mutations
+                               written, positions relative to specified gene feature. Format
+                               <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>,
+                               where <aa_mutation_individual> is an expected amino acid mutation
+                               given no other mutations have occurred, and <aa_mutation_cumulative>
+                               amino acid mutation is the observed amino acid mutation combining
+                               effect from all other. WARNING: format may change in following
+                               versions.
+      -positionInReferenceOf <reference_point>
+                             Export position of specified reference point inside reference
+                               sequences (clonal sequence / read sequence). (only for nodes with
+                               clones)
+      -allPositionsInReference
+                             Export position inside reference sequences (clonal sequence / read
+                               sequence) for all covered reference points. (only for nodes with
+                               clones)
+      -positionOf <reference_point>
+                             Export position of specified reference point inside target sequences
+                               (clonal sequence / read sequence). (only for nodes with clones)
+      -allPositions          Export position inside target sequences (clonal sequence / read
+                               sequence) for all covered reference points (only for nodes with
+                               clones)
+      -defaultAnchorPoints   Outputs a list of default reference points (like CDR2Begin, FR4End,
+                               etc. see documentation for the full list and formatting) (only for
+                               nodes with clones)
+      -fileName              Name of clns file with sample
+      -cloneId               Unique clone identifier in source sample file (only for nodes with
+                               clones)
+      -readCount             Number of reads assigned to the clonotype in source sample file (only
+                               for nodes with clones)
+      -readFraction          Fraction of reads assigned to the clonotype in source sample file
+                               (only for nodes with clones)
+      -targetSequences       Export aligned sequences (targets), separated with comma (only for
+                               nodes with clones)
+      -targetQualities       Export aligned sequence (target) qualities, separated with comma (only
+                               for nodes with clones)
+      -vIdentityPercents     V alignment identity percents (only for nodes with clones)
+      -dIdentityPercents     D alignment identity percents (only for nodes with clones)
+      -jIdentityPercents     J alignment identity percents (only for nodes with clones)
+      -cIdentityPercents     C alignment identity percents (only for nodes with clones)
+      -vBestIdentityPercent  V best alignment identity percent (only for nodes with clones)
+      -dBestIdentityPercent  D best alignment identity percent (only for nodes with clones)
+      -jBestIdentityPercent  J best alignment identity percent (only for nodes with clones)
+      -cBestIdentityPercent  C best alignment identity percent (only for nodes with clones)
+      -chains                Chains (only for nodes with clones)
+      -topChains             Top chains (only for nodes with clones)
+      -geneLabel <label>     Export gene label (i.e. ReliableChain) (only for nodes with clones)
+      -tagCounts             All tags with counts (only for nodes with clones)
+      -tags <(Molecule|Cell|Sample)>
+                             All tags values (i.e. CELL barcode or UMI sequence) (only for nodes
+                               with clones)
+      -uniqueTagCount <(Molecule|Cell|Sample)>
+                             Unique tag count (only for nodes with clones)
+      -uniqueTagFraction <(Molecule|Cell|Sample)>
+                             Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
+                               collected. (only for nodes with clones)
+      -cellGroup             Cell group (only for nodes with clones)

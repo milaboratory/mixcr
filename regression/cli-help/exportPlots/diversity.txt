@@ -1,0 +1,70 @@
+Usage: mixcr exportPlots diversity [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
+                                   (|>|>=|=|<=|<)value>...]]... [--chains <chain>]... [--metric
+                                   <metric>[,<metric>...]]... [--plot-type <plotType>]
+                                   [--primary-group <meta>] [--primary-group-values <value>[,
+                                   <value>...]]... [--secondary-group <meta>]
+                                   [--secondary-group-values <value>[,<value>...]]... [--facet-by
+                                   <meta>] [--hide-overall-p-value] [--pairwise-comparisons]
+                                   [--ref-group <refGroup>] [--hide-non-significant] [--paired]
+                                   [--method <method>] [--method-multiple-groups <method>]
+                                   [--p-adjust-method <method>] [--show-significance] [--width <n>]
+                                   [--height <n>] [--no-warnings] [--verbose] [--help] pa.json[.gz]
+                                   output.(pdf|eps|svg|png|jpeg)
+Export diversity metrics
+      pa.json[.gz]          Input file with postanalysis results.
+      output.(pdf|eps|svg|png|jpeg)
+                            Output PDF/EPS/PNG/JPEG file name.
+      --metadata <path>     Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form.
+                              Must contain `sample` column which matches names of input files.
+      --filter <meta(|>|>=|=|<=|<)value>[,<meta(|>|>=|=|<=|<)value>...]
+                            Filter samples to put on a plot by their metadata values. Filter allows
+                              equality (`species=cat`) or arithmetic comparison (`age>=10`) etc.
+      --chains <chain>      Export only for specified immunological chains.
+      --metric <metric>[,<metric>...]
+                            Output only specified list of metrics.
+                            Possible values are: observed, shannonWiener, chao1,
+                              normalizedShannonWienerIndex, inverseSimpsonIndex, giniIndex, d50,
+                              efronThisted
+      --plot-type <plotType>
+                            Plot type. Possible values: boxplot, boxplot-bindot, boxplot-jitter,
+                              violin, violin-bindot, barplot, barplot-stacked, lineplot,
+                              lineplot-jitter, lineplot-bindot, scatter
+  -p, --primary-group <meta>
+                            Specify metadata column used to group datasets.
+      -pv, --primary-group-values <value>[,<value>...]
+                            List of comma separated primary group values.
+  -s, --secondary-group <meta>
+                            Secondary group.
+      -sv, --secondary-group-values <value>[,<value>...]
+                            List of comma separated secondary group values.
+      --facet-by <meta>     Specify metadata column to use for plotting facets.
+      --hide-overall-p-value
+                            Hide overall p-value.
+      --pairwise-comparisons
+                            Show pairwise p-value comparisons.
+      --ref-group <refGroup>
+                            Reference group for compare means statistics. Can be 'all' or some
+                              specific value.
+      --hide-non-significant
+                            Hide non-significant observations.
+      --paired              Do paired analysis
+      --method <method>     Statistical test method. Available methods: TTest, Wilcoxon, ANOVA,
+                              KruskalWallis, KolmogorovSmirnov.
+                              Default: Wilcoxon
+      --method-multiple-groups <method>
+                            Test method for multiple groups comparison. Available methods: TTest,
+                              Wilcoxon, ANOVA, KruskalWallis, KolmogorovSmirnov.
+                              Default: Kruskal-Wallis
+      --p-adjust-method <method>
+                            Method used to adjust p-values. Available methods: none,
+                              BenjaminiHochberg, BenjaminiYekutieli, Bonferroni, Hochberg, Holm,
+                              Hommel.
+                              Default: Holm
+      --show-significance   Show significance levels instead of p-values ( `ns` for p-value >=
+                              0.05, `***` for p-value < 0.0001,  `**` for p-value < 0.001, `*` in
+                              other case).
+      --width <n>           Plot width.
+      --height <n>          Plot height.
+      -nw, --no-warnings    Suppress all warning messages.
+      --verbose             Verbose messages.
+  -h, --help                Show this help message and exit.

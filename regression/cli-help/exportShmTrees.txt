@@ -1,0 +1,59 @@
+Usage: mixcr exportShmTrees [--filter-min-nodes <n>] [--filter-min-height <n>] [--ids <id>[,
+                            <id>...]]... [--chains <chains>] [--preset <preset>] [--preset-file
+                            <presetFile>] [--no-header] [--not-covered-as-empty] [-treeId]
+                            [-numberOfClonesInTree] [-totalReadsCountInTree]
+                            [-totalUniqueTagCountInTree <(Molecule|Cell|Sample)>]... [-vHit]
+                            [-jHit] [-nFeature <gene_feature> <(germline|mrca)>]... [-allNFeatures <
+                            (germline|mrca)>]... [-aaFeature <gene_feature> <(germline|mrca)>]...
+                            [-allAAFeatures <(germline|mrca)>]... [--force-overwrite]
+                            [--no-warnings] [--verbose] [--help] [[--filter-in-feature
+                            <gene_feature>] [--pattern-max-errors <n>] (--filter-aa-pattern
+                            <pattern> | --filter-nt-pattern <pattern>)] trees.shmt [trees.tsv]
+Export SHMTree as a table with a row for every table
+      trees.shmt             Input file produced by 'findShmTrees' command.
+      [trees.tsv]            Path to output table. Print in stdout if omitted.
+      --filter-min-nodes <n> Minimal number of nodes in tree
+      --filter-min-height <n>
+                             Minimal height of the tree
+      --ids <id>[,<id>...]   Filter specific trees by id
+      --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
+                               or IGH).
+  -p, --preset <preset>      Specify preset of export fields. Possible values: full, min. By
+                               default `full`
+      -pf, --preset-file <presetFile>
+                             Specify preset file of export fields
+      --no-header            Don't print first header line, print only data
+      --not-covered-as-empty Export not covered regions as empty text.
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.
+Filter by pattern
+      --filter-in-feature <gene_feature>
+                             Match pattern inside specified gene feature.
+                               Default: CDR3
+      --pattern-max-errors <n>
+                             Max allowed subs & indels.
+                               Default: 0
+      --filter-aa-pattern <pattern>
+                             Filter specific trees by aa pattern.
+      --filter-nt-pattern <pattern>
+                             Filter specific trees by nt pattern.
+Possible fields to export
+      -treeId                SHM tree id
+      -numberOfClonesInTree  Number of uniq clones in the SHM tree
+      -totalReadsCountInTree Total sum of read counts of clones in the SHM tree
+      -totalUniqueTagCountInTree <(Molecule|Cell|Sample)>
+                             Total count of unique tags in the SHM tree with specified type
+      -vHit                  Export best V hit
+      -jHit                  Export best J hit
+      -nFeature <gene_feature> <(germline|mrca)>
+                             Export nucleotide sequence of specified gene feature of specified node
+                               type.
+      -allNFeatures <(germline|mrca)>
+                             Export nucleotide sequences for all covered gene features.
+      -aaFeature <gene_feature> <(germline|mrca)>
+                             Export amino acid sequence of specified gene feature of specified node
+                               type
+      -allAAFeatures <(germline|mrca)>
+                             Export nucleotide sequences for all covered gene features.

@@ -1,0 +1,33 @@
+Usage: mixcr overlapScatterPlot --downsampling (<type>|none) [--chains <chain>[,<chain>...]]...
+                                [--only-productive] [--criteria <s>] [--method <method>] [--no-log]
+                                [--force-overwrite] [--no-warnings] [--verbose] [--help] cloneset_1.
+                                (clns|clna) cloneset_2.(clns|clna) output.(pdf|eps|svg|png|jpeg)
+Plot overlap scatter-plot.
+      cloneset_1.(clns|clna)
+
+      cloneset_2.(clns|clna)
+
+      output.(pdf|eps|svg|png|jpeg)
+
+      --downsampling (<type>|none)
+                           Choose downsampling applied to normalize the clonesets. Possible values:
+                           count-[reads|TAG]-[auto|min|fixed][-<number>]
+                            top-[reads|TAG]-[<number>]
+                            cumtop-[reads|TAG]-[percent]
+      --chains <chain>[,<chain>...]
+                           Chains to export.
+      --only-productive    Filter out-of-frame sequences and sequences with stop-codons.
+      --criteria <s>       Overlap criteria. Defines the rules to treat clones as equal. It allows
+                             to specify gene feature for overlap (nucleotide or amino acid), and
+                             optionally use V and J hits.
+                           Examples: `CDR3|AA|V|J` (overlap by a.a. CDR3 and V and J),
+                             `VDJRegion|AA` (overlap by a.a. `VDJRegion`), `CDR3|NT|V` (overlap by
+                             nt CDR3 and V).
+                             Default: CDR3|AA|V|J
+      --method <method>    Correlation method to use. Possible value: Pearson, Kendall, Spearman.
+                             Default: Pearson
+      --no-log             Do not apply log10 to clonotype frequencies.
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

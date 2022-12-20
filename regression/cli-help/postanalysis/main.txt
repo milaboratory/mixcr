@@ -1,0 +1,6 @@
+Usage: mixcr postanalysis [-h] COMMAND
+Run postanalysis routines. This command has subcommands, use -h to see more
+  -h, --help   Show this help message and exit.
+Commands:
+  individual  Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype metrics
+  overlap     Overlap analysis

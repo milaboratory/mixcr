@@ -1,0 +1,9 @@
+Usage: mixcr exportTables [--chains <chain>]... [--no-warnings] [--verbose] [--help] pa.json[.gz]
+                          table.(tsv|csv)
+CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap
+      pa.json[.gz]         Input file with postanalysis results.
+      table.(tsv|csv)      Path for output file.
+      --chains <chain>     Export only for specified immunological chains.
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

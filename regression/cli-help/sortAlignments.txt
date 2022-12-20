@@ -1,0 +1,10 @@
+Usage: mixcr sortAlignments [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.
+                            vdjca alignments.sorted.vdjca
+Sort alignments in vdjca file by read id.
+      alignments.vdjca
+      alignments.sorted.vdjca
+
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

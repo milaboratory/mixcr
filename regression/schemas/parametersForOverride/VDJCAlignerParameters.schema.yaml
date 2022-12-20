@@ -1,0 +1,78 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$defs:
+  PairedEndReadsLayout:
+    type: "string"
+    enum:
+      - "DirectOnly"
+      - "ReverseOnly"
+      - "Opposite"
+      - "Collinear"
+      - "CollinearDirect"
+      - "Unknown"
+type: "object"
+properties:
+  alignmentBoundaryTolerance:
+    type: "integer"
+  allowChimeras:
+    type: "boolean"
+  allowNoCDR3PartAlignments:
+    type: "boolean"
+  allowPartialAlignments:
+    type: "boolean"
+  fixSeed:
+    type: "boolean"
+  includeCScore:
+    type: "boolean"
+  includeDScore:
+    type: "boolean"
+  libraryStructure:
+    type: "string"
+    enum:
+      - "Unknown"
+      - "R1V"
+  maxHits:
+    type: "integer"
+  mergerParameters:
+    type: "object"
+    properties:
+      identityType:
+        type: "string"
+        enum:
+          - "Unweighted"
+          - "MinimalQualityWeighted"
+      maxQuality:
+        type: "integer"
+      minimalIdentity:
+        type: "number"
+      minimalOverlap:
+        type: "integer"
+      partsLayout:
+        $ref: "#/$defs/PairedEndReadsLayout"
+      qualityMergingAlgorithm:
+        type: "string"
+        enum:
+          - "SumMax"
+          - "SumSubtraction"
+          - "MaxSubtraction"
+          - "MaxMax"
+  minChimeraDetectionScore:
+    type: "integer"
+  minSumScore:
+    type: "number"
+  readsLayout:
+    $ref: "#/$defs/PairedEndReadsLayout"
+  relativeMinVFR3CDR3Score:
+    type: "number"
+  saveOriginalReads:
+    type: "boolean"
+  saveOriginalSequence:
+    type: "boolean"
+  smartForceEdgeAlignments:
+    type: "boolean"
+  vjAlignmentOrder:
+    type: "string"
+    enum:
+      - "VThenJ"
+      - "JThenV"
+  vjOverlapWindow:
+    type: "integer"

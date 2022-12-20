@@ -1,0 +1,39 @@
+Usage: mixcr findShmTrees [--v-gene-names <gene_name>]... [--j-gene-names <gene_name>]...
+                          [--cdr3-lengths <n>]... [--min-count <n>] [--build-from <path>] [-O
+                          <key=value>]... [--report <path>] [--json-report <path>]
+                          [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
+                          [--verbose] [--help] (input_file.clns|directory)... output_file.shmt
+Builds SHM trees.
+All inputs must be fully covered by the same feature, have the same library produced by
+`findAlleles`, the same scoring of V and J genes and the same features to align.
+      (input_file.clns|directory)...
+                             Paths to clns files or to directory with clns files that was processed
+                               by 'findAlleles' command.
+                             In case of directory no filter by file type will be applied.
+      output_file.shmt       Path where to write output trees
+      --v-gene-names <gene_name>
+                             List of VGene names to filter clones
+      --j-gene-names <gene_name>
+                             List of JGene names to filter clones
+      --cdr3-lengths <n>     List of CDR3 nucleotide sequence lengths to filter clones
+      --min-count <n>        Filter clones with counts great or equal to that parameter
+      -bf, --build-from <path>
+                             If specified, trees will be build from data in the file. Main logic of
+                               command will be omitted.
+                             File must be formatted as tsv and have 3 columns: treeId, fileName,
+                               cloneId
+                             V and J genes will be chosen by majority of clones in a clonal group.
+                               CDR3 length must be the same in all clones.
+                             treeId - uniq id for clonal group,
+                             fileName - file name as was used in command line to search for clone,
+                             cloneId - clone id in the specified file
+  -O  <key=value>            Overrides default build SHM parameter values
+  -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
+                               machine readable report).
+  -j, --json-report <path>   JSON formatted report file.
+      --use-local-temp       Put temporary files in the same folder as the output files.
+  -t, --threads <n>          Processing threads
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.

@@ -1,0 +1,7 @@
+Usage: mixcr versionInfo [--no-warnings] [--verbose] [--help] input_file.(vdjca|clns|clna|shmt)
+Output information about MiXCR version which generated the file.
+      input_file.(vdjca|clns|clna|shmt)
+
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

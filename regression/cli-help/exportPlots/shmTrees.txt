@@ -1,0 +1,47 @@
+Usage: mixcr exportPlots shmTrees [--metadata <path.(tsv|csv)>] [--node-color <meta>] [--line-color
+                                  <meta>] [--node-size <meta>] [--node-label <meta>]
+                                  [--alignment-nt <gene_feature>] [--alignment-aa <gene_feature>]
+                                  [--alignment-no-fill] [--filter-min-nodes <n>]
+                                  [--filter-min-height <n>] [--ids <id>[,<id>...]]... [--chains
+                                  <chains>] [--force-overwrite] [--no-warnings] [--verbose]
+                                  [--help] [[--filter-in-feature <gene_feature>]
+                                  [--pattern-max-errors <n>] (--filter-aa-pattern <pattern> |
+                                  --filter-nt-pattern <pattern>)] trees.shmt plots.pdf
+Visualize SHM tree and save in PDF format
+      trees.shmt             Input file produced by 'findShmTrees' command.
+      plots.pdf              Path where to write PDF file with plots.
+  -m, --metadata <path.(tsv|csv)>
+                             Path to metadata file
+                             Metadata should be a .tsv or .csv file with a column named 'sample'
+                               with filenames of .clns files used in findShmTrees
+      --node-color <meta>    Color nodes with given metadata column
+      --line-color <meta>    Color lines with given metadata column
+      --node-size <meta>     Size nodes with given metadata column. Predefined columns: "Abundance".
+                               Default: Abundance
+      --node-label <meta>    Label nodes with given metadata column. Predefined columns: "Isotype"
+      --alignment-nt <gene_feature>
+                             Show tree nucleotide alignments using specified gene feature
+      --alignment-aa <gene_feature>
+                             Show tree amino acid alignments using specified gene feature
+      --alignment-no-fill    Do not highlight alignments with color
+      --filter-min-nodes <n> Minimal number of nodes in tree
+      --filter-min-height <n>
+                             Minimal height of the tree
+      --ids <id>[,<id>...]   Filter specific trees by id
+      --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
+                               or IGH).
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.
+Filter by pattern
+      --filter-in-feature <gene_feature>
+                             Match pattern inside specified gene feature.
+                               Default: CDR3
+      --pattern-max-errors <n>
+                             Max allowed subs & indels.
+                               Default: 0
+      --filter-aa-pattern <pattern>
+                             Filter specific trees by aa pattern.
+      --filter-nt-pattern <pattern>
+                             Filter specific trees by nt pattern.

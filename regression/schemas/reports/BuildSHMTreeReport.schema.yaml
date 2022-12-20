@@ -1,0 +1,138 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$defs:
+  StatsWithQuantiles:
+    type: "object"
+    properties:
+      avg:
+        type: "number"
+      max:
+        type: "number"
+      min:
+        type: "number"
+      percentile25:
+        type: "number"
+      percentile50:
+        type: "number"
+      percentile75:
+        type: "number"
+      quadraticMean:
+        type: "number"
+      size:
+        type: "integer"
+      stdDeviation:
+        type: "number"
+      sum:
+        type: "number"
+type: "object"
+properties:
+  commandLine:
+    type: "string"
+  inputFiles:
+    type: "array"
+    items:
+      type: "string"
+  outputFiles:
+    type: "array"
+    items:
+      type: "string"
+  stepResults:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        cloneNodesWasAdded:
+          type: "integer"
+        clonesCountInTrees:
+          $ref: "#/$defs/StatsWithQuantiles"
+        clonesWasAdded:
+          type: "integer"
+        commonVJMutationsCounts:
+          $ref: "#/$defs/StatsWithQuantiles"
+        maxNDNsWildcardsScoreInTree:
+          $ref: "#/$defs/StatsWithQuantiles"
+        step:
+          anyOf:
+            - allOf:
+                - type: "object"
+                  properties:
+                    maxNDNDistance:
+                      type: "number"
+                    threshold:
+                      type: "number"
+                - type: "object"
+                  properties:
+                    name:
+                      const: "AttachClonesByDistanceChange"
+                  required:
+                    - "name"
+            - allOf:
+                - type: "object"
+                  properties:
+                    maxNDNDistance:
+                      type: "number"
+                - type: "object"
+                  properties:
+                    name:
+                      const: "AttachClonesByNDN"
+                  required:
+                    - "name"
+            - allOf:
+                - type: "object"
+                  properties:
+                    algorithm:
+                      anyOf:
+                        - allOf:
+                            - type: "object"
+                              properties:
+                                commonMutationsCountForClustering:
+                                  type: "integer"
+                                maxNDNDistanceForClustering:
+                                  type: "number"
+                            - type: "object"
+                              properties:
+                                type:
+                                  const: "BronKerbosch"
+                              required:
+                                - "type"
+                        - allOf:
+                            - type: "object"
+                              properties:
+                                commonMutationsCountForClustering:
+                                  type: "integer"
+                                maxNDNDistanceForClustering:
+                                  type: "number"
+                            - type: "object"
+                              properties:
+                                type:
+                                  const: "SingleLinkage"
+                              required:
+                                - "type"
+                - type: "object"
+                  properties:
+                    name:
+                      const: "BuildingInitialTrees"
+                  required:
+                    - "name"
+            - allOf:
+                - type: "object"
+                  properties:
+                    maxNDNDistanceBetweenRoots:
+                      type: "number"
+                - type: "object"
+                  properties:
+                    name:
+                      const: "CombineTrees"
+                  required:
+                    - "name"
+        surenessOfDecisions:
+          $ref: "#/$defs/StatsWithQuantiles"
+        treesCountDelta:
+          type: "integer"
+        wildcardsScore:
+          $ref: "#/$defs/StatsWithQuantiles"
+        wildcardsScoreForRoots:
+          $ref: "#/$defs/StatsWithQuantiles"
+  totalClonesProcessed:
+    type: "integer"
+  version:
+    type: "string"

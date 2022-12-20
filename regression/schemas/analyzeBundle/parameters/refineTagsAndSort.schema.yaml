@@ -1,0 +1,260 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$defs:
+  AndKeyedFilter-1:
+    type: "object"
+    properties:
+      filters:
+        type: "array"
+        items:
+          anyOf:
+            - $ref: "#/$defs/AndKeyedFilter-2"
+            - $ref: "#/$defs/GroupFilter"
+            - $ref: "#/$defs/InGroupsFilter-2"
+  AndKeyedFilter-2:
+    $ref: "#/$defs/AndKeyedFilter-1"
+    type: "object"
+    properties:
+      type:
+        const: "filter_and"
+    required:
+      - "type"
+  CumtopMetric-1:
+    type: "object"
+    properties:
+      calculateMetricSum:
+        type: "boolean"
+      keys:
+        type: "array"
+        items:
+          type: "string"
+      rankingMetric:
+        anyOf:
+          - $ref: "#/$defs/CumtopMetric-2"
+          - $ref: "#/$defs/KMerDiversity"
+          - $ref: "#/$defs/NUnique"
+          - $ref: "#/$defs/SumWeight"
+      reportHist:
+        $ref: "#/$defs/HistCollectionSpec"
+      share:
+        type: "number"
+  CumtopMetric-2:
+    $ref: "#/$defs/CumtopMetric-1"
+    type: "object"
+    properties:
+      type:
+        const: "group_metric_cumtop"
+    required:
+      - "type"
+  GroupFilter:
+    allOf:
+      - type: "object"
+        properties:
+          groupingKeys:
+            type: "array"
+            items:
+              type: "string"
+          predicates:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                metrics:
+                  type: "array"
+                  items:
+                    anyOf:
+                      - $ref: "#/$defs/CumtopMetric-2"
+                      - $ref: "#/$defs/KMerDiversity"
+                      - $ref: "#/$defs/NUnique"
+                      - $ref: "#/$defs/SumWeight"
+                operator:
+                  anyOf:
+                    - allOf:
+                        - type: "object"
+                          properties:
+                            share:
+                              type: "number"
+                        - type: "object"
+                          properties:
+                            type:
+                              const: "group_operator_cumtop"
+                          required:
+                            - "type"
+                    - type: "object"
+                      properties:
+                        type:
+                          const: "dummy_group_operator"
+                      required:
+                        - "type"
+                    - allOf:
+                        - type: "object"
+                          properties:
+                            minimalShare:
+                              type: "number"
+                        - type: "object"
+                          properties:
+                            type:
+                              const: "group_operator_minimal_recursive_share"
+                          required:
+                            - "type"
+                    - allOf:
+                        - type: "object"
+                          properties:
+                            fallbackThreshold:
+                              type: "number"
+                            logX:
+                              type: "boolean"
+                            minimalSample:
+                              type: "integer"
+                            multiplyWeightByKey:
+                              type: "boolean"
+                        - type: "object"
+                          properties:
+                            type:
+                              const: "group_operator_otsu1"
+                          required:
+                            - "type"
+                    - allOf:
+                        - type: "object"
+                          properties:
+                            lower:
+                              type: "number"
+                            lowerExclusive:
+                              type: "boolean"
+                            upper:
+                              type: "number"
+                            upperExclusive:
+                              type: "boolean"
+                        - type: "object"
+                          properties:
+                            type:
+                              const: "group_operator_range"
+                          required:
+                            - "type"
+                    - allOf:
+                        - type: "object"
+                          properties:
+                            "n":
+                              type: "integer"
+                        - type: "object"
+                          properties:
+                            type:
+                              const: "group_operator_top"
+                          required:
+                            - "type"
+      - type: "object"
+        properties:
+          type:
+            const: "filter_groups"
+        required:
+          - "type"
+  HistCollectionSpec:
+    type: "object"
+    properties:
+      binNumber:
+        type: "integer"
+      log:
+        type: "boolean"
+      minBinWidth:
+        type: "number"
+      multiplyWeightByKey:
+        type: "boolean"
+  InGroupsFilter-1:
+    type: "object"
+    properties:
+      aggregateReport:
+        type: "boolean"
+      isolationKeys:
+        type: "array"
+        items:
+          type: "string"
+      nestedFilter:
+        anyOf:
+          - $ref: "#/$defs/AndKeyedFilter-2"
+          - $ref: "#/$defs/GroupFilter"
+          - $ref: "#/$defs/InGroupsFilter-2"
+  InGroupsFilter-2:
+    $ref: "#/$defs/InGroupsFilter-1"
+    type: "object"
+    properties:
+      type:
+        const: "filter_in_groups"
+    required:
+      - "type"
+  KMerDiversity:
+    allOf:
+      - type: "object"
+        properties:
+          k:
+            type: "integer"
+          minimalQuality:
+            type: "integer"
+          reportHist:
+            $ref: "#/$defs/HistCollectionSpec"
+          sequences:
+            type: "array"
+            items:
+              type: "string"
+          topShare:
+            type: "number"
+      - type: "object"
+        properties:
+          type:
+            const: "group_metric_kmer_diversity"
+        required:
+          - "type"
+  NUnique:
+    allOf:
+      - type: "object"
+        properties:
+          keys:
+            type: "array"
+            items:
+              type: "string"
+          reportHist:
+            $ref: "#/$defs/HistCollectionSpec"
+      - type: "object"
+        properties:
+          type:
+            const: "group_metric_nunique"
+        required:
+          - "type"
+  SumWeight:
+    allOf:
+      - type: "object"
+        properties:
+          reportHist:
+            $ref: "#/$defs/HistCollectionSpec"
+      - type: "object"
+        properties:
+          type:
+            const: "group_metric_sum_weight"
+        required:
+          - "type"
+type: "object"
+properties:
+  parameters:
+    type: "object"
+    properties:
+      backgroundIndelRate:
+        type: "number"
+      backgroundSubstitutionRate:
+        type: "number"
+      correctionPower:
+        type: "number"
+      maxIndels:
+        type: "integer"
+      maxSubstitutions:
+        type: "integer"
+      maxTotalErrors:
+        type: "integer"
+      minQuality:
+        type: "integer"
+      postFilter:
+        anyOf:
+          - $ref: "#/$defs/AndKeyedFilter-2"
+          - $ref: "#/$defs/GroupFilter"
+          - $ref: "#/$defs/InGroupsFilter-2"
+  runCorrection:
+    type: "boolean"
+  whitelists:
+    type: "object"

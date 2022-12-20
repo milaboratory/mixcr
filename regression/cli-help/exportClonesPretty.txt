@@ -1,0 +1,22 @@
+Usage: mixcr exportClonesPretty [--limitBefore <n>] [--limit <n>] [--skip <n>] [--clone-ids
+                                <id>]... [--chains <chains>] [--cdr3-equals <seq>]
+                                [--clonal-sequence-contains <seq>] [--force-overwrite]
+                                [--no-warnings] [--verbose] [--help] clones.(clns|clna) [output.txt]
+Export verbose information about clones.
+      clones.(clns|clna)    Path to input file with clones
+      [output.txt]          Path where to write export. Will write to output if omitted.
+  -b, --limitBefore <n>     Limit number of alignments before filtering
+  -n, --limit <n>           Limit number of filtered alignments; no more than N alignments will be
+                              outputted
+  -s, --skip <n>            Number of output alignments to skip
+  -i, --clone-ids <id>      List of clone ids to export
+  -c, --chains <chains>     Filter export to a specific protein chain gene (e.g. TRA or IGH).
+                              Default: ALL
+  -e, --cdr3-equals <seq>   Only output clones where CDR3 (not whole clonal sequence) exactly
+                              equals to given sequence
+  -r, --clonal-sequence-contains <seq>
+                            Only output clones where target clonal sequence contains sub-sequence.
+  -f, --force-overwrite     Force overwrite of output file(s).
+      -nw, --no-warnings    Suppress all warning messages.
+      --verbose             Verbose messages.
+  -h, --help                Show this help message and exit.

@@ -1,0 +1,38 @@
+Usage: mixcr exportPlots jUsage [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
+                                (|>|>=|=|<=|<)value>...]]... [--chains <chain>]... [--family-usage]
+                                [--no-samples-dendro] [--no-genes-dendro] [--color-key <key>]...
+                                [--bar-plot] [--bar-plot-by-sample] [--facet-by <s>] [--palette
+                                <s>] [--h-labels-size <d>] [--v-labels-size <d>] [--width <n>]
+                                [--height <n>] [--no-warnings] [--verbose] [--help] pa.json[.gz]
+                                output.(pdf|eps|svg|png|jpeg)
+Export J gene usage
+      pa.json[.gz]           Input file with postanalysis results.
+      output.(pdf|eps|svg|png|jpeg)
+                             Output PDF/EPS/PNG/JPEG file name.
+      --metadata <path>      Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form.
+                               Must contain `sample` column which matches names of input files.
+      --filter <meta(|>|>=|=|<=|<)value>[,<meta(|>|>=|=|<=|<)value>...]
+                             Filter samples to put on a plot by their metadata values. Filter
+                               allows equality (`species=cat`) or arithmetic comparison (`age>=10`)
+                               etc.
+      --chains <chain>       Export only for specified immunological chains.
+      --family-usage         Show gene family usage instead.
+      --no-samples-dendro    Don't add samples dendrogram on heatmap.
+      --no-genes-dendro      Don't add genes dendrogram on heatmap.
+      --color-key <key>      Add color key layer to heatmap.
+      --bar-plot             Export bar plot instead of heatmap.
+      --bar-plot-by-sample   Export bar plot groupped by sample.
+      --facet-by <s>         Facet barplot.
+      --palette <s>          Color palette for heatmap. Available names: diverging, viridis2magma,
+                               lime2rose, blue2red, teal2red, softSpectral, sequential, viridis,
+                               magma, sunset, rainbow, salinity, density.
+                               Default: density
+      --h-labels-size <d>    Width of horizontal labels. One unit corresponds to the width of one
+                               tile.
+      --v-labels-size <d>    Height of vertical labels. One unit corresponds to the height of one
+                               tile.
+      --width <n>            Plot width.
+      --height <n>           Plot height.
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.
