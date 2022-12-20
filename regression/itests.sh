@@ -49,7 +49,7 @@ esac
 declare -a all_tests
 while read -r tst; do
   all_tests=( "${all_tests[@]}" "$tst" )
-done < <(find itests -name '*.sh' | sed 's/\itests\///' | sed 's/\.sh//' | sort)
+done < <(find ${dir}/itests -name '*.sh' | sed "s/.*itests\///" | sed 's/\.sh//' | sort)
 
 tests=()
 while [[ $# -gt 0 ]]; do
@@ -63,14 +63,14 @@ if [[ ${#tests[@]} -eq 0 ]]; then
   tests=("${all_tests[@]}")
 fi
 
-PATH=${dir}:${PATH}
+PATH=${dir}/..:${PATH}
 
 rm -rf ${dir}/test_target
 mkdir ${dir}/test_target
 
-ln -s ${dir}/test_data/single_cell_vdj_t_subset_R1.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R1.fastq.gz
-ln -s ${dir}/test_data/single_cell_vdj_t_subset_R2.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R2.fastq.gz
-ln -s ${dir}/test_data/trees_samples ${dir}/test_target/trees_samples
+ln -s -f ../../src/test/resources/sequences/big/single_cell_vdj_t_subset_R1.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R1.fastq.gz
+ln -s -f ../../src/test/resources/sequences/big/single_cell_vdj_t_subset_R2.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R2.fastq.gz
+ln -s -f ../../src/test/resources/sequences/big/trees_samples ${dir}/test_target/trees_samples
 
 function run_test() {
   cd ${dir}/test_target
@@ -78,7 +78,7 @@ function run_test() {
   echo "Running: $1"
   echo "========================"
 
-  if ../itests/${1}; then
+  if ${dir}/itests/${1}; then
     echo "========================"
     echo "$1 executed successfully"
   else

@@ -24,6 +24,6 @@ set -euxo pipefail
 
 PATH=${dir}/..:${PATH}
 
-mixcr exportHelp cli-help
-mixcr exportAllPresets presets
-mixcr exportSchemas schemas
+mixcr exportHelp ${dir}/cli-help
+mixcr exportAllPresets ${dir}/presets
+mixcr exportSchemas ${dir}/schemas
