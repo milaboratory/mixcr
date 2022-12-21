@@ -332,7 +332,10 @@ object CommandRefineTagsAndSort {
                         SmartProgressReporter.startProgressReport(corrector)
 
                         // Will read the input stream once and extract all the required information from it
-                        corrector.initialize(mainReader, AlignmentSequenceExtractor, { al -> al.alignmentsIndex }) { als ->
+                        corrector.initialize(
+                            mainReader,
+                            AlignmentSequenceExtractor,
+                            { al -> al.alignmentsIndex }) { als ->
                             if (als.tagCount.size() != 1) throw ApplicationException(
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
@@ -384,12 +387,13 @@ object CommandRefineTagsAndSort {
                     val alPioState = PrimitivIOStateBuilder()
                     IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.header.featuresToAlign)
 
-                    // Reusable routine to perform has-based soring of alignments by tag with specific index
+                    // Reusable routine to perform hash-based soring of alignments by tag with specific index
+                    var sorterCounter = 0
                     val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> =
                         { tIdx -> // <- index inside the alignment object
                             sortByHashOnDisk(
                                 alPioState,
-                                tempDest.addSuffix("hashsorter.$tIdx"),
+                                tempDest.addSuffix("hashsorter.${sorterCounter++}.$tIdx"),
                                 bitsPerStep = 4,
                                 readerConcurrency = 4,
                                 writerConcurrency = 4,
