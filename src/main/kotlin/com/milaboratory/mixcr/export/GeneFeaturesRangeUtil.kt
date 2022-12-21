@@ -77,7 +77,8 @@ object GeneFeaturesRangeUtil {
         feature: GeneFeature
     ) {
         if (header.allFullyCoveredBy != null) {
-            if (header.allFullyCoveredBy.intersection(feature) != GeneFeatures(feature)) {
+            val asGeneFeatures = GeneFeatures.fromComposite(feature)
+            if (header.allFullyCoveredBy.intersection(asGeneFeatures) != asGeneFeatures) {
                 logger.warn("${GeneFeature.encode(feature)} is not covered ($cmdArgName ${GeneFeature.encode(feature)})")
             }
         }

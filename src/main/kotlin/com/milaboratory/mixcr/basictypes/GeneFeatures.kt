@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
+import com.milaboratory.app.ValidationException
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
@@ -26,19 +27,28 @@ import io.repseq.core.GeneFeature
 data class GeneFeatures @JsonCreator constructor(
     @JsonValue val features: List<GeneFeature>
 ) {
-    constructor(geneFeature: GeneFeature) : this(listOf(geneFeature))
-
     init {
         check(features.isNotEmpty())
+        for (feature in features) {
+            ValidationException.require(!feature.isComposite) {
+                "$features must be not composite"
+            }
+        }
         for (i in (1 until features.size)) {
-            require(features[i - 1].lastPoint <= features[i].firstPoint) {
-                features.map { GeneFeature.encode(it) } + " are not ordered"
+            ValidationException.require(features[i - 1].lastPoint <= features[i].firstPoint) {
+                "${features.map { GeneFeature.encode(it) }} are not ordered"
             }
         }
     }
 
     fun intersection(other: GeneFeature): GeneFeatures? {
         val result = features.mapNotNull { GeneFeature.intersection(it, other) }
+        if (result.isEmpty()) return null
+        return GeneFeatures(result)
+    }
+
+    fun intersection(other: GeneFeatures): GeneFeatures? {
+        val result = features.flatMap { other.intersection(it)?.features ?: emptyList() }
         if (result.isEmpty()) return null
         return GeneFeatures(result)
     }
@@ -89,6 +99,18 @@ data class GeneFeatures @JsonCreator constructor(
     }
 
     companion object {
+        fun fromComposite(geneFeature: GeneFeature): GeneFeatures = when {
+            geneFeature.isComposite -> GeneFeatures(geneFeature.map { GeneFeature(it.begin, it.end) })
+            else -> GeneFeatures(listOf(geneFeature))
+        }
+
+        fun fromSimple(geneFeature: GeneFeature): GeneFeatures {
+            ValidationException.require(!geneFeature.isComposite) {
+                "$geneFeature must be not composite"
+            }
+            return GeneFeatures(listOf(geneFeature))
+        }
+
         @JvmStatic
         @JsonCreator // for JsonOverrider
         fun parse(value: String): GeneFeatures = if (value.startsWith("[")) {
@@ -96,7 +118,7 @@ data class GeneFeatures @JsonCreator constructor(
                 throw IllegalArgumentException("Malformed GeneFeatures: $value")
             GeneFeatures(value.substring(1, value.length - 1).split(",").map { GeneFeature.parse(it) })
         } else
-            GeneFeatures(GeneFeature.parse(value))
+            fromComposite(GeneFeature.parse(value))
 
         @JvmStatic
         fun parse(value: Array<String>): GeneFeatures =
