@@ -15,6 +15,19 @@ import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
+import io.repseq.core.ReferencePoint.CDR1Begin
+import io.repseq.core.ReferencePoint.CDR2Begin
+import io.repseq.core.ReferencePoint.CDR3Begin
+import io.repseq.core.ReferencePoint.CDR3End
+import io.repseq.core.ReferencePoint.FR1Begin
+import io.repseq.core.ReferencePoint.FR2Begin
+import io.repseq.core.ReferencePoint.FR3Begin
+import io.repseq.core.ReferencePoint.FR4Begin
+import io.repseq.core.ReferencePoint.FR4End
+import io.repseq.core.ReferencePoint.L1Begin
+import io.repseq.core.ReferencePoint.L1End
+import io.repseq.core.ReferencePoint.L2Begin
+import io.repseq.core.ReferencePoint.encode
 
 object GeneFeaturesRangeUtil {
     fun commonDescriptionForFeatures(
@@ -40,17 +53,19 @@ object GeneFeaturesRangeUtil {
 
     fun MetaForExport.geneFeaturesBetweenArgs(
         from: ReferencePoint?,
-        to: ReferencePoint?
-    ): List<Array<String>> = geneFeaturesBetween(from, to)
+        to: ReferencePoint?,
+        withCDR3: Boolean = true
+    ): List<Array<String>> = geneFeaturesBetween(from, to, withCDR3)
         .flatten()
         .map { arrayOf(GeneFeature.encode(it)) }
 
     fun FieldsCollection<*>.warnIfFeatureNotCovered(
         header: MetaForExport,
         from: ReferencePoint?,
-        to: ReferencePoint?
+        to: ReferencePoint?,
+        withCDR3: Boolean = true
     ) {
-        header.geneFeaturesBetween(from, to)
+        header.geneFeaturesBetween(from, to, withCDR3)
             .flatten()
             .forEach { feature ->
                 warnIfFeatureNotCovered(header, feature)
@@ -70,47 +85,81 @@ object GeneFeaturesRangeUtil {
 
     private fun MetaForExport.geneFeaturesBetween(
         from: ReferencePoint?,
-        to: ReferencePoint?
-    ): List<List<GeneFeature>> = referencePointsBetweenOrDefault(from, to)
+        to: ReferencePoint?,
+        withCDR3: Boolean
+    ): List<List<GeneFeature>> = referencePointsBetweenOrDefault(from, to, withCDR3)
         .map { it.zipWithNext { a, b -> GeneFeature(a, b) } }
 
     fun MetaForExport.referencePointsToExport(
         from: ReferencePoint?,
         to: ReferencePoint?
-    ): List<Array<String>> = referencePointsBetweenOrDefault(from, to)
+    ): List<Array<String>> = referencePointsBetweenOrDefault(from, to, withCDR3 = true)
         .flatten()
-        .map { arrayOf(ReferencePoint.encode(it, true)) }
+        .map { arrayOf(encode(it, true)) }
 
     private fun MetaForExport.referencePointsBetweenOrDefault(
         from: ReferencePoint?,
-        to: ReferencePoint?
+        to: ReferencePoint?,
+        withCDR3: Boolean
     ): List<List<ReferencePoint>> = when {
-        from != null && to != null -> listOf(referencePointsBetween(from, to))
+        from != null && to != null -> referencePointsBetween(from, to, withCDR3)
         allFullyCoveredBy != null -> allFullyCoveredBy.features
-            .map { referencePointsBetween(it.firstPoint, it.lastPoint) }
-        else -> listOf(referencePointsBetween(ReferencePoint.FR1Begin, ReferencePoint.FR4End))
+            .flatMap { referencePointsBetween(it.firstPoint, it.lastPoint, withCDR3) }
+
+        else -> referencePointsBetween(FR1Begin, FR4End, withCDR3)
     }
 
     private fun referencePointsBetween(
         from: ReferencePoint,
-        to: ReferencePoint
-    ): List<ReferencePoint> {
-        val referencePointsBetween = referencePointsToExport
-            .filter { from < it && it < to }
-        return listOf(from) + referencePointsBetween + to
+        to: ReferencePoint,
+        withCDR3: Boolean
+    ): List<List<ReferencePoint>> = when {
+        withCDR3 -> listOf(referencePointsToExport.pointsBetween(from, to))
+        else -> buildList {
+            if (to <= referencePointsToExportBeforeCDR3.last()) {
+                this += referencePointsToExportBeforeCDR3.pointsBetween(from, to)
+            } else if (from <= referencePointsToExportBeforeCDR3.last()) {
+                this += referencePointsToExportBeforeCDR3.pointsBetween(from, referencePointsToExportBeforeCDR3.last())
+            }
+            if (from >= referencePointsToExportAfterCDR3.first()) {
+                this += referencePointsToExportAfterCDR3.pointsBetween(from, to)
+            } else if (to >= referencePointsToExportAfterCDR3.first()) {
+                this += referencePointsToExportAfterCDR3.pointsBetween(referencePointsToExportAfterCDR3.first(), to)
+            }
+        }
     }
 
+    private fun Array<ReferencePoint>.pointsBetween(from: ReferencePoint, to: ReferencePoint): List<ReferencePoint> =
+        listOf(from) + filter { from < it && it < to } + to
+
     private val referencePointsToExport = arrayOf(
-        ReferencePoint.L1Begin,
-        ReferencePoint.L1End,
-        ReferencePoint.L2Begin,
-        ReferencePoint.FR1Begin,
-        ReferencePoint.CDR1Begin,
-        ReferencePoint.FR2Begin,
-        ReferencePoint.CDR2Begin,
-        ReferencePoint.FR3Begin,
-        ReferencePoint.CDR3Begin,
-        ReferencePoint.FR4Begin,
-        ReferencePoint.FR4End
+        L1Begin,
+        L1End,
+        L2Begin,
+        FR1Begin,
+        CDR1Begin,
+        FR2Begin,
+        CDR2Begin,
+        FR3Begin,
+        CDR3Begin,
+        FR4Begin,
+        FR4End
+    )
+
+    private val referencePointsToExportBeforeCDR3 = arrayOf(
+        L1Begin,
+        L1End,
+        L2Begin,
+        FR1Begin,
+        CDR1Begin,
+        FR2Begin,
+        CDR2Begin,
+        FR3Begin,
+        CDR3Begin
+    )
+
+    private val referencePointsToExportAfterCDR3 = arrayOf(
+        CDR3End,
+        FR4End
     )
 }

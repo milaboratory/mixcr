@@ -599,10 +599,10 @@ object VDJCObjectFieldExtractors {
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
                 validateArgs = { header, from, to ->
-                    warnIfFeatureNotCovered(header, from, to)
+                    warnIfFeatureNotCovered(header, from, to, withCDR3 = false)
                 }
             ) { from, to ->
-                geneFeaturesBetweenArgs(from, to)
+                geneFeaturesBetweenArgs(from, to, withCDR3 = false)
             }
 
             this += Field(
@@ -640,10 +640,10 @@ object VDJCObjectFieldExtractors {
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
                 validateArgs = { header, from, to ->
-                    warnIfFeatureNotCovered(header, from, to)
+                    warnIfFeatureNotCovered(header, from, to, withCDR3 = false)
                 }
             ) { from, to ->
-                geneFeaturesBetweenArgs(from, to)
+                geneFeaturesBetweenArgs(from, to, withCDR3 = false)
             }
 
             this += Field(
@@ -685,10 +685,10 @@ object VDJCObjectFieldExtractors {
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
                 validateArgs = { header, from, to ->
-                    warnIfFeatureNotCovered(header, from, to)
+                    warnIfFeatureNotCovered(header, from, to, withCDR3 = false)
                 }
             ) { from, to ->
-                geneFeaturesBetweenArgs(from, to)
+                geneFeaturesBetweenArgs(from, to, withCDR3 = false)
             }
 
             this += Field(
