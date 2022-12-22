@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
+import com.milaboratory.app.ValidationException
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
@@ -22,23 +23,38 @@ import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeCollection
 import io.repseq.core.GeneFeature
 
+/**
+ * It's guarantied that features is ordered and every feature has no disjoints
+ */
 @Serializable(by = GeneFeatures.SerializerImpl::class)
 data class GeneFeatures @JsonCreator constructor(
     @JsonValue val features: List<GeneFeature>
 ) {
-    constructor(geneFeature: GeneFeature) : this(listOf(geneFeature))
-
     init {
         check(features.isNotEmpty())
+        for (feature in features) {
+            ValidationException.require(!feature.hasDisjoints) {
+                "$features must be not composite"
+            }
+        }
         for (i in (1 until features.size)) {
-            require(features[i - 1].lastPoint <= features[i].firstPoint) {
-                features.map { GeneFeature.encode(it) } + " are not ordered"
+            ValidationException.require(features[i - 1].lastPoint <= features[i].firstPoint) {
+                "${features.map { GeneFeature.encode(it) }} are not ordered"
             }
         }
     }
 
     fun intersection(other: GeneFeature): GeneFeatures? {
+        ValidationException.require(!other.hasDisjoints) {
+            "$other should be not composite"
+        }
         val result = features.mapNotNull { GeneFeature.intersection(it, other) }
+        if (result.isEmpty()) return null
+        return GeneFeatures(result)
+    }
+
+    fun intersection(other: GeneFeatures): GeneFeatures? {
+        val result = features.flatMap { other.intersection(it)?.features ?: emptyList() }
         if (result.isEmpty()) return null
         return GeneFeatures(result)
     }
@@ -89,6 +105,35 @@ data class GeneFeatures @JsonCreator constructor(
     }
 
     companion object {
+        private val GeneFeature.hasDisjoints: Boolean
+            get() = (1 until size())
+                .any { i -> getReferenceRange(i - 1).end != getReferenceRange(i).begin }
+
+        fun fromComposite(geneFeature: GeneFeature): GeneFeatures = when {
+            geneFeature.hasDisjoints -> {
+                val result = mutableListOf<GeneFeature>()
+                geneFeature
+                    .map { GeneFeature(it.begin, it.end) }
+                    .forEach { toAdd ->
+                        if (result.isEmpty() || result.last().lastPoint != toAdd.firstPoint) {
+                            result += toAdd
+                        } else {
+                            result[result.size - 1] = GeneFeature(result.last(), toAdd)
+                        }
+                    }
+                GeneFeatures(result)
+            }
+
+            else -> GeneFeatures(listOf(geneFeature))
+        }
+
+        fun fromOrdinal(geneFeature: GeneFeature): GeneFeatures {
+            ValidationException.require(!geneFeature.hasDisjoints) {
+                "$geneFeature must be not composite"
+            }
+            return GeneFeatures(listOf(geneFeature))
+        }
+
         @JvmStatic
         @JsonCreator // for JsonOverrider
         fun parse(value: String): GeneFeatures = if (value.startsWith("[")) {
@@ -96,7 +141,7 @@ data class GeneFeatures @JsonCreator constructor(
                 throw IllegalArgumentException("Malformed GeneFeatures: $value")
             GeneFeatures(value.substring(1, value.length - 1).split(",").map { GeneFeature.parse(it) })
         } else
-            GeneFeatures(GeneFeature.parse(value))
+            fromComposite(GeneFeature.parse(value))
 
         @JvmStatic
         fun parse(value: Array<String>): GeneFeatures =

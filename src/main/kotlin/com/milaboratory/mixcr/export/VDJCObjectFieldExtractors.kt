@@ -599,10 +599,10 @@ object VDJCObjectFieldExtractors {
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
                 validateArgs = { header, from, to ->
-                    warnIfFeatureNotCovered(header, from, to)
+                    warnIfFeatureNotCovered(header, from, to, withCDR3 = false)
                 }
             ) { from, to ->
-                geneFeaturesBetweenArgs(from, to)
+                geneFeaturesBetweenArgs(from, to, withCDR3 = false)
             }
 
             this += Field(
@@ -640,10 +640,10 @@ object VDJCObjectFieldExtractors {
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
                 validateArgs = { header, from, to ->
-                    warnIfFeatureNotCovered(header, from, to)
+                    warnIfFeatureNotCovered(header, from, to, withCDR3 = false)
                 }
             ) { from, to ->
-                geneFeaturesBetweenArgs(from, to)
+                geneFeaturesBetweenArgs(from, to, withCDR3 = false)
             }
 
             this += Field(
@@ -685,10 +685,10 @@ object VDJCObjectFieldExtractors {
                 referencePointParamOptional("<from_reference_point>"),
                 referencePointParamOptional("<to_reference_point>"),
                 validateArgs = { header, from, to ->
-                    warnIfFeatureNotCovered(header, from, to)
+                    warnIfFeatureNotCovered(header, from, to, withCDR3 = false)
                 }
             ) { from, to ->
-                geneFeaturesBetweenArgs(from, to)
+                geneFeaturesBetweenArgs(from, to, withCDR3 = false)
             }
 
             this += Field(
@@ -1043,13 +1043,11 @@ private fun VDJCObject.mutationsDetailed(
 private fun <R : Any> VDJCObject.extractMutations(
     geneFeature: GeneFeature,
     relativeTo: GeneFeature,
-    convert: (mutations: Mutations<NucleotideSequence>, seq1: NucleotideSequence, seq2: NucleotideSequence?, range: Range, tr: TranslationParameters?) -> R?
+    convert: (mutations: Mutations<NucleotideSequence>, seq1: NucleotideSequence, seq2: NucleotideSequence, range: Range, tr: TranslationParameters?) -> R?
 ): R? {
     val geneType = geneFeature.geneType!!
     val hit = getBestHit(geneType) ?: return null
     val alignedFeature = hit.alignedFeature
-    // if (!alignedFeature.contains(smallGeneFeature))
-    //     return "-";
     val gene = hit.gene
     val germlinePartitioning = gene.partitioning
     if (!germlinePartitioning.isAvailable(relativeTo)) return null
@@ -1075,7 +1073,7 @@ private fun <R : Any> VDJCObject.extractMutations(
         val mutations = if (geneFeature == relativeTo) {
             alignment.absoluteMutations.extractRelativeMutationsForRange(smallTargetRange)
         } else {
-            val mutations = alignment.absoluteMutations.extractAbsoluteMutationsForRange(smallTargetRange)
+            var mutations = alignment.absoluteMutations.extractAbsoluteMutationsForRange(smallTargetRange)
             val baIntersectionBegin = intersectionBigAligned.firstPoint
             val referencePosition =
                 germlinePartitioning.getRelativePosition(alignedFeature, baIntersectionBegin)
@@ -1083,13 +1081,13 @@ private fun <R : Any> VDJCObject.extractMutations(
                 germlinePartitioning.getRelativePosition(relativeTo, baIntersectionBegin)
             if (bigFeaturePosition < 0 || referencePosition < 0) continue
             val shift = bigFeaturePosition - referencePosition
-            when {
-                shift >= 0 -> mutations.move(shift)
-                else -> mutations.getRange(
+            if (shift < 0)
+                mutations = mutations.getRange(
                     Mutations.pabs(mutations.firstMutationWithPosition(-shift)),
                     mutations.size()
                 )
-            }
+
+            mutations.move(shift);
         }
         return convert(
             mutations,

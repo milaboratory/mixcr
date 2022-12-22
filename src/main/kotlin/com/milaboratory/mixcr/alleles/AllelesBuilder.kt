@@ -414,12 +414,12 @@ class AllelesBuilder(
             if (intersection != null) {
                 intersection + toAdd
             } else {
-                GeneFeatures(toAdd)
+                GeneFeatures.fromOrdinal(toAdd)
             }
         }
 
         Joining -> {
-            val toAdd = GeneFeatures(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
+            val toAdd = GeneFeatures.fromOrdinal(GeneFeature(CDR3End, -knownCDR3RangeLength, 0))
             val intersection = allClonesCutBy.intersection(GeneFeature(CDR3End, FR4End))
             if (intersection != null) {
                 toAdd + intersection
