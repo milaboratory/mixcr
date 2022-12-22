@@ -13,7 +13,7 @@ import org.junit.Test
 class GeneFeaturesTest {
     @Test
     fun `serialize with one gene feature`() {
-        val geneFeatures = GeneFeatures.fromSimple(CDR3)
+        val geneFeatures = GeneFeatures.fromOrdinal(CDR3)
         K_OM.writeValueAsString(geneFeatures) shouldBe """["CDR3"]"""
         K_OM.readValue<GeneFeatures>("""["CDR3"]""") shouldBe geneFeatures
     }
@@ -27,10 +27,10 @@ class GeneFeaturesTest {
 
     @Test
     fun `json override if original was set`() {
-        val original = Container("was set", GeneFeatures.fromSimple(CDR3))
+        val original = Container("was set", GeneFeatures.fromOrdinal(CDR3))
         val asArray =
             JsonOverrider.override(K_OM, original, Container::class.java, mapOf("features" to """[VDJRegion]"""))
-        asArray.features shouldBe GeneFeatures.fromSimple(VDJRegion)
+        asArray.features shouldBe GeneFeatures.fromOrdinal(VDJRegion)
         val asArrayWithMany =
             JsonOverrider.override(
                 K_OM,
@@ -41,7 +41,7 @@ class GeneFeaturesTest {
         asArrayWithMany.features shouldBe GeneFeatures(listOf(VCDR3Part, JCDR3Part))
 
         val asString = JsonOverrider.override(K_OM, original, Container::class.java, mapOf("features" to "VDJRegion"))
-        asString.features shouldBe GeneFeatures.fromSimple(VDJRegion)
+        asString.features shouldBe GeneFeatures.fromOrdinal(VDJRegion)
     }
 
     @Test
@@ -49,7 +49,7 @@ class GeneFeaturesTest {
         val original = Container("was null", null)
         val asArray =
             JsonOverrider.override(K_OM, original, Container::class.java, mapOf("features" to """[VDJRegion]"""))
-        asArray.features shouldBe GeneFeatures.fromSimple(VDJRegion)
+        asArray.features shouldBe GeneFeatures.fromOrdinal(VDJRegion)
         val asArrayWithMany =
             JsonOverrider.override(
                 K_OM,
@@ -60,7 +60,7 @@ class GeneFeaturesTest {
         asArrayWithMany.features shouldBe GeneFeatures(listOf(VCDR3Part, JCDR3Part))
 
         val asString = JsonOverrider.override(K_OM, original, Container::class.java, mapOf("features" to "VDJRegion"))
-        asString.features shouldBe GeneFeatures.fromSimple(VDJRegion)
+        asString.features shouldBe GeneFeatures.fromOrdinal(VDJRegion)
     }
 
     data class Container(

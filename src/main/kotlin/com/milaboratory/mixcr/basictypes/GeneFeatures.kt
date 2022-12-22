@@ -23,6 +23,9 @@ import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeCollection
 import io.repseq.core.GeneFeature
 
+/**
+ * It's guarantied that features is ordered and every feature has no disjoints
+ */
 @Serializable(by = GeneFeatures.SerializerImpl::class)
 data class GeneFeatures @JsonCreator constructor(
     @JsonValue val features: List<GeneFeature>
@@ -30,7 +33,7 @@ data class GeneFeatures @JsonCreator constructor(
     init {
         check(features.isNotEmpty())
         for (feature in features) {
-            ValidationException.require(!feature.isComposite) {
+            ValidationException.require(!feature.hasDisjoints) {
                 "$features must be not composite"
             }
         }
@@ -42,6 +45,9 @@ data class GeneFeatures @JsonCreator constructor(
     }
 
     fun intersection(other: GeneFeature): GeneFeatures? {
+        ValidationException.require(!other.hasDisjoints) {
+            "$other should be not composite"
+        }
         val result = features.mapNotNull { GeneFeature.intersection(it, other) }
         if (result.isEmpty()) return null
         return GeneFeatures(result)
@@ -99,13 +105,30 @@ data class GeneFeatures @JsonCreator constructor(
     }
 
     companion object {
+        private val GeneFeature.hasDisjoints: Boolean
+            get() = (1 until size())
+                .any { i -> getReferenceRange(i - 1).end != getReferenceRange(i).begin }
+
         fun fromComposite(geneFeature: GeneFeature): GeneFeatures = when {
-            geneFeature.isComposite -> GeneFeatures(geneFeature.map { GeneFeature(it.begin, it.end) })
+            geneFeature.hasDisjoints -> {
+                val result = mutableListOf<GeneFeature>()
+                geneFeature
+                    .map { GeneFeature(it.begin, it.end) }
+                    .forEach { toAdd ->
+                        if (result.isEmpty() || result.last().lastPoint != toAdd.firstPoint) {
+                            result += toAdd
+                        } else {
+                            result[result.size - 1] = GeneFeature(result.last(), toAdd)
+                        }
+                    }
+                GeneFeatures(result)
+            }
+
             else -> GeneFeatures(listOf(geneFeature))
         }
 
-        fun fromSimple(geneFeature: GeneFeature): GeneFeatures {
-            ValidationException.require(!geneFeature.isComposite) {
+        fun fromOrdinal(geneFeature: GeneFeature): GeneFeatures {
+            ValidationException.require(!geneFeature.hasDisjoints) {
                 "$geneFeature must be not composite"
             }
             return GeneFeatures(listOf(geneFeature))

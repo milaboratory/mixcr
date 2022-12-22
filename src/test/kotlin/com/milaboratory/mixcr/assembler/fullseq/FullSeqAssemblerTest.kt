@@ -428,7 +428,7 @@ class FullSeqAssemblerTest {
         val DEFAULT_PARAMETERS = FullSeqAssemblerParameters(
             0.1, 80, 120,
             3, 7, 0.25, 3.0,
-            0.5, 50, GeneFeatures.fromSimple(GeneFeature.VDJRegion), null, PostFiltering.NoFiltering,
+            0.5, 50, GeneFeatures.fromOrdinal(GeneFeature.VDJRegion), null, PostFiltering.NoFiltering,
             QualityTrimmerParameters(20.0f, 8), 20, false
         )
         val masterSeq1WT = MasterSequence(
