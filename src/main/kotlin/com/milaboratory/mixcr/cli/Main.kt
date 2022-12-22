@@ -40,6 +40,7 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign
 import com.milaboratory.mixcr.cli.qc.CommandExportQcChainUsage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
+import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
@@ -278,10 +279,13 @@ object Main {
                     commandLine.commandSpec.exitCodeOnExecutionException()
                 }
 
-                else -> throw CommandLine.ExecutionException(
-                    commandLine,
-                    "Error while running command ${commandLine.commandName} $ex", ex
-                )
+                else -> {
+                    commandLine.err.println(MiXCRVersionInfo.get().shortestVersionString)
+                    throw CommandLine.ExecutionException(
+                        commandLine,
+                        "Error while running command ${commandLine.commandName} $ex", ex
+                    )
+                }
             }
         }
         return this
