@@ -42,9 +42,9 @@ import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
-import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.groupByOnDisk
 import com.milaboratory.util.withExpectedSize
 import com.milaboratory.util.withNonLinerProgress
 import io.repseq.core.BaseSequence
@@ -102,8 +102,8 @@ class AllelesBuilder(
                 .use { clones ->
                     clones
                         .groupByOnDisk(
-                            stateBuilder,
-                            tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}")
+                            tempDest.addSuffix("alleles.searcher.${geneType.letterLowerCase}"),
+                            stateBuilder
                         ) { it.getBestHit(geneType).gene }
                         .map { it.toList() }
                 }

@@ -31,9 +31,9 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters
-import com.milaboratory.primitivio.groupAlreadySorted
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.groupAlreadySorted
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
