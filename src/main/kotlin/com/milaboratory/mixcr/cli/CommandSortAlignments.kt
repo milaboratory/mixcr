@@ -61,7 +61,7 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
                 Comparator.comparing { it.minReadId },
                 serializer = VDJCAlignmentsSerializer(reader),
                 chunkSize = 512 * 1024
-            ) { sorted ->
+            ).use { sorted ->
                 VDJCAlignmentsWriter(out).use { writer ->
                     writer.writeHeader(
                         reader.header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) },

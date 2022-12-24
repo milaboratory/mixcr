@@ -26,8 +26,8 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
-import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.groupByOnDisk
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
@@ -127,8 +127,8 @@ class TreeBuilderByUserData(
             )
         }
             .groupByOnDisk(
-                stateBuilder,
-                tempDest.addSuffix("tree.builder.userInput")
+                tempDest.addSuffix("tree.builder.userInput"),
+                stateBuilder
             ) { it.treeId }
             .map { it.toList() }
 

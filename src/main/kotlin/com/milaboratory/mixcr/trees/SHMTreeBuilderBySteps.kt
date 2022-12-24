@@ -45,13 +45,13 @@ import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
-import com.milaboratory.primitivio.groupByOnDisk
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.cached
+import com.milaboratory.util.groupByOnDisk
 import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
@@ -213,9 +213,9 @@ internal class SHMTreeBuilderBySteps(
                     //filter by user defined parameters
                     .filter { c -> clonesFilter.match(c) }
                     .groupByOnDisk(
-                        stateBuilder,
                         tempDest.addSuffix("tree.builder.grouping.by.the.same.VJ.CDR3Length"),
-                        VJBase.comparator
+                        stateBuilder = stateBuilder,
+                        comparator = VJBase.comparator
                     ) { it.VJBase }
                     .map { it.toList() }
                     .map { Cluster(it) }
@@ -252,8 +252,8 @@ internal class SHMTreeBuilderBySteps(
                 //group efficiently the same clones
                 allClones
                     .groupByOnDisk(
-                        stateBuilder,
-                        tempDest.addSuffix("tree.builder.grouping.clones.with.the.same.targets")
+                        tempDest.addSuffix("tree.builder.grouping.clones.with.the.same.targets"),
+                        stateBuilder
                     ) { it.clone.targets.reduce(NSequenceWithQuality::concatenate) }
                     .map { it.toList() }
             }

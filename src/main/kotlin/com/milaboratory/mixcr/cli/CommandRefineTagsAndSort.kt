@@ -392,8 +392,8 @@ object CommandRefineTagsAndSort {
                     val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> =
                         { tIdx -> // <- index inside the alignment object
                             sortByHashOnDisk(
-                                alPioState,
                                 tempDest.addSuffix("hashsorter.${sorterCounter++}.$tIdx"),
+                                alPioState,
                                 bitsPerStep = 4,
                                 readerConcurrency = 4,
                                 writerConcurrency = 4,
