@@ -15,7 +15,6 @@ import cc.redberry.pipe.CUtils;
 import com.milaboratory.core.io.sequence.PairedRead;
 import com.milaboratory.core.io.sequence.fastq.PairedFastqReader;
 import com.milaboratory.mixcr.basictypes.*;
-import com.milaboratory.mixcr.cli.MiXCRCommandReport;
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner;
 import com.milaboratory.util.TempFileManager;
 import io.repseq.core.Chains;
@@ -26,7 +25,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static com.milaboratory.mixcr.tests.MiXCRTestUtils.dummyHeader;
@@ -62,7 +60,7 @@ public class RunMiXCRTest {
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
-        File tempFile = TempFileManager.getTempFile();
+        File tempFile = TempFileManager.newTempFile();
         try (ClnsWriter writer = new ClnsWriter(tempFile)) {
             writer.writeCloneSet(assemble.cloneSet);
             writer.setFooter(emptyFooter());
@@ -115,7 +113,7 @@ public class RunMiXCRTest {
                 reads.add(s);
         }
 
-        File tempFile = TempFileManager.getTempFile();
+        File tempFile = TempFileManager.newTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
             writer.writeHeader(dummyHeader(), align.aligner.getUsedGenes());
             for (VDJCAlignments alignment : align.alignments)
@@ -153,7 +151,7 @@ public class RunMiXCRTest {
                 reads.add(s);
         }
 
-        File tempFile = TempFileManager.getTempFile();
+        File tempFile = TempFileManager.newTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tempFile)) {
             writer.writeHeader(dummyHeader(), align.aligner.getUsedGenes());
             for (VDJCAlignments alignment : align.alignments)

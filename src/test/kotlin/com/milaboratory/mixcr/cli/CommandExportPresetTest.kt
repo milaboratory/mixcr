@@ -17,7 +17,7 @@ import org.junit.Test
 class CommandExportPresetTest {
     @Test
     fun `add several export fields`() {
-        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
             "exportPreset --species hs --dna " +
@@ -34,7 +34,7 @@ class CommandExportPresetTest {
 
     @Test
     fun `add field with default`() {
-        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
             "exportPreset --species hs --dna " +
@@ -47,7 +47,7 @@ class CommandExportPresetTest {
 
     @Test
     fun `add assemble contig step`() {
-        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute("exportPreset --species hs --dna --add-step assembleContigs --preset-name test-tcr-shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
@@ -57,7 +57,7 @@ class CommandExportPresetTest {
 
     @Test
     fun `remove two steps`() {
-        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute("exportPreset --species hs --dna --remove-step exportClones --remove-step exportAlignments --preset-name test-tcr-shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
@@ -67,7 +67,7 @@ class CommandExportPresetTest {
 
     @Test
     fun `test that all mixins are applied`() {
-        val output = TempFileManager.getTempDir().toPath().resolve("output.yaml").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
             "exportPreset --preset-name generic-bcr-amplicon-umi " +

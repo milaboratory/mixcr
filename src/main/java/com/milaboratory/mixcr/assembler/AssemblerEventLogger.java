@@ -34,7 +34,7 @@ public final class AssemblerEventLogger {
 
     public AssemblerEventLogger() {
         try {
-            this.file = TempFileManager.getTempFile();
+            this.file = TempFileManager.newTempFile();
             this.os = new BufferedOutputStream(new FileOutputStream(file));
         } catch (IOException e) {
             throw new RuntimeException(e);

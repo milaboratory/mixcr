@@ -39,7 +39,7 @@ public class IOTest {
     public void testSerialization1() throws Exception {
         VDJCAlignerParameters parameters = VDJCParametersPresets.getByName("default");
 
-        File tmpFile = TempFileManager.getTempFile();
+        File tmpFile = TempFileManager.newTempFile();
 
         List<VDJCAlignments> alignemntsList = new ArrayList<>();
 

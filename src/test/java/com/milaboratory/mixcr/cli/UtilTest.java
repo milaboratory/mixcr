@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class UtilTest {
     @Test
     public void testAtomicAppend1() throws Exception {
-        File file = TempFileManager.getTempFile();
+        File file = TempFileManager.newTempFile();
         ReportUtil.appendAtomically(file, "ATTAG".getBytes());
         ReportUtil.appendAtomically(file, "GACAG".getBytes());
         byte[] bytes = Files.readAllBytes(file.toPath());

@@ -77,7 +77,7 @@ public class CloneAssemblerRunnerTest {
                     CloneAssemblerRunnerTest.class.getClassLoader().getResourceAsStream(fastqFiles[1]), true);
 
         //write alignments to byte array
-        File vdjcaFile = TempFileManager.getTempFile();
+        File vdjcaFile = TempFileManager.newTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
             writer.writeHeader(dummyHeader(), aligner.getUsedGenes());
             for (Object read : CUtils.it(reader)) {
@@ -117,7 +117,7 @@ public class CloneAssemblerRunnerTest {
 
         CloneSet cloneSet = assemblerRunner.getCloneSet(dummyHeader(), emptyFooter());
 
-        File tmpClnsFile = TempFileManager.getTempFile();
+        File tmpClnsFile = TempFileManager.newTempFile();
 
         try (ClnsWriter writer = new ClnsWriter(tmpClnsFile)) {
             writer.writeCloneSet(cloneSet);

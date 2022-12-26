@@ -45,10 +45,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.primitivio.PipeDataInputReader;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.util.CanReportProgress;
-import com.milaboratory.util.OutputPortWithExpectedSizeKt;
-import com.milaboratory.util.OutputPortWithProgress;
-import com.milaboratory.util.SmartProgressReporter;
+import com.milaboratory.util.*;
 import io.repseq.core.Chains;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -61,7 +58,7 @@ import java.util.List;
 
 import static cc.redberry.pipe.CUtils.chunked;
 import static cc.redberry.pipe.CUtils.unchunked;
-import static com.milaboratory.util.TempFileManager.getTempFile;
+import static com.milaboratory.util.TempFileManager.newTempFile;
 import static com.milaboratory.util.TempFileManager.systemTempFolderDestination;
 
 /**
@@ -139,7 +136,7 @@ public final class RunMiXCR {
         AlignResult align = assemble.alignResult;
 
         int totalClonesCount = 0;
-        File tmpFile = getTempFile();
+        File tmpFile = TempFileManager.newTempFile();
         try (ClnAReader reader = assemble.resultReader();
              PrimitivO tmpOut = new PrimitivO(new BufferedOutputStream(new FileOutputStream(tmpFile)));) {
 
@@ -282,7 +279,7 @@ public final class RunMiXCR {
 
         public ClnAReader resultReader() throws IOException {
             if (clnaFile == null) {
-                clnaFile = getTempFile();
+                clnaFile = TempFileManager.newTempFile();
                 try (ClnAWriter writer = new ClnAWriter(clnaFile, systemTempFolderDestination("runmixcr.assembleContigs"))) {
                     writer.writeClones(cloneSet);
                     PreCloneReader preCloneReader = alignResult.asPreCloneReader();
@@ -325,7 +322,7 @@ public final class RunMiXCR {
 
         public VDJCAlignmentsReader resultReader() throws IOException {
             if (alignmentsFile == null) {
-                alignmentsFile = getTempFile();
+                alignmentsFile = TempFileManager.newTempFile();
                 try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(alignmentsFile)) {
                     MiXCRHeader info = new MiXCRHeader(
                             null,

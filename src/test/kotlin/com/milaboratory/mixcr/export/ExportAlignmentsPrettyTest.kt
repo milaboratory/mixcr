@@ -20,7 +20,7 @@ class ExportAlignmentsPrettyTest {
         val samplesDir = Paths.get(ExportAlignmentsPrettyTest::class.java.getResource("/export_pretty/samples").file)
         samplesDir.listDirectoryEntries().forEach { dir ->
             withClue(dir.fileName) {
-                val tempDir = TempFileManager.getTempDir().toPath()
+                val tempDir = TempFileManager.newTempDir().toPath()
                 val mixins = K_OM.readValue<List<String>>(dir.resolve("mixins.json").toFile()).joinToString(" ")
                 val preset = dir.resolve("preset_name.txt").readLines().first()
                 val R1 = dir.resolve("R1.fastq")
