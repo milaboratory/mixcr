@@ -108,6 +108,11 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
         return maxRightMatchesLimitReached;
     }
 
+    private static boolean notSuitableForPartialAssemble(VDJCAlignments alignment) {
+        return alignment.isAvailable(GeneFeature.CDR3)
+                || alignment.isAvailable(GeneFeature.VJJunction);
+    }
+
     public void buildLeftPartsIndex(OutputPort<VDJCAlignments> input) {
         // Resetting internal state if this object was reused
         kToIndexLeft.clear();
@@ -117,7 +122,7 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
         independentRuns.incrementAndGet();
 
         for (VDJCAlignments alignment : CUtils.it(input)) {
-            if (alignment.getFeature(GeneFeature.CDR3) != null)
+            if (notSuitableForPartialAssemble(alignment))
                 continue;
             if (!addLeftToIndex(alignment))
                 notInLeftIndexIds.add(alignment.getAlignmentsIndex());
@@ -130,7 +135,7 @@ public class PartialAlignmentsAssembler extends AbstractCommandReportBuilder<Par
         for (final VDJCAlignments alignment : CUtils.it(input)) {
             totalProcessed.incrementAndGet();
 
-            if (alignment.getFeature(GeneFeature.CDR3) != null) {
+            if (notSuitableForPartialAssemble(alignment)) {
                 withCDR3.incrementAndGet();
                 if (!overlappedOnly) {
                     outputAlignments.incrementAndGet();
