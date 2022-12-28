@@ -171,11 +171,11 @@ object Presets {
                 }
                 throw ValidationException(
                     """
-No preset with name "$name".
-Here are supported presets with similar names:
-${candidates.joinToString("\n") { "- $it" }}
-
-To list all built-in presets run `mixcr ${CommandListPresets.COMMAND_NAME}`.
+                    No preset with name "$name".
+                    Here are supported presets with similar names:
+                    ${candidates.joinToString("\n") { "- $it" }}
+                    
+                    To list all built-in presets run `mixcr ${CommandListPresets.COMMAND_NAME}`.
                     """.trimIndent()
                 )
             }

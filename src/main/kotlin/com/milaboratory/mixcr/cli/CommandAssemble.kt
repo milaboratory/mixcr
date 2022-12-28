@@ -64,8 +64,8 @@ object CommandAssemble {
         @JsonProperty("sortBySequence") val sortBySequence: Boolean,
         @JsonProperty("clnaOutput") val clnaOutput: Boolean,
         @JsonProperty("cellLevel") val cellLevel: Boolean,
-        @JsonProperty("consensusAssemblerParameters") @JsonMerge val consensusAssemblerParameters: PreCloneAssemblerParameters?,
-        @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters,
+        @JsonMerge @JsonProperty("consensusAssemblerParameters") val consensusAssemblerParameters: PreCloneAssemblerParameters?,
+        @JsonMerge @JsonProperty("cloneAssemblerParameters") val cloneAssemblerParameters: CloneAssemblerParameters,
         /** Try automatically infer threshold value for the minimal number of records per consensus from the
          * filtering metadata of tag-refinement step. Applied only if corresponding threshold equals to 0. */
         @JsonProperty("inferMinRecordsPerConsensus") val inferMinRecordsPerConsensus: Boolean,
