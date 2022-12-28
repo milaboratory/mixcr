@@ -43,12 +43,14 @@ public class TargetMerger {
     private final IdentityType identityType;
     private final VDJCAlignerParameters alignerParameters;
     private final float minimalAlignmentMergeIdentity;
+    private final int minimalMatchQualitySum;
 
     public TargetMerger(MergerParameters mergerParameters, VDJCAlignerParameters alignerParameters, float minimalAlignmentMergeIdentity) {
         this.merger = new MismatchOnlyPairedReadMerger(mergerParameters);
         this.identityType = mergerParameters.getIdentityType();
         this.alignerParameters = alignerParameters;
         this.minimalAlignmentMergeIdentity = minimalAlignmentMergeIdentity;
+        this.minimalMatchQualitySum = mergerParameters.getMinimalMatchQualitySum();
     }
 
     @SuppressWarnings("unchecked")
@@ -305,7 +307,12 @@ public class TargetMerger {
                         targetRight.getTarget(), seq2Offset,
                         overlap);
 
-                if (identity < minimalAlignmentMergeIdentity)
+                int sumMatchQuality = MismatchOnlyPairedReadMerger.sumMatchQuality(
+                        targetLeft.getTarget(), seq1Offset,
+                        targetRight.getTarget(), seq2Offset,
+                        overlap);
+
+                if (identity < minimalAlignmentMergeIdentity || sumMatchQuality < minimalMatchQualitySum)
                     return new TargetMergingResult(geneType);
 
                 final AlignedTarget merge = merge(targetLeft, targetRight, delta, OverlapType.AlignmentOverlap, mismatches);

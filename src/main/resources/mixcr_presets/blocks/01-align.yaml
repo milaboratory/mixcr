@@ -108,7 +108,7 @@
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
         minimalOverlap: 13
-        minimalMatches: 13
+        minimalMatchQualitySum: 364
         minimalIdentity: 0.7
         identityType: MinimalQualityWeighted
       minSumScore: 120
@@ -234,7 +234,7 @@
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
         minimalOverlap: 13
-        minimalMatches: 13
+        minimalMatchQualitySum: 364
         minimalIdentity: 0.7
         identityType: MinimalQualityWeighted
       minSumScore: 200
@@ -372,7 +372,7 @@
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
         minimalOverlap: 13
-        minimalMatches: 13
+        minimalMatchQualitySum: 364
         minimalIdentity: 0.7
         identityType: MinimalQualityWeighted
       minSumScore: 120
@@ -510,7 +510,7 @@
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
         minimalOverlap: 13
-        minimalMatches: 13
+        minimalMatchQualitySum: 364
         minimalIdentity: 0.7
         identityType: MinimalQualityWeighted
       minSumScore: 300
@@ -637,7 +637,7 @@
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
         minimalOverlap: 13
-        minimalMatches: 13
+        minimalMatchQualitySum: 364
         minimalIdentity: 0.7
         identityType: MinimalQualityWeighted
       minSumScore: 200
@@ -782,7 +782,7 @@
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
         minimalOverlap: 13
-        minimalMatches: 13
+        minimalMatchQualitySum: 364
         maxQuality: 50
         minimalIdentity: 0.7
         identityType: MinimalQualityWeighted
@@ -926,7 +926,7 @@
         qualityMergingAlgorithm: MaxSubtraction
         partsLayout: null
         minimalOverlap: 13
-        minimalMatches: 13
+        minimalMatchQualitySum: 364
         maxQuality: 50
         minimalIdentity: 0.7
         identityType: MinimalQualityWeighted
