@@ -107,9 +107,10 @@
       includeCScore: false
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
-        minimalOverlap: 17
-        minimalIdentity: 0.9
-        identityType: Unweighted
+        minimalOverlap: 13
+        minimalMatches: 13
+        minimalIdentity: 0.7
+        identityType: MinimalQualityWeighted
       minSumScore: 120
       maxHits: 5
       relativeMinVFR3CDR3Score: 0.7
@@ -232,9 +233,10 @@
       includeCScore: true
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
-        minimalOverlap: 17
-        minimalIdentity: 0.9
-        identityType: Unweighted
+        minimalOverlap: 13
+        minimalMatches: 13
+        minimalIdentity: 0.7
+        identityType: MinimalQualityWeighted
       minSumScore: 200
       maxHits: 5
       relativeMinVFR3CDR3Score: 0.7
@@ -369,9 +371,10 @@
       includeCScore: false
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
-        minimalOverlap: 17
-        minimalIdentity: 0.9
-        identityType: Unweighted
+        minimalOverlap: 13
+        minimalMatches: 13
+        minimalIdentity: 0.7
+        identityType: MinimalQualityWeighted
       minSumScore: 120
       maxHits: 5
       relativeMinVFR3CDR3Score: 0.7
@@ -506,9 +509,10 @@
       includeCScore: false
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
-        minimalOverlap: 17
-        minimalIdentity: 0.9
-        identityType: Unweighted
+        minimalOverlap: 13
+        minimalMatches: 13
+        minimalIdentity: 0.7
+        identityType: MinimalQualityWeighted
       minSumScore: 300
       maxHits: 5
       relativeMinVFR3CDR3Score: 0.7
@@ -632,9 +636,10 @@
       includeCScore: true
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
-        minimalOverlap: 17
-        minimalIdentity: 0.9
-        identityType: Unweighted
+        minimalOverlap: 13
+        minimalMatches: 13
+        minimalIdentity: 0.7
+        identityType: MinimalQualityWeighted
       minSumScore: 200
       maxHits: 5
       relativeMinVFR3CDR3Score: 0.7
@@ -776,11 +781,11 @@
       readsLayout: Opposite
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
-        partsLayout: null
-        minimalOverlap: 17
+        minimalOverlap: 13
+        minimalMatches: 13
         maxQuality: 50
-        minimalIdentity: 0.9
-        identityType: Unweighted
+        minimalIdentity: 0.7
+        identityType: MinimalQualityWeighted
       fixSeed: true
       alignmentBoundaryTolerance: 5
       minChimeraDetectionScore: 120
@@ -920,10 +925,11 @@
       mergerParameters:
         qualityMergingAlgorithm: MaxSubtraction
         partsLayout: null
-        minimalOverlap: 17
+        minimalOverlap: 13
+        minimalMatches: 13
         maxQuality: 50
-        minimalIdentity: 0.9
-        identityType: Unweighted
+        minimalIdentity: 0.7
+        identityType: MinimalQualityWeighted
       fixSeed: true
       alignmentBoundaryTolerance: 5
       minChimeraDetectionScore: 120
