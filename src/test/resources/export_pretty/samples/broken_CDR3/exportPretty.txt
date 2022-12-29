@@ -8,7 +8,7 @@
 IGHV1-45*00 45                        acccaacaaccacatccctcctctagagaatcccctgaaagcacagctcctcaccat 101  2193
 
                                                          L1><L2     L2><FR1                         
-                  D  W  T  W  I  I  L  F  L  V  A  A  A  T  D  A  Y  S  P  M  Q  L  V  Q  S  G
+                  D  W  T  W  I  I  L  F  L  V  A  A  A  T  D  A  Y  S  P  M  Q  L  V  Q  S  G      
     Quality     52257422567745224777777777754725777667676774672777777774243646226722626267772222    
     Target0  80 GGACTGGACCTGGATAATCCTCTTCTTGGTTGCAGCAGCCACAGATGCCTACTCCCCGATGCAGCTGGTTCAGTCTGGGG 159  Score
 IGHV1-45*00 102 ggactggacctggaGaatcctcttcttggtGgcagcagccacagatgcctactcccAgatgcagctggtGcagtctgggg 181  2193
