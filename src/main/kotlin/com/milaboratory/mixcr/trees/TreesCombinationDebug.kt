@@ -18,9 +18,9 @@ import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.cli.DebugDirOption
-import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.intersection
 import com.milaboratory.mixcr.util.plus
+import com.milaboratory.util.XSV
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint.CDR3Begin

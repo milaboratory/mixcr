@@ -43,8 +43,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.mixcr.util.XSV.chooseDelimiter
-import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
@@ -52,6 +50,8 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.XSV.chooseDelimiter
+import com.milaboratory.util.XSV.writeXSV
 import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3

@@ -42,7 +42,6 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
-import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
@@ -50,6 +49,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.XSV
 import com.milaboratory.util.exhaustive
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
@@ -348,6 +348,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                     is SHMTreeBuilderParameters.SingleCell.NoOP -> {
 //                    warn("Single cell tags will not be used, but it's possible on this data")
                     }
+
                     is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
                         shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) {
                             writeResults(writer, it, scoringSet, generateGlobalTreeIds = true)
@@ -378,16 +379,17 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
     private fun readUserInput(userInputFile: File): Map<CloneWithDatasetId.ID, Int> {
         val fileNameToDatasetId = inputFiles.withIndex().associate { it.value.toString() to it.index }
-        val rows = XSV.readXSV(userInputFile, listOf("treeId", "fileName", "cloneId"), "\t")
-        return rows.associate { row ->
-            val datasetId = (fileNameToDatasetId[row["fileName"]!!]
-                ?: throw IllegalArgumentException("No such file ${row["fileName"]} in arguments"))
-            val datasetIdWithCloneId = CloneWithDatasetId.ID(
-                datasetId = datasetId,
-                cloneId = row["cloneId"]!!.toInt()
-            )
-            val treeId = row["treeId"]!!.toInt()
-            datasetIdWithCloneId to treeId
+        return XSV.readXSV(userInputFile, listOf("treeId", "fileName", "cloneId"), "\t") { rows ->
+            rows.associate { row ->
+                val datasetId = (fileNameToDatasetId[row["fileName"]!!]
+                    ?: throw IllegalArgumentException("No such file ${row["fileName"]} in arguments"))
+                val datasetIdWithCloneId = CloneWithDatasetId.ID(
+                    datasetId = datasetId,
+                    cloneId = row["cloneId"]!!.toInt()
+                )
+                val treeId = row["treeId"]!!.toInt()
+                datasetIdWithCloneId to treeId
+            }
         }
     }
 

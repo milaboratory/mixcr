@@ -25,8 +25,8 @@ import com.milaboratory.mixcr.cli.AbstractMiXCRCommandReport
 import com.milaboratory.mixcr.cli.CommandFindShmTrees
 import com.milaboratory.mixcr.cli.MiXCRCommandReport.StatsWithQuantiles
 import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.util.ReportHelper
+import com.milaboratory.util.XSV
 import io.repseq.core.VDJCGene
 import java.io.File
 import java.util.*
@@ -136,9 +136,8 @@ class BuildSHMTreeReport(
         }
 
         private fun File.parseDebug(genes: Map<String, VDJCGene>): List<Pair<TreeId, List<Pair<Int, Map<String, String?>>>>> =
-            XSV.readXSV(this, DebugInfo.COLUMNS_FOR_XSV.keys, ";")
-                .asSequence()
-                .map { row ->
+            XSV.readXSV(this, DebugInfo.COLUMNS_FOR_XSV.keys, ";") { lines ->
+                lines.map { row ->
                     val treeId = TreeId(
                         row["treeId"]!!.toInt(),
                         VJBase(
@@ -152,11 +151,12 @@ class BuildSHMTreeReport(
                     val nodeId = row["id"]!!.toInt()
                     treeId to (nodeId to row - arrayOf("treeId", "treeIdFull", "VGeneName", "JGeneName", "id"))
                 }
-                .groupBy({ (treeId) -> treeId }, { (_, node) -> node })
-                .toList()
-                .map { (treeId, nodes) -> treeId to nodes.sortedBy { it.first } }
-                .sortedWith(Comparator.comparing({ it.first }, TreeId.comparator))
-                .toList()
+                    .groupBy({ (treeId) -> treeId }, { (_, node) -> node })
+                    .toList()
+                    .map { (treeId, nodes) -> treeId to nodes.sortedBy { it.first } }
+                    .sortedWith(Comparator.comparing({ it.first }, TreeId.comparator))
+                    .toList()
+            }
 
         private fun calculateStatsFromDebug(
             step: BuildSHMTreeStep,

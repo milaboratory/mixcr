@@ -23,7 +23,6 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.ClonesSupplier
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
-import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
@@ -31,6 +30,7 @@ import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.XSV
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
