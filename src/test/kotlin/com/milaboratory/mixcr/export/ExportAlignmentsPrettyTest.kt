@@ -13,11 +13,16 @@ import java.nio.file.Paths
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readLines
 import kotlin.io.path.readText
+import kotlin.io.path.writeLines
 
 class ExportAlignmentsPrettyTest {
     @Test
     fun `check all examples`() {
-        val samplesDir = Paths.get(ExportAlignmentsPrettyTest::class.java.getResource("/export_pretty/samples").file)
+        val override = false
+        val samplesDir = when {
+            override -> Paths.get("").toAbsolutePath().resolve("src/test/resources/export_pretty/samples")
+            else -> Paths.get(ExportAlignmentsPrettyTest::class.java.getResource("/export_pretty/samples").file)
+        }
         samplesDir.listDirectoryEntries().forEach { dir ->
             withClue(dir.fileName) {
                 val tempDir = TempFileManager.newTempDir().toPath()
@@ -30,6 +35,11 @@ class ExportAlignmentsPrettyTest {
                 val exportResultFile = tempDir.resolve("result.txt")
                 TestMain.execute("exportAlignmentsPretty $alignmentsFile $exportResultFile")
                 val expectedResult = dir.resolve("exportPretty.txt")
+
+                if (override) {
+                    expectedResult.writeLines(exportResultFile.readLines())
+                }
+
                 exportResultFile.readText().also { println(it) }.lines().map { it.trim() } shouldContainInOrder
                         expectedResult.readLines().map { it.trim() }
             }

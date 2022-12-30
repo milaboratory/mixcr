@@ -134,10 +134,11 @@ align:
     mergerParameters:
       qualityMergingAlgorithm: "MaxSubtraction"
       partsLayout: null
-      minimalOverlap: 17
+      minimalOverlap: 13
+      minimalMatchQualitySum: 364
       maxQuality: 50
-      minimalIdentity: 0.9
-      identityType: "Unweighted"
+      minimalIdentity: 0.7
+      identityType: "MinimalQualityWeighted"
     fixSeed: true
     alignmentBoundaryTolerance: 5
     minChimeraDetectionScore: 120
@@ -188,6 +189,7 @@ assemblePartial:
       qualityMergingAlgorithm: "SumSubtraction"
       partsLayout: "CollinearDirect"
       minimalOverlap: 20
+      minimalMatchQualitySum: 0
       maxQuality: 45
       minimalIdentity: 0.95
       identityType: "Unweighted"

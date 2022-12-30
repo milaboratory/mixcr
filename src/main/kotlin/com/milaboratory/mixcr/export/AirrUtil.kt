@@ -115,11 +115,13 @@ object AirrUtil {
             if (gt == Variable) {
                 cdr3Begin = gene.partitioning.getRelativePosition(refGeneFeature, ReferencePoint.CDR3Begin)
                 val fr1Begin = gene.partitioning.getRelativePosition(refGeneFeature, FR1Begin)
-                if (fr1Begin >= 0) { // in case gene has no anchor point for the position
-                    leftVDJPadding = al.sequence1Range.from - fr1Begin
-                    if (leftVDJPadding > 0) {
-                        leftVDJExtraRange = Range(fr1Begin, al.sequence1Range.from)
-                        leftVDJExtra = refGeneSequence.getRange(leftVDJExtraRange)
+                if (fr1Begin >= 0) { // ensure gene has anchor point for the position
+                    if (al.sequence1Range.to > fr1Begin) { // excluding alignments completely residing to the left of VDJRegion
+                        leftVDJPadding = al.sequence1Range.from - fr1Begin
+                        if (leftVDJPadding > 0) {
+                            leftVDJExtraRange = Range(fr1Begin, al.sequence1Range.from)
+                            leftVDJExtra = refGeneSequence.getRange(leftVDJExtraRange)
+                        }
                     }
                 }
             }

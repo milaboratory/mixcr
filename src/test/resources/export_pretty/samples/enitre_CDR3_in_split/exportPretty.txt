@@ -1,28 +1,28 @@
 >>> Read ids: 0
 
 
-               <L1
-               <5'UTR                                        L1><L2  L2><FR1
-                M  S  I  R  L  L  C  C  V _   L  S  L  L  L  A  G  P  V  T  A   G  S  P  R  H
-   Quality     65876466887683887832787888532  6578768768864688588877877877678 68777668775887488
+               <L1                                                                                 
+               <5'UTR                                        L1><L2  L2><FR1                       
+                M  S  I  R  L  L  C  C  V _   L  S  L  L  L  A  G  P  V  T  A   G  S  P  R  H      
+   Quality     65876466887683887832787888532  6578768768864688588877877877678 68777668775887488    
    Target0   0 ATGAGCATCAGGCTCCTGTGCTGTGTGGC--TTTCTCTCCTGTTGGCAGGTCCAGTGACTGC-GGGATCACCCAGGCACC 76   Score
 TRBV6-4*00 100 atgagAatcaggctcctgtgctgtgtggcCTtttctctcctgtGggcaggtccagtgaTtgcTgggatcacccaggcacc 179  1125
 
-                                                                  FR1><CDR1     CDR1><FR2
-               Q  H  L  R  S  W  H   R  T  D   M  T  L  R  C  T  Q  D  M  R  H  N  A  M _
-   Quality     7758784884877478287 874767687 267667778775774875887788788867576577778686767
+                                                                  FR1><CDR1     CDR1><FR2     
+               Q  H  L  R  S  W  H   R  T  D   M  T  L  R  C  T  Q  D  M  R  H  N  A  M _     
+   Quality     7758784884877478287 874767687 267667778775774875887788788867576577778686767    
    Target0  77 AACATCTCAGATCCTGGCA-CAGGACGGA-CATGACACTGAGATGTACCCAGGATATGAGACATAATGCCATGTA 149  Score
 TRBV6-4*00 180 aacatctcagatcctggcaGcaggacggCGcatgacactgagatgtacccaggatatgagacataatgccatgta 254  1125
 
-
-               _  M  V  C  S  V  S   E  Q  T  Q  M  I  S  P  S   V  S   S  A  V  P  S  Q  T  S
-   Quality     78478734886628885788 78784836888867387787555488 7867473 766874788873877867747588
+                                                                                                   
+               _  M  V  C  S  V  S   E  Q  T  Q  M  I  S  P  S   V  S   S  A  V  P  S  Q  T  S     
+   Quality     78478734886628885788 78784836888867387787555488 7867473 766874788873877867747588    
    Target1   0 TGATGGTATGTAGTGTTTCC-GAGCAAACACAGATGATTTCCCCCTC-CGTTAGC-TCTGCTGTACCCTCTCAGACATCT 76   Score
 TRBV6-4*00 339 tgatggt-tAtagtgtCtccAgagcaaacacagatgatttccccctcAcgttGgcGtctgctgtaccctctcagacatct 417  646
 
-                    FR3><CDR3         V>   <J            CDR3><FR4
-                V  Y  F  C  A  S  I  D  Y _  G  N  T  I  Y  F  G  E  G  R  G  S  C  C _
-   Quality     7766588777887767787646867777868688585876873847672768887748185887876778866
+                    FR3><CDR3         V>   <J            CDR3><FR4                          
+                V  Y  F  C  A  S  I  D  Y _  G  N  T  I  Y  F  G  E  G  R  G  S  C  C _     
+   Quality     7766588777887767787646867777868688585876873847672768887748185887876778866    
    Target1  77 GTGTACTTCTGTGCCAGCATTGACTACATGGAAACACCATATATTTTGGAGAGGGAAGAGGCTCATGTTGTAG 149  Score
 TRBV6-4*00 418 gtgtacttctgtgccagcaGtgact                                                 442  646
 TRBJ1-3*00  23                             tggaaacaccatatattttggagagggaag                52   300
