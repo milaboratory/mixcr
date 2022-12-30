@@ -168,6 +168,22 @@
           - type: filter_groups
             groupingKeys:
               - allTags:Cell
+              - allTags:Molecule
+            predicates:
+              - metrics:
+                  - type: group_metric_kmer_diversity
+                    sequences: [ "targets" ]
+                    k: 12
+                    minimalQuality: 20
+                    topShare: 0.7
+                    reportHist:
+                      binNumber: 40
+                operator:
+                  type: group_operator_range
+                  lower: 200
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
             predicates:
               - metrics:
                   - type: group_metric_nunique
@@ -219,6 +235,18 @@
                   operator:
                     type: group_operator_cumtop
                     share: 0.99
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+              - clone
+            predicates:
+              - metrics:
+                  - type: group_metric_nunique
+                    keys:
+                      - allTags:Molecule
+                operator:
+                  type: "group_operator_range"
+                  lower: 2.0
   assembleContigs:
     inheritFrom: assembleContigs-universal
   exportAlignments:
