@@ -31,10 +31,10 @@ mixcr analyze 10x-vdj-bcr \
   single_cell_vdj_t_subset_R2.fastq.gz \
   base_single_cell.vdjcontigs
 
-assert "cat base_single_cell.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "7"
+assert "cat base_single_cell.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "6"
 
-assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.contigs.clns | wc -l" "7"
-assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.contigs.clns | wc -l" "7"
-assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
-assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
+assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.contigs.clns | wc -l" "6"
+assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.contigs.clns | wc -l" "6"
+assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "58"
+assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "58"
 
