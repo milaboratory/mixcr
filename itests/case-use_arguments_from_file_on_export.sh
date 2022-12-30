@@ -3,10 +3,10 @@
 assert() {
   expected=$(echo -ne "${2:-}")
   result="$(eval 2>/dev/null $1)" || true
+  result="$(sed -e :a -e '$!N;s/\n/\\n/;ta' -e 's/ *$//' -e 's/^ *//' <<<"$result")"
   if [[ "$result" == "$expected" ]]; then
     return
   fi
-  result="$(sed -e :a -e '$!N;s/\n/\\n/;ta' <<<"$result")"
   [[ -z "$result" ]] && result="nothing" || result="\"$result\""
   [[ -z "$2" ]] && expected="nothing" || expected="\"$2\""
   echo "expected $expected got $result for" "$1"

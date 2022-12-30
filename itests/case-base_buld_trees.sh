@@ -3,10 +3,10 @@
 assert() {
   expected=$(echo -ne "${2:-}")
   result="$(eval 2>/dev/null $1)" || true
+  result="$(sed -e :a -e '$!N;s/\n/\\n/;ta' -e 's/ *$//' -e 's/^ *//' <<<"$result")"
   if [[ "$result" == "$expected" ]]; then
     return
   fi
-  result="$(sed -e :a -e '$!N;s/\n/\\n/;ta' <<<"$result")"
   [[ -z "$result" ]] && result="nothing" || result="\"$result\""
   [[ -z "$2" ]] && expected="nothing" || expected="\"$2\""
   echo "expected $expected got $result for" "$1"
@@ -87,8 +87,8 @@ assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount
 assert "head -n 1 alleles/report.json | jq -r .foundAlleles" "3"
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
-assert "grep 'IGHV2-70' alleles/description.tsv | awk '{print \$7}'" "ST311G\nSG170AST259CST311GSA335T"
-assert "grep 'IGHJ6' alleles/description.tsv | awk '{print \$7}'" "SG37TSG38AST39CSC55A"
+assert "grep 'IGHV2-70' alleles/description.tsv | cut -f7'" "ST311G\nSG170AST259CST311GSA335T"
+assert "grep 'IGHJ6' alleles/description.tsv | cut -f7" "SG37TSG38AST39CSC55A"
 
 # biggest tree
 # `tail +2` - skip first line with column names
