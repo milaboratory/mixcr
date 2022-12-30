@@ -14,66 +14,66 @@ findShmTrees:
         type: "BronKerbosch"
         commonMutationsCountForClustering: 5
         maxNDNDistanceForClustering: 1.0
-    clonesWasAdded: 306
-    cloneNodesWasAdded: 305
-    treesCountDelta: 115
+    clonesWasAdded: 322
+    cloneNodesWasAdded: 321
+    treesCountDelta: 122
     commonVJMutationsCounts:
-      size: 115
-      sum: 1851.0
+      size: 122
+      sum: 1971.0
       min: 4.0
       max: 53.0
-      avg: 16.09565
-      quadraticMean: 18.40439
-      stdDeviation: 8.96383
+      avg: 16.15573
+      quadraticMean: 18.37786
+      stdDeviation: 8.79614
       percentile25: 9.0
-      percentile50: 15.0
-      percentile75: 20.0
+      percentile50: 14.5
+      percentile75: 21.0
     clonesCountInTrees:
-      size: 115
-      sum: 306.0
+      size: 122
+      sum: 322.0
       min: 2.0
       max: 11.0
-      avg: 2.66086
-      quadraticMean: 3.07867
-      stdDeviation: 1.55533
+      avg: 2.63934
+      quadraticMean: 3.04070
+      stdDeviation: 1.51611
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
     wildcardsScore:
-      size: 115
-      sum: 7.51969
+      size: 122
+      sum: 7.85303
       min: 0.0
       max: 1.0
-      avg: 0.06538
-      quadraticMean: 0.19588
-      stdDeviation: 0.18545
+      avg: 0.06436
+      quadraticMean: 0.19256
+      stdDeviation: 0.18223
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     wildcardsScoreForRoots:
-      size: 115
-      sum: 23.58496
+      size: 122
+      sum: 24.58496
       min: 0.0
       max: 3.0
-      avg: 0.20508
-      quadraticMean: 0.60204
-      stdDeviation: 0.56850
+      avg: 0.20151
+      quadraticMean: 0.59148
+      stdDeviation: 0.55839
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     maxNDNsWildcardsScoreInTree:
-      size: 115
-      sum: 23.58496
+      size: 122
+      sum: 24.58496
       min: 0.0
       max: 3.0
-      avg: 0.20508
-      quadraticMean: 0.60204
-      stdDeviation: 0.56850
+      avg: 0.20151
+      quadraticMean: 0.59148
+      stdDeviation: 0.55839
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     surenessOfDecisions:
-      size: 25
+      size: 18
       sum: "NaN"
       min: 0.0
       max: 0.0
@@ -87,61 +87,61 @@ findShmTrees:
       name: "AttachClonesByDistanceChange"
       threshold: 0.4
       maxNDNDistance: 1.5
-    clonesWasAdded: 7
-    cloneNodesWasAdded: 7
+    clonesWasAdded: 6
+    cloneNodesWasAdded: 6
     treesCountDelta: 0
     commonVJMutationsCounts:
-      size: 115
-      sum: 1851.0
+      size: 122
+      sum: 1971.0
       min: 4.0
       max: 53.0
-      avg: 16.09565
-      quadraticMean: 18.40439
-      stdDeviation: 8.96383
+      avg: 16.15573
+      quadraticMean: 18.37786
+      stdDeviation: 8.79614
       percentile25: 9.0
-      percentile50: 15.0
-      percentile75: 20.0
+      percentile50: 14.5
+      percentile75: 21.0
     clonesCountInTrees:
-      size: 115
-      sum: 313.0
+      size: 122
+      sum: 328.0
       min: 2.0
       max: 13.0
-      avg: 2.72173
-      quadraticMean: 3.26110
-      stdDeviation: 1.80422
+      avg: 2.68852
+      quadraticMean: 3.20859
+      stdDeviation: 1.75848
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
     wildcardsScore:
-      size: 115
-      sum: 7.51969
+      size: 122
+      sum: 7.85303
       min: 0.0
       max: 1.0
-      avg: 0.06538
-      quadraticMean: 0.19588
-      stdDeviation: 0.18545
+      avg: 0.06436
+      quadraticMean: 0.19256
+      stdDeviation: 0.18223
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     wildcardsScoreForRoots:
-      size: 115
-      sum: 23.58496
+      size: 122
+      sum: 24.58496
       min: 0.0
       max: 3.0
-      avg: 0.20508
-      quadraticMean: 0.60204
-      stdDeviation: 0.56850
+      avg: 0.20151
+      quadraticMean: 0.59148
+      stdDeviation: 0.55839
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     maxNDNsWildcardsScoreInTree:
-      size: 115
-      sum: 23.58496
+      size: 122
+      sum: 24.58496
       min: 0.0
       max: 3.0
-      avg: 0.20508
-      quadraticMean: 0.60204
-      stdDeviation: 0.56850
+      avg: 0.20151
+      quadraticMean: 0.59148
+      stdDeviation: 0.55839
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
@@ -163,57 +163,57 @@ findShmTrees:
     cloneNodesWasAdded: 0
     treesCountDelta: 0
     commonVJMutationsCounts:
-      size: 115
-      sum: 1851.0
+      size: 122
+      sum: 1971.0
       min: 4.0
       max: 53.0
-      avg: 16.09565
-      quadraticMean: 18.40439
-      stdDeviation: 8.96383
+      avg: 16.15573
+      quadraticMean: 18.37786
+      stdDeviation: 8.79614
       percentile25: 9.0
-      percentile50: 15.0
-      percentile75: 20.0
+      percentile50: 14.5
+      percentile75: 21.0
     clonesCountInTrees:
-      size: 115
-      sum: 313.0
+      size: 122
+      sum: 328.0
       min: 2.0
       max: 13.0
-      avg: 2.72173
-      quadraticMean: 3.26110
-      stdDeviation: 1.80422
+      avg: 2.68852
+      quadraticMean: 3.20859
+      stdDeviation: 1.75848
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
     wildcardsScore:
-      size: 115
-      sum: 7.51969
+      size: 122
+      sum: 7.85303
       min: 0.0
       max: 1.0
-      avg: 0.06538
-      quadraticMean: 0.19588
-      stdDeviation: 0.18545
+      avg: 0.06436
+      quadraticMean: 0.19256
+      stdDeviation: 0.18223
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     wildcardsScoreForRoots:
-      size: 115
-      sum: 23.58496
+      size: 122
+      sum: 24.58496
       min: 0.0
       max: 3.0
-      avg: 0.20508
-      quadraticMean: 0.60204
-      stdDeviation: 0.56850
+      avg: 0.20151
+      quadraticMean: 0.59148
+      stdDeviation: 0.55839
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     maxNDNsWildcardsScoreInTree:
-      size: 115
-      sum: 23.58496
+      size: 122
+      sum: 24.58496
       min: 0.0
       max: 3.0
-      avg: 0.20508
-      quadraticMean: 0.60204
-      stdDeviation: 0.56850
+      avg: 0.20151
+      quadraticMean: 0.59148
+      stdDeviation: 0.55839
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
@@ -228,7 +228,7 @@ findShmTrees:
       percentile25: "NaN"
       percentile50: "NaN"
       percentile75: "NaN"
-  totalClonesProcessed: 1277
+  totalClonesProcessed: 1294
 upstreams:
   alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns:
     align:
@@ -242,40 +242,40 @@ upstreams:
       - "align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca"
       trimmingReport: null
       totalReadsProcessed: 49700
-      aligned: 49561
-      notAligned: 139
+      aligned: 49560
+      notAligned: 140
       notAlignedReasons:
-        NoHits: 2
+        NoHits: 5
         NoCDR3Parts: 0
         NoVHits: 2
-        NoJHits: 34
-        VAndJOnDifferentTargets: 17
+        NoJHits: 36
+        VAndJOnDifferentTargets: 13
         LowTotalScore: 0
         NoBarcode: 84
         SampleNotMatched: 0
       chimeras: 0
-      overlapped: 41009
-      alignmentAidedOverlaps: 1962
-      overlappedAligned: 40979
-      overlappedNotAligned: 30
-      pairedEndAlignmentConflicts: 7423
-      vChimeras: 69
+      overlapped: 47629
+      alignmentAidedOverlaps: 320
+      overlappedAligned: 47590
+      overlappedNotAligned: 39
+      pairedEndAlignmentConflicts: 1270
+      vChimeras: 50
       jChimeras: 0
       chainUsage:
         type: "chainUsage"
         chimeras: 0
-        total: 49561
+        total: 49560
         chains:
           IGH:
-            total: 49561
-            nonFunctional: 1065
-            isOOF: 735
+            total: 49560
+            nonFunctional: 1062
+            isOOF: 732
             hasStops: 330
-      realignedWithForcedNonFloatingBound: 21138
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 6756
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 6756
+      realignedWithForcedNonFloatingBound: 4614
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1573
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1573
       noCDR3PartsAlignments: 3
-      partialAlignments: 216
+      partialAlignments: 217
       tagParsingReport:
         total: 49700
         matched: 49616
@@ -908,52 +908,52 @@ upstreams:
       - "assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns"
       preCloneAssemblerReport:
         type: "preCloneAssemblerReport"
-        inputGroups: 2912
-        groupsWithNoAssemblingFeature: 63
-        inputAlignments: 47191
-        inputAssemblingFeatureSequences: 38756
-        clonotypes: 2717
-        assemblingFeatureSequencesInZeroPreClones: 458
+        inputGroups: 2913
+        groupsWithNoAssemblingFeature: 77
+        inputAlignments: 47195
+        inputAssemblingFeatureSequences: 44978
+        clonotypes: 2808
+        assemblingFeatureSequencesInZeroPreClones: 79
         clonotypesPerGroup:
-          "0": 132
-          "1": 2717
-        coreAlignments: 38284
-        discardedCoreAlignments: 472
-        empiricallyAssignedAlignments: 7355
+          "0": 28
+          "1": 2808
+        coreAlignments: 44873
+        discardedCoreAlignments: 105
+        empiricallyAssignedAlignments: 1192
         vjEmpiricallyAssignedAlignments: 0
         umiEmpiricallyAssignedAlignments: 0
-        gatEmpiricallyAssignedAlignments: 7355
+        gatEmpiricallyAssignedAlignments: 1192
         empiricalAssignmentConflicts: 0
-        unassignedAlignments: 829
+        unassignedAlignments: 222
         umiConflicts: 0
         gatConflicts: 0
         geneConflicts: {}
         coreClonotypesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
       totalReadsProcessed: 49700
-      initialClonesCreated: 1263
-      readsDroppedNoTargetSequence: 8435
+      initialClonesCreated: 1279
+      readsDroppedNoTargetSequence: 2217
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 45591
-      readsDroppedFailedMapping: 43
+      coreReads: 46007
+      readsDroppedFailedMapping: 53
       lowQualityRescued: 5
       clonesClustered: 31
-      readsClustered: 442
-      clones: 1232
+      readsClustered: 439
+      clones: 1248
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 45154
-      readsInClonesBeforeClustering: 45596
+      readsInClones: 45573
+      readsInClonesBeforeClustering: 46012
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: "chainUsage"
         chimeras: 0
-        total: 1232
+        total: 1248
         chains:
           IGH:
-            total: 1232
+            total: 1248
             nonFunctional: 34
             isOOF: 29
             hasStops: 5
@@ -999,11 +999,11 @@ upstreams:
             discardedEnrichedMutations: []
             filteredOutByNaiveCount:
             - mutations: ""
-              count: 54
-              countOfSureAlign: 54
+              count: 55
+              countOfSureAlign: 55
               naiveCount: 1
             result: []
-          clonesCount: 54
+          clonesCount: 55
           diversity: 19
           enoughDiversity: true
           differentMutationsCount: 21
@@ -1016,10 +1016,10 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 215
-          diversity: 39
+          clonesCount: 218
+          diversity: 38
           enoughDiversity: true
-          differentMutationsCount: 41
+          differentMutationsCount: 43
           mutationsWithEnoughDiversityCount: 10
         IGHJ4*00:
           alleles:
@@ -1029,8 +1029,8 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 623
-          diversity: 48
+          clonesCount: 634
+          diversity: 47
           enoughDiversity: true
           differentMutationsCount: 67
           mutationsWithEnoughDiversityCount: 27
@@ -1042,7 +1042,7 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 136
+          clonesCount: 137
           diversity: 33
           enoughDiversity: true
           differentMutationsCount: 35
@@ -1055,24 +1055,24 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - "SC55A"
-          clonesCount: 187
-          diversity: 48
+          clonesCount: 188
+          diversity: 45
           enoughDiversity: true
-          differentMutationsCount: 43
+          differentMutationsCount: 42
           mutationsWithEnoughDiversityCount: 12
         IGHV2-70*00:
           alleles:
-            addedKnownAllele: null
+            addedKnownAllele: ""
             enrichedMutations: {}
             discardedEnrichedMutations: []
             filteredOutByNaiveCount: []
             result:
-            - "ST311G"
+            - ""
             - "SG170A,ST259C,ST311G,SA335T"
-          clonesCount: 258
-          diversity: 56
+          clonesCount: 260
+          diversity: 55
           enoughDiversity: true
-          differentMutationsCount: 489
+          differentMutationsCount: 488
           mutationsWithEnoughDiversityCount: 102
         IGHV3-72*00:
           alleles:
@@ -1082,11 +1082,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 409
-          diversity: 61
+          clonesCount: 412
+          diversity: 57
           enoughDiversity: true
-          differentMutationsCount: 632
-          mutationsWithEnoughDiversityCount: 182
+          differentMutationsCount: 627
+          mutationsWithEnoughDiversityCount: 185
         IGHV4-4*00:
           alleles:
             addedKnownAllele: null
@@ -1095,11 +1095,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 560
+          clonesCount: 572
           diversity: 77
           enoughDiversity: true
-          differentMutationsCount: 678
-          mutationsWithEnoughDiversityCount: 260
+          differentMutationsCount: 679
+          mutationsWithEnoughDiversityCount: 262
         IGHV4-55*00:
           alleles:
             addedKnownAllele: null
@@ -1116,45 +1116,37 @@ upstreams:
           enoughDiversity: false
           differentMutationsCount: 20
           mutationsWithEnoughDiversityCount: 0
-      clonesCountWithNoChangeOfScore: 880
-      clonesCountWithNegativeScoreChange: 48
+      clonesCountWithNoChangeOfScore: 1018
+      clonesCountWithNegativeScoreChange: 11
       clonesScoreDeltaStats:
-        size: 397
-        sum: 21082.99990
+        size: 276
+        sum: 18762.99987
         min: -58.0
         max: 232.0
-        avg: 53.10579
-        quadraticMean: 73.65589
-        stdDeviation: 51.10327
-      foundAlleles: 3
+        avg: 67.98188
+        quadraticMean: 83.40582
+        stdDeviation: 48.40957
+      foundAlleles: 2
       zygotes:
         "1": 9
         "2": 1
       allelesScoreChange:
         IGHJ6*00-M1-CDR3-3-1930984584:
-          size: 181
-          sum: 8062.0
+          size: 183
+          sum: 7946.0
           min: -58.0
           max: 116.0
-          avg: 44.54143
-          quadraticMean: 59.50263
-          stdDeviation: 39.56351
-        IGHV2-70*00-M1-1359867552:
-          size: 169
-          sum: 2407.0
-          min: -29.0
-          max: 29.0
-          avg: 14.24260
-          quadraticMean: 29.0
-          stdDeviation: 25.33666
+          avg: 43.42076
+          quadraticMean: 58.07918
+          stdDeviation: 38.67820
         IGHV2-70*00-M4-963628874:
-          size: 96
-          sum: 10614.0
-          min: 58.0
+          size: 100
+          sum: 10817.0
+          min: 29.0
           max: 116.0
-          avg: 110.56249
-          quadraticMean: 111.76920
-          stdDeviation: 16.46547
+          avg: 108.1
+          quadraticMean: 110.23815
+          stdDeviation: 21.36033
     refineTagsAndSort:
       type: "refineTagsAndSort"
       commandLine: "refineTagsAndSort align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca\
@@ -1164,31 +1156,31 @@ upstreams:
       outputFiles:
       - "align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca"
       correctionReport:
-        inputRecords: 49561
-        outputRecords: 47191
+        inputRecords: 49560
+        outputRecords: 47195
         steps:
         - tagName: "UMI"
           inputGroups: 1
-          inputDiversity: 5621
-          inputCount: 49561
-          coreDiversity: 5620
-          coreCount: 49560
-          directlyCorrectedDiversity: 1219
-          directlyCorrectedCount: 1237
+          inputDiversity: 5624
+          inputCount: 49560
+          coreDiversity: 5623
+          coreCount: 49559
+          directlyCorrectedDiversity: 1220
+          directlyCorrectedCount: 1238
           filteredDiversity: 0
           filteredCount: 0
           recursivelyCorrected: 30
           diversityFilteredByWhitelist: 0
-          outputDiversity: 4402
-          outputCount: 49561
+          outputDiversity: 4404
+          outputCount: 49560
         filterReport:
           type: "filter_groups_report"
           groupingKeys:
           - "UMI"
-          numberOfGroups: 4402
-          numberOfGroupsAccepted: 2912
-          totalWeight: 49561.0
-          totalWeightAccepted: 47191.0
+          numberOfGroups: 4404
+          numberOfGroupsAccepted: 2913
+          totalWeight: 49560.0
+          totalWeightAccepted: 47195.0
           operatorReports:
           - operatorReport:
               type: "generic_hist_report"
@@ -1197,7 +1189,7 @@ upstreams:
             - bins:
               - from: 1.0
                 to: 1.58489
-                weight: 995.0
+                weight: 998.0
               - from: 1.58489
                 to: 2.51188
                 weight: 235.0
@@ -1206,7 +1198,7 @@ upstreams:
                 weight: 135.0
               - from: 3.98107
                 to: 6.30957
-                weight: 386.0
+                weight: 385.0
               - from: 6.30957
                 to: 10.0
                 weight: 484.0
@@ -1239,40 +1231,40 @@ upstreams:
       - "align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca"
       trimmingReport: null
       totalReadsProcessed: 29871
-      aligned: 29800
-      notAligned: 71
+      aligned: 29499
+      notAligned: 372
       notAlignedReasons:
         NoHits: 0
         NoCDR3Parts: 0
         NoVHits: 1
-        NoJHits: 8
-        VAndJOnDifferentTargets: 20
+        NoJHits: 314
+        VAndJOnDifferentTargets: 15
         LowTotalScore: 0
         NoBarcode: 42
         SampleNotMatched: 0
       chimeras: 0
-      overlapped: 23193
-      alignmentAidedOverlaps: 1405
-      overlappedAligned: 23187
-      overlappedNotAligned: 6
-      pairedEndAlignmentConflicts: 5761
-      vChimeras: 84
-      jChimeras: 3
+      overlapped: 27898
+      alignmentAidedOverlaps: 241
+      overlappedAligned: 27586
+      overlappedNotAligned: 312
+      pairedEndAlignmentConflicts: 1307
+      vChimeras: 66
+      jChimeras: 1
       chainUsage:
         type: "chainUsage"
         chimeras: 0
-        total: 29800
+        total: 29499
         chains:
           IGH:
-            total: 29800
-            nonFunctional: 590
-            isOOF: 368
+            total: 29499
+            nonFunctional: 591
+            isOOF: 369
             hasStops: 222
-      realignedWithForcedNonFloatingBound: 16082
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 5074
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 5074
+      realignedWithForcedNonFloatingBound: 4344
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1354
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1354
       noCDR3PartsAlignments: 0
-      partialAlignments: 69
+      partialAlignments: 72
       tagParsingReport:
         total: 29871
         matched: 29829
@@ -1924,51 +1916,51 @@ upstreams:
       preCloneAssemblerReport:
         type: "preCloneAssemblerReport"
         inputGroups: 77
-        groupsWithNoAssemblingFeature: 7
-        inputAlignments: 29332
-        inputAssemblingFeatureSequences: 22531
-        clonotypes: 66
-        assemblingFeatureSequencesInZeroPreClones: 53
+        groupsWithNoAssemblingFeature: 8
+        inputAlignments: 29031
+        inputAssemblingFeatureSequences: 26523
+        clonotypes: 68
+        assemblingFeatureSequencesInZeroPreClones: 15
         clonotypesPerGroup:
-          "0": 4
-          "1": 66
-        coreAlignments: 22473
-        discardedCoreAlignments: 58
-        empiricallyAssignedAlignments: 5984
+          "0": 1
+          "1": 68
+        coreAlignments: 26489
+        discardedCoreAlignments: 34
+        empiricallyAssignedAlignments: 1196
         vjEmpiricallyAssignedAlignments: 0
         umiEmpiricallyAssignedAlignments: 0
-        gatEmpiricallyAssignedAlignments: 5984
+        gatEmpiricallyAssignedAlignments: 1196
         empiricalAssignmentConflicts: 0
-        unassignedAlignments: 175
+        unassignedAlignments: 270
         umiConflicts: 0
         gatConflicts: 0
         geneConflicts: {}
         coreClonotypesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
       totalReadsProcessed: 29871
-      initialClonesCreated: 45
-      readsDroppedNoTargetSequence: 6801
+      initialClonesCreated: 46
+      readsDroppedNoTargetSequence: 2508
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 28457
+      coreReads: 27685
       readsDroppedFailedMapping: 0
       lowQualityRescued: 0
       clonesClustered: 0
       readsClustered: 0
-      clones: 45
+      clones: 46
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 28457
-      readsInClonesBeforeClustering: 28457
+      readsInClones: 27685
+      readsInClonesBeforeClustering: 27685
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: "chainUsage"
         chimeras: 0
-        total: 45
+        total: 46
         chains:
           IGH:
-            total: 45
+            total: 46
             nonFunctional: 1
             isOOF: 1
             hasStops: 0
@@ -2014,11 +2006,11 @@ upstreams:
             discardedEnrichedMutations: []
             filteredOutByNaiveCount:
             - mutations: ""
-              count: 54
-              countOfSureAlign: 54
+              count: 55
+              countOfSureAlign: 55
               naiveCount: 1
             result: []
-          clonesCount: 54
+          clonesCount: 55
           diversity: 19
           enoughDiversity: true
           differentMutationsCount: 21
@@ -2031,10 +2023,10 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 215
-          diversity: 39
+          clonesCount: 218
+          diversity: 38
           enoughDiversity: true
-          differentMutationsCount: 41
+          differentMutationsCount: 43
           mutationsWithEnoughDiversityCount: 10
         IGHJ4*00:
           alleles:
@@ -2044,8 +2036,8 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 623
-          diversity: 48
+          clonesCount: 634
+          diversity: 47
           enoughDiversity: true
           differentMutationsCount: 67
           mutationsWithEnoughDiversityCount: 27
@@ -2057,7 +2049,7 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 136
+          clonesCount: 137
           diversity: 33
           enoughDiversity: true
           differentMutationsCount: 35
@@ -2070,24 +2062,24 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - "SC55A"
-          clonesCount: 187
-          diversity: 48
+          clonesCount: 188
+          diversity: 45
           enoughDiversity: true
-          differentMutationsCount: 43
+          differentMutationsCount: 42
           mutationsWithEnoughDiversityCount: 12
         IGHV2-70*00:
           alleles:
-            addedKnownAllele: null
+            addedKnownAllele: ""
             enrichedMutations: {}
             discardedEnrichedMutations: []
             filteredOutByNaiveCount: []
             result:
-            - "ST311G"
+            - ""
             - "SG170A,ST259C,ST311G,SA335T"
-          clonesCount: 258
-          diversity: 56
+          clonesCount: 260
+          diversity: 55
           enoughDiversity: true
-          differentMutationsCount: 489
+          differentMutationsCount: 488
           mutationsWithEnoughDiversityCount: 102
         IGHV3-72*00:
           alleles:
@@ -2097,11 +2089,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 409
-          diversity: 61
+          clonesCount: 412
+          diversity: 57
           enoughDiversity: true
-          differentMutationsCount: 632
-          mutationsWithEnoughDiversityCount: 182
+          differentMutationsCount: 627
+          mutationsWithEnoughDiversityCount: 185
         IGHV4-4*00:
           alleles:
             addedKnownAllele: null
@@ -2110,11 +2102,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 560
+          clonesCount: 572
           diversity: 77
           enoughDiversity: true
-          differentMutationsCount: 678
-          mutationsWithEnoughDiversityCount: 260
+          differentMutationsCount: 679
+          mutationsWithEnoughDiversityCount: 262
         IGHV4-55*00:
           alleles:
             addedKnownAllele: null
@@ -2131,45 +2123,37 @@ upstreams:
           enoughDiversity: false
           differentMutationsCount: 20
           mutationsWithEnoughDiversityCount: 0
-      clonesCountWithNoChangeOfScore: 880
-      clonesCountWithNegativeScoreChange: 48
+      clonesCountWithNoChangeOfScore: 1018
+      clonesCountWithNegativeScoreChange: 11
       clonesScoreDeltaStats:
-        size: 397
-        sum: 21082.99990
+        size: 276
+        sum: 18762.99987
         min: -58.0
         max: 232.0
-        avg: 53.10579
-        quadraticMean: 73.65589
-        stdDeviation: 51.10327
-      foundAlleles: 3
+        avg: 67.98188
+        quadraticMean: 83.40582
+        stdDeviation: 48.40957
+      foundAlleles: 2
       zygotes:
         "1": 9
         "2": 1
       allelesScoreChange:
         IGHJ6*00-M1-CDR3-3-1930984584:
-          size: 181
-          sum: 8062.0
+          size: 183
+          sum: 7946.0
           min: -58.0
           max: 116.0
-          avg: 44.54143
-          quadraticMean: 59.50263
-          stdDeviation: 39.56351
-        IGHV2-70*00-M1-1359867552:
-          size: 169
-          sum: 2407.0
-          min: -29.0
-          max: 29.0
-          avg: 14.24260
-          quadraticMean: 29.0
-          stdDeviation: 25.33666
+          avg: 43.42076
+          quadraticMean: 58.07918
+          stdDeviation: 38.67820
         IGHV2-70*00-M4-963628874:
-          size: 96
-          sum: 10614.0
-          min: 58.0
+          size: 100
+          sum: 10817.0
+          min: 29.0
           max: 116.0
-          avg: 110.56249
-          quadraticMean: 111.76920
-          stdDeviation: 16.46547
+          avg: 108.1
+          quadraticMean: 110.23815
+          stdDeviation: 21.36033
     refineTagsAndSort:
       type: "refineTagsAndSort"
       commandLine: "refineTagsAndSort align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca\
@@ -2179,31 +2163,31 @@ upstreams:
       outputFiles:
       - "align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca"
       correctionReport:
-        inputRecords: 29800
-        outputRecords: 29332
+        inputRecords: 29499
+        outputRecords: 29031
         steps:
         - tagName: "UMI"
           inputGroups: 1
           inputDiversity: 1365
-          inputCount: 29800
+          inputCount: 29499
           coreDiversity: 1365
-          coreCount: 29800
+          coreCount: 29499
           directlyCorrectedDiversity: 896
-          directlyCorrectedCount: 1098
+          directlyCorrectedCount: 1096
           filteredDiversity: 0
           filteredCount: 0
-          recursivelyCorrected: 234
+          recursivelyCorrected: 235
           diversityFilteredByWhitelist: 0
           outputDiversity: 469
-          outputCount: 29800
+          outputCount: 29499
         filterReport:
           type: "filter_groups_report"
           groupingKeys:
           - "UMI"
           numberOfGroups: 469
           numberOfGroupsAccepted: 77
-          totalWeight: 29800.0
-          totalWeightAccepted: 29332.0
+          totalWeight: 29499.0
+          totalWeightAccepted: 29031.0
           operatorReports:
           - operatorReport:
               type: "generic_hist_report"
@@ -2248,10 +2232,10 @@ upstreams:
                 weight: 10.0
               - from: 251.18864
                 to: 398.10717
-                weight: 11.0
+                weight: 12.0
               - from: 398.10717
                 to: 630.95734
-                weight: 42.0
+                weight: 41.0
               - from: 630.95734
                 to: 1000.0
                 weight: 2.0

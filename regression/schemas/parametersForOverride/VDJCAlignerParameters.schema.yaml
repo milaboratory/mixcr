@@ -44,6 +44,8 @@ properties:
         type: "integer"
       minimalIdentity:
         type: "number"
+      minimalMatchQualitySum:
+        type: "integer"
       minimalOverlap:
         type: "integer"
       partsLayout:
