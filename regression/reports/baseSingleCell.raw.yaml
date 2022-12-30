@@ -115,34 +115,34 @@ assemble:
     type: "preCloneAssemblerReport"
     inputGroups: 87
     groupsWithNoAssemblingFeature: 24
-    inputAlignments: 40427
-    inputAssemblingFeatureSequences: 912
+    inputAlignments: 40430
+    inputAssemblingFeatureSequences: 909
     clonotypes: 63
     assemblingFeatureSequencesInZeroPreClones: 3
     clonotypesPerGroup:
       "0": 1
       "1": 61
       "2": 1
-    coreAlignments: 850
+    coreAlignments: 847
     discardedCoreAlignments: 62
-    empiricallyAssignedAlignments: 16139
+    empiricallyAssignedAlignments: 16147
     vjEmpiricallyAssignedAlignments: 0
     umiEmpiricallyAssignedAlignments: 0
-    gatEmpiricallyAssignedAlignments: 16139
+    gatEmpiricallyAssignedAlignments: 16147
     empiricalAssignmentConflicts: 0
-    unassignedAlignments: 12751
+    unassignedAlignments: 12749
     umiConflicts: 1
     gatConflicts: 2
     geneConflicts:
       Variable: 2
     coreClonotypesDroppedByTagSuffix: 0
     coreAlignmentsDroppedByTagSuffix: 0
-  totalReadsProcessed: 46658
+  totalReadsProcessed: 46661
   initialClonesCreated: 10
-  readsDroppedNoTargetSequence: 39515
+  readsDroppedNoTargetSequence: 39521
   readsDroppedTooShortClonalSequence: 0
   readsDroppedLowQuality: 0
-  coreReads: 17210
+  coreReads: 17212
   readsDroppedFailedMapping: 0
   lowQualityRescued: 0
   clonesClustered: 0
@@ -151,8 +151,8 @@ assemble:
   clonesDroppedAsLowQuality: 0
   clonesPreClustered: 0
   readsPreClustered: 0
-  readsInClones: 17210
-  readsInClonesBeforeClustering: 17210
+  readsInClones: 17212
+  readsInClonesBeforeClustering: 17212
   readsDroppedWithLowQualityClones: 0
   clonalChainUsage:
     type: "chainUsage"
@@ -180,8 +180,8 @@ assemble:
       - "clone"
       numberOfGroups: 10
       numberOfGroupsAccepted: 8
-      totalWeight: 17210.0
-      totalWeightAccepted: 16447.0
+      totalWeight: 17212.0
+      totalWeightAccepted: 16449.0
       operatorReports:
       - operatorReport:
           type: "generic_hist_report"
@@ -197,8 +197,8 @@ assemble:
       - "clone"
       numberOfGroups: 8
       numberOfGroupsAccepted: 8
-      totalWeight: 16447.0
-      totalWeightAccepted: 16447.0
+      totalWeight: 16449.0
+      totalWeightAccepted: 16449.0
       operatorReports:
       - operatorReport:
           type: "generic_hist_report"
@@ -225,7 +225,7 @@ assembleContigs:
   initialCloneCount: 8
   canceledAssemblies: 0
   finalCloneCount: 8
-  totalReadsProcessed: 16447.0
+  totalReadsProcessed: 16449.0
   clonesClustered: 0
   readsClustered: 0.0
   longestContigLength: 618
@@ -242,19 +242,19 @@ assemblePartial:
   - "./baseSingleCell.raw.passembled.1.vdjca"
   independentRuns: 87
   totalProcessed: 40648
-  outputAlignments: 40427
-  withCDR3: 691
-  overlapped: 221
+  outputAlignments: 40430
+  withCDR3: 707
+  overlapped: 218
   leftTooShortNRegion: 553
-  kMerDiversity: 2166
+  kMerDiversity: 2063
   droppedWildcardsInKMer: 0
-  droppedSmallOverlapNRegion: 766
+  droppedSmallOverlapNRegion: 422
   droppedNoNRegion: 0
-  leftParts: 450
+  leftParts: 434
   rightParts: 21324
   complexOverlaps: 0
   overOverlaps: 0
-  partialAlignmentsAsIs: 39515
+  partialAlignmentsAsIs: 39505
 refineTagsAndSort:
   type: "refineTagsAndSort"
   commandLine: "refineTagsAndSort --report ./baseSingleCell.raw.refine.report.txt\
