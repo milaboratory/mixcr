@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.basictypes
 
 import cc.redberry.primitives.Filter
-import cc.redberry.primitives.FilterUtil
+import cc.redberry.primitives.not
 import com.milaboratory.core.sequence.AminoAcidAlphabet
 import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -309,22 +309,22 @@ object MultiAlignmentFormatter {
         }
     }
 
-    private val IsVP: Filter<SequencePartitioning> = Filter<SequencePartitioning> { partitioning ->
+    private val IsVP: Filter<SequencePartitioning> = Filter { partitioning ->
         partitioning.isAvailable(VEnd) && partitioning.getPosition(VEnd) != partitioning.getPosition(VEndTrimmed)
     }
-    private val IsJP: Filter<SequencePartitioning> = Filter<SequencePartitioning> { partitioning ->
+    private val IsJP: Filter<SequencePartitioning> = Filter { partitioning ->
         partitioning.isAvailable(JBegin) && partitioning.getPosition(JBegin) != partitioning.getPosition(JBeginTrimmed)
     }
-    private val IsDPLeft: Filter<SequencePartitioning> = Filter<SequencePartitioning> { partitioning ->
+    private val IsDPLeft: Filter<SequencePartitioning> = Filter { partitioning ->
         partitioning.isAvailable(DBegin) && partitioning.getPosition(DBegin) != partitioning.getPosition(DBeginTrimmed)
     }
-    private val IsDPRight: Filter<SequencePartitioning> = Filter<SequencePartitioning> { partitioning ->
+    private val IsDPRight: Filter<SequencePartitioning> = Filter { partitioning ->
         partitioning.isAvailable(DEnd) && partitioning.getPosition(DEnd) != partitioning.getPosition(DEndTrimmed)
     }
-    private val NotDPLeft: Filter<SequencePartitioning> = FilterUtil.not(IsDPLeft)
-    private val NotDPRight: Filter<SequencePartitioning> = FilterUtil.not(IsDPRight)
-    private val NotVP: Filter<SequencePartitioning> = FilterUtil.not(IsVP)
-    private val NotJP: Filter<SequencePartitioning> = FilterUtil.not(IsJP)
+    private val NotDPLeft: Filter<SequencePartitioning> = IsDPLeft.not()
+    private val NotDPRight: Filter<SequencePartitioning> = IsDPRight.not()
+    private val NotVP: Filter<SequencePartitioning> = IsVP.not()
+    private val NotJP: Filter<SequencePartitioning> = IsJP.not()
     val POINTS_FOR_REARRANGED = arrayOf(
         pd(V5UTRBeginTrimmed, "<5'UTR"),
         pd(V5UTREnd, "5'UTR><L1"),

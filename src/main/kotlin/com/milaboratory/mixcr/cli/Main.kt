@@ -290,6 +290,7 @@ object Main {
                 }
 
                 else -> {
+                    ex.rethrowOOM()
                     commandLine.err.println(MiXCRVersionInfo.get().shortestVersionString)
                     throw CommandLine.ExecutionException(
                         commandLine,
@@ -299,6 +300,12 @@ object Main {
             }
         }
         return this
+    }
+
+    private fun Throwable.rethrowOOM() {
+        if (this is OutOfMemoryError) throw this
+        suppressed.forEach { it.rethrowOOM() }
+        cause?.rethrowOOM()
     }
 
     private fun CommandLine.registerConvertors(): CommandLine {
