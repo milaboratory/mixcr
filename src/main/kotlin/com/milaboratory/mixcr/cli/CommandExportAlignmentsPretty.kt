@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.util.asSequence
 import cc.redberry.primitives.Filter
+import cc.redberry.primitives.and
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
@@ -22,7 +23,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.afiltering.AFilter
-import com.milaboratory.mixcr.util.and
 import com.milaboratory.util.NSequenceWithQualityPrintHelper
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.Chains
@@ -355,12 +355,12 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         }
     }
 
-    private fun printGeneFeatures(output: PrintStream, prefix: String, containsFilter: Filter<GeneFeature>) {
+    private fun printGeneFeatures(output: PrintStream, prefix: String, containsFilter: (GeneFeature) -> Boolean) {
         output.print(prefix)
         var totalLength = prefix.length
         var first = true
         for (geneFeature in GeneFeature.getNameByFeature().keys) {
-            if (!containsFilter.accept(geneFeature)) continue
+            if (!containsFilter(geneFeature)) continue
             if (first) {
                 first = false
             } else {

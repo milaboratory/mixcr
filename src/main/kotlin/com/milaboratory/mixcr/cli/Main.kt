@@ -83,6 +83,9 @@ object Main {
         try {
             exitProcess(commandLine.execute(*args))
         } catch (e: OutOfMemoryError) {
+            if (logger.verbose) {
+                e.printStackTrace()
+            }
             System.err.println("Not enough memory for run command, try to increase -Xmx.")
             System.err.println("Example: `mixcr -Xmx40g ${args.joinToString(" ")}`")
             val gb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_GB
@@ -290,6 +293,7 @@ object Main {
                 }
 
                 else -> {
+                    ex.rethrowOOM()
                     commandLine.err.println(MiXCRVersionInfo.get().shortestVersionString)
                     throw CommandLine.ExecutionException(
                         commandLine,
@@ -299,6 +303,12 @@ object Main {
             }
         }
         return this
+    }
+
+    private fun Throwable.rethrowOOM() {
+        if (this is OutOfMemoryError) throw this
+        suppressed.forEach { it.rethrowOOM() }
+        cause?.rethrowOOM()
     }
 
     private fun CommandLine.registerConvertors(): CommandLine {

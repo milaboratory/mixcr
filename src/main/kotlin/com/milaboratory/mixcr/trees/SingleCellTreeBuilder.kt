@@ -55,7 +55,7 @@ class SingleCellTreeBuilder(
     private val clonesFilter: SHMTreeBuilderOrchestrator.ClonesFilter,
     private val scoringSet: ScoringSet,
     private val assemblingFeatures: GeneFeatures,
-    private val SHMTreeBuilder: SHMTreeBuilder
+    private val treeBuilder: SHMTreeBuilder
 ) {
     fun buildTrees(
         clones: OutputPort<CloneWithDatasetId>,
@@ -140,7 +140,7 @@ class SingleCellTreeBuilder(
                                 //filter clusters formed by the same clones (for example, light chain didn't mutate)
                                 cluster.size > 1
                             }
-                            .map { SHMTreeBuilder.buildATreeFromRoot(it) }
+                            .map { treeBuilder.buildATreeFromRoot(it) }
                     }
                     .flatten()
 
@@ -243,8 +243,10 @@ class SingleCellTreeBuilder(
                 .map { it.clone }
                 .take(2)
             //TODO count and print
-            if (heavy.isEmpty() || light.isEmpty()) return@mapNotNull null
-            CellGroup(heavy, light, group.first().cellBarcode)
+            when {
+                heavy.isEmpty() || light.isEmpty() -> null
+                else -> CellGroup(heavy, light, group.first().cellBarcode)
+            }
         }
             .filter { cellGroup ->
                 (cellGroup.heavy + cellGroup.light)

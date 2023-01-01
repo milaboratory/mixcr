@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.InputPort
 import cc.redberry.pipe.util.forEach
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -154,8 +155,9 @@ object CommandAssemblePartial {
                 )
                 val assembler = PartialAlignmentsAssembler(
                     cmdParams.parameters, reader.parameters,
-                    reader.usedGenes, !cmdParams.dropPartial, cmdParams.overlappedOnly
-                ) { alignment: VDJCAlignments -> writer.write(alignment) }
+                    reader.usedGenes, !cmdParams.dropPartial, cmdParams.overlappedOnly,
+                    InputPort { alignment: VDJCAlignments? -> writer.write(alignment) }
+                )
 
                 @Suppress("UnnecessaryVariable")
                 val reportBuilder = assembler
@@ -183,7 +185,7 @@ object CommandAssemblePartial {
                             assembler.buildLeftPartsIndex(grp1)
                             grp1.close() // Drain leftover alignments in the group if not yet done
                             groups2.take().use { grp2 ->
-                                assert(grp2.key == grp1.key) { grp1.key.toString() + " != " + grp2.key }
+                                assert(grp2!!.key == grp1.key) { grp1.key.toString() + " != " + grp2.key }
                                 assembler.searchOverlaps(grp2)
                             }
                         }
