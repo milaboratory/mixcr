@@ -11,16 +11,22 @@
  */
 package com.milaboratory.mixcr
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.AbstractPresetBundleRaw
+import com.milaboratory.cli.BundleResolver
+import com.milaboratory.cli.Packer
 import com.milaboratory.cli.ParamsBundleSpec
+import com.milaboratory.cli.ParamsBundleSpecBase
+import com.milaboratory.cli.ParamsBundleSpecBaseAddress
 import com.milaboratory.cli.RawParams
 import com.milaboratory.cli.Resolver
 import com.milaboratory.cli.apply
+import com.milaboratory.cli.pack
 import com.milaboratory.mitool.helpers.KObjectMapperProvider
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
@@ -42,6 +48,7 @@ import com.milaboratory.mixcr.util.CosineSimilarity
 import com.milaboratory.primitivio.annotations.Serializable
 import org.apache.commons.io.IOUtils
 import java.nio.charset.Charset
+import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.toPath
@@ -49,15 +56,24 @@ import kotlin.reflect.KProperty1
 
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
 data class MiXCRParamsSpec(
-    @JsonProperty("presetAddress") override val presetAddress: String,
+    @JsonAlias("presetAddress") @JsonProperty("base") override val base: ParamsBundleSpecBase<MiXCRParamsBundle>,
     @JsonProperty("mixins") override val mixins: List<MiXCRMixin>,
 ) : ParamsBundleSpec<MiXCRParamsBundle> {
+    constructor(presetAddress: String, mixins: List<MiXCRMixin>) : this(
+        ParamsBundleSpecBaseAddress(presetAddress),
+        mixins
+    )
+
+    constructor(presetAddress: String, vararg mixins: MiXCRMixin) : this(presetAddress, listOf(*mixins))
 
     fun addMixins(toAdd: List<MiXCRMixin>) = copy(
         mixins = mixins + toAdd
     )
 
-    constructor(presetAddress: String, vararg mixins: MiXCRMixin) : this(presetAddress, listOf(*mixins))
+    fun pack() = MiXCRParamsSpec(
+        Presets.MiXCRBundleResolver.pack(base, MiXCRParamsBundlePacker),
+        MiXCRMixinPacker.pack(mixins)
+    )
 }
 
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
@@ -74,6 +90,15 @@ data class MiXCRParamsBundle(
     @JsonProperty("exportClones") val exportClones: CommandExportClones.Params?,
     @JsonIgnore val exportPreset: Unit = Unit
 )
+
+object MiXCRParamsBundlePacker : Packer<MiXCRParamsBundle> {
+    override fun pack(obj: MiXCRParamsBundle) =
+        obj.copy(refineTagsAndSort = obj.refineTagsAndSort?.pack())
+}
+
+object MiXCRMixinPacker : Packer<MiXCRMixin> {
+    override fun pack(obj: MiXCRMixin) = obj
+}
 
 object Flags {
 
@@ -108,7 +133,17 @@ object Flags {
     )
 }
 
+/** Contains information on the physical source of the raw parameters bundle */
+class MiXCRParamsBundleRawCtx(
+    /** Preset name the bundle was constructed from */
+    val presetName: String,
+    /** Path, if object was loaded from the file; null for built-in presets */
+    val path: Path?
+)
+
 object Presets {
+    const val LOCAL_PRESET_PREFIX = "local:"
+
     private val localPresetSearchPath = listOfNotNull(
         Path(System.getProperty("user.home"), ".mixcr", "presets"),
         Presets::class.java.protectionDomain.codeSource?.location?.toURI()?.toPath(),
@@ -144,13 +179,14 @@ object Presets {
     val visiblePresets = nonAbstractPresetNames.filter { "test" !in it && "legacy" !in it }
 
     private fun rawResolve(name: String): MiXCRParamsBundleRaw {
-        if (name.startsWith("local:")) {
-            val lName = name.removePrefix("local:")
+        if (name.startsWith(LOCAL_PRESET_PREFIX)) {
+            val lName = name.substring(LOCAL_PRESET_PREFIX.length)
             localPresetSearchPath.forEach { folder ->
                 listOf(".yaml", ".yml").forEach { ext ->
                     val presetPath = folder.resolve(lName + ext)
                     if (presetPath.exists())
-                        return K_YAML_OM.readValue(presetPath.toFile())
+                        return K_YAML_OM.readValue<MiXCRParamsBundleRaw>(presetPath.toFile())
+                            .copy(ctx = MiXCRParamsBundleRawCtx(name, presetPath))
                 }
             }
             throw ApplicationException("Can't find local preset with name \"$name\"")
@@ -179,7 +215,7 @@ object Presets {
                     """.trimIndent()
                 )
             }
-            return result
+            return result.copy(ctx = MiXCRParamsBundleRawCtx(name, null))
         }
     }
 
@@ -204,7 +240,9 @@ object Presets {
     internal val exportAlignments = getResolver(MiXCRParamsBundleRaw::exportAlignments)
     internal val exportClones = getResolver(MiXCRParamsBundleRaw::exportClones)
 
-    private class MiXCRParamsBundleRaw(
+    /** Note: JsonIgnore here are just for the readability, this class is not suitable for serialization,
+     * it supports only deserialization*/
+    private data class MiXCRParamsBundleRaw(
         @JsonProperty("abstract") val abstract: Boolean = false,
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
         @JsonProperty("mixins") val mixins: List<MiXCRMixin>?,
@@ -218,35 +256,45 @@ object Presets {
         @JsonProperty("assembleContigs") val assembleContigs: RawParams<CommandAssembleContigs.Params>? = null,
         @JsonProperty("exportAlignments") val exportAlignments: RawParams<CommandExportAlignments.Params>?,
         @JsonProperty("exportClones") val exportClones: RawParams<CommandExportClones.Params>?,
+        @JsonIgnore val ctx: MiXCRParamsBundleRawCtx? = null,
     ) : AbstractPresetBundleRaw<MiXCRParamsBundleRaw> {
+        @get:JsonIgnore
         val rawParent by lazy { inheritFrom?.let { rawResolve(it) } }
 
         // flags and mixins are aggregated and applied on the very step of resolution process
 
+        @get:JsonIgnore
         val resolvedFlags: Set<String> by lazy {
             (flags ?: emptySet()) + (rawParent?.resolvedFlags ?: emptySet())
         }
+
+        @get:JsonIgnore
         val resolvedMixins: List<MiXCRMixin> by lazy {
-            (mixins ?: emptyList()) + (rawParent?.resolvedMixins ?: emptyList())
+            (rawParent?.resolvedMixins ?: emptyList()) + (mixins ?: emptyList())
         }
     }
 
-    fun resolveParamsBundle(presetName: String): MiXCRParamsBundle {
-        val raw = rawResolve(presetName)
-        if (raw.abstract)
-            throw ApplicationException("Preset $presetName is abstract and not intended to be used directly.")
-        val bundle = MiXCRParamsBundle(
-            flags = raw.resolvedFlags,
-            pipeline = pipeline(presetName),
-            align = align(presetName),
-            refineTagsAndSort = refineTagsAndSort(presetName),
-            assemblePartial = assemblePartial(presetName),
-            extend = extend(presetName),
-            assemble = assemble(presetName),
-            assembleContigs = assembleContigs(presetName),
-            exportAlignments = exportAlignments(presetName),
-            exportClones = exportClones(presetName),
-        )
-        return raw.resolvedMixins.apply(bundle)
+    object MiXCRBundleResolver : BundleResolver<MiXCRParamsBundle> {
+        override fun isExternalPreset(presetName: String) =
+            presetName.startsWith(LOCAL_PRESET_PREFIX)
+
+        override fun resolvePreset(presetName: String): MiXCRParamsBundle {
+            val raw = rawResolve(presetName)
+            if (raw.abstract)
+                throw ApplicationException("Preset $presetName is abstract and not intended to be used directly.")
+            val bundle = MiXCRParamsBundle(
+                flags = raw.resolvedFlags,
+                pipeline = pipeline(presetName),
+                align = align(presetName),
+                refineTagsAndSort = refineTagsAndSort(presetName),
+                assemblePartial = assemblePartial(presetName),
+                extend = extend(presetName),
+                assemble = assemble(presetName),
+                assembleContigs = assembleContigs(presetName),
+                exportAlignments = exportAlignments(presetName),
+                exportClones = exportClones(presetName),
+            )
+            return raw.resolvedMixins.apply(bundle)
+        }
     }
 }

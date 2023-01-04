@@ -149,12 +149,14 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
 
                     CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
                         .use { reader -> reader.header }
+
                     CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
                         .use { reader -> reader.header }
+
                     SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
                 }.paramsSpec
 
-                MiXCRParamsSpec(paramsSpec.presetAddress, mixins = paramsSpec.mixins + mixinsFromArgs.mixins)
+                paramsSpec.addMixins(mixinsFromArgs.mixins)
             }
         }
 
