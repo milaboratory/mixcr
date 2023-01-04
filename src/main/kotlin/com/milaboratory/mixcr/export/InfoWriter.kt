@@ -34,7 +34,8 @@ class InfoWriter<T : Any> private constructor(
         outputStream.write('\n'.code)
     }
 
-    override fun put(t: T) {
+    override fun put(t: T?) {
+        if (t == null) return
         for (i in fieldExtractors.indices) {
             outputStream.write(fieldExtractors[i].extractValue(headerSupplier(t), t).toByteArray())
             if (i == fieldExtractors.size - 1) break

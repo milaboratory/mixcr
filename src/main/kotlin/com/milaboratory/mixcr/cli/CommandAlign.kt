@@ -1044,7 +1044,7 @@ object CommandAlign {
                         val alignment = when {
                             bundle.alignment != null -> bundle.alignment
 
-                            cmdParams.writeFailedAlignments -> {
+                            cmdParams.writeFailedAlignments && bundle.status == NotAligned -> {
                                 // Creating empty alignment object if alignment for current read failed
                                 val target = readsLayout.createTargets(bundle.sequence)[0]
                                 var a = VDJCAlignments(
