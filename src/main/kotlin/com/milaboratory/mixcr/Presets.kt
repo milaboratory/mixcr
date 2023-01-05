@@ -32,6 +32,7 @@ import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
 import com.milaboratory.mixcr.AlignMixins.MaterialTypeDNA
 import com.milaboratory.mixcr.AlignMixins.MaterialTypeRNA
+import com.milaboratory.mixcr.AlignMixins.SampleTable.*
 import com.milaboratory.mixcr.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.AlignMixins.SetTagPattern
 import com.milaboratory.mixcr.cli.CommandAlign
@@ -70,6 +71,7 @@ data class MiXCRParamsSpec(
         mixins = mixins + toAdd
     )
 
+    /** Packs external presets, and all other externally linked information */
     fun pack() = MiXCRParamsSpec(
         Presets.MiXCRBundleResolver.pack(base, MiXCRParamsBundlePacker),
         MiXCRMixinPacker.pack(mixins)
@@ -97,7 +99,7 @@ object MiXCRParamsBundlePacker : Packer<MiXCRParamsBundle> {
 }
 
 object MiXCRMixinPacker : Packer<MiXCRMixin> {
-    override fun pack(obj: MiXCRMixin) = obj
+    override fun pack(obj: MiXCRMixin) = (obj as? PackableMiXCRMixin)?.pack() ?: obj
 }
 
 object Flags {
@@ -108,6 +110,8 @@ object Flags {
     const val RightAlignmentMode = "rightAlignmentMode"
 
     const val TagPattern = "tagPattern"
+
+    const val SampleTable = "sampleTable"
 
     val flagMessages = mapOf(
         Species to
@@ -129,7 +133,12 @@ object Flags {
 
         TagPattern to
                 "This preset requires to specify tag pattern, \n" +
-                "please use ${SetTagPattern.CMD_OPTION} mix-in to set it."
+                "please use ${SetTagPattern.CMD_OPTION} mix-in to set it, alternatively " +
+                "tag pattern can be provided with sample table using ${AlignMixins.SampleTable.CMD_OPTION} mixin.",
+
+        SampleTable to
+                "This preset requires to specify sample table, \n" +
+                "please use ${AlignMixins.SampleTable.CMD_OPTION} mix-in.",
     )
 }
 

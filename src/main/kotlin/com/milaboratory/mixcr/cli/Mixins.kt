@@ -142,6 +142,16 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     fun dontSplitBySample(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(AlignMixins.SetSplitBySample(false))
 
+    @Option(
+        description = ["Loads sample table from a tab separated file."],
+        names = [AlignMixins.SampleTable.CMD_OPTION],
+        arity = "1",
+        paramLabel = "sample_table.tsv",
+        order = OptionsOrder.mixins.align + 330
+    )
+    fun sampleTable(arg: String) =
+        mixIn(AlignMixins.SampleTable(arg, null))
+
     //
     // Material type
     //

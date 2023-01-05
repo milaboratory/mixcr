@@ -934,7 +934,9 @@ object CommandAlign {
                 writers?.writeHeader(
                     MiXCRHeader(
                         inputHash,
-                        paramsSpec,
+                        // Output file header will contain packed version of the parameter specs,
+                        // i.e. all external presets and will be packed into the spec object
+                        paramsSpec.pack(),
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         tagsExtractor.tagsInfo,
                         aligner.parameters,

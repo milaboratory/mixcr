@@ -14,6 +14,7 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
@@ -44,6 +45,9 @@ import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint
+import java.util.*
+import kotlin.io.path.Path
+import kotlin.io.path.readText
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 sealed interface MiXCRMixin : Mixin<MiXCRParamsBundle>, Comparable<MiXCRMixin> {
@@ -75,6 +79,14 @@ private fun MixinBuilderOps.modifyGeneAlignmentParams(gt: GeneType, action: KGen
         val p = getVJCGeneAlignerParameters(gt)
         p.action()
     }
+
+/** Marks MiXCR presets that links some external information source,
+ * and can be packet to embed it's content into mixin body*/
+interface PackableMiXCRMixin {
+    val packed: Boolean
+
+    fun pack(): MiXCRMixin
+}
 
 sealed class MiXCRMixinBase(
     @JsonIgnore final override val importance: Int,
@@ -442,6 +454,156 @@ object AlignMixins {
         }
 
         const val CMD_OPTION = "--drop-non-CDR3-alignments"
+    }
+
+    data class SampleListSample(
+        val sampleName: String,
+        val matchTags: SortedMap<String, String>
+    )
+
+    data class SampleListPatternGroup(
+        val pattern: List<String>,
+        val samples: List<SampleListSample>,
+    ) {
+        val tagPattern by lazy { pattern.joinToString(" \\ ") }
+    }
+
+    data class SampleListParsed(
+        /** 0 means tag pattern is to be specified elsewhere
+         * 1 for R1 only
+         * 2 for R1+R2
+         * 3 for I1+R1+R2
+         * 4 for I1+I2+R1+R2 */
+        val numberOfReads: Int,
+        val sampleTagName: String,
+        val parsed: List<SampleListPatternGroup>
+    ) {
+        private var hasTagPattern = numberOfReads != 0
+
+        val tagPattern by lazy {
+            if (hasTagPattern) parsed.joinToString(" || ") { it.tagPattern } else null
+        }
+
+        val sampleTable = CommandAlign.SampleTable(
+            sampleTagName, parsed.flatMapIndexed { i, g ->
+                g.samples.map { s ->
+                    CommandAlign.SampleTableRow(s.matchTags, if (hasTagPattern) i else null, s.sampleName)
+                }
+            }
+        )
+
+        fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::align.update {
+                // Setting tag pattern, if required
+                tagPattern?.also { tp ->
+                    CommandAlign.Params::tagPattern setTo tp
+                }
+
+                // Setting sample table
+                CommandAlign.Params::sampleTable setTo sampleTable
+            }
+        }
+    }
+
+    @JsonTypeName("SampleTable")
+    data class SampleTable(
+        /** Name of the file containing the sample list */
+        @JsonInclude(NON_NULL) @JsonProperty("file") val file: String?,
+        /** Embedded body */
+        @JsonInclude(NON_NULL) @JsonProperty("body") val body: String?,
+    ) : MiXCRMixinBase(50, Flags.TagPattern, Flags.SampleTable), PackableMiXCRMixin {
+        init {
+            require((file == null) != (body == null)) {
+                "either \"file\" or \"body\" field must be not null"
+            }
+        }
+
+        private fun readBody() = file?.let { Path(it).readText() } ?: body!!
+
+        fun parse(): SampleListParsed {
+            val lines = readBody()
+                .split(Regex("[\\r\\n]+"))
+                .filter { it.isNotEmpty() }
+                .map { line -> line.split('\t').map { it.trim() } }
+            if (lines.isEmpty())
+                throw ValidationException("Sample list is empty")
+
+            val header = lines[0]
+
+            // Parsing header
+            val sampleTagName = header[0]
+            val indexedCols = header.drop(1)
+                .mapIndexed { i, s -> (i + 1) to s }
+            val pp = Regex("[IR][12]", RegexOption.IGNORE_CASE)
+            val patternIndexed = indexedCols
+                .filter { pp.matches(it.second) }
+                .sortedBy { it.second }
+            val expected: List<String> = when (patternIndexed.size) {
+                0 -> emptyList()
+                1 -> listOf("R1")
+                2 -> listOf("R1", "R2")
+                3 -> listOf("I1", "R1", "R2")
+                4 -> listOf("I1", "I2", "R1", "R2")
+                else -> throw ValidationException("Unexpected number of pattern columns.")
+            }
+            if (patternIndexed.map { it.second } != expected)
+                throw ValidationException("Unexpected combination of pattern columns: " +
+                        patternIndexed.map { it.second } + " expected " + expected)
+            val numberOfReads = patternIndexed.size
+            val patternCols = patternIndexed
+                .map { it.first }
+            val matchingCols = indexedCols
+                .filter { it.first !in patternCols }
+
+            // Processing body
+
+            // Grouping by pattern
+            val byPattern = mutableMapOf<List<String>, MutableList<List<String>>>()
+            for (row in lines.drop(1)) {
+                val pattern = patternCols.map { row[it] }
+                for (p in pattern) {
+                    if (p.contains("||"))
+                        throw ValidationException("Pattern in sample table must not contain \"||\" token.")
+                    if (p.contains("\\"))
+                        throw ValidationException("Pattern in sample table must not contain \"\\\" token.")
+                }
+                byPattern.computeIfAbsent(pattern) { mutableListOf() } += row
+            }
+
+            val parsed = byPattern.entries.map { group ->
+                SampleListPatternGroup(
+                    group.key,
+                    group.value.map { row ->
+                        SampleListSample(row[0], matchingCols.associateTo(TreeMap()) { it.second to row[it.first] })
+                    }
+                )
+            }
+
+            return SampleListParsed(numberOfReads, sampleTagName, parsed)
+        }
+
+        override val packed get() = body != null
+
+        override fun pack() =
+            if (packed)
+                this
+            else
+                copy(body = readBody(), file = null)
+
+        override fun MixinBuilderOps.action() {
+            parse().apply { action() }
+        }
+
+        override val cmdArgs
+            get() =
+                if (packed)
+                    throw IllegalStateException()
+                else
+                    listOf(CMD_OPTION, file!!)
+
+        companion object {
+            const val CMD_OPTION = "--sample-table"
+        }
     }
 
     @JsonTypeName("SetSplitBySample")

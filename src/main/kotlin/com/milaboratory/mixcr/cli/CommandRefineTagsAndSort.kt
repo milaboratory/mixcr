@@ -74,7 +74,7 @@ object CommandRefineTagsAndSort {
     ) : PackableMiXCRParams<Params> {
         override val command get() = MiXCRCommandDescriptor.refineTagsAndSort
 
-        override fun pack() = copy(whitelists = whitelists.mapValues { it.value.resolveExternal() })
+        override fun pack() = copy(whitelists = whitelists.mapValues { it.value.pack() })
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
