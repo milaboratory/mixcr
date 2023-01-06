@@ -61,12 +61,18 @@ object CommandExportAlignments {
         override val command get() = MiXCRCommandDescriptor.exportAlignments
     }
 
-    fun Params.mkFilter(): Filter<VDJCAlignments> = Filter {
-        for (gt in GeneType.VJC_REFERENCE) {
-            val bestHit = it.getBestHit(gt)
-            if (bestHit != null && Chains.parse(chains).intersects(bestHit.gene.chains)) return@Filter true
+    fun Params.mkFilter(): Filter<VDJCAlignments> {
+        val chainsParsed = Chains.parse(chains)
+        return Filter {
+            if (chainsParsed != Chains.ALL) {
+                for (gt in GeneType.VJC_REFERENCE) {
+                    val bestHit = it.getBestHit(gt)
+                    if (bestHit != null && chainsParsed.intersects(bestHit.gene.chains)) return@Filter true
+                }
+                false
+            } else
+                true
         }
-        false
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
