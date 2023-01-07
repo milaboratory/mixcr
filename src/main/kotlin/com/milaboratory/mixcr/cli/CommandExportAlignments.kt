@@ -123,7 +123,7 @@ object CommandExportAlignments {
             }
 
         @Mixin
-        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecific
+        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportAlignments
 
         override val inputFiles
             get() = listOf(inputFile)

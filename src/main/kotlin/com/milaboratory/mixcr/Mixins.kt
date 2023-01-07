@@ -716,4 +716,64 @@ object ExportMixins {
             const val CMD_OPTION_APPEND_PREFIX = "--append-export-clones-field"
         }
     }
+
+    @JsonTypeName("ExportClonesAddFileSplitting")
+    data class ExportClonesAddFileSplitting(
+        @JsonProperty("by") val by: String,
+    ) : MiXCRMixinBase(15) {
+        override val cmdArgs get() = listOf(CMD_OPTION, by)
+
+        override fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::exportClones.update {
+                CommandExportClones.Params::splitFilesBy append by
+            }
+        }
+
+        companion object {
+            const val CMD_OPTION = "--add-export-clone-table-splitting"
+        }
+    }
+
+    @JsonTypeName("ExportClonesResetFileSplitting")
+    object ExportClonesResetFileSplitting : MiXCRMixinBase(10) {
+        override val cmdArgs get() = listOf(CMD_OPTION)
+
+        override fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::exportClones.update {
+                CommandExportClones.Params::splitFilesBy setTo emptyList()
+            }
+        }
+
+        const val CMD_OPTION = "--reset-export-clone-table-splitting"
+    }
+
+    @JsonTypeName("ExportClonesAddCloneGrouping")
+    data class ExportClonesAddCloneGrouping(
+        @JsonProperty("by") val by: String,
+    ) : MiXCRMixinBase(15) {
+        override val cmdArgs get() = listOf(CMD_OPTION, by)
+
+        override fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::exportClones.update {
+                CommandExportClones.Params::groupClonesBy append by
+            }
+        }
+
+        companion object {
+            const val CMD_OPTION = "--add-export-clone-grouping"
+        }
+    }
+
+    @JsonTypeName("ExportClonesResetCloneGrouping")
+    object ExportClonesResetCloneGrouping : MiXCRMixinBase(10) {
+        override val cmdArgs get() = listOf(CMD_OPTION)
+
+        override fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::exportClones.update {
+                CommandExportClones.Params::groupClonesBy setTo emptyList()
+            }
+        }
+
+        const val CMD_OPTION = "--reset-export-clone-grouping"
+    }
 }

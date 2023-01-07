@@ -133,13 +133,13 @@ public final class Clone extends VDJCObject {
             return new Clone[]{this};
         } else {
             double sum = tagCount.sum();
-            TagCount[] splittedTagCounts = tagCount.splitBy(tag.getIndex() + 1);
-            Clone[] result = new Clone[splittedTagCounts.length];
-            for (int i = 0; i < splittedTagCounts.length; i++) {
-                TagCount tc = splittedTagCounts[i];
-                Clone splitted = new Clone(targets, hits, tc, 1.0 * count * tc.sum() / sum, id, group);
-                splitted.setParentCloneSet(getParentCloneSet());
-                result[i] = splitted;
+            TagCount[] splitTagCounts = tagCount.splitBy(tag.getIndex() + 1);
+            Clone[] result = new Clone[splitTagCounts.length];
+            for (int i = 0; i < splitTagCounts.length; i++) {
+                TagCount tc = splitTagCounts[i];
+                Clone split = new Clone(targets, hits, tc, 1.0 * count * tc.sum() / sum, id, group);
+                split.setParentCloneSet(getParentCloneSet());
+                result[i] = split;
             }
             return result;
         }

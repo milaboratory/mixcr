@@ -50,7 +50,6 @@ data class SHMTreeForPostanalysis<T : BaseNode>(
         fun getGene(geneType: GeneType) = geneSupplier(rootInfo.VJBase.geneIds[geneType])
     }
 
-
     class NodeWithClones(
         id: Int,
         parentId: Int?,
