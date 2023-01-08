@@ -9,17 +9,17 @@ import org.junit.Test
 class MixinsTest {
     @Test
     fun name1() {
-        val sampleList = "Sample\tR1\tR2\tCELL1\n" +
-                "S1\t^attagaca\t^attacaca(CELL1:NNNN)\tATTG\n" +
-                "S2\t^attagaca\t^attacaca(CELL1:NNNN)\tACCC\n" +
-                "S3\t^attagaca\t^gacatata(CELL1:NNNN)\tATTG\n" +
-                "S4\t^attagaca\t^gacatata(CELL1:NNNN)\tACCC\n"
+        val sampleList = "Sample\tTagPattern\tCELL1\n" +
+                "S1\t^attagaca \\ ^attacaca(CELL1:NNNN)\tATTG\n" +
+                "S2\t^attagaca \\ ^attacaca(CELL1:NNNN)\tACCC\n" +
+                "S3\t^attagaca \\ ^gacatata(CELL1:NNNN)\tATTG\n" +
+                "S4\t^attagaca \\ ^gacatata(CELL1:NNNN)\tACCC\n"
         val slMixin = AlignMixins.SetSampleTable(null, sampleList)
         Assert.assertTrue(slMixin.packed)
         TestUtil.assertJson(K_YAML_OM, slMixin, false)
         val parsed = slMixin.parse()
         Assert.assertEquals(
-            "^attagaca \\ ^attacaca(CELL1:NNNN) || ^attagaca \\ ^gacatata(CELL1:NNNN)".replace(" ", ""),
+            "^attagaca\\^attacaca(CELL1:NNNN)||^attagaca\\^gacatata(CELL1:NNNN)".replace(" ", ""),
             parsed.tagPattern!!.replace(" ", "")
         )
         Assert.assertEquals(

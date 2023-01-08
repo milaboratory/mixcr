@@ -484,11 +484,11 @@ object AlignMixins {
             }
         }
 
-        private val tagPattern
+        val tagPattern
             get() =
-                if (hasTagPattern) parsed.joinToString(" || ") { it.tagPattern!! } else null
+                if (hasTagPattern) parsed.joinToString("||") { it.tagPattern!! } else null
 
-        private val sampleTable = CommandAlign.SampleTable(
+        val sampleTable = CommandAlign.SampleTable(
             sampleTagName, parsed.flatMapIndexed { i, g ->
                 g.samples.map { s ->
                     CommandAlign.SampleTableRow(s.matchTags, if (parsed.size > 1) i else null, s.sampleName)
