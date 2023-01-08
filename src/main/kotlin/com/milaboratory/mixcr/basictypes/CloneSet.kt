@@ -73,10 +73,10 @@ class CloneSet private constructor(
         /**
          * WARNING: current object (in) will be destroyed
          */
-        fun <T> split(input: CloneSet, splitter: Function<Clone, T>): Map<T, CloneSet> {
+        fun <T> CloneSet.split(splitter: Function<Clone, T>): Map<T, CloneSet> {
             val clonesMap: MutableMap<T, MutableList<Clone>> = HashMap()
-            for (i in 0 until input.size()) {
-                val c = input[i]
+            for (i in 0 until size()) {
+                val c = get(i)
                 val key = splitter.apply(c)
                 val cloneList = clonesMap.computeIfAbsent(key) { ArrayList() }
                 c.parent = null
@@ -84,11 +84,30 @@ class CloneSet private constructor(
             }
             return clonesMap
                 .mapValuesTo(hashMapOf()) { (_, value) ->
-                    CloneSet(
-                        value, input.usedGenes, input.header, input.footer, input.ordering
-                    )
+                    CloneSet(value, usedGenes, header, footer, ordering)
                 }
         }
+
+        /** Returns a cloneset where each clone is decomposed into multiple clones according to the tag combinations it
+         * was observed with */
+        fun CloneSet.divideClonesByTags(depth: Int): CloneSet =
+            if (depth == 0) {
+                this
+            } else {
+                val newClones = mutableListOf<Clone>()
+                for (clone in this) {
+                    val sum = clone.tagCount.sum()
+                    val splitTagCounts = clone.tagCount.splitBy(depth)
+                    splitTagCounts.mapTo(newClones) { tc ->
+                        Clone(
+                            clone.targets, clone.hits, tc,
+                            1.0 * clone.count * tc.sum() / sum,
+                            clone.id, clone.group
+                        )
+                    }
+                }
+                CloneSet(newClones, usedGenes, header, footer, ordering)
+            }
     }
 }
 
