@@ -32,7 +32,7 @@ import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.AlignMixins.AlignmentBoundaryConstants
 import com.milaboratory.mixcr.AlignMixins.MaterialTypeDNA
 import com.milaboratory.mixcr.AlignMixins.MaterialTypeRNA
-import com.milaboratory.mixcr.AlignMixins.SampleTable.*
+import com.milaboratory.mixcr.AlignMixins.SetSampleTable.*
 import com.milaboratory.mixcr.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.AlignMixins.SetTagPattern
 import com.milaboratory.mixcr.cli.CommandAlign
@@ -134,11 +134,11 @@ object Flags {
         TagPattern to
                 "This preset requires to specify tag pattern, \n" +
                 "please use ${SetTagPattern.CMD_OPTION} mix-in to set it, alternatively " +
-                "tag pattern can be provided with sample table using ${AlignMixins.SampleTable.CMD_OPTION} mixin.",
+                "tag pattern can be provided with sample table using ${AlignMixins.SetSampleTable.CMD_OPTION} mixin.",
 
         SampleTable to
                 "This preset requires to specify sample table, \n" +
-                "please use ${AlignMixins.SampleTable.CMD_OPTION} mix-in.",
+                "please use ${AlignMixins.SetSampleTable.CMD_OPTION} mix-in.",
     )
 }
 

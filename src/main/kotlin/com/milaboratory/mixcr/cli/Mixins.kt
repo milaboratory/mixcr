@@ -168,13 +168,13 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
 
     @Option(
         description = ["Loads sample table from a tab separated file."],
-        names = [AlignMixins.SampleTable.CMD_OPTION],
+        names = [AlignMixins.SetSampleTable.CMD_OPTION],
         arity = "1",
         paramLabel = "sample_table.tsv",
         order = OptionsOrder.mixins.align + 330
     )
     fun sampleTable(arg: String) =
-        mixIn(AlignMixins.SampleTable(arg, null))
+        mixIn(AlignMixins.SetSampleTable(arg, null))
 
     //
     // Material type

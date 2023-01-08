@@ -466,32 +466,32 @@ object AlignMixins {
     )
 
     data class SampleListPatternGroup(
-        val pattern: List<String>,
+        val tagPattern: String?,
         val samples: List<SampleListSample>,
     ) {
-        val tagPattern by lazy { pattern.joinToString(" \\ ") }
+        val hasTagPattern get() = tagPattern != null
     }
 
     data class SampleListParsed(
-        /** 0 means tag pattern is to be specified elsewhere
-         * 1 for R1 only
-         * 2 for R1+R2
-         * 3 for I1+R1+R2
-         * 4 for I1+I2+R1+R2 */
-        val numberOfReads: Int,
         val sampleTagName: String,
         val parsed: List<SampleListPatternGroup>
     ) {
-        private var hasTagPattern = numberOfReads != 0
+        private val hasTagPattern = parsed.first().hasTagPattern
 
-        val tagPattern by lazy {
-            if (hasTagPattern) parsed.joinToString(" || ") { it.tagPattern } else null
+        init {
+            require(hasTagPattern || parsed.size == 1) {
+                "Inconsistent tag pattern structure across sample table rows."
+            }
         }
 
-        val sampleTable = CommandAlign.SampleTable(
+        private val tagPattern
+            get() =
+                if (hasTagPattern) parsed.joinToString(" || ") { it.tagPattern!! } else null
+
+        private val sampleTable = CommandAlign.SampleTable(
             sampleTagName, parsed.flatMapIndexed { i, g ->
                 g.samples.map { s ->
-                    CommandAlign.SampleTableRow(s.matchTags, if (hasTagPattern) i else null, s.sampleName)
+                    CommandAlign.SampleTableRow(s.matchTags, if (parsed.size > 1) i else null, s.sampleName)
                 }
             }
         )
@@ -509,8 +509,8 @@ object AlignMixins {
         }
     }
 
-    @JsonTypeName("SampleTable")
-    data class SampleTable(
+    @JsonTypeName("SetSampleTable")
+    data class SetSampleTable(
         /** Name of the file containing the sample list */
         @JsonInclude(NON_NULL) @JsonProperty("file") val file: String?,
         /** Embedded body */
@@ -536,54 +536,33 @@ object AlignMixins {
 
             // Parsing header
             val sampleTagName = header[0]
-            val indexedCols = header.drop(1)
-                .mapIndexed { i, s -> (i + 1) to s }
-            val pp = Regex("[IR][12]", RegexOption.IGNORE_CASE)
-            val patternIndexed = indexedCols
-                .filter { pp.matches(it.second) }
-                .sortedBy { it.second }
-            val expected: List<String> = when (patternIndexed.size) {
-                0 -> emptyList()
-                1 -> listOf("R1")
-                2 -> listOf("R1", "R2")
-                3 -> listOf("I1", "R1", "R2")
-                4 -> listOf("I1", "I2", "R1", "R2")
-                else -> throw ValidationException("Unexpected number of pattern columns.")
-            }
-            if (patternIndexed.map { it.second } != expected)
-                throw ValidationException("Unexpected combination of pattern columns: " +
-                        patternIndexed.map { it.second } + " expected " + expected)
-            val numberOfReads = patternIndexed.size
-            val patternCols = patternIndexed
-                .map { it.first }
-            val matchingCols = indexedCols
-                .filter { it.first !in patternCols }
 
             // Processing body
 
             // Grouping by pattern
-            val byPattern = mutableMapOf<List<String>, MutableList<List<String>>>()
+            val byPattern = mutableMapOf<String, MutableList<List<String>>>()
             for (row in lines.drop(1)) {
-                val pattern = patternCols.map { row[it] }
-                for (p in pattern) {
-                    if (p.contains("||"))
-                        throw ValidationException("Pattern in sample table must not contain \"||\" token.")
-                    if (p.contains("\\"))
-                        throw ValidationException("Pattern in sample table must not contain \"\\\" token.")
-                }
+                // removing spaces for better identification of equivalent patterns (canonicalization)
+                val pattern = row[1].replace(" ", "")
+                if (pattern.contains("||"))
+                    throw ValidationException("Pattern in sample table must not contain \"||\" token.")
                 byPattern.computeIfAbsent(pattern) { mutableListOf() } += row
             }
 
             val parsed = byPattern.entries.map { group ->
                 SampleListPatternGroup(
-                    group.key,
+                    group.key.takeIf { it.isNotEmpty() },
                     group.value.map { row ->
-                        SampleListSample(row[0], matchingCols.associateTo(TreeMap()) { it.second to row[it.first] })
+                        SampleListSample(row[0], row.drop(2)
+                            .mapIndexed { i, v -> header[i + 2] to v.trim() }
+                            .filter { it.second.isNotEmpty() }
+                            .toMap(TreeMap())
+                        )
                     }
                 )
             }
 
-            return SampleListParsed(numberOfReads, sampleTagName, parsed)
+            return SampleListParsed(sampleTagName, parsed)
         }
 
         override val packed get() = body != null
@@ -647,8 +626,9 @@ object AlignMixins {
 
         companion object {
             const val CMD_OPTION_SET = "--set-whitelist"
-            const val DESCRIPTION_SET = "Sets the whitelist for a specific tag to guide the tag refinement procedure.\n" +
-                    "Usage: $CMD_OPTION_SET CELL=preset:737K-august-2016 or $CMD_OPTION_SET UMI=file:my_umi_whitelist.txt ."
+            const val DESCRIPTION_SET =
+                "Sets the whitelist for a specific tag to guide the tag refinement procedure.\n" +
+                        "Usage: $CMD_OPTION_SET CELL=preset:737K-august-2016 or $CMD_OPTION_SET UMI=file:my_umi_whitelist.txt ."
             const val CMD_OPTION_RESET = "--reset-whitelist"
             const val DESCRIPTION_RESET = "Resets the whitelist for a specific tag so that unguided refinement " +
                     "procedure will be applied for it"
