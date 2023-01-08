@@ -68,6 +68,8 @@ interface MiXCRMixinCollection {
         val empty = object : MiXCRMixinCollection {
             override val mixins: List<MiXCRMixin> = emptyList()
         }
+
+        val Collection<MiXCRMixinCollection>.mixins get() = (empty + this).mixins
     }
 }
 

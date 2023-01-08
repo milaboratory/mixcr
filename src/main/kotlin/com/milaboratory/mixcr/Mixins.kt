@@ -24,6 +24,8 @@ import com.milaboratory.cli.POverride
 import com.milaboratory.cli.POverridesBuilderDsl
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.POverridesBuilderOpsAbstract
+import com.milaboratory.mitool.pattern.Whitelist
+import com.milaboratory.mitool.pattern.WhitelistFromAddress
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
@@ -33,6 +35,7 @@ import com.milaboratory.mixcr.cli.CommandAssemble
 import com.milaboratory.mixcr.cli.CommandAssembleContigs
 import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractorsFactory
@@ -128,6 +131,7 @@ data class GenericMixin(
 
     companion object {
         const val CMD_OPTION = "-M"
+        const val DESCRIPTION = "Overrides arbitrary preset parameter"
     }
 }
 
@@ -603,6 +607,51 @@ object AlignMixins {
 
         companion object {
             const val CMD_OPTION = "--sample-table"
+        }
+    }
+
+    @JsonTypeName("SetWhitelist")
+    data class SetWhitelist(
+        /** Tag for which to set the whitelist */
+        @JsonProperty("tag") val tag: String,
+        /** Whitelist address or contents */
+        @JsonProperty("whitelist") val whitelist: Whitelist?,
+    ) : MiXCRMixinBase(51), PackableMiXCRMixin {
+        constructor(tag: String, address: String) : this(tag, WhitelistFromAddress(address))
+
+        override val cmdArgs
+            get() =
+                if (whitelist == null)
+                    listOf(CMD_OPTION_RESET, tag)
+                else
+                    listOf(
+                        CMD_OPTION_SET,
+                        (whitelist as? WhitelistFromAddress ?: throw IllegalStateException()).address
+                    )
+
+        override val packed get() = whitelist?.isPacked ?: true
+
+        override fun pack() =
+            if (packed)
+                this
+            else
+                copy(whitelist = whitelist!!.pack())
+
+        override fun MixinBuilderOps.action() =
+            MiXCRParamsBundle::refineTagsAndSort.update {
+                if (whitelist == null)
+                    CommandRefineTagsAndSort.Params::whitelists updateBy { it - tag }
+                else
+                    CommandRefineTagsAndSort.Params::whitelists updateBy { it + (tag to whitelist) }
+            }
+
+        companion object {
+            const val CMD_OPTION_SET = "--set-whitelist"
+            const val DESCRIPTION_SET = "Sets the whitelist for a specific tag to guide the tag refinement procedure.\n" +
+                    "Usage: $CMD_OPTION_SET CELL=preset:737K-august-2016 or $CMD_OPTION_SET UMI=file:my_umi_whitelist.txt ."
+            const val CMD_OPTION_RESET = "--reset-whitelist"
+            const val DESCRIPTION_RESET = "Resets the whitelist for a specific tag so that unguided refinement " +
+                    "procedure will be applied for it"
         }
     }
 

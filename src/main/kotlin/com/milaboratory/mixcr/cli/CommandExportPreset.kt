@@ -133,8 +133,11 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     )
     var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
-    @Mixin
-    var genericMixins: GenericMiXCRMixins? = null
+    @ArgGroup(
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.generic
+    )
+    var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
 
     override fun run1() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +

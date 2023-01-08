@@ -552,8 +552,7 @@ object CommandAlign {
         )
         private var limit: Long? = null
             set(value) {
-                logger.warn("--limit and -n options are deprecated; use ${LimitInput.CMD_OPTION} instead.")
-                field = value
+                throw ApplicationException("--limit and -n options are deprecated; use ${LimitInput.CMD_OPTION} instead.")
             }
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::align) {
@@ -637,8 +636,11 @@ object CommandAlign {
         )
         var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
-        @Mixin
-        var genericMixins: GenericMiXCRMixins? = null
+        @ArgGroup(
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.generic
+        )
+        var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
 
         private val mixins: MiXCRMixinCollection
             get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
@@ -1003,7 +1005,7 @@ object CommandAlign {
                         it
                 }
 
-                //if (reportBuffers) {
+                // if (reportBuffers) {
                 //    checkNotNull(writer)
                 //    println("Analysis threads: $threads")
                 //    val reporter = StatusReporter()

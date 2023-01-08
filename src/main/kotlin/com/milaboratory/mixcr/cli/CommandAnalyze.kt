@@ -113,6 +113,12 @@ object CommandAnalyze {
         var alignMixins: List<AlignMiXCRMixins> = mutableListOf()
 
         @ArgGroup(
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.refineTagsAndSort
+        )
+        var refineAndSortMixins: List<RefineTagsAndSortMixins> = mutableListOf()
+
+        @ArgGroup(
             validate = false,
             heading = AssembleMiXCRMixins.DESCRIPTION,
             multiplicity = "0..*",
@@ -136,8 +142,12 @@ object CommandAnalyze {
         )
         var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
-        @Mixin
-        var genericMixins: GenericMiXCRMixins? = null
+        @ArgGroup(
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.generic
+        )
+        var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
+
 
         @Mixin
         lateinit var pathsForNotAligned: CommandAlign.PathsForNotAligned
@@ -149,7 +159,7 @@ object CommandAnalyze {
         lateinit var useLocalTemp: UseLocalTempOption
 
         private val mixins: MiXCRMixinCollection
-            get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
+            get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + refineAndSortMixins + assembleMixins +
                     assembleContigsMixins + exportMixins + genericMixins
 
         // @Option(

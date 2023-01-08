@@ -134,11 +134,6 @@ object CommandAssemble {
         )
         private var dontInferThreshold = false
 
-        @Mixin
-        private var mixins: AssembleMiXCRMixins? = null
-
-        protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
-
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemble) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::clnaOutput setIfTrue isClnaOutput
@@ -194,6 +189,11 @@ object CommandAssemble {
         )
         var reportBuffers = false
 
+        @Mixin
+        private var assembleMixins: AssembleMiXCRMixins? = null
+
+        private val mixins get() = assembleMixins?.mixins ?: emptyList()
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -223,7 +223,7 @@ object CommandAssemble {
                 numberOfAlignments = alignmentsReader.numberOfAlignments
 
                 cmdParam = paramsResolver.resolve(
-                    inputHeader.paramsSpec.addMixins(mixinsToAdd),
+                    inputHeader.paramsSpec.addMixins(mixins),
                     printParameters = logger.verbose
                 ) { cp ->
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
