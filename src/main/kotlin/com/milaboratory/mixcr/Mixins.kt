@@ -14,6 +14,7 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
@@ -23,6 +24,8 @@ import com.milaboratory.cli.POverride
 import com.milaboratory.cli.POverridesBuilderDsl
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.POverridesBuilderOpsAbstract
+import com.milaboratory.mitool.pattern.Whitelist
+import com.milaboratory.mitool.pattern.WhitelistFromAddress
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
@@ -32,6 +35,7 @@ import com.milaboratory.mixcr.cli.CommandAssemble
 import com.milaboratory.mixcr.cli.CommandAssembleContigs
 import com.milaboratory.mixcr.cli.CommandExportAlignments
 import com.milaboratory.mixcr.cli.CommandExportClones
+import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractorsFactory
@@ -44,6 +48,9 @@ import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.ReferencePoint
+import java.util.*
+import kotlin.io.path.Path
+import kotlin.io.path.readText
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 sealed interface MiXCRMixin : Mixin<MiXCRParamsBundle>, Comparable<MiXCRMixin> {
@@ -75,6 +82,14 @@ private fun MixinBuilderOps.modifyGeneAlignmentParams(gt: GeneType, action: KGen
         val p = getVJCGeneAlignerParameters(gt)
         p.action()
     }
+
+/** Marks MiXCR presets that links some external information source,
+ * and can be packet to embed it's content into mixin body*/
+interface PackableMiXCRMixin {
+    val packed: Boolean
+
+    fun pack(): MiXCRMixin
+}
 
 sealed class MiXCRMixinBase(
     @JsonIgnore final override val importance: Int,
@@ -116,6 +131,7 @@ data class GenericMixin(
 
     companion object {
         const val CMD_OPTION = "-M"
+        const val DESCRIPTION = "Overrides arbitrary preset parameter"
     }
 }
 
@@ -442,6 +458,181 @@ object AlignMixins {
         }
 
         const val CMD_OPTION = "--drop-non-CDR3-alignments"
+    }
+
+    data class SampleListSample(
+        val sampleName: String,
+        val matchTags: SortedMap<String, String>
+    )
+
+    data class SampleListPatternGroup(
+        val tagPattern: String?,
+        val samples: List<SampleListSample>,
+    ) {
+        val hasTagPattern get() = tagPattern != null
+    }
+
+    data class SampleListParsed(
+        val sampleTagName: String,
+        val parsed: List<SampleListPatternGroup>
+    ) {
+        private val hasTagPattern = parsed.first().hasTagPattern
+
+        init {
+            require(hasTagPattern || parsed.size == 1) {
+                "Inconsistent tag pattern structure across sample table rows."
+            }
+        }
+
+        val tagPattern
+            get() =
+                if (hasTagPattern) parsed.joinToString("||") { it.tagPattern!! } else null
+
+        val sampleTable = CommandAlign.SampleTable(
+            sampleTagName, parsed.flatMapIndexed { i, g ->
+                g.samples.map { s ->
+                    CommandAlign.SampleTableRow(s.matchTags, if (parsed.size > 1) i else null, s.sampleName)
+                }
+            }
+        )
+
+        fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::align.update {
+                // Setting tag pattern, if required
+                tagPattern?.also { tp ->
+                    CommandAlign.Params::tagPattern setTo tp
+                }
+
+                // Setting sample table
+                CommandAlign.Params::sampleTable setTo sampleTable
+            }
+        }
+    }
+
+    @JsonTypeName("SetSampleTable")
+    data class SetSampleTable(
+        /** Name of the file containing the sample list */
+        @JsonInclude(NON_NULL) @JsonProperty("file") val file: String?,
+        /** Embedded body */
+        @JsonInclude(NON_NULL) @JsonProperty("body") val body: String?,
+    ) : MiXCRMixinBase(50, Flags.TagPattern, Flags.SampleTable), PackableMiXCRMixin {
+        init {
+            require((file == null) != (body == null)) {
+                "either \"file\" or \"body\" field must be not null"
+            }
+        }
+
+        private fun readBody() = file?.let { Path(it).readText() } ?: body!!
+
+        fun parse(): SampleListParsed {
+            val lines = readBody()
+                .split(Regex("[\\r\\n]+"))
+                .filter { it.isNotEmpty() }
+                .map { line -> line.split('\t').map { it.trim() } }
+            if (lines.isEmpty())
+                throw ValidationException("Sample list is empty")
+
+            val header = lines[0]
+
+            // Parsing header
+            val sampleTagName = header[0]
+
+            // Processing body
+
+            // Grouping by pattern
+            val byPattern = mutableMapOf<String, MutableList<List<String>>>()
+            for (row in lines.drop(1)) {
+                // removing spaces for better identification of equivalent patterns (canonicalization)
+                val pattern = row[1].replace(" ", "")
+                if (pattern.contains("||"))
+                    throw ValidationException("Pattern in sample table must not contain \"||\" token.")
+                byPattern.computeIfAbsent(pattern) { mutableListOf() } += row
+            }
+
+            val parsed = byPattern.entries.map { group ->
+                SampleListPatternGroup(
+                    group.key.takeIf { it.isNotEmpty() },
+                    group.value.map { row ->
+                        SampleListSample(row[0], row.drop(2)
+                            .mapIndexed { i, v -> header[i + 2] to v.trim() }
+                            .filter { it.second.isNotEmpty() }
+                            .toMap(TreeMap())
+                        )
+                    }
+                )
+            }
+
+            return SampleListParsed(sampleTagName, parsed)
+        }
+
+        override val packed get() = body != null
+
+        override fun pack() =
+            if (packed)
+                this
+            else
+                copy(body = readBody(), file = null)
+
+        override fun MixinBuilderOps.action() {
+            parse().apply { action() }
+        }
+
+        override val cmdArgs
+            get() =
+                if (packed)
+                    throw IllegalStateException()
+                else
+                    listOf(CMD_OPTION, file!!)
+
+        companion object {
+            const val CMD_OPTION = "--sample-table"
+        }
+    }
+
+    @JsonTypeName("SetWhitelist")
+    data class SetWhitelist(
+        /** Tag for which to set the whitelist */
+        @JsonProperty("tag") val tag: String,
+        /** Whitelist address or contents */
+        @JsonProperty("whitelist") val whitelist: Whitelist?,
+    ) : MiXCRMixinBase(51), PackableMiXCRMixin {
+        constructor(tag: String, address: String) : this(tag, WhitelistFromAddress(address))
+
+        override val cmdArgs
+            get() =
+                if (whitelist == null)
+                    listOf(CMD_OPTION_RESET, tag)
+                else
+                    listOf(
+                        CMD_OPTION_SET,
+                        (whitelist as? WhitelistFromAddress ?: throw IllegalStateException()).address
+                    )
+
+        override val packed get() = whitelist?.isPacked ?: true
+
+        override fun pack() =
+            if (packed)
+                this
+            else
+                copy(whitelist = whitelist!!.pack())
+
+        override fun MixinBuilderOps.action() =
+            MiXCRParamsBundle::refineTagsAndSort.update {
+                if (whitelist == null)
+                    CommandRefineTagsAndSort.Params::whitelists updateBy { it - tag }
+                else
+                    CommandRefineTagsAndSort.Params::whitelists updateBy { it + (tag to whitelist) }
+            }
+
+        companion object {
+            const val CMD_OPTION_SET = "--set-whitelist"
+            const val DESCRIPTION_SET =
+                "Sets the whitelist for a specific tag to guide the tag refinement procedure.\n" +
+                        "Usage: $CMD_OPTION_SET CELL=preset:737K-august-2016 or $CMD_OPTION_SET UMI=file:my_umi_whitelist.txt ."
+            const val CMD_OPTION_RESET = "--reset-whitelist"
+            const val DESCRIPTION_RESET = "Resets the whitelist for a specific tag so that unguided refinement " +
+                    "procedure will be applied for it"
+        }
     }
 
     @JsonTypeName("SetSplitBySample")

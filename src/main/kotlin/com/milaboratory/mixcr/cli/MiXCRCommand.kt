@@ -54,9 +54,11 @@ abstract class MiXCRCommand : Runnable {
 
             const val pipeline = begin + 10_000
             const val align = begin + 20_000
+            const val refineTagsAndSort = begin + 25_000
             const val assemble = begin + 30_000
             const val assembleContigs = begin + 40_000
             const val exports = begin + 50_000
+            const val generic = begin + 60_000
         }
 
         const val exportOptions = 450_000

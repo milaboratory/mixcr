@@ -12,16 +12,16 @@
 package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonValue
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.core.JsonToken
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.milaboratory.mixcr.cli.*
 
+/** Parent interface for all mixcr command params */
 interface MiXCRParams {
     @get:JsonIgnore
     val command: AnyMiXCRCommand
 }
 
+/** Marks all mixcr params objects that may link external data (i.e. some parts of parameters may be defined as file
+ * names from where the value should be loaded) */
+interface PackableMiXCRParams<P : PackableMiXCRParams<P>> : MiXCRParams {
+    /** Embeds all the parameters linking external information sources into the params object */
+    fun pack(): P
+}

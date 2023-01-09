@@ -33,13 +33,13 @@ for filename in $FILES; do
   mixcr exportQc align "regression/${id}.vdjca" "${id}_qc_align.svg"
 
   input="regression/${id}.vdjca"
-  if grep -q '\- "refineTagsAndSort"' "${id}_preset.yaml"
+  if grep -q '\- refineTagsAndSort' "${id}_preset.yaml"
   then
     mixcr refineTagsAndSort "$input" "${id}.refined.vdjca"
     input="${id}.refined.vdjca"
   fi
 
-  if grep -q '\- "assemblePartial"' "${id}_preset.yaml"
+  if grep -q '\- assemblePartial' "${id}_preset.yaml"
   then
     mixcr assemblePartial "$input" "${id}.partial.vdjca"
     input="${id}.partial.vdjca"

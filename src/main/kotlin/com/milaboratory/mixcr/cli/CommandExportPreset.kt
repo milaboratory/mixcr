@@ -133,8 +133,11 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     )
     var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
-    @Mixin
-    var genericMixins: GenericMiXCRMixins? = null
+    @ArgGroup(
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.generic
+    )
+    var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
 
     override fun run1() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
@@ -149,12 +152,14 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
 
                     CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
                         .use { reader -> reader.header }
+
                     CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
                         .use { reader -> reader.header }
+
                     SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
                 }.paramsSpec
 
-                MiXCRParamsSpec(paramsSpec.presetAddress, mixins = paramsSpec.mixins + mixinsFromArgs.mixins)
+                paramsSpec.addMixins(mixinsFromArgs.mixins)
             }
         }
 

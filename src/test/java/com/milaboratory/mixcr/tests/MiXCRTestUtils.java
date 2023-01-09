@@ -34,8 +34,8 @@ public class MiXCRTestUtils {
         return new MiXCRHeader(
                 "hashA123",
                 new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
-                Presets.INSTANCE.resolveParamsBundle("legacy-4.0-default").getAlign().getParameters(),
-                Presets.INSTANCE.resolveParamsBundle("legacy-4.0-default").getAlign().getParameters().getFeaturesToAlignMap(),
+                Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("legacy-4.0-default").getAlign().getParameters(),
+                Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("legacy-4.0-default").getAlign().getParameters().getFeaturesToAlignMap(),
                 null, null, null);
     }
 

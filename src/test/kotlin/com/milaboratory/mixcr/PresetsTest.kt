@@ -22,7 +22,7 @@ class PresetsTest {
     fun test1() {
         for (presetName in Presets.nonAbstractPresetNames) {
             println(presetName)
-            val bundle = Presets.resolveParamsBundle(presetName)
+            val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             assertJson(K_OM, bundle, false)
             println(bundle.flags)
             println()
@@ -44,7 +44,7 @@ class PresetsTest {
         // val bundle = Presets.resolveParamsBundle("assemblePartial-universal")
         // val bundle = Presets.resolveParamsBundle("simple-base")
         // val bundle = Presets.resolveParamsBundle("_10x_vdj")
-        val bundle = Presets.resolveParamsBundle("umi-guided-consensus-test")
+        val bundle = Presets.MiXCRBundleResolver.resolvePreset("umi-guided-consensus-test")
         // Presets.assemble("umi-guided-consensus-test")
         assertJson(K_YAML_OM, bundle, true)
     }
@@ -52,7 +52,7 @@ class PresetsTest {
     @Test
     fun testExport2() {
         for (presetName in Presets.nonAbstractPresetNames) {
-            val bundle = Presets.resolveParamsBundle(presetName)
+            val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             if (bundle.align == null)
                 continue
             val tagsInfo = TagsInfo(

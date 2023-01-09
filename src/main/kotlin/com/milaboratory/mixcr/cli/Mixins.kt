@@ -103,6 +103,28 @@ class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
         mixIn(RemovePipelineStep(step))
 }
 
+class RefineTagsAndSortMixins : MiXCRMixinCollector() {
+    @Option(
+        description = [AlignMixins.SetWhitelist.DESCRIPTION_SET],
+        names = [AlignMixins.SetWhitelist.CMD_OPTION_SET],
+        paramLabel = Labels.OVERRIDES,
+        order = OptionsOrder.mixins.refineTagsAndSort + 100
+    )
+    fun setWhitelist(assignment: String) = parseAssignment(assignment) { tag, value ->
+        mixIn(AlignMixins.SetWhitelist(tag, value))
+    }
+
+    @Option(
+        description = [AlignMixins.SetWhitelist.DESCRIPTION_RESET],
+        names = [AlignMixins.SetWhitelist.CMD_OPTION_RESET],
+        paramLabel = "tag",
+        order = OptionsOrder.mixins.refineTagsAndSort + 200
+    )
+    fun resetWhitelist(tag: String) {
+        mixIn(AlignMixins.SetWhitelist(tag, null))
+    }
+}
+
 class AlignMiXCRMixins : MiXCRMixinCollector() {
     //
     // Base settings
@@ -143,6 +165,16 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     )
     fun dontSplitBySample(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(AlignMixins.SetSplitBySample(false))
+
+    @Option(
+        description = ["Loads sample table from a tab separated file."],
+        names = [AlignMixins.SetSampleTable.CMD_OPTION],
+        arity = "1",
+        paramLabel = "sample_table.tsv",
+        order = OptionsOrder.mixins.align + 330
+    )
+    fun sampleTable(arg: String) =
+        mixIn(AlignMixins.SetSampleTable(arg, null))
 
     //
     // Material type
@@ -501,25 +533,20 @@ object ExportMiXCRMixins {
 }
 
 class GenericMiXCRMixins : MiXCRMixinCollector() {
-    private val keysAdded = mutableMapOf<String, String>()
-
     @Option(
-        description = ["Overrides preset parameters"],
+        description = [GenericMixin.DESCRIPTION],
         names = [GenericMixin.CMD_OPTION],
         paramLabel = Labels.OVERRIDES,
         order = OptionsOrder.overrides + 300
     )
-    fun genericMixin(fieldAndOverrides: Map<String, String>) {
-        fieldAndOverrides.forEach { (field, override) ->
-            if (keysAdded.containsKey(field)) {
-                if (keysAdded[field] == override)
-                    return@forEach
-                else
-                    throw IllegalArgumentException("Repeated override of $field.")
-            } else {
-                keysAdded[field] = override
-                mixIn(GenericMixin(field, override))
-            }
-        }
+    fun genericMixin(assignment: String) = parseAssignment(assignment) { field, value ->
+        mixIn(GenericMixin(field, value))
     }
+}
+
+private fun parseAssignment(assignment: String, action: (field: String, value: String) -> Unit) {
+    val equalitySignPosition = assignment.indexOf('=')
+    val field = assignment.substring(0, equalitySignPosition)
+    val value = assignment.substring(equalitySignPosition + 1)
+    action(field, value)
 }

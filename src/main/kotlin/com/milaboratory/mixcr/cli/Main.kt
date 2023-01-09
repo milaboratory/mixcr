@@ -21,6 +21,7 @@ import com.milaboratory.core.sequence.AminoAcidSequence
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.miplots.StandardPlots
+import com.milaboratory.mitool.pattern.SequenceSetCollection
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
@@ -59,6 +60,7 @@ import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADI
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
 object Main {
@@ -79,6 +81,7 @@ object Main {
         if (args.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", args[1])
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
+        SequenceSetCollection.addSearchPath(Path(System.getProperty("user.home"), ".mixcr", "presets"))
         val commandLine = mkCmd()
         try {
             exitProcess(commandLine.execute(*args))

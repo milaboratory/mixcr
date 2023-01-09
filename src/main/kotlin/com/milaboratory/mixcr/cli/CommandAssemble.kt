@@ -64,8 +64,8 @@ object CommandAssemble {
         @JsonProperty("sortBySequence") val sortBySequence: Boolean,
         @JsonProperty("clnaOutput") val clnaOutput: Boolean,
         @JsonProperty("cellLevel") val cellLevel: Boolean,
-        @JsonProperty("consensusAssemblerParameters") @JsonMerge val consensusAssemblerParameters: PreCloneAssemblerParameters?,
-        @JsonProperty("cloneAssemblerParameters") @JsonMerge val cloneAssemblerParameters: CloneAssemblerParameters,
+        @JsonMerge @JsonProperty("consensusAssemblerParameters") val consensusAssemblerParameters: PreCloneAssemblerParameters?,
+        @JsonMerge @JsonProperty("cloneAssemblerParameters") val cloneAssemblerParameters: CloneAssemblerParameters,
         /** Try automatically infer threshold value for the minimal number of records per consensus from the
          * filtering metadata of tag-refinement step. Applied only if corresponding threshold equals to 0. */
         @JsonProperty("inferMinRecordsPerConsensus") val inferMinRecordsPerConsensus: Boolean,
@@ -134,11 +134,6 @@ object CommandAssemble {
         )
         private var dontInferThreshold = false
 
-        @Mixin
-        private var mixins: AssembleMiXCRMixins? = null
-
-        protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
-
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemble) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::clnaOutput setIfTrue isClnaOutput
@@ -194,6 +189,11 @@ object CommandAssemble {
         )
         var reportBuffers = false
 
+        @Mixin
+        private var assembleMixins: AssembleMiXCRMixins? = null
+
+        private val mixins get() = assembleMixins?.mixins ?: emptyList()
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -223,7 +223,7 @@ object CommandAssemble {
                 numberOfAlignments = alignmentsReader.numberOfAlignments
 
                 cmdParam = paramsResolver.resolve(
-                    inputHeader.paramsSpec.addMixins(mixinsToAdd),
+                    inputHeader.paramsSpec.addMixins(mixins),
                     printParameters = logger.verbose
                 ) { cp ->
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
