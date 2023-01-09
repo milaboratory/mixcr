@@ -113,75 +113,75 @@ assemble:
   - "./baseSingleCell.raw.clna"
   preCloneAssemblerReport:
     type: "preCloneAssemblerReport"
-    inputGroups: 87
-    groupsWithNoAssemblingFeature: 24
-    inputAlignments: 40430
-    inputAssemblingFeatureSequences: 909
-    clonotypes: 63
+    inputGroups: 60
+    groupsWithNoAssemblingFeature: 1
+    inputAlignments: 26902
+    inputAssemblingFeatureSequences: 822
+    clonotypes: 59
     assemblingFeatureSequencesInZeroPreClones: 3
     clonotypesPerGroup:
       "0": 1
-      "1": 61
+      "1": 57
       "2": 1
-    coreAlignments: 847
-    discardedCoreAlignments: 62
-    empiricallyAssignedAlignments: 16147
+    coreAlignments: 761
+    discardedCoreAlignments: 61
+    empiricallyAssignedAlignments: 13503
     vjEmpiricallyAssignedAlignments: 0
     umiEmpiricallyAssignedAlignments: 0
-    gatEmpiricallyAssignedAlignments: 16147
+    gatEmpiricallyAssignedAlignments: 13503
     empiricalAssignmentConflicts: 0
-    unassignedAlignments: 12749
+    unassignedAlignments: 12583
     umiConflicts: 1
     gatConflicts: 2
     geneConflicts:
       Variable: 2
     coreClonotypesDroppedByTagSuffix: 0
     coreAlignmentsDroppedByTagSuffix: 0
-  totalReadsProcessed: 46661
-  initialClonesCreated: 10
-  readsDroppedNoTargetSequence: 39521
+  totalReadsProcessed: 46687
+  initialClonesCreated: 7
+  readsDroppedNoTargetSequence: 26080
   readsDroppedTooShortClonalSequence: 0
   readsDroppedLowQuality: 0
-  coreReads: 17212
+  coreReads: 14456
   readsDroppedFailedMapping: 0
   lowQualityRescued: 0
   clonesClustered: 0
   readsClustered: 0
-  clones: 8
+  clones: 6
   clonesDroppedAsLowQuality: 0
   clonesPreClustered: 0
   readsPreClustered: 0
-  readsInClones: 17212
-  readsInClonesBeforeClustering: 17212
+  readsInClones: 14456
+  readsInClonesBeforeClustering: 14456
   readsDroppedWithLowQualityClones: 0
   clonalChainUsage:
     type: "chainUsage"
     chimeras: 0
-    total: 8
+    total: 6
     chains:
       TRA:
-        total: 5
-        nonFunctional: 2
-        isOOF: 2
+        total: 3
+        nonFunctional: 1
+        isOOF: 1
         hasStops: 0
       TRB:
         total: 3
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
-  clonesFilteredInPostFiltering: 2
-  readsFilteredInPostFiltering: 763.0
+  clonesFilteredInPostFiltering: 1
+  readsFilteredInPostFiltering: 2.0
   postFilteringReports:
   - type: "filter_in_groups_report"
-    numberOfGroups: 6
+    numberOfGroups: 5
     nestedAggregatedReport:
       type: "filter_groups_report"
       groupingKeys:
       - "clone"
-      numberOfGroups: 10
-      numberOfGroupsAccepted: 8
-      totalWeight: 17212.0
-      totalWeightAccepted: 16449.0
+      numberOfGroups: 7
+      numberOfGroupsAccepted: 6
+      totalWeight: 14456.0
+      totalWeightAccepted: 14454.0
       operatorReports:
       - operatorReport:
           type: "generic_hist_report"
@@ -195,10 +195,10 @@ assemble:
       type: "filter_groups_report"
       groupingKeys:
       - "clone"
-      numberOfGroups: 8
-      numberOfGroupsAccepted: 8
-      totalWeight: 16449.0
-      totalWeightAccepted: 16449.0
+      numberOfGroups: 6
+      numberOfGroupsAccepted: 6
+      totalWeight: 14454.0
+      totalWeightAccepted: 14454.0
       operatorReports:
       - operatorReport:
           type: "generic_hist_report"
@@ -206,6 +206,19 @@ assemble:
         metricHists:
         - null
     nestedPerGroupReports: {}
+  - type: "filter_groups_report"
+    groupingKeys:
+    - "allTags:Cell"
+    - "clone"
+    numberOfGroups: 6
+    numberOfGroupsAccepted: 6
+    totalWeight: 14454.0
+    totalWeightAccepted: 14454.0
+    operatorReports:
+    - operatorReport:
+        type: "dummy_report"
+      metricHists:
+      - null
   alignmentsFilteredByTagPrefix: 0
 assembleContigs:
   type: "fullSeqAssemblerReport"
@@ -222,10 +235,10 @@ assembleContigs:
   readsWithAmbiguousLettersInSplittingRegion: 0.0
   totalAmbiguousLetters: 14
   totalAmbiguousLettersInSplittingRegion: 0
-  initialCloneCount: 8
+  initialCloneCount: 6
   canceledAssemblies: 0
-  finalCloneCount: 8
-  totalReadsProcessed: 16449.0
+  finalCloneCount: 6
+  totalReadsProcessed: 14454.0
   clonesClustered: 0
   readsClustered: 0.0
   longestContigLength: 618
@@ -240,21 +253,21 @@ assemblePartial:
   - "./baseSingleCell.raw.refined.vdjca"
   outputFiles:
   - "./baseSingleCell.raw.passembled.1.vdjca"
-  independentRuns: 87
-  totalProcessed: 40648
-  outputAlignments: 40430
-  withCDR3: 707
-  overlapped: 218
-  leftTooShortNRegion: 553
-  kMerDiversity: 2063
+  independentRuns: 60
+  totalProcessed: 27094
+  outputAlignments: 26902
+  withCDR3: 641
+  overlapped: 192
+  leftTooShortNRegion: 506
+  kMerDiversity: 2013
   droppedWildcardsInKMer: 0
-  droppedSmallOverlapNRegion: 422
+  droppedSmallOverlapNRegion: 381
   droppedNoNRegion: 0
-  leftParts: 434
-  rightParts: 21324
+  leftParts: 398
+  rightParts: 8584
   complexOverlaps: 0
   overOverlaps: 0
-  partialAlignmentsAsIs: 39505
+  partialAlignmentsAsIs: 26069
 refineTagsAndSort:
   type: "refineTagsAndSort"
   commandLine: "refineTagsAndSort --report ./baseSingleCell.raw.refine.report.txt\
@@ -266,7 +279,7 @@ refineTagsAndSort:
   - "./baseSingleCell.raw.refined.vdjca"
   correctionReport:
     inputRecords: 40756
-    outputRecords: 40648
+    outputRecords: 27094
     steps:
     - tagName: "CELL"
       inputGroups: 1
@@ -366,29 +379,167 @@ refineTagsAndSort:
       - type: "filter_groups_report"
         groupingKeys:
         - "allTags:Cell"
-        numberOfGroups: 3
-        numberOfGroupsAccepted: 3
+        - "allTags:Molecule"
+        numberOfGroups: 87
+        numberOfGroupsAccepted: 60
         totalWeight: 40648.0
-        totalWeightAccepted: 40648.0
+        totalWeightAccepted: 27094.0
         operatorReports:
         - operatorReport:
             type: "dummy_report"
           metricHists:
           - bins:
-            - from: 9.0
-              to: 14.264038732150023
+            - from: 55.0
+              to: 60.95
+              weight: 23.0
+            - from: 60.95
+              to: 66.9
+              weight: 1.0
+            - from: 66.9
+              to: 72.85
+              weight: 1.0
+            - from: 72.85
+              to: 78.8
+              weight: 0.0
+            - from: 78.8
+              to: 84.75
+              weight: 0.0
+            - from: 84.75
+              to: 90.7
+              weight: 0.0
+            - from: 90.7
+              to: 96.65
+              weight: 0.0
+            - from: 96.65
+              to: 102.6
+              weight: 0.0
+            - from: 102.6
+              to: 108.55000000000001
+              weight: 0.0
+            - from: 108.55000000000001
+              to: 114.5
+              weight: 0.0
+            - from: 114.5
+              to: 120.45
+              weight: 0.0
+            - from: 120.45
+              to: 126.4
+              weight: 0.0
+            - from: 126.4
+              to: 132.35000000000002
+              weight: 0.0
+            - from: 132.35000000000002
+              to: 138.3
+              weight: 0.0
+            - from: 138.3
+              to: 144.25
+              weight: 1.0
+            - from: 144.25
+              to: 150.2
+              weight: 0.0
+            - from: 150.2
+              to: 156.15
+              weight: 0.0
+            - from: 156.15
+              to: 162.10000000000002
+              weight: 0.0
+            - from: 162.10000000000002
+              to: 168.05
+              weight: 0.0
+            - from: 168.05
+              to: 174.0
+              weight: 0.0
+            - from: 174.0
+              to: 179.95
+              weight: 0.0
+            - from: 179.95
+              to: 185.9
+              weight: 1.0
+            - from: 185.9
+              to: 191.85
+              weight: 0.0
+            - from: 191.85
+              to: 197.8
+              weight: 0.0
+            - from: 197.8
+              to: 203.75
+              weight: 1.0
+            - from: 203.75
+              to: 209.70000000000002
+              weight: 1.0
+            - from: 209.70000000000002
+              to: 215.65
+              weight: 1.0
+            - from: 215.65
+              to: 221.6
               weight: 2.0
-            - from: 14.264038732150023
-              to: 22.60697788358622
+            - from: 221.6
+              to: 227.55
+              weight: 2.0
+            - from: 227.55
+              to: 233.5
+              weight: 5.0
+            - from: 233.5
+              to: 239.45000000000002
+              weight: 10.0
+            - from: 239.45000000000002
+              to: 245.4
+              weight: 6.0
+            - from: 245.4
+              to: 251.35
+              weight: 9.0
+            - from: 251.35
+              to: 257.3
+              weight: 11.0
+            - from: 257.3
+              to: 263.25
+              weight: 4.0
+            - from: 263.25
+              to: 269.20000000000005
+              weight: 5.0
+            - from: 269.20000000000005
+              to: 275.15
+              weight: 1.0
+            - from: 275.15
+              to: 281.1
               weight: 0.0
-            - from: 22.60697788358622
-              to: 35.82964534981475
+            - from: 281.1
+              to: 287.05
               weight: 0.0
-            - from: 35.82964534981475
-              to: 56.786161003217416
+            - from: 287.05
+              to: 293.0
+              weight: 2.0
+            collectionSpec:
+              log: false
+              binNumber: 40
+              minBinWidth: 0.0
+              multiplyWeightByKey: false
+      - type: "filter_groups_report"
+        groupingKeys:
+        - "allTags:Cell"
+        numberOfGroups: 3
+        numberOfGroupsAccepted: 3
+        totalWeight: 27094.0
+        totalWeightAccepted: 27094.0
+        operatorReports:
+        - operatorReport:
+            type: "dummy_report"
+          metricHists:
+          - bins:
+            - from: 5.000000000000001
+              to: 7.92446596230557
+              weight: 1.0
+            - from: 7.92446596230557
+              to: 12.559432157547903
+              weight: 1.0
+            - from: 12.559432157547903
+              to: 19.905358527674863
               weight: 0.0
-            - from: 56.786161003217416
-              to: 89.99999999999997
+            - from: 19.905358527674863
+              to: 31.54786722400968
+              weight: 0.0
+            - from: 31.54786722400968
+              to: 49.99999999999999
               weight: 1.0
             collectionSpec:
               log: true
