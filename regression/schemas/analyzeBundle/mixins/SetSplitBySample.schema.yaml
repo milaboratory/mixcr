@@ -1,12 +1,12 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: "object"
+- type: object
   properties:
     value:
-      type: "boolean"
-- type: "object"
+      type: boolean
+- type: object
   properties:
     type:
-      const: "SetSplitBySample"
+      const: SetSplitBySample
   required:
-  - "type"
+  - type

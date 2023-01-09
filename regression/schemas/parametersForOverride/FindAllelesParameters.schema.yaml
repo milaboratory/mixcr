@@ -1,94 +1,94 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 $defs:
   Filter:
-    type: "object"
+    type: object
     properties:
       useClonesWithCountGreaterThen:
-        type: "integer"
-type: "object"
+        type: integer
+type: object
 properties:
   filterForDataWithUmi:
-    $ref: "#/$defs/Filter"
+    $ref: '#/$defs/Filter'
   filterForDataWithoutUmi:
-    $ref: "#/$defs/Filter"
+    $ref: '#/$defs/Filter'
   productiveOnly:
-    type: "boolean"
+    type: boolean
   searchAlleleParameter:
-    type: "object"
+    type: object
     properties:
       diversityRatioToSearchCommonMutationsInAnAllele:
-        type: "number"
+        type: number
       diversityThresholds:
-        type: "object"
+        type: object
         properties:
           diversityForSkipTestForRatioForZeroAllele:
-            type: "number"
+            type: number
           minDiversityForAllele:
-            type: "number"
+            type: number
           minDiversityForMutation:
-            type: "number"
+            type: number
       minCountOfNaiveClonesToAddAllele:
-        type: "integer"
+        type: integer
       minRelativePenaltyBetweenAllelesForCloneAlign:
-        type: "number"
+        type: number
       regressionFilter:
         anyOf:
         - allOf:
-          - type: "object"
+          - type: object
             properties:
               allowedSkippedPointsInRegression:
-                type: "integer"
+                type: integer
               maxSlopeForHomozygous:
-                type: "number"
+                type: number
               minPValue:
-                type: "number"
+                type: number
               minYInterceptForHeterozygous:
-                type: "number"
+                type: number
               minYInterceptForHomozygous:
-                type: "number"
+                type: number
               windowSizeForRegression:
-                type: "integer"
-          - type: "object"
+                type: integer
+          - type: object
             properties:
               type:
-                const: "byCount"
+                const: byCount
             required:
-            - "type"
+            - type
         - allOf:
-          - type: "object"
+          - type: object
             properties:
               allowedSkippedPointsInRegression:
-                type: "integer"
+                type: integer
               maxSlopeForHomozygous:
-                type: "number"
+                type: number
               minPValue:
-                type: "number"
+                type: number
               minYInterceptForHeterozygous:
-                type: "number"
+                type: number
               minYInterceptForHomozygous:
-                type: "number"
+                type: number
               windowSizeForRegression:
-                type: "integer"
-          - type: "object"
+                type: integer
+          - type: object
             properties:
               type:
-                const: "byDiversity"
+                const: byDiversity
             required:
-            - "type"
-        - type: "object"
+            - type
+        - type: object
           properties:
             type:
-              const: "noop"
+              const: noop
           required:
-          - "type"
+          - type
       topByDiversity:
-        type: "number"
+        type: number
   searchMutationsInCDR3:
-    type: "object"
+    type: object
     properties:
       minClonesCount:
-        type: "integer"
+        type: integer
       minDiversity:
-        type: "number"
+        type: number
       minPartOfTheSameLetter:
-        type: "number"
+        type: number

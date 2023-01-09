@@ -1,49 +1,49 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   assemblePrematureTerminationEvents:
-    type: "number"
+    type: number
   canceledAssemblies:
-    type: "integer"
+    type: integer
   clonesClustered:
-    type: "integer"
+    type: integer
   clonesWithAmbiguousLetters:
-    type: "integer"
+    type: integer
   clonesWithAmbiguousLettersInSplittingRegion:
-    type: "integer"
+    type: integer
   commandLine:
-    type: "string"
+    type: string
   date:
-    type: "string"
+    type: string
   executionTimeMillis:
-    type: "integer"
+    type: integer
   finalCloneCount:
-    type: "integer"
+    type: integer
   initialCloneCount:
-    type: "integer"
+    type: integer
   inputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   longestContigLength:
-    type: "integer"
+    type: integer
   outputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   readsClustered:
-    type: "number"
+    type: number
   readsWithAmbiguousLetters:
-    type: "number"
+    type: number
   readsWithAmbiguousLettersInSplittingRegion:
-    type: "number"
+    type: number
   totalAmbiguousLetters:
-    type: "integer"
+    type: integer
   totalAmbiguousLettersInSplittingRegion:
-    type: "integer"
+    type: integer
   totalDividedVariantReads:
-    type: "number"
+    type: number
   totalReadsProcessed:
-    type: "number"
+    type: number
   version:
-    type: "string"
+    type: string

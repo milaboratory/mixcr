@@ -1,44 +1,44 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   allelesScoreChange:
-    type: "object"
+    type: object
   clonesCountWithNegativeScoreChange:
-    type: "integer"
+    type: integer
   clonesCountWithNoChangeOfScore:
-    type: "integer"
+    type: integer
   clonesScoreDeltaStats:
-    type: "object"
+    type: object
     properties:
       avg:
-        type: "number"
+        type: number
       max:
-        type: "number"
+        type: number
       min:
-        type: "number"
+        type: number
       quadraticMean:
-        type: "number"
+        type: number
       size:
-        type: "integer"
+        type: integer
       stdDeviation:
-        type: "number"
+        type: number
       sum:
-        type: "number"
+        type: number
   commandLine:
-    type: "string"
+    type: string
   foundAlleles:
-    type: "integer"
+    type: integer
   inputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   outputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   searchHistoryForBCells:
-    type: "object"
+    type: object
   version:
-    type: "string"
+    type: string
   zygotes:
-    type: "object"
+    type: object

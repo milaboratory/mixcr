@@ -1,12 +1,12 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: "object"
+- type: object
   properties:
     species:
-      type: "string"
-- type: "object"
+      type: string
+- type: object
   properties:
     type:
-      const: "SetSpecies"
+      const: SetSpecies
   required:
-  - "type"
+  - type

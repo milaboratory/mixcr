@@ -1,80 +1,80 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 $defs:
   PairedEndReadsLayout:
-    type: "string"
+    type: string
     enum:
-    - "DirectOnly"
-    - "ReverseOnly"
-    - "Opposite"
-    - "Collinear"
-    - "CollinearDirect"
-    - "Unknown"
-type: "object"
+    - DirectOnly
+    - ReverseOnly
+    - Opposite
+    - Collinear
+    - CollinearDirect
+    - Unknown
+type: object
 properties:
   alignmentBoundaryTolerance:
-    type: "integer"
+    type: integer
   allowChimeras:
-    type: "boolean"
+    type: boolean
   allowNoCDR3PartAlignments:
-    type: "boolean"
+    type: boolean
   allowPartialAlignments:
-    type: "boolean"
+    type: boolean
   fixSeed:
-    type: "boolean"
+    type: boolean
   includeCScore:
-    type: "boolean"
+    type: boolean
   includeDScore:
-    type: "boolean"
+    type: boolean
   libraryStructure:
-    type: "string"
+    type: string
     enum:
-    - "Unknown"
-    - "R1V"
+    - Unknown
+    - R1V
   maxHits:
-    type: "integer"
+    type: integer
   mergerParameters:
-    type: "object"
+    type: object
     properties:
       identityType:
-        type: "string"
+        type: string
         enum:
-        - "Unweighted"
-        - "MinimalQualityWeighted"
+        - Unweighted
+        - MinimalQualityWeighted
       maxQuality:
-        type: "integer"
+        type: integer
       minimalIdentity:
-        type: "number"
+        type: number
       minimalMatchQualitySum:
-        type: "integer"
+        type: integer
       minimalOverlap:
-        type: "integer"
+        type: integer
       partsLayout:
-        $ref: "#/$defs/PairedEndReadsLayout"
+        $ref: '#/$defs/PairedEndReadsLayout'
       qualityMergingAlgorithm:
-        type: "string"
+        type: string
         enum:
-        - "SumMax"
-        - "SumSubtraction"
-        - "MaxSubtraction"
-        - "MaxMax"
+        - SumMax
+        - SumSubtraction
+        - MaxSubtraction
+        - MaxMax
   minChimeraDetectionScore:
-    type: "integer"
+    type: integer
   minSumScore:
-    type: "number"
+    type: number
   readsLayout:
-    $ref: "#/$defs/PairedEndReadsLayout"
+    $ref: '#/$defs/PairedEndReadsLayout'
   relativeMinVFR3CDR3Score:
-    type: "number"
+    type: number
   saveOriginalReads:
-    type: "boolean"
+    type: boolean
   saveOriginalSequence:
-    type: "boolean"
+    type: boolean
   smartForceEdgeAlignments:
-    type: "boolean"
+    type: boolean
   vjAlignmentOrder:
-    type: "string"
+    type: string
     enum:
-    - "VThenJ"
-    - "JThenV"
+    - VThenJ
+    - JThenV
   vjOverlapWindow:
-    type: "integer"
+    type: integer

@@ -1,60 +1,60 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   cellLevel:
-    type: "boolean"
+    type: boolean
   dropPartial:
-    type: "boolean"
+    type: boolean
   overlappedOnly:
-    type: "boolean"
+    type: boolean
   parameters:
-    type: "object"
+    type: object
     properties:
       kOffset:
-        type: "integer"
+        type: integer
       kValue:
-        type: "integer"
+        type: integer
       maxLeftMatches:
-        type: "integer"
+        type: integer
       maxLeftParts:
-        type: "integer"
+        type: integer
       mergerParameters:
-        type: "object"
+        type: object
         properties:
           identityType:
-            type: "string"
+            type: string
             enum:
-            - "Unweighted"
-            - "MinimalQualityWeighted"
+            - Unweighted
+            - MinimalQualityWeighted
           maxQuality:
-            type: "integer"
+            type: integer
           minimalIdentity:
-            type: "number"
+            type: number
           minimalMatchQualitySum:
-            type: "integer"
+            type: integer
           minimalOverlap:
-            type: "integer"
+            type: integer
           partsLayout:
-            type: "string"
+            type: string
             enum:
-            - "DirectOnly"
-            - "ReverseOnly"
-            - "Opposite"
-            - "Collinear"
-            - "CollinearDirect"
-            - "Unknown"
+            - DirectOnly
+            - ReverseOnly
+            - Opposite
+            - Collinear
+            - CollinearDirect
+            - Unknown
           qualityMergingAlgorithm:
-            type: "string"
+            type: string
             enum:
-            - "SumMax"
-            - "SumSubtraction"
-            - "MaxSubtraction"
-            - "MaxMax"
+            - SumMax
+            - SumSubtraction
+            - MaxSubtraction
+            - MaxMax
       minimalAlignmentMergeIdentity:
-        type: "number"
+        type: number
       minimalAssembleOverlap:
-        type: "integer"
+        type: integer
       minimalNOverlap:
-        type: "integer"
+        type: integer
       minimalNOverlapShare:
-        type: "number"
+        type: number

@@ -1,17 +1,17 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: "object"
+- type: object
   properties:
     features:
-      type: "object"
+      type: object
       properties:
         features:
-          type: "array"
+          type: array
           items:
-            type: "string"
-- type: "object"
+            type: string
+- type: object
   properties:
     type:
-      const: "SetClonotypeAssemblingFeatures"
+      const: SetClonotypeAssemblingFeatures
   required:
-  - "type"
+  - type

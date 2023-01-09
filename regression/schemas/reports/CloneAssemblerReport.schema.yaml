@@ -1,258 +1,258 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 $defs:
   AndTaggedFilterReport-1:
-    type: "object"
+    type: object
     properties:
       nestedReports:
-        type: "array"
+        type: array
         items:
           anyOf:
-          - $ref: "#/$defs/AndTaggedFilterReport-2"
-          - $ref: "#/$defs/DummyKeyedFilterReport"
-          - $ref: "#/$defs/GenericHistOpReport"
-          - $ref: "#/$defs/GroupFilterReport-2"
-          - $ref: "#/$defs/InGroupsFilterReport-2"
+          - $ref: '#/$defs/AndTaggedFilterReport-2'
+          - $ref: '#/$defs/DummyKeyedFilterReport'
+          - $ref: '#/$defs/GenericHistOpReport'
+          - $ref: '#/$defs/GroupFilterReport-2'
+          - $ref: '#/$defs/InGroupsFilterReport-2'
   AndTaggedFilterReport-2:
-    $ref: "#/$defs/AndTaggedFilterReport-1"
-    type: "object"
+    $ref: '#/$defs/AndTaggedFilterReport-1'
+    type: object
     properties:
       type:
-        const: "and_report"
+        const: and_report
     required:
-    - "type"
+    - type
   DummyKeyedFilterReport:
-    type: "object"
+    type: object
     properties:
       type:
-        const: "dummy_report"
+        const: dummy_report
     required:
-    - "type"
+    - type
   GenericHistOpReport:
     allOf:
-    - type: "object"
+    - type: object
       properties:
         threshold:
-          type: "number"
-    - type: "object"
+          type: number
+    - type: object
       properties:
         type:
-          const: "generic_hist_report"
+          const: generic_hist_report
       required:
-      - "type"
+      - type
   GroupFilterReport-1:
-    type: "object"
+    type: object
     properties:
       groupingKeys:
-        type: "array"
+        type: array
         items:
-          type: "string"
+          type: string
       numberOfGroups:
-        type: "integer"
+        type: integer
       numberOfGroupsAccepted:
-        type: "integer"
+        type: integer
       operatorReports:
-        type: "array"
+        type: array
         items:
-          type: "object"
+          type: object
           properties:
             hist:
-              type: "array"
+              type: array
               items:
-                type: "object"
+                type: object
                 properties:
                   bins:
-                    type: "array"
+                    type: array
                     items:
-                      type: "object"
+                      type: object
                       properties:
                         from:
-                          type: "number"
+                          type: number
                         to:
-                          type: "number"
+                          type: number
                         weight:
-                          type: "number"
+                          type: number
                   collectionSpec:
-                    type: "object"
+                    type: object
                     properties:
                       binNumber:
-                        type: "integer"
+                        type: integer
                       log:
-                        type: "boolean"
+                        type: boolean
                       minBinWidth:
-                        type: "number"
+                        type: number
                       multiplyWeightByKey:
-                        type: "boolean"
+                        type: boolean
             operatorReport:
               anyOf:
-              - $ref: "#/$defs/AndTaggedFilterReport-2"
-              - $ref: "#/$defs/DummyKeyedFilterReport"
-              - $ref: "#/$defs/GenericHistOpReport"
-              - $ref: "#/$defs/GroupFilterReport-2"
-              - $ref: "#/$defs/InGroupsFilterReport-2"
+              - $ref: '#/$defs/AndTaggedFilterReport-2'
+              - $ref: '#/$defs/DummyKeyedFilterReport'
+              - $ref: '#/$defs/GenericHistOpReport'
+              - $ref: '#/$defs/GroupFilterReport-2'
+              - $ref: '#/$defs/InGroupsFilterReport-2'
       totalWeight:
-        type: "number"
+        type: number
       totalWeightAccepted:
-        type: "number"
+        type: number
   GroupFilterReport-2:
-    $ref: "#/$defs/GroupFilterReport-1"
-    type: "object"
+    $ref: '#/$defs/GroupFilterReport-1'
+    type: object
     properties:
       type:
-        const: "filter_groups_report"
+        const: filter_groups_report
     required:
-    - "type"
+    - type
   InGroupsFilterReport-1:
-    type: "object"
+    type: object
     properties:
       nestedAggregatedReport:
         anyOf:
-        - $ref: "#/$defs/AndTaggedFilterReport-2"
-        - $ref: "#/$defs/DummyKeyedFilterReport"
-        - $ref: "#/$defs/GenericHistOpReport"
-        - $ref: "#/$defs/GroupFilterReport-2"
-        - $ref: "#/$defs/InGroupsFilterReport-2"
+        - $ref: '#/$defs/AndTaggedFilterReport-2'
+        - $ref: '#/$defs/DummyKeyedFilterReport'
+        - $ref: '#/$defs/GenericHistOpReport'
+        - $ref: '#/$defs/GroupFilterReport-2'
+        - $ref: '#/$defs/InGroupsFilterReport-2'
       nestedPerGroupReports:
-        type: "object"
+        type: object
       numberOfGroups:
-        type: "integer"
+        type: integer
   InGroupsFilterReport-2:
-    $ref: "#/$defs/InGroupsFilterReport-1"
-    type: "object"
+    $ref: '#/$defs/InGroupsFilterReport-1'
+    type: object
     properties:
       type:
-        const: "filter_in_groups_report"
+        const: filter_in_groups_report
     required:
-    - "type"
-type: "object"
+    - type
+type: object
 properties:
   alignmentsFilteredByTagPrefix:
-    type: "integer"
+    type: integer
   clonalChainUsage:
     allOf:
-    - type: "object"
+    - type: object
       properties:
         chains:
-          type: "object"
+          type: object
         chimeras:
-          type: "integer"
+          type: integer
         total:
-          type: "integer"
-    - type: "object"
+          type: integer
+    - type: object
       properties:
         type:
-          const: "chainUsage"
+          const: chainUsage
       required:
-      - "type"
+      - type
   clones:
-    type: "integer"
+    type: integer
   clonesClustered:
-    type: "integer"
+    type: integer
   clonesDroppedAsLowQuality:
-    type: "integer"
+    type: integer
   clonesFilteredInPostFiltering:
-    type: "integer"
+    type: integer
   clonesPreClustered:
-    type: "integer"
+    type: integer
   commandLine:
-    type: "string"
+    type: string
   coreReads:
-    type: "integer"
+    type: integer
   date:
-    type: "string"
+    type: string
   executionTimeMillis:
-    type: "integer"
+    type: integer
   initialClonesCreated:
-    type: "integer"
+    type: integer
   inputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   lowQualityRescued:
-    type: "integer"
+    type: integer
   outputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   postFilteringReports:
-    type: "array"
+    type: array
     items:
       anyOf:
-      - $ref: "#/$defs/AndTaggedFilterReport-2"
-      - $ref: "#/$defs/DummyKeyedFilterReport"
-      - $ref: "#/$defs/GenericHistOpReport"
-      - $ref: "#/$defs/GroupFilterReport-2"
-      - $ref: "#/$defs/InGroupsFilterReport-2"
+      - $ref: '#/$defs/AndTaggedFilterReport-2'
+      - $ref: '#/$defs/DummyKeyedFilterReport'
+      - $ref: '#/$defs/GenericHistOpReport'
+      - $ref: '#/$defs/GroupFilterReport-2'
+      - $ref: '#/$defs/InGroupsFilterReport-2'
   preCloneAssemblerReport:
     allOf:
-    - type: "object"
+    - type: object
       properties:
         assemblingFeatureSequencesInZeroPreClones:
-          type: "integer"
+          type: integer
         clonotypes:
-          type: "integer"
+          type: integer
         clonotypesPerGroup:
-          type: "object"
+          type: object
         coreAlignments:
-          type: "integer"
+          type: integer
         coreAlignmentsDroppedByTagSuffix:
-          type: "integer"
+          type: integer
         coreClonotypesDroppedByTagSuffix:
-          type: "integer"
+          type: integer
         discardedCoreAlignments:
-          type: "integer"
+          type: integer
         empiricalAssignmentConflicts:
-          type: "integer"
+          type: integer
         empiricallyAssignedAlignments:
-          type: "integer"
+          type: integer
         gatConflicts:
-          type: "integer"
+          type: integer
         gatEmpiricallyAssignedAlignments:
-          type: "integer"
+          type: integer
         geneConflicts:
-          type: "object"
+          type: object
         groupsWithNoAssemblingFeature:
-          type: "integer"
+          type: integer
         inputAlignments:
-          type: "integer"
+          type: integer
         inputAssemblingFeatureSequences:
-          type: "integer"
+          type: integer
         inputGroups:
-          type: "integer"
+          type: integer
         umiConflicts:
-          type: "integer"
+          type: integer
         umiEmpiricallyAssignedAlignments:
-          type: "integer"
+          type: integer
         unassignedAlignments:
-          type: "integer"
+          type: integer
         vjEmpiricallyAssignedAlignments:
-          type: "integer"
-    - type: "object"
+          type: integer
+    - type: object
       properties:
         type:
-          const: "preCloneAssemblerReport"
+          const: preCloneAssemblerReport
       required:
-      - "type"
+      - type
   readsClustered:
-    type: "integer"
+    type: integer
   readsDroppedFailedMapping:
-    type: "integer"
+    type: integer
   readsDroppedLowQuality:
-    type: "integer"
+    type: integer
   readsDroppedNoTargetSequence:
-    type: "integer"
+    type: integer
   readsDroppedTooShortClonalSequence:
-    type: "integer"
+    type: integer
   readsDroppedWithLowQualityClones:
-    type: "integer"
+    type: integer
   readsFilteredInPostFiltering:
-    type: "number"
+    type: number
   readsInClones:
-    type: "integer"
+    type: integer
   readsInClonesBeforeClustering:
-    type: "integer"
+    type: integer
   readsPreClustered:
-    type: "integer"
+    type: integer
   totalReadsProcessed:
-    type: "integer"
+    type: integer
   version:
-    type: "string"
+    type: string

@@ -1,83 +1,83 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 $defs:
   MetricParameters:
-    type: "object"
+    type: object
     properties:
       downsampling:
-        type: "string"
+        type: string
       dropOutliers:
-        type: "boolean"
+        type: boolean
       onlyProductive:
-        type: "boolean"
+        type: boolean
       weightFunction:
-        type: "string"
-type: "object"
+        type: string
+type: object
 properties:
   cdr3Spectratype:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   cdr3metrics:
-    type: "object"
+    type: object
     properties:
       addedNNT:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       cdr3lenAA:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       cdr3lenNT:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       charge:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       hydrophobicity:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       ndnLenNT:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       strength:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       surface:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       volume:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
   defaultDownsampling:
-    type: "string"
+    type: string
   defaultDropOutliers:
-    type: "boolean"
+    type: boolean
   defaultOnlyProductive:
-    type: "boolean"
+    type: boolean
   defaultWeightFunction:
-    type: "string"
+    type: string
   diversity:
-    type: "object"
+    type: object
     properties:
       chao1:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       d50:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       efronThisted:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       giniIndex:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       inverseSimpsonIndex:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       normalizedShannonWienerIndex:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       observed:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
       shannonWiener:
-        $ref: "#/$defs/MetricParameters"
+        $ref: '#/$defs/MetricParameters'
   isotypeUsage:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   jFamilyUsage:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   jUsage:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   vFamilyUsage:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   vSpectratype:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   vSpectratypeMean:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   vUsage:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   vjFamilyUsage:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'
   vjUsage:
-    $ref: "#/$defs/MetricParameters"
+    $ref: '#/$defs/MetricParameters'

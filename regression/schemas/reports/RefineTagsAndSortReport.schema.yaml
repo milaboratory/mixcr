@@ -1,190 +1,190 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 $defs:
   AndTaggedFilterReport-1:
-    type: "object"
+    type: object
     properties:
       nestedReports:
-        type: "array"
+        type: array
         items:
           anyOf:
-          - $ref: "#/$defs/AndTaggedFilterReport-2"
-          - $ref: "#/$defs/DummyKeyedFilterReport"
-          - $ref: "#/$defs/GenericHistOpReport"
-          - $ref: "#/$defs/GroupFilterReport-2"
-          - $ref: "#/$defs/InGroupsFilterReport-2"
+          - $ref: '#/$defs/AndTaggedFilterReport-2'
+          - $ref: '#/$defs/DummyKeyedFilterReport'
+          - $ref: '#/$defs/GenericHistOpReport'
+          - $ref: '#/$defs/GroupFilterReport-2'
+          - $ref: '#/$defs/InGroupsFilterReport-2'
   AndTaggedFilterReport-2:
-    $ref: "#/$defs/AndTaggedFilterReport-1"
-    type: "object"
+    $ref: '#/$defs/AndTaggedFilterReport-1'
+    type: object
     properties:
       type:
-        const: "and_report"
+        const: and_report
     required:
-    - "type"
+    - type
   DummyKeyedFilterReport:
-    type: "object"
+    type: object
     properties:
       type:
-        const: "dummy_report"
+        const: dummy_report
     required:
-    - "type"
+    - type
   GenericHistOpReport:
     allOf:
-    - type: "object"
+    - type: object
       properties:
         threshold:
-          type: "number"
-    - type: "object"
+          type: number
+    - type: object
       properties:
         type:
-          const: "generic_hist_report"
+          const: generic_hist_report
       required:
-      - "type"
+      - type
   GroupFilterReport-1:
-    type: "object"
+    type: object
     properties:
       groupingKeys:
-        type: "array"
+        type: array
         items:
-          type: "string"
+          type: string
       numberOfGroups:
-        type: "integer"
+        type: integer
       numberOfGroupsAccepted:
-        type: "integer"
+        type: integer
       operatorReports:
-        type: "array"
+        type: array
         items:
-          type: "object"
+          type: object
           properties:
             hist:
-              type: "array"
+              type: array
               items:
-                type: "object"
+                type: object
                 properties:
                   bins:
-                    type: "array"
+                    type: array
                     items:
-                      type: "object"
+                      type: object
                       properties:
                         from:
-                          type: "number"
+                          type: number
                         to:
-                          type: "number"
+                          type: number
                         weight:
-                          type: "number"
+                          type: number
                   collectionSpec:
-                    type: "object"
+                    type: object
                     properties:
                       binNumber:
-                        type: "integer"
+                        type: integer
                       log:
-                        type: "boolean"
+                        type: boolean
                       minBinWidth:
-                        type: "number"
+                        type: number
                       multiplyWeightByKey:
-                        type: "boolean"
+                        type: boolean
             operatorReport:
               anyOf:
-              - $ref: "#/$defs/AndTaggedFilterReport-2"
-              - $ref: "#/$defs/DummyKeyedFilterReport"
-              - $ref: "#/$defs/GenericHistOpReport"
-              - $ref: "#/$defs/GroupFilterReport-2"
-              - $ref: "#/$defs/InGroupsFilterReport-2"
+              - $ref: '#/$defs/AndTaggedFilterReport-2'
+              - $ref: '#/$defs/DummyKeyedFilterReport'
+              - $ref: '#/$defs/GenericHistOpReport'
+              - $ref: '#/$defs/GroupFilterReport-2'
+              - $ref: '#/$defs/InGroupsFilterReport-2'
       totalWeight:
-        type: "number"
+        type: number
       totalWeightAccepted:
-        type: "number"
+        type: number
   GroupFilterReport-2:
-    $ref: "#/$defs/GroupFilterReport-1"
-    type: "object"
+    $ref: '#/$defs/GroupFilterReport-1'
+    type: object
     properties:
       type:
-        const: "filter_groups_report"
+        const: filter_groups_report
     required:
-    - "type"
+    - type
   InGroupsFilterReport-1:
-    type: "object"
+    type: object
     properties:
       nestedAggregatedReport:
         anyOf:
-        - $ref: "#/$defs/AndTaggedFilterReport-2"
-        - $ref: "#/$defs/DummyKeyedFilterReport"
-        - $ref: "#/$defs/GenericHistOpReport"
-        - $ref: "#/$defs/GroupFilterReport-2"
-        - $ref: "#/$defs/InGroupsFilterReport-2"
+        - $ref: '#/$defs/AndTaggedFilterReport-2'
+        - $ref: '#/$defs/DummyKeyedFilterReport'
+        - $ref: '#/$defs/GenericHistOpReport'
+        - $ref: '#/$defs/GroupFilterReport-2'
+        - $ref: '#/$defs/InGroupsFilterReport-2'
       nestedPerGroupReports:
-        type: "object"
+        type: object
       numberOfGroups:
-        type: "integer"
+        type: integer
   InGroupsFilterReport-2:
-    $ref: "#/$defs/InGroupsFilterReport-1"
-    type: "object"
+    $ref: '#/$defs/InGroupsFilterReport-1'
+    type: object
     properties:
       type:
-        const: "filter_in_groups_report"
+        const: filter_in_groups_report
     required:
-    - "type"
-type: "object"
+    - type
+type: object
 properties:
   commandLine:
-    type: "string"
+    type: string
   correctionReport:
-    type: "object"
+    type: object
     properties:
       filterReport:
         anyOf:
-        - $ref: "#/$defs/AndTaggedFilterReport-2"
-        - $ref: "#/$defs/DummyKeyedFilterReport"
-        - $ref: "#/$defs/GenericHistOpReport"
-        - $ref: "#/$defs/GroupFilterReport-2"
-        - $ref: "#/$defs/InGroupsFilterReport-2"
+        - $ref: '#/$defs/AndTaggedFilterReport-2'
+        - $ref: '#/$defs/DummyKeyedFilterReport'
+        - $ref: '#/$defs/GenericHistOpReport'
+        - $ref: '#/$defs/GroupFilterReport-2'
+        - $ref: '#/$defs/InGroupsFilterReport-2'
       inputRecords:
-        type: "integer"
+        type: integer
       outputRecords:
-        type: "integer"
+        type: integer
       steps:
-        type: "array"
+        type: array
         items:
-          type: "object"
+          type: object
           properties:
             coreCount:
-              type: "integer"
+              type: integer
             coreDiversity:
-              type: "integer"
+              type: integer
             directlyCorrectedCount:
-              type: "integer"
+              type: integer
             directlyCorrectedDiversity:
-              type: "integer"
+              type: integer
             diversityFilteredByWhitelist:
-              type: "integer"
+              type: integer
             filteredCount:
-              type: "integer"
+              type: integer
             filteredDiversity:
-              type: "integer"
+              type: integer
             inputCount:
-              type: "integer"
+              type: integer
             inputDiversity:
-              type: "integer"
+              type: integer
             inputGroups:
-              type: "integer"
+              type: integer
             outputCount:
-              type: "integer"
+              type: integer
             outputDiversity:
-              type: "integer"
+              type: integer
             recursivelyCorrected:
-              type: "integer"
+              type: integer
             tagName:
-              type: "string"
+              type: string
   date:
-    type: "string"
+    type: string
   executionTimeMillis:
-    type: "integer"
+    type: integer
   inputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   outputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   version:
-    type: "string"
+    type: string

@@ -1,36 +1,36 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   chains:
-    type: "string"
+    type: string
   fields:
-    type: "array"
+    type: array
     items:
-      type: "object"
+      type: object
       properties:
         args:
-          type: "array"
+          type: array
           items:
-            type: "string"
+            type: string
         field:
-          type: "string"
+          type: string
   filterOutOfFrames:
-    type: "boolean"
+    type: boolean
   filterStops:
-    type: "boolean"
+    type: boolean
   groupClonesBy:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   noHeader:
-    type: "boolean"
+    type: boolean
   splitByTagType:
-    type: "string"
+    type: string
     enum:
-    - "Sample"
-    - "Cell"
-    - "Molecule"
+    - Sample
+    - Cell
+    - Molecule
   splitFilesBy:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string

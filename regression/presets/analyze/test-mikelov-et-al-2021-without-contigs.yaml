@@ -1,32 +1,46 @@
 flags: []
 pipeline:
-- "align"
-- "refineTagsAndSort"
-- "assemble"
-- "exportClones"
+- align
+- refineTagsAndSort
+- assemble
+- exportClones
 align:
-  species: "hs"
-  libraryName: "default"
+  species: hs
+  libraryName: default
   trimmingQualityThreshold: 0
   trimmingWindowSize: 6
-  chains: "ALL"
+  chains: ALL
   replaceWildcards: true
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |\n^(R1F:N{0:2}(C:rggggaagacsgatg)(R1:*))\
-    \ |\n^(R1F:N{0:2}(C:agcgggaagaccttg)(R1:*)) |\n^(R1F:N{0:2}(C:tatgatggggaacac)(R1:*))\
-    \ \\\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTACCTGTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTATGCATNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCACCATNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCAGATTNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCCTGTTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGAAATNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGTTATNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNACGATNTNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNATTCGNTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNCCGTCNTNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNGATACNTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNTACGTNTNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCACTGNNTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCCATGNNTNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCTAGTNNTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCAAANNTNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCTGCNNTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGGATANNTNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTAACCNNTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*))\
-    \ |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |\n^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))\n"
+  tagPattern: |
+    ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
+    ^(R1F:N{0:2}(C:rggggaagacsgatg)(R1:*)) |
+    ^(R1F:N{0:2}(C:agcgggaagaccttg)(R1:*)) |
+    ^(R1F:N{0:2}(C:tatgatggggaacac)(R1:*)) \
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTACCTGTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTATGCATNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCACCATNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCAGATTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCCTGTTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGAAATNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGTTATNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNACGATNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNATTCGNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNCCGTCNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNGATACNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNTACGTNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCACTGNNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCCATGNNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCTAGTNNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCAAANNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCTGCNNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGGATANNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTAACCNNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
+    ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
   tagUnstranded: false
   tagMaxBudget: 10.0
   sampleTable: null
@@ -35,11 +49,11 @@ align:
   limit: null
   parameters:
     vParameters:
-      geneFeatureToAlign: "VTranscriptWithP"
+      geneFeatureToAlign: VTranscriptWithP
       minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: "kaligner2"
+        type: kaligner2
         mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: false
@@ -62,27 +76,27 @@ align:
         relativeMinScore: 0.8
         maxHits: 3
         scoring:
-          type: "affine"
-          alphabet: "nucleotide"
+          type: affine
+          alphabet: nucleotide
           subsMatrix: "simple(match = 10, mismatch = -19)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
     dParameters:
-      geneFeatureToAlign: "DRegionWithP"
+      geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
       absoluteMinScore: 25.0
       maxHits: 3
       scoring:
-        type: "linear"
-        alphabet: "nucleotide"
+        type: linear
+        alphabet: nucleotide
         subsMatrix: "simple(match = 5, mismatch = -9)"
         gapPenalty: -12
     jParameters:
-      geneFeatureToAlign: "JRegionWithP"
+      geneFeatureToAlign: JRegionWithP
       minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: "kaligner2"
+        type: kaligner2
         mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: true
@@ -105,8 +119,8 @@ align:
         relativeMinScore: 0.8
         maxHits: 3
         scoring:
-          type: "affine"
-          alphabet: "nucleotide"
+          type: affine
+          alphabet: nucleotide
           subsMatrix: "simple(match = 10, mismatch = -19)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
@@ -115,7 +129,7 @@ align:
       minSumScore: 40
       relativeMinScore: 0.97
       parameters:
-        type: "kaligner"
+        type: kaligner
         mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: false
@@ -133,12 +147,12 @@ align:
         relativeMinScore: 0.87
         maxHits: 7
         scoring:
-          type: "linear"
-          alphabet: "nucleotide"
+          type: linear
+          alphabet: nucleotide
           subsMatrix: "simple(match = 5, mismatch = -9)"
           gapPenalty: -12
-    vjAlignmentOrder: "VThenJ"
-    libraryStructure: "Unknown"
+    vjAlignmentOrder: VThenJ
+    libraryStructure: Unknown
     includeDScore: false
     includeCScore: false
     minSumScore: 120.0
@@ -147,15 +161,15 @@ align:
     allowPartialAlignments: false
     allowNoCDR3PartAlignments: false
     allowChimeras: false
-    readsLayout: "Opposite"
+    readsLayout: Opposite
     mergerParameters:
-      qualityMergingAlgorithm: "MaxSubtraction"
+      qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
       minimalOverlap: 13
       minimalMatchQualitySum: 364
       maxQuality: 50
       minimalIdentity: 0.7
-      identityType: "MinimalQualityWeighted"
+      identityType: MinimalQualityWeighted
     fixSeed: true
     alignmentBoundaryTolerance: 5
     minChimeraDetectionScore: 120
@@ -175,19 +189,19 @@ refineTagsAndSort:
     maxIndels: 2
     maxTotalErrors: 3
     postFilter:
-      type: "filter_groups"
+      type: filter_groups
       groupingKeys:
-      - "UMI"
+      - UMI
       predicates:
       - metrics:
-        - type: "group_metric_sum_weight"
+        - type: group_metric_sum_weight
           reportHist:
             log: true
             binNumber: 0
             minBinWidth: 0.2
             multiplyWeightByKey: false
         operator:
-          type: "group_operator_otsu1"
+          type: group_operator_otsu1
           logX: true
           minimalSample: 30
           fallbackThreshold: 1.0
@@ -203,18 +217,18 @@ assemblePartial:
     minimalNOverlapShare: 0.65
     minimalAlignmentMergeIdentity: 0.85
     mergerParameters:
-      qualityMergingAlgorithm: "SumSubtraction"
-      partsLayout: "CollinearDirect"
+      qualityMergingAlgorithm: SumSubtraction
+      partsLayout: CollinearDirect
       minimalOverlap: 20
       minimalMatchQualitySum: 0
       maxQuality: 45
       minimalIdentity: 0.95
-      identityType: "Unweighted"
+      identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
 extend:
-  vAnchor: "CDR3Begin"
-  jAnchor: "FR4Begin"
+  vAnchor: CDR3Begin
+  jAnchor: FR4Begin
   minimalVScore: 50
   minimalJScore: 50
 assemble:
@@ -226,8 +240,8 @@ assemble:
       aAssemblerParameters:
         bandWidth: 4
         scoring:
-          type: "linear"
-          alphabet: "nucleotide"
+          type: linear
+          alphabet: nucleotide
           subsMatrix: "simple(match = 5, mismatch = -4)"
           gapPenalty: -14
         minAlignmentScore: 40
@@ -247,16 +261,16 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - "VDJRegion"
+    - VDJRegion
     minimalClonalSequenceLength: 12
-    qualityAggregationType: "Max"
+    qualityAggregationType: Max
     cloneClusteringParameters:
       searchDepth: 2
       allowedMutationsInNRegions: 1
       minimalTagSetOverlap: -1.0
-      searchParameters: "twoMismatchesOrIndels"
+      searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: "relativeConcentration"
+        type: relativeConcentration
         specificMutationProbability: 1.0E-4
     cloneFactoryParameters:
       vParameters:
@@ -304,7 +318,7 @@ assemble:
     addReadsCountOnClustering: false
     badQualityThreshold: 20
     maxBadPointsPercent: 0.7
-    mappingThreshold: "2of5"
+    mappingThreshold: 2of5
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: true
@@ -323,58 +337,58 @@ assembleContigs:
     subCloningRegions: null
     assemblingRegions: null
     postFiltering:
-      type: "NoFiltering"
+      type: NoFiltering
     trimmingParameters:
       averageQualityThreshold: 10.0
       windowSize: 8
     minimalContigLength: 20
     alignedRegionsOnly: false
 exportAlignments:
-  chains: "ALL"
+  chains: ALL
   noHeader: false
   fields:
-  - field: "-targetSequences"
-  - field: "-targetQualities"
-  - field: "-vHitsWithScore"
-  - field: "-dHitsWithScore"
-  - field: "-jHitsWithScore"
-  - field: "-cHitsWithScore"
-  - field: "-vAlignments"
-  - field: "-dAlignments"
-  - field: "-jAlignments"
-  - field: "-cAlignments"
-  - field: "-allNFeaturesWithMinQuality"
-  - field: "-allAAFeatures"
-  - field: "-defaultAnchorPoints"
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
   filterStops: false
-  chains: "ALL"
+  chains: ALL
   noHeader: false
   fields:
-  - field: "-cloneId"
-  - field: "-readCount"
-  - field: "-readFraction"
-  - field: "-uniqueTagCount"
+  - field: -cloneId
+  - field: -readCount
+  - field: -readFraction
+  - field: -uniqueTagCount
     args:
-    - "Molecule"
-  - field: "-uniqueTagFraction"
+    - Molecule
+  - field: -uniqueTagFraction
     args:
-    - "Molecule"
-  - field: "-targetSequences"
-  - field: "-targetQualities"
-  - field: "-vHitsWithScore"
-  - field: "-dHitsWithScore"
-  - field: "-jHitsWithScore"
-  - field: "-cHitsWithScore"
-  - field: "-vAlignments"
-  - field: "-dAlignments"
-  - field: "-jAlignments"
-  - field: "-cAlignments"
-  - field: "-allNFeaturesWithMinQuality"
-  - field: "-allAAFeatures"
-  - field: "-defaultAnchorPoints"
+    - Molecule
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
   splitFilesBy:
-  - "geneLabel:ReliableChain"
+  - geneLabel:ReliableChain
   groupClonesBy: []
