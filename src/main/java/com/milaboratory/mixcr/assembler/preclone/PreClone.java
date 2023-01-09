@@ -83,7 +83,8 @@ public interface PreClone {
             assert CollectionUtils.isSorted(gss);
             geneScores.put(gt, gss);
         }
-        return new PreCloneAbstract(index, TagTuple.NO_TAGS, alignment.getTagCount(), alignment.getTagCount(),
+        return new PreCloneAbstract(index, TagTuple.NO_TAGS,
+                alignment.getTagCount().ensureIsKey(), alignment.getTagCount().ensureIsKey(),
                 clonalSequences, geneScores) {
             @Override
             public Range getRange(int csIdx, GeneFeature feature) {
