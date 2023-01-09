@@ -352,7 +352,6 @@ exportClones:
   filterStops: false
   chains: "ALL"
   noHeader: false
-  splitFilesBy: []
   fields:
   - field: "-cloneId"
   - field: "-tags"
@@ -436,3 +435,5 @@ exportClones:
     args:
     - "FR4"
   - field: "-defaultAnchorPoints"
+  splitFilesBy: []
+  groupClonesBy: []

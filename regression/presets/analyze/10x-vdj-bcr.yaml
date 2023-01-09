@@ -188,6 +188,26 @@ refineTagsAndSort:
       - type: "filter_groups"
         groupingKeys:
         - "allTags:Cell"
+        - "allTags:Molecule"
+        predicates:
+        - metrics:
+          - type: "group_metric_kmer_diversity"
+            sequences:
+            - "targets"
+            k: 12
+            minimalQuality: 20
+            topShare: 0.7
+            reportHist:
+              log: false
+              binNumber: 40
+              minBinWidth: 0.0
+              multiplyWeightByKey: false
+          operator:
+            type: "group_operator_range"
+            lower: 200.0
+      - type: "filter_groups"
+        groupingKeys:
+        - "allTags:Cell"
         predicates:
         - metrics:
           - type: "group_metric_nunique"
@@ -348,6 +368,19 @@ assemble:
             type: "group_operator_cumtop"
             share: 0.99
       aggregateReport: true
+    - type: "filter_groups"
+      groupingKeys:
+      - "allTags:Cell"
+      - "clone"
+      predicates:
+      - metrics:
+        - type: "group_metric_nunique"
+          reportHist: null
+          keys:
+          - "allTags:Molecule"
+        operator:
+          type: "group_operator_range"
+          lower: 2.0
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -393,7 +426,6 @@ exportClones:
   filterStops: false
   chains: "ALL"
   noHeader: false
-  splitFilesBy: []
   fields:
   - field: "-cloneId"
   - field: "-tags"
@@ -416,3 +448,5 @@ exportClones:
   - field: "-allNFeaturesWithMinQuality"
   - field: "-allAAFeatures"
   - field: "-defaultAnchorPoints"
+  splitFilesBy: []
+  groupClonesBy: []

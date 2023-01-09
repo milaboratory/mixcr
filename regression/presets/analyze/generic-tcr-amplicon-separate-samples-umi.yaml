@@ -1,10 +1,14 @@
-flags: []
+flags:
+- "sampleTable"
+- "tagPattern"
+- "leftAlignmentMode"
+- "rightAlignmentMode"
+- "materialType"
+- "species"
 pipeline:
 - "align"
 - "refineTagsAndSort"
-- "assemblePartial"
 - "assemble"
-- "assembleContigs"
 - "exportClones"
 align:
   species: ""
@@ -16,41 +20,41 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^(CELL:N{16})(UMI:N{10})\\^(R2:*)"
+  tagPattern: null
   tagUnstranded: false
   tagMaxBudget: 10.0
   sampleTable: null
-  splitBySample: false
+  splitBySample: true
   readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
       geneFeatureToAlign: "VTranscriptWithP"
-      minSumScore: 50
+      minSumScore: 80
       relativeMinScore: 0.97
       parameters:
         type: "kaligner"
-        mapperKValue: 8
-        floatingLeftBound: false
+        mapperKValue: 5
+        floatingLeftBound: true
         floatingRightBound: true
-        mapperAbsoluteMinScore: 59.0
-        mapperRelativeMinScore: 0.91
-        mapperMatchScore: 17.0
+        mapperAbsoluteMinScore: 1.5
+        mapperRelativeMinScore: 0.7
+        mapperMatchScore: 1.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 8
+        mapperMinSeedsDistance: 4
         mapperMaxSeedsDistance: 10
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
+        absoluteMinScore: 55.0
         relativeMinScore: 0.87
-        maxHits: 9
+        maxHits: 7
         scoring:
           type: "linear"
           alphabet: "nucleotide"
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 5, mismatch = -11)"
+          gapPenalty: -21
     dParameters:
       geneFeatureToAlign: "DRegionWithP"
       relativeMinScore: 0.85
@@ -59,71 +63,71 @@ align:
       scoring:
         type: "linear"
         alphabet: "nucleotide"
-        subsMatrix: "simple(match = 5, mismatch = -9)"
-        gapPenalty: -12
+        subsMatrix: "simple(match = 5, mismatch = -11)"
+        gapPenalty: -21
     jParameters:
       geneFeatureToAlign: "JRegionWithP"
-      minSumScore: 40
+      minSumScore: 60
       relativeMinScore: 0.97
       parameters:
         type: "kaligner"
         mapperKValue: 5
         floatingLeftBound: true
-        floatingRightBound: false
-        mapperAbsoluteMinScore: 37.0
-        mapperRelativeMinScore: 0.76
-        mapperMatchScore: 16.0
+        floatingRightBound: true
+        mapperAbsoluteMinScore: 1.5
+        mapperRelativeMinScore: 0.75
+        mapperMatchScore: 1.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 7
-        mapperMaxSeedsDistance: 7
+        mapperMinSeedsDistance: 4
+        mapperMaxSeedsDistance: 8
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
+        absoluteMinScore: 50.0
         relativeMinScore: 0.87
-        maxHits: 9
+        maxHits: 7
         scoring:
           type: "linear"
           alphabet: "nucleotide"
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 5, mismatch = -11)"
+          gapPenalty: -21
     cParameters:
       geneFeatureToAlign: "CExon1"
       minSumScore: 40
       relativeMinScore: 0.97
       parameters:
         type: "kaligner"
-        mapperKValue: 9
+        mapperKValue: 5
         floatingLeftBound: false
-        floatingRightBound: false
-        mapperAbsoluteMinScore: 95.0
-        mapperRelativeMinScore: 0.61
-        mapperMatchScore: 5.0
+        floatingRightBound: true
+        mapperAbsoluteMinScore: 1.5
+        mapperRelativeMinScore: 0.75
+        mapperMatchScore: 1.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 9
-        mapperMaxSeedsDistance: 19
+        mapperMinSeedsDistance: 4
+        mapperMaxSeedsDistance: 10
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 3
+        maxHits: 7
         scoring:
           type: "linear"
           alphabet: "nucleotide"
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 5, mismatch = -11)"
+          gapPenalty: -21
     vjAlignmentOrder: "VThenJ"
     libraryStructure: "Unknown"
-    includeDScore: false
-    includeCScore: false
-    minSumScore: 120.0
+    includeDScore: true
+    includeCScore: true
+    minSumScore: 200.0
     maxHits: 5
     relativeMinVFR3CDR3Score: 0.7
-    allowPartialAlignments: true
-    allowNoCDR3PartAlignments: true
+    allowPartialAlignments: false
+    allowNoCDR3PartAlignments: false
     allowChimeras: false
     readsLayout: "Opposite"
     mergerParameters:
@@ -142,8 +146,7 @@ align:
     saveOriginalReads: false
     smartForceEdgeAlignments: true
 refineTagsAndSort:
-  whitelists:
-    CELL: "builtin:737K-august-2016"
+  whitelists: {}
   runCorrection: true
   parameters:
     correctionPower: 0.001
@@ -154,43 +157,22 @@ refineTagsAndSort:
     maxIndels: 2
     maxTotalErrors: 3
     postFilter:
-      type: "filter_and"
-      operands:
-      - type: "filter_groups"
-        groupingKeys:
-        - "allTags:Cell"
-        - "allTags:Molecule"
-        predicates:
-        - metrics:
-          - type: "group_metric_sum_weight"
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-          operator:
-            type: "group_operator_otsu1"
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 1.0
-      - type: "filter_groups"
-        groupingKeys:
-        - "allTags:Cell"
-        predicates:
-        - metrics:
-          - type: "group_metric_nunique"
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-            keys:
-            - "allTags:Molecule"
-          operator:
-            type: "group_operator_otsu1"
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 2.0
+      type: "filter_groups"
+      groupingKeys:
+      - "UMI"
+      predicates:
+      - metrics:
+        - type: "group_metric_sum_weight"
+          reportHist:
+            log: true
+            binNumber: 0
+            minBinWidth: 0.2
+            multiplyWeightByKey: false
+        operator:
+          type: "group_operator_otsu1"
+          logX: true
+          minimalSample: 30
+          fallbackThreshold: 1.0
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -212,10 +194,14 @@ assemblePartial:
       identityType: "Unweighted"
     maxLeftParts: 256000
     maxLeftMatches: 6144
-extend: null
+extend:
+  vAnchor: "CDR3Begin"
+  jAnchor: "FR4Begin"
+  minimalVScore: 50
+  minimalJScore: 50
 assemble:
   sortBySequence: false
-  clnaOutput: true
+  clnaOutput: false
   cellLevel: false
   consensusAssemblerParameters:
     assembler:
@@ -302,56 +288,8 @@ assemble:
     maxBadPointsPercent: 0.7
     mappingThreshold: "2of5"
     minimalQuality: 0
-    postFilters:
-    - type: "filter_in_groups"
-      isolationKeys:
-      - "geneLabel:ReliableChain"
-      - "allTags:Cell"
-      nestedFilter:
-        type: "filter_groups"
-        groupingKeys:
-        - "clone"
-        predicates:
-        - metrics:
-          - type: "group_metric_nunique"
-            reportHist: null
-            keys:
-            - "allTags:Molecule"
-          operator:
-            type: "group_operator_cumtop"
-            share: 0.95
-      aggregateReport: true
-    - type: "filter_in_groups"
-      isolationKeys:
-      - "allTags:Cell"
-      nestedFilter:
-        type: "filter_groups"
-        groupingKeys:
-        - "clone"
-        predicates:
-        - metrics:
-          - type: "group_metric_nunique"
-            reportHist: null
-            keys:
-            - "allTags:Molecule"
-          operator:
-            type: "group_operator_cumtop"
-            share: 0.99
-      aggregateReport: true
-    - type: "filter_groups"
-      groupingKeys:
-      - "allTags:Cell"
-      - "clone"
-      predicates:
-      - metrics:
-        - type: "group_metric_nunique"
-          reportHist: null
-          keys:
-          - "allTags:Molecule"
-        operator:
-          type: "group_operator_range"
-          lower: 2.0
-  inferMinRecordsPerConsensus: false
+    postFilters: null
+  inferMinRecordsPerConsensus: true
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -364,17 +302,15 @@ assembleContigs:
     minimalMeanNormalizedQuality: 5.0
     outputMinimalQualityShare: 0.75
     outputMinimalSumQuality: 0
-    subCloningRegions:
-    - "VDJRegion"
-    assemblingRegions:
-    - "VDJRegion"
+    subCloningRegions: null
+    assemblingRegions: null
     postFiltering:
-      type: "OnlyFullyDefined"
+      type: "NoFiltering"
     trimmingParameters:
       averageQualityThreshold: 10.0
       windowSize: 8
     minimalContigLength: 20
-    alignedRegionsOnly: true
+    alignedRegionsOnly: false
 exportAlignments:
   chains: "ALL"
   noHeader: false
@@ -400,11 +336,12 @@ exportClones:
   noHeader: false
   fields:
   - field: "-cloneId"
-  - field: "-tags"
-    args:
-    - "Cell"
   - field: "-readCount"
+  - field: "-readFraction"
   - field: "-uniqueTagCount"
+    args:
+    - "Molecule"
+  - field: "-uniqueTagFraction"
     args:
     - "Molecule"
   - field: "-targetSequences"
@@ -420,5 +357,6 @@ exportClones:
   - field: "-allNFeaturesWithMinQuality"
   - field: "-allAAFeatures"
   - field: "-defaultAnchorPoints"
-  splitFilesBy: []
+  splitFilesBy:
+  - "geneLabel:ReliableChain"
   groupClonesBy: []

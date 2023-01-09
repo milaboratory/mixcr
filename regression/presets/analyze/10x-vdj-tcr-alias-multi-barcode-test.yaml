@@ -383,7 +383,6 @@ exportClones:
   filterStops: false
   chains: "ALL"
   noHeader: false
-  splitFilesBy: []
   fields:
   - field: "-cloneId"
   - field: "-tags"
@@ -406,3 +405,5 @@ exportClones:
   - field: "-allNFeaturesWithMinQuality"
   - field: "-allAAFeatures"
   - field: "-defaultAnchorPoints"
+  splitFilesBy: []
+  groupClonesBy: []

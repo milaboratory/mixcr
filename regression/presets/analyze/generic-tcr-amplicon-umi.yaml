@@ -333,8 +333,6 @@ exportClones:
   filterStops: false
   chains: "ALL"
   noHeader: false
-  splitFilesBy:
-  - "geneLabel:ReliableChain"
   fields:
   - field: "-cloneId"
   - field: "-readCount"
@@ -358,3 +356,6 @@ exportClones:
   - field: "-allNFeaturesWithMinQuality"
   - field: "-allAAFeatures"
   - field: "-defaultAnchorPoints"
+  splitFilesBy:
+  - "geneLabel:ReliableChain"
+  groupClonesBy: []
