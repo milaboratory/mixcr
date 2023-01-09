@@ -1,14 +1,14 @@
 align:
-  type: "alignerReport"
-  commandLine: "align --report ./baseSingleCell.vdjcontigs.align.report.txt --json-report\
-    \ ./baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --species\
-    \ hs --assemble-contigs-by VDJRegion single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz\
-    \ ./baseSingleCell.vdjcontigs.vdjca"
+  type: alignerReport
+  commandLine: align --report ./baseSingleCell.vdjcontigs.align.report.txt --json-report
+    ./baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --species hs
+    --assemble-contigs-by VDJRegion single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz
+    ./baseSingleCell.vdjcontigs.vdjca
   inputFiles:
-  - "single_cell_vdj_t_subset_R1.fastq.gz"
-  - "single_cell_vdj_t_subset_R2.fastq.gz"
+  - single_cell_vdj_t_subset_R1.fastq.gz
+  - single_cell_vdj_t_subset_R2.fastq.gz
   outputFiles:
-  - "./baseSingleCell.vdjcontigs.vdjca"
+  - ./baseSingleCell.vdjcontigs.vdjca
   trimmingReport: null
   totalReadsProcessed: 46879
   aligned: 40756
@@ -31,7 +31,7 @@ align:
   vChimeras: 0
   jChimeras: 0
   chainUsage:
-    type: "chainUsage"
+    type: chainUsage
     chimeras: 0
     total: 40756
     chains:
@@ -104,16 +104,16 @@ align:
           costDistributions:
             "0": 46879
 assemble:
-  type: "assemblerReport"
-  commandLine: "assemble --report ./baseSingleCell.vdjcontigs.assemble.report.txt\
-    \ --json-report ./baseSingleCell.vdjcontigs.assemble.report.json ./baseSingleCell.vdjcontigs.passembled.1.vdjca\
-    \ ./baseSingleCell.vdjcontigs.clna"
+  type: assemblerReport
+  commandLine: assemble --report ./baseSingleCell.vdjcontigs.assemble.report.txt --json-report
+    ./baseSingleCell.vdjcontigs.assemble.report.json ./baseSingleCell.vdjcontigs.passembled.1.vdjca
+    ./baseSingleCell.vdjcontigs.clna
   inputFiles:
-  - "./baseSingleCell.vdjcontigs.passembled.1.vdjca"
+  - ./baseSingleCell.vdjcontigs.passembled.1.vdjca
   outputFiles:
-  - "./baseSingleCell.vdjcontigs.clna"
+  - ./baseSingleCell.vdjcontigs.clna
   preCloneAssemblerReport:
-    type: "preCloneAssemblerReport"
+    type: preCloneAssemblerReport
     inputGroups: 60
     groupsWithNoAssemblingFeature: 1
     inputAlignments: 26902
@@ -156,7 +156,7 @@ assemble:
   readsInClonesBeforeClustering: 14456
   readsDroppedWithLowQualityClones: 0
   clonalChainUsage:
-    type: "chainUsage"
+    type: chainUsage
     chimeras: 0
     total: 6
     chains:
@@ -173,63 +173,63 @@ assemble:
   clonesFilteredInPostFiltering: 1
   readsFilteredInPostFiltering: 2.0
   postFilteringReports:
-  - type: "filter_in_groups_report"
+  - type: filter_in_groups_report
     numberOfGroups: 5
     nestedAggregatedReport:
-      type: "filter_groups_report"
+      type: filter_groups_report
       groupingKeys:
-      - "clone"
+      - clone
       numberOfGroups: 7
       numberOfGroupsAccepted: 6
       totalWeight: 14456.0
       totalWeightAccepted: 14454.0
       operatorReports:
       - operatorReport:
-          type: "generic_hist_report"
-          threshold: "NaN"
+          type: generic_hist_report
+          threshold: NaN
         metricHists:
         - null
     nestedPerGroupReports: {}
-  - type: "filter_in_groups_report"
+  - type: filter_in_groups_report
     numberOfGroups: 3
     nestedAggregatedReport:
-      type: "filter_groups_report"
+      type: filter_groups_report
       groupingKeys:
-      - "clone"
+      - clone
       numberOfGroups: 6
       numberOfGroupsAccepted: 6
       totalWeight: 14454.0
       totalWeightAccepted: 14454.0
       operatorReports:
       - operatorReport:
-          type: "generic_hist_report"
-          threshold: "NaN"
+          type: generic_hist_report
+          threshold: NaN
         metricHists:
         - null
     nestedPerGroupReports: {}
-  - type: "filter_groups_report"
+  - type: filter_groups_report
     groupingKeys:
-    - "allTags:Cell"
-    - "clone"
+    - allTags:Cell
+    - clone
     numberOfGroups: 6
     numberOfGroupsAccepted: 6
     totalWeight: 14454.0
     totalWeightAccepted: 14454.0
     operatorReports:
     - operatorReport:
-        type: "dummy_report"
+        type: dummy_report
       metricHists:
       - null
   alignmentsFilteredByTagPrefix: 0
 assembleContigs:
-  type: "fullSeqAssemblerReport"
-  commandLine: "assembleContigs --report ./baseSingleCell.vdjcontigs.assembleContigs.report.txt\
-    \ --json-report ./baseSingleCell.vdjcontigs.assembleContigs.report.json ./baseSingleCell.vdjcontigs.clna\
-    \ ./baseSingleCell.vdjcontigs.contigs.clns"
+  type: fullSeqAssemblerReport
+  commandLine: assembleContigs --report ./baseSingleCell.vdjcontigs.assembleContigs.report.txt
+    --json-report ./baseSingleCell.vdjcontigs.assembleContigs.report.json ./baseSingleCell.vdjcontigs.clna
+    ./baseSingleCell.vdjcontigs.contigs.clns
   inputFiles:
-  - "./baseSingleCell.vdjcontigs.clna"
+  - ./baseSingleCell.vdjcontigs.clna
   outputFiles:
-  - "./baseSingleCell.vdjcontigs.contigs.clns"
+  - ./baseSingleCell.vdjcontigs.contigs.clns
   clonesWithAmbiguousLetters: 0
   clonesWithAmbiguousLettersInSplittingRegion: 0
   readsWithAmbiguousLetters: 0.0
@@ -246,14 +246,14 @@ assembleContigs:
   totalDividedVariantReads: 0.0
   assemblePrematureTerminationEvents: 0.0
 assemblePartial:
-  type: "partialAlignmentsAssemblerReport"
-  commandLine: "assemblePartial --report ./baseSingleCell.vdjcontigs.assemblePartial.report.txt\
-    \ --json-report ./baseSingleCell.vdjcontigs.assemblePartial.report.json ./baseSingleCell.vdjcontigs.refined.vdjca\
-    \ ./baseSingleCell.vdjcontigs.passembled.1.vdjca"
+  type: partialAlignmentsAssemblerReport
+  commandLine: assemblePartial --report ./baseSingleCell.vdjcontigs.assemblePartial.report.txt
+    --json-report ./baseSingleCell.vdjcontigs.assemblePartial.report.json ./baseSingleCell.vdjcontigs.refined.vdjca
+    ./baseSingleCell.vdjcontigs.passembled.1.vdjca
   inputFiles:
-  - "./baseSingleCell.vdjcontigs.refined.vdjca"
+  - ./baseSingleCell.vdjcontigs.refined.vdjca
   outputFiles:
-  - "./baseSingleCell.vdjcontigs.passembled.1.vdjca"
+  - ./baseSingleCell.vdjcontigs.passembled.1.vdjca
   independentRuns: 60
   totalProcessed: 27094
   outputAlignments: 26902
@@ -270,19 +270,19 @@ assemblePartial:
   overOverlaps: 0
   partialAlignmentsAsIs: 26069
 refineTagsAndSort:
-  type: "refineTagsAndSort"
-  commandLine: "refineTagsAndSort --report ./baseSingleCell.vdjcontigs.refine.report.txt\
-    \ --json-report ./baseSingleCell.vdjcontigs.refine.report.json ./baseSingleCell.vdjcontigs.vdjca\
-    \ ./baseSingleCell.vdjcontigs.refined.vdjca"
+  type: refineTagsAndSort
+  commandLine: refineTagsAndSort --report ./baseSingleCell.vdjcontigs.refine.report.txt
+    --json-report ./baseSingleCell.vdjcontigs.refine.report.json ./baseSingleCell.vdjcontigs.vdjca
+    ./baseSingleCell.vdjcontigs.refined.vdjca
   inputFiles:
-  - "./baseSingleCell.vdjcontigs.vdjca"
+  - ./baseSingleCell.vdjcontigs.vdjca
   outputFiles:
-  - "./baseSingleCell.vdjcontigs.refined.vdjca"
+  - ./baseSingleCell.vdjcontigs.refined.vdjca
   correctionReport:
     inputRecords: 40756
     outputRecords: 27094
     steps:
-    - tagName: "CELL"
+    - tagName: CELL
       inputGroups: 1
       inputDiversity: 161
       inputCount: 40756
@@ -296,7 +296,7 @@ refineTagsAndSort:
       diversityFilteredByWhitelist: 0
       outputDiversity: 3
       outputCount: 40754
-    - tagName: "UMI"
+    - tagName: UMI
       inputGroups: 3
       inputDiversity: 409
       inputCount: 40754
@@ -311,19 +311,19 @@ refineTagsAndSort:
       outputDiversity: 106
       outputCount: 40753
     filterReport:
-      type: "and_report"
+      type: and_report
       nestedReports:
-      - type: "filter_groups_report"
+      - type: filter_groups_report
         groupingKeys:
-        - "allTags:Cell"
-        - "allTags:Molecule"
+        - allTags:Cell
+        - allTags:Molecule
         numberOfGroups: 106
         numberOfGroupsAccepted: 87
         totalWeight: 40753.0
         totalWeightAccepted: 40648.0
         operatorReports:
         - operatorReport:
-            type: "generic_hist_report"
+            type: generic_hist_report
             threshold: 36.0
           metricHists:
           - bins:
@@ -377,17 +377,17 @@ refineTagsAndSort:
               binNumber: 0
               minBinWidth: 0.2
               multiplyWeightByKey: false
-      - type: "filter_groups_report"
+      - type: filter_groups_report
         groupingKeys:
-        - "allTags:Cell"
-        - "allTags:Molecule"
+        - allTags:Cell
+        - allTags:Molecule
         numberOfGroups: 87
         numberOfGroupsAccepted: 60
         totalWeight: 40648.0
         totalWeightAccepted: 27094.0
         operatorReports:
         - operatorReport:
-            type: "dummy_report"
+            type: dummy_report
           metricHists:
           - bins:
             - from: 55.0
@@ -515,16 +515,16 @@ refineTagsAndSort:
               binNumber: 40
               minBinWidth: 0.0
               multiplyWeightByKey: false
-      - type: "filter_groups_report"
+      - type: filter_groups_report
         groupingKeys:
-        - "allTags:Cell"
+        - allTags:Cell
         numberOfGroups: 3
         numberOfGroupsAccepted: 3
         totalWeight: 27094.0
         totalWeightAccepted: 27094.0
         operatorReports:
         - operatorReport:
-            type: "dummy_report"
+            type: dummy_report
           metricHists:
           - bins:
             - from: 5.000000000000001
