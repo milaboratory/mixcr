@@ -43,7 +43,6 @@ import com.milaboratory.util.exhaustive
 import io.repseq.core.Chains
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model
@@ -126,8 +125,8 @@ object CommandExportAlignments {
         @Mixin
         lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportAlignments
 
-        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
-        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
 
         override val inputFiles
             get() = listOf(inputFile)

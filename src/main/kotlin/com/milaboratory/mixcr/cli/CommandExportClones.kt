@@ -45,7 +45,6 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model
@@ -168,8 +167,8 @@ object CommandExportClones {
         @Mixin
         lateinit var exportDefaults: ExportDefaultOptions
 
-        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
-        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
 
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {

@@ -236,8 +236,8 @@ object CommandRefineTagsAndSort {
         )
         var refineAndSortMixins: List<RefineTagsAndSortMixins> = mutableListOf()
 
-        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
-        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
 
         private val mixins get() = refineAndSortMixins.mixins
 
@@ -255,7 +255,6 @@ object CommandRefineTagsAndSort {
         override fun run1() {
             val startTimeMillis = System.currentTimeMillis()
 
-            val cmdParams: Params
 
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: TagCorrectionReport?
@@ -264,10 +263,8 @@ object CommandRefineTagsAndSort {
                 val header = mainReader.header
                 val tagsInfo = header.tagsInfo
                 require(!tagsInfo.hasNoTags()) { "input file has no tags" }
-                cmdParams = paramsResolver.resolve(
-                    resetPreset.overridePreset(header.paramsSpec).addMixins(mixins),
-                    printParameters = logger.verbose
-                ).second
+                val paramsSpec = resetPreset.overridePreset(header.paramsSpec).addMixins(mixins)
+                val cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
 
                 // These tags will be corrected, other used as grouping keys
                 val correctionEnabled = tagsInfo.map { it.valueType == TagValueType.SequenceAndQuality }
@@ -445,7 +442,8 @@ object CommandRefineTagsAndSort {
                     writer.writeHeader(
                         header
                             .updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) }
-                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams),
+                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams)
+                            .copy(paramsSpec = paramsSpec),
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)

@@ -35,7 +35,6 @@ import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParamet
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.groupAlreadySorted
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -125,8 +124,8 @@ object CommandAssemblePartial {
         @Mixin
         lateinit var reportOptions: ReportOptions
 
-        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
-        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -142,22 +141,20 @@ object CommandAssemblePartial {
         override fun run1() {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
-            val cmdParams: Params
             use(
                 VDJCAlignmentsReader(inputFile),
                 VDJCAlignmentsWriter(outputFile)
             ) { reader, writer ->
                 val header = reader.header
-                cmdParams = paramsResolver.resolve(
-                    resetPreset.overridePreset(header.paramsSpec),
-                    printParameters = logger.verbose
-                ).second
+                val paramsSpec = resetPreset.overridePreset(header.paramsSpec)
+                val cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
                 val groupingDepth =
                     header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
                 writer.writeHeader(
                     header
                         .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
-                        .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams),
+                        .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams)
+                        .copy(paramsSpec = paramsSpec),
                     reader.usedGenes
                 )
                 val assembler = PartialAlignmentsAssembler(

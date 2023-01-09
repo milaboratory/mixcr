@@ -50,7 +50,6 @@ import gnu.trove.map.hash.TIntObjectHashMap
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -190,8 +189,8 @@ object CommandAssemble {
         )
         var reportBuffers = false
 
-        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
-        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
 
         @Mixin
         private var assembleMixins: AssembleMiXCRMixins? = null
@@ -223,10 +222,8 @@ object CommandAssemble {
                 val inputFooter = alignmentsReader.footer
                 val numberOfAlignments = alignmentsReader.numberOfAlignments
 
-                val (_, cmdParam) = paramsResolver.resolve(
-                    inputHeader.paramsSpec.addMixins(mixins),
-                    printParameters = logger.verbose
-                ) { cp ->
+                val paramSpec = resetPreset.overridePreset(inputHeader.paramsSpec).addMixins(mixins)
+                val (_, cmdParam) = paramsResolver.resolve(paramSpec, printParameters = logger.verbose) { cp ->
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
                         return@resolve cp
 
@@ -351,7 +348,8 @@ object CommandAssemble {
                         assemblerRunner.getCloneSet(
                             inputHeader
                                 .withAssemblerParameters(cloneAssemblerParameters)
-                                .addStepParams(MiXCRCommandDescriptor.assemble, cmdParam),
+                                .addStepParams(MiXCRCommandDescriptor.assemble, cmdParam)
+                                .copy(paramsSpec = paramSpec),
                             inputFooter
                         ),
                         ordering

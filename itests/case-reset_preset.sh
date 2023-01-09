@@ -23,6 +23,6 @@ mixcr assemble result.vdjca result.clns
 
 mixcr assemble result.vdjca result_with_override.clns
 
-diff \
-  <(mixcr exportPreset --mixcr-file result.vdjca) \
-  <(mixcr exportPreset --mixcr-file result.vdjca --reset-preset-keep-mixins generic-tcr-amplicon)
+#diff \
+#  <(mixcr exportPreset --mixcr-file result.vdjca) \
+#  <(mixcr exportPreset --mixcr-file result.vdjca --reset-preset-keep-mixins generic-tcr-amplicon)

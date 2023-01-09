@@ -29,6 +29,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -47,28 +48,23 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         )
         var presetName: String? = null
 
-        class FileInput {
-            @Option(
-                names = ["--mixcr-file"],
-                description = ["File that was processed by MiXCR."],
-                paramLabel = "<input.(vdjca|clns|clna)>",
-                required = true,
-                order = 2
-            )
-            var input: Path? = null
-                set(value) {
-                    ValidationException.requireFileType(value, InputFileType.VDJCA, InputFileType.CLNX)
-                    ValidationException.requireFileExists(value)
-                    field = value
-                }
-
-            @ArgGroup(exclusive = true, multiplicity = "0..1")
-            var resetPreset: ResetPresetArgs = ResetPresetArgs()
-        }
-
-        @ArgGroup(exclusive = false, multiplicity = "1", order = 2)
-        var fileInput: FileInput? = null
+        @Option(
+            names = ["--mixcr-file"],
+            description = ["File that was processed by MiXCR."],
+            paramLabel = "<input.(vdjca|clns|clna)>",
+            required = true,
+            order = 2
+        )
+        var input: Path? = null
+            set(value) {
+                ValidationException.requireFileType(value, InputFileType.VDJCA, InputFileType.CLNX)
+                ValidationException.requireFileExists(value)
+                field = value
+            }
     }
+
+    @Mixin
+    lateinit var resetPreset: ResetPresetArgs
 
     @ArgGroup(
         exclusive = true,
@@ -152,8 +148,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         val spec: MiXCRParamsSpec = when {
             presetInput.presetName != null -> MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins)
             else -> {
-                val fileInput = presetInput.fileInput!!
-                val inputFile = fileInput.input
+                val inputFile = presetInput.input
                 val paramsSpec = when (IOUtil.extractFileType(inputFile)) {
                     VDJCA -> VDJCAlignmentsReader(inputFile)
                         .use { reader -> reader.header }
@@ -167,7 +162,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                     SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
                 }.paramsSpec
 
-                fileInput.resetPreset.overridePreset(paramsSpec).addMixins(mixinsFromArgs.mixins)
+                resetPreset.overridePreset(paramsSpec).addMixins(mixinsFromArgs.mixins)
             }
         }
 

@@ -45,7 +45,6 @@ import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
-import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Mixin
@@ -150,8 +149,8 @@ object CommandExtend {
         @Mixin
         lateinit var threadsOption: ThreadsOption
 
-        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
-        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -180,7 +179,8 @@ object CommandExtend {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val cloneSet = reader.readCloneSet()
                 val outputPort = cloneSet.asOutputPort()
-                val process = processWrapper(outputPort, reader.header.paramsSpec, cloneSet.header.alignerParameters!!)
+                val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
+                val process = processWrapper(outputPort, paramsSpec, cloneSet.header.alignerParameters!!)
 
                 val clones = process.output
                     .asSequence()
@@ -193,7 +193,8 @@ object CommandExtend {
                         cloneSet.usedGenes,
                         cloneSet.header
                             .addStepParams(MiXCRCommandDescriptor.extend, process.params)
-                            .copy(allFullyCoveredBy = null),
+                            .copy(allFullyCoveredBy = null)
+                            .copy(paramsSpec = paramsSpec),
                         cloneSet.footer,
                         cloneSet.ordering
                     )
@@ -209,8 +210,10 @@ object CommandExtend {
             VDJCAlignmentsReader(inputFile).use { reader ->
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     SmartProgressReporter.startProgressReport("Extending alignments", reader)
-                    writer.inheritHeaderAndFooterFrom(reader)
-                    val process = processWrapper(reader, reader.header.paramsSpec, reader.parameters)
+                    val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
+                    writer.writeHeader(reader.header.copy(paramsSpec = paramsSpec), reader.usedGenes)
+                    writer.setFooter(reader.footer)
+                    val process = processWrapper(reader, paramsSpec, reader.parameters)
 
                     // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
                     // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
@@ -234,10 +237,7 @@ object CommandExtend {
             paramsSpec: MiXCRParamsSpec,
             alignerParameters: VDJCAlignerParameters
         ): ProcessWrapper<T> {
-            val (_, cmdParams) = paramsResolver.resolve(
-                resetPreset.overridePreset(paramsSpec),
-                printParameters = logger.verbose
-            )
+            val (_, cmdParams) = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose)
 
             val extender = VDJCObjectExtender<T>(
                 chains, extensionQuality,

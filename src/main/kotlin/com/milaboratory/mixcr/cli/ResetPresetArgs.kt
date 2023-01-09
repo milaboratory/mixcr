@@ -19,8 +19,8 @@ class ResetPresetArgs {
         description = ["Reset preset from input file to new value. All previous mix-ins will be removed"],
         names = ["--reset-preset"],
         paramLabel = "<preset>",
-        required = true,
-        order = 1
+        order = 1,
+        hidden = true
     )
     var resetPreset: String? = null
 
@@ -30,8 +30,8 @@ class ResetPresetArgs {
         description = ["Reset preset from input file to new value. All previous mix-ins will be removed"],
         names = ["--reset-preset-keep-mixins"],
         paramLabel = "<preset>",
-        required = true,
-        order = 2
+        order = 2,
+        hidden = true
     )
     fun resetPresetAndKeepMixins(presetName: String) {
         resetPreset = presetName
