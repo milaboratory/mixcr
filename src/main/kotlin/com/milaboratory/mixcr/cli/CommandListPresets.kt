@@ -39,10 +39,11 @@ class CommandListPresets : MiXCRCommand() {
         table.addRowValues("PresetName", "Description", "Required mix-ins")
 
         Presets.visiblePresets.sorted().forEach { presetName ->
+            val presetRaw = Presets.presetCollection[presetName]!!
             val preset = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             table.addRowValues(
                 presetName,
-                preset.description,
+                presetRaw.description,
                 preset.flags.joinToString("\n") { Flags.flagOptions[it]!! }
             )
         }

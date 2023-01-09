@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.AbstractPresetBundleRaw
 import com.milaboratory.cli.BundleResolver
 import com.milaboratory.cli.Packer
@@ -83,10 +84,6 @@ data class MiXCRParamsSpec(
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
 data class MiXCRParamsBundle(
     @JsonProperty("flags") val flags: Set<String>,
-    @JsonInclude(NON_EMPTY)
-    @JsonProperty("description") val description: String?,
-    @JsonInclude(NON_EMPTY)
-    @JsonProperty("deprecation") val deprecation: String?,
     @JsonProperty("pipeline") val pipeline: MiXCRPipeline?,
     @JsonProperty("align") val align: CommandAlign.Params?,
     @JsonProperty("refineTagsAndSort") val refineTagsAndSort: CommandRefineTagsAndSort.Params?,
@@ -184,7 +181,7 @@ object Presets {
         }
     }
 
-    private val presetCollection: Map<String, MiXCRParamsBundleRaw> = buildMap {
+    val presetCollection: Map<String, MiXCRParamsBundleRaw> = buildMap {
         val files = (Presets.javaClass.getResourceAsStream("/mixcr_presets/file_list.txt")
             ?: throw IllegalStateException("No preset file list")).use { stream ->
             IOUtils.readLines(stream, Charset.defaultCharset())
@@ -269,7 +266,7 @@ object Presets {
 
     /** Note: JsonIgnore here are just for the readability, this class is not suitable for serialization,
      * it supports only deserialization*/
-    private data class MiXCRParamsBundleRaw(
+    data class MiXCRParamsBundleRaw(
         @JsonInclude(NON_EMPTY)
         @JsonProperty("description") val description: String?,
         @JsonInclude(NON_EMPTY)
@@ -313,10 +310,11 @@ object Presets {
             val raw = rawResolve(presetName)
             if (raw.abstract)
                 throw ApplicationException("Preset $presetName is abstract and not intended to be used directly.")
+            if (raw.deprecation != null)
+                logger.warn { "Preset is deprecated. ${raw.deprecation}" }
+
             val bundle = MiXCRParamsBundle(
                 flags = raw.resolvedFlags,
-                description = raw.description,
-                deprecation = raw.deprecation,
                 pipeline = pipeline(presetName),
                 align = align(presetName),
                 refineTagsAndSort = refineTagsAndSort(presetName),

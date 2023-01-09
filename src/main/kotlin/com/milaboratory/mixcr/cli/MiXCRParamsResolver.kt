@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
-import com.milaboratory.app.logger
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
 import com.milaboratory.mixcr.Flags
@@ -26,11 +25,6 @@ abstract class MiXCRParamsResolver<P : Any>(
     paramsProperty: KProperty1<MiXCRParamsBundle, P?>
 ) : ParamsResolver<MiXCRParamsBundle, P>(Presets.MiXCRBundleResolver, paramsProperty) {
     override fun validateBundle(bundle: MiXCRParamsBundle) {
-        if (bundle.deprecation != null) {
-            logger.warn {
-                "Preset is deprecated. ${bundle.deprecation}"
-            }
-        }
         if (bundle.flags.isNotEmpty()) {
             println("Preset errors: ")
             bundle.flags.forEach { flag ->
