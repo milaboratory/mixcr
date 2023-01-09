@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -58,6 +58,7 @@ import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -149,6 +150,9 @@ object CommandAssembleContigs {
         @Option(description = ["Report file."], names = ["--debug-report"], hidden = true)
         var debugReportFile: Path? = null
 
+        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
+        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+
         override val inputFiles get() = listOf(inputFile)
 
         override val outputFiles get() = listOf(outputFile)
@@ -172,7 +176,7 @@ object CommandAssembleContigs {
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
                 cmdParams = paramsResolver.resolve(
-                    reader.header.paramsSpec.addMixins(mixinsToAdd),
+                    resetPreset.overridePreset(reader.header.paramsSpec).addMixins(mixinsToAdd),
                     printParameters = logger.verbose
                 ).second
 

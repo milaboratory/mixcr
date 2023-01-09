@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -45,6 +45,7 @@ import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Mixin
@@ -149,6 +150,9 @@ object CommandExtend {
         @Mixin
         lateinit var threadsOption: ThreadsOption
 
+        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
+        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -230,7 +234,10 @@ object CommandExtend {
             paramsSpec: MiXCRParamsSpec,
             alignerParameters: VDJCAlignerParameters
         ): ProcessWrapper<T> {
-            val (_, cmdParams) = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose)
+            val (_, cmdParams) = paramsResolver.resolve(
+                resetPreset.overridePreset(paramsSpec),
+                printParameters = logger.verbose
+            )
 
             val extender = VDJCObjectExtender<T>(
                 chains, extensionQuality,

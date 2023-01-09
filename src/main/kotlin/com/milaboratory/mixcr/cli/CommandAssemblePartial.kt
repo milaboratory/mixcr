@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -35,6 +35,7 @@ import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParamet
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.groupAlreadySorted
+import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -124,6 +125,9 @@ object CommandAssemblePartial {
         @Mixin
         lateinit var reportOptions: ReportOptions
 
+        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
+        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -144,7 +148,10 @@ object CommandAssemblePartial {
                 VDJCAlignmentsWriter(outputFile)
             ) { reader, writer ->
                 val header = reader.header
-                cmdParams = paramsResolver.resolve(header.paramsSpec, printParameters = logger.verbose).second
+                cmdParams = paramsResolver.resolve(
+                    resetPreset.overridePreset(header.paramsSpec),
+                    printParameters = logger.verbose
+                ).second
                 val groupingDepth =
                     header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
                 writer.writeHeader(

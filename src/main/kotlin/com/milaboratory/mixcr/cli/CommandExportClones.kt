@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -45,6 +45,7 @@ import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
+import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model
@@ -167,6 +168,10 @@ object CommandExportClones {
         @Mixin
         lateinit var exportDefaults: ExportDefaultOptions
 
+        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
+        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+
+
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
@@ -226,7 +231,7 @@ object CommandExportClones {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val header = initialSet.header
             val (_, params) = paramsResolver.resolve(
-                header.paramsSpec.addMixins(exportMixins.mixins),
+                resetPreset.overridePreset(header.paramsSpec).addMixins(exportMixins.mixins),
                 printParameters = logger.verbose && outputFile != null
             )
 

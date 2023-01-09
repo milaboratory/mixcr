@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -55,7 +55,6 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortByHashOnDisk
 import org.apache.commons.io.FileUtils
-import picocli.CommandLine
 import picocli.CommandLine.*
 import java.nio.file.Path
 import java.util.*
@@ -237,6 +236,9 @@ object CommandRefineTagsAndSort {
         )
         var refineAndSortMixins: List<RefineTagsAndSortMixins> = mutableListOf()
 
+        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
+        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+
         private val mixins get() = refineAndSortMixins.mixins
 
         override val inputFiles
@@ -262,7 +264,10 @@ object CommandRefineTagsAndSort {
                 val header = mainReader.header
                 val tagsInfo = header.tagsInfo
                 require(!tagsInfo.hasNoTags()) { "input file has no tags" }
-                cmdParams = paramsResolver.resolve(header.paramsSpec.addMixins(mixins), printParameters = logger.verbose).second
+                cmdParams = paramsResolver.resolve(
+                    resetPreset.overridePreset(header.paramsSpec).addMixins(mixins),
+                    printParameters = logger.verbose
+                ).second
 
                 // These tags will be corrected, other used as grouping keys
                 val correctionEnabled = tagsInfo.map { it.valueType == TagValueType.SequenceAndQuality }

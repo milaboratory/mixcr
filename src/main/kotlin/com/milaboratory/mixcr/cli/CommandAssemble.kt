@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -50,6 +50,7 @@ import gnu.trove.map.hash.TIntObjectHashMap
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
+import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -189,6 +190,9 @@ object CommandAssemble {
         )
         var reportBuffers = false
 
+        @ArgGroup(exclusive = true, multiplicity = "0..1", order = OptionsOrder.mixins.resetPreset)
+        var resetPreset: ResetPresetArgs = ResetPresetArgs()
+
         @Mixin
         private var assembleMixins: AssembleMiXCRMixins? = null
 
@@ -214,15 +218,12 @@ object CommandAssemble {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
 
-            val numberOfAlignments: Long
-
-            val cmdParam: Params
             VDJCAlignmentsReader(inputFile).use { alignmentsReader ->
                 val inputHeader = alignmentsReader.header
                 val inputFooter = alignmentsReader.footer
-                numberOfAlignments = alignmentsReader.numberOfAlignments
+                val numberOfAlignments = alignmentsReader.numberOfAlignments
 
-                cmdParam = paramsResolver.resolve(
+                val (_, cmdParam) = paramsResolver.resolve(
                     inputHeader.paramsSpec.addMixins(mixins),
                     printParameters = logger.verbose
                 ) { cp ->
@@ -255,7 +256,7 @@ object CommandAssemble {
                                 .mapAssembler { it.withMinRecordsPerConsensus(threshold.toInt()) }
                         )
                     }
-                }.second
+                }
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if ((outputFile.extension == "clna" && !cmdParam.clnaOutput) ||
