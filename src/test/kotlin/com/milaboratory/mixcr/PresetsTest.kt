@@ -12,6 +12,7 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.test.TestUtil.assertJson
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 import org.junit.Assert
 import org.junit.Test
 import java.nio.file.Paths
@@ -105,5 +106,14 @@ class PresetsTest {
                     }
                 }
             }
+    }
+
+    @Test
+    fun `all presets must have description or be deprecated`() {
+        Presets.nonAbstractPresetNames
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                bundle.deprecation == null && bundle.description == null
+            } shouldBe emptyList()
     }
 }

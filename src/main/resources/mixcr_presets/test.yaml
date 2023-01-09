@@ -1,4 +1,5 @@
 "test-mikelov-et-al-2021-without-contigs":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-umi-kaligner2-v1-base
   mixins:
     - type: SetSpecies
@@ -44,6 +45,7 @@
       features: [ "VDJRegion" ]
 
 "test-mikelov-et-al-2021-with-contigs":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-umi-kaligner2-v1-base
   mixins:
     - type: AddPipelineStep
@@ -89,6 +91,7 @@
       anchorPoint: CBegin(+15)
 
 "test-airr-long-ig-base":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-base
   align:
     inheritFrom: align-legacy-4.0-kaligner2
@@ -109,11 +112,13 @@
             specificMutationProbability: 1E-3
 
 "test-generic":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-base
   align:
     inheritFrom: align-legacy-4.0-default
 
 "test-subCloningRegions":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-base
   align:
     inheritFrom: align-legacy-4.0-default
@@ -131,6 +136,7 @@
 #
 
 "test-tcr-shotgun":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-base
   flags:
     - materialType
@@ -153,6 +159,7 @@
 #
 
 "10x-vdj-tcr-multi-barcode-test":
+  deprecation: "This preset is only for tests"
   pipeline:
     inheritFrom: pipeline-single-cell-shotgun
   align:
@@ -279,6 +286,7 @@
       - field: "-defaultAnchorPoints"
 
 "pereshlop-test":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-base
   mixins:
     - type: SetSpecies
@@ -320,6 +328,7 @@
       - field: "-defaultAnchorPoints"
 
 "10x-vdj-tcr-alias-multi-barcode-test":
+  deprecation: "This preset is only for tests"
   inheritFrom: 10x-vdj-tcr
   mixins:
     - type: SetTagPattern
@@ -363,6 +372,7 @@
                     share: 0.99
 
 "single-cell-as-sample-no-split":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-base
   pipeline:
     - align
@@ -441,6 +451,7 @@
       - field: "-defaultAnchorPoints"
 
 "single-cell-as-sample-split":
+  deprecation: "This preset is only for tests"
   inheritFrom: bundle-base
   pipeline:
     - align
@@ -515,6 +526,7 @@
       - field: "-defaultAnchorPoints"
 
 "umi-guided-consensus-test":
+  deprecation: "This preset is only for tests"
   pipeline:
     - align
     - refineTagsAndSort

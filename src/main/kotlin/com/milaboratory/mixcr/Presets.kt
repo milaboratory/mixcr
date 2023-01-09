@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -13,6 +13,8 @@ package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.app.ApplicationException
@@ -81,6 +83,10 @@ data class MiXCRParamsSpec(
 @Serializable(asJson = true, objectMapperBy = KObjectMapperProvider::class)
 data class MiXCRParamsBundle(
     @JsonProperty("flags") val flags: Set<String>,
+    @JsonInclude(NON_EMPTY)
+    @JsonProperty("description") val description: String?,
+    @JsonInclude(NON_EMPTY)
+    @JsonProperty("deprecation") val deprecation: String?,
     @JsonProperty("pipeline") val pipeline: MiXCRPipeline?,
     @JsonProperty("align") val align: CommandAlign.Params?,
     @JsonProperty("refineTagsAndSort") val refineTagsAndSort: CommandRefineTagsAndSort.Params?,
@@ -140,6 +146,18 @@ object Flags {
                 "This preset requires to specify sample table, \n" +
                 "please use ${AlignMixins.SetSampleTable.CMD_OPTION} mix-in.",
     )
+
+    val flagOptions = mapOf(
+        Species to "${SetSpecies.CMD_OPTION} <name>",
+        MaterialType to "${MaterialTypeDNA.CMD_OPTION}, ${MaterialTypeRNA.CMD_OPTION}",
+        LeftAlignmentMode to "${AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION} [${Labels.ANCHOR_POINT}]\n" +
+                "${AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION} [${Labels.ANCHOR_POINT}]",
+        RightAlignmentMode to
+                "${AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} (${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})\n" +
+                "${AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})]",
+        TagPattern to "${SetTagPattern.CMD_OPTION} <pattern>",
+        SampleTable to "${AlignMixins.SetSampleTable.CMD_OPTION} sample_table.tsv",
+    )
 }
 
 /** Contains information on the physical source of the raw parameters bundle */
@@ -183,9 +201,9 @@ object Presets {
 
     val allPresetNames = presetCollection.keys
 
-    val nonAbstractPresetNames = presetCollection.filter { !it.value.abstract }.keys
+    val nonAbstractPresetNames = presetCollection.filterValues { !it.abstract }.keys
 
-    val visiblePresets = nonAbstractPresetNames.filter { "test" !in it && "legacy" !in it }
+    val visiblePresets = presetCollection.filterValues { !it.abstract && it.deprecation == null }.keys
 
     private fun rawResolve(name: String): MiXCRParamsBundleRaw {
         if (name.startsWith(LOCAL_PRESET_PREFIX)) {
@@ -252,6 +270,10 @@ object Presets {
     /** Note: JsonIgnore here are just for the readability, this class is not suitable for serialization,
      * it supports only deserialization*/
     private data class MiXCRParamsBundleRaw(
+        @JsonInclude(NON_EMPTY)
+        @JsonProperty("description") val description: String?,
+        @JsonInclude(NON_EMPTY)
+        @JsonProperty("deprecation") val deprecation: String?,
         @JsonProperty("abstract") val abstract: Boolean = false,
         @JsonProperty("inheritFrom") override val inheritFrom: String? = null,
         @JsonProperty("mixins") val mixins: List<MiXCRMixin>?,
@@ -293,6 +315,8 @@ object Presets {
                 throw ApplicationException("Preset $presetName is abstract and not intended to be used directly.")
             val bundle = MiXCRParamsBundle(
                 flags = raw.resolvedFlags,
+                description = raw.description,
+                deprecation = raw.deprecation,
                 pipeline = pipeline(presetName),
                 align = align(presetName),
                 refineTagsAndSort = refineTagsAndSort(presetName),
