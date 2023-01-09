@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -149,6 +149,9 @@ object CommandExtend {
         @Mixin
         lateinit var threadsOption: ThreadsOption
 
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -176,7 +179,8 @@ object CommandExtend {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val cloneSet = reader.readCloneSet()
                 val outputPort = cloneSet.asOutputPort()
-                val process = processWrapper(outputPort, reader.header.paramsSpec, cloneSet.header.alignerParameters!!)
+                val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
+                val process = processWrapper(outputPort, paramsSpec, cloneSet.header.alignerParameters!!)
 
                 val clones = process.output
                     .asSequence()
@@ -189,7 +193,8 @@ object CommandExtend {
                         cloneSet.usedGenes,
                         cloneSet.header
                             .addStepParams(MiXCRCommandDescriptor.extend, process.params)
-                            .copy(allFullyCoveredBy = null),
+                            .copy(allFullyCoveredBy = null)
+                            .copy(paramsSpec = paramsSpec),
                         cloneSet.footer,
                         cloneSet.ordering
                     )
@@ -205,8 +210,10 @@ object CommandExtend {
             VDJCAlignmentsReader(inputFile).use { reader ->
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     SmartProgressReporter.startProgressReport("Extending alignments", reader)
-                    writer.inheritHeaderAndFooterFrom(reader)
-                    val process = processWrapper(reader, reader.header.paramsSpec, reader.parameters)
+                    val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
+                    writer.writeHeader(reader.header.copy(paramsSpec = paramsSpec), reader.usedGenes)
+                    writer.setFooter(reader.footer)
+                    val process = processWrapper(reader, paramsSpec, reader.parameters)
 
                     // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
                     // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure

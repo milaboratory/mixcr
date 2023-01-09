@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.postanalysis.ui;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.milaboratory.app.ValidationException;
 import com.milaboratory.mixcr.basictypes.Clone;
 import com.milaboratory.mixcr.basictypes.tag.TagInfo;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
@@ -206,7 +207,7 @@ public abstract class PostanalysisParameters {
             default:
                 int tagIndex = info.indexOf(weight);
                 if (tagIndex < 0)
-                    throw new IllegalArgumentException("Unknown weight type: " + weight + ". Available types: none, default, read, " + info.stream().map(TagInfo::getName).collect(Collectors.joining(",")));
+                    throw new ValidationException("Unknown weight type: " + weight + ". Available types: none, default, read, " + info.stream().map(TagInfo::getName).collect(Collectors.joining(",")), false);
                 int tagLevel = tagIndex + 1;
                 return new WeightFunctions.TagCount(tagLevel);
         }

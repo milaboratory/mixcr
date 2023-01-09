@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -25,6 +25,7 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
@@ -149,6 +150,9 @@ object CommandAssembleContigs {
         @Option(description = ["Report file."], names = ["--debug-report"], hidden = true)
         var debugReportFile: Path? = null
 
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
         override val inputFiles get() = listOf(inputFile)
 
         override val outputFiles get() = listOf(outputFile)
@@ -162,6 +166,7 @@ object CommandAssembleContigs {
             val beginTimestamp = System.currentTimeMillis()
 
             val cmdParams: Params
+            val paramsSpec: MiXCRParamsSpec
 
             val reportBuilder = FullSeqAssemblerReportBuilder()
             var totalClonesCount = 0
@@ -171,10 +176,8 @@ object CommandAssembleContigs {
             val footer: MiXCRFooter
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-                cmdParams = paramsResolver.resolve(
-                    reader.header.paramsSpec.addMixins(mixinsToAdd),
-                    printParameters = logger.verbose
-                ).second
+                paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec).addMixins(mixinsToAdd)
+                cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."
@@ -366,6 +369,7 @@ object CommandAssembleContigs {
             val resultHeader = header
                 .copy(allFullyCoveredBy = allFullyCoveredBy)
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
+                .copy(paramsSpec = paramsSpec)
 
             val cloneSet = CloneSet(clones, genes, resultHeader, footer, ordering)
             ClnsWriter(outputFile).use { writer ->

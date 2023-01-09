@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -167,6 +167,10 @@ object CommandExportClones {
         @Mixin
         lateinit var exportDefaults: ExportDefaultOptions
 
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
+
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
                 Params::chains setIfNotNull chains
@@ -226,7 +230,7 @@ object CommandExportClones {
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val header = initialSet.header
             val (_, params) = paramsResolver.resolve(
-                header.paramsSpec.addMixins(exportMixins.mixins),
+                resetPreset.overridePreset(header.paramsSpec).addMixins(exportMixins.mixins),
                 printParameters = logger.verbose && outputFile != null
             )
 

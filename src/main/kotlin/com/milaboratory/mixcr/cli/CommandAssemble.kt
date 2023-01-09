@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -190,6 +190,9 @@ object CommandAssemble {
         var reportBuffers = false
 
         @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
+        @Mixin
         private var assembleMixins: AssembleMiXCRMixins? = null
 
         private val mixins get() = assembleMixins?.mixins ?: emptyList()
@@ -214,18 +217,13 @@ object CommandAssemble {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
 
-            val numberOfAlignments: Long
-
-            val cmdParam: Params
             VDJCAlignmentsReader(inputFile).use { alignmentsReader ->
                 val inputHeader = alignmentsReader.header
                 val inputFooter = alignmentsReader.footer
-                numberOfAlignments = alignmentsReader.numberOfAlignments
+                val numberOfAlignments = alignmentsReader.numberOfAlignments
 
-                cmdParam = paramsResolver.resolve(
-                    inputHeader.paramsSpec.addMixins(mixins),
-                    printParameters = logger.verbose
-                ) { cp ->
+                val paramSpec = resetPreset.overridePreset(inputHeader.paramsSpec).addMixins(mixins)
+                val (_, cmdParam) = paramsResolver.resolve(paramSpec, printParameters = logger.verbose) { cp ->
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
                         return@resolve cp
 
@@ -255,7 +253,7 @@ object CommandAssemble {
                                 .mapAssembler { it.withMinRecordsPerConsensus(threshold.toInt()) }
                         )
                     }
-                }.second
+                }
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if ((outputFile.extension == "clna" && !cmdParam.clnaOutput) ||
@@ -350,7 +348,8 @@ object CommandAssemble {
                         assemblerRunner.getCloneSet(
                             inputHeader
                                 .withAssemblerParameters(cloneAssemblerParameters)
-                                .addStepParams(MiXCRCommandDescriptor.assemble, cmdParam),
+                                .addStepParams(MiXCRCommandDescriptor.assemble, cmdParam)
+                                .copy(paramsSpec = paramSpec),
                             inputFooter
                         ),
                         ordering

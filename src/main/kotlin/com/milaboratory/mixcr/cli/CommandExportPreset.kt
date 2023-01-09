@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -42,7 +42,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         @Option(
             names = ["--preset-name"],
             description = ["Preset name to export."],
-            paramLabel = "preset",
+            paramLabel = "<preset>",
             required = true,
             order = 1
         )
@@ -62,6 +62,9 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                 field = value
             }
     }
+
+    @Mixin
+    lateinit var resetPreset: ResetPresetArgs
 
     @ArgGroup(
         exclusive = true,
@@ -145,7 +148,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         val spec: MiXCRParamsSpec = when {
             presetInput.presetName != null -> MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins)
             else -> {
-                val inputFile = presetInput.input!!
+                val inputFile = presetInput.input
                 val paramsSpec = when (IOUtil.extractFileType(inputFile)) {
                     VDJCA -> VDJCAlignmentsReader(inputFile)
                         .use { reader -> reader.header }
@@ -159,7 +162,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                     SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
                 }.paramsSpec
 
-                paramsSpec.addMixins(mixinsFromArgs.mixins)
+                resetPreset.overridePreset(paramsSpec).addMixins(mixinsFromArgs.mixins)
             }
         }
 
