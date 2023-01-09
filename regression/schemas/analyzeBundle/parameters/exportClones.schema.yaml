@@ -18,6 +18,10 @@ properties:
     type: "boolean"
   filterStops:
     type: "boolean"
+  groupClonesBy:
+    type: "array"
+    items:
+      type: "string"
   noHeader:
     type: "boolean"
   splitByTagType:
