@@ -319,3 +319,129 @@
         ^gttagtctcgagctcttcaga(R2:*)|
         ^cagtgtggctttgttttcct(R2:*)
 
+"bd-rhapsody-bcr-full-length":
+  pipeline:
+    inheritFrom: pipeline-single-cell-shotgun
+  mixins:
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
+  align:
+    inheritFrom: align-kaligner2-single-cell-v1
+    overrides:
+      tagPattern: ^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+  refineTagsAndSort:
+    whitelists:
+      CELL1: builtin:rhapsody-cell1
+      CELL2: builtin:rhapsody-cell2
+      CELL3: builtin:rhapsody-cell3
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_and
+        operands:
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+              - allTags:Molecule
+            predicates:
+              - metrics:
+                  - type: group_metric_sum_weight
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                operator:
+                  type: group_operator_otsu1
+                  logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+            predicates:
+              - metrics:
+                  - type: group_metric_nunique
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                    keys:
+                      - allTags:Molecule
+                operator:
+                  type: group_operator_range
+                  lower: 3.0
+  assemblePartial:
+    inheritFrom: assemblePartial-universal
+  assemble:
+    inheritFrom: assemble-base-with-consensus
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+          - type: filter_in_groups
+            isolationKeys:
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+          - type: filter_in_groups
+            isolationKeys:
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+  assembleContigs:
+    inheritFrom: assembleContigs-universal
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  exportClones:
+    inheritFrom: exportClones-single-cell-full
+
+
+"bd-rhapsody-tcr-full-length":
+  inheritFrom: bd-rhapsody-bcr-full-length
+  align:
+    inheritFrom: align-kaligner1-single-cell-v1
