@@ -1,4 +1,4 @@
-PresetName                                 Description                                                 Required mix-ins
+PresetName                                 Required mix-ins
 10x-5gex-cdr3
 10x-5gex-full-length
 10x-vdj-bcr
@@ -23,66 +23,54 @@ bd-rhapsody-mouse-tcr-v2
 biomed2-human-bcr-cdr3
 biomed2-human-bcr-full-length
 cellecta-air-human
-exom-cdr3                                                                                              --species <name>
-exom-full-length                                                                                       --species <name>
-exome-cdr3                                                                                             --species <name>
-exome-full-length                                                                                      --species <name>
-generic-bcr-amplicon                                                                                   --floating-left-alignment-boundary [<anchor_point>]
-                                                                                                       --rigid-left-alignment-boundary [<anchor_point>]
-                                                                                                       --floating-right-alignment-boundary
-                                                                                                         (<gene_type>|<anchor_point>)
-                                                                                                       --rigid-right-alignment-boundary
-                                                                                                         [(<gene_type>|<anchor_point>)]
-                                                                                                       --dna, --rna
-                                                                                                       --species <name>
-generic-bcr-amplicon-separate-samples-umi                                                              --sample-table sample_table.tsv
-                                                                                                       --tag-pattern <pattern>
-                                                                                                       --floating-left-alignment-boundary [<anchor_point>]
-                                                                                                       --rigid-left-alignment-boundary [<anchor_point>]
-                                                                                                       --floating-right-alignment-boundary
-                                                                                                         (<gene_type>|<anchor_point>)
-                                                                                                       --rigid-right-alignment-boundary
-                                                                                                         [(<gene_type>|<anchor_point>)]
-                                                                                                       --dna, --rna
-                                                                                                       --species <name>
-generic-bcr-amplicon-umi                                                                               --tag-pattern <pattern>
-                                                                                                       --floating-left-alignment-boundary [<anchor_point>]
-                                                                                                       --rigid-left-alignment-boundary [<anchor_point>]
-                                                                                                       --floating-right-alignment-boundary
-                                                                                                         (<gene_type>|<anchor_point>)
-                                                                                                       --rigid-right-alignment-boundary
-                                                                                                         [(<gene_type>|<anchor_point>)]
-                                                                                                       --dna, --rna
-                                                                                                       --species <name>
-generic-tcr-amplicon                                                                                   --floating-left-alignment-boundary [<anchor_point>]
-                                                                                                       --rigid-left-alignment-boundary [<anchor_point>]
-                                                                                                       --floating-right-alignment-boundary
-                                                                                                         (<gene_type>|<anchor_point>)
-                                                                                                       --rigid-right-alignment-boundary
-                                                                                                         [(<gene_type>|<anchor_point>)]
-                                                                                                       --dna, --rna
-                                                                                                       --species <name>
-generic-tcr-amplicon-separate-samples-umi                                                              --sample-table sample_table.tsv
-                                                                                                       --tag-pattern <pattern>
-                                                                                                       --floating-left-alignment-boundary [<anchor_point>]
-                                                                                                       --rigid-left-alignment-boundary [<anchor_point>]
-                                                                                                       --floating-right-alignment-boundary
-                                                                                                         (<gene_type>|<anchor_point>)
-                                                                                                       --rigid-right-alignment-boundary
-                                                                                                         [(<gene_type>|<anchor_point>)]
-                                                                                                       --dna, --rna
-                                                                                                       --species <name>
-generic-tcr-amplicon-umi                                                                               --tag-pattern <pattern>
-                                                                                                       --floating-left-alignment-boundary [<anchor_point>]
-                                                                                                       --rigid-left-alignment-boundary [<anchor_point>]
-                                                                                                       --floating-right-alignment-boundary
-                                                                                                         (<gene_type>|<anchor_point>)
-                                                                                                       --rigid-right-alignment-boundary
-                                                                                                         [(<gene_type>|<anchor_point>)]
-                                                                                                       --dna, --rna
-                                                                                                       --species <name>
-han-et-al-2014-bcr                                                                                     --species <name>
-han-et-al-2014-tcr                                                                                     --species <name>
+exom-cdr3                                  --species <name>
+exom-full-length                           --species <name>
+exome-cdr3                                 --species <name>
+exome-full-length                          --species <name>
+generic-bcr-amplicon                       (--floating-left-alignment-boundary [<anchor_point>]|
+                                           --rigid-left-alignment-boundary [<anchor_point>])
+                                           (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
+                                           --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+                                           (--dna|--rna)
+                                           --species <name>
+generic-bcr-amplicon-separate-samples-umi  --sample-table sample_table.tsv
+                                           --tag-pattern <pattern>
+                                           (--floating-left-alignment-boundary [<anchor_point>]|
+                                           --rigid-left-alignment-boundary [<anchor_point>])
+                                           (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
+                                           --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+                                           (--dna|--rna)
+                                           --species <name>
+generic-bcr-amplicon-umi                   --tag-pattern <pattern>
+                                           (--floating-left-alignment-boundary [<anchor_point>]|
+                                           --rigid-left-alignment-boundary [<anchor_point>])
+                                           (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
+                                           --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+                                           (--dna|--rna)
+                                           --species <name>
+generic-tcr-amplicon                       (--floating-left-alignment-boundary [<anchor_point>]|
+                                           --rigid-left-alignment-boundary [<anchor_point>])
+                                           (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
+                                           --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+                                           (--dna|--rna)
+                                           --species <name>
+generic-tcr-amplicon-separate-samples-umi  --sample-table sample_table.tsv
+                                           --tag-pattern <pattern>
+                                           (--floating-left-alignment-boundary [<anchor_point>]|
+                                           --rigid-left-alignment-boundary [<anchor_point>])
+                                           (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
+                                           --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+                                           (--dna|--rna)
+                                           --species <name>
+generic-tcr-amplicon-umi                   --tag-pattern <pattern>
+                                           (--floating-left-alignment-boundary [<anchor_point>]|
+                                           --rigid-left-alignment-boundary [<anchor_point>])
+                                           (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
+                                           --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+                                           (--dna|--rna)
+                                           --species <name>
+han-et-al-2014-bcr                         --species <name>
+han-et-al-2014-tcr                         --species <name>
 irepertoire-human-dna-igh-lr
 irepertoire-human-dna-igh-sr
 irepertoire-human-dna-trb-lr
@@ -134,12 +122,12 @@ qiaseq-human-tcr-cdr3
 qiaseq-human-tcr-full-length
 qiaseq-mouse-tcr-cdr3
 qiaseq-mouse-tcr-full-length
-rnaseq-bcr-cdr3                                                                                        --species <name>
-rnaseq-bcr-full-length                                                                                 --species <name>
-rnaseq-cdr3                                                                                            --species <name>
-rnaseq-full-length                                                                                     --species <name>
-rnaseq-tcr-cdr3                                                                                        --species <name>
-rnaseq-tcr-full-length                                                                                 --species <name>
+rnaseq-bcr-cdr3                            --species <name>
+rnaseq-bcr-full-length                     --species <name>
+rnaseq-cdr3                                --species <name>
+rnaseq-full-length                         --species <name>
+rnaseq-tcr-cdr3                            --species <name>
+rnaseq-tcr-full-length                     --species <name>
 singleron-2.0.1-vdj-cdr3
 split-seq-vdj-3gex
 takara-human-bcr-cdr3

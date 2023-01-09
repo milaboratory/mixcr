@@ -146,12 +146,13 @@ object Flags {
 
     val flagOptions = mapOf(
         Species to "${SetSpecies.CMD_OPTION} <name>",
-        MaterialType to "${MaterialTypeDNA.CMD_OPTION}, ${MaterialTypeRNA.CMD_OPTION}",
-        LeftAlignmentMode to "${AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION} [${Labels.ANCHOR_POINT}]\n" +
-                "${AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION} [${Labels.ANCHOR_POINT}]",
+        MaterialType to "(${MaterialTypeDNA.CMD_OPTION}|${MaterialTypeRNA.CMD_OPTION})",
+        LeftAlignmentMode to
+                "(${AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION} [${Labels.ANCHOR_POINT}]|\n" +
+                "${AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION} [${Labels.ANCHOR_POINT}])",
         RightAlignmentMode to
-                "${AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} (${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})\n" +
-                "${AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})]",
+                "(${AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} (${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})|\n" +
+                "${AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})])",
         TagPattern to "${SetTagPattern.CMD_OPTION} <pattern>",
         SampleTable to "${AlignMixins.SetSampleTable.CMD_OPTION} sample_table.tsv",
     )
@@ -181,7 +182,7 @@ object Presets {
         }
     }
 
-    val presetCollection: Map<String, MiXCRParamsBundleRaw> = buildMap {
+    private val presetCollection: Map<String, MiXCRParamsBundleRaw> = buildMap {
         val files = (Presets.javaClass.getResourceAsStream("/mixcr_presets/file_list.txt")
             ?: throw IllegalStateException("No preset file list")).use { stream ->
             IOUtils.readLines(stream, Charset.defaultCharset())
@@ -266,9 +267,7 @@ object Presets {
 
     /** Note: JsonIgnore here are just for the readability, this class is not suitable for serialization,
      * it supports only deserialization*/
-    data class MiXCRParamsBundleRaw(
-        @JsonInclude(NON_EMPTY)
-        @JsonProperty("description") val description: String?,
+    private data class MiXCRParamsBundleRaw(
         @JsonInclude(NON_EMPTY)
         @JsonProperty("deprecation") val deprecation: String?,
         @JsonProperty("abstract") val abstract: Boolean = false,
