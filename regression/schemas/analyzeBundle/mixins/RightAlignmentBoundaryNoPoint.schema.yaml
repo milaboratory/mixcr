@@ -1,19 +1,19 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: "object"
+- type: object
   properties:
     floating:
-      type: "boolean"
+      type: boolean
     geneType:
-      type: "string"
+      type: string
       enum:
-      - "Variable"
-      - "Diversity"
-      - "Joining"
-      - "Constant"
-- type: "object"
+      - Variable
+      - Diversity
+      - Joining
+      - Constant
+- type: object
   properties:
     type:
-      const: "RightAlignmentBoundaryNoPoint"
+      const: RightAlignmentBoundaryNoPoint
   required:
-  - "type"
+  - type

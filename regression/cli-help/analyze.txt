@@ -3,8 +3,8 @@ Usage: mixcr analyze [--not-aligned-I1 <path.fastq[.gz]>] [--not-aligned-I2 <pat
                      [--not-parsed-I1 <path.fastq[.gz]>] [--not-parsed-I2 <path.fastq[.gz]>]
                      [--not-parsed-R1 <path.fastq[.gz]>] [--not-parsed-R2 <path.fastq[.gz]>]
                      [--add-step <step>] [--remove-step <step>] [-s <species>] [-b <library>]
-                     [--split-by-sample] [--dont-split-by-sample] [--dna] [--rna]
-                     [--floating-left-alignment-boundary [<anchor_point>]]
+                     [--split-by-sample] [--dont-split-by-sample] [--sample-table sample_table.tsv]
+                     [--dna] [--rna] [--floating-left-alignment-boundary [<anchor_point>]]
                      [--rigid-left-alignment-boundary [<anchor_point>]]
                      [--floating-right-alignment-boundary (<gene_type>|<anchor_point>)]
                      [--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)]]
@@ -16,11 +16,15 @@ Usage: mixcr analyze [--not-aligned-I1 <path.fastq[.gz]>] [--not-aligned-I2 <pat
                      [--prepend-export-clones-field <field> [<param>...]]...
                      [--append-export-clones-field <field> [<param>...]]...
                      [--prepend-export-alignments-field <field> [<param>...]]...
-                     [--append-export-alignments-field <field> [<param>...]]... [-M <key=value>]...
-                     [--no-reports] [--no-json-reports] [--use-local-temp] [--threads <n>]
-                     [--force-overwrite] [--no-warnings] [--verbose] [--help] <preset_name>
-                     ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.
-                     gz]]|file.(fasta|bam|sam)) output_prefix
+                     [--append-export-alignments-field <field> [<param>...]]...
+                     [--add-export-clone-table-splitting <(geneLabel|tag):key>]
+                     [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
+                     (geneLabel|tag):key>] [--reset-export-clone-grouping] [--no-reports]
+                     [--no-json-reports] [--use-local-temp] [--threads <n>] [--force-overwrite]
+                     [--no-warnings] [--verbose] [--help] [--set-whitelist <key=value> |
+                     --reset-whitelist tag]... [-M <key=value>]... <preset_name> ([file_I1.fastq[.
+                     gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
+                     (fasta|bam|sam)) output_prefix
 Run full MiXCR pipeline for specific input.
       <preset_name>          Name of the analysis preset.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
@@ -47,7 +51,14 @@ Run full MiXCR pipeline for specific input.
                              Pipe not parsed R1 reads into separate file.
       --not-parsed-R2 <path.fastq[.gz]>
                              Pipe not parsed R2 reads into separate file.
-  -M  <key=value>            Overrides preset parameters
+      --set-whitelist <key=value>
+                             Sets the whitelist for a specific tag to guide the tag refinement
+                               procedure.
+                             Usage: --set-whitelist CELL=preset:737K-august-2016 or --set-whitelist
+                               UMI=file:my_umi_whitelist.txt .
+      --reset-whitelist tag  Resets the whitelist for a specific tag so that unguided refinement
+                               procedure will be applied for it
+  -M  <key=value>            Overrides arbitrary preset parameter
       --no-reports           Don't output report files for each of the steps
       --no-json-reports      Don't output json report files for each of the steps
       --use-local-temp       Put temporary files in the same folder as the output files.
@@ -68,6 +79,8 @@ Params for align command:
                                library is used. One can also use external libraries
       --split-by-sample      Split output alignments files by sample.
       --dont-split-by-sample Don't split output alignments files by sample.
+      --sample-table sample_table.tsv
+                             Loads sample table from a tab separated file.
       --dna                  For DNA starting material. Setups V gene feature to align to
                                `VGeneWithP` (full intron) and also instructs MiXCR to skip C gene
                                alignment since it is too far from CDR3 in DNA data.
@@ -147,3 +160,11 @@ Params for export commands:
                              Add clones export column after other columns. First param is field
                                name as it is in `exportAlignments` command, left params are params
                                of the field
+      --add-export-clone-table-splitting <(geneLabel|tag):key>
+                             Add key to split output files with clone tables.
+      --reset-export-clone-table-splitting
+                             Reset all file splitting for output clone tables.
+      --add-export-clone-grouping <(geneLabel|tag):key>
+                             Add key to group clones in the output clone tables.
+      --reset-export-clone-grouping
+                             Reset all clone grouping in the output clone tables.

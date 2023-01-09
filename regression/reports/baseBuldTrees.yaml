@@ -1,17 +1,17 @@
 findShmTrees:
-  type: "buildSHMTreeReport"
-  commandLine: "findShmTrees -j trees/report.json -r trees/report.txt alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns\
-    \ alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns trees/result.shmt"
+  type: buildSHMTreeReport
+  commandLine: findShmTrees -j trees/report.json -r trees/report.txt alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
+    alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns trees/result.shmt
   inputFiles:
-  - "alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns"
-  - "alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns"
+  - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
+  - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
   outputFiles:
-  - "trees/result.shmt"
+  - trees/result.shmt
   stepResults:
   - step:
-      name: "BuildingInitialTrees"
+      name: BuildingInitialTrees
       algorithm:
-        type: "BronKerbosch"
+        type: BronKerbosch
         commonMutationsCountForClustering: 5
         maxNDNDistanceForClustering: 1.0
     clonesWasAdded: 322
@@ -74,17 +74,17 @@ findShmTrees:
       percentile75: 0.0
     surenessOfDecisions:
       size: 18
-      sum: "NaN"
+      sum: NaN
       min: 0.0
       max: 0.0
-      avg: "NaN"
-      quadraticMean: "NaN"
-      stdDeviation: "NaN"
+      avg: NaN
+      quadraticMean: NaN
+      stdDeviation: NaN
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
   - step:
-      name: "AttachClonesByDistanceChange"
+      name: AttachClonesByDistanceChange
       threshold: 0.4
       maxNDNDistance: 1.5
     clonesWasAdded: 6
@@ -148,16 +148,16 @@ findShmTrees:
     surenessOfDecisions:
       size: 0
       sum: 0.0
-      min: "NaN"
-      max: "NaN"
-      avg: "NaN"
-      quadraticMean: "NaN"
-      stdDeviation: "NaN"
-      percentile25: "NaN"
-      percentile50: "NaN"
-      percentile75: "NaN"
+      min: NaN
+      max: NaN
+      avg: NaN
+      quadraticMean: NaN
+      stdDeviation: NaN
+      percentile25: NaN
+      percentile50: NaN
+      percentile75: NaN
   - step:
-      name: "CombineTrees"
+      name: CombineTrees
       maxNDNDistanceBetweenRoots: 0.5
     clonesWasAdded: 0
     cloneNodesWasAdded: 0
@@ -220,26 +220,26 @@ findShmTrees:
     surenessOfDecisions:
       size: 0
       sum: 0.0
-      min: "NaN"
-      max: "NaN"
-      avg: "NaN"
-      quadraticMean: "NaN"
-      stdDeviation: "NaN"
-      percentile25: "NaN"
-      percentile50: "NaN"
-      percentile75: "NaN"
+      min: NaN
+      max: NaN
+      avg: NaN
+      quadraticMean: NaN
+      stdDeviation: NaN
+      percentile25: NaN
+      percentile50: NaN
+      percentile75: NaN
   totalClonesProcessed: 1294
 upstreams:
   alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns:
     align:
-      type: "alignerReport"
-      commandLine: "align -p mikelov-et-al-2021 trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R1.fastq.gz\
-        \ trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca"
+      type: alignerReport
+      commandLine: align -p mikelov-et-al-2021 trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R1.fastq.gz
+        trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       inputFiles:
-      - "trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R1.fastq.gz"
-      - "trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz"
+      - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R1.fastq.gz
+      - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz
       outputFiles:
-      - "align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca"
+      - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       trimmingReport: null
       totalReadsProcessed: 49700
       aligned: 49560
@@ -262,7 +262,7 @@ upstreams:
       vChimeras: 50
       jChimeras: 0
       chainUsage:
-        type: "chainUsage"
+        type: chainUsage
         chimeras: 0
         total: 49560
         chains:
@@ -899,15 +899,15 @@ upstreams:
                 "17": 7
                 "19": 12
     assemble:
-      type: "assemblerReport"
-      commandLine: "assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca\
-        \ assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns"
+      type: assemblerReport
+      commandLine: assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
+        assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
       inputFiles:
-      - "align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca"
+      - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       outputFiles:
-      - "assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns"
+      - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
       preCloneAssemblerReport:
-        type: "preCloneAssemblerReport"
+        type: preCloneAssemblerReport
         inputGroups: 2913
         groupsWithNoAssemblingFeature: 77
         inputAlignments: 47195
@@ -948,7 +948,7 @@ upstreams:
       readsInClonesBeforeClustering: 46012
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
-        type: "chainUsage"
+        type: chainUsage
         chimeras: 0
         total: 1248
         chains:
@@ -962,19 +962,19 @@ upstreams:
       postFilteringReports: null
       alignmentsFilteredByTagPrefix: 0
     findAlleles:
-      type: "findAllelesReport"
+      type: findAllelesReport
       commandLine: "findAlleles -j alleles/report.json -r alleles/report.txt --output-template\
         \ alleles/{file_name}.with_alleles.clns --export-library alleles_library.json\
         \ --export-alleles-mutations alleles/description.tsv assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns\
         \ assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns"
       inputFiles:
-      - "assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns"
-      - "assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns"
+      - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
+      - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
       outputFiles:
-      - "alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns"
-      - "alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns"
-      - "alleles/description.tsv"
-      - "alleles_library.json"
+      - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
+      - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
+      - alleles/description.tsv
+      - alleles_library.json
       searchHistoryForBCells:
         IGHJ1*00:
           alleles:
@@ -1054,7 +1054,7 @@ upstreams:
             discardedEnrichedMutations: []
             filteredOutByNaiveCount: []
             result:
-            - "SC55A"
+            - SC55A
           clonesCount: 188
           diversity: 45
           enoughDiversity: true
@@ -1148,18 +1148,18 @@ upstreams:
           quadraticMean: 110.23815
           stdDeviation: 21.36033
     refineTagsAndSort:
-      type: "refineTagsAndSort"
-      commandLine: "refineTagsAndSort align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca\
-        \ align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca"
+      type: refineTagsAndSort
+      commandLine: refineTagsAndSort align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
+        align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       inputFiles:
-      - "align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca"
+      - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       outputFiles:
-      - "align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca"
+      - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       correctionReport:
         inputRecords: 49560
         outputRecords: 47195
         steps:
-        - tagName: "UMI"
+        - tagName: UMI
           inputGroups: 1
           inputDiversity: 5624
           inputCount: 49560
@@ -1174,16 +1174,16 @@ upstreams:
           outputDiversity: 4404
           outputCount: 49560
         filterReport:
-          type: "filter_groups_report"
+          type: filter_groups_report
           groupingKeys:
-          - "UMI"
+          - UMI
           numberOfGroups: 4404
           numberOfGroupsAccepted: 2913
           totalWeight: 49560.0
           totalWeightAccepted: 47195.0
           operatorReports:
           - operatorReport:
-              type: "generic_hist_report"
+              type: generic_hist_report
               threshold: 5.0
             metricHists:
             - bins:
@@ -1221,14 +1221,14 @@ upstreams:
                 multiplyWeightByKey: false
   alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns:
     align:
-      type: "alignerReport"
-      commandLine: "align -p mikelov-et-al-2021 trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R1.fastq.gz\
-        \ trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca"
+      type: alignerReport
+      commandLine: align -p mikelov-et-al-2021 trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R1.fastq.gz
+        trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       inputFiles:
-      - "trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R1.fastq.gz"
-      - "trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz"
+      - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R1.fastq.gz
+      - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz
       outputFiles:
-      - "align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca"
+      - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       trimmingReport: null
       totalReadsProcessed: 29871
       aligned: 29499
@@ -1251,7 +1251,7 @@ upstreams:
       vChimeras: 66
       jChimeras: 1
       chainUsage:
-        type: "chainUsage"
+        type: chainUsage
         chimeras: 0
         total: 29499
         chains:
@@ -1906,15 +1906,15 @@ upstreams:
                 "17": 11
                 "19": 4
     assemble:
-      type: "assemblerReport"
-      commandLine: "assemble align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca\
-        \ assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns"
+      type: assemblerReport
+      commandLine: assemble align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
+        assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
       inputFiles:
-      - "align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca"
+      - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       outputFiles:
-      - "assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns"
+      - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
       preCloneAssemblerReport:
-        type: "preCloneAssemblerReport"
+        type: preCloneAssemblerReport
         inputGroups: 77
         groupsWithNoAssemblingFeature: 8
         inputAlignments: 29031
@@ -1955,7 +1955,7 @@ upstreams:
       readsInClonesBeforeClustering: 27685
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
-        type: "chainUsage"
+        type: chainUsage
         chimeras: 0
         total: 46
         chains:
@@ -1969,19 +1969,19 @@ upstreams:
       postFilteringReports: null
       alignmentsFilteredByTagPrefix: 0
     findAlleles:
-      type: "findAllelesReport"
+      type: findAllelesReport
       commandLine: "findAlleles -j alleles/report.json -r alleles/report.txt --output-template\
         \ alleles/{file_name}.with_alleles.clns --export-library alleles_library.json\
         \ --export-alleles-mutations alleles/description.tsv assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns\
         \ assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns"
       inputFiles:
-      - "assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns"
-      - "assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns"
+      - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
+      - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
       outputFiles:
-      - "alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns"
-      - "alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns"
-      - "alleles/description.tsv"
-      - "alleles_library.json"
+      - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
+      - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
+      - alleles/description.tsv
+      - alleles_library.json
       searchHistoryForBCells:
         IGHJ1*00:
           alleles:
@@ -2061,7 +2061,7 @@ upstreams:
             discardedEnrichedMutations: []
             filteredOutByNaiveCount: []
             result:
-            - "SC55A"
+            - SC55A
           clonesCount: 188
           diversity: 45
           enoughDiversity: true
@@ -2155,18 +2155,18 @@ upstreams:
           quadraticMean: 110.23815
           stdDeviation: 21.36033
     refineTagsAndSort:
-      type: "refineTagsAndSort"
-      commandLine: "refineTagsAndSort align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca\
-        \ align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca"
+      type: refineTagsAndSort
+      commandLine: refineTagsAndSort align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
+        align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       inputFiles:
-      - "align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca"
+      - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       outputFiles:
-      - "align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca"
+      - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       correctionReport:
         inputRecords: 29499
         outputRecords: 29031
         steps:
-        - tagName: "UMI"
+        - tagName: UMI
           inputGroups: 1
           inputDiversity: 1365
           inputCount: 29499
@@ -2181,16 +2181,16 @@ upstreams:
           outputDiversity: 469
           outputCount: 29499
         filterReport:
-          type: "filter_groups_report"
+          type: filter_groups_report
           groupingKeys:
-          - "UMI"
+          - UMI
           numberOfGroups: 469
           numberOfGroupsAccepted: 77
           totalWeight: 29499.0
           totalWeightAccepted: 29031.0
           operatorReports:
           - operatorReport:
-              type: "generic_hist_report"
+              type: generic_hist_report
               threshold: 19.0
             metricHists:
             - bins:

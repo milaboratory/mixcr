@@ -1,15 +1,15 @@
 flags: []
 pipeline:
-- "align"
-- "refineTagsAndSort"
-- "assemble"
-- "exportClones"
+- align
+- refineTagsAndSort
+- assemble
+- exportClones
 align:
-  species: "hs"
-  libraryName: "default"
+  species: hs
+  libraryName: default
   trimmingQualityThreshold: 0
   trimmingWindowSize: 6
-  chains: "ALL"
+  chains: ALL
   replaceWildcards: true
   overlapPairedReads: true
   bamDropNonVDJ: false
@@ -24,11 +24,11 @@ align:
   limit: null
   parameters:
     vParameters:
-      geneFeatureToAlign: "VTranscriptWithP"
+      geneFeatureToAlign: VTranscriptWithP
       minSumScore: 80
       relativeMinScore: 0.97
       parameters:
-        type: "kaligner"
+        type: kaligner
         mapperKValue: 5
         floatingLeftBound: true
         floatingRightBound: true
@@ -46,26 +46,26 @@ align:
         relativeMinScore: 0.87
         maxHits: 7
         scoring:
-          type: "linear"
-          alphabet: "nucleotide"
+          type: linear
+          alphabet: nucleotide
           subsMatrix: "simple(match = 5, mismatch = -11)"
           gapPenalty: -21
     dParameters:
-      geneFeatureToAlign: "DRegionWithP"
+      geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
       absoluteMinScore: 25.0
       maxHits: 3
       scoring:
-        type: "linear"
-        alphabet: "nucleotide"
+        type: linear
+        alphabet: nucleotide
         subsMatrix: "simple(match = 5, mismatch = -11)"
         gapPenalty: -21
     jParameters:
-      geneFeatureToAlign: "JRegionWithP"
+      geneFeatureToAlign: JRegionWithP
       minSumScore: 60
       relativeMinScore: 0.97
       parameters:
-        type: "kaligner"
+        type: kaligner
         mapperKValue: 5
         floatingLeftBound: true
         floatingRightBound: true
@@ -83,16 +83,16 @@ align:
         relativeMinScore: 0.87
         maxHits: 7
         scoring:
-          type: "linear"
-          alphabet: "nucleotide"
+          type: linear
+          alphabet: nucleotide
           subsMatrix: "simple(match = 5, mismatch = -11)"
           gapPenalty: -21
     cParameters:
-      geneFeatureToAlign: "CExon1"
+      geneFeatureToAlign: CExon1
       minSumScore: 40
       relativeMinScore: 0.97
       parameters:
-        type: "kaligner"
+        type: kaligner
         mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: true
@@ -110,12 +110,12 @@ align:
         relativeMinScore: 0.87
         maxHits: 7
         scoring:
-          type: "linear"
-          alphabet: "nucleotide"
+          type: linear
+          alphabet: nucleotide
           subsMatrix: "simple(match = 5, mismatch = -11)"
           gapPenalty: -21
-    vjAlignmentOrder: "VThenJ"
-    libraryStructure: "Unknown"
+    vjAlignmentOrder: VThenJ
+    libraryStructure: Unknown
     includeDScore: true
     includeCScore: true
     minSumScore: 200.0
@@ -124,15 +124,15 @@ align:
     allowPartialAlignments: false
     allowNoCDR3PartAlignments: false
     allowChimeras: false
-    readsLayout: "Opposite"
+    readsLayout: Opposite
     mergerParameters:
-      qualityMergingAlgorithm: "MaxSubtraction"
+      qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
       minimalOverlap: 13
       minimalMatchQualitySum: 364
       maxQuality: 50
       minimalIdentity: 0.7
-      identityType: "MinimalQualityWeighted"
+      identityType: MinimalQualityWeighted
     fixSeed: true
     alignmentBoundaryTolerance: 5
     minChimeraDetectionScore: 120
@@ -142,9 +142,9 @@ align:
     smartForceEdgeAlignments: true
 refineTagsAndSort:
   whitelists:
-    CELL1: "builtin:singleron-whitelist"
-    CELL2: "builtin:singleron-whitelist"
-    CELL3: "builtin:singleron-whitelist"
+    CELL1: builtin:singleron-whitelist
+    CELL2: builtin:singleron-whitelist
+    CELL3: builtin:singleron-whitelist
   runCorrection: true
   parameters:
     correctionPower: 0.001
@@ -155,22 +155,22 @@ refineTagsAndSort:
     maxIndels: 2
     maxTotalErrors: 3
     postFilter:
-      type: "filter_and"
+      type: filter_and
       operands:
-      - type: "filter_groups"
+      - type: filter_groups
         groupingKeys:
-        - "allTags:Cell"
-        - "allTags:Molecule"
+        - allTags:Cell
+        - allTags:Molecule
         predicates:
         - metrics:
-          - type: "group_metric_sum_weight"
+          - type: group_metric_sum_weight
             reportHist:
               log: true
               binNumber: 0
               minBinWidth: 0.2
               multiplyWeightByKey: false
           operator:
-            type: "group_operator_otsu1"
+            type: group_operator_otsu1
             logX: true
             minimalSample: 20
             fallbackThreshold: 1.0
@@ -185,8 +185,8 @@ assemble:
       aAssemblerParameters:
         bandWidth: 4
         scoring:
-          type: "linear"
-          alphabet: "nucleotide"
+          type: linear
+          alphabet: nucleotide
           subsMatrix: "simple(match = 5, mismatch = -4)"
           gapPenalty: -14
         minAlignmentScore: 40
@@ -206,16 +206,16 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - "CDR3"
+    - CDR3
     minimalClonalSequenceLength: 12
-    qualityAggregationType: "Max"
+    qualityAggregationType: Max
     cloneClusteringParameters:
       searchDepth: 2
       allowedMutationsInNRegions: 1
       minimalTagSetOverlap: -1.0
-      searchParameters: "twoMismatchesOrIndels"
+      searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: "relativeConcentration"
+        type: relativeConcentration
         specificMutationProbability: 1.0E-4
     cloneFactoryParameters:
       vParameters:
@@ -263,7 +263,7 @@ assemble:
     addReadsCountOnClustering: false
     badQualityThreshold: 20
     maxBadPointsPercent: 0.7
-    mappingThreshold: "2of5"
+    mappingThreshold: 2of5
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: false
@@ -273,89 +273,90 @@ exportClones:
   splitByTagType: null
   filterOutOfFrames: false
   filterStops: false
-  chains: "ALL"
+  chains: ALL
   noHeader: false
-  splitFilesBy: []
   fields:
-  - field: "-cloneId"
-  - field: "-tags"
+  - field: -cloneId
+  - field: -tags
     args:
-    - "Cell"
-  - field: "-readCount"
-  - field: "-uniqueTagCount"
+    - Cell
+  - field: -readCount
+  - field: -uniqueTagCount
     args:
-    - "Molecule"
-  - field: "-targetSequences"
-  - field: "-targetQualities"
-  - field: "-vHitsWithScore"
-  - field: "-dHitsWithScore"
-  - field: "-jHitsWithScore"
-  - field: "-cHitsWithScore"
-  - field: "-vAlignments"
-  - field: "-dAlignments"
-  - field: "-jAlignments"
-  - field: "-cAlignments"
-  - field: "-nFeature"
+    - Molecule
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -nFeature
     args:
-    - "FR1"
-  - field: "-minFeatureQuality"
+    - FR1
+  - field: -minFeatureQuality
     args:
-    - "FR1"
-  - field: "-nFeature"
+    - FR1
+  - field: -nFeature
     args:
-    - "CDR1"
-  - field: "-minFeatureQuality"
+    - CDR1
+  - field: -minFeatureQuality
     args:
-    - "CDR1"
-  - field: "-nFeature"
+    - CDR1
+  - field: -nFeature
     args:
-    - "FR2"
-  - field: "-minFeatureQuality"
+    - FR2
+  - field: -minFeatureQuality
     args:
-    - "FR2"
-  - field: "-nFeature"
+    - FR2
+  - field: -nFeature
     args:
-    - "CDR2"
-  - field: "-minFeatureQuality"
+    - CDR2
+  - field: -minFeatureQuality
     args:
-    - "CDR2"
-  - field: "-nFeature"
+    - CDR2
+  - field: -nFeature
     args:
-    - "FR3"
-  - field: "-minFeatureQuality"
+    - FR3
+  - field: -minFeatureQuality
     args:
-    - "FR3"
-  - field: "-nFeature"
+    - FR3
+  - field: -nFeature
     args:
-    - "CDR3"
-  - field: "-minFeatureQuality"
+    - CDR3
+  - field: -minFeatureQuality
     args:
-    - "CDR3"
-  - field: "-nFeature"
+    - CDR3
+  - field: -nFeature
     args:
-    - "FR4"
-  - field: "-minFeatureQuality"
+    - FR4
+  - field: -minFeatureQuality
     args:
-    - "FR4"
-  - field: "-aaFeature"
+    - FR4
+  - field: -aaFeature
     args:
-    - "FR1"
-  - field: "-aaFeature"
+    - FR1
+  - field: -aaFeature
     args:
-    - "CDR1"
-  - field: "-aaFeature"
+    - CDR1
+  - field: -aaFeature
     args:
-    - "FR2"
-  - field: "-aaFeature"
+    - FR2
+  - field: -aaFeature
     args:
-    - "CDR2"
-  - field: "-aaFeature"
+    - CDR2
+  - field: -aaFeature
     args:
-    - "FR3"
-  - field: "-aaFeature"
+    - FR3
+  - field: -aaFeature
     args:
-    - "CDR3"
-  - field: "-aaFeature"
+    - CDR3
+  - field: -aaFeature
     args:
-    - "FR4"
-  - field: "-defaultAnchorPoints"
+    - FR4
+  - field: -defaultAnchorPoints
+  splitFilesBy: []
+  groupClonesBy: []

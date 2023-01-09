@@ -1,37 +1,37 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   commandLine:
-    type: "string"
+    type: string
   date:
-    type: "string"
+    type: string
   executionTimeMillis:
-    type: "integer"
+    type: integer
   inputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   jExtended:
-    type: "integer"
+    type: integer
   jExtendedMerged:
-    type: "integer"
+    type: integer
   meanJExtensionLength:
-    type: "number"
+    type: number
   meanVExtensionLength:
-    type: "number"
+    type: number
   outputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   totalExtended:
-    type: "integer"
+    type: integer
   totalProcessed:
-    type: "integer"
+    type: integer
   vExtended:
-    type: "integer"
+    type: integer
   vExtendedMerged:
-    type: "integer"
+    type: integer
   version:
-    type: "string"
+    type: string
   vjExtended:
-    type: "integer"
+    type: integer

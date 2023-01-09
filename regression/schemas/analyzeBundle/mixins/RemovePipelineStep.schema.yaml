@@ -1,12 +1,12 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: "object"
+- type: object
   properties:
     step:
-      type: "string"
-- type: "object"
+      type: string
+- type: object
   properties:
     type:
-      const: "RemovePipelineStep"
+      const: RemovePipelineStep
   required:
-  - "type"
+  - type

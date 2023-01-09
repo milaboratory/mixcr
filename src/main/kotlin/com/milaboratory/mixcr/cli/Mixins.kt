@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -492,7 +492,7 @@ object ExportMiXCRMixins {
         @Option(
             description = ["Add key to split output files with clone tables."],
             names = [ExportMixins.ExportClonesAddFileSplitting.CMD_OPTION],
-            paramLabel = "<key>",
+            paramLabel = "<(geneLabel|tag):key>",
             hideParamSyntax = true,
             order = OptionsOrder.mixins.exports + 700
         )
@@ -512,7 +512,7 @@ object ExportMiXCRMixins {
             description = ["Add key to group clones in the output clone tables."],
             names = [ExportMixins.ExportClonesAddCloneGrouping.CMD_OPTION],
             arity = "1",
-            paramLabel = "<key>",
+            paramLabel = "<(geneLabel|tag):key>",
             hideParamSyntax = true,
             order = OptionsOrder.mixins.exports + 900
         )
