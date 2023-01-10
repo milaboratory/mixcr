@@ -667,7 +667,7 @@
   align:
     species: ""
     libraryName: default
-    trimmingQualityThreshold: 10
+    trimmingQualityThreshold: 0
     trimmingWindowSize: 6
     chains: ALL
     overlapPairedReads: true
@@ -798,7 +798,7 @@
   align:
     species: ''
     libraryName: default
-    trimmingQualityThreshold: 10
+    trimmingQualityThreshold: 0
     trimmingWindowSize: 6
     chains: ALL
     overlapPairedReads: true
