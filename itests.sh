@@ -50,7 +50,7 @@ esac
 declare -a all_tests
 while read -r tst; do
   all_tests=( "${all_tests[@]}" "$tst" )
-done < <(find itests -name '*.sh' | sed 's/\itests\///' | sed 's/\.sh//' | sort)
+done < <(find itests -name '*.sh' | sed 's/\itests\///' | sed 's/\.sh//' | grep -v 'ignored' | sort)
 
 tests=()
 create_standard_results=false
