@@ -90,7 +90,14 @@ object CommandAlignPipeline {
                 ReadIndex,
                 TagInfo(TagType.Cell, TagValueType.NonSequence, "READ_IDX", 0 /* will be changed below */)
             )
-        }
+        } else
+            fileTags.forEach { tagName ->
+                val type = detectTagTypeByName(tagName) ?: return@forEach
+                tagExtractors += TagExtractorWithInfo(
+                    FileTag(tagName),
+                    TagInfo(type, TagValueType.NonSequence, tagName, 0 /* will be changed below */)
+                )
+            }
 
         tagExtractors = tagExtractors
             .sortedBy { it.tagInfo }
