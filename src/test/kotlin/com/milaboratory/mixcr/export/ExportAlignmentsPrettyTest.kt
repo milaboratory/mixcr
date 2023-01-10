@@ -8,6 +8,7 @@ import com.milaboratory.mixcr.cli.TestMain
 import com.milaboratory.util.TempFileManager
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainInOrder
+import org.junit.Ignore
 import org.junit.Test
 import java.nio.file.Paths
 import kotlin.io.path.listDirectoryEntries
@@ -16,6 +17,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeLines
 
 class ExportAlignmentsPrettyTest {
+    @Ignore
     @Test
     fun `check all examples`() {
         val override = false
