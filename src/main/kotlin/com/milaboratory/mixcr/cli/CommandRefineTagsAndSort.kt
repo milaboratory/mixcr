@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -25,16 +25,16 @@ import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.pattern.Whitelist
-import com.milaboratory.mitool.pattern.WhitelistFromAddress
 import com.milaboratory.mitool.refinement.TagCorrectionPlan
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractor
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractorsFactory
+import com.milaboratory.mixcr.AlignMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
+import com.milaboratory.mixcr.PackableMiXCRParams
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
@@ -46,6 +46,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagValue
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
+import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.util.CanReportProgress
@@ -54,10 +55,7 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortByHashOnDisk
 import org.apache.commons.io.FileUtils
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.nio.file.Path
 import java.util.*
 
@@ -71,8 +69,10 @@ object CommandRefineTagsAndSort {
         @JsonProperty("runCorrection") val runCorrection: Boolean = true,
         /** Correction parameters */
         @JsonMerge @JsonProperty("parameters") val parameters: TagCorrectorParameters?
-    ) : MiXCRParams {
+    ) : PackableMiXCRParams<Params> {
         override val command get() = MiXCRCommandDescriptor.refineTagsAndSort
+
+        override fun pack() = copy(whitelists = whitelists.mapValues { it.value.pack() })
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
@@ -168,21 +168,16 @@ object CommandRefineTagsAndSort {
 
         @Option(
             names = ["-w", "--whitelist"],
-            description = [
-                "Use whitelist-driven correction for one of the tags.",
-                "Usage: --whitelist CELL=preset:737K-august-2016 or -w UMI=file:my_umi_whitelist.txt.",
-                "If not specified mixcr will set correct whitelists if --tag-preset was used on align step.",
-                DEFAULT_VALUE_FROM_PRESET
-            ],
+            description = ["Deprecated"],
             paramLabel = "<tag=value>",
-            order = OptionsOrder.main + 10_800
+            hidden = true
         )
-        private var whitelists: Map<String, String> = mutableMapOf()
+        fun whitelist(map: Map<String, String>) {
+            throw ApplicationException("\"-w\" and \"--whitelist\" options are deprecated, please use ${AlignMixins.SetWhitelist.CMD_OPTION_SET} instead.")
+        }
 
         override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::refineTagsAndSort) {
             override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::whitelists setIfNotEmpty whitelists.mapValues { WhitelistFromAddress(it.value) }
-
                 Params::runCorrection resetIfTrue dontCorrect
 
                 @Suppress("DuplicatedCode")
@@ -235,6 +230,17 @@ object CommandRefineTagsAndSort {
         @Mixin
         lateinit var reportOptions: ReportOptions
 
+        @ArgGroup(
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.refineTagsAndSort
+        )
+        var refineAndSortMixins: List<RefineTagsAndSortMixins> = mutableListOf()
+
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
+        private val mixins get() = refineAndSortMixins.mixins
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -249,7 +255,6 @@ object CommandRefineTagsAndSort {
         override fun run1() {
             val startTimeMillis = System.currentTimeMillis()
 
-            val cmdParams: Params
 
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: TagCorrectionReport?
@@ -258,7 +263,8 @@ object CommandRefineTagsAndSort {
                 val header = mainReader.header
                 val tagsInfo = header.tagsInfo
                 require(!tagsInfo.hasNoTags()) { "input file has no tags" }
-                cmdParams = paramsResolver.resolve(header.paramsSpec, printParameters = logger.verbose).second
+                val paramsSpec = resetPreset.overridePreset(header.paramsSpec).addMixins(mixins)
+                val cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
 
                 // These tags will be corrected, other used as grouping keys
                 val correctionEnabled = tagsInfo.map { it.valueType == TagValueType.SequenceAndQuality }
@@ -267,6 +273,7 @@ object CommandRefineTagsAndSort {
                 val tagNames = tagsInfo.map { it.name }
 
                 // // Indices to be corrected
+                // TODO: allow to turn off refinement
                 // val correctionIndicesBuilder = TIntArrayList()
                 // for (ti in tagsInfo.indices) {
                 //     val tag = tagsInfo[ti]
@@ -435,7 +442,8 @@ object CommandRefineTagsAndSort {
                     writer.writeHeader(
                         header
                             .updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) }
-                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams),
+                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams)
+                            .copy(paramsSpec = paramsSpec),
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)

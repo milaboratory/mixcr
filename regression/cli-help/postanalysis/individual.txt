@@ -1,7 +1,7 @@
 Usage: mixcr postanalysis individual --default-downsampling (<type>|none) --default-weight-function
                                      (<read>|<Tag>|none) [--only-productive] [--drop-outliers]
                                      [--chains <chain>[,<chain>...]]... [--metadata <path>]
-                                     [--group <group>]... [--tables <path.(tsv|csv)>]
+                                     [--group <group>[,<group>...]]... [--tables <path.(tsv|csv)>]
                                      [--preproc-tables <path.(tsv|csv)>] [-O <key=value>]...
                                      [--force-overwrite] [--no-warnings] [--verbose] [--help]
                                      (cloneset.(clns|clna)|directory)... result.json[.gz]
@@ -28,7 +28,8 @@ Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype m
       --metadata <path>    Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form. Must
                              contain `sample` column which matches names of input files. Optionally
                              may have `chains` column.
-      --group <group>      Metadata column used to group samples into isolation groups;
+      --group <group>[,<group>...]
+                           Metadata column used to group samples into isolation groups;
                              postanalysis will be performed in each of the groups separately. It is
                              possible to specify several isolation groups.
       --tables <path.(tsv|csv)>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.InputPort
 import cc.redberry.pipe.util.forEach
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -123,6 +124,9 @@ object CommandAssemblePartial {
         @Mixin
         lateinit var reportOptions: ReportOptions
 
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -137,25 +141,27 @@ object CommandAssemblePartial {
         override fun run1() {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
-            val cmdParams: Params
             use(
                 VDJCAlignmentsReader(inputFile),
                 VDJCAlignmentsWriter(outputFile)
             ) { reader, writer ->
                 val header = reader.header
-                cmdParams = paramsResolver.resolve(header.paramsSpec, printParameters = logger.verbose).second
+                val paramsSpec = resetPreset.overridePreset(header.paramsSpec)
+                val cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
                 val groupingDepth =
                     header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
                 writer.writeHeader(
                     header
                         .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
-                        .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams),
+                        .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams)
+                        .copy(paramsSpec = paramsSpec),
                     reader.usedGenes
                 )
                 val assembler = PartialAlignmentsAssembler(
                     cmdParams.parameters, reader.parameters,
-                    reader.usedGenes, !cmdParams.dropPartial, cmdParams.overlappedOnly
-                ) { alignment: VDJCAlignments -> writer.write(alignment) }
+                    reader.usedGenes, !cmdParams.dropPartial, cmdParams.overlappedOnly,
+                    InputPort { alignment: VDJCAlignments? -> writer.write(alignment) }
+                )
 
                 @Suppress("UnnecessaryVariable")
                 val reportBuilder = assembler
@@ -183,7 +189,7 @@ object CommandAssemblePartial {
                             assembler.buildLeftPartsIndex(grp1)
                             grp1.close() // Drain leftover alignments in the group if not yet done
                             groups2.take().use { grp2 ->
-                                assert(grp2.key == grp1.key) { grp1.key.toString() + " != " + grp2.key }
+                                assert(grp2!!.key == grp1.key) { grp1.key.toString() + " != " + grp2.key }
                                 assembler.searchOverlaps(grp2)
                             }
                         }

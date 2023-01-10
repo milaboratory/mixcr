@@ -1,117 +1,117 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   aligned:
-    type: "integer"
+    type: integer
   alignmentAidedOverlaps:
-    type: "integer"
+    type: integer
   chainUsage:
     allOf:
-    - type: "object"
+    - type: object
       properties:
         chains:
-          type: "object"
+          type: object
         chimeras:
-          type: "integer"
+          type: integer
         total:
-          type: "integer"
-    - type: "object"
+          type: integer
+    - type: object
       properties:
         type:
-          const: "chainUsage"
+          const: chainUsage
       required:
-      - "type"
+      - type
   chimeras:
-    type: "integer"
+    type: integer
   commandLine:
-    type: "string"
+    type: string
   date:
-    type: "string"
+    type: string
   executionTimeMillis:
-    type: "integer"
+    type: integer
   inputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   jChimeras:
-    type: "integer"
+    type: integer
   noCDR3PartsAlignments:
-    type: "integer"
+    type: integer
   notAligned:
-    type: "integer"
+    type: integer
   notAlignedReasons:
-    type: "object"
+    type: object
   outputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   overlapped:
-    type: "integer"
+    type: integer
   overlappedAligned:
-    type: "integer"
+    type: integer
   overlappedNotAligned:
-    type: "integer"
+    type: integer
   pairedEndAlignmentConflicts:
-    type: "integer"
+    type: integer
   partialAlignments:
-    type: "integer"
+    type: integer
   realignedWithForcedNonFloatingBound:
-    type: "integer"
+    type: integer
   realignedWithForcedNonFloatingLeftBoundInRightRead:
-    type: "integer"
+    type: integer
   realignedWithForcedNonFloatingRightBoundInLeftRead:
-    type: "integer"
+    type: integer
   sampleStat:
-    type: "object"
+    type: object
   tagParsingReport:
-    type: "object"
+    type: object
     properties:
       detailedReport:
-        type: "array"
+        type: array
         items:
-          type: "object"
+          type: object
           properties:
             nested:
-              type: "object"
+              type: object
       matchedReads:
-        type: "integer"
+        type: integer
       projections:
-        type: "object"
+        type: object
       totalBitCost:
-        type: "number"
+        type: number
       totalReads:
-        type: "integer"
+        type: integer
   totalReadsProcessed:
-    type: "integer"
+    type: integer
   trimmingReport:
     allOf:
-    - type: "object"
+    - type: object
       properties:
         r1LeftTrimmedEvents:
-          type: "integer"
+          type: integer
         r1LeftTrimmedNucleotides:
-          type: "integer"
+          type: integer
         r1RightTrimmedEvents:
-          type: "integer"
+          type: integer
         r1RightTrimmedNucleotides:
-          type: "integer"
+          type: integer
         r2LeftTrimmedEvents:
-          type: "integer"
+          type: integer
         r2LeftTrimmedNucleotides:
-          type: "integer"
+          type: integer
         r2RightTrimmedEvents:
-          type: "integer"
+          type: integer
         r2RightTrimmedNucleotides:
-          type: "integer"
+          type: integer
         total:
-          type: "integer"
-    - type: "object"
+          type: integer
+    - type: object
       properties:
         type:
-          const: "readTrimmerReport"
+          const: readTrimmerReport
       required:
-      - "type"
+      - type
   vChimeras:
-    type: "integer"
+    type: integer
   version:
-    type: "string"
+    type: string

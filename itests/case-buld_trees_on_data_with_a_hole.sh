@@ -3,6 +3,7 @@
 assert() {
   expected=$(echo -ne "${2:-}")
   result="$(eval 2>/dev/null $1)" || true
+  result="$(sed -e 's/ *$//' -e 's/^ *//' <<<"$result")"
   if [[ "$result" == "$expected" ]]; then
     return
   fi
@@ -62,10 +63,10 @@ assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqFR2" "0"
 assert "cat alleles/report.json | head -n 1 | jq -r .foundAlleles" "2"
 assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
 
-assert "grep 'IGHJ6' alleles/description.tsv | awk '{print \$7}'" "SG37TSG38AST39CSC55A"
+assert "grep 'IGHJ6' alleles/description.tsv | cut -f7" "SG37TSG38AST39CSC55A"
 
 # biggest tree
 # `tail +2` - skip first line with column names
 # `sort -n -r -k 2` - reverse numeric sort by second column (uniqClonesCount)
-assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | awk '{print \$2}'" "11"
-assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | awk '{print \$6}'" "TGTGCTGGAGGGCCTAGTRTTGGGAGATACGACTACTGG"
+assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | cut -f2" "12"
+assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | cut -f6" "TGTGCTGGAGGGCCTAGTRTTGGGAGATACGACTACTGG"

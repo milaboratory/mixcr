@@ -1,28 +1,28 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: "object"
+- type: object
   properties:
     r1LeftTrimmedEvents:
-      type: "integer"
+      type: integer
     r1LeftTrimmedNucleotides:
-      type: "integer"
+      type: integer
     r1RightTrimmedEvents:
-      type: "integer"
+      type: integer
     r1RightTrimmedNucleotides:
-      type: "integer"
+      type: integer
     r2LeftTrimmedEvents:
-      type: "integer"
+      type: integer
     r2LeftTrimmedNucleotides:
-      type: "integer"
+      type: integer
     r2RightTrimmedEvents:
-      type: "integer"
+      type: integer
     r2RightTrimmedNucleotides:
-      type: "integer"
+      type: integer
     total:
-      type: "integer"
-- type: "object"
+      type: integer
+- type: object
   properties:
     type:
-      const: "readTrimmerReport"
+      const: readTrimmerReport
   required:
-  - "type"
+  - type

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -29,9 +29,11 @@ import com.milaboratory.mixcr.AlignMixins.SetTagPattern
 import com.milaboratory.mixcr.AssembleContigsMixins.SetContigAssemblingFeatures
 import com.milaboratory.mixcr.AssembleMixins.SetClonotypeAssemblingFeatures
 import com.milaboratory.mixcr.AssembleMixins.SetSplitClonesBy
+import com.milaboratory.mixcr.ExportMixins
 import com.milaboratory.mixcr.ExportMixins.AddExportAlignmentsField
 import com.milaboratory.mixcr.ExportMixins.AddExportClonesField
 import com.milaboratory.mixcr.ExportMixins.DontImputeGermlineOnExport
+import com.milaboratory.mixcr.ExportMixins.ExportClonesAddFileSplitting.*
 import com.milaboratory.mixcr.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.GenericMixin
 import com.milaboratory.mixcr.PipelineMixins.AddPipelineStep
@@ -101,6 +103,28 @@ class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
         mixIn(RemovePipelineStep(step))
 }
 
+class RefineTagsAndSortMixins : MiXCRMixinCollector() {
+    @Option(
+        description = [AlignMixins.SetWhitelist.DESCRIPTION_SET],
+        names = [AlignMixins.SetWhitelist.CMD_OPTION_SET],
+        paramLabel = Labels.OVERRIDES,
+        order = OptionsOrder.mixins.refineTagsAndSort + 100
+    )
+    fun setWhitelist(assignment: String) = parseAssignment(assignment) { tag, value ->
+        mixIn(AlignMixins.SetWhitelist(tag, value))
+    }
+
+    @Option(
+        description = [AlignMixins.SetWhitelist.DESCRIPTION_RESET],
+        names = [AlignMixins.SetWhitelist.CMD_OPTION_RESET],
+        paramLabel = "tag",
+        order = OptionsOrder.mixins.refineTagsAndSort + 200
+    )
+    fun resetWhitelist(tag: String) {
+        mixIn(AlignMixins.SetWhitelist(tag, null))
+    }
+}
+
 class AlignMiXCRMixins : MiXCRMixinCollector() {
     //
     // Base settings
@@ -141,6 +165,16 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     )
     fun dontSplitBySample(@Suppress("UNUSED_PARAMETER") f: Boolean) =
         mixIn(AlignMixins.SetSplitBySample(false))
+
+    @Option(
+        description = ["Loads sample table from a tab separated file."],
+        names = [AlignMixins.SetSampleTable.CMD_OPTION],
+        arity = "1",
+        paramLabel = "sample_table.tsv",
+        order = OptionsOrder.mixins.align + 330
+    )
+    fun sampleTable(arg: String) =
+        mixIn(AlignMixins.SetSampleTable(arg, null))
 
     //
     // Material type
@@ -349,9 +383,11 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
 
 object ExportMiXCRMixins {
 
-    class All : Modifiers, Generic, MiXCRMixinCollector()
+    class All : Modifiers, Generic, ExportClonesMixins, MiXCRMixinCollector()
 
-    class CommandSpecific : Modifiers, MiXCRMixinCollector()
+    class CommandSpecificExportAlignments : Modifiers, MiXCRMixinCollector()
+
+    class CommandSpecificExportClones : Modifiers, ExportClonesMixins, MiXCRMixinCollector()
 
     private interface Modifiers : MiXCRMixinRegister {
         @Option(
@@ -452,29 +488,65 @@ object ExportMiXCRMixins {
         }
     }
 
+    private interface ExportClonesMixins : MiXCRMixinRegister {
+        @Option(
+            description = ["Add key to split output files with clone tables."],
+            names = [ExportMixins.ExportClonesAddFileSplitting.CMD_OPTION],
+            paramLabel = "<(geneLabel|tag):key>",
+            hideParamSyntax = true,
+            order = OptionsOrder.mixins.exports + 700
+        )
+        fun addExportClonesFileSplitting(by: String) =
+            mixIn(ExportMixins.ExportClonesAddFileSplitting(by))
+
+        @Option(
+            description = ["Reset all file splitting for output clone tables."],
+            names = [ExportMixins.ExportClonesResetFileSplitting.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 800
+        )
+        fun resetExportClonesFileSplitting(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+            mixIn(ExportMixins.ExportClonesResetFileSplitting)
+
+        @Option(
+            description = ["Add key to group clones in the output clone tables."],
+            names = [ExportMixins.ExportClonesAddCloneGrouping.CMD_OPTION],
+            arity = "1",
+            paramLabel = "<(geneLabel|tag):key>",
+            hideParamSyntax = true,
+            order = OptionsOrder.mixins.exports + 900
+        )
+        fun addExportClonesCloneGrouping(by: String) =
+            mixIn(ExportMixins.ExportClonesAddCloneGrouping(by))
+
+        @Option(
+            description = ["Reset all clone grouping in the output clone tables."],
+            names = [ExportMixins.ExportClonesResetCloneGrouping.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 1000
+        )
+        fun resetExportClonesCloneGrouping(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+            mixIn(ExportMixins.ExportClonesResetCloneGrouping)
+    }
+
     const val DESCRIPTION = "Params for export commands:%n"
 }
 
 class GenericMiXCRMixins : MiXCRMixinCollector() {
-    private val keysAdded = mutableMapOf<String, String>()
-
     @Option(
-        description = ["Overrides preset parameters"],
+        description = [GenericMixin.DESCRIPTION],
         names = [GenericMixin.CMD_OPTION],
         paramLabel = Labels.OVERRIDES,
         order = OptionsOrder.overrides + 300
     )
-    fun genericMixin(fieldAndOverrides: Map<String, String>) {
-        fieldAndOverrides.forEach { (field, override) ->
-            if (keysAdded.containsKey(field)) {
-                if (keysAdded[field] == override)
-                    return@forEach
-                else
-                    throw IllegalArgumentException("Repeated override of $field.")
-            } else {
-                keysAdded[field] = override
-                mixIn(GenericMixin(field, override))
-            }
-        }
+    fun genericMixin(assignment: String) = parseAssignment(assignment) { field, value ->
+        mixIn(GenericMixin(field, value))
     }
+}
+
+private fun parseAssignment(assignment: String, action: (field: String, value: String) -> Unit) {
+    val equalitySignPosition = assignment.indexOf('=')
+    val field = assignment.substring(0, equalitySignPosition)
+    val value = assignment.substring(equalitySignPosition + 1)
+    action(field, value)
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -42,7 +42,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         @Option(
             names = ["--preset-name"],
             description = ["Preset name to export."],
-            paramLabel = "preset",
+            paramLabel = "<preset>",
             required = true,
             order = 1
         )
@@ -62,6 +62,9 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                 field = value
             }
     }
+
+    @Mixin
+    lateinit var resetPreset: ResetPresetArgs
 
     @ArgGroup(
         exclusive = true,
@@ -133,8 +136,11 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     )
     var exportMixins: List<ExportMiXCRMixins.All> = mutableListOf()
 
-    @Mixin
-    var genericMixins: GenericMiXCRMixins? = null
+    @ArgGroup(
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.generic
+    )
+    var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
 
     override fun run1() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
@@ -142,19 +148,21 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         val spec: MiXCRParamsSpec = when {
             presetInput.presetName != null -> MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins)
             else -> {
-                val inputFile = presetInput.input!!
+                val inputFile = presetInput.input
                 val paramsSpec = when (IOUtil.extractFileType(inputFile)) {
                     VDJCA -> VDJCAlignmentsReader(inputFile)
                         .use { reader -> reader.header }
 
                     CLNS -> ClnsReader(inputFile, VDJCLibraryRegistry.getDefault())
                         .use { reader -> reader.header }
+
                     CLNA -> ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), 1)
                         .use { reader -> reader.header }
+
                     SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
                 }.paramsSpec
 
-                MiXCRParamsSpec(paramsSpec.presetAddress, mixins = paramsSpec.mixins + mixinsFromArgs.mixins)
+                resetPreset.overridePreset(paramsSpec).addMixins(mixinsFromArgs.mixins)
             }
         }
 

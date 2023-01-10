@@ -1,7 +1,7 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   type:
-    const: "DropNonCDR3Alignments"
+    const: DropNonCDR3Alignments
 required:
-- "type"
+- type

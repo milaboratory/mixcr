@@ -1,14 +1,14 @@
 flags: []
 pipeline:
-- "align"
-- "assemble"
-- "exportClones"
+- align
+- assemble
+- exportClones
 align:
-  species: "hs"
-  libraryName: "default"
+  species: hs
+  libraryName: default
   trimmingQualityThreshold: 0
   trimmingWindowSize: 6
-  chains: "ALL"
+  chains: ALL
   replaceWildcards: true
   overlapPairedReads: true
   bamDropNonVDJ: false
@@ -22,11 +22,11 @@ align:
   limit: null
   parameters:
     vParameters:
-      geneFeatureToAlign: "VGeneWithP"
+      geneFeatureToAlign: VGeneWithP
       minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: "kaligner2"
+        type: kaligner2
         mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: true
@@ -49,27 +49,27 @@ align:
         relativeMinScore: 0.8
         maxHits: 3
         scoring:
-          type: "affine"
-          alphabet: "nucleotide"
+          type: affine
+          alphabet: nucleotide
           subsMatrix: "simple(match = 10, mismatch = -19)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
     dParameters:
-      geneFeatureToAlign: "DRegionWithP"
+      geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
       absoluteMinScore: 25.0
       maxHits: 3
       scoring:
-        type: "linear"
-        alphabet: "nucleotide"
+        type: linear
+        alphabet: nucleotide
         subsMatrix: "simple(match = 5, mismatch = -9)"
         gapPenalty: -12
     jParameters:
-      geneFeatureToAlign: "JRegionWithP"
+      geneFeatureToAlign: JRegionWithP
       minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: "kaligner2"
+        type: kaligner2
         mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: true
@@ -92,13 +92,13 @@ align:
         relativeMinScore: 0.8
         maxHits: 3
         scoring:
-          type: "affine"
-          alphabet: "nucleotide"
+          type: affine
+          alphabet: nucleotide
           subsMatrix: "simple(match = 10, mismatch = -19)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
-    vjAlignmentOrder: "VThenJ"
-    libraryStructure: "Unknown"
+    vjAlignmentOrder: VThenJ
+    libraryStructure: Unknown
     includeDScore: false
     includeCScore: false
     minSumScore: 120.0
@@ -107,14 +107,15 @@ align:
     allowPartialAlignments: false
     allowNoCDR3PartAlignments: false
     allowChimeras: false
-    readsLayout: "Opposite"
+    readsLayout: Opposite
     mergerParameters:
-      qualityMergingAlgorithm: "MaxSubtraction"
+      qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
-      minimalOverlap: 17
+      minimalOverlap: 13
+      minimalMatchQualitySum: 364
       maxQuality: 50
-      minimalIdentity: 0.9
-      identityType: "Unweighted"
+      minimalIdentity: 0.7
+      identityType: MinimalQualityWeighted
     fixSeed: true
     alignmentBoundaryTolerance: 5
     minChimeraDetectionScore: 120
@@ -146,17 +147,18 @@ assemblePartial:
     minimalNOverlapShare: 0.65
     minimalAlignmentMergeIdentity: 0.85
     mergerParameters:
-      qualityMergingAlgorithm: "SumSubtraction"
-      partsLayout: "CollinearDirect"
+      qualityMergingAlgorithm: SumSubtraction
+      partsLayout: CollinearDirect
       minimalOverlap: 20
+      minimalMatchQualitySum: 0
       maxQuality: 45
       minimalIdentity: 0.95
-      identityType: "Unweighted"
+      identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
 extend:
-  vAnchor: "CDR3Begin"
-  jAnchor: "FR4Begin"
+  vAnchor: CDR3Begin
+  jAnchor: FR4Begin
   minimalVScore: 50
   minimalJScore: 50
 assemble:
@@ -168,14 +170,14 @@ assemble:
     assemblingFeatures:
     - "{CDR1Begin:CDR3End}"
     minimalClonalSequenceLength: 12
-    qualityAggregationType: "Max"
+    qualityAggregationType: Max
     cloneClusteringParameters:
       searchDepth: 2
       allowedMutationsInNRegions: 1
       minimalTagSetOverlap: -1.0
-      searchParameters: "twoMismatchesOrIndels"
+      searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: "relativeConcentration"
+        type: relativeConcentration
         specificMutationProbability: 0.001
     cloneFactoryParameters:
       vParameters:
@@ -223,7 +225,7 @@ assemble:
     addReadsCountOnClustering: false
     badQualityThreshold: 20
     maxBadPointsPercent: 0.7
-    mappingThreshold: "2of5"
+    mappingThreshold: 2of5
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: false
@@ -242,51 +244,52 @@ assembleContigs:
     subCloningRegions: null
     assemblingRegions: null
     postFiltering:
-      type: "NoFiltering"
+      type: NoFiltering
     trimmingParameters:
       averageQualityThreshold: 10.0
       windowSize: 8
     minimalContigLength: 20
     alignedRegionsOnly: false
 exportAlignments:
-  chains: "ALL"
+  chains: ALL
   noHeader: false
   fields:
-  - field: "-targetSequences"
-  - field: "-targetQualities"
-  - field: "-vHitsWithScore"
-  - field: "-dHitsWithScore"
-  - field: "-jHitsWithScore"
-  - field: "-cHitsWithScore"
-  - field: "-vAlignments"
-  - field: "-dAlignments"
-  - field: "-jAlignments"
-  - field: "-cAlignments"
-  - field: "-allNFeaturesWithMinQuality"
-  - field: "-allAAFeatures"
-  - field: "-defaultAnchorPoints"
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
   filterStops: false
-  chains: "ALL"
+  chains: ALL
   noHeader: false
-  splitFilesBy:
-  - "geneLabel:ReliableChain"
   fields:
-  - field: "-cloneId"
-  - field: "-readCount"
-  - field: "-readFraction"
-  - field: "-targetSequences"
-  - field: "-targetQualities"
-  - field: "-vHitsWithScore"
-  - field: "-dHitsWithScore"
-  - field: "-jHitsWithScore"
-  - field: "-cHitsWithScore"
-  - field: "-vAlignments"
-  - field: "-dAlignments"
-  - field: "-jAlignments"
-  - field: "-cAlignments"
-  - field: "-allNFeaturesWithMinQuality"
-  - field: "-allAAFeatures"
-  - field: "-defaultAnchorPoints"
+  - field: -cloneId
+  - field: -readCount
+  - field: -readFraction
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
+  splitFilesBy:
+  - geneLabel:ReliableChain
+  groupClonesBy: []

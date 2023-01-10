@@ -1,49 +1,49 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   commandLine:
-    type: "string"
+    type: string
   complexOverlaps:
-    type: "integer"
+    type: integer
   date:
-    type: "string"
+    type: string
   droppedNoNRegion:
-    type: "integer"
+    type: integer
   droppedSmallOverlapNRegion:
-    type: "integer"
+    type: integer
   droppedWildcardsInKMer:
-    type: "integer"
+    type: integer
   executionTimeMillis:
-    type: "integer"
+    type: integer
   independentRuns:
-    type: "integer"
+    type: integer
   inputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   kMerDiversity:
-    type: "integer"
+    type: integer
   leftParts:
-    type: "integer"
+    type: integer
   leftTooShortNRegion:
-    type: "integer"
+    type: integer
   outputAlignments:
-    type: "integer"
+    type: integer
   outputFiles:
-    type: "array"
+    type: array
     items:
-      type: "string"
+      type: string
   overOverlaps:
-    type: "integer"
+    type: integer
   overlapped:
-    type: "integer"
+    type: integer
   partialAlignmentsAsIs:
-    type: "integer"
+    type: integer
   rightParts:
-    type: "integer"
+    type: integer
   totalProcessed:
-    type: "integer"
+    type: integer
   version:
-    type: "string"
+    type: string
   withCDR3:
-    type: "integer"
+    type: integer

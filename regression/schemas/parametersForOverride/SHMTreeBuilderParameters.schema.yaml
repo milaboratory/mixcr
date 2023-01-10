@@ -1,137 +1,137 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-type: "object"
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
 properties:
   productiveOnly:
-    type: "boolean"
+    type: boolean
   singleCell:
     anyOf:
-    - type: "object"
+    - type: object
       properties:
         type:
-          const: "noop"
+          const: noop
       required:
-      - "type"
+      - type
     - allOf:
-      - type: "object"
+      - type: object
         properties:
           algorithm:
             anyOf:
             - allOf:
-              - type: "object"
+              - type: object
                 properties:
                   maxNDNDistanceForHeavyChain:
-                    type: "number"
+                    type: number
                   maxNDNDistanceForLightChain:
-                    type: "number"
-              - type: "object"
+                    type: number
+              - type: object
                 properties:
                   type:
-                    const: "BronKerbosch"
+                    const: BronKerbosch
                 required:
-                - "type"
+                - type
             - allOf:
-              - type: "object"
+              - type: object
                 properties:
                   maxNDNDistanceForHeavyChain:
-                    type: "number"
+                    type: number
                   maxNDNDistanceForLightChain:
-                    type: "number"
-              - type: "object"
+                    type: number
+              - type: object
                 properties:
                   type:
-                    const: "SingleLinkage"
+                    const: SingleLinkage
                 required:
-                - "type"
-      - type: "object"
+                - type
+      - type: object
         properties:
           type:
-            const: "simpleClustering"
+            const: simpleClustering
         required:
-        - "type"
+        - type
   steps:
-    type: "array"
+    type: array
     items:
       anyOf:
       - allOf:
-        - type: "object"
+        - type: object
           properties:
             maxNDNDistance:
-              type: "number"
+              type: number
             threshold:
-              type: "number"
-        - type: "object"
+              type: number
+        - type: object
           properties:
             name:
-              const: "AttachClonesByDistanceChange"
+              const: AttachClonesByDistanceChange
           required:
-          - "name"
+          - name
       - allOf:
-        - type: "object"
+        - type: object
           properties:
             maxNDNDistance:
-              type: "number"
-        - type: "object"
+              type: number
+        - type: object
           properties:
             name:
-              const: "AttachClonesByNDN"
+              const: AttachClonesByNDN
           required:
-          - "name"
+          - name
       - allOf:
-        - type: "object"
+        - type: object
           properties:
             algorithm:
               anyOf:
               - allOf:
-                - type: "object"
+                - type: object
                   properties:
                     commonMutationsCountForClustering:
-                      type: "integer"
+                      type: integer
                     maxNDNDistanceForClustering:
-                      type: "number"
-                - type: "object"
+                      type: number
+                - type: object
                   properties:
                     type:
-                      const: "BronKerbosch"
+                      const: BronKerbosch
                   required:
-                  - "type"
+                  - type
               - allOf:
-                - type: "object"
+                - type: object
                   properties:
                     commonMutationsCountForClustering:
-                      type: "integer"
+                      type: integer
                     maxNDNDistanceForClustering:
-                      type: "number"
-                - type: "object"
+                      type: number
+                - type: object
                   properties:
                     type:
-                      const: "SingleLinkage"
+                      const: SingleLinkage
                   required:
-                  - "type"
-        - type: "object"
+                  - type
+        - type: object
           properties:
             name:
-              const: "BuildingInitialTrees"
+              const: BuildingInitialTrees
           required:
-          - "name"
+          - name
       - allOf:
-        - type: "object"
+        - type: object
           properties:
             maxNDNDistanceBetweenRoots:
-              type: "number"
-        - type: "object"
+              type: number
+        - type: object
           properties:
             name:
-              const: "CombineTrees"
+              const: CombineTrees
           required:
-          - "name"
+          - name
   topologyBuilder:
-    type: "object"
+    type: object
     properties:
       countOfNodesToProbe:
-        type: "integer"
+        type: integer
       multiplierForNDNScore:
-        type: "number"
+        type: number
       penaltyForReversedMutations:
-        type: "number"
+        type: number
       topToVoteOnNDNSize:
-        type: "integer"
+        type: integer

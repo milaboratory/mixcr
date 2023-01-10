@@ -44,7 +44,7 @@ public class VDJCAlignerSTest {
         VDJCAlignerParameters parameters =
                 VDJCParametersPresets.getByName("default");
         //LociLibrary ll = LociLibraryManager.getDefault().getLibrary("mi");
-        File tmpFile = TempFileManager.getTempFile();
+        File tmpFile = TempFileManager.newTempFile();
 
         List<VDJCAlignments> alignemntsList = new ArrayList<>();
         long header;

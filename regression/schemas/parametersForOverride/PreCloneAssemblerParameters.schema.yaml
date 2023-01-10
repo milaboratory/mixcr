@@ -1,135 +1,135 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 $defs:
   Wildcard:
-    type: "object"
+    type: object
     properties:
       bSymbol:
-        type: "string"
+        type: string
       basicMask:
-        type: "integer"
+        type: integer
       basicMatchingCodes:
-        type: "array"
+        type: array
         items:
-          type: "string"
+          type: string
       basicSize:
-        type: "string"
+        type: string
       cSymbol:
-        type: "string"
+        type: string
       code:
-        type: "string"
+        type: string
       mask:
-        type: "integer"
+        type: integer
       matchingCodes:
-        type: "array"
+        type: array
         items:
-          type: "string"
-type: "object"
+          type: string
+type: object
 properties:
   assembler:
-    type: "object"
+    type: object
     properties:
       aAssemblerParameters:
-        type: "object"
+        type: object
         properties:
           bandWidth:
-            type: "integer"
+            type: integer
           maxNormalizedAlignmentPenalty:
-            type: "number"
+            type: number
           maxQuality:
-            type: "string"
+            type: string
           minAlignmentScore:
-            type: "integer"
+            type: integer
           scoring:
             allOf:
-            - type: "object"
+            - type: object
               properties:
                 alphabet:
-                  type: "object"
+                  type: object
                   properties:
                     alphabetId:
-                      type: "string"
+                      type: string
                     alphabetName:
-                      type: "string"
+                      type: string
                     basicMaskToWildcard:
-                      type: "object"
+                      type: object
                     codeToSymbol:
-                      type: "array"
+                      type: array
                       items:
-                        type: "string"
+                        type: string
                     codeToWildcard:
-                      type: "array"
+                      type: array
                       items:
-                        $ref: "#/$defs/Wildcard"
+                        $ref: '#/$defs/Wildcard'
                     countOfBasicLetters:
-                      type: "integer"
+                      type: integer
                     empty:
-                      type: "object"
+                      type: object
                       properties:
                         data:
-                          type: "array"
+                          type: array
                           items:
-                            type: "string"
+                            type: string
                     hashCode:
-                      type: "integer"
+                      type: integer
                     symbolToCode:
-                      type: "object"
+                      type: object
                       properties:
                         _autoCompactRemovesRemaining:
-                          type: "integer"
+                          type: integer
                         _autoCompactionFactor:
-                          type: "number"
+                          type: number
                         _loadFactor:
-                          type: "number"
+                          type: number
                         _maxSize:
-                          type: "integer"
+                          type: integer
                         consumeFreeSlot:
-                          type: "boolean"
+                          type: boolean
                         no_entry_key:
-                          type: "string"
+                          type: string
                         no_entry_value:
-                          type: "string"
+                          type: string
                     wildcardForAnyLetter:
-                      $ref: "#/$defs/Wildcard"
+                      $ref: '#/$defs/Wildcard'
                     wildcardsList:
-                      type: "array"
+                      type: array
                       items:
-                        $ref: "#/$defs/Wildcard"
+                        $ref: '#/$defs/Wildcard'
                 gapPenalty:
-                  type: "integer"
+                  type: integer
                 subsMatrix:
-                  type: "object"
+                  type: object
                   properties:
                     data:
-                      type: "array"
+                      type: array
                       items:
-                        type: "integer"
-            - type: "object"
+                        type: integer
+            - type: object
               properties:
                 type:
-                  const: "linear"
+                  const: linear
               required:
-              - "type"
+              - type
           trimMinimalSumQuality:
-            type: "integer"
+            type: integer
           trimReferenceRegion:
-            type: "boolean"
+            type: boolean
       altSeedPenaltyTolerance:
-        type: "number"
+        type: number
       maxConsensuses:
-        type: "integer"
+        type: integer
       maxIterations:
-        type: "integer"
+        type: integer
       minAltSeedNormalizedPenalty:
-        type: "number"
+        type: number
       minAltSeedQualityScore:
-        type: "string"
+        type: string
       minQualityScore:
-        type: "string"
+        type: string
       minRecordSharePerConsensus:
-        type: "number"
+        type: number
       minRecordsPerConsensus:
-        type: "integer"
+        type: integer
       minRecursiveRecordShare:
-        type: "number"
+        type: number
   minTagSuffixShare:
-    type: "number"
+    type: number

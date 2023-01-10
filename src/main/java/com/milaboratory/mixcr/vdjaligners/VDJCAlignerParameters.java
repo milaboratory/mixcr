@@ -65,7 +65,7 @@ public final class VDJCAlignerParameters implements HasRelativeMinScore, HasFeat
                                  @JsonProperty("allowNoCDR3PartAlignments") boolean allowNoCDR3PartAlignments,
                                  @JsonProperty("allowChimeras") boolean allowChimeras,
                                  @JsonProperty("readsLayout") PairedEndReadsLayout readsLayout,
-                                 @JsonProperty("mergerParameters") MergerParameters mergerParameters,
+                                 @JsonMerge @JsonProperty("mergerParameters") MergerParameters mergerParameters,
                                  @JsonProperty("fixSeed") boolean fixSeed,
                                  @JsonProperty("alignmentBoundaryTolerance") int alignmentBoundaryTolerance,
                                  @JsonProperty("minChimeraDetectionScore") int minChimeraDetectionScore,

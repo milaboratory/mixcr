@@ -1,11 +1,11 @@
 Usage: mixcr postanalysis overlap --default-downsampling (<type>|none) --default-weight-function
                                   (<read>|<Tag>|none) [--criteria <s>] [--factor-by <meta>[,
                                   <meta>...]]... [--only-productive] [--drop-outliers] [--chains
-                                  <chain>[,<chain>...]]... [--metadata <path>] [--group <group>]...
-                                  [--tables <path.(tsv|csv)>] [--preproc-tables <path.(tsv|csv)>]
-                                  [-O <key=value>]... [--force-overwrite] [--no-warnings]
-                                  [--verbose] [--help] (cloneset.(clns|clna)|directory)... result.
-                                  json[.gz]
+                                  <chain>[,<chain>...]]... [--metadata <path>] [--group <group>[,
+                                  <group>...]]... [--tables <path.(tsv|csv)>] [--preproc-tables
+                                  <path.(tsv|csv)>] [-O <key=value>]... [--force-overwrite]
+                                  [--no-warnings] [--verbose] [--help] (cloneset.(clns|clna)
+                                  |directory)... result.json[.gz]
 Overlap analysis
       (cloneset.(clns|clna)|directory)...
                            Paths to input clnx files or to directories with clnx files. Files in
@@ -39,7 +39,8 @@ Overlap analysis
       --metadata <path>    Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form. Must
                              contain `sample` column which matches names of input files. Optionally
                              may have `chains` column.
-      --group <group>      Metadata column used to group samples into isolation groups;
+      --group <group>[,<group>...]
+                           Metadata column used to group samples into isolation groups;
                              postanalysis will be performed in each of the groups separately. It is
                              possible to specify several isolation groups.
       --tables <path.(tsv|csv)>

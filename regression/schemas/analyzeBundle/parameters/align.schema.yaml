@@ -1,127 +1,129 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 $defs:
   PairedEndReadsLayout:
-    type: "string"
+    type: string
     enum:
-    - "DirectOnly"
-    - "ReverseOnly"
-    - "Opposite"
-    - "Collinear"
-    - "CollinearDirect"
-    - "Unknown"
-type: "object"
+    - DirectOnly
+    - ReverseOnly
+    - Opposite
+    - Collinear
+    - CollinearDirect
+    - Unknown
+type: object
 properties:
   bamDropNonVDJ:
-    type: "boolean"
+    type: boolean
   chains:
-    type: "string"
+    type: string
   library:
-    type: "string"
+    type: string
   limit:
-    type: "integer"
+    type: integer
   overlapPairedReads:
-    type: "boolean"
+    type: boolean
   parameters:
-    type: "object"
+    type: object
     properties:
       alignmentBoundaryTolerance:
-        type: "integer"
+        type: integer
       allowChimeras:
-        type: "boolean"
+        type: boolean
       allowNoCDR3PartAlignments:
-        type: "boolean"
+        type: boolean
       allowPartialAlignments:
-        type: "boolean"
+        type: boolean
       fixSeed:
-        type: "boolean"
+        type: boolean
       includeCScore:
-        type: "boolean"
+        type: boolean
       includeDScore:
-        type: "boolean"
+        type: boolean
       libraryStructure:
-        type: "string"
+        type: string
         enum:
-        - "Unknown"
-        - "R1V"
+        - Unknown
+        - R1V
       maxHits:
-        type: "integer"
+        type: integer
       mergerParameters:
-        type: "object"
+        type: object
         properties:
           identityType:
-            type: "string"
+            type: string
             enum:
-            - "Unweighted"
-            - "MinimalQualityWeighted"
+            - Unweighted
+            - MinimalQualityWeighted
           maxQuality:
-            type: "integer"
+            type: integer
           minimalIdentity:
-            type: "number"
+            type: number
+          minimalMatchQualitySum:
+            type: integer
           minimalOverlap:
-            type: "integer"
+            type: integer
           partsLayout:
-            $ref: "#/$defs/PairedEndReadsLayout"
+            $ref: '#/$defs/PairedEndReadsLayout'
           qualityMergingAlgorithm:
-            type: "string"
+            type: string
             enum:
-            - "SumMax"
-            - "SumSubtraction"
-            - "MaxSubtraction"
-            - "MaxMax"
+            - SumMax
+            - SumSubtraction
+            - MaxSubtraction
+            - MaxMax
       minChimeraDetectionScore:
-        type: "integer"
+        type: integer
       minSumScore:
-        type: "number"
+        type: number
       readsLayout:
-        $ref: "#/$defs/PairedEndReadsLayout"
+        $ref: '#/$defs/PairedEndReadsLayout'
       relativeMinVFR3CDR3Score:
-        type: "number"
+        type: number
       saveOriginalReads:
-        type: "boolean"
+        type: boolean
       saveOriginalSequence:
-        type: "boolean"
+        type: boolean
       smartForceEdgeAlignments:
-        type: "boolean"
+        type: boolean
       vjAlignmentOrder:
-        type: "string"
+        type: string
         enum:
-        - "VThenJ"
-        - "JThenV"
+        - VThenJ
+        - JThenV
       vjOverlapWindow:
-        type: "integer"
+        type: integer
   readIdAsCellTag:
-    type: "boolean"
+    type: boolean
   replaceWildcards:
-    type: "boolean"
+    type: boolean
   sampleTable:
-    type: "object"
+    type: object
     properties:
       sampleTagName:
-        type: "string"
+        type: string
       samples:
-        type: "array"
+        type: array
         items:
-          type: "object"
+          type: object
           properties:
             matchTags:
-              type: "object"
+              type: object
             matchVariantId:
-              type: "integer"
+              type: integer
             sampleName:
-              type: "string"
+              type: string
   species:
-    type: "string"
+    type: string
   splitBySample:
-    type: "boolean"
+    type: boolean
   tagMaxBudget:
-    type: "number"
+    type: number
   tagPattern:
-    type: "string"
+    type: string
   tagUnstranded:
-    type: "boolean"
+    type: boolean
   trimmingQualityThreshold:
-    type: "string"
+    type: string
   trimmingWindowSize:
-    type: "string"
+    type: string
   writeFailedAlignments:
-    type: "boolean"
+    type: boolean

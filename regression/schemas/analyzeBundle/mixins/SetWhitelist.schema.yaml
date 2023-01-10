@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+allOf:
+- type: object
+  properties:
+    tag:
+      type: string
+    whitelist:
+      anyOf:
+      - type: object
+        properties:
+          sequences:
+            type: array
+            items:
+              type: string
+      - type: object
+        properties:
+          address:
+            type: string
+- type: object
+  properties:
+    type:
+      const: SetWhitelist
+  required:
+  - type

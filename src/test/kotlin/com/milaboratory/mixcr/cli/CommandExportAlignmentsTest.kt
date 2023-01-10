@@ -17,7 +17,7 @@ class CommandExportAlignmentsTest {
     fun `check default export columns`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -30,7 +30,7 @@ class CommandExportAlignmentsTest {
     fun `use don't impute option`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --dont-impute-germline-on-export $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -42,7 +42,7 @@ class CommandExportAlignmentsTest {
     fun `append export field`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} -readHistory $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -53,7 +53,7 @@ class CommandExportAlignmentsTest {
     fun `prepend export field`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} -readHistory --prepend-columns $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -64,7 +64,7 @@ class CommandExportAlignmentsTest {
     fun `no default fields`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempDir().toPath().resolve("output.tsv").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} -readHistory --drop-default-fields $input ${output.path}")
         val columns = output.readLines().first().split("\t")
@@ -75,7 +75,7 @@ class CommandExportAlignmentsTest {
     fun `don't get features from allCoveredBy for clna`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.clna").file)
-        val output = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output0.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --drop-default-fields -allNFeatures $input ${output.path}")
         val columnsCompositeDefaults = output.readLines().first().split("\t")
@@ -86,7 +86,7 @@ class CommandExportAlignmentsTest {
     fun `don't get features from allCoveredBy for vdjca`() {
         val input =
             Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.vdjca").file)
-        val output = TempFileManager.getTempDir().toPath().resolve("output0.tsv").toFile()
+        val output = TempFileManager.newTempDir().toPath().resolve("output0.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --drop-default-fields -allNFeatures $input ${output.path}")
         val columnsCompositeDefaults = output.readLines().first().split("\t")

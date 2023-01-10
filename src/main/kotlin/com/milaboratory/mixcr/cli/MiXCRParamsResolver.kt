@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -23,7 +23,7 @@ import kotlin.reflect.KProperty1
 
 abstract class MiXCRParamsResolver<P : Any>(
     paramsProperty: KProperty1<MiXCRParamsBundle, P?>
-) : ParamsResolver<MiXCRParamsBundle, P>(Presets::resolveParamsBundle, paramsProperty) {
+) : ParamsResolver<MiXCRParamsBundle, P>(Presets.MiXCRBundleResolver, paramsProperty) {
     override fun validateBundle(bundle: MiXCRParamsBundle) {
         if (bundle.flags.isNotEmpty()) {
             println("Preset errors: ")
@@ -52,6 +52,7 @@ interface MiXCRMixinCollection {
         another != null -> object : MiXCRMixinCollection {
             override val mixins: List<MiXCRMixin> = this@MiXCRMixinCollection.mixins + another.mixins
         }
+
         else -> this
     }
 
@@ -59,6 +60,7 @@ interface MiXCRMixinCollection {
         another.isNotEmpty() -> object : MiXCRMixinCollection {
             override val mixins: List<MiXCRMixin> = this@MiXCRMixinCollection.mixins + another.flatMap { it.mixins }
         }
+
         else -> this
     }
 
@@ -66,6 +68,8 @@ interface MiXCRMixinCollection {
         val empty = object : MiXCRMixinCollection {
             override val mixins: List<MiXCRMixin> = emptyList()
         }
+
+        val Collection<MiXCRMixinCollection>.mixins get() = (empty + this).mixins
     }
 }
 

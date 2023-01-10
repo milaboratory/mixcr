@@ -11,8 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.VoidProcessor
+import cc.redberry.pipe.util.forEachInParallel
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.info.AlignmentInfoCollector
@@ -89,7 +89,7 @@ class CommandAlignmentsStats : MiXCRCommandWithOutputs() {
             (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it.toFile()), 32768)) }
                 ?: System.out).use { output ->
                 SmartProgressReporter.startProgressReport("Analysis", reader)
-                CUtils.processAllInParallel(reader, collector, min(4, Runtime.getRuntime().availableProcessors()))
+                reader.forEachInParallel(min(4, Runtime.getRuntime().availableProcessors()), collector)
                 collector.end()
                 if (output === System.out) output.println()
                 collector.write(output)

@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.primitives.Filter
+import cc.redberry.primitives.and
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -21,7 +22,6 @@ import com.milaboratory.mixcr.basictypes.MultiAlignmentFormatter
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.util.and
 import gnu.trove.set.hash.TIntHashSet
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature

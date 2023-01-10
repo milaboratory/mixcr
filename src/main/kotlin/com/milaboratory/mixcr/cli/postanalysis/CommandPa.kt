@@ -112,6 +112,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                 "postanalysis will be performed in each of the groups separately. " +
                 "It is possible to specify several isolation groups."],
         names = ["--group"],
+        split = ",",
         paramLabel = "<group>",
         order = OptionsOrder.main + 10_700
     )

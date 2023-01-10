@@ -76,7 +76,7 @@ public class ClnAReaderTest {
         AlignmentsMappingMerger merged = new AlignmentsMappingMerger(preCloneReader.readAlignments(),
                 assemble.cloneAssembler.getAssembledReadsPort());
 
-        File file = TempFileManager.getTempFile();
+        File file = TempFileManager.newTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
 
         List<Clone> newClones = assemble.cloneSet.getClones().stream()
@@ -130,7 +130,7 @@ public class ClnAReaderTest {
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
 
-        File file = TempFileManager.getTempFile();
+        File file = TempFileManager.newTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
         writer.writeClones(new CloneSet(Collections.EMPTY_LIST, align.usedGenes,
                 new MiXCRHeader(null, new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,

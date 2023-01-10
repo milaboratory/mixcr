@@ -1,7 +1,10 @@
 Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter-stops]
                           [--split-by-tags <(Molecule|Cell|Sample)>] [--split-files-by
                           <splitFilesBy>]... [--dont-split-files] [--impute-germline-on-export]
-                          [--dont-impute-germline-on-export] [--no-header] [--drop-default-fields]
+                          [--dont-impute-germline-on-export] [--add-export-clone-table-splitting <
+                          (geneLabel|tag):key>] [--reset-export-clone-table-splitting]
+                          [--add-export-clone-grouping <(geneLabel|tag):key>]
+                          [--reset-export-clone-grouping] [--no-header] [--drop-default-fields]
                           [--prepend-columns] [--not-covered-as-empty] [-targets] [-vHit] [-dHit]
                           [-jHit] [-cHit] [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily]
                           [-jFamily] [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
@@ -76,6 +79,14 @@ Export assembled clones into tab delimited file.
                                lowercase) for uncovered regions
       --dont-impute-germline-on-export
                              Export nucleotide sequences only from covered region
+      --add-export-clone-table-splitting <(geneLabel|tag):key>
+                             Add key to split output files with clone tables.
+      --reset-export-clone-table-splitting
+                             Reset all file splitting for output clone tables.
+      --add-export-clone-grouping <(geneLabel|tag):key>
+                             Add key to group clones in the output clone tables.
+      --reset-export-clone-grouping
+                             Reset all clone grouping in the output clone tables.
       --no-header            Don't print first header line, print only data
                                Default value determined by the preset.
       --drop-default-fields  Don't export fields from preset.

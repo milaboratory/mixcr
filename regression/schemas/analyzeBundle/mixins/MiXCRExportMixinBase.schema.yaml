@@ -1,54 +1,54 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 anyOf:
 - allOf:
-  - type: "object"
+  - type: object
     properties:
       args:
-        type: "array"
+        type: array
         items:
-          type: "string"
+          type: string
       field:
-        type: "string"
+        type: string
       insertIndex:
-        type: "integer"
-  - type: "object"
+        type: integer
+  - type: object
     properties:
       type:
-        const: "AddExportAlignmentsField"
+        const: AddExportAlignmentsField
     required:
-    - "type"
+    - type
 - allOf:
-  - type: "object"
+  - type: object
     properties:
       args:
-        type: "array"
+        type: array
         items:
-          type: "string"
+          type: string
       field:
-        type: "string"
+        type: string
       insertIndex:
-        type: "integer"
-  - type: "object"
+        type: integer
+  - type: object
     properties:
       type:
-        const: "AddExportClonesField"
+        const: AddExportClonesField
     required:
-    - "type"
-- type: "object"
+    - type
+- type: object
   properties:
     type:
-      const: "DontImputeGermlineOnExport"
+      const: DontImputeGermlineOnExport
   required:
-  - "type"
-- type: "object"
+  - type
+- type: object
   properties:
     type:
-      const: "ImputeGermlineOnExport"
+      const: ImputeGermlineOnExport
   required:
-  - "type"
-type: "object"
+  - type
+type: object
 properties:
   type:
-    const: "ExportMixins$MiXCRExportMixinBase"
+    const: ExportMixins$MiXCRExportMixinBase
 required:
-- "type"
+- type

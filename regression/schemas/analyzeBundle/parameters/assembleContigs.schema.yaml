@@ -1,80 +1,80 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 $defs:
   GeneFeatures:
-    type: "object"
+    type: object
     properties:
       features:
-        type: "array"
+        type: array
         items:
-          type: "string"
-type: "object"
+          type: string
+type: object
 properties:
   ignoreTags:
-    type: "boolean"
+    type: boolean
   parameters:
-    type: "object"
+    type: object
     properties:
       alignedSequenceEdgeDelta:
-        type: "integer"
+        type: integer
       alignmentEdgeRegionSize:
-        type: "integer"
+        type: integer
       assemblingRegions:
-        $ref: "#/$defs/GeneFeatures"
+        $ref: '#/$defs/GeneFeatures'
       branchingMinimalQualityShare:
-        type: "number"
+        type: number
       branchingMinimalSumQuality:
-        type: "integer"
+        type: integer
       decisiveBranchingSumQualityThreshold:
-        type: "integer"
+        type: integer
       isAlignedRegionsOnly:
-        type: "boolean"
+        type: boolean
       minimalContigLength:
-        type: "integer"
+        type: integer
       minimalMeanNormalizedQuality:
-        type: "number"
+        type: number
       minimalNonEdgePointsFraction:
-        type: "number"
+        type: number
       outputMinimalQualityShare:
-        type: "number"
+        type: number
       outputMinimalSumQuality:
-        type: "integer"
+        type: integer
       postFiltering:
         anyOf:
         - allOf:
-          - type: "object"
+          - type: object
             properties:
               minimalLength:
-                type: "integer"
-          - type: "object"
+                type: integer
+          - type: object
             properties:
               type:
-                const: "MinimalContigLength"
+                const: MinimalContigLength
             required:
-            - "type"
-        - type: "object"
+            - type
+        - type: object
           properties:
             type:
-              const: "NoFiltering"
+              const: NoFiltering
           required:
-          - "type"
-        - type: "object"
+          - type
+        - type: object
           properties:
             type:
-              const: "OnlyFullyAssembled"
+              const: OnlyFullyAssembled
           required:
-          - "type"
-        - type: "object"
+          - type
+        - type: object
           properties:
             type:
-              const: "OnlyFullyDefined"
+              const: OnlyFullyDefined
           required:
-          - "type"
+          - type
       subCloningRegions:
-        $ref: "#/$defs/GeneFeatures"
+        $ref: '#/$defs/GeneFeatures'
       trimmingParameters:
-        type: "object"
+        type: object
         properties:
           averageQualityThreshold:
-            type: "number"
+            type: number
           windowSize:
-            type: "integer"
+            type: integer

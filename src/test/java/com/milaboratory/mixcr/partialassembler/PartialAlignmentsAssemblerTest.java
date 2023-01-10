@@ -38,7 +38,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 
 import static com.milaboratory.mixcr.tests.MiXCRTestUtils.emptyFooter;
@@ -232,7 +231,7 @@ public class PartialAlignmentsAssemblerTest {
             //     Assert.assertTrue(input.VJJunction.toString().contains(al.getFeature(GeneFeature.VJJunction).getSequence().toString()));
         }
 
-        File overlappedAlignments = TempFileManager.getTempFile();
+        File overlappedAlignments = TempFileManager.newTempFile();
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(overlappedAlignments)) {
             final PartialAlignmentsAssemblerParameters pParameters = PartialAlignmentsAssemblerParameters.getDefault();
             pParameters.setMergerParameters(pParameters.getMergerParameters().overrideMinimalIdentity(0.0));

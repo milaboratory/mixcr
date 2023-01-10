@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -61,12 +61,18 @@ object CommandExportAlignments {
         override val command get() = MiXCRCommandDescriptor.exportAlignments
     }
 
-    fun Params.mkFilter(): Filter<VDJCAlignments> = Filter {
-        for (gt in GeneType.VJC_REFERENCE) {
-            val bestHit = it.getBestHit(gt)
-            if (bestHit != null && Chains.parse(chains).intersects(bestHit.gene.chains)) return@Filter true
+    fun Params.mkFilter(): Filter<VDJCAlignments> {
+        val chainsParsed = Chains.parse(chains)
+        return Filter {
+            if (chainsParsed != Chains.ALL) {
+                for (gt in GeneType.VJC_REFERENCE) {
+                    val bestHit = it.getBestHit(gt)
+                    if (bestHit != null && chainsParsed.intersects(bestHit.gene.chains)) return@Filter true
+                }
+                false
+            } else
+                true
         }
-        false
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
@@ -117,7 +123,10 @@ object CommandExportAlignments {
             }
 
         @Mixin
-        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecific
+        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportAlignments
+
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -133,7 +142,7 @@ object CommandExportAlignments {
             openAlignmentsPort(inputFile).use { data ->
                 val header = data.info.header
                 val (_, params) = paramsResolver.resolve(
-                    header.paramsSpec.addMixins(exportMixins.mixins),
+                    resetPreset.overridePreset(header.paramsSpec).addMixins(exportMixins.mixins),
                     printParameters = logger.verbose && outputFile != null
                 )
 

@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.util.forEach
+import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
@@ -144,7 +145,7 @@ class CommandMergeAlignments : MiXCRCommandWithOutputs() {
                 currentInnerReader.close()
                 val newReader = createNewReader() ?: return null
                 currentInnerReader = newReader
-                record = currentInnerReader.take()
+                record = currentInnerReader.take() ?: throw ApplicationException("One of input files is empty: $files")
             }
             updateProgress()
             return record.shiftReadId(recordId.incrementAndGet(), readIdOffset.get())

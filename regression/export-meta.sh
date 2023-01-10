@@ -27,3 +27,4 @@ PATH=${dir}/..:${PATH}
 mixcr exportHelp ${dir}/cli-help
 mixcr exportAllPresets ${dir}/presets
 mixcr exportSchemas ${dir}/schemas
+mixcr listPresets > ${dir}/presets/list.txt

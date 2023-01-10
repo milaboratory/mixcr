@@ -1,12 +1,12 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
+$schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: "object"
+- type: object
   properties:
     tagPattern:
-      type: "string"
-- type: "object"
+      type: string
+- type: object
   properties:
     type:
-      const: "SetTagPattern"
+      const: SetTagPattern
   required:
-  - "type"
+  - type
