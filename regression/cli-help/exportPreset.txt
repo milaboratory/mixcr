@@ -17,12 +17,13 @@ Usage: mixcr exportPreset [--no-validation] [--add-step <step>] [--remove-step <
                           [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                           [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
                           (geneLabel|tag):key>] [--reset-export-clone-grouping] [--force-overwrite]
-                          [--no-warnings] [--verbose] [--help] (--preset-name preset | --mixcr-file
-                          <input.(vdjca|clns|clna)>) [-M <key=value>]... [preset_file.(yaml|yml)]
+                          [--no-warnings] [--verbose] [--help] (--preset-name <preset> |
+                          --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]... [preset_file.
+                          (yaml|yml)]
 Export a preset file given the preset name and a set of mix-ins
       [preset_file.(yaml|yml)]
                              Path where to write preset yaml file. Will write to output if omitted.
-      --preset-name preset   Preset name to export.
+      --preset-name <preset> Preset name to export.
       --mixcr-file <input.(vdjca|clns|clna)>
                              File that was processed by MiXCR.
       --no-validation        Don't validate preset before export.

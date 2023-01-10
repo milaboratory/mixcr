@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -55,7 +55,6 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortByHashOnDisk
 import org.apache.commons.io.FileUtils
-import picocli.CommandLine
 import picocli.CommandLine.*
 import java.nio.file.Path
 import java.util.*
@@ -237,6 +236,9 @@ object CommandRefineTagsAndSort {
         )
         var refineAndSortMixins: List<RefineTagsAndSortMixins> = mutableListOf()
 
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
         private val mixins get() = refineAndSortMixins.mixins
 
         override val inputFiles
@@ -253,7 +255,6 @@ object CommandRefineTagsAndSort {
         override fun run1() {
             val startTimeMillis = System.currentTimeMillis()
 
-            val cmdParams: Params
 
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: TagCorrectionReport?
@@ -262,7 +263,8 @@ object CommandRefineTagsAndSort {
                 val header = mainReader.header
                 val tagsInfo = header.tagsInfo
                 require(!tagsInfo.hasNoTags()) { "input file has no tags" }
-                cmdParams = paramsResolver.resolve(header.paramsSpec.addMixins(mixins), printParameters = logger.verbose).second
+                val paramsSpec = resetPreset.overridePreset(header.paramsSpec).addMixins(mixins)
+                val cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
 
                 // These tags will be corrected, other used as grouping keys
                 val correctionEnabled = tagsInfo.map { it.valueType == TagValueType.SequenceAndQuality }
@@ -440,7 +442,8 @@ object CommandRefineTagsAndSort {
                     writer.writeHeader(
                         header
                             .updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) }
-                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams),
+                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams)
+                            .copy(paramsSpec = paramsSpec),
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)

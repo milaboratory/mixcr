@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -125,6 +125,9 @@ object CommandExportAlignments {
         @Mixin
         lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportAlignments
 
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -139,7 +142,7 @@ object CommandExportAlignments {
             openAlignmentsPort(inputFile).use { data ->
                 val header = data.info.header
                 val (_, params) = paramsResolver.resolve(
-                    header.paramsSpec.addMixins(exportMixins.mixins),
+                    resetPreset.overridePreset(header.paramsSpec).addMixins(exportMixins.mixins),
                     printParameters = logger.verbose && outputFile != null
                 )
 

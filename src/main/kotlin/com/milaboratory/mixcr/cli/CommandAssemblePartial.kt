@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -124,6 +124,9 @@ object CommandAssemblePartial {
         @Mixin
         lateinit var reportOptions: ReportOptions
 
+        @Mixin
+        lateinit var resetPreset: ResetPresetArgs
+
         override val inputFiles
             get() = listOf(inputFile)
 
@@ -138,19 +141,20 @@ object CommandAssemblePartial {
         override fun run1() {
             // Saving initial timestamp
             val beginTimestamp = System.currentTimeMillis()
-            val cmdParams: Params
             use(
                 VDJCAlignmentsReader(inputFile),
                 VDJCAlignmentsWriter(outputFile)
             ) { reader, writer ->
                 val header = reader.header
-                cmdParams = paramsResolver.resolve(header.paramsSpec, printParameters = logger.verbose).second
+                val paramsSpec = resetPreset.overridePreset(header.paramsSpec)
+                val cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
                 val groupingDepth =
                     header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
                 writer.writeHeader(
                     header
                         .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
-                        .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams),
+                        .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams)
+                        .copy(paramsSpec = paramsSpec),
                     reader.usedGenes
                 )
                 val assembler = PartialAlignmentsAssembler(
