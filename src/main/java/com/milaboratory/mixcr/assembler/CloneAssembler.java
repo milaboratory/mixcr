@@ -25,6 +25,7 @@ import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
 import com.milaboratory.util.CanReportProgress;
@@ -51,7 +52,7 @@ import static io.repseq.core.GeneFeature.*;
 
 /**
  * Clone assembly steps:
- *
+ * <p>
  * - Initial clone assembly:
  * Iteration over alignments to assemble clonotypes into {@link CloneAccumulatorContainer} (groups of clonotypes with the same
  * clonal sequence). Each {@link CloneAccumulatorContainer} consists of a map {@link VJCSignature} -> {@link CloneAccumulator}.
@@ -62,20 +63,26 @@ import static io.repseq.core.GeneFeature.*;
  * by saving their ids into special on-disk (to save memory) log structure, that will be used on the mapping step to pick only
  * alignments, skipped on this step.
  * Initial clone assembly is performed by pushing clonotypes into {@link InitialAssembler}.
- *
+ * <p>
  * - Mapping low quality reads:
  * Second iteration over alignments, only alignments deferred on the initial assemble step are taken into processing here.
  * Clonal sequence are mapped with the algorithm implemented in {@link DeferredAlignmentsMapper}.
- *
+ * <p>
  * - Pre-clustering. This step performs "clustering" between clonotypes with the same clonal sequence (clonotypes inside
  * the same {@link CloneAccumulatorContainer}). To reduce artificial diversity due to the mis-identification of V/J/C genes,
  * both because of experimental artifacts and alignment errors. This step do nothing if
- *
+ * <p>
  * - Clustering. Grouping of clonotypes with similar clonal sequences, and high ratio between their counts, to eliminate the
  * artificial diversity.
  */
 public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     final TagsInfo tagsInfo;
+
+    /** Tag depth for sample and cell tags */
+    final int sampleOrCellTagDepth;
+    /** true if tag tuples contain molecular tags */
+    final boolean hasMoleculeTags;
+
     final CloneAssemblerParameters parameters;
     // Accumulators and generators (atomics)
     final AtomicLong successfullyAssembledAlignments = new AtomicLong(),
@@ -91,7 +98,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
     /**
      * Mapping between initial clonotype id (one that was written to globalLogger) and final clonotype id,
      * to be used in alignment-to-clone mapping tracking
-     *
+     * <p>
      * FinalCloneId -> OldCloneId or bitwise negated OldCloneId of the head clonotype to which the clonotype was clustered to
      */
     private TIntIntHashMap idMapping;
@@ -122,6 +129,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         if (!parameters.isComplete())
             throw new IllegalArgumentException("Not complete parameters");
         this.tagsInfo = tagsInfo;
+        this.sampleOrCellTagDepth = tagsInfo.getDepthFor(TagType.Cell);
+        this.hasMoleculeTags = tagsInfo.hasTagsWithType(TagType.Molecule);
+
         this.parameters = parameters.clone();
         this.featuresToAlign = featuresToAlign;
         if (!logAssemblerEvents && !parameters.isMappingEnabled())
@@ -256,14 +266,14 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
 
     @Override
     public double getProgress() {
-        if (progressReporter == null)//case!
+        if (progressReporter == null)// case!
             return 0.0;
         return progressReporter.getProgress();
     }
 
     @Override
     public boolean isFinished() {
-        if (progressReporter == null)//case!
+        if (progressReporter == null)// case!
             return false;
         return progressReporter.isFinished();
     }
@@ -273,6 +283,11 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             throw new IllegalStateException("Already clustered.");
         if (!preClusteringDone)
             throw new IllegalStateException("No pre-clustering is done.");
+
+        // Calculating weight for clustering.
+        // According to the tag structure number of reads or molecules will be used as weight.
+        for (CloneAccumulator acc : cloneList)
+            acc.updateWeight(hasMoleculeTags);
 
         Clustering<CloneAccumulator, NucleotideSequence> clustering = new Clustering<>(cloneList,
                 object -> object.getSequence().getConcatenated().getSequence(),
@@ -290,11 +305,11 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             head.setCloneIndex(i);
             // k - index to be set for all child clonotypes
             final int k = ~i;
-            cluster.processAllChildren(object -> {
-                onClustered(head, object.getHead());
+            cluster.processAllChildren(child -> {
+                onClustered(head, child.getHead());
                 if (parameters.isAddReadsCountOnClustering())
-                    head.mergeCounts(object.getHead());
-                idMapping.put(object.getHead().getCloneIndex(), k);
+                    head.mergeCounts(child.getHead());
+                idMapping.put(child.getHead().getCloneIndex(), k);
                 return true;
             });
             clusteredClonesAccumulators.add(head);
@@ -567,7 +582,7 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
                 source = clusteredClonesAccumulators;
             else {
                 TIntIntHashMap newIdMapping = new TIntIntHashMap();
-                //sort clones by count (if not yet sorted by clustering)
+                // sort clones by count (if not yet sorted by clustering)
                 CloneAccumulator[] sourceArray = clusteredClonesAccumulators == null
                         ? cloneList.toArray(new CloneAccumulator[cloneList.size()])
                         : clusteredClonesAccumulators.toArray(new CloneAccumulator[clusteredClonesAccumulators.size()]);

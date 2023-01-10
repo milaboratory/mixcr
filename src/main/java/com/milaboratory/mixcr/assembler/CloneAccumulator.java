@@ -22,7 +22,6 @@ import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.basictypes.ClonalSequence;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
-import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
@@ -39,12 +38,13 @@ public final class CloneAccumulator {
     private volatile int cloneIndex = -1;
     final Range[] nRegions;
     final TagCountAggregator tagBuilder = new TagCountAggregator();
+    /** This weight is updated right before clustering, and used in statistical testing during PCR/RT error correction */
+    private long weight = -1;
 
     public CloneAccumulator(ClonalSequence sequence, Range[] nRegions, QualityAggregationType qualityAggregationType) {
         this.sequence = sequence;
         this.nRegions = nRegions;
         this.aggregator = qualityAggregationType.create(sequence.getConcatenated().size());
-        //this.quality = sequence.getConcatenated().getQuality().asArray();
     }
 
     public ClonalSequence getSequence() {
@@ -129,6 +129,18 @@ public final class CloneAccumulator {
 
     public long getMappedCount() {
         return mappedCount;
+    }
+
+    public long getWeight() {
+        assert weight != -1;
+        return weight;
+    }
+
+    public void updateWeight(boolean hasMoleculeTags) {
+        if (hasMoleculeTags)
+            weight = tagBuilder.size();
+        else
+            weight = getCount();
     }
 
     public void mergeCounts(CloneAccumulator acc) {

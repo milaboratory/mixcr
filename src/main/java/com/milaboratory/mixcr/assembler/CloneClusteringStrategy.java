@@ -37,6 +37,7 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
         Mutations<NucleotideSequence> currentMutations = iterator.getCurrentMutations();
         if (!cluster.getHead().getSequence().isCompatible(minorObject.getSequence(), currentMutations))
             return false;
+
         double minimalTagSetOverlap = parameters.getMinimalTagSetOverlap();
         if (minimalTagSetOverlap > 0) {
             TagCountAggregator headTags = cluster.getHead().tagBuilder;
@@ -54,10 +55,10 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
                     if (--nMismatches < 0)
                         return false;
                     else continue out;
-        return parameters.getClusteringFilter().allow(currentMutations, cluster.getHead().getCount(),
-                minorObject.getCount(), cluster.getHead().getSequence())
-                && cloneAssembler.extractSignature(cluster.getHead()).matchHits(
-                minorObject);
+        return parameters.getClusteringFilter().allow(currentMutations,
+                cluster.getHead().getWeight(), minorObject.getWeight(),
+                cluster.getHead().getSequence())
+                && cloneAssembler.extractSignature(cluster.getHead()).matchHits(minorObject);
     }
 
     @Override

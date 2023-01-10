@@ -96,6 +96,16 @@ public final class TagCountAggregator {
         return this;
     }
 
+    public int size() {
+        if (singletonTuple == null) {
+            if (tagMap == null)
+                return 0;
+            else
+                return tagMap.size();
+        } else
+            return 1;
+    }
+
     public boolean isEmpty() {
         return singletonTuple == null && tagMap == null;
     }
