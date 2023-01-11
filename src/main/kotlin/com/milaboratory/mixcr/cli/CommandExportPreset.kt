@@ -35,7 +35,7 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 @Command(
-    description = ["Export a preset file given the preset name and a set of mix-ins"]
+    description = ["Export a preset file given the preset name or source file and a set of mix-ins"]
 )
 class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Unit> {
     class PresetInput {
