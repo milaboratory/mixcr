@@ -240,7 +240,17 @@ upstreams:
       - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz
       outputFiles:
       - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
-      trimmingReport: null
+      trimmingReport:
+        type: readTrimmerReport
+        total: 49700
+        r1LeftTrimmedEvents: 0
+        r1RightTrimmedEvents: 0
+        r2LeftTrimmedEvents: 16
+        r2RightTrimmedEvents: 19
+        r1LeftTrimmedNucleotides: 0
+        r1RightTrimmedNucleotides: 0
+        r2LeftTrimmedNucleotides: 831
+        r2RightTrimmedNucleotides: 2744
       totalReadsProcessed: 49700
       aligned: 49560
       notAligned: 140
@@ -254,9 +264,9 @@ upstreams:
         NoBarcode: 84
         SampleNotMatched: 0
       chimeras: 0
-      overlapped: 47629
+      overlapped: 47614
       alignmentAidedOverlaps: 320
-      overlappedAligned: 47590
+      overlappedAligned: 47575
       overlappedNotAligned: 39
       pairedEndAlignmentConflicts: 1270
       vChimeras: 50
@@ -271,9 +281,9 @@ upstreams:
             nonFunctional: 1062
             isOOF: 732
             hasStops: 330
-      realignedWithForcedNonFloatingBound: 4614
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 1573
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 1573
+      realignedWithForcedNonFloatingBound: 4644
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1584
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1584
       noCDR3PartsAlignments: 3
       partialAlignments: 217
       tagParsingReport:
@@ -911,20 +921,20 @@ upstreams:
         inputGroups: 2913
         groupsWithNoAssemblingFeature: 77
         inputAlignments: 47195
-        inputAssemblingFeatureSequences: 44978
-        clonotypes: 2808
-        assemblingFeatureSequencesInZeroPreClones: 79
+        inputAssemblingFeatureSequences: 44960
+        clonotypes: 2807
+        assemblingFeatureSequencesInZeroPreClones: 83
         clonotypesPerGroup:
-          "0": 28
-          "1": 2808
-        coreAlignments: 44873
-        discardedCoreAlignments: 105
-        empiricallyAssignedAlignments: 1192
+          "0": 29
+          "1": 2807
+        coreAlignments: 44851
+        discardedCoreAlignments: 109
+        empiricallyAssignedAlignments: 1209
         vjEmpiricallyAssignedAlignments: 0
         umiEmpiricallyAssignedAlignments: 0
-        gatEmpiricallyAssignedAlignments: 1192
+        gatEmpiricallyAssignedAlignments: 1209
         empiricalAssignmentConflicts: 0
-        unassignedAlignments: 222
+        unassignedAlignments: 227
         umiConflicts: 0
         gatConflicts: 0
         geneConflicts: {}
@@ -932,10 +942,10 @@ upstreams:
         coreAlignmentsDroppedByTagSuffix: 0
       totalReadsProcessed: 49700
       initialClonesCreated: 1279
-      readsDroppedNoTargetSequence: 2217
+      readsDroppedNoTargetSequence: 2235
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 46007
+      coreReads: 46002
       readsDroppedFailedMapping: 53
       lowQualityRescued: 5
       clonesClustered: 31
@@ -944,8 +954,8 @@ upstreams:
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 45573
-      readsInClonesBeforeClustering: 46012
+      readsInClones: 45568
+      readsInClonesBeforeClustering: 46007
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: chainUsage
@@ -1237,7 +1247,17 @@ upstreams:
       - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz
       outputFiles:
       - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
-      trimmingReport: null
+      trimmingReport:
+        type: readTrimmerReport
+        total: 29871
+        r1LeftTrimmedEvents: 0
+        r1RightTrimmedEvents: 0
+        r2LeftTrimmedEvents: 12
+        r2RightTrimmedEvents: 12
+        r1LeftTrimmedNucleotides: 0
+        r1RightTrimmedNucleotides: 0
+        r2LeftTrimmedNucleotides: 414
+        r2RightTrimmedNucleotides: 1858
       totalReadsProcessed: 29871
       aligned: 29499
       notAligned: 372
@@ -1251,9 +1271,9 @@ upstreams:
         NoBarcode: 42
         SampleNotMatched: 0
       chimeras: 0
-      overlapped: 27898
+      overlapped: 27888
       alignmentAidedOverlaps: 241
-      overlappedAligned: 27586
+      overlappedAligned: 27576
       overlappedNotAligned: 312
       pairedEndAlignmentConflicts: 1307
       vChimeras: 66
@@ -1268,9 +1288,9 @@ upstreams:
             nonFunctional: 591
             isOOF: 369
             hasStops: 222
-      realignedWithForcedNonFloatingBound: 4344
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 1354
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 1354
+      realignedWithForcedNonFloatingBound: 4364
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1358
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1358
       noCDR3PartsAlignments: 0
       partialAlignments: 72
       tagParsingReport:
@@ -1926,20 +1946,20 @@ upstreams:
         inputGroups: 77
         groupsWithNoAssemblingFeature: 8
         inputAlignments: 29031
-        inputAssemblingFeatureSequences: 26523
+        inputAssemblingFeatureSequences: 26513
         clonotypes: 68
         assemblingFeatureSequencesInZeroPreClones: 15
         clonotypesPerGroup:
           "0": 1
           "1": 68
-        coreAlignments: 26489
+        coreAlignments: 26479
         discardedCoreAlignments: 34
-        empiricallyAssignedAlignments: 1196
+        empiricallyAssignedAlignments: 1204
         vjEmpiricallyAssignedAlignments: 0
         umiEmpiricallyAssignedAlignments: 0
-        gatEmpiricallyAssignedAlignments: 1196
+        gatEmpiricallyAssignedAlignments: 1204
         empiricalAssignmentConflicts: 0
-        unassignedAlignments: 270
+        unassignedAlignments: 272
         umiConflicts: 0
         gatConflicts: 0
         geneConflicts: {}
@@ -1947,10 +1967,10 @@ upstreams:
         coreAlignmentsDroppedByTagSuffix: 0
       totalReadsProcessed: 29871
       initialClonesCreated: 46
-      readsDroppedNoTargetSequence: 2508
+      readsDroppedNoTargetSequence: 2518
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 27685
+      coreReads: 27683
       readsDroppedFailedMapping: 0
       lowQualityRescued: 0
       clonesClustered: 0
@@ -1959,8 +1979,8 @@ upstreams:
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 27685
-      readsInClonesBeforeClustering: 27685
+      readsInClones: 27683
+      readsInClonesBeforeClustering: 27683
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: chainUsage
