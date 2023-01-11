@@ -82,20 +82,13 @@ done
 assert "mixcr exportReportsTable --no-header base_build_trees.shmt | wc -l" "1"
 assert "mixcr exportReportsTable --with-upstreams --no-header base_build_trees.shmt | wc -l" "3"
 
-# TODO Gera, please, research this change:
-#assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "1"
-#assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "3"
-assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -c '2'" "1"
-assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount base_build_trees.shmt | grep -c '2'" "3"
+assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "1"
+assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "3"
 
-# TODO Gera, please, research this change:
-# assert "head -n 1 alleles/report.json | jq -r .foundAlleles" "3"
-assert "head -n 1 alleles/report.json | jq -r .foundAlleles" "2"
+assert "head -n 1 alleles/report.json | jq -r .foundAlleles" "3"
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
-# TODO Gera, please, research this change:
-# assert "grep 'IGHV2-70' alleles/description.tsv | cut -f7" "ST311G\nSG170AST259CST311GSA335T"
-assert "grep 'IGHV2-70' alleles/description.tsv | cut -f7" "\nSG170AST259CST311GSA335T"
+assert "grep 'IGHV2-70' alleles/description.tsv | cut -f7" "ST311G\nSG170AST259CST311GSA335T"
 assert "grep 'IGHJ6' alleles/description.tsv | cut -f7" "SG37TSG38AST39CSC55A"
 
 # biggest tree

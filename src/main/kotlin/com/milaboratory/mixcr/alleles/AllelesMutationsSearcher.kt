@@ -54,7 +54,7 @@ class AllelesMutationsSearcher(
         searchHistory.differentMutationsCount = allMutations.size
 
         val mutationsFilteredByDiversity = allMutations
-            //other mutations definitely are not allele mutations
+            // other mutations definitely are not allele mutations
             .filter { mutation ->
                 clones
                     .filter { mutation in it.mutationGroups }
@@ -170,24 +170,28 @@ class AllelesMutationsSearcher(
         // check if there are enough clones that more close to zero allele
         else -> {
             val clonesByAlleles = alignClonesOnAlleles(clones, foundAlleles + ZERO_ALLELE)
-            val alleleDiversities = clonesByAlleles
+            val alleleDiversitiesAndScores = clonesByAlleles
                 .associate { alleleWithClones ->
                     val filteredClones = alleleWithClones.clonesWithPenalties
                         .filter {
                             it.relativePenalty >= parameters.minRelativePenaltyBetweenAllelesForCloneAlign
                         }
                         .map { it.clone }
-                    alleleWithClones.allele to filteredClones.diversity()
+                    alleleWithClones.allele to DiversityAndScore(
+                        filteredClones.diversity(),
+                        filteredClones.score()
+                    )
                 }
-            val diversityOfZeroAllele = alleleDiversities[ZERO_ALLELE] ?: 0
+            val diversityOfZeroAllele = alleleDiversitiesAndScores[ZERO_ALLELE]?.diversity ?: 0
             when {
                 // TODO try remove
                 // Zero allele is not represented enough
                 diversityOfZeroAllele < minDiversityForAllele -> foundAlleles
                 else -> {
-                    val boundary = alleleDiversities.values.maxOrNull()!! * (1.0 - parameters.topByDiversity)
-                    val result = alleleDiversities
-                        .filter { it.value >= boundary || it.value >= diversityForSkipTestForRatioForZeroAllele }
+                    val boundary =
+                        alleleDiversitiesAndScores.values.maxOf { it.score } * (1.0 - parameters.topByScore)
+                    val result = alleleDiversitiesAndScores
+                        .filter { it.value.score >= boundary || it.value.diversity >= diversityForSkipTestForRatioForZeroAllele }
                         .keys
                     if (ZERO_ALLELE in result) {
                         searchHistory.alleles.addedKnownAllele = ZERO_ALLELE.mutationGroups
@@ -199,6 +203,9 @@ class AllelesMutationsSearcher(
     }
 
     private fun List<CloneDescription>.diversity() = map { it.clusterIdentity }.distinct().size
+
+    private fun List<CloneDescription>.score(): Double =
+        diversity() + parameters.coefficientForNaiveClonesInScore * filter { it.naiveByComplimentaryGeneMutations }.diversity()
 
     private fun alignClonesOnAlleles(
         clones: List<CloneDescription>,
@@ -258,18 +265,18 @@ class AllelesMutationsSearcher(
 
         val alignedClones = alignClonesOnAlleles(clones, filteredMutationSubsets)
 
-        val alleleDiversities = alignedClones.associate { alleleWithClones ->
+        val allelesWithScores = alignedClones.associate { alleleWithClones ->
             val filteredClones = alleleWithClones.clonesWithPenalties
                 .filter {
                     it.relativePenalty >= parameters.minRelativePenaltyBetweenAllelesForCloneAlign
                 }
                 .map { it.clone }
-            alleleWithClones.allele to filteredClones.diversity()
+            alleleWithClones.allele to filteredClones.score()
         }
 
-        //filter candidates with too low diversity in comparison to others
-        val boundary = alleleDiversities.values.maxOrNull()!! * (1.0 - parameters.topByDiversity)
-        return alleleDiversities
+        // filter candidates with too low diversity in comparison to others
+        val boundary = allelesWithScores.values.maxOrNull()!! * (1.0 - parameters.topByScore)
+        return allelesWithScores
             .filter { it.value >= boundary }
             .keys
     }
@@ -317,12 +324,13 @@ class AllelesMutationsSearcher(
             return true
         }
 
-        override fun hashCode(): Int {
-            return mutationGroups.hashCode()
-        }
+        override fun hashCode(): Int = mutationGroups.hashCode()
 
-        override fun toString(): String {
-            return mutationGroups.toString()
-        }
+        override fun toString(): String = mutationGroups.toString()
     }
+
+    private data class DiversityAndScore(
+        val diversity: Int,
+        val score: Double
+    )
 }

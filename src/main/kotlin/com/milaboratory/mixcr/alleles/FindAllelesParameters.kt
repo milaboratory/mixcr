@@ -70,9 +70,11 @@ data class FindAllelesParameters(
     )
     data class AlleleMutationsSearchParameters(
         /**
-         * Percentage to get top of alleles by diversity
+         * Percentage to get top of alleles by score.
+         * Score = diversity + coefficientForNaiveClonesInScore * diversityOfCloneThatNaiveByComplementaryGene
          */
-        val topByDiversity: Double,
+        val topByScore: Double,
+        val coefficientForNaiveClonesInScore: Double,
         /**
          * On decision about clone matching to allele will check relation between score penalties between the best and the next alleles.
          */

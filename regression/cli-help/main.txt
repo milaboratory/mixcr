@@ -49,5 +49,6 @@ Util commands:
   clonesDiff                 Calculates the difference between two .clns files.
   versionInfo                Output information about MiXCR version which generated the file.
   slice                      Slice vdjca|clns|clna|shmt file.
-  exportPreset               Export a preset file given the preset name and a set of mix-ins
+  exportPreset               Export a preset file given the preset name or source file and a set of
+                               mix-ins
   listPresets                Show all available presets

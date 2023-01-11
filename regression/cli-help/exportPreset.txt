@@ -20,7 +20,7 @@ Usage: mixcr exportPreset [--no-validation] [--add-step <step>] [--remove-step <
                           [--no-warnings] [--verbose] [--help] (--preset-name <preset> |
                           --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]... [preset_file.
                           (yaml|yml)]
-Export a preset file given the preset name and a set of mix-ins
+Export a preset file given the preset name or source file and a set of mix-ins
       [preset_file.(yaml|yml)]
                              Path where to write preset yaml file. Will write to output if omitted.
       --preset-name <preset> Preset name to export.
