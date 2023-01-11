@@ -25,6 +25,7 @@ import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import com.milaboratory.mixcr.basictypes.tag.TagType;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters;
@@ -193,9 +194,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
             listener.onPreClustered(majorClone, minorClone);
     }
 
-    void onClustered(CloneAccumulator majorClone, CloneAccumulator minorClone) {
+    void onClustered(CloneAccumulator majorClone, CloneAccumulatorPart minorCloneReminder) {
         if (listener != null)
-            listener.onClustered(majorClone, minorClone, parameters.isAddReadsCountOnClustering());
+            listener.onClustered(majorClone, minorCloneReminder, parameters.isAddReadsCountOnClustering());
     }
 
     /* Filtering events */
@@ -287,7 +288,9 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         // Calculating weight for clustering.
         // According to the tag structure number of reads or molecules will be used as weight.
         for (CloneAccumulator acc : cloneList)
-            acc.updateWeight(hasMoleculeTags);
+            acc.updateWeightAndPrefixes(sampleOrCellTagDepth, hasMoleculeTags);
+
+        // TODO parameter to run multiple rounds of clustering ?
 
         Clustering<CloneAccumulator, NucleotideSequence> clustering = new Clustering<>(cloneList,
                 object -> object.getSequence().getConcatenated().getSequence(),
@@ -297,22 +300,37 @@ public final class CloneAssembler implements CanReportProgress, AutoCloseable {
         List<Cluster<CloneAccumulator>> clusters = clustering.performClustering();
         clusteredClonesAccumulators = new ArrayList<>(clusters.size());
         idMapping = new TIntIntHashMap(cloneList.size());
-        for (int i = 0; i < clusters.size(); ++i) {
-            final Cluster<CloneAccumulator> cluster = clusters.get(i);
+        final AtomicInteger idx = new AtomicInteger(-1); // to be used inside lambda below
+        for (Cluster<CloneAccumulator> cluster : clusters) {
             final CloneAccumulator head = cluster.getHead();
-            idMapping.put(head.getCloneIndex(), i);
-            // i - new index of head clone
-            head.setCloneIndex(i);
+            clusteredClonesAccumulators.add(head);
+            final Set<TagTuple> headPrefixes = head.getSampleAndCellPrefixes();
+            idMapping.put(head.getCloneIndex(), idx.incrementAndGet());
+            // idx - new index of head clone
+            head.setCloneIndex(idx.get());
             // k - index to be set for all child clonotypes
-            final int k = ~i;
-            cluster.processAllChildren(child -> {
-                onClustered(head, child.getHead());
+            final int k = ~idx.get();
+            cluster.processAllChildren(childCluster -> {
+                CloneAccumulator child = childCluster.getHead();
+                CloneAccumulatorPart cut = child.subtractTags(sampleOrCellTagDepth, headPrefixes);
+                onClustered(head, cut);
                 if (parameters.isAddReadsCountOnClustering())
-                    head.mergeCounts(child.getHead());
-                idMapping.put(child.getHead().getCloneIndex(), k);
+                    head.mergeCounts(cut);
+
+                if (cut.isComplete())
+                    // If clonotype was completely consumed, marking its alignments accordingly
+                    idMapping.put(child.getCloneIndex(), k);
+                else {
+                    // If child was not completely consumed by the head clonotype, reminder part
+                    // will be added to the clustered accumulators
+                    idMapping.put(child.getCloneIndex(), idx.incrementAndGet());
+                    child.setCloneIndex(idx.get());
+                    clusteredClonesAccumulators.add(child);
+                }
+
                 return true;
             });
-            clusteredClonesAccumulators.add(head);
+
         }
 
         this.progressReporter = null;

@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.assembler;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonMerge;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.milaboratory.core.tree.TreeSearchParameters;
 
@@ -21,10 +21,10 @@ import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonIgnoreProperties({"minimalTagSetOverlap"})
 public final class CloneClusteringParameters implements java.io.Serializable {
     private int searchDepth;
     private int allowedMutationsInNRegions;
-    private double minimalTagSetOverlap;
     private TreeSearchParameters searchParameters;
     private ClusteringFilter clusteringFilter;
 
@@ -32,12 +32,10 @@ public final class CloneClusteringParameters implements java.io.Serializable {
     public CloneClusteringParameters(
             @JsonProperty("searchDepth") int searchDepth,
             @JsonProperty("allowedMutationsInNRegions") int allowedMutationsInNRegions,
-            @JsonProperty("minimalTagSetOverlap") double minimalTagSetOverlap,
             @JsonProperty("searchParameters") TreeSearchParameters searchParameters,
             @JsonProperty("clusteringFilter") ClusteringFilter clusteringFilter) {
         this.searchDepth = searchDepth;
         this.allowedMutationsInNRegions = allowedMutationsInNRegions;
-        this.minimalTagSetOverlap = minimalTagSetOverlap;
         this.searchParameters = searchParameters;
         this.clusteringFilter = clusteringFilter;
     }
@@ -78,18 +76,9 @@ public final class CloneClusteringParameters implements java.io.Serializable {
         return this;
     }
 
-    public double getMinimalTagSetOverlap() {
-        return minimalTagSetOverlap;
-    }
-
-    public CloneClusteringParameters setMinimalTagSetOverlap(double minimalTagSetOverlap) {
-        this.minimalTagSetOverlap = minimalTagSetOverlap;
-        return this;
-    }
-
     @Override
     public CloneClusteringParameters clone() {
-        return new CloneClusteringParameters(searchDepth, allowedMutationsInNRegions, minimalTagSetOverlap, searchParameters, clusteringFilter);
+        return new CloneClusteringParameters(searchDepth, allowedMutationsInNRegions, searchParameters, clusteringFilter);
     }
 
     @Override
@@ -99,13 +88,12 @@ public final class CloneClusteringParameters implements java.io.Serializable {
         CloneClusteringParameters that = (CloneClusteringParameters) o;
         return getSearchDepth() == that.getSearchDepth() &&
                 getAllowedMutationsInNRegions() == that.getAllowedMutationsInNRegions() &&
-                Double.compare(that.minimalTagSetOverlap, minimalTagSetOverlap) == 0 &&
                 Objects.equals(getSearchParameters(), that.getSearchParameters()) &&
                 Objects.equals(getClusteringFilter(), that.getClusteringFilter());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSearchDepth(), getAllowedMutationsInNRegions(), minimalTagSetOverlap, getSearchParameters(), getClusteringFilter());
+        return Objects.hash(getSearchDepth(), getAllowedMutationsInNRegions(), getSearchParameters(), getClusteringFilter());
     }
 }

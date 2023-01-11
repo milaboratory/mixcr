@@ -14,6 +14,10 @@ package com.milaboratory.mixcr.basictypes.tag;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
+import java.util.Collections;
+import java.util.Set;
+import java.util.function.Predicate;
+
 /**
  *
  */
@@ -96,6 +100,22 @@ public final class TagCountAggregator {
         return this;
     }
 
+    public double sum() {
+        if (isEmpty())
+            return 0.0;
+
+        if (singletonTuple != null)
+            return singletonCount;
+
+        double s = 0.0;
+        TObjectDoubleIterator<TagTuple> it = tagMap.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            s += it.value();
+        }
+        return s;
+    }
+
     public int size() {
         if (singletonTuple == null) {
             if (tagMap == null)
@@ -126,6 +146,51 @@ public final class TagCountAggregator {
                 totalIntersection += v;
         }
         return totalIntersection / minorTotal;
+    }
+
+    public Set<TagTuple> getPrefixSet(int depth) {
+        if (depth == 0)
+            return Collections.singleton(TagTuple.NO_TAGS);
+        else
+            return createTagCounter().reduceToLevel(depth).tuples();
+    }
+
+    /** Returns aggregator containing the subtracted part */
+    public TagCountAggregator filterKeys(Predicate<TagTuple> predicate) {
+        TagCountAggregator cut = new TagCountAggregator();
+        if (isEmpty())
+            return cut;
+
+        if (singletonTuple != null) {
+            if (!predicate.test(singletonTuple)) {
+                cut.add(singletonTuple, singletonCount);
+                singletonTuple = null;
+                singletonCount = Double.NaN;
+            }
+            return cut;
+        }
+
+        TObjectDoubleIterator<TagTuple> it = tagMap.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            if (!predicate.test(it.key())) {
+                cut.add(it.key(), it.value());
+                it.remove();
+            }
+        }
+
+        // Downgrading the state of aggregator if only one or zero elements left after filtering
+        if (tagMap.size() == 1) {
+            it = tagMap.iterator();
+            it.advance();
+            singletonTuple = it.key();
+            singletonCount = it.value();
+            tagMap = null;
+        } else if (tagMap.isEmpty()) {
+            tagMap = null;
+        }
+
+        return cut;
     }
 
     private TagCount createTagCounter() {

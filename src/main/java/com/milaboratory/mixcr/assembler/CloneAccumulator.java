@@ -23,11 +23,14 @@ import com.milaboratory.mixcr.basictypes.ClonalSequence;
 import com.milaboratory.mixcr.basictypes.GeneAndScore;
 import com.milaboratory.mixcr.basictypes.HasRelativeMinScore;
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGeneId;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class CloneAccumulator {
     VDJCGeneAccumulator geneAccumulator = new VDJCGeneAccumulator();
@@ -37,9 +40,11 @@ public final class CloneAccumulator {
     private long coreCount = 0, mappedCount = 0, initialCoreCount = -1;
     private volatile int cloneIndex = -1;
     final Range[] nRegions;
-    final TagCountAggregator tagBuilder = new TagCountAggregator();
+    final TagCountAggregator tagAggregator = new TagCountAggregator();
     /** This weight is updated right before clustering, and used in statistical testing during PCR/RT error correction */
     private long weight = -1;
+    /** Updated before clustering and used to calculate sample/cell intersection during error correction */
+    private Set<TagTuple> sampleAndCellPrefixes = null;
 
     public CloneAccumulator(ClonalSequence sequence, Range[] nRegions, QualityAggregationType qualityAggregationType) {
         this.sequence = sequence;
@@ -131,22 +136,56 @@ public final class CloneAccumulator {
         return mappedCount;
     }
 
+    public TagCountAggregator getTagAggregator() {
+        return tagAggregator;
+    }
+
     public long getWeight() {
         assert weight != -1;
         return weight;
     }
 
-    public void updateWeight(boolean hasMoleculeTags) {
+    public Set<TagTuple> getSampleAndCellPrefixes() {
+        return sampleAndCellPrefixes;
+    }
+
+    public void updateWeightAndPrefixes(int sampleCellDepth, boolean hasMoleculeTags) {
         if (hasMoleculeTags)
-            weight = tagBuilder.size();
+            weight = tagAggregator.size();
         else
             weight = getCount();
+
+        sampleAndCellPrefixes = tagAggregator.getPrefixSet(sampleCellDepth);
+    }
+
+    private static final Set<TagTuple> noTagsSet = Collections.singleton(TagTuple.NO_TAGS);
+
+    public CloneAccumulatorPart subtractTags(int sampleCellDepth, Set<TagTuple> prefixes) {
+        if (noTagsSet.equals(prefixes))
+            return new CloneAccumulatorPart(this);
+        double sumBeforeIntersection = tagAggregator.sum();
+        TagCountAggregator cut = tagAggregator.filterKeys(t -> prefixes.contains(t.keyPrefix(sampleCellDepth)));
+        if (tagAggregator.isEmpty())
+            return new CloneAccumulatorPart(this);
+        double cutShare = cut.sum() / sumBeforeIntersection;
+        CloneAccumulatorPart cCut = new CloneAccumulatorPart(this, cut,
+                (long) (coreCount * cutShare),
+                (long) (mappedCount * cutShare));
+        coreCount -= cCut.getCoreCount();
+        mappedCount -= cCut.getMappedCount();
+        return cCut;
     }
 
     public void mergeCounts(CloneAccumulator acc) {
         coreCount += acc.coreCount;
         mappedCount += acc.mappedCount;
-        tagBuilder.add(acc.tagBuilder);
+        tagAggregator.add(acc.tagAggregator);
+    }
+
+    public void mergeCounts(CloneAccumulatorPart part) {
+        coreCount += part.getCoreCount();
+        mappedCount += part.getMappedCount();
+        tagAggregator.add(part.getTagAggregator());
     }
 
     public void aggregateGeneInfo(HasRelativeMinScore geneParameters) {
@@ -162,7 +201,7 @@ public final class CloneAccumulator {
             coreCount += preClone.getNumberOfReads();
 
             // TODO or core tag count ???
-            tagBuilder.add(preClone.getFullTagCount());
+            tagAggregator.add(preClone.getFullTagCount());
 
             // Accumulate information about V-D-J alignments only for strictly clustered reads
             // (only for core clonotypes members)

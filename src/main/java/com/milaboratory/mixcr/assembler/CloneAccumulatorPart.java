@@ -11,23 +11,29 @@
  */
 package com.milaboratory.mixcr.assembler;
 
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
+
 import java.util.Objects;
 
-public final class CloneAccumulatorReminder {
+public final class CloneAccumulatorPart {
     private final CloneAccumulator parent;
     private final boolean complete;
+    private final TagCountAggregator tagAggregator;
     private final long coreCount, mappedCount;
 
-    public CloneAccumulatorReminder(CloneAccumulator parent) {
+    public CloneAccumulatorPart(CloneAccumulator parent) {
         this.parent = parent;
         this.complete = true;
+        this.tagAggregator = parent.getTagAggregator();
         this.coreCount = parent.getCoreCount();
         this.mappedCount = parent.getMappedCount();
     }
 
-    public CloneAccumulatorReminder(CloneAccumulator parent, long coreCount, long mappedCount) {
+    public CloneAccumulatorPart(CloneAccumulator parent, TagCountAggregator tagAggregator,
+                                long coreCount, long mappedCount) {
         this.parent = parent;
         this.complete = false;
+        this.tagAggregator = tagAggregator;
         this.coreCount = parent.getCoreCount();
         this.mappedCount = parent.getMappedCount();
     }
@@ -36,6 +42,7 @@ public final class CloneAccumulatorReminder {
         return parent;
     }
 
+    /** True if part represents the whole parent clonotype accumulator */
     public boolean isComplete() {
         return complete;
     }
@@ -48,16 +55,24 @@ public final class CloneAccumulatorReminder {
         return mappedCount;
     }
 
+    public long getCount() {
+        return coreCount + mappedCount;
+    }
+
+    public TagCountAggregator getTagAggregator() {
+        return tagAggregator;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CloneAccumulatorReminder that = (CloneAccumulatorReminder) o;
-        return complete == that.complete && coreCount == that.coreCount && mappedCount == that.mappedCount && parent.equals(that.parent);
+        CloneAccumulatorPart that = (CloneAccumulatorPart) o;
+        return complete == that.complete && coreCount == that.coreCount && mappedCount == that.mappedCount && parent.equals(that.parent) && tagAggregator.equals(that.tagAggregator);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(parent, complete, coreCount, mappedCount);
+        return Objects.hash(parent, complete, tagAggregator, coreCount, mappedCount);
     }
 }

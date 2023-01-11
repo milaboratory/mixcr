@@ -36,7 +36,7 @@ public class CloneAssemblerParametersTest {
         CloneAssemblerParameters params = new CloneAssemblerParameters(
                 new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 QualityAggregationType.Average,
-                new CloneClusteringParameters(2, 1, -1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
+                new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, true, false,
                 0.4, 2.0, 2.0, true, (byte) 20, .8, "2", (byte) 15, null);
 
@@ -65,7 +65,7 @@ public class CloneAssemblerParametersTest {
 
         CloneAssemblerParameters params = new CloneAssemblerParameters(new GeneFeature[]{GeneFeature.FR1, GeneFeature.CDR3}, 12,
                 QualityAggregationType.Average,
-                new CloneClusteringParameters(2, 1, -1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
+                new CloneClusteringParameters(2, 1,  TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(1.0E-6)),
                 factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2of6", (byte) 15, null);
 
         String str = GlobalObjectMappers.getPretty().writeValueAsString(params);
