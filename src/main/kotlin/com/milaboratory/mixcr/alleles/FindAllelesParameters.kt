@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -14,8 +14,6 @@ package com.milaboratory.mixcr.alleles
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonTypeName
 import com.milaboratory.mixcr.util.ParametersPresets
 
 @JsonAutoDetect(
@@ -87,8 +85,7 @@ data class FindAllelesParameters(
          * Alleles will be filtered by min count of clones that are naive by complementary gene
          */
         val minCountOfNaiveClonesToAddAllele: Int,
-        val diversityThresholds: DiversityThresholds,
-        val regressionFilter: RegressionFilter
+        val diversityThresholds: DiversityThresholds
     ) {
 
         data class DiversityThresholds(
@@ -105,68 +102,6 @@ data class FindAllelesParameters(
              */
             val diversityForSkipTestForRatioForZeroAllele: Double,
         )
-
-        @JsonTypeInfo(
-            use = JsonTypeInfo.Id.NAME,
-            property = "type"
-        )
-        sealed interface RegressionFilter {
-            @JsonTypeName("noop")
-            class NoOP : RegressionFilter {
-                override fun equals(other: Any?): Boolean = other is NoOP
-                override fun hashCode(): Int = 0
-            }
-
-            sealed class Filter : RegressionFilter {
-                /**
-                 * Window size that will be used for build regression of mutations frequency vs count of mutations
-                 */
-                abstract val windowSizeForRegression: Int
-                /**
-                 * Maximum absent points in a window to build regression
-                 */
-                abstract val allowedSkippedPointsInRegression: Int
-                /**
-                 * Mutations will be considered as a candidate for allele mutation if p-value of t-test of mutation frequency regression will be more than this parameter
-                 */
-                abstract val minPValue: Double
-
-                /**
-                 * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter and slope exists
-                 */
-                abstract val minYInterceptForHeterozygous: Double
-
-                /**
-                 * Mutations will be considered as a candidate for allele mutation if y-intersect of mutation frequency regression will be more than this parameter and no slope
-                 */
-                abstract val minYInterceptForHomozygous: Double
-
-                /**
-                 * Max slope for test that mutation is a part of homozygous allele
-                 */
-                abstract val maxSlopeForHomozygous: Double
-            }
-
-            @JsonTypeName("byCount")
-            class ByCount(
-                override val windowSizeForRegression: Int,
-                override val allowedSkippedPointsInRegression: Int,
-                override val minPValue: Double,
-                override val minYInterceptForHeterozygous: Double,
-                override val minYInterceptForHomozygous: Double,
-                override val maxSlopeForHomozygous: Double,
-            ) : Filter()
-
-            @JsonTypeName("byDiversity")
-            class ByDiversity(
-                override val windowSizeForRegression: Int,
-                override val allowedSkippedPointsInRegression: Int,
-                override val minPValue: Double,
-                override val minYInterceptForHeterozygous: Double,
-                override val minYInterceptForHomozygous: Double,
-                override val maxSlopeForHomozygous: Double,
-            ) : Filter()
-        }
     }
 
     companion object {

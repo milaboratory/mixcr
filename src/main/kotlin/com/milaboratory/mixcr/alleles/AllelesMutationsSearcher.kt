@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -20,13 +20,10 @@ import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AllelesMutationsSearcher.Allele.Companion.ZERO_ALLELE
 import com.milaboratory.mixcr.alleles.CloneDescription.MutationGroup
-import com.milaboratory.mixcr.alleles.FindAllelesParameters.AlleleMutationsSearchParameters.RegressionFilter
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import io.repseq.core.VDJCGeneId
-import org.apache.commons.math3.stat.inference.TTest
-import org.apache.commons.math3.stat.regression.SimpleRegression
-import kotlin.math.absoluteValue
+import kotlin.math.ceil
 import kotlin.math.floor
 
 
@@ -35,16 +32,23 @@ class AllelesMutationsSearcher(
     private val scoring: AlignmentScoring<NucleotideSequence>,
     private val sequence1: NucleotideSequence,
     private val parameters: FindAllelesParameters.AlleleMutationsSearchParameters,
-    private val diversityThresholds: DiversityThresholds
+    maxPossibleDiversity: Int
 ) : AllelesSearcher {
     private val maxScore = scoring.maximalMatchScore * sequence1.size()
+
+    private val minDiversityForAllele =
+        ceil(parameters.diversityThresholds.minDiversityForAllele * maxPossibleDiversity).toInt()
+    private val minDiversityForMutation =
+        ceil(parameters.diversityThresholds.minDiversityForMutation * maxPossibleDiversity)
+    private val diversityForSkipTestForRatioForZeroAllele =
+        ceil(parameters.diversityThresholds.diversityForSkipTestForRatioForZeroAllele * maxPossibleDiversity)
 
     override fun search(geneId: VDJCGeneId, clones: List<CloneDescription>): List<AllelesSearcher.Result> {
         val searchHistory = reportBuilder.historyForBCells(
             geneId.name,
             clones.size,
             clones.diversity(),
-            diversityThresholds.minDiversityForAllele
+            minDiversityForAllele
         )
         val allMutations = clones.flatMap { it.mutationGroups }.distinct()
         searchHistory.differentMutationsCount = allMutations.size
@@ -54,15 +58,14 @@ class AllelesMutationsSearcher(
             .filter { mutation ->
                 clones
                     .filter { mutation in it.mutationGroups }
-                    .diversity() > diversityThresholds.minDiversityForMutation
+                    .diversity() > minDiversityForMutation
             }
         searchHistory.mutationsWithEnoughDiversityCount = mutationsFilteredByDiversity.size
 
-        val possibleAlleleMutations = filterMutationsCandidatesByRegression(clones, mutationsFilteredByDiversity)
-        val foundAlleles = chooseAndGroupMutationsByAlleles(possibleAlleleMutations.toSet(), clones)
+        val foundAlleles = chooseAndGroupMutationsByAlleles(mutationsFilteredByDiversity.toSet(), clones)
 
         val withZeroAllele = addZeroAlleleIfNeeded(foundAlleles, clones, searchHistory)
-        //TODO try remove (or may be only for zero allele)
+        // TODO try remove (or may be only for zero allele)
         val enriched = enrichAllelesWithMutationsThatExistsInAlmostAllClones(withZeroAllele, clones)
         enriched
             .map { it.allele }
@@ -104,40 +107,6 @@ class AllelesMutationsSearcher(
         }.map { AllelesSearcher.Result(it.mutations) }
     }
 
-    private fun filterMutationsCandidatesByRegression(
-        clones: List<CloneDescription>,
-        candidates: List<MutationGroup>
-    ): List<MutationGroup> = when (parameters.regressionFilter) {
-        is RegressionFilter.NoOP -> candidates
-        is RegressionFilter.Filter -> {
-            val pointSupplier: List<CloneDescription>.() -> Map<Int, Int> = when (parameters.regressionFilter) {
-                is RegressionFilter.ByCount -> {
-                    {
-                        groupingBy { it.mutationGroups.size }.eachCount()
-                    }
-                }
-                is RegressionFilter.ByDiversity -> {
-                    {
-                        groupBy { it.mutationGroups.size }
-                            .mapValues { it.value.diversity() }
-                    }
-                }
-            }
-
-            val byMutationsCount = clones.pointSupplier()
-
-            candidates.filter { mutation ->
-                isItCandidateToAlleleMutation(
-                    byMutationsCount,
-                    clones
-                        .filter { clone -> mutation in clone.mutationGroups }
-                        .pointSupplier(),
-                    parameters.regressionFilter
-                )
-            }
-        }
-    }
-
     /**
      * Find and add mutations that exist in almost all clones of an allele
      */
@@ -160,7 +129,7 @@ class AllelesMutationsSearcher(
 
     private fun AlleleWithClones.mutationsThatExistsInAlmostAllClones(): Mutations<NucleotideSequence> {
         val diversityOfAll = clones.diversity()
-        if (diversityOfAll < diversityThresholds.minDiversityForAllele) return EMPTY_NUCLEOTIDE_MUTATIONS
+        if (diversityOfAll < minDiversityForAllele) return EMPTY_NUCLEOTIDE_MUTATIONS
         val boundary = floor(diversityOfAll * parameters.diversityRatioToSearchCommonMutationsInAnAllele).toInt()
         val diversityOfMutations = clones
             .flatMap { clone ->
@@ -172,6 +141,7 @@ class AllelesMutationsSearcher(
                         allele.mutations.mutate(sequence1),
                         clone.mutations.mutate(sequence1)
                     ).absoluteMutations
+
                     else -> allele.mutations.invert().combineWith(clone.mutations)
                 }
                 MutationGroup.groupMutationsByPositions(mutationsFromAllele).map { it to clone }
@@ -197,7 +167,7 @@ class AllelesMutationsSearcher(
     ): Collection<Allele> = when {
         foundAlleles.isEmpty() -> listOf(ZERO_ALLELE)
         foundAlleles.any { it == ZERO_ALLELE } -> foundAlleles
-        //check if there are enough clones that more close to zero allele
+        // check if there are enough clones that more close to zero allele
         else -> {
             val clonesByAlleles = alignClonesOnAlleles(clones, foundAlleles + ZERO_ALLELE)
             val alleleDiversities = clonesByAlleles
@@ -211,13 +181,13 @@ class AllelesMutationsSearcher(
                 }
             val diversityOfZeroAllele = alleleDiversities[ZERO_ALLELE] ?: 0
             when {
-                //TODO try remove
+                // TODO try remove
                 // Zero allele is not represented enough
-                diversityOfZeroAllele < diversityThresholds.minDiversityForAllele -> foundAlleles
+                diversityOfZeroAllele < minDiversityForAllele -> foundAlleles
                 else -> {
                     val boundary = alleleDiversities.values.maxOrNull()!! * (1.0 - parameters.topByDiversity)
                     val result = alleleDiversities
-                        .filter { it.value >= boundary || it.value >= diversityThresholds.diversityForSkipTestForRatioForZeroAllele }
+                        .filter { it.value >= boundary || it.value >= diversityForSkipTestForRatioForZeroAllele }
                         .keys
                     if (ZERO_ALLELE in result) {
                         searchHistory.alleles.addedKnownAllele = ZERO_ALLELE.mutationGroups
@@ -255,7 +225,7 @@ class AllelesMutationsSearcher(
                 }
                 .sortedWith(
                     Comparator.comparingDouble { (_, score): Pair<Allele, Double> -> score }
-                        //prefer to align on not zero allele
+                        // prefer to align on not zero allele
                         .then(Comparator.comparingInt { (allele, _) -> if (allele == ZERO_ALLELE) 1 else 0 })
                 )
             val (alignedOn, penalty) = allelesWithScore.first()
@@ -268,74 +238,12 @@ class AllelesMutationsSearcher(
         .groupBy({ it.first }, { it.second })
         .map { AlleleWithClones(it.key, it.value) }
 
-    /**
-     * Build regression for data:
-     * x = mutations count in a sequence
-     * y = (count of clones with `mutation` in mutations and mutations.size() == x) / (count of clones mutations.size() == x)
-     * i.e. y - frequency of `mutation` in clones that have x mutations
-     *
-     * Regression starts from x point with max count of clones that contains `mutation`.
-     * If there are sufficient data and regression is statistical significant, compare y-intersect with parameter.
-     *
-     * For allele mutations this regression is horizontal or points downwards. For hotspots it points upwards.
-     * That's because in SHM process there are more and more different mutations in more mutated sequences, but
-     * allele mutations remains more or less constant (apart from point with allele clones without mutations)
-     */
-    private fun isItCandidateToAlleleMutation(
-        byMutationsCount: Map<Int, Int>,
-        byMutationsCountWithTheMutation: Map<Int, Int>,
-        filter: RegressionFilter.Filter
-    ): Boolean {
-        val mutationCountWithMaxClonesCount = byMutationsCountWithTheMutation.entries
-            .maxByOrNull { it.value }!!
-            .key
-
-        val regression = SimpleRegression()
-
-        val xPoints = (0 until filter.windowSizeForRegression)
-            .map { i -> i + mutationCountWithMaxClonesCount }
-            .filter { x ->
-                val pointValue = byMutationsCountWithTheMutation[x]
-                pointValue != null && pointValue != 0
-            }
-        if (filter.windowSizeForRegression - xPoints.size > filter.allowedSkippedPointsInRegression) {
-            return false
-        }
-
-        val y = DoubleArray(xPoints.size)
-        xPoints.forEachIndexed { i, x ->
-            val result = (byMutationsCountWithTheMutation[x] ?: 0) /
-                    (byMutationsCount[x]?.toDouble() ?: 1.0)
-            regression.addData(x.toDouble(), result)
-            y[i] = result
-        }
-
-        val regressionResults = regression.regress()
-
-        val a = regressionResults.getParameterEstimate(0)
-        val b = regressionResults.getParameterEstimate(1)
-
-        val estimate = DoubleArray(xPoints.size)
-        xPoints.forEachIndexed { i, x ->
-            estimate[i] = a + b * x
-        }
-
-        val pValue = TTest().tTest(estimate, y)
-
-        val intercept = a + b * (xPoints[0] - 1)
-        val isHomozygousAlleleMutation =
-            intercept > filter.minYInterceptForHomozygous && b.absoluteValue < filter.maxSlopeForHomozygous
-        val isHeterozygousAlleleMutation =
-            pValue >= filter.minPValue && intercept >= filter.minYInterceptForHeterozygous
-        return isHomozygousAlleleMutation || isHeterozygousAlleleMutation
-    }
-
     private fun chooseAndGroupMutationsByAlleles(
         mutations: Set<MutationGroup>,
         clones: List<CloneDescription>
     ): Collection<Allele> {
         val mutationSubsetsWithClones = clones.map { clone ->
-            //subsetOfAlleleMutations may be empty (zero allele)
+            // subsetOfAlleleMutations may be empty (zero allele)
             val subsetOfAlleleMutations = clone.mutationGroups.filter { it in mutations }
             Allele(subsetOfAlleleMutations) to clone
         }.groupBy({ it.first }) { it.second }
@@ -343,7 +251,7 @@ class AllelesMutationsSearcher(
         val mutationSubsetsWithDiversity = mutationSubsetsWithClones
             .filterValues { it.count { clone -> clone.naiveByComplimentaryGeneMutations } >= parameters.minCountOfNaiveClonesToAddAllele }
             .mapValues { it.value.diversity() }
-            .filterValues { it >= diversityThresholds.minDiversityForAllele }
+            .filterValues { it >= minDiversityForAllele }
 
         val filteredMutationSubsets = mutationSubsetsWithDiversity.keys
         if (filteredMutationSubsets.isEmpty()) return emptyList()
@@ -417,10 +325,4 @@ class AllelesMutationsSearcher(
             return mutationGroups.toString()
         }
     }
-
-    data class DiversityThresholds(
-        val minDiversityForMutation: Int,
-        val minDiversityForAllele: Int,
-        val diversityForSkipTestForRatioForZeroAllele: Int,
-    )
 }

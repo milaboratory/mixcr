@@ -16,10 +16,7 @@
         "diversityForSkipTestForRatioForZeroAllele": 0.1
       },
       "diversityRatioToSearchCommonMutationsInAnAllele": 0.95,
-      "minCountOfNaiveClonesToAddAllele": 2,
-      "regressionFilter": {
-        "type": "noop"
-      }
+      "minCountOfNaiveClonesToAddAllele": 2
     },
     "searchMutationsInCDR3": {
       "minClonesCount": 5,
