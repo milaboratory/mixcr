@@ -15,6 +15,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.milaboratory.mitool.refinement.gfilter.KeyedFilterReport;
 import com.milaboratory.mixcr.assembler.ClonalSequenceExtractionListener;
 import com.milaboratory.mixcr.assembler.CloneAccumulator;
+import com.milaboratory.mixcr.assembler.CloneAccumulatorPart;
 import com.milaboratory.mixcr.assembler.CloneAssemblerListener;
 import com.milaboratory.mixcr.assembler.preclone.PreClone;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReportBuilder;
@@ -105,11 +106,12 @@ public final class CloneAssemblerReportBuilder
     }
 
     @Override
-    public void onClustered(CloneAccumulator majorClone, CloneAccumulator minorClone, boolean countAdded) {
-        readsClustered.addAndGet(minorClone.getCount());
-        clonesClustered.incrementAndGet();
+    public void onClustered(CloneAccumulator majorClone, CloneAccumulatorPart minorCloneReminder, boolean countAdded) {
+        readsClustered.addAndGet(minorCloneReminder.getCount());
+        if (minorCloneReminder.isComplete())
+            clonesClustered.incrementAndGet();
         if (!countAdded)
-            readsInClones.addAndGet(-minorClone.getCount());
+            readsInClones.addAndGet(-minorCloneReminder.getCount());
     }
 
     @Override

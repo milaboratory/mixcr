@@ -18,7 +18,7 @@ import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.TreeSearchParameters;
-import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator;
+import com.milaboratory.mixcr.basictypes.tag.TagTuple;
 
 public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumulator, NucleotideSequence> {
     final CloneClusteringParameters parameters;
@@ -35,17 +35,21 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
                                    NeighborhoodIterator<NucleotideSequence,
                                            CloneAccumulator[]> iterator) {
         Mutations<NucleotideSequence> currentMutations = iterator.getCurrentMutations();
-        if (!cluster.getHead().getSequence().isCompatible(minorObject.getSequence(), currentMutations))
-            return false;
-        double minimalTagSetOverlap = parameters.getMinimalTagSetOverlap();
-        if (minimalTagSetOverlap > 0) {
-            TagCountAggregator headTags = cluster.getHead().tagBuilder;
-            TagCountAggregator minorTags = minorObject.tagBuilder;
-            if (headTags.intersectionFractionOf(minorTags) >= minimalTagSetOverlap)
-                return true;
-        }
+        CloneAccumulator head = cluster.getHead();
 
-        Range[] nRegions = cluster.getHead().getNRegions();
+        if (!head.getSequence().isCompatible(minorObject.getSequence(), currentMutations))
+            return false;
+
+        boolean prefixesIntersects = false;
+        for (TagTuple sampleAndCellPrefix : minorObject.getSampleAndCellPrefixes())
+            if (head.getSampleAndCellPrefixes().contains(sampleAndCellPrefix)) {
+                prefixesIntersects = true;
+                break;
+            }
+        if (!prefixesIntersects)
+            return false;
+
+        Range[] nRegions = head.getNRegions();
         int nMismatches = parameters.getAllowedMutationsInNRegions();
         out:
         for (Range nRegion : nRegions)
@@ -54,10 +58,10 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
                     if (--nMismatches < 0)
                         return false;
                     else continue out;
-        return parameters.getClusteringFilter().allow(currentMutations, cluster.getHead().getCount(),
-                minorObject.getCount(), cluster.getHead().getSequence())
-                && cloneAssembler.extractSignature(cluster.getHead()).matchHits(
-                minorObject);
+        return parameters.getClusteringFilter().allow(currentMutations,
+                head.getWeight(), minorObject.getWeight(),
+                head.getSequence())
+                && cloneAssembler.extractSignature(head).matchHits(minorObject);
     }
 
     @Override
@@ -72,6 +76,6 @@ public class CloneClusteringStrategy implements ClusteringStrategy<CloneAccumula
 
     @Override
     public int compare(CloneAccumulator o1, CloneAccumulator o2) {
-        return Long.compare(o1.getCount(), o2.getCount());
+        return Long.compare(o1.getWeight(), o2.getWeight());
     }
 }

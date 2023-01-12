@@ -241,7 +241,7 @@ public final class CloneFactory {
     }
 
     public Clone create(int id, CloneAccumulator accumulator) {
-        return create(id, accumulator.getCount(), accumulator.genes, accumulator.tagBuilder.createAndDestroy(), accumulator.getSequence().sequences, null);
+        return create(id, accumulator.getCount(), accumulator.genes, accumulator.tagAggregator.createAndDestroy(), accumulator.getSequence().sequences, null);
     }
 
     private static boolean containsD(GeneFeature feature) {
