@@ -27,6 +27,32 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 
+/**
+ * 1. Collect all individual mutations in the group. Subsequent insertions or deletions viewed as one element.
+ *
+ * 2. Filter all mutations by diversity of clones containing this mutation.
+ *
+ * 3. Group clones by allele candidates: remove all filtered out mutations from clones and group them by left mutations.
+ * Result is allele candidates and clones that contains all mutations of this candidate.
+ * Some allele candidates will not have any mutations.
+ *
+ * 4. Filter candidates by `diversity` and `naiveByComplimentaryGeneMutations` clones count.
+ *
+ * 5. Group clones by allele candidates.
+ * If clone is too far from any candidate than it will not be assigned to any group.
+ * Sort allele candidates by score of its clones and get top allele candidates.
+ *
+ * Score:
+ *
+ * diversity + coefficientForNaiveClonesInScore * diversityOfNaiveByComplimentaryGeneMutations
+ *
+ * 6. If there is no allele without mutations in found alleles, then try to add it.
+ * Group clones by allele candidates with added (as in 6.). Get the top alleles or with high score.
+ *
+ * 7. Enrich alleles with mutations that exist in almost all clones
+ *
+ * 8. Filter alleles by `naiveByComplimentaryGeneMutations` clones count
+ */
 class AllelesMutationsSearcher(
     private val reportBuilder: FindAllelesReport.Builder,
     private val scoring: AlignmentScoring<NucleotideSequence>,

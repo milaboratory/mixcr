@@ -174,22 +174,8 @@ class AllelesBuilder(
         reportBuilder.zygote(foundAlleles.size)
 
         val result = foundAlleles.map { foundAllele ->
-            val naiveClones = clusterByTheSameGene.asSequence()
-                .filter { clone -> clone.getBestHit(geneType).mutationsWithoutCDR3() == foundAllele.allele }
-                .filter { clone -> clone.getBestHit(complimentaryGeneType(geneType)).mutationsWithoutCDR3().isEmpty }
-                .toList()
-            // TODO calculate mutationsInCDR3 as separate action to get more precise filter by clone.getBestHit(complimentaryGeneType(geneType)).mutations
-            val mutationsInCDR3 = when {
-                searchMutationsInCDR3Parameters != null -> mutationsInCDR3(
-                    geneType,
-                    sequence1,
-                    naiveClones,
-                    searchMutationsInCDR3Parameters,
-                    geneDiversity[complimentaryGeneType(geneType)]
-                )
-
-                else -> MutationsInCDR3.empty
-            }
+            val mutationsInCDR3 =
+                foundAllele.mutationsInCDR3(clusterByTheSameGene, geneType)
             buildAllele(
                 bestHit,
                 foundAllele.allele,
@@ -230,6 +216,32 @@ class AllelesBuilder(
         }
 
         return result
+    }
+
+    /**
+     * For each allele (even if it is the same as germline), try to find mutations in CDR3:
+     */
+    private fun AllelesSearcher.Result.mutationsInCDR3(
+        clusterByTheSameGene: List<Clone>,
+        geneType: GeneType
+    ): MutationsInCDR3 {
+        val sequence1 = clusterByTheSameGene.first().getBestHit(geneType).alignments.filterNotNull().first().sequence1
+        val naiveClones = clusterByTheSameGene.asSequence()
+            .filter { clone -> clone.getBestHit(geneType).mutationsWithoutCDR3() == allele }
+            .filter { clone -> clone.getBestHit(complimentaryGeneType(geneType)).mutationsWithoutCDR3().isEmpty }
+            .toList()
+        // TODO calculate mutationsInCDR3 as separate action to get more precise filter by clone.getBestHit(complimentaryGeneType(geneType)).mutations
+        return when {
+            searchMutationsInCDR3Parameters != null -> mutationsInCDR3(
+                geneType,
+                sequence1,
+                naiveClones,
+                searchMutationsInCDR3Parameters,
+                geneDiversity[complimentaryGeneType(geneType)]
+            )
+
+            else -> MutationsInCDR3.empty
+        }
     }
 
     private fun buildAllele(
@@ -303,9 +315,15 @@ class AllelesBuilder(
     }
 
     /**
-     * Test positions in CDR3 of naive clones.
-     * Diversity of naive clones must be more than `parameters.minDiversityForAllele`
-     * Register allele mutation if letter is the same in all naive clones in this position (stop on found difference)
+     * Use for search only naive clones that have no mutations in both V and J genes.
+     *
+     * For each position in CDR3 starting from CDR3Begin for V and from CDR3End for J:
+     *
+     *    1. Group clones by letter in this position.
+     *    2. Test most frequent letter: if clones count with this letter or count of uniq complementary genes are less than thresholds, then stop search.
+     *    3. For next loop step use only clones that have most frequent letter in this position.
+     *
+     * Compare found letters with germline
      */
     private fun mutationsInCDR3(
         geneType: GeneType,
