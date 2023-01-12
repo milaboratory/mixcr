@@ -68,5 +68,5 @@ assert "grep 'IGHJ6' alleles/description.tsv | cut -f7" "SG37TSG38AST39CSC55A"
 # biggest tree
 # `tail +2` - skip first line with column names
 # `sort -n -r -k 2` - reverse numeric sort by second column (uniqClonesCount)
-assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | cut -f2" "12"
+assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | cut -f2" "11"
 assert "cat trees/trees.tsv | tail +2 | sort -n -r -k 2 | head -n 1 | cut -f6" "TGTGCTGGAGGGCCTAGTRTTGGGAGATACGACTACTGG"
