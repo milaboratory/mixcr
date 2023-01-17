@@ -715,7 +715,7 @@ object AssembleContigsMixins {
                     FullSeqAssemblerParameters::assemblingRegions.setTo(features)
                     FullSeqAssemblerParameters::subCloningRegions.setTo(features)
                     FullSeqAssemblerParameters::isAlignedRegionsOnly.setTo(true)
-                    FullSeqAssemblerParameters::postFiltering.setTo(PostFiltering.OnlyFullyDefined)
+                    FullSeqAssemblerParameters::postFiltering.setTo(PostFiltering.OnlyUnambiguouslyCovering(features))
                 }
             }
         }
