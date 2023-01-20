@@ -227,7 +227,6 @@ assemble:
     cloneClusteringParameters:
       searchDepth: 2
       allowedMutationsInNRegions: 1
-      minimalTagSetOverlap: -1.0
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
