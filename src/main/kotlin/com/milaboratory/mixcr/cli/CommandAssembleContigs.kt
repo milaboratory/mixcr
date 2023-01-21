@@ -344,11 +344,11 @@ object CommandAssembleContigs {
                 }
             }
             assert(reportBuilder.finalCloneCount == totalClonesCount)
-            assert(
-                cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyDefined ||
-                        cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyAssembled ||
-                        reportBuilder.finalCloneCount >= reportBuilder.initialCloneCount
-            )
+            // assert(
+            //     cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyDefined ||
+            //             cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyAssembled ||
+            //             reportBuilder.finalCloneCount >= reportBuilder.initialCloneCount
+            // )
             val clones: MutableList<Clone> = ArrayList(totalClonesCount)
             PrimitivI(BufferedInputStream(FileInputStream(outputFile.toFile()))).use { tmpIn ->
                 IOUtil.registerGeneReferences(tmpIn, genes, header.featuresToAlign)
@@ -360,7 +360,7 @@ object CommandAssembleContigs {
             val allFullyCoveredBy = if (
                 cmdParams.parameters.assemblingRegions != null &&
                 cmdParams.parameters.subCloningRegions == cmdParams.parameters.assemblingRegions &&
-                cmdParams.parameters.postFiltering == PostFiltering.OnlyFullyDefined
+                cmdParams.parameters.postFiltering == PostFiltering.OnlyUnambiguouslyCovering(cmdParams.parameters.assemblingRegions)
             ) {
                 cmdParams.parameters.assemblingRegions
             } else {

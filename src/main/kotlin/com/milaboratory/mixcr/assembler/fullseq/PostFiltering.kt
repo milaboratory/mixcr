@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.assembler.fullseq
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.GeneFeatures
 
 
 /** Post filtering clonotype predicate */
@@ -35,6 +36,7 @@ sealed interface PostFiltering {
 
     /** Only clonotypes completely covering [.assemblingRegions] will be retained. */
     @JsonTypeName("OnlyFullyAssembled")
+    @Deprecated("Use OnlyCovering")
     object OnlyFullyAssembled : PostFiltering {
         override fun getFilter(allParameters: FullSeqAssemblerParameters) = run {
             val features = allParameters.assemblingRegions!!.features
@@ -44,6 +46,7 @@ sealed interface PostFiltering {
 
     /** Only clonotypes completely covering [.assemblingRegions] and having no "N" letters will be retained. */
     @JsonTypeName("OnlyFullyDefined")
+    @Deprecated("Use OnlyUnambiguouslyCovering")
     object OnlyFullyDefined : PostFiltering {
         override fun getFilter(allParameters: FullSeqAssemblerParameters) = run {
             val features = allParameters.assemblingRegions!!.features
@@ -57,6 +60,22 @@ sealed interface PostFiltering {
         override fun getFilter(allParameters: FullSeqAssemblerParameters) =
             PostFilteringFunc { clone ->
                 clone.targets.sumOf { it.size() } >= minimalLength
+            }
+    }
+
+    /** Filter clonotypes that covers a certain gene feature */
+    @JsonTypeName("OnlyCovering")
+    data class OnlyCovering(val geneFeatures: GeneFeatures) : PostFiltering {
+        override fun getFilter(allParameters: FullSeqAssemblerParameters) =
+            PostFilteringFunc { clone -> geneFeatures.features.all { clone.isAvailable(it) } }
+    }
+
+    /** Filter clonotypes that covers a certain gene feature and have no wildcards in the region */
+    @JsonTypeName("OnlyUnambiguouslyCovering")
+    data class OnlyUnambiguouslyCovering(val geneFeatures: GeneFeatures) : PostFiltering {
+        override fun getFilter(allParameters: FullSeqAssemblerParameters) =
+            PostFilteringFunc { clone ->
+                geneFeatures.features.all { clone.getFeature(it)?.sequence?.containsWildcards() == false }
             }
     }
 }
