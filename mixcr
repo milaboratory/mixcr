@@ -158,12 +158,18 @@ if [[ ${needXmxXms} == true ]]; then
       targetXmx=$maxMb
     fi
 
+    echo "IMPORTANT: MiXCR will use at most ${targetXmx}MB of RAM,"
+    echo "           use -Xmx to change automatically set heap size (i.e. -Xmx50g to set heap size to 50 Gb)"
     javaArgs+=("-Xmx${targetXmx}m")
 
     targetXms=$((targetXmx * 2 / 3))
 
     if [[ $targetXms -lt 2000 ]]; then
       targetXms=$targetXmx
+    fi
+
+    if [[ $targetXms -gt 6000 ]]; then
+      targetXms="6000"
     fi
 
     javaArgs+=("-Xms${targetXms}m")
