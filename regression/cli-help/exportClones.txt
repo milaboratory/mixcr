@@ -4,10 +4,11 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [--dont-impute-germline-on-export] [--add-export-clone-table-splitting <
                           (geneLabel|tag):key>] [--reset-export-clone-table-splitting]
                           [--add-export-clone-grouping <(geneLabel|tag):key>]
-                          [--reset-export-clone-grouping] [--no-header] [--drop-default-fields]
-                          [--prepend-columns] [--not-covered-as-empty] [-targets] [-vHit] [-dHit]
-                          [-jHit] [-cHit] [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily]
-                          [-jFamily] [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
+                          [--reset-export-clone-grouping] [--export-productive-clones-only]
+                          [--no-header] [--drop-default-fields] [--prepend-columns]
+                          [--not-covered-as-empty] [-targets] [-vHit] [-dHit] [-jHit] [-cHit]
+                          [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily] [-jFamily]
+                          [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
                           [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore] [-cHitsWithScore]
                           [-vHits] [-dHits] [-jHits] [-cHits] [-vGenes] [-dGenes] [-jGenes]
                           [-cGenes] [-vFamilies] [-dFamilies] [-jFamilies] [-cFamilies]
@@ -87,6 +88,8 @@ Export assembled clones into tab delimited file.
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
                              Reset all clone grouping in the output clone tables.
+      --export-productive-clones-only
+                             Export only productive clonotypes.
       --no-header            Don't print first header line, print only data
                                Default value determined by the preset.
       --drop-default-fields  Don't export fields from preset.

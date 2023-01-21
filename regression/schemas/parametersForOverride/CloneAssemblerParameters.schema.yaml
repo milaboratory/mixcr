@@ -158,6 +158,8 @@ $defs:
                         type: integer
                       multiplyWeightByKey:
                         type: boolean
+                      triClassAdjustmentIterations:
+                        type: integer
                   - type: object
                     properties:
                       type:
@@ -338,8 +340,6 @@ properties:
               const: relativeConcentration
           required:
           - type
-      minimalTagSetOverlap:
-        type: number
       searchDepth:
         type: integer
       searchParameters:

@@ -107,6 +107,8 @@ $defs:
                         type: integer
                       multiplyWeightByKey:
                         type: boolean
+                      triClassAdjustmentIterations:
+                        type: integer
                   - type: object
                     properties:
                       type:

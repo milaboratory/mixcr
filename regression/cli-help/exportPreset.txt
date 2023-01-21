@@ -16,10 +16,10 @@ Usage: mixcr exportPreset [--no-validation] [--add-step <step>] [--remove-step <
                           [--append-export-alignments-field <field> [<param>...]]...
                           [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                           [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
-                          (geneLabel|tag):key>] [--reset-export-clone-grouping] [--force-overwrite]
-                          [--no-warnings] [--verbose] [--help] (--preset-name <preset> |
-                          --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]... [preset_file.
-                          (yaml|yml)]
+                          (geneLabel|tag):key>] [--reset-export-clone-grouping]
+                          [--export-productive-clones-only] [--force-overwrite] [--no-warnings]
+                          [--verbose] [--help] (--preset-name <preset> | --mixcr-file <input.
+                          (vdjca|clns|clna)>) [-M <key=value>]... [preset_file.(yaml|yml)]
 Export a preset file given the preset name or source file and a set of mix-ins
       [preset_file.(yaml|yml)]
                              Path where to write preset yaml file. Will write to output if omitted.
@@ -133,3 +133,5 @@ Params for export commands:
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
                              Reset all clone grouping in the output clone tables.
+      --export-productive-clones-only
+                             Export only productive clonotypes.

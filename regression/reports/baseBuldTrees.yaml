@@ -14,8 +14,8 @@ findShmTrees:
         type: BronKerbosch
         commonMutationsCountForClustering: 5
         maxNDNDistanceForClustering: 1.0
-    clonesWasAdded: 315
-    cloneNodesWasAdded: 314
+    clonesWasAdded: 316
+    cloneNodesWasAdded: 315
     treesCountDelta: 119
     commonVJMutationsCounts:
       size: 119
@@ -30,12 +30,12 @@ findShmTrees:
       percentile75: 21.0
     clonesCountInTrees:
       size: 119
-      sum: 315.0
+      sum: 316.0
       min: 2.0
       max: 11.0
-      avg: 2.64705
-      quadraticMean: 3.05550
-      stdDeviation: 1.53262
+      avg: 2.65546
+      quadraticMean: 3.07879
+      stdDeviation: 1.56463
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
@@ -103,12 +103,12 @@ findShmTrees:
       percentile75: 21.0
     clonesCountInTrees:
       size: 119
-      sum: 322.0
+      sum: 323.0
       min: 2.0
       max: 13.0
-      avg: 2.70588
-      quadraticMean: 3.23323
-      stdDeviation: 1.77722
+      avg: 2.71428
+      quadraticMean: 3.25782
+      stdDeviation: 1.80931
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
@@ -175,12 +175,12 @@ findShmTrees:
       percentile75: 21.0
     clonesCountInTrees:
       size: 119
-      sum: 322.0
+      sum: 323.0
       min: 2.0
       max: 13.0
-      avg: 2.70588
-      quadraticMean: 3.23323
-      stdDeviation: 1.77722
+      avg: 2.71428
+      quadraticMean: 3.25782
+      stdDeviation: 1.80931
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
@@ -228,7 +228,7 @@ findShmTrees:
       percentile25: NaN
       percentile50: NaN
       percentile75: NaN
-  totalClonesProcessed: 1294
+  totalClonesProcessed: 1295
 upstreams:
   alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns:
     align:
@@ -948,22 +948,22 @@ upstreams:
       coreReads: 46002
       readsDroppedFailedMapping: 53
       lowQualityRescued: 5
-      clonesClustered: 31
-      readsClustered: 439
-      clones: 1248
+      clonesClustered: 30
+      readsClustered: 433
+      clones: 1249
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 45568
+      readsInClones: 45574
       readsInClonesBeforeClustering: 46007
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: chainUsage
         chimeras: 0
-        total: 1248
+        total: 1249
         chains:
           IGH:
-            total: 1248
+            total: 1249
             nonFunctional: 34
             isOOF: 29
             hasStops: 5
@@ -1026,7 +1026,7 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 218
+          clonesCount: 219
           diversity: 38
           enoughDiversity: true
           differentMutationsCount: 43
@@ -1092,10 +1092,10 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 412
+          clonesCount: 413
           diversity: 57
           enoughDiversity: true
-          differentMutationsCount: 627
+          differentMutationsCount: 628
           mutationsWithEnoughDiversityCount: 185
         IGHV4-4*00:
           alleles:
@@ -1126,7 +1126,7 @@ upstreams:
           enoughDiversity: false
           differentMutationsCount: 20
           mutationsWithEnoughDiversityCount: 0
-      clonesCountWithNoChangeOfScore: 893
+      clonesCountWithNoChangeOfScore: 894
       clonesCountWithNegativeScoreChange: 49
       clonesScoreDeltaStats:
         size: 401
@@ -2051,7 +2051,7 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 218
+          clonesCount: 219
           diversity: 38
           enoughDiversity: true
           differentMutationsCount: 43
@@ -2117,10 +2117,10 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 412
+          clonesCount: 413
           diversity: 57
           enoughDiversity: true
-          differentMutationsCount: 627
+          differentMutationsCount: 628
           mutationsWithEnoughDiversityCount: 185
         IGHV4-4*00:
           alleles:
@@ -2151,7 +2151,7 @@ upstreams:
           enoughDiversity: false
           differentMutationsCount: 20
           mutationsWithEnoughDiversityCount: 0
-      clonesCountWithNoChangeOfScore: 893
+      clonesCountWithNoChangeOfScore: 894
       clonesCountWithNegativeScoreChange: 49
       clonesScoreDeltaStats:
         size: 401
