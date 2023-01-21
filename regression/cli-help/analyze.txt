@@ -19,12 +19,12 @@ Usage: mixcr analyze [--not-aligned-I1 <path.fastq[.gz]>] [--not-aligned-I2 <pat
                      [--append-export-alignments-field <field> [<param>...]]...
                      [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                      [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
-                     (geneLabel|tag):key>] [--reset-export-clone-grouping] [--no-reports]
-                     [--no-json-reports] [--use-local-temp] [--threads <n>] [--force-overwrite]
-                     [--no-warnings] [--verbose] [--help] [--set-whitelist <key=value> |
-                     --reset-whitelist tag]... [-M <key=value>]... <preset_name> ([file_I1.fastq[.
-                     gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
-                     (fasta|bam|sam)) output_prefix
+                     (geneLabel|tag):key>] [--reset-export-clone-grouping]
+                     [--export-productive-clones-only] [--no-reports] [--no-json-reports]
+                     [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
+                     [--verbose] [--help] [--set-whitelist <key=value> | --reset-whitelist tag]...
+                     [-M <key=value>]... <preset_name> ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]]
+                     file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam)) output_prefix
 Run full MiXCR pipeline for specific input.
       <preset_name>          Name of the analysis preset.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
@@ -168,3 +168,5 @@ Params for export commands:
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
                              Reset all clone grouping in the output clone tables.
+      --export-productive-clones-only
+                             Export only productive clonotypes.

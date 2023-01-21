@@ -527,6 +527,15 @@ object ExportMiXCRMixins {
         )
         fun resetExportClonesCloneGrouping(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
             mixIn(ExportMixins.ExportClonesResetCloneGrouping)
+
+        @Option(
+            description = ["Export only productive clonotypes."],
+            names = [ExportMixins.ExportProductiveClonesOnly.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 1100
+        )
+        fun exportProductiveClonesOnly(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+            mixIn(ExportMixins.ExportProductiveClonesOnly)
     }
 
     const val DESCRIPTION = "Params for export commands:%n"

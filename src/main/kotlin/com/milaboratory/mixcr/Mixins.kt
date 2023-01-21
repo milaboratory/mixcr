@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -966,5 +966,19 @@ object ExportMixins {
         }
 
         const val CMD_OPTION = "--reset-export-clone-grouping"
+    }
+
+    @JsonTypeName("ExportProductiveClonesOnly")
+    object ExportProductiveClonesOnly : MiXCRMixinBase(10) {
+        override val cmdArgs get() = listOf(CMD_OPTION)
+
+        override fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::exportClones.update {
+                CommandExportClones.Params::filterOutOfFrames setTo true
+                CommandExportClones.Params::filterStops setTo true
+            }
+        }
+
+        const val CMD_OPTION = "--export-productive-clones-only"
     }
 }
