@@ -489,9 +489,9 @@ object AlignMixins {
                 if (hasTagPattern) parsed.joinToString("||") { it.tagPattern!! } else null
 
         val sampleTable = CommandAlign.SampleTable(
-            sampleTagName, parsed.flatMapIndexed { i, g ->
+            listOf(sampleTagName), parsed.flatMapIndexed { i, g ->
                 g.samples.map { s ->
-                    CommandAlign.SampleTableRow(s.matchTags, if (parsed.size > 1) i else null, s.sampleName)
+                    CommandAlign.SampleTableRow(s.matchTags, if (parsed.size > 1) i else null, listOf(s.sampleName))
                 }
             }
         )
@@ -587,6 +587,19 @@ object AlignMixins {
         companion object {
             const val CMD_OPTION = "--sample-table"
         }
+    }
+
+    @JsonTypeName("InferSampleTable")
+    object InferSampleTable : MiXCRMixinBase(60, Flags.SampleTable) {
+        override val cmdArgs get() = listOf(CMD_OPTION)
+
+        override fun MixinBuilderOps.action() {
+            MiXCRParamsBundle::align.update {
+                CommandAlign.Params::inferSampleTable setTo true
+            }
+        }
+
+        const val CMD_OPTION = "--infer-sample-table"
     }
 
     @JsonTypeName("SetWhitelist")

@@ -167,6 +167,15 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         mixIn(AlignMixins.SetSplitBySample(false))
 
     @Option(
+        description = ["Infer sample table (supports only sample tags derived from file names)."],
+        names = [AlignMixins.InferSampleTable.CMD_OPTION],
+        arity = "0",
+        order = OptionsOrder.mixins.align + 320
+    )
+    fun inferSampleTable(@Suppress("UNUSED_PARAMETER") f: Boolean) =
+        mixIn(AlignMixins.InferSampleTable)
+
+    @Option(
         description = ["Loads sample table from a tab separated file."],
         names = [AlignMixins.SetSampleTable.CMD_OPTION],
         arity = "1",
