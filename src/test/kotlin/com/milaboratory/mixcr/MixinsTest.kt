@@ -25,12 +25,12 @@ class MixinsTest {
         Assert.assertEquals(
             parsed.sampleTable,
             CommandAlign.SampleTable(
-                "Sample",
+                listOf("Sample"),
                 listOf(
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ATTG"), 0, "S1"),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ACCC"), 0, "S2"),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ATTG"), 1, "S3"),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ACCC"), 1, "S4"),
+                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ATTG"), 0, listOf("S1")),
+                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ACCC"), 0, listOf("S2")),
+                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ATTG"), 1, listOf("S3")),
+                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ACCC"), 1, listOf("S4")),
                 )
             )
         )
