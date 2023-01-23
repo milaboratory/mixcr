@@ -19,6 +19,8 @@ import cc.redberry.pipe.util.mapChunksInParallel
 import cc.redberry.pipe.util.mapUnchunked
 import cc.redberry.pipe.util.ordered
 import cc.redberry.pipe.util.unchunked
+import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonMerge
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.ApplicationException
@@ -58,6 +60,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
@@ -70,7 +73,9 @@ import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.No
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotParsed
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.SampleNotMatched
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.detectTagTypeByName
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.listToSampleName
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
@@ -84,6 +89,7 @@ import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.limit
+import com.milaboratory.util.listComparator
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.VRegion
 import io.repseq.core.GeneFeature.VRegionWithP
@@ -116,7 +122,10 @@ object CommandAlign {
     data class SampleTableRow(
         @JsonProperty("matchTags") val matchTags: SortedMap<String, String> = TreeMap(),
         @JsonProperty("matchVariantId") val matchVariantId: Int? = null,
-        @JsonProperty("sampleName") val sampleName: String
+        @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
+        @JsonAlias("sampleName")
+        @JsonProperty("sample")
+        val sample: List<String>
     ) {
         init {
             require(matchTags.isNotEmpty() || matchVariantId != null)
@@ -126,16 +135,19 @@ object CommandAlign {
             matchVariantId.toString() + " " + matchTags.entries.joinToString("|") { it.key + "-" + it.value }
 
         override fun toString() =
-            sampleName + " " + matchingInfoString()
+            sample.joinToString("+") + " " + matchingInfoString()
     }
 
     /** Whole set of sample tag values to sample name mappings (i.e. sample table) */
     data class SampleTable(
-        @JsonProperty("sampleTagName") val sampleTagName: String,
+        @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
+        @JsonAlias("sampleTagName")
+        @JsonProperty("sampleTagNames")
+        val sampleTagNames: List<String>,
         @JsonProperty("samples") val samples: List<SampleTableRow>
     )
 
-    fun List<SampleTableRow>.bySampleName() = groupBy { it.sampleName }
+    fun List<SampleTableRow>.bySampleName() = groupBy { it.sample }
 
     data class Params(
         @JsonProperty("species") val species: String = "",
@@ -152,6 +164,7 @@ object CommandAlign {
         @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
         @JsonProperty("sampleTable") val sampleTable: SampleTable? = null,
         @JsonProperty("splitBySample") val splitBySample: Boolean = true,
+        @JsonProperty("inferSampleTable") val inferSampleTable: Boolean = false,
         @JsonProperty("readIdAsCellTag") val readIdAsCellTag: Boolean = false,
         @JsonProperty("limit") val limit: Long? = null,
         @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
@@ -697,9 +710,6 @@ object CommandAlign {
         @Mixin
         lateinit var pathsForNotAligned: PathsForNotAligned
 
-        @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
-        var reportBuffers = false
-
         private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins.mixins) }
 
         private val bpPair by lazy { paramsResolver.resolve(paramsSpec, printParameters = logger.verbose) }
@@ -854,7 +864,7 @@ object CommandAlign {
             }
 
             // Tags
-            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups.tags)
+            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups)
 
             // true if final NSQTuple will have two reads, false otherwise
             val pairedPayload = tagsExtractor.pairedPatternPayload
@@ -929,7 +939,7 @@ object CommandAlign {
                 // Pre-create all writers
                 val samples = tagsExtractor.samples
                 if (samples == null || !cmdParams.splitBySample)
-                    writers?.get("")
+                    writers?.get(emptyList())
                 else
                     samples.forEach { sample -> writers?.get(sample) }
 
@@ -1005,37 +1015,6 @@ object CommandAlign {
                         it
                 }
 
-                // if (reportBuffers) {
-                //    checkNotNull(writer)
-                //    println("Analysis threads: $threads")
-                //    val reporter = StatusReporter()
-                //    reporter.addBuffer(
-                //        "Input (chunked; chunk size = 64)",
-                //        mainInputReads.bufferStatusProvider
-                //    )
-                //    reporter.addBuffer(
-                //        "Alignment result (chunked; chunk size = 64)",
-                //        step2.outputBufferStatusProvider
-                //    )
-                //    reporter.addCustomProvider(object : StatusProvider {
-                //        @Suppress("ObjectPropertyName")
-                //        @Volatile
-                //        var _status: String = ""
-                //
-                //        @Volatile
-                //        var isClosed = false
-                //        override fun updateStatus() {
-                //            _status = "Busy encoders: " + writer.busyEncoders + " / " + writer.encodersCount
-                //            isClosed = writer.isClosed
-                //        }
-                //
-                //        override fun isFinished(): Boolean = isClosed
-                //
-                //        override fun getStatus(): String = _status
-                //    })
-                //    reporter.start()
-                //}
-
                 step2
                     .unchunked()
                     .ordered { it.read.id }
@@ -1070,13 +1049,15 @@ object CommandAlign {
                         if (alignment.isChimera)
                             reportBuilder.onChimera()
 
-                        writers?.get(if (cmdParams.splitBySample) bundle.sample else "")?.write(alignment)
+                        writers?.get(if (cmdParams.splitBySample) bundle.sample else emptyList())?.write(alignment)
                     }
 
                 writers?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
-                reportBuilder.setSampleStat(tagsExtractor.sampleStat)
+                reportBuilder.setSampleStat(tagsExtractor.sampleStat
+                    ?.map { listToSampleName(it.key) to it.value }
+                    ?.toMap(TreeMap()))
                 val report = reportBuilder.buildReport()
                 writers?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
@@ -1106,11 +1087,9 @@ object CommandAlign {
                 "." -> null
                 else -> {
                     object : Writers() {
-                        override fun writerFactory(sampleName: String) = run {
+                        override fun writerFactory(sample: List<String>) = run {
                             VDJCAlignmentsWriter(
-                                outputFile.resolveSibling(
-                                    addSampleToFileName(outputFile.fileName.toString(), sampleName)
-                                ),
+                                outputFile.resolveSibling(addSampleToFileName(outputFile.fileName.toString(), sample)),
                                 concurrencyLimiter, VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
                             )
                         }
@@ -1121,10 +1100,10 @@ object CommandAlign {
         abstract inner class Writers : AutoCloseable {
             private var header: MiXCRHeader? = null
             private var genes: List<VDJCGene>? = null
-            private val writers = mutableMapOf<String, VDJCAlignmentsWriter>()
+            private val writers = mutableMapOf<List<String>, VDJCAlignmentsWriter>()
             protected val concurrencyLimiter: Semaphore = Semaphore(max(1, threads.value / 8))
 
-            abstract fun writerFactory(sampleName: String): VDJCAlignmentsWriter
+            abstract fun writerFactory(sample: List<String>): VDJCAlignmentsWriter
 
             fun writeHeader(header: MiXCRHeader, genes: List<VDJCGene>) {
                 if (this.header != null)
@@ -1136,7 +1115,7 @@ object CommandAlign {
                 this.genes = genes
             }
 
-            operator fun get(sample: String) =
+            operator fun get(sample: List<String>) =
                 writers.computeIfAbsent(sample) {
                     val writer = writerFactory(it)
                     if (header != null)
@@ -1175,7 +1154,8 @@ object CommandAlign {
         }
     }
 
-    fun addSampleToFileName(fileName: String, sampleName: String): String {
+    fun addSampleToFileName(fileName: String, sample: List<String>): String {
+        val sampleName = listToSampleName(sample)
         val dotIndex = fileName.lastIndexOf('.')
         val prefix = fileName.substring(0, dotIndex)
         val extension = fileName.substring(dotIndex)

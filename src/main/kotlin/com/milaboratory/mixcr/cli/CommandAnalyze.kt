@@ -200,13 +200,15 @@ object CommandAnalyze {
             override fun POverridesBuilderOps<MiXCRPipeline>.paramsOverrides() {}
         }
 
-        override fun validate() {
-            CommandAlign.checkInputTemplates(inputTemplates)
-            val inputFileGroups = try {
+        private val inputFileGroups
+            get() = try {
                 CommandAlign.InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
             } catch (e: PathPatternExpandException) {
                 throw ValidationException(e.message!!)
             }
+
+        override fun validate() {
+            CommandAlign.checkInputTemplates(inputTemplates)
             pathsForNotAligned.validate(inputFileGroups.inputType)
             inputFileGroups.allFiles.forEach { input ->
                 ValidationException.requireFileExists(input)
@@ -248,7 +250,9 @@ object CommandAnalyze {
             // Calculating samples
             val samples =
                 if (bundle.align!!.splitBySample)
-                    bundle.align.sampleTable?.samples?.bySampleName()?.keys?.toList() ?: emptyList()
+                    (if (bundle.align.inferSampleTable) CommandAlignPipeline.inferSampleTable(inputFileGroups)
+                    else bundle.align.sampleTable)
+                        ?.samples?.bySampleName()?.keys?.toList() ?: emptyList()
                 else
                     emptyList()
 
@@ -331,7 +335,7 @@ object CommandAnalyze {
             fun addStep(
                 cmd: AnyMiXCRCommand,
                 extraArgs: List<String> = emptyList(),
-                vdjcaSamples: List<String> = emptyList(),
+                vdjcaSamples: List<List<String>> = emptyList(),
             ) {
                 val round = rounds.compute(cmd) { c, p ->
                     if (p == null)
@@ -395,11 +399,11 @@ object CommandAnalyze {
                             )
                     else {
                         assert(inputs.sampleName == "")
-                        nextInputsBuilder += vdjcaSamples.map { sampleName ->
+                        nextInputsBuilder += vdjcaSamples.map { sample ->
                             val outputName = cmd.outputName(outputNamePrefixFull, paramsBundle, round)
                             InputFileSet(
-                                sampleName, listOf(
-                                    outputFolder.resolve(CommandAlign.addSampleToFileName(outputName, sampleName))
+                                CommandAlignPipeline.listToSampleName(sample), listOf(
+                                    outputFolder.resolve(CommandAlign.addSampleToFileName(outputName, sample))
                                         .toString()
                                 )
                             )
