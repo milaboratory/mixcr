@@ -439,8 +439,7 @@ object CommandAlign {
 
         @Option(
             description = [
-                "Read pre-processing: trimming quality threshold.",
-                "Zero value can be used to skip trimming.",
+                "Read pre-processing: trimming quality threshold. Zero value can be used to skip trimming.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--trimming-quality-threshold"],
@@ -495,7 +494,7 @@ object CommandAlign {
         @set:Option(
             description = [
                 "Read tag pattern from a file.",
-                "  Default tag pattern determined by the preset."
+                DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--tag-pattern-file"],
             paramLabel = "<path>",
@@ -510,7 +509,7 @@ object CommandAlign {
         @Option(
             description = [
                 "If paired-end input is used, determines whether to try all combinations of mate-pairs or " +
-                        "only match reads to the corresponding pattern sections (i.e. first file to first section, etc...).",
+                        "only match reads to the corresponding pattern sections (i.e. first file to first section etc).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--tag-parse-unstranded"],
@@ -520,7 +519,7 @@ object CommandAlign {
 
         @Option(
             description = [
-                "Maximal bit budget, higher values allows more substitutions in small letters.",
+                "Maximal bit budget controlling mismatches (substitutions) in tag pattern. Higher values allows more substitutions in small letters.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--tag-max-budget"],
@@ -609,9 +608,8 @@ object CommandAlign {
     )
     class Cmd : CmdBase() {
         @Option(
-            description = ["Analysis preset. Sets all significant parameters of this and all downstream analysis steps. " +
-                    "This is a required parameter. It is very important to carefully select the most appropriate preset " +
-                    "for the data you analyse."],
+            description = ["Analysis preset. Sets key parameters of this and all downstream analysis steps. " +
+                    "It is critical to carefully select the most appropriate preset for the data you analyse."],
             names = ["-p", "--preset"],
             paramLabel = "<name>",
             required = true,
