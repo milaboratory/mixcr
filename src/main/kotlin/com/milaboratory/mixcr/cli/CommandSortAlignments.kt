@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -25,9 +25,11 @@ import com.milaboratory.primitivio.PipeReader
 import com.milaboratory.primitivio.PipeWriter
 import com.milaboratory.util.ObjectSerializer
 import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortOnDisk
 import io.repseq.core.VDJCGene
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Parameters
 import java.io.InputStream
 import java.io.OutputStream
@@ -43,11 +45,18 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
     @Parameters(paramLabel = "alignments.sorted.vdjca", index = "1")
     lateinit var out: Path
 
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
+
     override val inputFiles
         get() = listOf(input)
 
     override val outputFiles
         get() = listOf(out)
+
+    private val tempDest by lazy {
+        TempFileManager.smartTempDestination(out, "", !useLocalTemp.value)
+    }
 
     override fun validate() {
         ValidationException.requireFileType(input, InputFileType.VDJCA)
@@ -58,6 +67,8 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
         VDJCAlignmentsReader(input).use { reader ->
             SmartProgressReporter.startProgressReport("Reading vdjca", reader)
             reader.sortOnDisk(
+                tempDest,
+                "sort_by_read_id",
                 Comparator.comparing { it.minReadId },
                 serializer = VDJCAlignmentsSerializer(reader),
                 chunkSize = 512 * 1024

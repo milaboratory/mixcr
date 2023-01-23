@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -213,7 +213,8 @@ internal class SHMTreeBuilderBySteps(
                     //filter by user defined parameters
                     .filter { c -> clonesFilter.match(c) }
                     .groupByOnDisk(
-                        tempDest.addSuffix("tree.builder.grouping.by.the.same.VJ.CDR3Length"),
+                        tempDest,
+                        "tree.builder.grouping.by.the.same.VJ.CDR3Length",
                         stateBuilder = stateBuilder,
                         comparator = VJBase.comparator
                     ) { it.VJBase }
@@ -252,7 +253,8 @@ internal class SHMTreeBuilderBySteps(
                 //group efficiently the same clones
                 allClones
                     .groupByOnDisk(
-                        tempDest.addSuffix("tree.builder.grouping.clones.with.the.same.targets"),
+                        tempDest,
+                        "tree.builder.grouping.clones.with.the.same.targets",
                         stateBuilder
                     ) { it.clone.targets.reduce(NSequenceWithQuality::concatenate) }
                     .map { it.toList() }

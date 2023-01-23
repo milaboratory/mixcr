@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -71,7 +71,7 @@ class SingleCellTreeBuilder(
             .synchronized()
             .formCellGroups()
             .cached(
-                tempDest.addSuffix("tree.builder.sc.cellGroups"),
+                tempDest,
                 stateBuilder,
                 blockSize = 100
             )
@@ -81,8 +81,9 @@ class SingleCellTreeBuilder(
                     .groupCellsByChainPairs()
                     //on resolving intersection prefer larger groups
                     .sortOnDisk(
+                        tempDest,
+                        "tree.builder.sc.sort_by_cell_barcodes_count",
                         comparator = Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed(),
-                        tempFile = tempDest.resolveFile("tree.builder.sc.sort_by_cell_barcodes_count"),
                         chunkSize = 1024 * 1024
                     ).use { sortedCellGroups ->
                         //decision about every barcode, to what pair of heavy and light chains it belongs
@@ -190,7 +191,8 @@ class SingleCellTreeBuilder(
             )
         }
         .groupByOnDisk(
-            tempDest.addSuffix("tree.builder.sc.group_by_found_chain_pairs"),
+            tempDest,
+            "tree.builder.sc.group_by_found_chain_pairs",
             pairComparator(VJBase.comparator),
             stateBuilder
         ) { it.heavy.clone.asVJBase() to it.light.clone.asVJBase() }
@@ -214,7 +216,8 @@ class SingleCellTreeBuilder(
         }
             //group by chain pairs. Groups will have intersection
             .groupByOnDisk(
-                tempDest.addSuffix("tree.builder.sc.group_cells_by_chain_pairs"),
+                tempDest,
+                "tree.builder.sc.group_cells_by_chain_pairs",
                 Comparator
                     .comparing({ (heavy, _): ChainPairKey -> heavy }, VJBase.comparator)
                     .thenComparing({ it.light }, VJBase.comparator),
@@ -269,7 +272,8 @@ class SingleCellTreeBuilder(
                     .asOutputPort()
             }
             .groupByOnDisk(
-                tempDest.addSuffix("tree.builder.sc.group_by_cell_barcodes"),
+                tempDest,
+                "tree.builder.sc.group_by_cell_barcodes",
                 CellBarcodeWithDatasetId.comparator,
                 stateBuilder
             ) { it.cellBarcode }
