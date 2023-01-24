@@ -1,6 +1,8 @@
 "smartseq2-vdj-full-length":
   pipeline:
     inheritFrom: pipeline-single-cell-shotgun
+  flags:
+    - species
   align:
     inheritFrom: align-kaligner2-10x
     overrides:

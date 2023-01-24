@@ -1,5 +1,7 @@
 "align-kaligner1-10x":
   abstract: true
+  flags:
+    - species
   align:
     inheritFrom: align-kaligner1-single-cell-v1
     overrides:
@@ -7,6 +9,8 @@
 
 "align-kaligner2-10x":
   abstract: true
+  flags:
+    - species
   align:
     inheritFrom: align-kaligner2-single-cell-v1
     overrides:
