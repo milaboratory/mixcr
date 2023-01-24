@@ -1,5 +1,6 @@
 "ont-rna-seq-vdj-full-length":
-  flags: []
+  flags:
+    - species
   pipeline:
     - align
     - assemble
