@@ -918,6 +918,12 @@ object CommandAlign {
 
             // Attaching report to aligner
             aligner.setEventsListener(reportBuilder)
+
+            // Preparing the analysis spec
+            // Output file header will contain packed version of the parameter specs,
+            // i.e. all external presets and will be packed into the spec object
+            val packedSpec = paramsSpec.pack()
+
             use(
                 createReader(),
                 alignedWriter(outputFile),
@@ -944,9 +950,7 @@ object CommandAlign {
                 writers?.writeHeader(
                     MiXCRHeader(
                         inputHash,
-                        // Output file header will contain packed version of the parameter specs,
-                        // i.e. all external presets and will be packed into the spec object
-                        paramsSpec.pack(),
+                        packedSpec,
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         tagsExtractor.tagsInfo,
                         aligner.parameters,
