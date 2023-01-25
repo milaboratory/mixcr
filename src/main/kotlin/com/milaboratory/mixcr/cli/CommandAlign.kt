@@ -60,7 +60,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
@@ -73,7 +72,6 @@ import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.No
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotParsed
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.SampleNotMatched
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.detectTagTypeByName
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.listToSampleName
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
@@ -89,7 +87,6 @@ import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.limit
-import com.milaboratory.util.listComparator
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.VRegion
 import io.repseq.core.GeneFeature.VRegionWithP
@@ -710,6 +707,10 @@ object CommandAlign {
 
         private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins.mixins) }
 
+        /** Output file header will contain packed version of the parameter specs,
+        i.e. all external presets and will be packed into the spec object.*/
+        private val paramsSpecPacked by lazy { paramsSpec.pack() }
+
         private val bpPair by lazy { paramsResolver.resolve(paramsSpec, printParameters = logger.verbose) }
 
         private val cmdParams get() = bpPair.second
@@ -783,14 +784,19 @@ object CommandAlign {
                 }
                 ?: emptyList()
 
-            val keyParameter = cmdParams.tagPattern.toString()
+            val samplePattern = cmdParams.tagPattern.toString()
 
             return when (inputFileGroups.inputType) {
                 BAM -> {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    MiXCRMain.lm.reportApplicationInputs(files, keyParameter, sampleDescriptions)
+                    MiXCRMain.lm.reportApplicationInputs(
+                        files,
+                        paramsSpecPacked.base.consistentHashString(),
+                        samplePattern,
+                        sampleDescriptions
+                    )
                     BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
                         .map { ProcessingBundle(it) }
                 }
@@ -799,7 +805,12 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
-                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFile), keyParameter, sampleDescriptions)
+                    MiXCRMain.lm.reportApplicationInputs(
+                        listOf(inputFile),
+                        paramsSpecPacked.base.consistentHashString(),
+                        samplePattern,
+                        sampleDescriptions
+                    )
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
@@ -808,7 +819,12 @@ object CommandAlign {
                 }
 
                 else -> { // All fastq file types
-                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParameter, sampleDescriptions)
+                    MiXCRMain.lm.reportApplicationInputs(
+                        inputFileGroups.allFiles,
+                        paramsSpecPacked.base.consistentHashString(),
+                        samplePattern,
+                        sampleDescriptions
+                    )
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     FastqGroupReader(inputFileGroups.fileGroups, cmdParams.replaceWildcards, readBufferSize)
                         .map { ProcessingBundle(it.read, it.fileTags, it.originalReadId) }
@@ -919,11 +935,6 @@ object CommandAlign {
             // Attaching report to aligner
             aligner.setEventsListener(reportBuilder)
 
-            // Preparing the analysis spec
-            // Output file header will contain packed version of the parameter specs,
-            // i.e. all external presets and will be packed into the spec object
-            val packedSpec = paramsSpec.pack()
-
             use(
                 createReader(),
                 alignedWriter(outputFile),
@@ -950,7 +961,7 @@ object CommandAlign {
                 writers?.writeHeader(
                     MiXCRHeader(
                         inputHash,
-                        packedSpec,
+                        paramsSpecPacked,
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         tagsExtractor.tagsInfo,
                         aligner.parameters,
