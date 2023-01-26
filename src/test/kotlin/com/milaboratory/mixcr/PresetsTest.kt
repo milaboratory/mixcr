@@ -1,6 +1,8 @@
 package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.milaboratory.cli.ParamsBundleSpecBaseAddress
+import com.milaboratory.cli.ParamsBundleSpecBaseEmbedded
 import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
@@ -15,6 +17,8 @@ import io.kotest.assertions.withClue
 import org.junit.Assert
 import org.junit.Test
 import java.nio.file.Paths
+import kotlin.io.path.Path
+import kotlin.io.path.bufferedWriter
 import kotlin.io.path.listDirectoryEntries
 
 class PresetsTest {
@@ -35,6 +39,32 @@ class PresetsTest {
             }
             bundle.flags.forEach {
                 Assert.assertTrue("Flag = $it", Flags.flagMessages.containsKey(it))
+            }
+        }
+    }
+
+    @Test
+    fun test2XConsistentHash() {
+        val mapOfHashes = mutableMapOf<String, MutableList<String>>()
+        for (presetName in Presets.nonAbstractPresetNames) {
+            val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+            val bundleJson = K_OM.writeValueAsString(bundle)
+            val bundleDeserialized = K_OM.readValue(bundleJson, MiXCRParamsBundle::class.java)
+            Assert.assertEquals(bundle.hashCode(), bundleDeserialized.hashCode())
+            val asAddressSpec = ParamsBundleSpecBaseAddress<MiXCRParamsBundle>(presetName)
+            val asEmbeddedSpec = ParamsBundleSpecBaseEmbedded(bundle)
+            for (hash in listOf(asAddressSpec.consistentHashString(), asEmbeddedSpec.consistentHashString()))
+                mapOfHashes.compute(hash) { _, b ->
+                    val l = (b ?: mutableListOf())
+                    l += presetName
+                    l
+                }
+        }
+        Path("hash_projection.txt").bufferedWriter().use { writer ->
+            mapOfHashes.forEach { (hash, presets) ->
+                presets.forEach { preset ->
+                    writer.write("$hash\t$preset\n")
+                }
             }
         }
     }
