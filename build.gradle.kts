@@ -96,12 +96,22 @@ repositories {
     maven {
         url = uri("https://pub.maven.milaboratory.com")
     }
+
+    maven {
+        url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
+        authentication {
+            credentials(AwsCredentials::class) {
+                accessKey = miRepoAccessKeyId
+                secretKey = miRepoSecretAccessKey
+            }
+        }
+    }
 }
 
 val milibVersion = "2.3.0"
 val repseqioVersion = "1.7.0"
 val miplotsVersion = "1.2.0"
-val mitoolVersion = "1.6.0"
+val mitoolVersion = "1.6.0-2-main"
 val jacksonBomVersion = "2.14.1"
 val redberryPipeVersion = "1.4.0"
 
