@@ -50,6 +50,7 @@ import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
@@ -399,18 +400,16 @@ object CommandRefineTagsAndSort {
                     val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> =
                         { tIdx -> // <- index inside the alignment object
                             sortByHashOnDisk(
+                                ComparatorWithHash.compareBy { al ->
+                                    val tagTuple = al.tagCount.singletonTuple
+                                    tagTuple[tIdx].extractKey()
+                                },
                                 tempDest,
                                 "hashsorter.${sorterCounter++}.$tIdx",
-                                alPioState,
-                                bitsPerStep = 4,
-                                readerConcurrency = 4,
-                                writerConcurrency = 4,
+                                stateBuilder = alPioState,
                                 objectSizeInitialGuess = 10_000,
                                 memoryBudget = memoryBudget
-                            ) { al ->
-                                val tagTuple = al.tagCount.singletonTuple
-                                tagTuple[tIdx].extractKey()
-                            }
+                            )
                         }
 
                     // Progress reporter for the first sorting step

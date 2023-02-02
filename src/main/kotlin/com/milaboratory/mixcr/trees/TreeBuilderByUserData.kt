@@ -26,6 +26,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
+import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.groupByOnDisk
 import io.repseq.core.GeneFeature.CDR3
@@ -127,10 +128,11 @@ class TreeBuilderByUserData(
             )
         }
             .groupByOnDisk(
+                ComparatorWithHash.compareBy { it.treeId },
                 tempDest,
                 "tree.builder.userInput",
                 stateBuilder
-            ) { it.treeId }
+            )
             .map { it.toList() }
 
     private fun List<Clone>.bestGeneForClones(geneType: GeneType): VDJCGeneId =

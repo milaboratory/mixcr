@@ -38,6 +38,7 @@ import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeCollection
+import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.cached
 import com.milaboratory.util.groupByOnDisk
@@ -81,9 +82,9 @@ class SingleCellTreeBuilder(
                     .groupCellsByChainPairs()
                     //on resolving intersection prefer larger groups
                     .sortOnDisk(
+                        comparator = Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed(),
                         tempDest,
                         "tree.builder.sc.sort_by_cell_barcodes_count",
-                        comparator = Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed(),
                         chunkSize = 1024 * 1024
                     ).use { sortedCellGroups ->
                         //decision about every barcode, to what pair of heavy and light chains it belongs
@@ -191,11 +192,13 @@ class SingleCellTreeBuilder(
             )
         }
         .groupByOnDisk(
+            ComparatorWithHash.compareBy(pairComparator(VJBase.comparator)) { chainPair ->
+                chainPair.heavy.clone.asVJBase() to chainPair.light.clone.asVJBase()
+            },
             tempDest,
             "tree.builder.sc.group_by_found_chain_pairs",
-            pairComparator(VJBase.comparator),
             stateBuilder
-        ) { it.heavy.clone.asVJBase() to it.light.clone.asVJBase() }
+        )
         .map { it.toList() }
 
     private fun OutputPort<CellGroup>.groupCellsByChainPairs(): OutputPort<GroupOfCells> =
@@ -216,13 +219,15 @@ class SingleCellTreeBuilder(
         }
             //group by chain pairs. Groups will have intersection
             .groupByOnDisk(
+                ComparatorWithHash.Companion.compareBy(
+                    comparator = Comparator
+                        .comparing({ (heavy, _): ChainPairKey -> heavy }, VJBase.comparator)
+                        .thenComparing({ it.light }, VJBase.comparator)
+                ) { it.chainPairKey },
                 tempDest,
                 "tree.builder.sc.group_cells_by_chain_pairs",
-                Comparator
-                    .comparing({ (heavy, _): ChainPairKey -> heavy }, VJBase.comparator)
-                    .thenComparing({ it.light }, VJBase.comparator),
-                stateBuilder
-            ) { it.chainPairKey }
+                stateBuilder = stateBuilder
+            )
             //we search for clusters, so we not need groups with size 1
             .filter { it.count > 1 }
             .map { it.toList() }
@@ -272,11 +277,11 @@ class SingleCellTreeBuilder(
                     .asOutputPort()
             }
             .groupByOnDisk(
+                ComparatorWithHash.compareBy(CellBarcodeWithDatasetId.comparator) { it.cellBarcode },
                 tempDest,
                 "tree.builder.sc.group_by_cell_barcodes",
-                CellBarcodeWithDatasetId.comparator,
-                stateBuilder
-            ) { it.cellBarcode }
+                stateBuilder = stateBuilder
+            )
             .map { it.toList() }
 }
 

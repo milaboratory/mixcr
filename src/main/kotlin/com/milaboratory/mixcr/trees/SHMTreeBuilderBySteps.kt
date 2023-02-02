@@ -47,6 +47,7 @@ import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeCollection
+import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.XSV
@@ -213,11 +214,11 @@ internal class SHMTreeBuilderBySteps(
                     //filter by user defined parameters
                     .filter { c -> clonesFilter.match(c) }
                     .groupByOnDisk(
+                        ComparatorWithHash.compareBy(VJBase.comparator) { it.VJBase },
                         tempDest,
                         "tree.builder.grouping.by.the.same.VJ.CDR3Length",
-                        stateBuilder = stateBuilder,
-                        comparator = VJBase.comparator
-                    ) { it.VJBase }
+                        stateBuilder = stateBuilder
+                    )
                     .map { it.toList() }
                     .map { Cluster(it) }
             }
@@ -253,10 +254,11 @@ internal class SHMTreeBuilderBySteps(
                 //group efficiently the same clones
                 allClones
                     .groupByOnDisk(
+                        ComparatorWithHash.compareBy { it.clone.targets.reduce(NSequenceWithQuality::concatenate) },
                         tempDest,
                         "tree.builder.grouping.clones.with.the.same.targets",
                         stateBuilder
-                    ) { it.clone.targets.reduce(NSequenceWithQuality::concatenate) }
+                    )
                     .map { it.toList() }
             }
 

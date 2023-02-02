@@ -41,6 +41,7 @@ import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
+import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.XSV
@@ -102,10 +103,11 @@ class AllelesBuilder(
                 .use { clones ->
                     clones
                         .groupByOnDisk(
+                            ComparatorWithHash.compareBy { it.getBestHit(geneType).gene },
                             tempDest,
                             "alleles.searcher.${geneType.letterLowerCase}",
                             stateBuilder
-                        ) { it.getBestHit(geneType).gene }
+                        )
                         .map { it.toList() }
                 }
                 .withNonLinerProgress(totalClonesCount) { it.size.toLong() }

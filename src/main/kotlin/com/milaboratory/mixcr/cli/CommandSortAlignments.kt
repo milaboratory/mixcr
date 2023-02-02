@@ -67,11 +67,11 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
         VDJCAlignmentsReader(input).use { reader ->
             SmartProgressReporter.startProgressReport("Reading vdjca", reader)
             reader.sortOnDisk(
+                Comparator.comparing { it.minReadId },
                 tempDest,
                 "sort_by_read_id",
-                Comparator.comparing { it.minReadId },
-                serializer = VDJCAlignmentsSerializer(reader),
-                chunkSize = 512 * 1024
+                chunkSize = 512 * 1024,
+                serializer = VDJCAlignmentsSerializer(reader)
             ).use { sorted ->
                 VDJCAlignmentsWriter(out).use { writer ->
                     writer.writeHeader(
