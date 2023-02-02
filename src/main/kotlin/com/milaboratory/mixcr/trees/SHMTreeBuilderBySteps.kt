@@ -21,7 +21,6 @@ import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.flatMap
 import cc.redberry.pipe.util.flatten
 import cc.redberry.pipe.util.forEachInParallel
-import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.mapInParallelOrdered
 import cc.redberry.pipe.util.toList
 import com.milaboratory.core.mutations.Mutations
@@ -48,6 +47,7 @@ import com.milaboratory.primitivio.readList
 import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.primitivio.writeCollection
 import com.milaboratory.util.ComparatorWithHash
+import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.XSV
@@ -103,7 +103,6 @@ internal class SHMTreeBuilderBySteps(
     private val shmTreeBuilder: SHMTreeBuilder,
     private val clonesFilter: SHMTreeBuilderOrchestrator.ClonesFilter,
     private val relatedAllelesMutations: Map<VDJCGeneId, List<Mutations<NucleotideSequence>>>,
-    private val clonesCount: Long,
     private val stateBuilder: PrimitivIOStateBuilder,
     private val tempDest: TempFileDest
 ) {
@@ -128,7 +127,7 @@ internal class SHMTreeBuilderBySteps(
             .toSet()
 
     fun buildTrees(
-        clones: OutputPort<CloneWithDatasetId>,
+        clones: OutputPortWithProgress<CloneWithDatasetId>,
         progressAndStage: ProgressAndStage,
         threads: Int,
         debugs: List<SHMTreeBuilderOrchestrator.Debug>,
@@ -205,9 +204,8 @@ internal class SHMTreeBuilderBySteps(
         decisions = ConcurrentHashMap()
     }
 
-    private fun OutputPort<List<CloneWithDatasetId>>.groupByTheSameVJBase(progressAndStage: ProgressAndStage): OutputPort<Cluster> =
-        withExpectedSize(clonesCount)
-            .reportProgress(progressAndStage, "Group clones by the same V, J and CDR3Length")
+    private fun OutputPortWithProgress<List<CloneWithDatasetId>>.groupByTheSameVJBase(progressAndStage: ProgressAndStage): OutputPort<Cluster> =
+        reportProgress(progressAndStage, "Group clones by the same V, J and CDR3Length")
             .use { groupedClones ->
                 groupedClones
                     .flatMap { clones -> clones.asCloneWrappers().asOutputPort() }
@@ -247,9 +245,8 @@ internal class SHMTreeBuilderBySteps(
     }
 
 
-    private fun OutputPort<CloneWithDatasetId>.groupByTheSameTargets(progressAndStage: ProgressAndStage): OutputPort<List<CloneWithDatasetId>> =
-        withExpectedSize(clonesCount)
-            .reportProgress(progressAndStage, "Search for clones with the same targets")
+    private fun OutputPortWithProgress<CloneWithDatasetId>.groupByTheSameTargets(progressAndStage: ProgressAndStage): OutputPortWithProgress<List<CloneWithDatasetId>> =
+        reportProgress(progressAndStage, "Search for clones with the same targets")
             .use { allClones ->
                 //group efficiently the same clones
                 allClones
@@ -259,8 +256,8 @@ internal class SHMTreeBuilderBySteps(
                         "tree.builder.grouping.clones.with.the.same.targets",
                         stateBuilder
                     )
-                    .map { it.toList() }
             }
+            .map { it.toList() }
 
     /**
      * Run one of possible steps to add clones or combine trees.

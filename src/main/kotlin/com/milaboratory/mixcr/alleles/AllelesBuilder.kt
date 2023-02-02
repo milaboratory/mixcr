@@ -20,7 +20,6 @@ import cc.redberry.pipe.util.buffered
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.flatMap
 import cc.redberry.pipe.util.forEach
-import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.mapInParallel
 import cc.redberry.pipe.util.toList
 import com.milaboratory.core.alignment.AlignmentScoring
@@ -47,7 +46,6 @@ import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.XSV
 import com.milaboratory.util.groupByOnDisk
 import com.milaboratory.util.withExpectedSize
-import com.milaboratory.util.withNonLinerProgress
 import io.repseq.core.BaseSequence
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -108,9 +106,8 @@ class AllelesBuilder(
                             "alleles.searcher.${geneType.letterLowerCase}",
                             stateBuilder
                         )
-                        .map { it.toList() }
                 }
-                .withNonLinerProgress(totalClonesCount) { it.size.toLong() }
+                .map { it.toList() }
                 .reportProgress(progress, "Searching for ${geneType.letter} alleles")
                 .use { clustersWithTheSameV ->
                     clustersWithTheSameV

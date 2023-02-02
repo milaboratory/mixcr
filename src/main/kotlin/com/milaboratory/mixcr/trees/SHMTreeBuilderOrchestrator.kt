@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -31,6 +31,7 @@ import com.milaboratory.primitivio.readObjectRequired
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.XSV
+import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCGeneId
@@ -116,6 +117,7 @@ class SHMTreeBuilderOrchestrator(
         threads: Int,
         resultWriter: (OutputPort<TreeWithMetaBuilder>) -> Unit
     ) {
+        val clonesCount = datasets.sumOf { it.numberOfClones() }.toLong()
         val treeBuilder = SHMTreeBuilderBySteps(
             parameters.steps,
             scoringSet,
@@ -123,7 +125,6 @@ class SHMTreeBuilderOrchestrator(
             SHMTreeBuilder,
             clonesFilter,
             relatedAllelesMutations(),
-            datasets.sumOf { it.numberOfClones() }.toLong(),
             featureToAlign.constructStateBuilder(usedGenes),
             tempDest
         )
@@ -132,7 +133,7 @@ class SHMTreeBuilderOrchestrator(
         }
         readClonesWithDatasetIds { clones ->
             treeBuilder.buildTrees(
-                clones,
+                clones.withExpectedSize(clonesCount),
                 progressAndStage,
                 threads,
                 debugs,

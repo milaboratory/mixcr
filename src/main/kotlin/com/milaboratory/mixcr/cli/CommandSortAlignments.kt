@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.forEach
-import cc.redberry.pipe.util.withCounting
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
@@ -24,7 +23,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.primitivio.PipeReader
 import com.milaboratory.primitivio.PipeWriter
 import com.milaboratory.util.ObjectSerializer
-import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortOnDisk
 import io.repseq.core.VDJCGene
@@ -65,31 +63,30 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
 
     override fun run1() {
         VDJCAlignmentsReader(input).use { reader ->
-            SmartProgressReporter.startProgressReport("Reading vdjca", reader)
-            reader.sortOnDisk(
-                Comparator.comparing { it.minReadId },
-                tempDest,
-                "sort_by_read_id",
-                chunkSize = 512 * 1024,
-                serializer = VDJCAlignmentsSerializer(reader)
-            ).use { sorted ->
-                VDJCAlignmentsWriter(out).use { writer ->
-                    writer.writeHeader(
-                        reader.header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) },
-                        reader.usedGenes
-                    )
-                    val counter = sorted.withCounting()
-                    SmartProgressReporter.startProgressReport(
-                        "Writing sorted alignments",
-                        SmartProgressReporter.extractProgress(counter, reader.numberOfReads)
-                    )
-                    counter.forEach { res ->
-                        writer.write(res)
+            reader
+                .reportProgress("Reading vdjca")
+                .sortOnDisk(
+                    Comparator.naturalOrder(),
+                    tempDest,
+                    "sort_by_read_id",
+                    chunkSize = 512 * 1024,
+                    serializer = VDJCAlignmentsSerializer(reader)
+                ) { it.minReadId }
+                .use { sorted ->
+                    VDJCAlignmentsWriter(out).use { writer ->
+                        writer.writeHeader(
+                            reader.header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) },
+                            reader.usedGenes
+                        )
+                        sorted
+                            .reportProgress("Writing sorted alignments")
+                            .forEach { res ->
+                                writer.write(res)
+                            }
+                        writer.setNumberOfProcessedReads(reader.numberOfReads)
+                        writer.setFooter(reader.footer)
                     }
-                    writer.setNumberOfProcessedReads(reader.numberOfReads)
-                    writer.setFooter(reader.footer)
                 }
-            }
         }
     }
 

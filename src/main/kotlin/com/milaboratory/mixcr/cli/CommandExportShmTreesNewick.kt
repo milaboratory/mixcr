@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -41,7 +41,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
         get() = listOf(out)
 
     override fun validate() {
-        ValidationException.requireNoExtension(out.toString())
+        ValidationException.requireNoExtension(out)
     }
 
     override fun run1() {

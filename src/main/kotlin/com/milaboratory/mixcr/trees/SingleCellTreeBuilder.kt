@@ -82,11 +82,11 @@ class SingleCellTreeBuilder(
                     .groupCellsByChainPairs()
                     //on resolving intersection prefer larger groups
                     .sortOnDisk(
-                        comparator = Comparator.comparingInt<GroupOfCells> { it.cellBarcodes.size }.reversed(),
+                        comparator = Comparator.reverseOrder(),
                         tempDest,
                         "tree.builder.sc.sort_by_cell_barcodes_count",
                         chunkSize = 1024 * 1024
-                    ).use { sortedCellGroups ->
+                    ) { it.cellBarcodes.size }.use { sortedCellGroups ->
                         //decision about every barcode, to what pair of heavy and light chains it belongs
                         sortedCellGroups.forEach { cellGroup ->
                             val newBarcodes = cellGroup.cellBarcodes - cellBarcodesToGroupChainPair.keys
