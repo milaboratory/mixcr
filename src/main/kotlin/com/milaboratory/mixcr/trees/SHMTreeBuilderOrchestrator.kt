@@ -15,7 +15,6 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.flatten
-import cc.redberry.pipe.util.map
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -28,6 +27,7 @@ import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.primitivio.Serializer
 import com.milaboratory.primitivio.annotations.Serializable
 import com.milaboratory.primitivio.readObjectRequired
+import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.XSV
@@ -133,7 +133,7 @@ class SHMTreeBuilderOrchestrator(
         }
         readClonesWithDatasetIds { clones ->
             treeBuilder.buildTrees(
-                clones.withExpectedSize(clonesCount),
+                clones,
                 progressAndStage,
                 threads,
                 debugs,
@@ -153,12 +153,13 @@ class SHMTreeBuilderOrchestrator(
     }
 
     //TODO auto close through lambda
-    private fun <R> readClonesWithDatasetIds(function: (OutputPort<CloneWithDatasetId>) -> R) = datasets
+    private fun <R> readClonesWithDatasetIds(function: (OutputPortWithProgress<CloneWithDatasetId>) -> R) = datasets
         .withIndex()
         .map { (datasetId, dataset) ->
             dataset.readClones().map { clone -> CloneWithDatasetId(clone, datasetId) }
         }
         .flatten()
+        .withExpectedSize(datasets.sumOf { it.numberOfClones() }.toLong())
         .use(function)
 
     /**

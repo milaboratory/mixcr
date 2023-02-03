@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -11,11 +11,10 @@
  */
 package com.milaboratory.mixcr.postanalysis.ui;
 
-import cc.redberry.pipe.OutputPort;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.postanalysis.Dataset;
 import com.milaboratory.util.LambdaSemaphore;
-import com.milaboratory.util.OutputPortWithExpectedSizeKt;
+import com.milaboratory.util.OutputPortWithExpectedSize;
 import com.milaboratory.util.OutputPortWithProgress;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -72,7 +71,7 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
                     }
             }
         }
-        return OutputPortWithExpectedSizeKt.withExpectedSize(reader.readClones(), reader.numberOfClones());
+        return reader.readClones();
     }
 
     @Override
@@ -81,7 +80,7 @@ public class ClonotypeDataset implements Dataset<Clone>, CloneReader {
     }
 
     @Override
-    public OutputPort<Clone> readClones() {
+    public OutputPortWithExpectedSize<Clone> readClones() {
         return mkElementsPort();
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -16,7 +16,6 @@ import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.primitives.Filter;
 import com.milaboratory.primitivio.PrimitivIOStateBuilder;
 import com.milaboratory.util.OutputPortWithExpectedSize;
-import com.milaboratory.util.OutputPortWithExpectedSizeKt;
 import com.milaboratory.util.OutputPortWithProgress;
 import com.milaboratory.util.TempFileManager;
 import com.milaboratory.util.sorting.MergeStrategy;
@@ -37,7 +36,7 @@ public final class CloneSetOverlap {
 
         List<OutputPortWithExpectedSize<Clone>> individualPorts = readers
                 .stream()
-                .map(r -> OutputPortWithExpectedSizeKt.withExpectedSize(r.readClones(), r.numberOfClones()))
+                .map(ClonesSupplier::readClones)
                 .collect(Collectors.toList());
 
 

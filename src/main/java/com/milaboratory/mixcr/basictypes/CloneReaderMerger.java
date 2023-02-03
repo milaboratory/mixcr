@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -12,8 +12,9 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.FlatteningOutputPort;
+import com.milaboratory.util.OutputPortWithExpectedSize;
+import com.milaboratory.util.OutputPortWithExpectedSizeKt;
 import io.repseq.core.VDJCGene;
 
 import java.util.List;
@@ -37,8 +38,9 @@ public class CloneReaderMerger implements CloneReader {
     }
 
     @Override
-    public OutputPort<Clone> readClones() {
-        return new FlatteningOutputPort<>(CUtils.asOutputPort(readers.stream().map(CloneReader::readClones).collect(Collectors.toList())));
+    public OutputPortWithExpectedSize<Clone> readClones() {
+        FlatteningOutputPort<Clone> combined = new FlatteningOutputPort<>(CUtils.asOutputPort(readers.stream().map(CloneReader::readClones).collect(Collectors.toList())));
+        return OutputPortWithExpectedSizeKt.withExpectedSize(combined, readers.stream().mapToInt(CloneReader::numberOfClones).sum());
     }
 
     @Override

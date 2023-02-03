@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -18,6 +18,8 @@ import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.*;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.OutputPortWithExpectedSize;
+import com.milaboratory.util.OutputPortWithExpectedSizeKt;
 import com.milaboratory.util.OutputPortWithProgress;
 import gnu.trove.map.hash.TIntIntHashMap;
 import io.repseq.core.GeneFeature;
@@ -270,8 +272,8 @@ public final class ClnAReader implements CloneReader, AutoCloseable {
      * Constructs output port to read clones one by one as a stream
      */
     @Override
-    public OutputPort<Clone> readClones() {
-        return input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition);
+    public OutputPortWithExpectedSize<Clone> readClones() {
+        return OutputPortWithExpectedSizeKt.withExpectedSize(input.beginRandomAccessPrimitivIBlocks(Clone.class, firstClonePosition), numberOfClones);
     }
 
     /**

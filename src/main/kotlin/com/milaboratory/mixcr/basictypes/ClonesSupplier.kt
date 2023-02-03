@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -11,11 +11,11 @@
  */
 package com.milaboratory.mixcr.basictypes
 
-import cc.redberry.pipe.OutputPort
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.util.OutputPortWithExpectedSize
 
 interface ClonesSupplier {
-    fun readClones(): OutputPort<Clone>
+    fun readClones(): OutputPortWithExpectedSize<Clone>
 
     fun numberOfClones(): Int
 

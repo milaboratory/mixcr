@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -12,12 +12,13 @@
 package com.milaboratory.mixcr.basictypes;
 
 import cc.redberry.pipe.CUtils;
-import cc.redberry.pipe.OutputPort;
 import com.milaboratory.app.ApplicationException;
 import com.milaboratory.mixcr.util.BackwardCompatibilityUtils;
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.blocks.PrimitivIHybrid;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.OutputPortWithExpectedSize;
+import com.milaboratory.util.OutputPortWithExpectedSizeKt;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibraryId;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -129,8 +130,8 @@ public class ClnsReader implements CloneReader, AutoCloseable {
     }
 
     @Override
-    public OutputPort<Clone> readClones() {
-        return input.beginRandomAccessPrimitivIBlocks(Clone.class, clonesPosition);
+    public OutputPortWithExpectedSize<Clone> readClones() {
+        return OutputPortWithExpectedSizeKt.withExpectedSize(input.beginRandomAccessPrimitivIBlocks(Clone.class, clonesPosition), numberOfClones);
     }
 
     public CloneSet readCloneSet() {

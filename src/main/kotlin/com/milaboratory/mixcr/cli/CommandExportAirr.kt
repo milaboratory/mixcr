@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -11,10 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.util.CountingOutputPort
 import cc.redberry.pipe.util.forEach
-import cc.redberry.pipe.util.withCounting
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -50,8 +47,7 @@ import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper
 import com.milaboratory.mixcr.export.FieldExtractor
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
-import com.milaboratory.util.CanReportProgress
-import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.exhaustive
 import com.milaboratory.util.limit
 import io.repseq.core.GeneFeature
@@ -133,6 +129,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                 AirrColumns.Single(gf.firstPoint), AirrColumns.Single(gf.lastPoint),
                 header
             )
+
             else -> NFeature(gf, header)
         }
     }
@@ -225,55 +222,40 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
     override fun run1() {
         val extractors: List<FieldExtractor<AirrVDJCObjectWrapper>>
         val closeable: AutoCloseable
-        var port: OutputPort<out VDJCObject>
+        var port: OutputPortWithProgress<out VDJCObject>
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
-        val cPort: CountingOutputPort<out VDJCObject>
         val fileInfo: MiXCRFileInfo
-        var progressReporter: CanReportProgress? = null
         when (fileType) {
             CLNA -> {
                 extractors = cloneExtractors()
                 val clnaReader = ClnAReader(input, libraryRegistry, 4)
-                cPort = clnaReader.readClones().withCounting()
-                port = cPort
+                port = clnaReader.readClones()
                 closeable = clnaReader
                 fileInfo = clnaReader
-                progressReporter = SmartProgressReporter.extractProgress(cPort, clnaReader.numberOfClones().toLong())
             }
+
             CLNS -> {
                 extractors = cloneExtractors()
                 val clnsReader = ClnsReader(input, libraryRegistry)
 
-                // I know, still writing airr is much slower...
-                var maxCount = 0
-                clnsReader.readClones().use { p ->
-                    p.forEach {
-                        ++maxCount
-                    }
-                }
-                cPort = clnsReader.readClones().withCounting()
-                port = cPort
+                port = clnsReader.readClones()
                 closeable = clnsReader
                 fileInfo = clnsReader
-                progressReporter = SmartProgressReporter.extractProgress(cPort, maxCount.toLong())
             }
+
             VDJCA -> {
                 extractors = alignmentsExtractors()
                 val alignmentsReader = VDJCAlignmentsReader(input, libraryRegistry)
                 fileInfo = alignmentsReader
                 port = alignmentsReader
                 closeable = alignmentsReader
-                progressReporter = alignmentsReader
             }
 
             SHMT -> throw UnsupportedOperationException(".shmt file unsupported")
         }.exhaustive
         if (limit != null) {
-            val clop = port.limit(limit!!.toLong())
-            port = clop
-            progressReporter = clop
+            port = port.limit(limit!!.toLong())
         }
-        SmartProgressReporter.startProgressReport("Exporting to AIRR format", progressReporter)
         val rowMetaForExport = RowMetaForExport(
             fileInfo.header.tagsInfo,
             MetaForExport(fileInfo),
@@ -281,25 +263,27 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         )
         (out?.let { PrintStream(it.toFile()) } ?: System.out).use { output ->
             closeable.use {
-                port.use {
-                    var first = true
-                    for (extractor in extractors) {
-                        if (!first) output.print("\t")
-                        first = false
-                        output.print(extractor.header)
-                    }
-                    output.println()
-                    port.forEach { obj ->
-                        first = true
-                        val wrapper = AirrVDJCObjectWrapper(obj)
+                port
+                    .reportProgress("Exporting to AIRR format")
+                    .use {
+                        var first = true
                         for (extractor in extractors) {
                             if (!first) output.print("\t")
                             first = false
-                            output.print(extractor.extractValue(rowMetaForExport, wrapper))
+                            output.print(extractor.header)
                         }
                         output.println()
+                        port.forEach { obj ->
+                            first = true
+                            val wrapper = AirrVDJCObjectWrapper(obj)
+                            for (extractor in extractors) {
+                                if (!first) output.print("\t")
+                                first = false
+                                output.print(extractor.extractValue(rowMetaForExport, wrapper))
+                            }
+                            output.println()
+                        }
                     }
-                }
             }
         }
     }

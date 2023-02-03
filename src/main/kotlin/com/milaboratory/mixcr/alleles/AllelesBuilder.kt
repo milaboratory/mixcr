@@ -13,11 +13,9 @@
 
 package com.milaboratory.mixcr.alleles
 
-import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.asSequence
 import cc.redberry.pipe.util.buffered
-import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.flatMap
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.mapInParallel
@@ -41,6 +39,7 @@ import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.asMutations
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.util.ComparatorWithHash
+import com.milaboratory.util.OutputPortWithExpectedSize
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.XSV
@@ -89,37 +88,33 @@ class AllelesBuilder(
         reportBuilder: FindAllelesReport.Builder,
         threads: Int
     ): Map<String, List<VDJCGeneData>> {
-        val totalClonesCount = datasets.sumOf { it.numberOfClones() }.toLong()
         val stateBuilder = featureToAlign.constructStateBuilder(usedGenes)
 
         //assumption: there are no allele genes in library
         //TODO how to check assumption?
-        return datasets.filteredClones(clonesFilter) { filteredClones ->
-            filteredClones
-                .withExpectedSize(totalClonesCount)
-                .reportProgress(progress, "Grouping by the same ${geneType.letter} gene")
-                .groupByOnDisk(
-                    ComparatorWithHash.compareBy { it.getBestHit(geneType).gene },
-                    tempDest,
-                    "alleles.searcher.${geneType.letterLowerCase}",
-                    stateBuilder
-                )
-                .map { it.toList() }
-                .reportProgress(progress, "Searching for ${geneType.letter} alleles")
-                .buffered(1) //also make take() from upstream synchronized
-                .mapInParallel(threads) { cluster ->
-                    val geneId = cluster[0].getBestHit(geneType).gene.name
-                    geneId to findAlleles(
-                        cluster,
-                        complementaryAlleles,
-                        geneType,
-                        reportBuilder
-                    ).sortedBy { it.name }
-                }
-                .asSequence()
-                .sortedBy { it.first }
-                .toMap()
-        }
+        return datasets.filteredClones(clonesFilter)
+            .reportProgress(progress, "Grouping by the same ${geneType.letter} gene")
+            .groupByOnDisk(
+                ComparatorWithHash.compareBy { it.getBestHit(geneType).gene },
+                tempDest,
+                "alleles.searcher.${geneType.letterLowerCase}",
+                stateBuilder
+            )
+            .map { it.toList() }
+            .reportProgress(progress, "Searching for ${geneType.letter} alleles")
+            .buffered(1) //also make take() from upstream synchronized
+            .mapInParallel(threads) { cluster ->
+                val geneId = cluster[0].getBestHit(geneType).gene.name
+                geneId to findAlleles(
+                    cluster,
+                    complementaryAlleles,
+                    geneType,
+                    reportBuilder
+                ).sortedBy { it.name }
+            }
+            .asSequence()
+            .sortedBy { it.first }
+            .toMap()
     }
 
     private fun findAlleles(
@@ -462,13 +457,14 @@ class AllelesBuilder(
             val CDR3Variants = mutableSetOf<Int>()
             val VVariants = mutableSetOf<String>()
             val JVariants = mutableSetOf<String>()
-            datasets.filteredClones(clonesFilter) { clones ->
-                clones.forEach { clone ->
+            datasets
+                .filteredClones(clonesFilter)
+                .reportProgress("Count diversity for dataset")
+                .forEach { clone ->
                     CDR3Variants += clone.ntLengthOf(CDR3)
                     VVariants += clone.getBestHit(Variable).gene.name
                     JVariants += clone.getBestHit(Joining).gene.name
                 }
-            }
             return AllelesBuilder(
                 parameters.searchAlleleParameter,
                 parameters.searchMutationsInCDR3,
@@ -487,15 +483,13 @@ class AllelesBuilder(
             )
         }
 
-        private fun <R> List<ClonesSupplier>.filteredClones(
-            filter: ClonesFilter,
-            function: (OutputPort<Clone>) -> R
-        ): R = asOutputPort()
-            .flatMap { cloneReader ->
-                cloneReader.readClones().filter { clone ->
-                    filter.match(clone, cloneReader.tagsInfo)
+        private fun List<ClonesSupplier>.filteredClones(filter: ClonesFilter): OutputPortWithExpectedSize<Clone> =
+            asOutputPort()
+                .flatMap { cloneReader ->
+                    cloneReader.readClones().filter { clone ->
+                        filter.match(clone, cloneReader.tagsInfo)
+                    }
                 }
-            }
-            .use(function)
+                .withExpectedSize(this.sumOf { it.numberOfClones() }.toLong())
     }
 }

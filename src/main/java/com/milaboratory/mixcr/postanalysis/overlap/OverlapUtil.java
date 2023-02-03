@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -11,10 +11,10 @@
  */
 package com.milaboratory.mixcr.postanalysis.overlap;
 
-import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.util.SimpleProcessorWrapper;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.util.LambdaSemaphore;
+import com.milaboratory.util.OutputPortWithExpectedSize;
 import com.milaboratory.util.OutputPortWithProgress;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.GeneType;
@@ -121,9 +121,29 @@ public final class OverlapUtil {
             }
 
             @Override
-            public OutputPort<Clone> readClones() {
-                OutputPort<Clone> in = inner.readClones();
-                return new OutputPort<Clone>() {
+            public OutputPortWithExpectedSize<Clone> readClones() {
+                OutputPortWithExpectedSize<Clone> in = inner.readClones();
+                return new OutputPortWithExpectedSize<Clone>() {
+                    @Override
+                    public long getCount() {
+                        return in.getCount();
+                    }
+
+                    @Override
+                    public long getExpectedSize() {
+                        return in.getExpectedSize();
+                    }
+
+                    @Override
+                    public double getProgress() {
+                        return in.getProgress();
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return in.isFinished();
+                    }
+
                     @Override
                     public void close() {
                         in.close();

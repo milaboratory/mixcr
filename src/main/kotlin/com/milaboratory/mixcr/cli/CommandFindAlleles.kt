@@ -373,7 +373,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 cloneReader.header.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
-                val withRecalculatedScores = port.withExpectedSize(cloneReader.numberOfClones().toLong())
+                val withRecalculatedScores = port
                     .reportProgress(progressAndStage, "Recalculating scores ${inputFiles[i]}")
                     .let { clones ->
                         cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
