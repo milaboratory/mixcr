@@ -1057,7 +1057,7 @@ public final class FullSeqAssembler {
         final MatrixCache affineCache = new MatrixCache();
     }
 
-    //fixme write docs
+    // fixme write docs
     static Alignment<NucleotideSequence>
     alignSeq1FromLeft(AlignmentScoring<NucleotideSequence> scoring,
                       NucleotideSequence seq1, NucleotideSequence seq2,
@@ -1075,7 +1075,7 @@ public final class FullSeqAssembler {
                     seq1, seq2, offset1, length1, offset2, length2, global, cache.affineCache);
     }
 
-    //fixme write docs
+    // fixme write docs
     static Alignment<NucleotideSequence>
     alignSeq1FromRight(AlignmentScoring<NucleotideSequence> scoring,
                        NucleotideSequence seq1, NucleotideSequence seq2,
@@ -1093,7 +1093,7 @@ public final class FullSeqAssembler {
                     seq1, seq2, offset1, length1, offset2, length2, global, cache.affineCache);
     }
 
-    //fixme write docs
+    // fixme write docs
     static Alignment<NucleotideSequence>
     alignLinearSeq1FromLeft(LinearGapAlignmentScoring<NucleotideSequence> scoring,
                             NucleotideSequence seq1, NucleotideSequence seq2,
@@ -1144,7 +1144,7 @@ public final class FullSeqAssembler {
                 result.score);
     }
 
-    //fixme write docs
+    // fixme write docs
     static Alignment<NucleotideSequence>
     alignLinearSeq1FromRight(LinearGapAlignmentScoring<NucleotideSequence> scoring,
                              NucleotideSequence seq1, NucleotideSequence seq2,
@@ -1347,10 +1347,14 @@ public final class FullSeqAssembler {
                 return Collections.singletonList(
                         new Variant(bestVariant << 8 | (int) Math.min(SequenceQuality.MAX_QUALITY_VALUE, phredQuality),
                                 reads, 1));
-            } else
+            } else {
                 // No variants to output (poorly covered or ambiguous position)
                 // Should substitute 'N'
-                return Collections.singletonList(new Variant(AMBIGUOUS_PACKED_VARIANT_INFO, targetReads, 0));
+                if (parameters.getDiscardAmbiguousNucleotideCalls())
+                    return Collections.singletonList(new Variant(ABSENT_PACKED_VARIANT_INFO, targetReads, 0));
+                else
+                    return Collections.singletonList(new Variant(AMBIGUOUS_PACKED_VARIANT_INFO, targetReads, 0));
+            }
         } else {
             if (variants.size() == 1)
                 // Adding unassigned reads to all variants (only if exactly one significant variant was found)
@@ -1776,7 +1780,7 @@ public final class FullSeqAssembler {
         NSequenceWithQuality assemblingFeature = alignments.getFeature(this.assemblingFeature);
         if (assemblingFeature != null) {
             byte quality = assemblingFeature.getQuality().minValue();
-            //if (!inSplitRegion(positionOfAssemblingFeature))
+            // if (!inSplitRegion(positionOfAssemblingFeature))
             quality |= 0x80;
             assemblingFeaturePointSeq = Stream.of(new PointSequence(positionOfAssemblingFeature, assemblingFeature, quality));
         } else

@@ -429,7 +429,7 @@ class FullSeqAssemblerTest {
             0.1, 80, 120,
             3, 7, 0.25, 3.0,
             0.5, 50, GeneFeatures.fromOrdinal(GeneFeature.VDJRegion), null, PostFiltering.NoFiltering,
-            QualityTrimmerParameters(20.0f, 8), 20, false
+            QualityTrimmerParameters(20.0f, 8), 20, false, false
         )
         val masterSeq1WT = MasterSequence(
             "CTGAAGAAAACCAGCCCTGCAGCTCTGGGAGAGGAGCCCCAGCCCTGGGATTCCCAGCTGTTTCTGCTTGCTGATCAGGACTGCACACAGAGAACTCACC" +
