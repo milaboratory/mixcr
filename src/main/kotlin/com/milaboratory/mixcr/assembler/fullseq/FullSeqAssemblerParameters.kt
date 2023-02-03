@@ -90,7 +90,11 @@ data class FullSeqAssemblerParameters constructor(
     /**
      * Assemble only parts of sequences covered by alignments
      */
-    @JsonProperty("alignedRegionsOnly") val isAlignedRegionsOnly: Boolean
+    @JsonProperty("alignedRegionsOnly") val isAlignedRegionsOnly: Boolean,
+    /**
+     * Discard ambiguous calls (no use of 'N's)
+     */
+    @JsonProperty("discardAmbiguousNucleotideCalls") val discardAmbiguousNucleotideCalls: Boolean,
 ) {
     /** Returns post filtering predicate instance */
     @get:JsonIgnore
