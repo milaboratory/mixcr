@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -375,14 +375,14 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             cloneReader.readClones().use { port ->
                 val withRecalculatedScores = port.withExpectedSize(cloneReader.numberOfClones().toLong())
                     .reportProgress(progressAndStage, "Recalculating scores ${inputFiles[i]}")
-                    .use { clones ->
+                    .let { clones ->
                         cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
                     }
                 if (outputClnsOptions.outputTemplate != null) {
                     withRecalculatedScores.asOutputPort()
                         .withExpectedSize(cloneReader.numberOfClones().toLong())
                         .reportProgress(progressAndStage, "Realigning ${inputFiles[i]}")
-                        .use { clonesWithScores ->
+                        .let { clonesWithScores ->
                             val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
                             outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
                             val callback = outputClnsFiles[i].toFile()

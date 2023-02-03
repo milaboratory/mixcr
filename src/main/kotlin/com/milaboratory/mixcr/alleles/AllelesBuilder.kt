@@ -98,33 +98,27 @@ class AllelesBuilder(
             filteredClones
                 .withExpectedSize(totalClonesCount)
                 .reportProgress(progress, "Grouping by the same ${geneType.letter} gene")
-                .use { clones ->
-                    clones
-                        .groupByOnDisk(
-                            ComparatorWithHash.compareBy { it.getBestHit(geneType).gene },
-                            tempDest,
-                            "alleles.searcher.${geneType.letterLowerCase}",
-                            stateBuilder
-                        )
-                }
+                .groupByOnDisk(
+                    ComparatorWithHash.compareBy { it.getBestHit(geneType).gene },
+                    tempDest,
+                    "alleles.searcher.${geneType.letterLowerCase}",
+                    stateBuilder
+                )
                 .map { it.toList() }
                 .reportProgress(progress, "Searching for ${geneType.letter} alleles")
-                .use { clustersWithTheSameV ->
-                    clustersWithTheSameV
-                        .buffered(1) //also make take() from upstream synchronized
-                        .mapInParallel(threads) { cluster ->
-                            val geneId = cluster[0].getBestHit(geneType).gene.name
-                            geneId to findAlleles(
-                                cluster,
-                                complementaryAlleles,
-                                geneType,
-                                reportBuilder
-                            ).sortedBy { it.name }
-                        }
-                        .asSequence()
-                        .sortedBy { it.first }
-                        .toMap()
+                .buffered(1) //also make take() from upstream synchronized
+                .mapInParallel(threads) { cluster ->
+                    val geneId = cluster[0].getBestHit(geneType).gene.name
+                    geneId to findAlleles(
+                        cluster,
+                        complementaryAlleles,
+                        geneType,
+                        reportBuilder
+                    ).sortedBy { it.name }
                 }
+                .asSequence()
+                .sortedBy { it.first }
+                .toMap()
         }
     }
 

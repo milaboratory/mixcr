@@ -15,8 +15,6 @@ package com.milaboratory.mixcr.trees
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.asOutputPort
-import cc.redberry.pipe.util.buffered
-import cc.redberry.pipe.util.drainAndCount
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.flatMap
 import cc.redberry.pipe.util.flatten
@@ -53,7 +51,6 @@ import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.XSV
 import com.milaboratory.util.cached
 import com.milaboratory.util.groupByOnDisk
-import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
@@ -136,7 +133,7 @@ internal class SHMTreeBuilderBySteps(
         clones
             .groupByTheSameTargets(progressAndStage)
             .groupByTheSameVJBase(progressAndStage)
-            .buffered(1) //also make take() from upstream synchronized
+            //also make take() from upstream synchronized
             .cached(
                 tempDest.addSuffix("tree.builder.grouping.by.the.same.VJ.CDR3Length"),
                 stateBuilder,
@@ -145,32 +142,26 @@ internal class SHMTreeBuilderBySteps(
                 concurrencyToWrite = max(1, threads / 2)
             )
             .use { clustersCache ->
-                val cloneWrappersCount = clustersCache.createPort().drainAndCount()
-
                 steps.forEachIndexed { i, step ->
                     val previousStepDebug = if (i != 0) debugs[i - 1] else null
                     val currentStepDebug = debugs[i]
                     val allClonesInTress = allClonesInTress
                     clustersCache.createPort()
-                        .withExpectedSize(cloneWrappersCount)
                         .reportProgress(progressAndStage, "Step ${i + 1}/${steps.size}, ${step.forPrint}")
-                        .use { clusters ->
-                            clusters.forEachInParallel(threads) { cluster ->
-                                applyStep(
-                                    cluster.clones,
-                                    step,
-                                    allClonesInTress,
-                                    previousStepDebug?.treesAfterDecisionsWriter,
-                                    currentStepDebug.treesBeforeDecisionsWriter
-                                )
-                            }
+                        .forEachInParallel(threads) { cluster ->
+                            applyStep(
+                                cluster.clones,
+                                step,
+                                allClonesInTress,
+                                previousStepDebug?.treesAfterDecisionsWriter,
+                                currentStepDebug.treesBeforeDecisionsWriter
+                            )
                         }
                     makeDecisions()
                 }
                 clustersCache.createPort()
-                    .withExpectedSize(cloneWrappersCount)
                     .reportProgress(progressAndStage, "Building results")
-                    .use { clusters ->
+                    .let { clusters ->
                         val result = clusters
                             .mapInParallelOrdered(threads) { cluster ->
                                 getResult(cluster.clones, debugs.last().treesAfterDecisionsWriter)
@@ -204,22 +195,19 @@ internal class SHMTreeBuilderBySteps(
         decisions = ConcurrentHashMap()
     }
 
-    private fun OutputPortWithProgress<List<CloneWithDatasetId>>.groupByTheSameVJBase(progressAndStage: ProgressAndStage): OutputPort<Cluster> =
+    private fun OutputPortWithProgress<List<CloneWithDatasetId>>.groupByTheSameVJBase(progressAndStage: ProgressAndStage): OutputPortWithProgress<Cluster> =
         reportProgress(progressAndStage, "Group clones by the same V, J and CDR3Length")
-            .use { groupedClones ->
-                groupedClones
-                    .flatMap { clones -> clones.asCloneWrappers().asOutputPort() }
-                    //filter by user defined parameters
-                    .filter { c -> clonesFilter.match(c) }
-                    .groupByOnDisk(
-                        ComparatorWithHash.compareBy(VJBase.comparator) { it.VJBase },
-                        tempDest,
-                        "tree.builder.grouping.by.the.same.VJ.CDR3Length",
-                        stateBuilder = stateBuilder
-                    )
-                    .map { it.toList() }
-                    .map { Cluster(it) }
-            }
+            .flatMap { clones -> clones.asCloneWrappers().asOutputPort() }
+            //filter by user defined parameters
+            .filter { c -> clonesFilter.match(c) }
+            .groupByOnDisk(
+                ComparatorWithHash.compareBy(VJBase.comparator) { it.VJBase },
+                tempDest,
+                "tree.builder.grouping.by.the.same.VJ.CDR3Length",
+                stateBuilder = stateBuilder
+            )
+            .map { it.toList() }
+            .map { Cluster(it) }
 
     private fun List<CloneWithDatasetId>.asCloneWrappers(): List<CloneWrapper> {
         val mainClone = CloneWrapper.chooseMainClone(map { it.clone })
@@ -247,16 +235,13 @@ internal class SHMTreeBuilderBySteps(
 
     private fun OutputPortWithProgress<CloneWithDatasetId>.groupByTheSameTargets(progressAndStage: ProgressAndStage): OutputPortWithProgress<List<CloneWithDatasetId>> =
         reportProgress(progressAndStage, "Search for clones with the same targets")
-            .use { allClones ->
-                //group efficiently the same clones
-                allClones
-                    .groupByOnDisk(
-                        ComparatorWithHash.compareBy { it.clone.targets.reduce(NSequenceWithQuality::concatenate) },
-                        tempDest,
-                        "tree.builder.grouping.clones.with.the.same.targets",
-                        stateBuilder
-                    )
-            }
+            //group efficiently the same clones
+            .groupByOnDisk(
+                ComparatorWithHash.compareBy { it.clone.targets.reduce(NSequenceWithQuality::concatenate) },
+                tempDest,
+                "tree.builder.grouping.clones.with.the.same.targets",
+                stateBuilder
+            )
             .map { it.toList() }
 
     /**
