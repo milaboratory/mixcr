@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -9,11 +9,12 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.export
+package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
+import com.milaboratory.mixcr.export.ExportFieldDescription
 import picocli.CommandLine.Option
 
 class ExportDefaultOptions : (List<ExportFieldDescription>) -> List<ExportFieldDescription> {

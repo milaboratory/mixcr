@@ -15,13 +15,11 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
 import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.asSequence
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.basictypes.ClnsReader
@@ -53,18 +51,9 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 object CommandExtend {
-    const val COMMAND_NAME = "extend"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.extend.name
 
-    data class Params(
-        @JsonProperty("vAnchor") val vAnchor: ReferencePoint,
-        @JsonProperty("jAnchor") val jAnchor: ReferencePoint,
-        @JsonProperty("minimalVScore") val minimalVScore: Int,
-        @JsonProperty("minimalJScore") val minimalJScore: Int
-    ) : MiXCRParams {
-        override val command = MiXCRCommandDescriptor.extend
-    }
-
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandExtendParams> {
         @Option(
             description = ["V extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--v-anchor"],
@@ -97,12 +86,12 @@ object CommandExtend {
         )
         private var minimalJScore: Int? = null
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::extend) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::vAnchor setIfNotNull vAnchorPoint
-                Params::jAnchor setIfNotNull jAnchorPoint
-                Params::minimalVScore setIfNotNull minimalVScore
-                Params::minimalJScore setIfNotNull minimalJScore
+        override val paramsResolver = object : MiXCRParamsResolver<CommandExtendParams>(MiXCRParamsBundle::extend) {
+            override fun POverridesBuilderOps<CommandExtendParams>.paramsOverrides() {
+                CommandExtendParams::vAnchor setIfNotNull vAnchorPoint
+                CommandExtendParams::jAnchor setIfNotNull jAnchorPoint
+                CommandExtendParams::minimalVScore setIfNotNull minimalVScore
+                CommandExtendParams::minimalJScore setIfNotNull minimalJScore
             }
         }
     }
@@ -257,7 +246,7 @@ object CommandExtend {
         private inner class ProcessWrapper<T : VDJCObject>(
             val reportBuilder: VDJCObjectExtender<T>,
             val output: ParallelProcessor<T, T>,
-            val params: Params,
+            val params: CommandExtendParams,
         ) {
             fun finish(): VDJCObjectExtenderReport {
                 reportBuilder.setFinishMillis(System.currentTimeMillis())

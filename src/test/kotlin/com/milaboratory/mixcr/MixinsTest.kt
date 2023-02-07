@@ -27,10 +27,10 @@ class MixinsTest {
             CommandAlign.SampleTable(
                 listOf("Sample"),
                 listOf(
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ATTG"), 0, listOf("S1")),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ACCC"), 0, listOf("S2")),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ATTG"), 1, listOf("S3")),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ACCC"), 1, listOf("S4")),
+                    CommandAlign.SampleTable.Row(sortedMapOf("CELL1" to "ATTG"), 0, listOf("S1")),
+                    CommandAlign.SampleTable.Row(sortedMapOf("CELL1" to "ACCC"), 0, listOf("S2")),
+                    CommandAlign.SampleTable.Row(sortedMapOf("CELL1" to "ATTG"), 1, listOf("S3")),
+                    CommandAlign.SampleTable.Row(sortedMapOf("CELL1" to "ACCC"), 1, listOf("S4")),
                 )
             )
         )

@@ -108,25 +108,12 @@ repositories {
     }
 }
 
+val mixcrAlgoVersion = "4.2.0"
 val milibVersion = "2.3.0"
-val repseqioVersion = "1.7.0"
-val miplotsVersion = "1.2.0"
-val mitoolVersion = "1.6.0-2-main"
 val jacksonBomVersion = "2.14.1"
-val redberryPipeVersion = "1.4.0"
 
 dependencies {
-    api("cc.redberry:pipe:$redberryPipeVersion")
-    api("com.milaboratory:milib:$milibVersion") {
-        exclude("cc.redberry", "pipe")
-    }
-    api("io.repseq:repseqio:$repseqioVersion") {
-        exclude("com.milaboratory", "milib")
-    }
-    api("com.milaboratory:mitool:$mitoolVersion") {
-        exclude("com.milaboratory", "milib")
-    }
-    api("com.milaboratory:miplots:$miplotsVersion")
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
 
     // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
     implementation("com.milaboratory:milm2-jvm:2.7.0")
@@ -134,17 +121,18 @@ dependencies {
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    implementation("commons-io:commons-io:2.11.0")
-    implementation("org.lz4:lz4-java:1.8.0")
-    implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("info.picocli:picocli:4.6.3")
-    implementation("com.google.guava:guava:31.1-jre")
-    implementation("com.itextpdf:itext7-core:7.2.1")
-    implementation("com.itextpdf:layout:7.2.1")
-    implementation("com.github.samtools:htsjdk:2.24.1")
-    implementation("org.slf4j:slf4j-nop:1.7.36")
+    implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("com.github.victools:jsonschema-generator:4.27.0")
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
+
+    // implementation("commons-io:commons-io:2.11.0")
+    // implementation("org.lz4:lz4-java:1.8.0")
+    // implementation("com.google.guava:guava:31.1-jre")
+    // implementation("com.itextpdf:itext7-core:7.2.1")
+    // implementation("com.itextpdf:layout:7.2.1")
+    // implementation("com.github.samtools:htsjdk:2.24.1")
+    // implementation("org.slf4j:slf4j-nop:1.7.36")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))

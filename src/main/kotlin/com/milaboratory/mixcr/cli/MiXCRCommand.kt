@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Spec
 
@@ -63,7 +64,7 @@ abstract class MiXCRCommand : Runnable {
         }
 
         const val exportOptions = 450_000
-        const val exportFields = 460_000
+        private const val exportFields = FieldExtractorsFactory.globalOrderInCli
 
         const val overrides = 500_000
 
@@ -73,5 +74,9 @@ abstract class MiXCRCommand : Runnable {
         const val forceOverride = 1_000_000 + 4_000
         const val logger = 1_000_000 + 5_000
         const val help = 1_000_000 + 6_000
+
+        init {
+            check(exportFields == 460_000)
+        }
     }
 }

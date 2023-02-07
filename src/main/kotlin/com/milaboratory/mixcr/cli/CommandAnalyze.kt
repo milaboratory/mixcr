@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -250,8 +250,8 @@ object CommandAnalyze {
             // Calculating samples
             val samples =
                 if (bundle.align!!.splitBySample)
-                    (if (bundle.align.inferSampleTable) CommandAlignPipeline.inferSampleTable(inputFileGroups)
-                    else bundle.align.sampleTable)
+                    (if (bundle.align!!.inferSampleTable) CommandAlignPipeline.inferSampleTable(inputFileGroups)
+                    else bundle.align!!.sampleTable)
                         ?.samples?.bySampleName()?.keys?.toList() ?: emptyList()
                 else
                     emptyList()

@@ -12,15 +12,12 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.primitives.Filter
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
@@ -32,8 +29,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.ExportDefaultOptions
-import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
@@ -54,23 +49,9 @@ import java.nio.file.Path
 import kotlin.io.path.Path
 
 object CommandExportClones {
-    const val COMMAND_NAME = "exportClones"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.exportClones.name
 
-    @JsonIgnoreProperties("splitByTags")
-    data class Params(
-        @JsonProperty("splitByTagType") val splitByTagType: TagType?,
-        @JsonProperty("filterOutOfFrames") val filterOutOfFrames: Boolean,
-        @JsonProperty("filterStops") val filterStops: Boolean,
-        @JsonProperty("chains") val chains: String,
-        @JsonProperty("noHeader") val noHeader: Boolean,
-        @JsonProperty("fields") val fields: List<ExportFieldDescription>,
-        @JsonProperty("splitFilesBy") val splitFilesBy: List<String> = emptyList(),
-        @JsonProperty("groupClonesBy") val groupClonesBy: List<String> = emptyList(),
-    ) : MiXCRParams {
-        override val command get() = MiXCRCommandDescriptor.exportClones
-    }
-
-    fun Params.mkFilter(): Filter<Clone> {
+    fun CommandExportClonesParams.mkFilter(): Filter<Clone> {
         val chains = Chains.parse(chains)
         return Filter {
             if (filterOutOfFrames)
@@ -89,7 +70,7 @@ object CommandExportClones {
         }
     }
 
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandExportClonesParams> {
         @Option(
             description = [
                 "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated).",
@@ -171,19 +152,20 @@ object CommandExportClones {
         lateinit var resetPreset: ResetPresetArgs
 
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportClones) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::chains setIfNotNull chains
-                Params::filterOutOfFrames setIfTrue filterOutOfFrames
-                Params::filterStops setIfTrue filterStops
-                Params::splitByTagType setIfNotNull splitByTagType
-                Params::splitFilesBy setIfNotEmpty splitFilesBy
-                Params::noHeader setIfTrue exportDefaults.noHeader
-                Params::fields updateBy exportDefaults
-                if (dontSplitFiles || (chains != null && chains != "ALL"))
-                    Params::splitFilesBy setTo emptyList()
+        override val paramsResolver =
+            object : MiXCRParamsResolver<CommandExportClonesParams>(MiXCRParamsBundle::exportClones) {
+                override fun POverridesBuilderOps<CommandExportClonesParams>.paramsOverrides() {
+                    CommandExportClonesParams::chains setIfNotNull chains
+                    CommandExportClonesParams::filterOutOfFrames setIfTrue filterOutOfFrames
+                    CommandExportClonesParams::filterStops setIfTrue filterStops
+                    CommandExportClonesParams::splitByTagType setIfNotNull splitByTagType
+                    CommandExportClonesParams::splitFilesBy setIfNotEmpty splitFilesBy
+                    CommandExportClonesParams::noHeader setIfTrue exportDefaults.noHeader
+                    CommandExportClonesParams::fields updateBy exportDefaults
+                    if (dontSplitFiles || (chains != null && chains != "ALL"))
+                        CommandExportClonesParams::splitFilesBy setTo emptyList()
+                }
             }
-        }
     }
 
     @Command(

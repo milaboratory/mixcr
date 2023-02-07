@@ -14,11 +14,13 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
+import com.milaboratory.mixcr.AlignMixins
 import com.milaboratory.mixcr.Flags
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRMixin
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import kotlin.reflect.KProperty1
 
 abstract class MiXCRParamsResolver<P : Any>(
@@ -29,7 +31,7 @@ abstract class MiXCRParamsResolver<P : Any>(
             println("Preset errors: ")
             bundle.flags.forEach { flag ->
                 println()
-                println("- " + Flags.flagMessages[flag]!!.replace("\n", "\n  "))
+                println("- " + flagMessages[flag]!!.replace("\n", "\n  "))
             }
             println()
 
@@ -42,6 +44,35 @@ abstract class MiXCRParamsResolver<P : Any>(
             throw ValidationException("assembleContigs step required clnaOutput=true on assemble step")
     }
 }
+
+private val flagMessages = mapOf(
+    Flags.Species to
+            "This preset requires to specify species, \n" +
+            "please use the following mix-in: ${AlignMixins.SetSpecies.CMD_OPTION} <name>",
+    Flags.MaterialType to
+            "This preset requires to specify material type, \n" +
+            "please use one of the following mix-ins: ${AlignMixins.MaterialTypeDNA.CMD_OPTION}, ${AlignMixins.MaterialTypeRNA.CMD_OPTION}",
+    Flags.LeftAlignmentMode to
+            "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
+            "please use one of the following mix-ins: \n" +
+            "${AlignMixins.AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION} [${Labels.ANCHOR_POINT}]\n" +
+            "${AlignMixins.AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION} [${Labels.ANCHOR_POINT}]",
+    Flags.RightAlignmentMode to
+            "This preset requires to specify left side (V gene) alignment boundary mode, \n" +
+            "please use one of the following mix-ins: \n" +
+            "${AlignMixins.AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} (${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})\n" +
+            "${AlignMixins.AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})]",
+
+    Flags.TagPattern to
+            "This preset requires to specify tag pattern, \n" +
+            "please use ${AlignMixins.SetTagPattern.CMD_OPTION} mix-in to set it, alternatively " +
+            "tag pattern can be provided with sample table using ${AlignMixins.SetSampleTable.CMD_OPTION} mixin.",
+
+    Flags.SampleTable to
+            "This preset requires to specify sample table, \n" +
+            "please use ${AlignMixins.SetSampleTable.CMD_OPTION} mix-in.",
+)
+
 
 interface MiXCRPresetAwareCommand<P : Any> : PresetAware<MiXCRParamsBundle, P>
 

@@ -15,13 +15,11 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.forEach
 import cc.redberry.primitives.Filter
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -30,8 +28,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.export.ExportDefaultOptions
-import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
@@ -51,17 +47,9 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 object CommandExportAlignments {
-    const val COMMAND_NAME = "exportAlignments"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.exportAlignments.name
 
-    data class Params(
-        @JsonProperty("chains") val chains: String,
-        @JsonProperty("noHeader") val noHeader: Boolean,
-        @JsonProperty("fields") val fields: List<ExportFieldDescription>,
-    ) : MiXCRParams {
-        override val command get() = MiXCRCommandDescriptor.exportAlignments
-    }
-
-    fun Params.mkFilter(): Filter<VDJCAlignments> {
+    fun CommandExportAlignmentsParams.mkFilter(): Filter<VDJCAlignments> {
         val chainsParsed = Chains.parse(chains)
         return Filter {
             if (chainsParsed != Chains.ALL) {
@@ -75,7 +63,7 @@ object CommandExportAlignments {
         }
     }
 
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandExportAlignmentsParams> {
         @Option(
             description = [
                 "Limit export to specific chain (e.g. TRA or IGH) (fractions will be recalculated)",
@@ -90,13 +78,14 @@ object CommandExportAlignments {
         @Mixin
         lateinit var exportDefaults: ExportDefaultOptions
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::exportAlignments) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::chains setIfNotNull chains
-                Params::noHeader setIfTrue exportDefaults.noHeader
-                Params::fields updateBy exportDefaults
+        override val paramsResolver =
+            object : MiXCRParamsResolver<CommandExportAlignmentsParams>(MiXCRParamsBundle::exportAlignments) {
+                override fun POverridesBuilderOps<CommandExportAlignmentsParams>.paramsOverrides() {
+                    CommandExportAlignmentsParams::chains setIfNotNull chains
+                    CommandExportAlignmentsParams::noHeader setIfTrue exportDefaults.noHeader
+                    CommandExportAlignmentsParams::fields updateBy exportDefaults
+                }
             }
-        }
     }
 
     @Command(

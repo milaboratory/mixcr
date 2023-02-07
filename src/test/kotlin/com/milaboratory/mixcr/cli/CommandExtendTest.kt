@@ -10,7 +10,7 @@ class CommandExtendTest {
     fun testSerialization() {
         TestUtil.assertJson(
             K_OM,
-            CommandExtend.Params(
+            CommandExtendParams(
                 ReferencePoint.CDR3Begin, ReferencePoint.CDR3End, 70, 100
             ),
             true

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -93,7 +93,8 @@ class CommandExportQcAlign : CommandExportQc() {
         val plt = alignQc(
             inputFiles.map { it },
             !absoluteValues,
-            sizeParameters
+            width = sizeParameters?.width,
+            height = sizeParameters?.height,
         )
         writeFile(output, plt)
     }

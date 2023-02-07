@@ -16,20 +16,16 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.mapInParallelOrdered
-import com.fasterxml.jackson.annotation.JsonMerge
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReportBuilder
 import com.milaboratory.mixcr.assembler.fullseq.PostFiltering
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -74,16 +70,9 @@ import java.util.*
 import java.util.stream.Collectors
 
 object CommandAssembleContigs {
-    const val COMMAND_NAME = "assembleContigs"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.assembleContigs.name
 
-    data class Params(
-        @JsonProperty("ignoreTags") val ignoreTags: Boolean,
-        @JsonProperty("parameters") @JsonMerge val parameters: FullSeqAssemblerParameters
-    ) : MiXCRParams {
-        override val command = MiXCRCommandDescriptor.assembleContigs
-    }
-
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAssembleContigsParams> {
         @Option(
             description = [
                 "Ignore tags (UMIs, cell-barcodes).",
@@ -107,20 +96,21 @@ object CommandAssembleContigs {
 
         protected val mixinsToAdd get() = mixins?.mixins ?: emptyList()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assembleContigs) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::ignoreTags setIfTrue ignoreTags
-                Params::parameters jsonOverrideWith overrides
-            }
+        override val paramsResolver =
+            object : MiXCRParamsResolver<CommandAssembleContigsParams>(MiXCRParamsBundle::assembleContigs) {
+                override fun POverridesBuilderOps<CommandAssembleContigsParams>.paramsOverrides() {
+                    CommandAssembleContigsParams::ignoreTags setIfTrue ignoreTags
+                    CommandAssembleContigsParams::parameters jsonOverrideWith overrides
+                }
 
-            override fun validateParams(params: Params) {
-                if (params.parameters.postFiltering != PostFiltering.NoFiltering) {
-                    if (params.parameters.assemblingRegions == null) {
-                        throw ValidationException("assemblingRegion must be set if postFiltering is not NoFiltering")
+                override fun validateParams(params: CommandAssembleContigsParams) {
+                    if (params.parameters.postFiltering != PostFiltering.NoFiltering) {
+                        if (params.parameters.assemblingRegions == null) {
+                            throw ValidationException("assemblingRegion must be set if postFiltering is not NoFiltering")
+                        }
                     }
                 }
             }
-        }
     }
 
     @Command(
@@ -165,7 +155,7 @@ object CommandAssembleContigs {
         override fun run1() {
             val beginTimestamp = System.currentTimeMillis()
 
-            val cmdParams: Params
+            val cmdParams: CommandAssembleContigsParams
             val paramsSpec: MiXCRParamsSpec
 
             val reportBuilder = FullSeqAssemblerReportBuilder()
@@ -360,7 +350,7 @@ object CommandAssembleContigs {
             val allFullyCoveredBy = if (
                 cmdParams.parameters.assemblingRegions != null &&
                 cmdParams.parameters.subCloningRegions == cmdParams.parameters.assemblingRegions &&
-                cmdParams.parameters.postFiltering == PostFiltering.OnlyUnambiguouslyCovering(cmdParams.parameters.assemblingRegions)
+                cmdParams.parameters.postFiltering == PostFiltering.OnlyUnambiguouslyCovering(cmdParams.parameters.assemblingRegions!!)
             ) {
                 cmdParams.parameters.assemblingRegions
             } else {

@@ -14,22 +14,17 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.StatusReporter
 import cc.redberry.pipe.util.map
-import com.fasterxml.jackson.annotation.JsonMerge
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.data.MinGroupsPerGroup
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
 import com.milaboratory.mixcr.assembler.CloneAssembler
-import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.CloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping.DROPPED_WITH_CLONE_MASK
-import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
@@ -58,22 +53,9 @@ import java.nio.file.Path
 import kotlin.io.path.extension
 
 object CommandAssemble {
-    const val COMMAND_NAME = "assemble"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.assemble.name
 
-    data class Params(
-        @JsonProperty("sortBySequence") val sortBySequence: Boolean,
-        @JsonProperty("clnaOutput") val clnaOutput: Boolean,
-        @JsonProperty("cellLevel") val cellLevel: Boolean,
-        @JsonMerge @JsonProperty("consensusAssemblerParameters") val consensusAssemblerParameters: PreCloneAssemblerParameters?,
-        @JsonMerge @JsonProperty("cloneAssemblerParameters") val cloneAssemblerParameters: CloneAssemblerParameters,
-        /** Try automatically infer threshold value for the minimal number of records per consensus from the
-         * filtering metadata of tag-refinement step. Applied only if corresponding threshold equals to 0. */
-        @JsonProperty("inferMinRecordsPerConsensus") val inferMinRecordsPerConsensus: Boolean,
-    ) : MiXCRParams {
-        override val command = MiXCRCommandDescriptor.assemble
-    }
-
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAssembleParams> {
         @Option(
             description = ["If this option is specified, output file will be written in \"Clones & " +
                     "Alignments\" format (*.clna), containing clones and all corresponding alignments. " +
@@ -134,14 +116,14 @@ object CommandAssemble {
         )
         private var dontInferThreshold = false
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemble) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::clnaOutput setIfTrue isClnaOutput
-                Params::cellLevel setIfTrue cellLevel
-                Params::sortBySequence setIfTrue sortBySequence
-                Params::cloneAssemblerParameters jsonOverrideWith cloneAssemblerOverrides
-                Params::consensusAssemblerParameters jsonOverrideWith consensusAssemblerOverrides
-                Params::inferMinRecordsPerConsensus resetIfTrue dontInferThreshold
+        override val paramsResolver = object : MiXCRParamsResolver<CommandAssembleParams>(MiXCRParamsBundle::assemble) {
+            override fun POverridesBuilderOps<CommandAssembleParams>.paramsOverrides() {
+                CommandAssembleParams::clnaOutput setIfTrue isClnaOutput
+                CommandAssembleParams::cellLevel setIfTrue cellLevel
+                CommandAssembleParams::sortBySequence setIfTrue sortBySequence
+                CommandAssembleParams::cloneAssemblerParameters jsonOverrideWith cloneAssemblerOverrides
+                CommandAssembleParams::consensusAssemblerParameters jsonOverrideWith consensusAssemblerOverrides
+                CommandAssembleParams::inferMinRecordsPerConsensus resetIfTrue dontInferThreshold
             }
         }
     }
@@ -227,7 +209,7 @@ object CommandAssemble {
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
                         return@resolve cp
 
-                    if (cp.consensusAssemblerParameters.assembler.minRecordsPerConsensus != 0) {
+                    if (cp.consensusAssemblerParameters!!.assembler.minRecordsPerConsensus != 0) {
                         println(
                             "WARNING: minRecordsPerConsensus has non default value (not equal to 0), the automatic " +
                                     "inference of this parameter was canceled."
@@ -243,13 +225,13 @@ object CommandAssemble {
                     if (threshold == null) {
                         println(
                             "No data to automatically infer minRecordsPerConsensus. Using default value: " +
-                                    cp.consensusAssemblerParameters.assembler.minRecordsPerConsensus
+                                    cp.consensusAssemblerParameters!!.assembler.minRecordsPerConsensus
                         )
                         cp
                     } else {
                         println("Value for minRecordsPerConsensus was automatically inferred and set to ${threshold.toInt()}")
                         cp.copy(
-                            consensusAssemblerParameters = cp.consensusAssemblerParameters
+                            consensusAssemblerParameters = cp.consensusAssemblerParameters!!
                                 .mapAssembler { it.withMinRecordsPerConsensus(threshold.toInt()) }
                         )
                     }

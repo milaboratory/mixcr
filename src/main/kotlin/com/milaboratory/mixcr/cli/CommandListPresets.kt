@@ -11,8 +11,10 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.AlignMixins
 import com.milaboratory.mixcr.Flags
 import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import picocli.CommandLine
 import picocli.CommandLine.Command
 
@@ -20,17 +22,13 @@ import picocli.CommandLine.Command
     description = ["Show all available presets"]
 )
 class CommandListPresets : MiXCRCommand() {
-    companion object {
-        const val COMMAND_NAME = "listPresets"
-    }
-
     override fun run0() {
         val maxPresetNameLength = Presets.visiblePresets.maxOf { it.length }
         val table = CommandLine.Help.TextTable.forColumns(
             spec.commandLine().colorScheme,
             CommandLine.Help.Column(maxPresetNameLength, 0, CommandLine.Help.Column.Overflow.WRAP),
             CommandLine.Help.Column(
-                Flags.flagOptions.values.flatMap { message -> message.split("\n").map { it.length } }.max() + 2,
+                flagOptions.values.flatMap { message -> message.split("\n").map { it.length } }.max() + 2,
                 2,
                 CommandLine.Help.Column.Overflow.SPAN
             )
@@ -41,9 +39,22 @@ class CommandListPresets : MiXCRCommand() {
             val preset = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             table.addRowValues(
                 presetName,
-                preset.flags.joinToString("\n") { Flags.flagOptions[it]!! }
+                preset.flags.joinToString("\n") { flagOptions[it]!! }
             )
         }
         println(table.toString())
     }
 }
+
+private val flagOptions = mapOf(
+    Flags.Species to "${AlignMixins.SetSpecies.CMD_OPTION} <name>",
+    Flags.MaterialType to "(${AlignMixins.MaterialTypeDNA.CMD_OPTION}|${AlignMixins.MaterialTypeRNA.CMD_OPTION})",
+    Flags.LeftAlignmentMode to
+            "(${AlignMixins.AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION} [${Labels.ANCHOR_POINT}]|\n" +
+            "${AlignMixins.AlignmentBoundaryConstants.LEFT_RIGID_CMD_OPTION} [${Labels.ANCHOR_POINT}])",
+    Flags.RightAlignmentMode to
+            "(${AlignMixins.AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} (${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})|\n" +
+            "${AlignMixins.AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})])",
+    Flags.TagPattern to "${AlignMixins.SetTagPattern.CMD_OPTION} <pattern>",
+    Flags.SampleTable to "${AlignMixins.SetSampleTable.CMD_OPTION} sample_table.tsv",
+)
