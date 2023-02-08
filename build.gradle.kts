@@ -19,21 +19,16 @@ gradle.startParameter.excludedTaskNames += listOf(
     "shadowDistZip"
 )
 
-val dataframeVersion = "0.8.1"
-
 plugins {
     `java-library`
     application
     `maven-publish`
     kotlin("jvm") version "1.7.10"
-    id("org.jetbrains.kotlinx.dataframe") version "0.8.1"
     id("com.palantir.git-version") version "0.15.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.bmuschko.docker-java-application") version "7.4.0"
     id("de.undercouch.download") version "5.1.0"
 }
-// Make IDE aware of the generated code:
-kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
 
 val miRepoAccessKeyId: String? by project
 val miRepoSecretAccessKey: String? by project
@@ -125,14 +120,6 @@ dependencies {
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("com.github.victools:jsonschema-generator:4.27.0")
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
-
-    // implementation("commons-io:commons-io:2.11.0")
-    // implementation("org.lz4:lz4-java:1.8.0")
-    // implementation("com.google.guava:guava:31.1-jre")
-    // implementation("com.itextpdf:itext7-core:7.2.1")
-    // implementation("com.itextpdf:layout:7.2.1")
-    // implementation("com.github.samtools:htsjdk:2.24.1")
-    // implementation("org.slf4j:slf4j-nop:1.7.36")
 
     testImplementation("junit:junit:4.13.2")
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))

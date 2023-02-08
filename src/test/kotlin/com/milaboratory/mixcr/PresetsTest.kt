@@ -9,6 +9,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.test.TestUtil.assertJson
@@ -38,7 +39,7 @@ class PresetsTest {
                 )
             }
             bundle.flags.forEach {
-                Assert.assertTrue("Flag = $it", Flags.flagMessages.containsKey(it))
+                Assert.assertTrue("Flag = $it", presetFlagsMessages.containsKey(it))
             }
         }
     }

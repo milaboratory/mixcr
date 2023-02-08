@@ -31,7 +31,7 @@ abstract class MiXCRParamsResolver<P : Any>(
             println("Preset errors: ")
             bundle.flags.forEach { flag ->
                 println()
-                println("- " + flagMessages[flag]!!.replace("\n", "\n  "))
+                println("- " + presetFlagsMessages[flag]!!.replace("\n", "\n  "))
             }
             println()
 
@@ -45,7 +45,7 @@ abstract class MiXCRParamsResolver<P : Any>(
     }
 }
 
-private val flagMessages = mapOf(
+val presetFlagsMessages = mapOf(
     Flags.Species to
             "This preset requires to specify species, \n" +
             "please use the following mix-in: ${AlignMixins.SetSpecies.CMD_OPTION} <name>",

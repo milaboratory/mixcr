@@ -1,6 +1,5 @@
 package com.milaboratory.mixcr.trees
 
-import com.google.common.primitives.Bytes
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.alignment.LinearGapAlignmentScoring
@@ -9,8 +8,6 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.MutationsBuilder
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
-import java.util.stream.Collectors
-import java.util.stream.IntStream
 import kotlin.random.Random
 
 fun Random.generateMutations(
@@ -29,6 +26,7 @@ fun Random.generateMutations(
                     i1++
                 }
             }
+
             1 -> result.append(Mutation.createDeletion(i, parentChars[i].toInt()))
             2, 3, 4 -> {
                 val replaceWith = nextInt(4).toByte()
@@ -48,12 +46,10 @@ fun Random.generateMutations(
     ).absoluteMutations
 }
 
-fun Random.generateSequence(size: Int): NucleotideSequence {
-    val chars = IntStream.range(0, size)
-        .mapToObj { nextInt(4).toByte() }
-        .collect(Collectors.toList())
-    return NucleotideSequence(Bytes.toArray(chars))
-}
+fun Random.generateSequence(size: Int): NucleotideSequence =
+    NucleotideSequence(ByteArray(size) {
+        nextInt(4).toByte()
+    })
 
 fun buildSequence(
     sequence1: NucleotideSequence,

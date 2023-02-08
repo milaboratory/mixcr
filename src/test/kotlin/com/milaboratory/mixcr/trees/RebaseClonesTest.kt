@@ -13,7 +13,6 @@
 
 package com.milaboratory.mixcr.trees
 
-import com.google.common.collect.Maps
 import com.milaboratory.core.Range
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring
 import com.milaboratory.core.alignment.Aligner
@@ -49,6 +48,7 @@ import io.repseq.core.VDJCLibraryId
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.lang.Integer.min
+import java.util.*
 import kotlin.random.Random
 
 class RebaseClonesTest {
@@ -585,7 +585,7 @@ class RebaseClonesTest {
             CloneWrapper(
                 listOf(
                     CloneWithDatasetId(
-                        Clone(emptyArray(), Maps.newEnumMap(GeneType::class.java), null, 0.0, 0, 0),
+                        Clone(emptyArray(), EnumMap(GeneType::class.java), null, 0.0, 0, 0),
                         0
                     )
                 ),
