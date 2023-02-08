@@ -103,7 +103,7 @@ repositories {
     }
 }
 
-val mixcrAlgoVersion = "4.2.0"
+val mixcrAlgoVersion = "4.2.0-6-migration"
 val milibVersion = "2.3.0"
 val jacksonBomVersion = "2.14.1"
 
