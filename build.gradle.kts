@@ -19,21 +19,16 @@ gradle.startParameter.excludedTaskNames += listOf(
     "shadowDistZip"
 )
 
-val dataframeVersion = "0.8.1"
-
 plugins {
     `java-library`
     application
     `maven-publish`
     kotlin("jvm") version "1.7.10"
-    id("org.jetbrains.kotlinx.dataframe") version "0.8.1"
     id("com.palantir.git-version") version "0.15.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.bmuschko.docker-java-application") version "7.4.0"
     id("de.undercouch.download") version "5.1.0"
 }
-// Make IDE aware of the generated code:
-kotlin.sourceSets.getByName("main").kotlin.srcDir("build/generated/ksp/main/kotlin/")
 
 val miRepoAccessKeyId: String? by project
 val miRepoSecretAccessKey: String? by project
@@ -108,25 +103,12 @@ repositories {
     }
 }
 
+val mixcrAlgoVersion = "4.2.0-6-migration"
 val milibVersion = "2.3.0"
-val repseqioVersion = "1.7.0"
-val miplotsVersion = "1.2.0"
-val mitoolVersion = "1.6.0-2-main"
 val jacksonBomVersion = "2.14.1"
-val redberryPipeVersion = "1.4.0"
 
 dependencies {
-    api("cc.redberry:pipe:$redberryPipeVersion")
-    api("com.milaboratory:milib:$milibVersion") {
-        exclude("cc.redberry", "pipe")
-    }
-    api("io.repseq:repseqio:$repseqioVersion") {
-        exclude("com.milaboratory", "milib")
-    }
-    api("com.milaboratory:mitool:$mitoolVersion") {
-        exclude("com.milaboratory", "milib")
-    }
-    api("com.milaboratory:miplots:$miplotsVersion")
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
 
     // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
     implementation("com.milaboratory:milm2-jvm:2.7.0")
@@ -134,15 +116,8 @@ dependencies {
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    implementation("commons-io:commons-io:2.11.0")
-    implementation("org.lz4:lz4-java:1.8.0")
-    implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("info.picocli:picocli:4.6.3")
-    implementation("com.google.guava:guava:31.1-jre")
-    implementation("com.itextpdf:itext7-core:7.2.1")
-    implementation("com.itextpdf:layout:7.2.1")
-    implementation("com.github.samtools:htsjdk:2.24.1")
-    implementation("org.slf4j:slf4j-nop:1.7.36")
+    implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("com.github.victools:jsonschema-generator:4.27.0")
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
 
@@ -150,6 +125,8 @@ dependencies {
     implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
+
+    testImplementation("org.lz4:lz4-java:1.8.0")
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {

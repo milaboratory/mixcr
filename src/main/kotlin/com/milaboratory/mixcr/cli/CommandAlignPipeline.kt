@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -47,7 +47,7 @@ object CommandAlignPipeline {
     private val readGroupPattern = Regex("R\\d+")
 
     fun getTagsExtractor(
-        cmdParams: CommandAlign.Params,
+        cmdParams: CommandAlignParams,
         fileGroups: CommandAlign.InputFileGroups
     ): TagsExtractor {
         var plan: ReadSearchPlan? = null
@@ -61,7 +61,7 @@ object CommandAlignPipeline {
                 SearchSettings.Default.copy(bitBudget = cmdParams.tagMaxBudget),
                 if (cmdParams.tagUnstranded) ReadSearchMode.DirectAndReversed else ReadSearchMode.Direct
             )
-            plan = ReadSearchPlan.create(cmdParams.tagPattern, searchSettings)
+            plan = ReadSearchPlan.create(cmdParams.tagPattern!!, searchSettings)
             for (tagName in plan.allTags)
                 if (tagName.matches(readGroupPattern))
                     readTags += tagName
@@ -164,15 +164,15 @@ object CommandAlignPipeline {
         )
     }
 
-    fun inferSampleTable(fileGroups: CommandAlign.InputFileGroups): CommandAlign.SampleTable {
+    fun inferSampleTable(fileGroups: CommandAlign.InputFileGroups): CommandAlignParams.SampleTable {
         val sampleTagNames = fileGroups.tags.filter { detectTagTypeByName(it) == TagType.Sample }
-        return CommandAlign.SampleTable(
+        return CommandAlignParams.SampleTable(
             sampleTagNames,
             fileGroups.fileGroups
                 .map { fg -> sampleTagNames.map { fg.getTag(it) } }
                 .toSortedSet(listComparator())
                 .map { sample ->
-                    CommandAlign.SampleTableRow(
+                    CommandAlignParams.SampleTable.Row(
                         matchTags = sampleTagNames
                             .mapIndexed { i, tn -> tn to sample[i] }
                             .toMap(TreeMap()),
@@ -314,7 +314,7 @@ object CommandAlignPipeline {
         }
     }
 
-    private fun CommandAlign.SampleTable.toTagMapper(
+    private fun CommandAlignParams.SampleTable.toTagMapper(
         originalInfo: TagsInfo,
         addSampleTag: Boolean
     ): Pair<TagMapper, TagsInfo> = run {

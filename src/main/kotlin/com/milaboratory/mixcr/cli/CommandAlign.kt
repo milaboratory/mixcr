@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -19,10 +19,6 @@ import cc.redberry.pipe.util.mapChunksInParallel
 import cc.redberry.pipe.util.mapUnchunked
 import cc.redberry.pipe.util.ordered
 import cc.redberry.pipe.util.unchunked
-import com.fasterxml.jackson.annotation.JsonAlias
-import com.fasterxml.jackson.annotation.JsonFormat
-import com.fasterxml.jackson.annotation.JsonMerge
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -47,7 +43,6 @@ import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.use
 import com.milaboratory.mixcr.AlignMixins.LimitInput
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRStepParams
@@ -113,61 +108,9 @@ import kotlin.io.path.readText
 import kotlin.math.max
 
 object CommandAlign {
-    const val COMMAND_NAME = "align"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.align.name
 
-    /** Defines specific mapping between tag values and sample name (i.e. one row from sample table) */
-    data class SampleTableRow(
-        @JsonProperty("matchTags") val matchTags: SortedMap<String, String> = TreeMap(),
-        @JsonProperty("matchVariantId") val matchVariantId: Int? = null,
-        @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-        @JsonAlias("sampleName")
-        @JsonProperty("sample")
-        val sample: List<String>
-    ) {
-        init {
-            require(matchTags.isNotEmpty() || matchVariantId != null)
-        }
-
-        fun matchingInfoString() =
-            matchVariantId.toString() + " " + matchTags.entries.joinToString("|") { it.key + "-" + it.value }
-
-        override fun toString() =
-            sample.joinToString("+") + " " + matchingInfoString()
-    }
-
-    /** Whole set of sample tag values to sample name mappings (i.e. sample table) */
-    data class SampleTable(
-        @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-        @JsonAlias("sampleTagName")
-        @JsonProperty("sampleTagNames")
-        val sampleTagNames: List<String>,
-        @JsonProperty("samples") val samples: List<SampleTableRow>
-    )
-
-    fun List<SampleTableRow>.bySampleName() = groupBy { it.sample }
-
-    data class Params(
-        @JsonProperty("species") val species: String = "",
-        @JsonProperty("libraryName") val library: String = "default",
-        @JsonProperty("trimmingQualityThreshold") val trimmingQualityThreshold: Byte,
-        @JsonProperty("trimmingWindowSize") val trimmingWindowSize: Byte,
-        @JsonProperty("chains") val chains: String = "ALL",
-        @JsonProperty("replaceWildcards") val replaceWildcards: Boolean = true,
-        @JsonProperty("overlapPairedReads") val overlapPairedReads: Boolean = true,
-        @JsonProperty("bamDropNonVDJ") val bamDropNonVDJ: Boolean = false,
-        @JsonProperty("writeFailedAlignments") val writeFailedAlignments: Boolean = false,
-        @JsonProperty("tagPattern") val tagPattern: String? = null,
-        @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
-        @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
-        @JsonProperty("sampleTable") val sampleTable: SampleTable? = null,
-        @JsonProperty("splitBySample") val splitBySample: Boolean = true,
-        @JsonProperty("inferSampleTable") val inferSampleTable: Boolean = false,
-        @JsonProperty("readIdAsCellTag") val readIdAsCellTag: Boolean = false,
-        @JsonProperty("limit") val limit: Long? = null,
-        @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
-    ) : MiXCRParams {
-        override val command get() = MiXCRCommandDescriptor.align
-    }
+    fun List<CommandAlignParams.SampleTable.Row>.bySampleName() = groupBy { it.sample }
 
     class InputFileGroups(
         val fileGroups: List<FileGroup>
@@ -425,7 +368,7 @@ object CommandAlign {
                 .build()
         )
 
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAlignParams> {
         @Option(
             names = ["-O"],
             description = ["Overrides aligner parameters from the selected preset"],
@@ -564,8 +507,8 @@ object CommandAlign {
                 throw ApplicationException("--limit and -n options are deprecated; use ${LimitInput.CMD_OPTION} instead.")
             }
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::align) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
+        override val paramsResolver = object : MiXCRParamsResolver<CommandAlignParams>(MiXCRParamsBundle::align) {
+            override fun POverridesBuilderOps<CommandAlignParams>.paramsOverrides() {
                 if (overrides.isNotEmpty()) {
                     // Printing warning message for some common mistakes in parameter overrides
                     for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) logger.warn(
@@ -573,27 +516,27 @@ object CommandAlign {
                                 "instead of \"${key[0]}Parameters.parameters.relativeMinScore\". " +
                                 "The latter should be touched only in a very specific cases."
                     )
-                    Params::parameters jsonOverrideWith overrides
+                    CommandAlignParams::parameters jsonOverrideWith overrides
                 }
 
-                Params::trimmingQualityThreshold setIfNotNull trimmingQualityThreshold
-                Params::trimmingWindowSize setIfNotNull trimmingWindowSize
-                Params::bamDropNonVDJ setIfTrue dropNonVDJ
-                Params::writeFailedAlignments setIfTrue writeAllResults
-                Params::tagPattern setIfNotNull tagPatternFile?.readText()
-                Params::tagUnstranded setIfTrue tagUnstranded
-                Params::tagMaxBudget setIfNotNull tagMaxBudget
-                Params::readIdAsCellTag setIfTrue readIdAsCellTag
+                CommandAlignParams::trimmingQualityThreshold setIfNotNull trimmingQualityThreshold
+                CommandAlignParams::trimmingWindowSize setIfNotNull trimmingWindowSize
+                CommandAlignParams::bamDropNonVDJ setIfTrue dropNonVDJ
+                CommandAlignParams::writeFailedAlignments setIfTrue writeAllResults
+                CommandAlignParams::tagPattern setIfNotNull tagPatternFile?.readText()
+                CommandAlignParams::tagUnstranded setIfTrue tagUnstranded
+                CommandAlignParams::tagMaxBudget setIfNotNull tagMaxBudget
+                CommandAlignParams::readIdAsCellTag setIfTrue readIdAsCellTag
 
                 if (saveReads)
-                    Params::parameters.updateBy {
+                    CommandAlignParams::parameters.updateBy {
                         it.setSaveOriginalReads(true)
                     }
 
-                Params::limit setIfNotNull limit
+                CommandAlignParams::limit setIfNotNull limit
             }
 
-            override fun validateParams(params: Params) {
+            override fun validateParams(params: CommandAlignParams) {
                 if (params.species.isEmpty())
                     throw ValidationException("Species not set, please use -s / --species option to specified it.")
             }

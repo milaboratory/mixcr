@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -20,7 +20,6 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.basictypes.ClnsReader
@@ -42,6 +41,7 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
+import com.milaboratory.mixcr.util.DebugDir
 import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.util.JsonOverrider
@@ -76,7 +76,7 @@ import kotlin.io.path.listDirectoryEntries
 )
 class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     companion object {
-        const val COMMAND_NAME = "findShmTrees"
+        const val COMMAND_NAME = MiXCRCommandDescriptor.findShmTrees.name
 
         private const val inputsLabel = "(input_file.clns|directory)..."
 
@@ -109,10 +109,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                     .description("Path where to write output trees")
                     .build()
             )
-    }
-
-    data class Params(val dummy: Boolean = true) : MiXCRParams {
-        override val command get() = MiXCRCommandDescriptor.findShmTrees
     }
 
     @Parameters(
@@ -191,7 +187,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
     private val debugDirectoryPath: Path by lazy {
         var result: Path? = null
-        debugDir { path ->
+        DebugDir { path ->
             result = path
         }
         result ?: tempDest.resolvePath("trees_debug").also {
@@ -332,7 +328,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val report: BuildSHMTreeReport
         outputTreesPath.toAbsolutePath().parent.createDirectories()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            shmTreesWriter.writeHeader(datasets, Params())
+            shmTreesWriter.writeHeader(datasets, CommandFindShmTreesParams())
 
             val writer = shmTreesWriter.treesWriter()
 
@@ -417,7 +413,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         writer.put(null)
     }
 
-    private fun SHMTreesWriter.writeHeader(cloneReaders: List<ClnsReader>, params: Params) {
+    private fun SHMTreesWriter.writeHeader(cloneReaders: List<ClnsReader>, params: CommandFindShmTreesParams) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
         val headers = cloneReaders.map { it.readCloneSet().cloneSetInfo }
         writeHeader(

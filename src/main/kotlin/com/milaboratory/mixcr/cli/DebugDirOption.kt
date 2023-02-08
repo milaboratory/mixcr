@@ -11,25 +11,15 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.util.DebugDir
 import picocli.CommandLine.Option
 import java.nio.file.Path
 
 object DebugDirOption {
-    @Option(names = ["--debug-dir"], hidden = true)
-    private var value: Path? = null
-
-    private var initialized = false
-
-    operator fun invoke(function: (Path) -> Unit) {
-        value?.let { value ->
-            synchronized(this) {
-                if (!initialized) {
-                    value.toFile().deleteRecursively()
-                    value.toFile().mkdirs()
-                    initialized = true
-                }
-            }
-            function(value)
+    @set:Option(names = ["--debug-dir"], hidden = true)
+    private var value: Path?
+        set(value) {
+            DebugDir.value = value
         }
-    }
+        get() = DebugDir.value
 }

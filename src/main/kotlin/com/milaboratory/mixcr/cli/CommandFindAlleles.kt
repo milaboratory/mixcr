@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -24,7 +24,6 @@ import com.milaboratory.core.io.sequence.fasta.FastaWriter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyAlleleVariantOf
 import com.milaboratory.mixcr.alleles.AllelesBuilder.Companion.metaKeyForAlleleMutationsReliableGeneFeatures
@@ -87,9 +86,6 @@ import kotlin.io.path.nameWithoutExtension
     ]
 )
 class CommandFindAlleles : MiXCRCommandWithOutputs() {
-    data class Params(val dummy: Boolean = true) : MiXCRParams {
-        override val command get() = MiXCRCommandDescriptor.findAlleles
-    }
 
     @Parameters(
         arity = "1..*",
@@ -208,7 +204,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         clnsFiles
     }
 
-    override val outputFiles get() = outputClnsFiles + listOfNotNull(allelesMutationsOutput) + libraryOutputs
+    public override val outputFiles get() = outputClnsFiles + listOfNotNull(allelesMutationsOutput) + libraryOutputs
 
     private val tempDest: TempFileDest by lazy {
         val path = outputFiles.first()
@@ -489,7 +485,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                     resultLibrary.name,
                     resultLibrary.data
                 )
-            ).addStepParams(MiXCRCommandDescriptor.findAlleles, Params()),
+            ).addStepParams(MiXCRCommandDescriptor.findAlleles, CommandFindAllelesParams()),
             cloneReader.footer,
             cloneReader.ordering()
         )
@@ -550,6 +546,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     companion object {
-        const val COMMAND_NAME = "findAlleles"
+        const val COMMAND_NAME = MiXCRCommandDescriptor.findAlleles.name
     }
 }
