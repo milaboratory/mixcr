@@ -204,7 +204,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         clnsFiles
     }
 
-    override val outputFiles get() = outputClnsFiles + listOfNotNull(allelesMutationsOutput) + libraryOutputs
+    public override val outputFiles get() = outputClnsFiles + listOfNotNull(allelesMutationsOutput) + libraryOutputs
 
     private val tempDest: TempFileDest by lazy {
         val path = outputFiles.first()

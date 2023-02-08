@@ -9,96 +9,89 @@
  * by the terms of the License Agreement. If you do not want to agree to the terms
  * of the Licensing Agreement, you must not download or access the software.
  */
-package com.milaboratory.mixcr.tags;
+package com.milaboratory.mixcr.tags
 
-import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.ShortSequenceSet;
-import com.milaboratory.primitivio.PrimitivO;
-import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil;
-import com.milaboratory.util.FormatUtils;
-import com.milaboratory.util.IntArrayList;
-import com.milaboratory.util.io.ByteArrayDataOutput;
-import com.milaboratory.util.io.IOUtil;
-import net.jpountz.lz4.LZ4Compressor;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.core.sequence.ShortSequenceSet
+import com.milaboratory.primitivio.PrimitivO
+import com.milaboratory.primitivio.blocks.PrimitivIOBlocksUtil
+import com.milaboratory.util.FormatUtils
+import com.milaboratory.util.IntArrayList
+import com.milaboratory.util.io.ByteArrayDataOutput
+import com.milaboratory.util.io.IOUtil
+import org.junit.Assert
+import org.junit.Ignore
+import org.junit.Test
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.*
 
-import java.io.*;
-import java.util.Arrays;
-
-public class WhitelistPackerTest {
-    public void importWL(String inputFile, String resourceName) throws IOException {
-        IntArrayList list = new IntArrayList();
-        ShortSequenceSet expectedWhitelist = new ShortSequenceSet();
-        System.out.println("Initial file size: " + FormatUtils.bytesToString(new File(inputFile).length()));
-        try (
-                BufferedReader r = new BufferedReader(new InputStreamReader(
-                        new FileInputStream(inputFile)))
-        ) {
-            String line;
-            while ((line = r.readLine()) != null) {
-                line = line.trim();
-                if (line.length() == 0)
-                    continue;
-                NucleotideSequence seq = new NucleotideSequence(line);
-                if (seq.size() != 16)
-                    throw new IllegalArgumentException();
-
-                expectedWhitelist.add(seq);
-
-                int barcodeInt = 0;
-                for (int i = 0; i < seq.size(); i++) {
-                    byte nuc = seq.codeAt(i);
-                    if (nuc > 3)
-                        throw new IllegalArgumentException();
-                    barcodeInt <<= 2;
-                    barcodeInt |= nuc;
+class WhitelistPackerTest {
+    @Throws(IOException::class)
+    fun importWL(inputFile: String?, resourceName: String) {
+        val list = IntArrayList()
+        val expectedWhitelist = ShortSequenceSet()
+        println("Initial file size: " + FormatUtils.bytesToString(File(inputFile).length()))
+        BufferedReader(InputStreamReader(FileInputStream(inputFile))).use { r ->
+            var line: String
+            while (r.readLine().also { line = it } != null) {
+                line = line.trim { it <= ' ' }
+                if (line.length == 0) continue
+                val seq = NucleotideSequence(line)
+                require(seq.size() == 16)
+                expectedWhitelist.add(seq)
+                var barcodeInt = 0
+                for (i in 0 until seq.size()) {
+                    val nuc: Byte = seq.codeAt(i)
+                    require(nuc <= 3)
+                    barcodeInt = barcodeInt shl 2
+                    barcodeInt = barcodeInt or nuc.toInt()
                 }
-                list.add(barcodeInt);
+                list.add(barcodeInt)
             }
         }
-
-        System.out.println("Data without delta-encoding: " + FormatUtils.bytesToString(expectedWhitelist.size() * 4L));
-        list.sort();
-        ByteArrayDataOutput bos = new ByteArrayDataOutput();
-        PrimitivO o = new PrimitivO(bos);
-        int p = 0, c;
-        for (int i = 0; i < list.size(); i++) {
-            c = list.get(i);
-            o.writeVarInt(c - p);
-            p = c;
+        println("Data without delta-encoding: " + FormatUtils.bytesToString(expectedWhitelist.size * 4L))
+        list.sort()
+        val bos = ByteArrayDataOutput()
+        val o = PrimitivO(bos)
+        var p = 0
+        var c: Int
+        for (i in 0 until list.size()) {
+            c = list[i]
+            o.writeVarInt(c - p)
+            p = c
         }
-        byte[] buffer = bos.getBuffer();
-        System.out.println("Data before compression: " + FormatUtils.bytesToString(buffer.length));
-        LZ4Compressor compressor = PrimitivIOBlocksUtil.highLZ4Compressor();
-        byte[] compressed = compressor.compress(buffer);
-        compressed = Arrays.copyOf(compressed, compressed.length + 8);
-        IOUtil.writeIntBE(buffer.length, compressed, compressed.length - 4);
-        IOUtil.writeIntBE(list.size(), compressed, compressed.length - 8);
-        System.out.println("Data after compression: " + FormatUtils.bytesToString(compressed.length));
-
-        ShortSequenceSet whitelist = WhitelistReader.read10XCompressedWhitelist(compressed);
-
-        try (FileOutputStream fos = new FileOutputStream("src/main/resources/" + resourceName)) {
-            fos.write(compressed);
-        }
+        val buffer = bos.buffer
+        println("Data before compression: " + FormatUtils.bytesToString(buffer.size.toLong()))
+        val compressor = PrimitivIOBlocksUtil.highLZ4Compressor()
+        var compressed = compressor.compress(buffer)
+        compressed = Arrays.copyOf(compressed, compressed.size + 8)
+        IOUtil.writeIntBE(buffer.size, compressed, compressed.size - 4)
+        IOUtil.writeIntBE(list.size(), compressed, compressed.size - 8)
+        println("Data after compression: " + FormatUtils.bytesToString(compressed.size.toLong()))
+        val whitelist: ShortSequenceSet = WhitelistReader.read10XCompressedWhitelist(compressed)
+        FileOutputStream("src/main/resources/$resourceName").use { fos -> fos.write(compressed) }
 
         // System.out.println(whitelist.hashCode());
         // System.out.println(expectedWhitelist.hashCode());
-
-        Assert.assertEquals(expectedWhitelist, whitelist);
+        Assert.assertEquals(expectedWhitelist, whitelist)
     }
 
     @Ignore
     @Test
-    public void test1() throws IOException {
-        importWL("/Volumes/Data/Projects/MiLaboratory/data/10x/3M-february-2018.txt", "10x-3M-february-2018.bin");
+    @Throws(IOException::class)
+    fun test1() {
+        importWL("/Volumes/Data/Projects/MiLaboratory/data/10x/3M-february-2018.txt", "10x-3M-february-2018.bin")
     }
 
     @Ignore
     @Test
-    public void test2() throws IOException {
-        importWL("/Volumes/Data/Projects/MiLaboratory/data/10x/737K-august-2016.txt", "10x-737K-august-2016.bin");
+    @Throws(IOException::class)
+    fun test2() {
+        importWL("/Volumes/Data/Projects/MiLaboratory/data/10x/737K-august-2016.txt", "10x-737K-august-2016.bin")
     }
 }
