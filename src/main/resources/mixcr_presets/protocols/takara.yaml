@@ -1,19 +1,25 @@
 "takara-bcr-umi-base":
   abstract: true
-  inheritFrom: bundle-umi-rna-kaligner2-global-c
+  inheritFrom: bundle-umi-rna-kaligner2-global-x
   mixins:
     - type: SetTagPattern
-      tagPattern: ^N{30}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
+      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
     - type: SetSplitClonesBy
       geneType: C
       value: true
 
 "takara-tcr-umi-base":
   abstract: true
-  inheritFrom: bundle-umi-rna-kaligner1-global-c
+  inheritFrom: bundle-umi-rna-kaligner2-global-x
   mixins:
     - type: SetTagPattern
-      tagPattern: ^N{28}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
+      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
     - type: SetSplitClonesBy
       geneType: C
       value: true
