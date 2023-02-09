@@ -13,7 +13,7 @@
 
 "takara-tcr-umi-base":
   abstract: true
-  inheritFrom: bundle-umi-rna-kaligner2-global-x
+  inheritFrom: bundle-umi-rna-kaligner1-global-x
   mixins:
     - type: SetTagPattern
       tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
