@@ -150,6 +150,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         val ret = mutableListOf<FieldExtractor<AirrVDJCObjectWrapper>>()
         if (tagsInfo.hasTagsWithType(TagType.Cell)) {
             ret += AirrColumns.CellId()
+            ret += AirrColumns.CellIds()
         }
         ret += listOf(
             AirrColumns.Sequence(targetId),
@@ -215,6 +216,10 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         ret += CloneId()
         ret += commonExtractors(tagsInfo)
         ret += AirrColumns.CloneCount()
+        if (tagsInfo.hasTagsWithType(TagType.Molecule)) {
+            // in case of UMI data AIRR use column name `consensus_count` instead of `duplicate_count`
+            ret += AirrColumns.CloneCount(header = "consensus_count")
+        }
         return ret
     }
 

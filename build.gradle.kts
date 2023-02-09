@@ -103,7 +103,7 @@ repositories {
     }
 }
 
-val mixcrAlgoVersion = "4.2.0-7-enchant_export_airr"
+val mixcrAlgoVersion = "4.2.0-11-fix_exports"
 val milibVersion = "2.3.0"
 val jacksonBomVersion = "2.14.1"
 
