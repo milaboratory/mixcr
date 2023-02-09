@@ -11,8 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.util.CountingOutputPort
 import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.InputFileType
@@ -54,6 +52,7 @@ import com.milaboratory.mixcr.export.FieldExtractor
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.util.OutputPortWithProgress
+import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.exhaustive
 import com.milaboratory.util.limit
 import com.milaboratory.util.withExpectedSize
@@ -254,10 +253,8 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                     set = set.divideClonesByTags(tagDivisionDepth)
                 }
 
-                cPort = set.asOutputPort().withExpectedSize(set.size().toLong())
-                port = cPort
+                port = set.asOutputPort().withExpectedSize(set.size().toLong())
                 closeable = clnaReader
-                progressReporter = SmartProgressReporter.extractProgress(cPort, clnaReader.numberOfClones().toLong())
             }
 
             CLNS -> {
@@ -271,10 +268,8 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                     set = set.divideClonesByTags(tagDivisionDepth)
                 }
 
-                cPort = set.asOutputPort().withExpectedSize(set.size().toLong())
-                port = cPort
+                port = set.asOutputPort().withExpectedSize(set.size().toLong())
                 closeable = clnsReader
-                progressReporter = SmartProgressReporter.extractProgress(cPort, set.size().toLong())
             }
 
             VDJCA -> {
@@ -292,7 +287,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         }
         SmartProgressReporter.startProgressReport(
             "Exporting to AIRR format",
-            progressReporter,
+            port,
             if (out != null) System.out else System.err
         )
         val rowMetaForExport = RowMetaForExport(
@@ -302,27 +297,25 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         )
         (out?.let { PrintStream(it.toFile()) } ?: System.out).use { output ->
             closeable.use {
-                port
-                    .reportProgress("Exporting to AIRR format")
-                    .use {
-                        var first = true
+                port.use {
+                    var first = true
+                    for (extractor in extractors) {
+                        if (!first) output.print("\t")
+                        first = false
+                        output.print(extractor.header)
+                    }
+                    output.println()
+                    port.forEach { obj ->
+                        first = true
+                        val wrapper = AirrVDJCObjectWrapper(obj)
                         for (extractor in extractors) {
                             if (!first) output.print("\t")
                             first = false
-                            output.print(extractor.header)
+                            output.print(extractor.extractValue(rowMetaForExport, wrapper))
                         }
                         output.println()
-                        port.forEach { obj ->
-                            first = true
-                            val wrapper = AirrVDJCObjectWrapper(obj)
-                            for (extractor in extractors) {
-                                if (!first) output.print("\t")
-                                first = false
-                                output.print(extractor.extractValue(rowMetaForExport, wrapper))
-                            }
-                            output.println()
-                        }
                     }
+                }
             }
         }
     }
