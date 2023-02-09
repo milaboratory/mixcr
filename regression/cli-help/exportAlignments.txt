@@ -44,10 +44,10 @@ Usage: mixcr exportAlignments [--chains <chains>] [--impute-germline-on-export]
                               [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
                               [-cIdentityPercents] [-vBestIdentityPercent] [-dBestIdentityPercent]
                               [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains]
-                              [-topChains] [-geneLabel <label>]... [-tagCounts] [-tags <
-                              (Molecule|Cell|Sample)>]... [-uniqueTagCount <(Molecule|Cell|Sample)
-                              >]... [--force-overwrite] [--no-warnings] [--verbose] [--help] data.
-                              (vdjca|clna) [table.tsv]
+                              [-topChains] [-geneLabel <label>]... [-tagCounts] [-cellId [<
+                              (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
+                              [-uniqueTagCount <(Molecule|Cell|Sample)>]... [--force-overwrite]
+                              [--no-warnings] [--verbose] [--help] data.(vdjca|clna) [table.tsv]
 Export V/D/J/C alignments into tab delimited file.
       data.(vdjca|clna)      Path to input file
       [table.tsv]            Path where to write export table. Will write to output if omitted.
@@ -314,6 +314,11 @@ Possible fields to export
       -topChains             Top chains
       -geneLabel <label>     Export gene label (i.e. ReliableChain)
       -tagCounts             All tags with counts
+      -cellId [<(none|space|dash)>]
+                             Concatenated all cell tags with specified delimiter, default delimiter
+                               is `none`.
+                             Example output for `-cellId`: GGATTACTCATTGCCC
+                             Example output for `-cellId dash`: GGATTACT-CATTGCCC
       -tags <(Molecule|Cell|Sample)>
                              All tags values (i.e. CELL barcode or UMI sequence)
       -uniqueTagCount <(Molecule|Cell|Sample)>

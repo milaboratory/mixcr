@@ -46,13 +46,13 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      [-dIdentityPercents] [-jIdentityPercents] [-cIdentityPercents]
                                      [-vBestIdentityPercent] [-dBestIdentityPercent]
                                      [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains]
-                                     [-topChains] [-geneLabel <label>]... [-tagCounts] [-tags <
-                                     (Molecule|Cell|Sample)>]... [-uniqueTagCount <
-                                     (Molecule|Cell|Sample)>]... [-uniqueTagFraction <
-                                     (Molecule|Cell|Sample)>]... [-cellGroup] [--force-overwrite]
-                                     [--no-warnings] [--verbose] [--help] [[--filter-in-feature
-                                     <gene_feature>] [--pattern-max-errors <n>]
-                                     (--filter-aa-pattern <pattern> | --filter-nt-pattern
+                                     [-topChains] [-geneLabel <label>]... [-tagCounts] [-cellId [<
+                                     (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
+                                     [-uniqueTagCount <(Molecule|Cell|Sample)>]...
+                                     [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-cellGroup]
+                                     [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                                     [[--filter-in-feature <gene_feature>] [--pattern-max-errors
+                                     <n>] (--filter-aa-pattern <pattern> | --filter-nt-pattern
                                      <pattern>)] trees.shmt [trees.tsv]
 Export SHMTree as a table with a row for every node
       trees.shmt             Input file produced by 'findShmTrees' command.
@@ -288,6 +288,12 @@ Possible fields to export
       -topChains             Top chains (only for nodes with clones)
       -geneLabel <label>     Export gene label (i.e. ReliableChain) (only for nodes with clones)
       -tagCounts             All tags with counts (only for nodes with clones)
+      -cellId [<(none|space|dash)>]
+                             Concatenated all cell tags with specified delimiter, default delimiter
+                               is `none`.
+                             Example output for `-cellId`: GGATTACTCATTGCCC
+                             Example output for `-cellId dash`: GGATTACT-CATTGCCC (only for nodes
+                               with clones)
       -tags <(Molecule|Cell|Sample)>
                              All tags values (i.e. CELL barcode or UMI sequence) (only for nodes
                                with clones)
