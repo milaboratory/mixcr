@@ -19,20 +19,24 @@ align:
   tagUnstranded: false
   tagMaxBudget: 10.0
   sampleTable:
-    sampleTagName: SAMPLE
+    sampleTagNames:
+    - SAMPLE
     samples:
     - matchTags:
         SMPL: GGATTACTCATTGCCC
       matchVariantId: null
-      sampleName: sample0
+      sample:
+      - sample0
     - matchTags:
         SMPL: CTGAAGTTCAAGGTAA
       matchVariantId: null
-      sampleName: sample1
+      sample:
+      - sample1
     - matchTags:
         SMPL: AACTCCCAGATCCTGT
       matchVariantId: null
-      sampleName: sample2
+      sample:
+      - sample2
   splitBySample: false
   readIdAsCellTag: false
   limit: null
