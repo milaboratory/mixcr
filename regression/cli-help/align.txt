@@ -6,8 +6,8 @@ Usage: mixcr align --preset <name> [--trimming-quality-threshold <n>] [--trimmin
                    fastq[.gz]>] [--not-parsed-I1 <path.fastq[.gz]>] [--not-parsed-I2 <path.fastq[.
                    gz]>] [--not-parsed-R1 <path.fastq[.gz]>] [--not-parsed-R2 <path.fastq[.gz]>]
                    [--species <species>] [--library <library>] [--split-by-sample]
-                   [--dont-split-by-sample] [--sample-table sample_table.tsv] [--dna] [--rna]
-                   [--floating-left-alignment-boundary [<anchor_point>]]
+                   [--dont-split-by-sample] [--infer-sample-table] [--sample-table sample_table.
+                   tsv] [--dna] [--rna] [--floating-left-alignment-boundary [<anchor_point>]]
                    [--rigid-left-alignment-boundary [<anchor_point>]]
                    [--floating-right-alignment-boundary (<gene_type>|<anchor_point>)]
                    [--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)]] [--tag-pattern
@@ -21,11 +21,12 @@ Usage: mixcr align --preset <name> [--trimming-quality-threshold <n>] [--trimmin
                    [--append-export-alignments-field <field> [<param>...]]...
                    [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                    [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
-                   (geneLabel|tag):key>] [--reset-export-clone-grouping] [-O <key=value>]...
-                   [--report <path>] [--json-report <path>] [--threads <n>] [--force-overwrite]
-                   [--no-warnings] [--verbose] [--help] [-M <key=value>]... ([file_I1.fastq[.gz]
-                   [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
-                   (fasta|bam|sam)) alignments.vdjca
+                   (geneLabel|tag):key>] [--reset-export-clone-grouping]
+                   [--export-productive-clones-only] [-O <key=value>]... [--report <path>]
+                   [--json-report <path>] [--threads <n>] [--force-overwrite] [--no-warnings]
+                   [--verbose] [--help] [-M <key=value>]... ([file_I1.fastq[.gz] [file_I2.fastq[.
+                   gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam)) alignments.
+                   vdjca
 Builds alignments with V,D,J and C genes for input sequencing reads.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
         (fasta|bam|sam))
@@ -33,13 +34,12 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
                              Use {{n}} if you want to concatenate files from multiple lanes, like:
                              my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz
       alignments.vdjca       Path where to write output alignments
-  -p, --preset <name>        Analysis preset. Sets all significant parameters of this and all
-                               downstream analysis steps. This is a required parameter. It is very
-                               important to carefully select the most appropriate preset for the
-                               data you analyse.
+  -p, --preset <name>        Analysis preset. Sets key parameters of this and all downstream
+                               analysis steps. It is critical to carefully select the most
+                               appropriate preset for the data you analyse.
       --trimming-quality-threshold <n>
-                             Read pre-processing: trimming quality threshold.
-                             Zero value can be used to skip trimming.
+                             Read pre-processing: trimming quality threshold. Zero value can be
+                               used to skip trimming.
                                Default value determined by the preset.
       --trimming-window-size <n>
                              Read pre-processing: trimming window size.
@@ -48,13 +48,13 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
                                Default value determined by the preset.
       --tag-pattern-file <path>
                              Read tag pattern from a file.
-                               Default tag pattern determined by the preset.
+                               Default value determined by the preset.
       --tag-parse-unstranded If paired-end input is used, determines whether to try all
                                combinations of mate-pairs or only match reads to the corresponding
-                               pattern sections (i.e. first file to first section, etc...).
+                               pattern sections (i.e. first file to first section etc).
                                Default value determined by the preset.
-      --tag-max-budget <n>   Maximal bit budget, higher values allows more substitutions in small
-                               letters.
+      --tag-max-budget <n>   Maximal bit budget controlling mismatches (substitutions) in tag
+                               pattern. Higher values allows more substitutions in small letters.
                                Default value determined by the preset.
       --read-id-as-cell-tag  Marks reads, coming from different files, but having the same
                                positions in those files, as reads coming from the same cells. Main
@@ -91,6 +91,7 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
                                library is used. One can also use external libraries
       --split-by-sample      Split output alignments files by sample.
       --dont-split-by-sample Don't split output alignments files by sample.
+      --infer-sample-table   Infer sample table (supports only sample tags derived from file names).
       --sample-table sample_table.tsv
                              Loads sample table from a tab separated file.
       --dna                  For DNA starting material. Setups V gene feature to align to
@@ -190,3 +191,5 @@ Params for export commands:
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
                              Reset all clone grouping in the output clone tables.
+      --export-productive-clones-only
+                             Export only productive clonotypes.

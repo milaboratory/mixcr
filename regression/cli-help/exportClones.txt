@@ -4,10 +4,11 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [--dont-impute-germline-on-export] [--add-export-clone-table-splitting <
                           (geneLabel|tag):key>] [--reset-export-clone-table-splitting]
                           [--add-export-clone-grouping <(geneLabel|tag):key>]
-                          [--reset-export-clone-grouping] [--no-header] [--drop-default-fields]
-                          [--prepend-columns] [--not-covered-as-empty] [-targets] [-vHit] [-dHit]
-                          [-jHit] [-cHit] [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily]
-                          [-jFamily] [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
+                          [--reset-export-clone-grouping] [--export-productive-clones-only]
+                          [--no-header] [--drop-default-fields] [--prepend-columns]
+                          [--not-covered-as-empty] [-targets] [-vHit] [-dHit] [-jHit] [-cHit]
+                          [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily] [-jFamily]
+                          [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
                           [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore] [-cHitsWithScore]
                           [-vHits] [-dHits] [-jHits] [-cHits] [-vGenes] [-dGenes] [-jGenes]
                           [-cGenes] [-vFamilies] [-dFamilies] [-jFamilies] [-cFamilies]
@@ -45,10 +46,11 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
                           [-cIdentityPercents] [-vBestIdentityPercent] [-dBestIdentityPercent]
                           [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains] [-topChains]
-                          [-geneLabel <label>]... [-tagCounts] [-tags <(Molecule|Cell|Sample)>]...
-                          [-uniqueTagCount <(Molecule|Cell|Sample)>]... [-uniqueTagFraction <
-                          (Molecule|Cell|Sample)>]... [-cellGroup] [--force-overwrite]
-                          [--no-warnings] [--verbose] [--help] data.(clns|clna) [table.tsv]
+                          [-geneLabel <label>]... [-tagCounts] [-cellId [<(none|space|dash)>]]...
+                          [-tags <(Molecule|Cell|Sample)>]... [-uniqueTagCount <
+                          (Molecule|Cell|Sample)>]... [-uniqueTagFraction <(Molecule|Cell|Sample)
+                          >]... [-cellGroup] [--force-overwrite] [--no-warnings] [--verbose]
+                          [--help] data.(clns|clna) [table.tsv]
 Export assembled clones into tab delimited file.
       data.(clns|clna)       Path to input file with clones
       [table.tsv]            Path where to write export table.
@@ -87,6 +89,8 @@ Export assembled clones into tab delimited file.
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
                              Reset all clone grouping in the output clone tables.
+      --export-productive-clones-only
+                             Export only productive clonotypes.
       --no-header            Don't print first header line, print only data
                                Default value determined by the preset.
       --drop-default-fields  Don't export fields from preset.
@@ -333,6 +337,11 @@ Possible fields to export
       -topChains             Top chains
       -geneLabel <label>     Export gene label (i.e. ReliableChain)
       -tagCounts             All tags with counts
+      -cellId [<(none|space|dash)>]
+                             Concatenated all cell tags with specified delimiter, default delimiter
+                               is `none`.
+                             Example output for `-cellId`: GGATTACTCATTGCCC
+                             Example output for `-cellId dash`: GGATTACT-CATTGCCC
       -tags <(Molecule|Cell|Sample)>
                              All tags values (i.e. CELL barcode or UMI sequence)
       -uniqueTagCount <(Molecule|Cell|Sample)>

@@ -8,7 +8,7 @@ pipeline:
 align:
   species: hs
   libraryName: default
-  trimmingQualityThreshold: 0
+  trimmingQualityThreshold: 10
   trimmingWindowSize: 6
   chains: ALL
   replaceWildcards: true
@@ -46,6 +46,7 @@ align:
   tagMaxBudget: 10.0
   sampleTable: null
   splitBySample: false
+  inferSampleTable: false
   readIdAsCellTag: false
   limit: null
   parameters:
@@ -206,6 +207,7 @@ refineTagsAndSort:
           logX: true
           minimalSample: 30
           fallbackThreshold: 1.0
+          accept: High
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -268,7 +270,6 @@ assemble:
     cloneClusteringParameters:
       searchDepth: 2
       allowedMutationsInNRegions: 1
-      minimalTagSetOverlap: -1.0
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
@@ -344,6 +345,7 @@ assembleContigs:
       windowSize: 8
     minimalContigLength: 20
     alignedRegionsOnly: false
+    discardAmbiguousNucleotideCalls: false
 exportAlignments:
   chains: ALL
   noHeader: false

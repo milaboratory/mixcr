@@ -13,15 +13,12 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.InputPort
 import cc.redberry.pipe.util.forEach
-import com.fasterxml.jackson.annotation.JsonMerge
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.use
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
@@ -31,7 +28,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler
-import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.groupAlreadySorted
@@ -42,18 +38,9 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 object CommandAssemblePartial {
-    const val COMMAND_NAME = "assemblePartial"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.assemblePartial.name
 
-    data class Params(
-        @JsonProperty("overlappedOnly") val overlappedOnly: Boolean,
-        @JsonProperty("dropPartial") val dropPartial: Boolean,
-        @JsonProperty("cellLevel") val cellLevel: Boolean,
-        @JsonProperty("parameters") @JsonMerge val parameters: PartialAlignmentsAssemblerParameters
-    ) : MiXCRParams {
-        override val command = MiXCRCommandDescriptor.assemblePartial
-    }
-
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAssemblePartialParams> {
         @Option(
             description = [
                 "Write only overlapped sequences (needed for testing).",
@@ -93,14 +80,15 @@ object CommandAssemblePartial {
         )
         private var overrides: Map<String, String> = mutableMapOf()
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::assemblePartial) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::overlappedOnly setIfTrue overlappedOnly
-                Params::dropPartial setIfTrue dropPartial
-                Params::cellLevel setIfTrue cellLevel
-                Params::parameters jsonOverrideWith overrides
+        override val paramsResolver =
+            object : MiXCRParamsResolver<CommandAssemblePartialParams>(MiXCRParamsBundle::assemblePartial) {
+                override fun POverridesBuilderOps<CommandAssemblePartialParams>.paramsOverrides() {
+                    CommandAssemblePartialParams::overlappedOnly setIfTrue overlappedOnly
+                    CommandAssemblePartialParams::dropPartial setIfTrue dropPartial
+                    CommandAssemblePartialParams::cellLevel setIfTrue cellLevel
+                    CommandAssemblePartialParams::parameters jsonOverrideWith overrides
+                }
             }
-        }
     }
 
     @Command(

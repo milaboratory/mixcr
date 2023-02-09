@@ -6,7 +6,7 @@ pipeline:
 align:
   species: mmu
   libraryName: default
-  trimmingQualityThreshold: 0
+  trimmingQualityThreshold: 10
   trimmingWindowSize: 6
   chains: ALL
   replaceWildcards: true
@@ -18,6 +18,7 @@ align:
   tagMaxBudget: 10.0
   sampleTable: null
   splitBySample: false
+  inferSampleTable: false
   readIdAsCellTag: false
   limit: null
   parameters:
@@ -201,7 +202,6 @@ assemble:
     cloneClusteringParameters:
       searchDepth: 2
       allowedMutationsInNRegions: 1
-      minimalTagSetOverlap: -1.0
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
@@ -277,6 +277,7 @@ assembleContigs:
       windowSize: 8
     minimalContigLength: 20
     alignedRegionsOnly: false
+    discardAmbiguousNucleotideCalls: false
 exportAlignments:
   chains: ALL
   noHeader: false

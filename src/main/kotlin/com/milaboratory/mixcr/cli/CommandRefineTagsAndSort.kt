@@ -14,8 +14,6 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.withCounting
-import com.fasterxml.jackson.annotation.JsonMerge
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -24,7 +22,6 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.data.CriticalThresholdKey
-import com.milaboratory.mitool.pattern.Whitelist
 import com.milaboratory.mitool.refinement.TagCorrectionPlan
 import com.milaboratory.mitool.refinement.TagCorrectionReport
 import com.milaboratory.mitool.refinement.TagCorrector
@@ -34,7 +31,6 @@ import com.milaboratory.mitool.refinement.gfilter.SequenceExtractorsFactory
 import com.milaboratory.mixcr.AlignMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.PackableMiXCRParams
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
@@ -62,22 +58,9 @@ import java.nio.file.Path
 import java.util.*
 
 object CommandRefineTagsAndSort {
-    const val COMMAND_NAME = "refineTagsAndSort"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.refineTagsAndSort.name
 
-    data class Params(
-        /** Whitelists to use on the correction step for barcodes requiring whitelist-driven correction */
-        @JsonProperty("whitelists") val whitelists: Map<String, Whitelist> = emptyMap(),
-        /** If false no correction will be performed, only sorting */
-        @JsonProperty("runCorrection") val runCorrection: Boolean = true,
-        /** Correction parameters */
-        @JsonMerge @JsonProperty("parameters") val parameters: TagCorrectorParameters?
-    ) : PackableMiXCRParams<Params> {
-        override val command get() = MiXCRCommandDescriptor.refineTagsAndSort
-
-        override fun pack() = copy(whitelists = whitelists.mapValues { it.value.pack() })
-    }
-
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandRefineTagsAndSortParams> {
         @Option(
             description = [
                 "Don't correct barcodes, only sort alignments by tags.",
@@ -178,20 +161,21 @@ object CommandRefineTagsAndSort {
             throw ApplicationException("\"-w\" and \"--whitelist\" options are deprecated, please use ${AlignMixins.SetWhitelist.CMD_OPTION_SET} instead.")
         }
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::refineTagsAndSort) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
-                Params::runCorrection resetIfTrue dontCorrect
+        override val paramsResolver =
+            object : MiXCRParamsResolver<CommandRefineTagsAndSortParams>(MiXCRParamsBundle::refineTagsAndSort) {
+                override fun POverridesBuilderOps<CommandRefineTagsAndSortParams>.paramsOverrides() {
+                    CommandRefineTagsAndSortParams::runCorrection resetIfTrue dontCorrect
 
-                @Suppress("DuplicatedCode")
-                Params::parameters.update {
-                    TagCorrectorParameters::correctionPower setIfNotNull power
-                    TagCorrectorParameters::backgroundSubstitutionRate setIfNotNull backgroundSubstitutionRate
-                    TagCorrectorParameters::backgroundIndelRate setIfNotNull backgroundIndelRate
-                    TagCorrectorParameters::minQuality setIfNotNull minQuality
-                    TagCorrectorParameters::maxSubstitutions setIfNotNull maxSubstitutions
-                    TagCorrectorParameters::maxIndels setIfNotNull maxIndels
-                    TagCorrectorParameters::maxTotalErrors setIfNotNull maxTotalErrors
-                }
+                    @Suppress("DuplicatedCode")
+                    CommandRefineTagsAndSortParams::parameters.update {
+                        TagCorrectorParameters::correctionPower setIfNotNull power
+                        TagCorrectorParameters::backgroundSubstitutionRate setIfNotNull backgroundSubstitutionRate
+                        TagCorrectorParameters::backgroundIndelRate setIfNotNull backgroundIndelRate
+                        TagCorrectorParameters::minQuality setIfNotNull minQuality
+                        TagCorrectorParameters::maxSubstitutions setIfNotNull maxSubstitutions
+                        TagCorrectorParameters::maxIndels setIfNotNull maxIndels
+                        TagCorrectorParameters::maxTotalErrors setIfNotNull maxTotalErrors
+                    }
             }
         }
     }
@@ -331,7 +315,7 @@ object CommandRefineTagsAndSort {
                         )
 
                         val corrector = TagCorrector(
-                            cmdParams.parameters,
+                            cmdParams.parameters!!,
                             correctionPlan,
                             tempDest.addSuffix("tags"),
                             memoryBudget,

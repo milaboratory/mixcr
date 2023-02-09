@@ -11,11 +11,15 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.CountingOutputPort
+import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.CloneSet.Companion.divideClonesByTags
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
@@ -25,6 +29,8 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCObject
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.AirrColumns
 import com.milaboratory.mixcr.export.AirrColumns.AirrAlignmentBoundary
 import com.milaboratory.mixcr.export.AirrColumns.AlignmentCigar
@@ -50,6 +56,7 @@ import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.exhaustive
 import com.milaboratory.util.limit
+import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.VDJC_REFERENCE
@@ -67,7 +74,7 @@ import java.nio.file.Path
 )
 class CommandExportAirr : MiXCRCommandWithOutputs() {
     @Option(
-        description = ["Target id (use -1 to export from the target containing CDR3)."],
+        description = ["Index of source sequence that was used to build clone/alignment (use -1 to export from the target containing CDR3)."],
         names = ["-t", "--target"],
         paramLabel = "<n>",
         order = OptionsOrder.main + 10_100
@@ -134,13 +141,17 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         }
     }
 
-    private fun commonExtractors(): List<FieldExtractor<AirrVDJCObjectWrapper>> {
+    private fun commonExtractors(tagsInfo: TagsInfo): List<FieldExtractor<AirrVDJCObjectWrapper>> {
         val vnpEnd: ComplexReferencePoint = Leftmost(ReferencePoint.VEndTrimmed, ReferencePoint.VEnd)
         val dnpBegin: ComplexReferencePoint = Rightmost(ReferencePoint.DBegin, ReferencePoint.DBeginTrimmed)
         val dnpEnd: ComplexReferencePoint = Leftmost(ReferencePoint.DEnd, ReferencePoint.DEndTrimmed)
         val jnpBegin: ComplexReferencePoint = Rightmost(ReferencePoint.JBegin, ReferencePoint.JBeginTrimmed)
         val np1End: ComplexReferencePoint = Leftmost(dnpBegin, jnpBegin)
         val ret = mutableListOf<FieldExtractor<AirrVDJCObjectWrapper>>()
+        if (tagsInfo.hasTagsWithType(TagType.Cell)) {
+            ret += AirrColumns.CellId()
+            ret += AirrColumns.CellIds()
+        }
         ret += listOf(
             AirrColumns.Sequence(targetId),
             RevComp(),
@@ -194,21 +205,28 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                 ret += AirrAlignmentBoundary(targetId, withPadding, gt, start)
             }
         }
+        if (tagsInfo.hasTagsWithType(TagType.Molecule)) {
+            ret += AirrColumns.UmiCounts()
+        }
         return ret
     }
 
-    private fun cloneExtractors(): List<FieldExtractor<AirrVDJCObjectWrapper>> {
+    private fun cloneExtractors(tagsInfo: TagsInfo): List<FieldExtractor<AirrVDJCObjectWrapper>> {
         val ret = mutableListOf<FieldExtractor<AirrVDJCObjectWrapper>>()
         ret += CloneId()
-        ret += commonExtractors()
+        ret += commonExtractors(tagsInfo)
         ret += AirrColumns.CloneCount()
+        if (tagsInfo.hasTagsWithType(TagType.Molecule)) {
+            // in case of UMI data AIRR use column name `consensus_count` instead of `duplicate_count`
+            ret += AirrColumns.CloneCount(header = "consensus_count")
+        }
         return ret
     }
 
-    private fun alignmentsExtractors(): List<FieldExtractor<AirrVDJCObjectWrapper>> {
+    private fun alignmentsExtractors(tagsInfo: TagsInfo): List<FieldExtractor<AirrVDJCObjectWrapper>> {
         val ret = mutableListOf<FieldExtractor<AirrVDJCObjectWrapper>>()
         ret += AlignmentId()
-        ret += commonExtractors()
+        ret += commonExtractors(tagsInfo)
         return ret
     }
 
@@ -227,26 +245,42 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         val fileInfo: MiXCRFileInfo
         when (fileType) {
             CLNA -> {
-                extractors = cloneExtractors()
                 val clnaReader = ClnAReader(input, libraryRegistry, 4)
-                port = clnaReader.readClones()
-                closeable = clnaReader
                 fileInfo = clnaReader
+                extractors = cloneExtractors(fileInfo.header.tagsInfo)
+                var set = clnaReader.readCloneSet()
+                if (fileInfo.header.tagsInfo.hasTagsWithType(TagType.Cell)) {
+                    val tagDivisionDepth = fileInfo.header.tagsInfo.getDepthFor(TagType.Cell)
+                    set = set.divideClonesByTags(tagDivisionDepth)
+                }
+
+                cPort = set.asOutputPort().withExpectedSize(set.size().toLong())
+                port = cPort
+                closeable = clnaReader
+                progressReporter = SmartProgressReporter.extractProgress(cPort, clnaReader.numberOfClones().toLong())
             }
 
             CLNS -> {
-                extractors = cloneExtractors()
                 val clnsReader = ClnsReader(input, libraryRegistry)
-
-                port = clnsReader.readClones()
-                closeable = clnsReader
                 fileInfo = clnsReader
+                extractors = cloneExtractors(fileInfo.header.tagsInfo)
+
+                var set = clnsReader.readCloneSet()
+                if (fileInfo.header.tagsInfo.hasTagsWithType(TagType.Cell)) {
+                    val tagDivisionDepth = fileInfo.header.tagsInfo.getDepthFor(TagType.Cell)
+                    set = set.divideClonesByTags(tagDivisionDepth)
+                }
+
+                cPort = set.asOutputPort().withExpectedSize(set.size().toLong())
+                port = cPort
+                closeable = clnsReader
+                progressReporter = SmartProgressReporter.extractProgress(cPort, set.size().toLong())
             }
 
             VDJCA -> {
-                extractors = alignmentsExtractors()
                 val alignmentsReader = VDJCAlignmentsReader(input, libraryRegistry)
                 fileInfo = alignmentsReader
+                extractors = alignmentsExtractors(fileInfo.header.tagsInfo)
                 port = alignmentsReader
                 closeable = alignmentsReader
             }
@@ -256,6 +290,11 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         if (limit != null) {
             port = port.limit(limit!!.toLong())
         }
+        SmartProgressReporter.startProgressReport(
+            "Exporting to AIRR format",
+            progressReporter,
+            if (out != null) System.out else System.err
+        )
         val rowMetaForExport = RowMetaForExport(
             fileInfo.header.tagsInfo,
             MetaForExport(fileInfo),

@@ -25,6 +25,7 @@ import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
+import picocli.CommandLine.Model.OptionSpec
 import picocli.CommandLine.Model.PositionalParamSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -66,7 +67,14 @@ object CommandAnalyze {
                 .hideParamSyntax(true)
                 .description("Path prefix telling mixcr where to put all output files. If arguments ends with file separator, then outputs will be written in specified directory.")
                 .build()
-        )
+        ).apply {
+            val optionNamesToHide = CommandAlign.PathsForNotAligned.optionNames
+            val forDelete = options()
+                .filter { it.longestName() in optionNamesToHide }
+            val forReplace = forDelete.map { OptionSpec.builder(it).hidden(true).build() }
+            forDelete.forEach { remove(it) }
+            forReplace.forEach { add(it) }
+        }
 
     @Command(
         description = ["Run full MiXCR pipeline for specific input."]
@@ -189,6 +197,14 @@ object CommandAnalyze {
         )
         private var noJsonReports: Boolean = false
 
+        @Option(
+            description = ["If specified, not aligned reads will be written in `{output_prefix}.not_aligned.{(I1|I2|R1|R2)}.fastq.gz`, " +
+                    "not parsed reads will be written in `{output_prefix}.not_parsed.{(I1|I2|R1|R2)}.fastq.gz`"],
+            names = ["--output-not-used-reads"],
+            order = OptionsOrder.report + 200
+        )
+        private var outputNoUsedReads: Boolean = false
+
         // parsing inOut
 
         private val inputTemplates get() = inOut.dropLast(1).map { Paths.get(it) }
@@ -200,13 +216,15 @@ object CommandAnalyze {
             override fun POverridesBuilderOps<MiXCRPipeline>.paramsOverrides() {}
         }
 
-        override fun validate() {
-            CommandAlign.checkInputTemplates(inputTemplates)
-            val inputFileGroups = try {
+        private val inputFileGroups
+            get() = try {
                 CommandAlign.InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
             } catch (e: PathPatternExpandException) {
                 throw ValidationException(e.message!!)
             }
+
+        override fun validate() {
+            CommandAlign.checkInputTemplates(inputTemplates)
             pathsForNotAligned.validate(inputFileGroups.inputType)
             inputFileGroups.allFiles.forEach { input ->
                 ValidationException.requireFileExists(input)
@@ -248,25 +266,19 @@ object CommandAnalyze {
             // Calculating samples
             val samples =
                 if (bundle.align!!.splitBySample)
-                    bundle.align.sampleTable?.samples?.bySampleName()?.keys?.toList() ?: emptyList()
+                    (if (bundle.align!!.inferSampleTable) CommandAlignPipeline.inferSampleTable(inputFileGroups)
+                    else bundle.align!!.sampleTable)
+                        ?.samples?.bySampleName()?.keys?.toList() ?: emptyList()
                 else
                     emptyList()
 
             // Adding "align" step
+            if (outputNoUsedReads) {
+                pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
+            }
             planBuilder.addStep(
                 MiXCRCommandDescriptor.align,
-                listOf("--preset", presetName) + mixins.flatMap { it.cmdArgs } + listOf(
-                    "--not-aligned-I1" to pathsForNotAligned.notAlignedReadsI1,
-                    "--not-aligned-I2" to pathsForNotAligned.notAlignedReadsI2,
-                    "--not-aligned-R1" to pathsForNotAligned.notAlignedReadsR1,
-                    "--not-aligned-R2" to pathsForNotAligned.notAlignedReadsR2,
-                    "--not-parsed-I1" to pathsForNotAligned.notParsedReadsI1,
-                    "--not-parsed-I2" to pathsForNotAligned.notParsedReadsI2,
-                    "--not-parsed-R1" to pathsForNotAligned.notParsedReadsR1,
-                    "--not-parsed-R2" to pathsForNotAligned.notParsedReadsR2,
-                )
-                    .filter { it.second != null }
-                    .flatMap { listOf(it.first, it.second!!.toString()) },
+                listOf("--preset", presetName) + mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign(),
                 samples
             )
             // Adding all other steps
@@ -331,7 +343,7 @@ object CommandAnalyze {
             fun addStep(
                 cmd: AnyMiXCRCommand,
                 extraArgs: List<String> = emptyList(),
-                vdjcaSamples: List<String> = emptyList(),
+                vdjcaSamples: List<List<String>> = emptyList(),
             ) {
                 val round = rounds.compute(cmd) { c, p ->
                     if (p == null)
@@ -371,10 +383,9 @@ object CommandAnalyze {
                         arguments += "--use-local-temp"
                     }
 
-                    val output =
-                        listOf(
-                            outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round)).toString()
-                        )
+                    val output = listOf(
+                        outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round)).toString()
+                    )
 
                     executionPlan += ExecutionStep(
                         cmd.command,
@@ -388,18 +399,20 @@ object CommandAnalyze {
                     if (vdjcaSamples.isEmpty())
                         nextInputsBuilder +=
                             InputFileSet(
-                                inputs.sampleName, listOf(
+                                inputs.sampleName,
+                                listOf(
                                     outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round))
                                         .toString()
                                 )
                             )
                     else {
                         assert(inputs.sampleName == "")
-                        nextInputsBuilder += vdjcaSamples.map { sampleName ->
+                        nextInputsBuilder += vdjcaSamples.map { sample ->
                             val outputName = cmd.outputName(outputNamePrefixFull, paramsBundle, round)
                             InputFileSet(
-                                sampleName, listOf(
-                                    outputFolder.resolve(CommandAlign.addSampleToFileName(outputName, sampleName))
+                                CommandAlignPipeline.listToSampleName(sample),
+                                listOf(
+                                    outputFolder.resolve(CommandAlign.addSampleToFileName(outputName, sample))
                                         .toString()
                                 )
                             )

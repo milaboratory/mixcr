@@ -1,7 +1,7 @@
 package com.milaboratory.mixcr
 
 import com.milaboratory.mitool.helpers.K_YAML_OM
-import com.milaboratory.mixcr.cli.CommandAlign
+import com.milaboratory.mixcr.cli.CommandAlignParams
 import com.milaboratory.test.TestUtil
 import org.junit.Assert
 import org.junit.Test
@@ -24,13 +24,13 @@ class MixinsTest {
         )
         Assert.assertEquals(
             parsed.sampleTable,
-            CommandAlign.SampleTable(
-                "Sample",
+            CommandAlignParams.SampleTable(
+                listOf("Sample"),
                 listOf(
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ATTG"), 0, "S1"),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ACCC"), 0, "S2"),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ATTG"), 1, "S3"),
-                    CommandAlign.SampleTableRow(sortedMapOf("CELL1" to "ACCC"), 1, "S4"),
+                    CommandAlignParams.SampleTable.Row(sortedMapOf("CELL1" to "ATTG"), 0, listOf("S1")),
+                    CommandAlignParams.SampleTable.Row(sortedMapOf("CELL1" to "ACCC"), 0, listOf("S2")),
+                    CommandAlignParams.SampleTable.Row(sortedMapOf("CELL1" to "ATTG"), 1, listOf("S3")),
+                    CommandAlignParams.SampleTable.Row(sortedMapOf("CELL1" to "ACCC"), 1, listOf("S4")),
                 )
             )
         )

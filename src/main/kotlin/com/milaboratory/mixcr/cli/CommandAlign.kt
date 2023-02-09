@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -19,8 +19,6 @@ import cc.redberry.pipe.util.mapChunksInParallel
 import cc.redberry.pipe.util.mapUnchunked
 import cc.redberry.pipe.util.ordered
 import cc.redberry.pipe.util.unchunked
-import com.fasterxml.jackson.annotation.JsonMerge
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -45,7 +43,6 @@ import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.use
 import com.milaboratory.mixcr.AlignMixins.LimitInput
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRStepParams
@@ -71,6 +68,7 @@ import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.No
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.SampleNotMatched
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.listToSampleName
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
@@ -110,54 +108,9 @@ import kotlin.io.path.readText
 import kotlin.math.max
 
 object CommandAlign {
-    const val COMMAND_NAME = "align"
+    const val COMMAND_NAME = MiXCRCommandDescriptor.align.name
 
-    /** Defines specific mapping between tag values and sample name (i.e. one row from sample table) */
-    data class SampleTableRow(
-        @JsonProperty("matchTags") val matchTags: SortedMap<String, String> = TreeMap(),
-        @JsonProperty("matchVariantId") val matchVariantId: Int? = null,
-        @JsonProperty("sampleName") val sampleName: String
-    ) {
-        init {
-            require(matchTags.isNotEmpty() || matchVariantId != null)
-        }
-
-        fun matchingInfoString() =
-            matchVariantId.toString() + " " + matchTags.entries.joinToString("|") { it.key + "-" + it.value }
-
-        override fun toString() =
-            sampleName + " " + matchingInfoString()
-    }
-
-    /** Whole set of sample tag values to sample name mappings (i.e. sample table) */
-    data class SampleTable(
-        @JsonProperty("sampleTagName") val sampleTagName: String,
-        @JsonProperty("samples") val samples: List<SampleTableRow>
-    )
-
-    fun List<SampleTableRow>.bySampleName() = groupBy { it.sampleName }
-
-    data class Params(
-        @JsonProperty("species") val species: String = "",
-        @JsonProperty("libraryName") val library: String = "default",
-        @JsonProperty("trimmingQualityThreshold") val trimmingQualityThreshold: Byte,
-        @JsonProperty("trimmingWindowSize") val trimmingWindowSize: Byte,
-        @JsonProperty("chains") val chains: String = "ALL",
-        @JsonProperty("replaceWildcards") val replaceWildcards: Boolean = true,
-        @JsonProperty("overlapPairedReads") val overlapPairedReads: Boolean = true,
-        @JsonProperty("bamDropNonVDJ") val bamDropNonVDJ: Boolean = false,
-        @JsonProperty("writeFailedAlignments") val writeFailedAlignments: Boolean = false,
-        @JsonProperty("tagPattern") val tagPattern: String? = null,
-        @JsonProperty("tagUnstranded") val tagUnstranded: Boolean = false,
-        @JsonProperty("tagMaxBudget") val tagMaxBudget: Double,
-        @JsonProperty("sampleTable") val sampleTable: SampleTable? = null,
-        @JsonProperty("splitBySample") val splitBySample: Boolean = true,
-        @JsonProperty("readIdAsCellTag") val readIdAsCellTag: Boolean = false,
-        @JsonProperty("limit") val limit: Long? = null,
-        @JsonProperty("parameters") @JsonMerge val parameters: VDJCAlignerParameters,
-    ) : MiXCRParams {
-        override val command get() = MiXCRCommandDescriptor.align
-    }
+    fun List<CommandAlignParams.SampleTable.Row>.bySampleName() = groupBy { it.sample }
 
     class InputFileGroups(
         val fileGroups: List<FileGroup>
@@ -194,6 +147,20 @@ object CommandAlign {
     }
 
     class PathsForNotAligned {
+        companion object {
+            val optionNames
+                get() = arrayOf(
+                    "--not-aligned-I1",
+                    "--not-aligned-I2",
+                    "--not-aligned-R1",
+                    "--not-aligned-R2",
+                    "--not-parsed-I1",
+                    "--not-parsed-I2",
+                    "--not-parsed-R1",
+                    "--not-parsed-R2",
+                )
+        }
+
         @set:Option(
             description = ["Pipe not aligned I1 reads into separate file."],
             names = ["--not-aligned-I1"],
@@ -297,6 +264,74 @@ object CommandAlign {
             "I1,R1,R2",
             "I1,I2,R1,R2",
         )
+
+        fun fillWithDefaults(inputType: Cmd.InputType, outputDir: Path, prefix: String) {
+            fun fill(type: String) {
+                when (type) {
+                    "R1" -> {
+                        notAlignedReadsR1 = outputDir.resolve("$prefix.not_aligned.R1.fastq.gz")
+                        notParsedReadsR1 = outputDir.resolve("$prefix.not_parsed.R1.fastq.gz")
+                    }
+
+                    "R2" -> {
+                        notAlignedReadsR2 = outputDir.resolve("$prefix.not_aligned.R2.fastq.gz")
+                        notParsedReadsR2 = outputDir.resolve("$prefix.not_parsed.R2.fastq.gz")
+                    }
+
+                    "I1" -> {
+                        notAlignedReadsI1 = outputDir.resolve("$prefix.not_aligned.I1.fastq.gz")
+                        notParsedReadsI1 = outputDir.resolve("$prefix.not_parsed.I1.fastq.gz")
+                    }
+
+                    "I2" -> {
+                        notAlignedReadsI2 = outputDir.resolve("$prefix.not_aligned.I2.fastq.gz")
+                        notParsedReadsI2 = outputDir.resolve("$prefix.not_parsed.I2.fastq.gz")
+                    }
+
+                    else -> throw IllegalArgumentException()
+                }
+            }
+
+            when (inputType) {
+                SingleEndFastq -> {
+                    fill("R1")
+                }
+
+                PairedEndFastq -> {
+                    fill("R1")
+                    fill("R2")
+                }
+
+                TripleEndFastq -> {
+                    fill("I1")
+                    fill("R1")
+                    fill("R2")
+                }
+
+                QuadEndFastq -> {
+                    fill("I1")
+                    fill("I2")
+                    fill("R1")
+                    fill("R2")
+                }
+
+                Fasta -> throw ValidationException("Can't write not aligned and not parsed reads for fasta input")
+                BAM -> throw ValidationException("Can't write not aligned and not parsed reads for bam input")
+            }
+        }
+
+        fun argsForAlign(): List<String> = listOf(
+            "--not-aligned-I1" to notAlignedReadsI1,
+            "--not-aligned-I2" to notAlignedReadsI2,
+            "--not-aligned-R1" to notAlignedReadsR1,
+            "--not-aligned-R2" to notAlignedReadsR2,
+            "--not-parsed-I1" to notParsedReadsI1,
+            "--not-parsed-I2" to notParsedReadsI2,
+            "--not-parsed-R1" to notParsedReadsR1,
+            "--not-parsed-R2" to notParsedReadsR2,
+        )
+            .filter { it.second != null }
+            .flatMap { listOf(it.first, it.second!!.toString()) }
 
         fun validate(inputType: Cmd.InputType) {
             fun Any?.tl(value: String) = if (this == null) emptyList() else listOf(value)
@@ -415,7 +450,7 @@ object CommandAlign {
                 .build()
         )
 
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<Params> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAlignParams> {
         @Option(
             names = ["-O"],
             description = ["Overrides aligner parameters from the selected preset"],
@@ -426,8 +461,7 @@ object CommandAlign {
 
         @Option(
             description = [
-                "Read pre-processing: trimming quality threshold.",
-                "Zero value can be used to skip trimming.",
+                "Read pre-processing: trimming quality threshold. Zero value can be used to skip trimming.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--trimming-quality-threshold"],
@@ -482,7 +516,7 @@ object CommandAlign {
         @set:Option(
             description = [
                 "Read tag pattern from a file.",
-                "  Default tag pattern determined by the preset."
+                DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--tag-pattern-file"],
             paramLabel = "<path>",
@@ -497,7 +531,7 @@ object CommandAlign {
         @Option(
             description = [
                 "If paired-end input is used, determines whether to try all combinations of mate-pairs or " +
-                        "only match reads to the corresponding pattern sections (i.e. first file to first section, etc...).",
+                        "only match reads to the corresponding pattern sections (i.e. first file to first section etc).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--tag-parse-unstranded"],
@@ -507,7 +541,7 @@ object CommandAlign {
 
         @Option(
             description = [
-                "Maximal bit budget, higher values allows more substitutions in small letters.",
+                "Maximal bit budget controlling mismatches (substitutions) in tag pattern. Higher values allows more substitutions in small letters.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--tag-max-budget"],
@@ -555,8 +589,8 @@ object CommandAlign {
                 throw ApplicationException("--limit and -n options are deprecated; use ${LimitInput.CMD_OPTION} instead.")
             }
 
-        override val paramsResolver = object : MiXCRParamsResolver<Params>(MiXCRParamsBundle::align) {
-            override fun POverridesBuilderOps<Params>.paramsOverrides() {
+        override val paramsResolver = object : MiXCRParamsResolver<CommandAlignParams>(MiXCRParamsBundle::align) {
+            override fun POverridesBuilderOps<CommandAlignParams>.paramsOverrides() {
                 if (overrides.isNotEmpty()) {
                     // Printing warning message for some common mistakes in parameter overrides
                     for ((key) in overrides) if ("Parameters.parameters.relativeMinScore" == key.substring(1)) logger.warn(
@@ -564,27 +598,27 @@ object CommandAlign {
                                 "instead of \"${key[0]}Parameters.parameters.relativeMinScore\". " +
                                 "The latter should be touched only in a very specific cases."
                     )
-                    Params::parameters jsonOverrideWith overrides
+                    CommandAlignParams::parameters jsonOverrideWith overrides
                 }
 
-                Params::trimmingQualityThreshold setIfNotNull trimmingQualityThreshold
-                Params::trimmingWindowSize setIfNotNull trimmingWindowSize
-                Params::bamDropNonVDJ setIfTrue dropNonVDJ
-                Params::writeFailedAlignments setIfTrue writeAllResults
-                Params::tagPattern setIfNotNull tagPatternFile?.readText()
-                Params::tagUnstranded setIfTrue tagUnstranded
-                Params::tagMaxBudget setIfNotNull tagMaxBudget
-                Params::readIdAsCellTag setIfTrue readIdAsCellTag
+                CommandAlignParams::trimmingQualityThreshold setIfNotNull trimmingQualityThreshold
+                CommandAlignParams::trimmingWindowSize setIfNotNull trimmingWindowSize
+                CommandAlignParams::bamDropNonVDJ setIfTrue dropNonVDJ
+                CommandAlignParams::writeFailedAlignments setIfTrue writeAllResults
+                CommandAlignParams::tagPattern setIfNotNull tagPatternFile?.readText()
+                CommandAlignParams::tagUnstranded setIfTrue tagUnstranded
+                CommandAlignParams::tagMaxBudget setIfNotNull tagMaxBudget
+                CommandAlignParams::readIdAsCellTag setIfTrue readIdAsCellTag
 
                 if (saveReads)
-                    Params::parameters.updateBy {
+                    CommandAlignParams::parameters.updateBy {
                         it.setSaveOriginalReads(true)
                     }
 
-                Params::limit setIfNotNull limit
+                CommandAlignParams::limit setIfNotNull limit
             }
 
-            override fun validateParams(params: Params) {
+            override fun validateParams(params: CommandAlignParams) {
                 if (params.species.isEmpty())
                     throw ValidationException("Species not set, please use -s / --species option to specified it.")
             }
@@ -596,9 +630,8 @@ object CommandAlign {
     )
     class Cmd : CmdBase() {
         @Option(
-            description = ["Analysis preset. Sets all significant parameters of this and all downstream analysis steps. " +
-                    "This is a required parameter. It is very important to carefully select the most appropriate preset " +
-                    "for the data you analyse."],
+            description = ["Analysis preset. Sets key parameters of this and all downstream analysis steps. " +
+                    "It is critical to carefully select the most appropriate preset for the data you analyse."],
             names = ["-p", "--preset"],
             paramLabel = "<name>",
             required = true,
@@ -697,10 +730,11 @@ object CommandAlign {
         @Mixin
         lateinit var pathsForNotAligned: PathsForNotAligned
 
-        @Option(description = ["Show runtime buffer load."], names = ["--buffers"], hidden = true)
-        var reportBuffers = false
-
         private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins.mixins) }
+
+        /** Output file header will contain packed version of the parameter specs,
+        i.e. all external presets and will be packed into the spec object.*/
+        private val paramsSpecPacked by lazy { paramsSpec.pack() }
 
         private val bpPair by lazy { paramsResolver.resolve(paramsSpec, printParameters = logger.verbose) }
 
@@ -775,14 +809,19 @@ object CommandAlign {
                 }
                 ?: emptyList()
 
-            val keyParameter = cmdParams.tagPattern.toString()
+            val samplePattern = cmdParams.tagPattern.toString()
 
             return when (inputFileGroups.inputType) {
                 BAM -> {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    MiXCRMain.lm.reportApplicationInputs(files, keyParameter, sampleDescriptions)
+                    MiXCRMain.lm.reportApplicationInputs(
+                        files,
+                        paramsSpecPacked.base.consistentHashString(),
+                        samplePattern,
+                        sampleDescriptions
+                    )
                     BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
                         .map { ProcessingBundle(it) }
                 }
@@ -791,7 +830,12 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
-                    MiXCRMain.lm.reportApplicationInputs(listOf(inputFile), keyParameter, sampleDescriptions)
+                    MiXCRMain.lm.reportApplicationInputs(
+                        listOf(inputFile),
+                        paramsSpecPacked.base.consistentHashString(),
+                        samplePattern,
+                        sampleDescriptions
+                    )
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
@@ -800,7 +844,12 @@ object CommandAlign {
                 }
 
                 else -> { // All fastq file types
-                    MiXCRMain.lm.reportApplicationInputs(inputFileGroups.allFiles, keyParameter, sampleDescriptions)
+                    MiXCRMain.lm.reportApplicationInputs(
+                        inputFileGroups.allFiles,
+                        paramsSpecPacked.base.consistentHashString(),
+                        samplePattern,
+                        sampleDescriptions
+                    )
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     FastqGroupReader(inputFileGroups.fileGroups, cmdParams.replaceWildcards, readBufferSize)
                         .map { ProcessingBundle(it.read, it.fileTags, it.originalReadId) }
@@ -854,7 +903,7 @@ object CommandAlign {
             }
 
             // Tags
-            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups.tags)
+            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups)
 
             // true if final NSQTuple will have two reads, false otherwise
             val pairedPayload = tagsExtractor.pairedPatternPayload
@@ -910,6 +959,7 @@ object CommandAlign {
 
             // Attaching report to aligner
             aligner.setEventsListener(reportBuilder)
+
             use(
                 createReader(),
                 alignedWriter(outputFile),
@@ -929,16 +979,14 @@ object CommandAlign {
                 // Pre-create all writers
                 val samples = tagsExtractor.samples
                 if (samples == null || !cmdParams.splitBySample)
-                    writers?.get("")
+                    writers?.get(emptyList())
                 else
                     samples.forEach { sample -> writers?.get(sample) }
 
                 writers?.writeHeader(
                     MiXCRHeader(
                         inputHash,
-                        // Output file header will contain packed version of the parameter specs,
-                        // i.e. all external presets and will be packed into the spec object
-                        paramsSpec.pack(),
+                        paramsSpecPacked,
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         tagsExtractor.tagsInfo,
                         aligner.parameters,
@@ -1005,37 +1053,6 @@ object CommandAlign {
                         it
                 }
 
-                // if (reportBuffers) {
-                //    checkNotNull(writer)
-                //    println("Analysis threads: $threads")
-                //    val reporter = StatusReporter()
-                //    reporter.addBuffer(
-                //        "Input (chunked; chunk size = 64)",
-                //        mainInputReads.bufferStatusProvider
-                //    )
-                //    reporter.addBuffer(
-                //        "Alignment result (chunked; chunk size = 64)",
-                //        step2.outputBufferStatusProvider
-                //    )
-                //    reporter.addCustomProvider(object : StatusProvider {
-                //        @Suppress("ObjectPropertyName")
-                //        @Volatile
-                //        var _status: String = ""
-                //
-                //        @Volatile
-                //        var isClosed = false
-                //        override fun updateStatus() {
-                //            _status = "Busy encoders: " + writer.busyEncoders + " / " + writer.encodersCount
-                //            isClosed = writer.isClosed
-                //        }
-                //
-                //        override fun isFinished(): Boolean = isClosed
-                //
-                //        override fun getStatus(): String = _status
-                //    })
-                //    reporter.start()
-                //}
-
                 step2
                     .unchunked()
                     .ordered { it.read.id }
@@ -1070,13 +1087,15 @@ object CommandAlign {
                         if (alignment.isChimera)
                             reportBuilder.onChimera()
 
-                        writers?.get(if (cmdParams.splitBySample) bundle.sample else "")?.write(alignment)
+                        writers?.get(if (cmdParams.splitBySample) bundle.sample else emptyList())?.write(alignment)
                     }
 
                 writers?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
-                reportBuilder.setSampleStat(tagsExtractor.sampleStat)
+                reportBuilder.setSampleStat(tagsExtractor.sampleStat
+                    ?.map { listToSampleName(it.key) to it.value }
+                    ?.toMap(TreeMap()))
                 val report = reportBuilder.buildReport()
                 writers?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
@@ -1106,11 +1125,9 @@ object CommandAlign {
                 "." -> null
                 else -> {
                     object : Writers() {
-                        override fun writerFactory(sampleName: String) = run {
+                        override fun writerFactory(sample: List<String>) = run {
                             VDJCAlignmentsWriter(
-                                outputFile.resolveSibling(
-                                    addSampleToFileName(outputFile.fileName.toString(), sampleName)
-                                ),
+                                outputFile.resolveSibling(addSampleToFileName(outputFile.fileName.toString(), sample)),
                                 concurrencyLimiter, VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
                             )
                         }
@@ -1121,10 +1138,10 @@ object CommandAlign {
         abstract inner class Writers : AutoCloseable {
             private var header: MiXCRHeader? = null
             private var genes: List<VDJCGene>? = null
-            private val writers = mutableMapOf<String, VDJCAlignmentsWriter>()
+            private val writers = mutableMapOf<List<String>, VDJCAlignmentsWriter>()
             protected val concurrencyLimiter: Semaphore = Semaphore(max(1, threads.value / 8))
 
-            abstract fun writerFactory(sampleName: String): VDJCAlignmentsWriter
+            abstract fun writerFactory(sample: List<String>): VDJCAlignmentsWriter
 
             fun writeHeader(header: MiXCRHeader, genes: List<VDJCGene>) {
                 if (this.header != null)
@@ -1136,7 +1153,7 @@ object CommandAlign {
                 this.genes = genes
             }
 
-            operator fun get(sample: String) =
+            operator fun get(sample: List<String>) =
                 writers.computeIfAbsent(sample) {
                     val writer = writerFactory(it)
                     if (header != null)
@@ -1175,7 +1192,8 @@ object CommandAlign {
         }
     }
 
-    fun addSampleToFileName(fileName: String, sampleName: String): String {
+    fun addSampleToFileName(fileName: String, sample: List<String>): String {
+        val sampleName = listToSampleName(sample)
         val dotIndex = fileName.lastIndexOf('.')
         val prefix = fileName.substring(0, dotIndex)
         val extension = fileName.substring(dotIndex)

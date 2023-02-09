@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -22,6 +22,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.mitool.pattern.SequenceSetCollection
+import com.milaboratory.mixcr.Presets
 import com.milaboratory.mixcr.basictypes.GeneFeatures
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
@@ -232,7 +233,7 @@ object Main {
                     .addSubcommand("versionInfo", CommandVersionInfo::class.java)
                     .addSubcommand("slice", CommandSlice::class.java)
                     .addSubcommand("exportPreset", CommandExportPreset::class.java)
-                    .addSubcommand(CommandListPresets.COMMAND_NAME, CommandListPresets::class.java)
+                    .addSubcommand(Presets.LIST_PRESETS_COMMAND_NAME, CommandListPresets::class.java)
             )
 
             //hidden

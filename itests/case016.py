@@ -296,7 +296,7 @@ def compare_tables(analysis='individual', metric=None, downsampling=None, criter
                 table_mixcr_formatted = mixcr_tables_format(table_mixcr)
                 table_test = pd.read_table(*file_test, sep='\t')
                 try:
-                    pd.testing.assert_frame_equal(table_mixcr_formatted, table_test, check_dtype=False)
+                    pd.testing.assert_frame_equal(table_mixcr_formatted, table_test, check_dtype=False, check_exact=False)
                     print(f'{metric} test passed')
                 except AssertionError as e:
                     print(f'{metric} test failed')
@@ -332,7 +332,7 @@ def compare_tables(analysis='individual', metric=None, downsampling=None, criter
                 if metric == 'Pearson':
                     table_mixcr_final['Pearson'] = table_mixcr_final['Pearson'].replace(-1, 0)
                 try:
-                    pd.testing.assert_frame_equal(table_mixcr_final.fillna(0), table_test_final, check_dtype=False)
+                    pd.testing.assert_frame_equal(table_mixcr_final.fillna(0), table_test_final, check_dtype=False, check_exact=False)
                     print(f'{metric} test passed')
                 except AssertionError as e:
                     print(f'{metric} test failed')

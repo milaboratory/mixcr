@@ -26,6 +26,8 @@ properties:
         type: integer
       decisiveBranchingSumQualityThreshold:
         type: integer
+      discardAmbiguousNucleotideCalls:
+        type: boolean
       isAlignedRegionsOnly:
         type: boolean
       minimalContigLength:
@@ -57,6 +59,17 @@ properties:
               const: NoFiltering
           required:
           - type
+        - allOf:
+          - type: object
+            properties:
+              geneFeatures:
+                $ref: '#/$defs/GeneFeatures'
+          - type: object
+            properties:
+              type:
+                const: OnlyCovering
+            required:
+            - type
         - type: object
           properties:
             type:
@@ -69,6 +82,17 @@ properties:
               const: OnlyFullyDefined
           required:
           - type
+        - allOf:
+          - type: object
+            properties:
+              geneFeatures:
+                $ref: '#/$defs/GeneFeatures'
+          - type: object
+            properties:
+              type:
+                const: OnlyUnambiguouslyCovering
+            required:
+            - type
       subCloningRegions:
         $ref: '#/$defs/GeneFeatures'
       trimmingParameters:

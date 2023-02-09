@@ -16,6 +16,7 @@
     },
     "minimalContigLength": 20,
     "alignedRegionsOnly": false,
+    "discardAmbiguousNucleotideCalls": false,
     "postFiltering": {
       "type": "NoFiltering"
     }
