@@ -343,7 +343,9 @@ assembleContigs:
     assemblingRegions:
     - VDJRegion
     postFiltering:
-      type: OnlyFullyDefined
+      type: OnlyUnambiguouslyCovering
+      geneFeatures:
+      - VDJRegion
     trimmingParameters:
       averageQualityThreshold: 10.0
       windowSize: 8
