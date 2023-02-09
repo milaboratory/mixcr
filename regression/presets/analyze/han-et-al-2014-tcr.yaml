@@ -23,6 +23,7 @@ align:
   tagMaxBudget: 10.0
   sampleTable: null
   splitBySample: false
+  inferSampleTable: false
   readIdAsCellTag: false
   limit: null
   parameters:
@@ -172,6 +173,7 @@ refineTagsAndSort:
         operator:
           type: group_operator_cumtop
           share: 0.99
+          accept: High
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -305,6 +307,7 @@ assemble:
           operator:
             type: group_operator_cumtop
             share: 0.99
+            accept: High
       aggregateReport: true
   inferMinRecordsPerConsensus: false
 assembleContigs:
@@ -328,6 +331,7 @@ assembleContigs:
       windowSize: 8
     minimalContigLength: 20
     alignedRegionsOnly: false
+    discardAmbiguousNucleotideCalls: false
 exportAlignments:
   chains: ALL
   noHeader: false

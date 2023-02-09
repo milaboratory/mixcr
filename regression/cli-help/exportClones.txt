@@ -46,10 +46,11 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
                           [-cIdentityPercents] [-vBestIdentityPercent] [-dBestIdentityPercent]
                           [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains] [-topChains]
-                          [-geneLabel <label>]... [-tagCounts] [-tags <(Molecule|Cell|Sample)>]...
-                          [-uniqueTagCount <(Molecule|Cell|Sample)>]... [-uniqueTagFraction <
-                          (Molecule|Cell|Sample)>]... [-cellGroup] [--force-overwrite]
-                          [--no-warnings] [--verbose] [--help] data.(clns|clna) [table.tsv]
+                          [-geneLabel <label>]... [-tagCounts] [-cellId [<(none|space|dash)>]]...
+                          [-tags <(Molecule|Cell|Sample)>]... [-uniqueTagCount <
+                          (Molecule|Cell|Sample)>]... [-uniqueTagFraction <(Molecule|Cell|Sample)
+                          >]... [-cellGroup] [--force-overwrite] [--no-warnings] [--verbose]
+                          [--help] data.(clns|clna) [table.tsv]
 Export assembled clones into tab delimited file.
       data.(clns|clna)       Path to input file with clones
       [table.tsv]            Path where to write export table.
@@ -336,6 +337,11 @@ Possible fields to export
       -topChains             Top chains
       -geneLabel <label>     Export gene label (i.e. ReliableChain)
       -tagCounts             All tags with counts
+      -cellId [<(none|space|dash)>]
+                             Concatenated all cell tags with specified delimiter, default delimiter
+                               is `none`.
+                             Example output for `-cellId`: GGATTACTCATTGCCC
+                             Example output for `-cellId dash`: GGATTACT-CATTGCCC
       -tags <(Molecule|Cell|Sample)>
                              All tags values (i.e. CELL barcode or UMI sequence)
       -uniqueTagCount <(Molecule|Cell|Sample)>

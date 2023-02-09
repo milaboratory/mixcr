@@ -21,6 +21,7 @@ align:
   tagMaxBudget: 10.0
   sampleTable: null
   splitBySample: false
+  inferSampleTable: false
   readIdAsCellTag: false
   limit: null
   parameters:
@@ -169,6 +170,7 @@ refineTagsAndSort:
           logX: true
           minimalSample: 30
           fallbackThreshold: 1.0
+          accept: High
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -302,6 +304,7 @@ assembleContigs:
       windowSize: 8
     minimalContigLength: 20
     alignedRegionsOnly: false
+    discardAmbiguousNucleotideCalls: false
 exportAlignments:
   chains: ALL
   noHeader: false

@@ -21,6 +21,7 @@ align:
   tagMaxBudget: 10.0
   sampleTable: null
   splitBySample: false
+  inferSampleTable: false
   readIdAsCellTag: false
   limit: null
   parameters:
@@ -294,6 +295,7 @@ assemble:
           operator:
             type: group_operator_cumtop
             share: 0.95
+            accept: High
       aggregateReport: true
     - type: filter_in_groups
       isolationKeys:
@@ -311,6 +313,7 @@ assemble:
           operator:
             type: group_operator_cumtop
             share: 0.99
+            accept: High
       aggregateReport: true
     - type: filter_groups
       groupingKeys:
@@ -343,12 +346,15 @@ assembleContigs:
     assemblingRegions:
     - VDJRegion
     postFiltering:
-      type: OnlyFullyDefined
+      type: OnlyUnambiguouslyCovering
+      geneFeatures:
+      - VDJRegion
     trimmingParameters:
       averageQualityThreshold: 10.0
       windowSize: 8
     minimalContigLength: 20
     alignedRegionsOnly: true
+    discardAmbiguousNucleotideCalls: false
 exportAlignments:
   chains: ALL
   noHeader: false

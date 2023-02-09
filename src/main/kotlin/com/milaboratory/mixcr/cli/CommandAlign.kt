@@ -147,6 +147,20 @@ object CommandAlign {
     }
 
     class PathsForNotAligned {
+        companion object {
+            val optionNames
+                get() = arrayOf(
+                    "--not-aligned-I1",
+                    "--not-aligned-I2",
+                    "--not-aligned-R1",
+                    "--not-aligned-R2",
+                    "--not-parsed-I1",
+                    "--not-parsed-I2",
+                    "--not-parsed-R1",
+                    "--not-parsed-R2",
+                )
+        }
+
         @set:Option(
             description = ["Pipe not aligned I1 reads into separate file."],
             names = ["--not-aligned-I1"],
@@ -250,6 +264,74 @@ object CommandAlign {
             "I1,R1,R2",
             "I1,I2,R1,R2",
         )
+
+        fun fillWithDefaults(inputType: Cmd.InputType, outputDir: Path, prefix: String) {
+            fun fill(type: String) {
+                when (type) {
+                    "R1" -> {
+                        notAlignedReadsR1 = outputDir.resolve("$prefix.not_aligned.R1.fastq.gz")
+                        notParsedReadsR1 = outputDir.resolve("$prefix.not_parsed.R1.fastq.gz")
+                    }
+
+                    "R2" -> {
+                        notAlignedReadsR2 = outputDir.resolve("$prefix.not_aligned.R2.fastq.gz")
+                        notParsedReadsR2 = outputDir.resolve("$prefix.not_parsed.R2.fastq.gz")
+                    }
+
+                    "I1" -> {
+                        notAlignedReadsI1 = outputDir.resolve("$prefix.not_aligned.I1.fastq.gz")
+                        notParsedReadsI1 = outputDir.resolve("$prefix.not_parsed.I1.fastq.gz")
+                    }
+
+                    "I2" -> {
+                        notAlignedReadsI2 = outputDir.resolve("$prefix.not_aligned.I2.fastq.gz")
+                        notParsedReadsI2 = outputDir.resolve("$prefix.not_parsed.I2.fastq.gz")
+                    }
+
+                    else -> throw IllegalArgumentException()
+                }
+            }
+
+            when (inputType) {
+                SingleEndFastq -> {
+                    fill("R1")
+                }
+
+                PairedEndFastq -> {
+                    fill("R1")
+                    fill("R2")
+                }
+
+                TripleEndFastq -> {
+                    fill("I1")
+                    fill("R1")
+                    fill("R2")
+                }
+
+                QuadEndFastq -> {
+                    fill("I1")
+                    fill("I2")
+                    fill("R1")
+                    fill("R2")
+                }
+
+                Fasta -> throw ValidationException("Can't write not aligned and not parsed reads for fasta input")
+                BAM -> throw ValidationException("Can't write not aligned and not parsed reads for bam input")
+            }
+        }
+
+        fun argsForAlign(): List<String> = listOf(
+            "--not-aligned-I1" to notAlignedReadsI1,
+            "--not-aligned-I2" to notAlignedReadsI2,
+            "--not-aligned-R1" to notAlignedReadsR1,
+            "--not-aligned-R2" to notAlignedReadsR2,
+            "--not-parsed-I1" to notParsedReadsI1,
+            "--not-parsed-I2" to notParsedReadsI2,
+            "--not-parsed-R1" to notParsedReadsR1,
+            "--not-parsed-R2" to notParsedReadsR2,
+        )
+            .filter { it.second != null }
+            .flatMap { listOf(it.first, it.second!!.toString()) }
 
         fun validate(inputType: Cmd.InputType) {
             fun Any?.tl(value: String) = if (this == null) emptyList() else listOf(value)
