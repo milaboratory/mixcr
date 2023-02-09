@@ -15,6 +15,8 @@ properties:
     type: boolean
   chains:
     type: string
+  inferSampleTable:
+    type: boolean
   library:
     type: string
   limit:
@@ -98,8 +100,10 @@ properties:
   sampleTable:
     type: object
     properties:
-      sampleTagName:
-        type: string
+      sampleTagNames:
+        type: array
+        items:
+          type: string
       samples:
         type: array
         items:
@@ -109,8 +113,10 @@ properties:
               type: object
             matchVariantId:
               type: integer
-            sampleName:
-              type: string
+            sample:
+              type: array
+              items:
+                type: string
   species:
     type: string
   splitBySample:

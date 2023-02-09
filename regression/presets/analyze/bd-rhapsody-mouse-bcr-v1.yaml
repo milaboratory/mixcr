@@ -31,6 +31,7 @@ align:
   tagMaxBudget: 10.0
   sampleTable: null
   splitBySample: false
+  inferSampleTable: false
   readIdAsCellTag: false
   limit: null
   parameters:
@@ -185,6 +186,7 @@ refineTagsAndSort:
             logX: true
             minimalSample: 20
             fallbackThreshold: 1.0
+            accept: High
       - type: filter_groups
         groupingKeys:
         - allTags:Cell
@@ -309,6 +311,7 @@ assemble:
           operator:
             type: group_operator_cumtop
             share: 0.95
+            accept: High
       aggregateReport: true
     - type: filter_in_groups
       isolationKeys:
@@ -326,6 +329,7 @@ assemble:
           operator:
             type: group_operator_cumtop
             share: 0.99
+            accept: High
       aggregateReport: true
     - type: filter_groups
       groupingKeys:

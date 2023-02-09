@@ -1,5 +1,105 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 $defs:
+  AdvancedThresholdingOp-1:
+    type: object
+    properties:
+      accept:
+        $ref: '#/$defs/HistHalf'
+      algorithm:
+        anyOf:
+        - allOf:
+          - type: object
+            properties:
+              kappa:
+                type: number
+              nu:
+                type: number
+              omega:
+                type: number
+              tau:
+                type: number
+          - type: object
+            properties:
+              type:
+                const: ght
+            required:
+            - type
+        - type: object
+          properties:
+            type:
+              const: met
+          required:
+          - type
+        - type: object
+          properties:
+            type:
+              const: otsu
+          required:
+          - type
+        - type: object
+          properties:
+            type:
+              const: otsue
+          required:
+          - type
+        - allOf:
+          - type: object
+            properties:
+              omega:
+                type: number
+          - type: object
+            properties:
+              type:
+                const: wprctile
+            required:
+            - type
+      fallbackThreshold:
+        type: number
+      histTransformers:
+        type: array
+        items:
+          anyOf:
+          - anyOf:
+            - $ref: '#/$defs/AdvancedThresholdingOp-2'
+            - $ref: '#/$defs/Otsu1Op'
+            - $ref: '#/$defs/CumtopOp'
+            - $ref: '#/$defs/MinimalRecursiveShareOp'
+            - $ref: '#/$defs/TopNOp'
+            type: object
+            properties:
+              type:
+                const: HistGroupFilterOperator
+            required:
+            - type
+          - allOf:
+            - type: object
+              properties:
+                fraction:
+                  type: number
+                value:
+                  type: number
+            - type: object
+              properties:
+                type:
+                  const: inflate
+              required:
+              - type
+      logX:
+        type: boolean
+      minimalSample:
+        type: integer
+      multiplyWeightByKey:
+        type: boolean
+      triClassAdjustmentIterations:
+        type: integer
+  AdvancedThresholdingOp-2:
+    $ref: '#/$defs/AdvancedThresholdingOp-1'
+    type: object
+    properties:
+      type:
+        const: group_operator_advanced_thresholding
+    required:
+    - type
   AndKeyedFilter-1:
     type: object
     properties:
@@ -45,6 +145,20 @@ $defs:
         const: group_metric_cumtop
     required:
     - type
+  CumtopOp:
+    allOf:
+    - type: object
+      properties:
+        accept:
+          $ref: '#/$defs/HistHalf'
+        share:
+          type: number
+    - type: object
+      properties:
+        type:
+          const: group_operator_cumtop
+      required:
+      - type
   GroupFilter:
     allOf:
     - type: object
@@ -68,53 +182,24 @@ $defs:
                   - $ref: '#/$defs/SumWeight'
               operator:
                 anyOf:
-                - allOf:
-                  - type: object
-                    properties:
-                      share:
-                        type: number
-                  - type: object
-                    properties:
-                      type:
-                        const: group_operator_cumtop
-                    required:
-                    - type
                 - type: object
                   properties:
                     type:
                       const: dummy_group_operator
                   required:
                   - type
-                - allOf:
-                  - type: object
-                    properties:
-                      minimalShare:
-                        type: number
-                  - type: object
-                    properties:
-                      type:
-                        const: group_operator_minimal_recursive_share
-                    required:
-                    - type
-                - allOf:
-                  - type: object
-                    properties:
-                      fallbackThreshold:
-                        type: number
-                      logX:
-                        type: boolean
-                      minimalSample:
-                        type: integer
-                      multiplyWeightByKey:
-                        type: boolean
-                      triClassAdjustmentIterations:
-                        type: integer
-                  - type: object
-                    properties:
-                      type:
-                        const: group_operator_otsu1
-                    required:
-                    - type
+                - anyOf:
+                  - $ref: '#/$defs/AdvancedThresholdingOp-2'
+                  - $ref: '#/$defs/Otsu1Op'
+                  type: object
+                  properties:
+                    type:
+                      const: AbstractAdvancedThresholdingOp
+                  required:
+                  - type
+                - $ref: '#/$defs/CumtopOp'
+                - $ref: '#/$defs/MinimalRecursiveShareOp'
+                - $ref: '#/$defs/TopNOp'
                 - allOf:
                   - type: object
                     properties:
@@ -130,17 +215,6 @@ $defs:
                     properties:
                       type:
                         const: group_operator_range
-                    required:
-                    - type
-                - allOf:
-                  - type: object
-                    properties:
-                      "n":
-                        type: integer
-                  - type: object
-                    properties:
-                      type:
-                        const: group_operator_top
                     required:
                     - type
     - type: object
@@ -160,6 +234,11 @@ $defs:
         type: number
       multiplyWeightByKey:
         type: boolean
+  HistHalf:
+    type: string
+    enum:
+    - Low
+    - High
   InGroupsFilter-1:
     type: object
     properties:
@@ -204,6 +283,20 @@ $defs:
           const: group_metric_kmer_diversity
       required:
       - type
+  MinimalRecursiveShareOp:
+    allOf:
+    - type: object
+      properties:
+        accept:
+          $ref: '#/$defs/HistHalf'
+        minimalShare:
+          type: number
+    - type: object
+      properties:
+        type:
+          const: group_operator_minimal_recursive_share
+      required:
+      - type
   NUnique:
     allOf:
     - type: object
@@ -220,6 +313,28 @@ $defs:
           const: group_metric_nunique
       required:
       - type
+  Otsu1Op:
+    allOf:
+    - type: object
+      properties:
+        accept:
+          $ref: '#/$defs/HistHalf'
+        fallbackThreshold:
+          type: number
+        logX:
+          type: boolean
+        minimalSample:
+          type: integer
+        multiplyWeightByKey:
+          type: boolean
+        triClassAdjustmentIterations:
+          type: integer
+    - type: object
+      properties:
+        type:
+          const: group_operator_otsu1
+      required:
+      - type
   SumWeight:
     allOf:
     - type: object
@@ -230,6 +345,20 @@ $defs:
       properties:
         type:
           const: group_metric_sum_weight
+      required:
+      - type
+  TopNOp:
+    allOf:
+    - type: object
+      properties:
+        accept:
+          $ref: '#/$defs/HistHalf'
+        "n":
+          type: integer
+    - type: object
+      properties:
+        type:
+          const: group_operator_top
       required:
       - type
 type: object

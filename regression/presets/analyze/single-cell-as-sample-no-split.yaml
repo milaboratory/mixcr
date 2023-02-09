@@ -38,6 +38,7 @@ align:
       sample:
       - sample2
   splitBySample: false
+  inferSampleTable: false
   readIdAsCellTag: false
   limit: null
   parameters:
@@ -190,6 +191,7 @@ refineTagsAndSort:
             logX: true
             minimalSample: 30
             fallbackThreshold: 1.0
+            accept: High
       aggregateReport: true
 assemblePartial:
   overlappedOnly: false
@@ -328,6 +330,7 @@ assembleContigs:
       windowSize: 8
     minimalContigLength: 20
     alignedRegionsOnly: false
+    discardAmbiguousNucleotideCalls: false
 exportAlignments:
   chains: ALL
   noHeader: false
