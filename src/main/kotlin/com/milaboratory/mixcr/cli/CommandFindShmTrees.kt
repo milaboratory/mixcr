@@ -42,7 +42,6 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.util.DebugDir
-import com.milaboratory.mixcr.util.XSV
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
