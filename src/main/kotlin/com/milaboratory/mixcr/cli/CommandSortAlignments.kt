@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.forEach
-import cc.redberry.pipe.util.withCounting
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
@@ -24,10 +23,11 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.primitivio.PipeReader
 import com.milaboratory.primitivio.PipeWriter
 import com.milaboratory.util.ObjectSerializer
-import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortOnDisk
 import io.repseq.core.VDJCGene
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Parameters
 import java.io.InputStream
 import java.io.OutputStream
@@ -43,11 +43,18 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
     @Parameters(paramLabel = "alignments.sorted.vdjca", index = "1")
     lateinit var out: Path
 
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
+
     override val inputFiles
         get() = listOf(input)
 
     override val outputFiles
         get() = listOf(out)
+
+    private val tempDest by lazy {
+        TempFileManager.smartTempDestination(out, "", !useLocalTemp.value)
+    }
 
     override fun validate() {
         ValidationException.requireFileType(input, InputFileType.VDJCA)
@@ -56,29 +63,30 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
 
     override fun run1() {
         VDJCAlignmentsReader(input).use { reader ->
-            SmartProgressReporter.startProgressReport("Reading vdjca", reader)
-            reader.sortOnDisk(
-                Comparator.comparing { it.minReadId },
-                serializer = VDJCAlignmentsSerializer(reader),
-                chunkSize = 512 * 1024
-            ).use { sorted ->
-                VDJCAlignmentsWriter(out).use { writer ->
-                    writer.writeHeader(
-                        reader.header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) },
-                        reader.usedGenes
-                    )
-                    val counter = sorted.withCounting()
-                    SmartProgressReporter.startProgressReport(
-                        "Writing sorted alignments",
-                        SmartProgressReporter.extractProgress(counter, reader.numberOfReads)
-                    )
-                    counter.forEach { res ->
-                        writer.write(res)
+            reader
+                .reportProgress("Reading vdjca")
+                .sortOnDisk(
+                    Comparator.naturalOrder(),
+                    tempDest,
+                    "sort_by_read_id",
+                    chunkSize = 512 * 1024,
+                    serializer = VDJCAlignmentsSerializer(reader)
+                ) { it.minReadId }
+                .use { sorted ->
+                    VDJCAlignmentsWriter(out).use { writer ->
+                        writer.writeHeader(
+                            reader.header.updateTagInfo { tagsInfo -> tagsInfo.setSorted(0) },
+                            reader.usedGenes
+                        )
+                        sorted
+                            .reportProgress("Writing sorted alignments")
+                            .forEach { res ->
+                                writer.write(res)
+                            }
+                        writer.setNumberOfProcessedReads(reader.numberOfReads)
+                        writer.setFooter(reader.footer)
                     }
-                    writer.setNumberOfProcessedReads(reader.numberOfReads)
-                    writer.setFooter(reader.footer)
                 }
-            }
         }
     }
 

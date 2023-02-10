@@ -15,11 +15,11 @@ import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.sequence.NSQTuple
-import com.milaboratory.mitool.pattern.search.MicRecord
+import com.milaboratory.mitool.container.MicRecord
+import com.milaboratory.mitool.container.ReadTagShortcut
 import com.milaboratory.mitool.pattern.search.ReadSearchMode
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchSettings
-import com.milaboratory.mitool.pattern.search.ReadTagShortcut
 import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ParseReportAggregator
 import com.milaboratory.mixcr.basictypes.VDJCAlignments

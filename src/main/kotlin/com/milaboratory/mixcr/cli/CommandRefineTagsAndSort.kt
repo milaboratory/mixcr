@@ -46,6 +46,8 @@ import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.ComparatorWithHash
+import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
@@ -380,20 +382,20 @@ object CommandRefineTagsAndSort {
 
                     // Reusable routine to perform hash-based soring of alignments by tag with specific index
                     var sorterCounter = 0
-                    val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPort<VDJCAlignments> =
+                    //TODO sortByHashOnDiskHierarchically?
+                    val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPortWithProgress<VDJCAlignments> =
                         { tIdx -> // <- index inside the alignment object
                             sortByHashOnDisk(
-                                tempDest.addSuffix("hashsorter.${sorterCounter++}.$tIdx"),
-                                alPioState,
-                                bitsPerStep = 4,
-                                readerConcurrency = 4,
-                                writerConcurrency = 4,
+                                ComparatorWithHash.compareBy { al ->
+                                    val tagTuple = al.tagCount.singletonTuple
+                                    tagTuple[tIdx].extractKey()
+                                },
+                                tempDest,
+                                "hashsorter.${sorterCounter++}.$tIdx",
+                                stateBuilder = alPioState,
                                 objectSizeInitialGuess = 10_000,
                                 memoryBudget = memoryBudget
-                            ) { al ->
-                                val tagTuple = al.tagCount.singletonTuple
-                                tagTuple[tIdx].extractKey()
-                            }
+                            )
                         }
 
                     // Progress reporter for the first sorting step
@@ -411,6 +413,7 @@ object CommandRefineTagsAndSort {
 
                     // Sorting by other tags
                     for (tIdx in tagNames.size - 2 downTo 0) {
+                        //TODO used that sortByHashOnDisk returns OutputPortWithProgress
                         SmartProgressReporter.startProgressReport(
                             "Sorting alignments by " + tagNames[tIdx],
                             SmartProgressReporter.extractProgress(sorted, numberOfAlignments)

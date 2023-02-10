@@ -42,8 +42,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.mixcr.util.XSV.chooseDelimiter
-import com.milaboratory.mixcr.util.XSV.writeXSV
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ProgressAndStage
@@ -51,6 +49,8 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.XSV.chooseDelimiter
+import com.milaboratory.util.XSV.writeXSV
 import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -369,16 +369,16 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 cloneReader.header.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
-                val withRecalculatedScores = port.withExpectedSize(cloneReader.numberOfClones().toLong())
+                val withRecalculatedScores = port
                     .reportProgress(progressAndStage, "Recalculating scores ${inputFiles[i]}")
-                    .use { clones ->
+                    .let { clones ->
                         cloneRebuild.recalculateScores(clones, cloneReader.tagsInfo, reportBuilder)
                     }
                 if (outputClnsOptions.outputTemplate != null) {
                     withRecalculatedScores.asOutputPort()
                         .withExpectedSize(cloneReader.numberOfClones().toLong())
                         .reportProgress(progressAndStage, "Realigning ${inputFiles[i]}")
-                        .use { clonesWithScores ->
+                        .let { clonesWithScores ->
                             val mapperClones = cloneRebuild.rebuildClones(clonesWithScores)
                             outputClnsFiles[i].toAbsolutePath().parent.createDirectories()
                             val callback = outputClnsFiles[i].toFile()

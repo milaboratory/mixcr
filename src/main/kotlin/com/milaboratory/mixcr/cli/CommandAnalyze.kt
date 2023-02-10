@@ -229,7 +229,7 @@ object CommandAnalyze {
             inputFileGroups.allFiles.forEach { input ->
                 ValidationException.requireFileExists(input)
             }
-            ValidationException.requireNoExtension(outSuffix)
+            ValidationException.requireNoExtension(Paths.get(outSuffix))
         }
 
         override fun run0() {
