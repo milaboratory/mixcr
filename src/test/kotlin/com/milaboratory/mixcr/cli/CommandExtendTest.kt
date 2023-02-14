@@ -1,7 +1,7 @@
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.test.TestUtil
+import com.milaboratory.util.io.K_OM
 import io.repseq.core.ReferencePoint
 import org.junit.Test
 

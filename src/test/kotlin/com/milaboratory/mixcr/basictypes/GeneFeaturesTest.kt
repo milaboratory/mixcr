@@ -1,8 +1,8 @@
 package com.milaboratory.mixcr.basictypes
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.io.K_OM
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.JCDR3Part

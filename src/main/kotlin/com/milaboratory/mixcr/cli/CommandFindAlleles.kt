@@ -325,38 +325,42 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             } else if (libraryOutput.matches(InputFileType.FASTA)) {
                 FastaWriter<NucleotideSequence>(libraryOutput.toFile()).use { writer ->
                     var id = 0L
-                    resultLibrary.genes.forEach { gene ->
-                        val geneFeaturesForFoundAllele = gene.data.meta[metaKeyForAlleleMutationsReliableGeneFeatures]
-                            ?.map { GeneFeature.parse(it) }
-                            ?.sorted()
-                        when {
-                            geneFeaturesForFoundAllele != null -> {
-                                geneFeaturesForFoundAllele.forEach { geneFeature ->
-                                    val baseGene = originalLibrary[gene.data.meta[metaKeyAlleleVariantOf]!!.first()]
-                                    val range = baseGene.partitioning.getRange(geneFeature)
-                                    val sequence =
-                                        gene.sequenceProvider.getRegion(gene.partitioning.getRange(geneFeature))
+                    resultLibrary.getGenes()
+                        .sortedBy { it.name }
+                        .forEach { gene ->
+                            val geneFeaturesForFoundAllele =
+                                gene.data.meta[metaKeyForAlleleMutationsReliableGeneFeatures]
+                                    ?.map { GeneFeature.parse(it) }
+                                    ?.sorted()
+                            when {
+                                geneFeaturesForFoundAllele != null -> {
+                                    geneFeaturesForFoundAllele.forEach { geneFeature ->
+                                        val baseGene =
+                                            originalLibrary[gene.data.meta[metaKeyAlleleVariantOf]!!.first()]!!
+                                        val range = baseGene.partitioning.getRange(geneFeature)
+                                        val sequence =
+                                            gene.sequenceProvider.getRegion(gene.partitioning.getRange(geneFeature))
+                                        writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
+                                    }
+                                }
+
+                                else -> {
+                                    val range = Range(
+                                        gene.partitioning.firstAvailablePosition,
+                                        gene.partitioning.lastAvailablePosition
+                                    )
+                                    val sequence = gene.sequenceProvider.getRegion(range)
                                     writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
                                 }
                             }
-
-                            else -> {
-                                val range = Range(
-                                    gene.partitioning.firstAvailablePosition,
-                                    gene.partitioning.lastAvailablePosition
-                                )
-                                val sequence = gene.sequenceProvider.getRegion(range)
-                                writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
-                            }
                         }
-                    }
                 }
             } else {
                 throw ApplicationException("Unsupported file type for export library, $libraryOutput")
             }
         }
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
-            geneDatum.map { resultLibrary[it.name].id }
+            geneDatum.map { resultLibrary[it.name]!!.id }
         }
         val writerCloseCallbacks = mutableListOf<(FindAllelesReport) -> Unit>()
         datasets.forEachIndexed { i, cloneReader ->
@@ -463,7 +467,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                         GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
                 }
             }
-            val genes = resultLibrary.genes
+            val genes = resultLibrary.getGenes()
                 .filter { it.geneType in VJ_REFERENCE }
                 .sortedWith(Comparator.comparing { gene: VDJCGene -> gene.geneType }
                     .thenComparing { gene: VDJCGene -> gene.name })
@@ -479,7 +483,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         toPath().toAbsolutePath().parent.toFile().mkdirs()
         val cloneSet = CloneSet(
             clones,
-            resultLibrary.genes,
+            resultLibrary.getGenes(),
             cloneReader.header.copy(
                 foundAlleles = MiXCRHeader.FoundAlleles(
                     resultLibrary.name,
@@ -506,7 +510,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             VDJCLibraryData(originalLibrary.data, ArrayList(usedGenes.values)),
             originalLibrary.name + "_with_found_alleles",
             libraryRegistry,
-            null
+            originalLibrary.context
         )
         usedGenes.values.forEach { VDJCLibrary.addGene(resultLibrary, it) }
         return resultLibrary

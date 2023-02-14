@@ -15,7 +15,6 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.ParamsResolver
-import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -26,6 +25,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.util.K_YAML_OM
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command

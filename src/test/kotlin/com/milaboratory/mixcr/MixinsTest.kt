@@ -1,8 +1,8 @@
 package com.milaboratory.mixcr
 
-import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.cli.CommandAlignParams
 import com.milaboratory.test.TestUtil
+import com.milaboratory.util.io.K_YAML_OM
 import org.junit.Assert
 import org.junit.Test
 

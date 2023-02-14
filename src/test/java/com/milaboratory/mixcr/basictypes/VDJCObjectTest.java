@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -162,7 +162,7 @@ public class VDJCObjectTest {
                 VDJCPartitionedSequence pt = al.getPartitionedTarget(tIdx);
                 if (pt == null)
                     continue;
-                TargetPartitioning partitioning = pt.getPartitioning();
+                TargetPartitioning partitioning = pt.partitioning;
                 if (partitioning.isAvailable(CDR3)) {
                     Assert.assertEquals(RelativePointSide.MatchOrInside,
                             partitioning.getRelativeSide(CDR3Begin));
