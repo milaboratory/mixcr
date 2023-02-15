@@ -755,7 +755,7 @@ object CommandAlign {
                     totalV++
                     if (!parameters.containsRequiredFeature(gene)) {
                         totalVErrors++
-                        if (gene.partitioning.isAvailable(correctingFeature)) hasVRegion++
+                        if (gene.referencePoints.isAvailable(correctingFeature)) hasVRegion++
                     }
                 }
             }

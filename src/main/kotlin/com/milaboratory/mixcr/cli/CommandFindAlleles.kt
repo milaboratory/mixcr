@@ -337,19 +337,18 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                                     geneFeaturesForFoundAllele.forEach { geneFeature ->
                                         val baseGene =
                                             originalLibrary[gene.data.meta[metaKeyAlleleVariantOf]!!.first()]!!
-                                        val range = baseGene.partitioning.getRange(geneFeature)
-                                        val sequence =
-                                            gene.sequenceProvider.getRegion(gene.partitioning.getRange(geneFeature))
+                                        val range = baseGene.referencePoints.getRange(geneFeature)
+                                        val sequence = gene.getSequence(gene.referencePoints.getRange(geneFeature))
                                         writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
                                     }
                                 }
 
                                 else -> {
                                     val range = Range(
-                                        gene.partitioning.firstAvailablePosition,
-                                        gene.partitioning.lastAvailablePosition
+                                        gene.referencePoints.firstAvailablePosition,
+                                        gene.referencePoints.lastAvailablePosition
                                     )
-                                    val sequence = gene.sequenceProvider.getRegion(range)
+                                    val sequence = gene.getSequence(range)
                                     writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
                                 }
                             }
