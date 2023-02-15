@@ -151,6 +151,7 @@ object CommandRefineTagsAndSort {
         )
         private var maxTotalErrors: Int? = null
 
+        @Suppress("unused", "UNUSED_PARAMETER")
         @Option(
             names = ["-w", "--whitelist"],
             description = ["Deprecated"],

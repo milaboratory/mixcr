@@ -325,7 +325,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             } else if (libraryOutput.matches(InputFileType.FASTA)) {
                 FastaWriter<NucleotideSequence>(libraryOutput.toFile()).use { writer ->
                     var id = 0L
-                    resultLibrary.getGenes()
+                    resultLibrary.primaryGenes
                         .sortedBy { it.name }
                         .forEach { gene ->
                             val geneFeaturesForFoundAllele =
@@ -335,8 +335,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                             when {
                                 geneFeaturesForFoundAllele != null -> {
                                     geneFeaturesForFoundAllele.forEach { geneFeature ->
-                                        val baseGene =
-                                            originalLibrary[gene.data.meta[metaKeyAlleleVariantOf]!!.first()]!!
+                                        val baseGene = originalLibrary[gene.data.meta[metaKeyAlleleVariantOf]!!.first()]
                                         val range = baseGene.referencePoints.getRange(geneFeature)
                                         val sequence = gene.getSequence(gene.referencePoints.getRange(geneFeature))
                                         writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
@@ -359,7 +358,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             }
         }
         val allelesMapping = alleles.mapValues { (_, geneDatum) ->
-            geneDatum.map { resultLibrary[it.name]!!.id }
+            geneDatum.map { resultLibrary[it.name].id }
         }
         val writerCloseCallbacks = mutableListOf<(FindAllelesReport) -> Unit>()
         datasets.forEachIndexed { i, cloneReader ->
@@ -466,7 +465,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                         GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
                 }
             }
-            val genes = resultLibrary.getGenes()
+            val genes = resultLibrary.primaryGenes
                 .filter { it.geneType in VJ_REFERENCE }
                 .sortedWith(Comparator.comparing { gene: VDJCGene -> gene.geneType }
                     .thenComparing { gene: VDJCGene -> gene.name })
@@ -482,7 +481,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         toPath().toAbsolutePath().parent.toFile().mkdirs()
         val cloneSet = CloneSet(
             clones,
-            resultLibrary.getGenes(),
+            resultLibrary.primaryGenes,
             cloneReader.header.copy(
                 foundAlleles = MiXCRHeader.FoundAlleles(
                     resultLibrary.name,

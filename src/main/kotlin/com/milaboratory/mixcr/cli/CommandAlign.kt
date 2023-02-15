@@ -575,6 +575,7 @@ object CommandAlign {
         )
         private var saveReads = false
 
+        @Suppress("UNUSED_PARAMETER")
         @set:Option(
             description = [
                 "Maximal number of reads to process",
@@ -750,7 +751,7 @@ object CommandAlign {
                 parameters.vAlignerParameters.geneFeatureToAlign.hasReversedRegions() -> VRegionWithP
                 else -> VRegion
             }
-            for (gene in vdjcLibrary.getGenes(Chains.parse(cmdParams.chains))) {
+            for (gene in vdjcLibrary.getPrimaryGenes(Chains.parse(cmdParams.chains))) {
                 if (gene.geneType == GeneType.Variable) {
                     totalV++
                     if (!parameters.containsRequiredFeature(gene)) {
@@ -918,7 +919,7 @@ object CommandAlign {
             )
             var numberOfExcludedNFGenes = 0
             var numberOfExcludedFGenes = 0
-            for (gene in vdjcLibrary.getGenes(Chains.parse(cmdParams.chains))) {
+            for (gene in vdjcLibrary.getPrimaryGenes(Chains.parse(cmdParams.chains))) {
                 alignerParameters.getFeatureToAlign(gene.geneType) ?: continue
 
                 val featureSequence = alignerParameters.extractFeatureToAlign(gene)

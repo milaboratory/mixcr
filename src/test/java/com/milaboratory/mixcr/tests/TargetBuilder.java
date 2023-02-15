@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -24,10 +24,10 @@ public class TargetBuilder {
         public final VDJCGene v, d, j, c;
 
         public VDJCGenes(VDJCLibrary library, String v, String d, String j, String c) {
-            this.v = library.getSafe(v);
-            this.d = library.getSafe(d);
-            this.j = library.getSafe(j);
-            this.c = library.getSafe(c);
+            this.v = library.get(v);
+            this.d = library.get(d);
+            this.j = library.get(j);
+            this.c = library.get(c);
         }
 
         public VDJCGenes(VDJCGene v, VDJCGene d, VDJCGene j, VDJCGene c) {

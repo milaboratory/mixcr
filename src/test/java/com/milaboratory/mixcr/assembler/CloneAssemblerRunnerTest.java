@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -64,7 +64,7 @@ public class CloneAssemblerRunnerTest {
         VDJCAlignerParameters alignerParameters = Objects.requireNonNull(VDJCParametersPresets.getByName("default"));
         VDJCAligner aligner = fastqFiles.length == 1 ? new VDJCAlignerS(alignerParameters) : new VDJCAlignerWithMerge(alignerParameters);
 
-        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getPrimaryGenes(Chains.IGH))
             if (alignerParameters.containsRequiredFeature(gene))
                 aligner.addGene(gene);
 
