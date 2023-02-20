@@ -23,7 +23,7 @@ import com.milaboratory.core.sequence.SequenceQuality
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.GeneFeatures
+import io.repseq.core.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo

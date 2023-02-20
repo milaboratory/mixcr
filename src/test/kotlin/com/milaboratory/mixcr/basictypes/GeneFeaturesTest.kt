@@ -8,6 +8,7 @@ import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.JCDR3Part
 import io.repseq.core.GeneFeature.VCDR3Part
 import io.repseq.core.GeneFeature.VDJRegion
+import io.repseq.core.GeneFeatures
 import org.junit.Test
 
 class GeneFeaturesTest {

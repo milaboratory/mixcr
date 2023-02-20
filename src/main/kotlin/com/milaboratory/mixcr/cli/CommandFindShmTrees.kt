@@ -23,7 +23,7 @@ import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.basictypes.ClnsReader
-import com.milaboratory.mixcr.basictypes.GeneFeatures
+import io.repseq.core.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
