@@ -30,7 +30,7 @@ for filename in $FILES; do
   R1=${id}_R1.fastq.gz
   R2=${id}_R2.fastq.gz
 
-  mixcr align -p mikelov-et-al-2021 trees_samples/$R1 trees_samples/$R2 align/$id.vdjca
+  mixcr align -p mikelov-et-al-2021 -b library_for_alleles_test.json trees_samples/$R1 trees_samples/$R2 align/$id.vdjca
 
   mixcr refineTagsAndSort align/$id.vdjca align_corrected/$id.vdjca
 
@@ -86,10 +86,18 @@ assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees
 assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "3"
 
 assert "head -n 1 alleles/report.json | jq -r .foundAlleles" "3"
+assert "head -n 1 alleles/report.json | jq -r .deNovaAlleles" "2"
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
-assert "grep 'IGHV2-70' alleles/description.tsv | cut -f7" "ST311G\nSG170AST259CST311GSA335T"
-assert "grep 'IGHJ6' alleles/description.tsv | cut -f7" "SG37TSG38AST39CSC55A"
+#2 found alleles of IGHV2-70
+assert "grep -c 'IGHV2-70' alleles/description.tsv" "2"
+#2 found alleles based on IGHV2-70*01
+assert "grep -c 'IGHV2-70\*01' alleles/description.tsv" "2"
+#relative mutations
+assert "grep 'IGHV2-70\*01' alleles/description.tsv | cut -f6" "\nSG13AST102CSA178T"
+#for most mutated allele
+assert "grep 'IGHV2-70\*01-M' alleles/description.tsv | cut -f6" "SG13AST102CSA178T"
+assert "grep 'IGHJ6' alleles/description.tsv | cut -f6" "SG17TSG18AST19CSC35A"
 
 # biggest tree
 # `tail +2` - skip first line with column names

@@ -23,7 +23,7 @@ import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.mitool.pattern.SequenceSetCollection
 import com.milaboratory.mixcr.Presets
-import com.milaboratory.mixcr.basictypes.GeneFeatures
+import io.repseq.core.GeneFeatures
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter

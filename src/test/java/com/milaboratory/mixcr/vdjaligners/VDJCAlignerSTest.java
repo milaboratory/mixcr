@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -53,7 +53,7 @@ public class VDJCAlignerSTest {
                              VDJCAlignerSTest.class.getClassLoader()
                                      .getResourceAsStream("sequences/sample_IGH_R1.fastq"), true)) {
             VDJCAlignerS aligner = new VDJCAlignerS(parameters);
-            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
+            for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getPrimaryGenes(Chains.IGH))
                 if (parameters.containsRequiredFeature(gene))
                     aligner.addGene(gene);
             try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(tmpFile)) {
@@ -91,7 +91,7 @@ public class VDJCAlignerSTest {
         VDJCAlignerParameters parameters =
                 VDJCParametersPresets.getByName("default");
         VDJCAlignerS aligner = new VDJCAlignerS(parameters);
-        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getGenes(Chains.IGH))
+        for (VDJCGene gene : VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getPrimaryGenes(Chains.IGH))
             if (parameters.containsRequiredFeature(gene))
                 aligner.addGene(gene);
         SingleReadImpl read = new SingleReadImpl(0, new NSequenceWithQuality(new NucleotideSequence("GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC"), SequenceQuality.GOOD_QUALITY_VALUE), "");

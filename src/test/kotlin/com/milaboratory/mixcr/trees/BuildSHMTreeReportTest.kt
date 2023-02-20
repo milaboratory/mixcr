@@ -1,8 +1,8 @@
 package com.milaboratory.mixcr.trees
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
+import com.milaboratory.util.K_OM
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.instanceOf
 import org.junit.Test

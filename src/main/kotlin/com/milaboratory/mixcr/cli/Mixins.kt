@@ -38,7 +38,7 @@ import com.milaboratory.mixcr.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.GenericMixin
 import com.milaboratory.mixcr.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.PipelineMixins.RemovePipelineStep
-import com.milaboratory.mixcr.basictypes.GeneFeatures
+import io.repseq.core.GeneFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory

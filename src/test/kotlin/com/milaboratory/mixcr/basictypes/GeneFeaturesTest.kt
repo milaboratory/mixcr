@@ -1,13 +1,14 @@
 package com.milaboratory.mixcr.basictypes
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.K_OM
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.JCDR3Part
 import io.repseq.core.GeneFeature.VCDR3Part
 import io.repseq.core.GeneFeature.VDJRegion
+import io.repseq.core.GeneFeatures
 import org.junit.Test
 
 class GeneFeaturesTest {

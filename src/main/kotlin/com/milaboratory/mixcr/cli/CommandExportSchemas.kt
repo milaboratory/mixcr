@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -17,8 +17,6 @@ import com.github.victools.jsonschema.generator.SchemaGenerator
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder
 import com.github.victools.jsonschema.generator.SchemaVersion
 import com.github.victools.jsonschema.module.jackson.JacksonModule
-import com.milaboratory.mitool.helpers.K_PRETTY_OM
-import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRMixin
 import com.milaboratory.mixcr.alleles.FindAllelesParameters
@@ -36,6 +34,8 @@ import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
+import com.milaboratory.util.K_PRETTY_OM
+import com.milaboratory.util.K_YAML_OM
 import io.repseq.core.GeneFeature
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters

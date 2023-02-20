@@ -103,8 +103,8 @@ repositories {
     }
 }
 
-val mixcrAlgoVersion = "4.2.0-26-migex"
-val milibVersion = "2.3.0"
+val mixcrAlgoVersion = "4.2.0-35-alleles"
+val milibVersion = "2.3.0-19-alleles"
 val jacksonBomVersion = "2.14.1"
 
 dependencies {

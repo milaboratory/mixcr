@@ -36,7 +36,7 @@ class FieldExtractorsTest {
         val aligner = PartialAlignmentsAssemblerAligner(rnaSeqParams)
         val lib = VDJCLibraryRegistry.getDefault().getLibrary("default", "hs")
         for (gene in VDJCLibraryRegistry.getDefault()
-            .getLibrary("default", "hs").genes) if (gene.isFunctional) aligner.addGene(gene)
+            .getLibrary("default", "hs").allGenes) if (gene.isFunctional) aligner.addGene(gene)
         val genes = TargetBuilder.VDJCGenes(
             lib,
             "TRBV12-3*00", "TRBD1*00", "TRBJ1-3*00", "TRBC2*00"

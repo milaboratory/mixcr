@@ -3,8 +3,6 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.cli.ParamsBundleSpecBaseAddress
 import com.milaboratory.cli.ParamsBundleSpecBaseEmbedded
-import com.milaboratory.mitool.helpers.K_OM
-import com.milaboratory.mitool.helpers.K_YAML_OM
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
@@ -13,6 +11,8 @@ import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.test.TestUtil.assertJson
+import com.milaboratory.util.K_OM
+import com.milaboratory.util.K_YAML_OM
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import org.junit.Assert

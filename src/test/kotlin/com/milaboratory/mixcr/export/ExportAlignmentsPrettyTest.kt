@@ -3,8 +3,8 @@
 package com.milaboratory.mixcr.export
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.mitool.helpers.K_OM
 import com.milaboratory.mixcr.cli.TestMain
+import com.milaboratory.util.K_OM
 import com.milaboratory.util.TempFileManager
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainInOrder

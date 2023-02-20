@@ -63,7 +63,7 @@ assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqFR2" "0"
 assert "cat alleles/report.json | head -n 1 | jq -r .foundAlleles" "2"
 assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
 
-assert "grep 'IGHJ6' alleles/description.tsv | cut -f7" "SG37TSG38AST39CSC55A"
+assert "grep 'IGHJ6' alleles/description.tsv | cut -f6" "SG17TSG18AST19CSC35A"
 
 # biggest tree
 # `tail +2` - skip first line with column names
