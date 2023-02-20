@@ -58,7 +58,8 @@ object CommandExtend {
             description = ["V extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--v-anchor"],
             paramLabel = Labels.ANCHOR_POINT,
-            order = OptionsOrder.main + 10_100
+            order = OptionsOrder.main + 10_100,
+            completionCandidates = ReferencePointsCandidates::class
         )
         private var vAnchorPoint: ReferencePoint? = null
 
@@ -66,7 +67,8 @@ object CommandExtend {
             description = ["J extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--j-anchor"],
             paramLabel = Labels.ANCHOR_POINT,
-            order = OptionsOrder.main + 10_200
+            order = OptionsOrder.main + 10_200,
+            completionCandidates = ReferencePointsCandidates::class
         )
         private var jAnchorPoint: ReferencePoint? = null
 
@@ -119,7 +121,8 @@ object CommandExtend {
             names = ["-c", "--chains"],
             paramLabel = Labels.CHAINS,
             showDefaultValue = ALWAYS,
-            order = OptionsOrder.main + 10_500
+            order = OptionsOrder.main + 10_500,
+            completionCandidates = ChainsCandidates::class
         )
         var chains: Chains = Chains.TCR
 

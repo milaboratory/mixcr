@@ -38,12 +38,12 @@ import com.milaboratory.mixcr.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.GenericMixin
 import com.milaboratory.mixcr.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.PipelineMixins.RemovePipelineStep
-import io.repseq.core.GeneFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
+import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Joining
@@ -218,7 +218,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         names = [AlignmentBoundaryConstants.LEFT_FLOATING_CMD_OPTION],
         arity = "0..1",
         paramLabel = Labels.ANCHOR_POINT,
-        order = OptionsOrder.mixins.align + 600
+        order = OptionsOrder.mixins.align + 600,
+        completionCandidates = ReferencePointsCandidates::class
     )
     fun floatingLeftAlignmentBoundary(arg: ReferencePoint?) =
         mixIn(
@@ -253,7 +254,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         names = [AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION],
         arity = "1",
         paramLabel = "(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})",
-        order = OptionsOrder.mixins.align + 800
+        order = OptionsOrder.mixins.align + 800,
+        completionCandidates = ReferencePointsCandidatesAndGeneType::class
     )
     fun floatingRightAlignmentBoundary(arg: String) =
         mixIn(
@@ -276,7 +278,8 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         names = [AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION],
         arity = "0..1",
         paramLabel = "(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})",
-        order = OptionsOrder.mixins.align + 900
+        order = OptionsOrder.mixins.align + 900,
+        completionCandidates = ReferencePointsCandidatesAndGeneType::class
     )
     fun rigidRightAlignmentBoundary(arg: String?) =
         mixIn(
@@ -344,7 +347,8 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
                 "Note that `assemblingFeatures` must cover CDR3"],
         names = [SetClonotypeAssemblingFeatures.CMD_OPTION],
         paramLabel = Labels.GENE_FEATURES,
-        order = OptionsOrder.mixins.assemble + 100
+        order = OptionsOrder.mixins.assemble + 100,
+        completionCandidates = GeneFeaturesCandidates::class
     )
     fun assembleClonotypesBy(gf: GeneFeatures) =
         mixIn(SetClonotypeAssemblingFeatures(gf))
@@ -380,7 +384,8 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
                 "and only clonotypes that fully cover the region will be outputted, others will be filtered out."],
         names = [SetContigAssemblingFeatures.CMD_OPTION],
         paramLabel = Labels.GENE_FEATURES,
-        order = OptionsOrder.mixins.assembleContigs + 100
+        order = OptionsOrder.mixins.assembleContigs + 100,
+        completionCandidates = GeneFeaturesCandidates::class
     )
     fun assembleContigsBy(gf: GeneFeatures) =
         mixIn(SetContigAssemblingFeatures(gf))

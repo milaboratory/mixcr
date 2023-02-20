@@ -71,7 +71,8 @@ object CommandExportAlignments {
             ],
             names = ["-c", "--chains"],
             paramLabel = Labels.CHAINS,
-            order = OptionsOrder.main + 10_100
+            order = OptionsOrder.main + 10_100,
+            completionCandidates = ChainsCandidates::class
         )
         private var chains: String? = null
 

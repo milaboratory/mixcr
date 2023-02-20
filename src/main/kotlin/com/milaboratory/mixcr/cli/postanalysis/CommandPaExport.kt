@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -12,10 +12,11 @@
 
 package com.milaboratory.mixcr.cli.postanalysis
 
-import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.app.InputFileType
-import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.app.ValidationException
+import com.milaboratory.mixcr.cli.ChainsCandidates
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.cli.MiXCRCommand
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -36,7 +37,8 @@ abstract class CommandPaExport : MiXCRCommand() {
         description = ["Export only for specified immunological chains."],
         names = ["--chains"],
         paramLabel = Labels.CHAIN,
-        order = OptionsOrder.main + 5_000
+        order = OptionsOrder.main + 5_000,
+        completionCandidates = ChainsCandidates::class
     )
     var chains: Set<String>? = null
 

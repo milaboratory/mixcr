@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -97,7 +97,8 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
             paramLabel = CommonDescriptions.Labels.GENE_FEATURE,
             defaultValue = "CDR3",
             showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
-            order = 2
+            order = 2,
+            completionCandidates = GeneFeaturesCandidates::class
         )
         lateinit var inFeature: GeneFeature
 
@@ -126,7 +127,8 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
         ],
         names = ["--chains"],
         paramLabel = CommonDescriptions.Labels.CHAINS,
-        order = OptionsOrder.main + 30_400
+        order = OptionsOrder.main + 30_400,
+        completionCandidates = ChainsCandidates::class
     )
     private var chains: Chains? = null
 

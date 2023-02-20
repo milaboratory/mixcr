@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -102,7 +102,8 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         names = ["--alignment-nt"],
         description = ["Show tree nucleotide alignments using specified gene feature"],
         paramLabel = Labels.GENE_FEATURE,
-        order = OptionsOrder.main + 10_500
+        order = OptionsOrder.main + 10_500,
+        completionCandidates = GeneFeaturesCandidates::class
     )
     var alignmentGeneFeatureNt: GeneFeature? = null
 
@@ -110,7 +111,8 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
         names = ["--alignment-aa"],
         description = ["Show tree amino acid alignments using specified gene feature"],
         paramLabel = Labels.GENE_FEATURE,
-        order = OptionsOrder.main + 10_600
+        order = OptionsOrder.main + 10_600,
+        completionCandidates = GeneFeaturesCandidates::class
     )
     var alignmentGeneFeatureAa: GeneFeature? = null
 

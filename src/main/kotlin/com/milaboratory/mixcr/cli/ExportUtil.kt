@@ -55,6 +55,7 @@ fun <T : Any> FieldExtractorsFactory<T>.addOptionsToSpec(
                 .hideParamSyntax(true)
                 .hidden(field.deprecation != null)
                 .order(FieldExtractorsFactory.globalOrderInCli + index)
+                .completionCandidates(field.completionCandidates)
                 .build()
         )
     }
