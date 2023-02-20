@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mitool.pattern.search.IntListKey
 import com.milaboratory.mitool.report.ParseReport
-import com.milaboratory.util.io.K_PRETTY_OM
+import com.milaboratory.util.K_PRETTY_OM
 import io.kotest.matchers.shouldBe
 import org.junit.Assert
 import org.junit.Test

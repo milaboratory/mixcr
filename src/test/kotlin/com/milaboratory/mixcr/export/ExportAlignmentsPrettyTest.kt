@@ -4,8 +4,8 @@ package com.milaboratory.mixcr.export
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mixcr.cli.TestMain
+import com.milaboratory.util.K_OM
 import com.milaboratory.util.TempFileManager
-import com.milaboratory.util.io.K_OM
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainInOrder
 import org.junit.Ignore

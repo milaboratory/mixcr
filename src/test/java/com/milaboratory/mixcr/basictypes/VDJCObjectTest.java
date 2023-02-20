@@ -162,7 +162,7 @@ public class VDJCObjectTest {
                 VDJCPartitionedSequence pt = al.getPartitionedTarget(tIdx);
                 if (pt == null)
                     continue;
-                TargetPartitioning partitioning = pt.partitioning;
+                TargetPartitioning partitioning = pt.getPartitioning();
                 if (partitioning.isAvailable(CDR3)) {
                     Assert.assertEquals(RelativePointSide.MatchOrInside,
                             partitioning.getRelativeSide(CDR3Begin));

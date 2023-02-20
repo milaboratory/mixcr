@@ -4,8 +4,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.export.ExportFieldDescription
+import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.TempFileManager
-import com.milaboratory.util.io.K_YAML_OM
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainInOrder
