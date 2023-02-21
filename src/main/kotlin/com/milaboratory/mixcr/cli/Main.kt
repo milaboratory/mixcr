@@ -71,6 +71,10 @@ object Main {
 
     @JvmStatic
     fun main(vararg args: String) {
+        if ("-v" in args) {
+            CommandMain.VersionProvider().version.forEach { println(it) }
+            exitProcess(0)
+        }
         val versionInfo = VersionInfo.getVersionInfoForArtifact("mixcr")
         MiXCRMain.mixcrArtefactName = "mixcr." +
                 versionInfo.version + "." +
