@@ -25,6 +25,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.util.K_YAML_OM
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
@@ -42,9 +43,10 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         @Option(
             names = ["--preset-name"],
             description = ["Preset name to export."],
-            paramLabel = "<preset>",
+            paramLabel = Labels.PRESET,
             required = true,
-            order = 1
+            order = 1,
+            completionCandidates = PresetsCandidates::class
         )
         var presetName: String? = null
 
@@ -149,7 +151,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
             presetInput.presetName != null -> MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins)
             else -> {
                 val inputFile = presetInput.input
-                val paramsSpec = when (IOUtil.extractFileType(inputFile)) {
+                val header = when (IOUtil.extractFileType(inputFile)) {
                     VDJCA -> VDJCAlignmentsReader(inputFile)
                         .use { reader -> reader.header }
 
@@ -160,9 +162,9 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                         .use { reader -> reader.header }
 
                     SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
-                }.paramsSpec
+                }
 
-                resetPreset.overridePreset(paramsSpec).addMixins(mixinsFromArgs.mixins)
+                resetPreset.overridePreset(header.paramsSpec).addMixins(mixinsFromArgs.mixins)
             }
         }
 

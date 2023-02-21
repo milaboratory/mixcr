@@ -1,9 +1,10 @@
-Usage: mixcr sortAlignments [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.
-                            vdjca alignments.sorted.vdjca
+Usage: mixcr sortAlignments [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose]
+                            [--help] alignments.vdjca alignments.sorted.vdjca
 Sort alignments in vdjca file by read id.
       alignments.vdjca
       alignments.sorted.vdjca
 
+      --use-local-temp     Put temporary files in the same folder as the output files.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

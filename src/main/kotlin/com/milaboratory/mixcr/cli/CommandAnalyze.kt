@@ -21,6 +21,7 @@ import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRPipeline
 import com.milaboratory.mixcr.cli.CommandAlign.bySampleName
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -90,8 +91,9 @@ object CommandAnalyze {
         @Parameters(
             index = "0",
             arity = "1",
-            paramLabel = "<preset_name>",
-            description = ["Name of the analysis preset."]
+            paramLabel = Labels.PRESET,
+            description = ["Name of the analysis preset."],
+            completionCandidates = PresetsCandidates::class
         )
         private lateinit var presetName: String
 

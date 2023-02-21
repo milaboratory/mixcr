@@ -155,7 +155,7 @@ object Main {
         val cmd = CommandLine(CommandMain::class.java)
             .setCommandName(command)
             .addSubcommand(CommandSpec.forAnnotatedObject(GenerateCompletion()).also {
-                it.usageMessage().hidden()
+                it.usageMessage().hidden(true)
                 it.remove(it.findOption("-h"))
             })
             .addSubcommand(CommandAnalyze.COMMAND_NAME, CommandAnalyze.mkCommandSpec())

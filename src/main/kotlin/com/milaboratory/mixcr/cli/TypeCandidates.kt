@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.Presets
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint
@@ -34,4 +35,8 @@ object ReferencePointsCandidatesAndGeneType : TypeCandidates(
 
 object ChainsCandidates : TypeCandidates(
     Chains.WELL_KNOWN_CHAINS_MAP.keys
+)
+
+object PresetsCandidates : TypeCandidates(
+    Presets.visiblePresets
 )

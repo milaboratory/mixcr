@@ -12,26 +12,30 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import picocli.CommandLine.Option
 
 class ResetPresetArgs {
     @Option(
         description = ["Reset preset from input file to new value. All previous mix-ins will be removed"],
         names = ["--reset-preset"],
-        paramLabel = "<preset>",
+        paramLabel = Labels.PRESET,
         order = 1,
-        hidden = true
+        hidden = true,
+        completionCandidates = PresetsCandidates::class
     )
     var resetPreset: String? = null
 
     private var resetMixins = true
 
+    @Suppress("unused")
     @Option(
         description = ["Reset preset from input file to new value. All previous mix-ins will be removed"],
         names = ["--reset-preset-keep-mixins"],
-        paramLabel = "<preset>",
+        paramLabel = Labels.PRESET,
         order = 2,
-        hidden = true
+        hidden = true,
+        completionCandidates = PresetsCandidates::class
     )
     fun resetPresetAndKeepMixins(presetName: String) {
         resetPreset = presetName

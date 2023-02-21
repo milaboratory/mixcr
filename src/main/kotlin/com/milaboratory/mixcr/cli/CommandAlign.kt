@@ -634,9 +634,10 @@ object CommandAlign {
             description = ["Analysis preset. Sets key parameters of this and all downstream analysis steps. " +
                     "It is critical to carefully select the most appropriate preset for the data you analyse."],
             names = ["-p", "--preset"],
-            paramLabel = "<name>",
+            paramLabel = Labels.PRESET,
             required = true,
-            order = OptionsOrder.main + 1000
+            order = OptionsOrder.main + 1000,
+            completionCandidates = PresetsCandidates::class
         )
         lateinit var presetName: String
 
