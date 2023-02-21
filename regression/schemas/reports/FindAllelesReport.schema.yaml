@@ -26,6 +26,8 @@ properties:
         type: number
   commandLine:
     type: string
+  deNovaAlleles:
+    type: integer
   foundAlleles:
     type: integer
   inputFiles:
