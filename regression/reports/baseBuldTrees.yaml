@@ -14,8 +14,8 @@ findShmTrees:
         type: BronKerbosch
         commonMutationsCountForClustering: 5
         maxNDNDistanceForClustering: 1.0
-    clonesWasAdded: 316
-    cloneNodesWasAdded: 315
+    clonesWasAdded: 317
+    cloneNodesWasAdded: 316
     treesCountDelta: 119
     commonVJMutationsCounts:
       size: 119
@@ -30,12 +30,12 @@ findShmTrees:
       percentile75: 21.0
     clonesCountInTrees:
       size: 119
-      sum: 316.0
+      sum: 317.0
       min: 2.0
       max: 11.0
-      avg: 2.65546
-      quadraticMean: 3.07879
-      stdDeviation: 1.56463
+      avg: 2.66386
+      quadraticMean: 3.08561
+      stdDeviation: 1.56377
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
@@ -87,8 +87,8 @@ findShmTrees:
       name: AttachClonesByDistanceChange
       threshold: 0.4
       maxNDNDistance: 1.5
-    clonesWasAdded: 7
-    cloneNodesWasAdded: 7
+    clonesWasAdded: 6
+    cloneNodesWasAdded: 6
     treesCountDelta: 0
     commonVJMutationsCounts:
       size: 119
@@ -986,7 +986,7 @@ upstreams:
       - alleles/description.tsv
       - alleles_library.json
       searchHistoryForBCells:
-        IGHJ1*00:
+        IGHJ1:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1002,7 +1002,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 3
           mutationsWithEnoughDiversityCount: 0
-        IGHJ2*00:
+        IGHJ2:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1018,7 +1018,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 21
           mutationsWithEnoughDiversityCount: 0
-        IGHJ3*00:
+        IGHJ3:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1031,7 +1031,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 43
           mutationsWithEnoughDiversityCount: 10
-        IGHJ4*00:
+        IGHJ4:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1044,7 +1044,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 67
           mutationsWithEnoughDiversityCount: 27
-        IGHJ5*00:
+        IGHJ5:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1057,7 +1057,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 35
           mutationsWithEnoughDiversityCount: 3
-        IGHJ6*00:
+        IGHJ6:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1070,7 +1070,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 42
           mutationsWithEnoughDiversityCount: 12
-        IGHV2-70*00:
+        IGHV2-70:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1084,7 +1084,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 488
           mutationsWithEnoughDiversityCount: 102
-        IGHV3-72*00:
+        IGHV3-72:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1097,7 +1097,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 628
           mutationsWithEnoughDiversityCount: 185
-        IGHV4-4*00:
+        IGHV4-4:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1110,7 +1110,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 679
           mutationsWithEnoughDiversityCount: 262
-        IGHV4-55*00:
+        IGHV4-55:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -1137,11 +1137,12 @@ upstreams:
         quadraticMean: 73.13005
         stdDeviation: 50.96901
       foundAlleles: 3
+      deNovaAlleles: 3
       zygotes:
         "1": 9
         "2": 1
       allelesScoreChange:
-        IGHJ6*00-M1-CDR3-3-1930984584:
+        IGHJ6*00-M1-CDR3-3-438433022:
           size: 183
           sum: 7946.0
           min: -58.0
@@ -1149,7 +1150,7 @@ upstreams:
           avg: 43.42076
           quadraticMean: 58.07918
           stdDeviation: 38.67820
-        IGHV2-70*00-M1-1359867552:
+        IGHV2-70*00-M1-426287302:
           size: 170
           sum: 2378.0
           min: -29.0
@@ -1157,7 +1158,7 @@ upstreams:
           avg: 13.98823
           quadraticMean: 29.0
           stdDeviation: 25.47837
-        IGHV2-70*00-M4-963628874:
+        IGHV2-70*00-M4-2071078005:
           size: 97
           sum: 10730.0
           min: 58.0
@@ -2011,7 +2012,7 @@ upstreams:
       - alleles/description.tsv
       - alleles_library.json
       searchHistoryForBCells:
-        IGHJ1*00:
+        IGHJ1:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2027,7 +2028,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 3
           mutationsWithEnoughDiversityCount: 0
-        IGHJ2*00:
+        IGHJ2:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2043,7 +2044,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 21
           mutationsWithEnoughDiversityCount: 0
-        IGHJ3*00:
+        IGHJ3:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2056,7 +2057,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 43
           mutationsWithEnoughDiversityCount: 10
-        IGHJ4*00:
+        IGHJ4:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2069,7 +2070,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 67
           mutationsWithEnoughDiversityCount: 27
-        IGHJ5*00:
+        IGHJ5:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2082,7 +2083,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 35
           mutationsWithEnoughDiversityCount: 3
-        IGHJ6*00:
+        IGHJ6:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2095,7 +2096,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 42
           mutationsWithEnoughDiversityCount: 12
-        IGHV2-70*00:
+        IGHV2-70:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2109,7 +2110,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 488
           mutationsWithEnoughDiversityCount: 102
-        IGHV3-72*00:
+        IGHV3-72:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2122,7 +2123,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 628
           mutationsWithEnoughDiversityCount: 185
-        IGHV4-4*00:
+        IGHV4-4:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2135,7 +2136,7 @@ upstreams:
           enoughDiversity: true
           differentMutationsCount: 679
           mutationsWithEnoughDiversityCount: 262
-        IGHV4-55*00:
+        IGHV4-55:
           alleles:
             addedKnownAllele: null
             enrichedMutations: {}
@@ -2162,11 +2163,12 @@ upstreams:
         quadraticMean: 73.13005
         stdDeviation: 50.96901
       foundAlleles: 3
+      deNovaAlleles: 3
       zygotes:
         "1": 9
         "2": 1
       allelesScoreChange:
-        IGHJ6*00-M1-CDR3-3-1930984584:
+        IGHJ6*00-M1-CDR3-3-438433022:
           size: 183
           sum: 7946.0
           min: -58.0
@@ -2174,7 +2176,7 @@ upstreams:
           avg: 43.42076
           quadraticMean: 58.07918
           stdDeviation: 38.67820
-        IGHV2-70*00-M1-1359867552:
+        IGHV2-70*00-M1-426287302:
           size: 170
           sum: 2378.0
           min: -29.0
@@ -2182,7 +2184,7 @@ upstreams:
           avg: 13.98823
           quadraticMean: 29.0
           stdDeviation: 25.47837
-        IGHV2-70*00-M4-963628874:
+        IGHV2-70*00-M4-2071078005:
           size: 97
           sum: 10730.0
           min: 58.0
