@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -11,15 +11,16 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
+import com.milaboratory.app.matches
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.ChainsCandidates
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.app.InputFileType
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
-import com.milaboratory.app.ValidationException
-import com.milaboratory.app.matches
 import com.milaboratory.mixcr.postanalysis.preproc.ChainsFilter
 import com.milaboratory.mixcr.postanalysis.ui.DownsamplingParameters
 import com.milaboratory.util.StringUtil
@@ -91,7 +92,8 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         names = ["--chains"],
         split = ",",
         paramLabel = Labels.CHAIN,
-        order = OptionsOrder.main + 10_500
+        order = OptionsOrder.main + 10_500,
+        completionCandidates = ChainsCandidates::class
     )
     var chains: Set<String>? = null
 

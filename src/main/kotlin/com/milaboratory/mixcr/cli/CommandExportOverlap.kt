@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -104,7 +104,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         names = ["--chains"],
         split = ",",
         paramLabel = Labels.CHAIN,
-        order = OptionsOrder.main + 10_100
+        order = OptionsOrder.main + 10_100,
+        completionCandidates = ChainsCandidates::class
     )
     var chains: Set<String>? = null
 

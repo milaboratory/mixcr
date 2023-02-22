@@ -23,7 +23,6 @@ import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.mitool.pattern.SequenceSetCollection
 import com.milaboratory.mixcr.Presets
-import io.repseq.core.GeneFeatures
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter
@@ -48,13 +47,16 @@ import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.seqbase.SequenceResolvers
 import org.apache.commons.io.FileUtils
+import picocli.AutoComplete.GenerateCompletion
 import picocli.CommandLine
 import picocli.CommandLine.IHelpSectionRenderer
+import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.OptionSpec
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADING
@@ -69,6 +71,10 @@ object Main {
 
     @JvmStatic
     fun main(vararg args: String) {
+        if ("-v" in args) {
+            CommandMain.VersionProvider().version.forEach { println(it) }
+            exitProcess(0)
+        }
         val versionInfo = VersionInfo.getVersionInfoForArtifact("mixcr")
         MiXCRMain.mixcrArtefactName = "mixcr." +
                 versionInfo.version + "." +
@@ -117,8 +123,8 @@ object Main {
             if (repseqioCacheEnv != null) {
                 cachePath = Paths.get(repseqioCacheEnv)
             }
-            //if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
-            //TODO add mechanism to deny http requests
+            // if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
+            // TODO add mechanism to deny http requests
             SequenceResolvers.initDefaultResolver(cachePath)
             val libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries")
             VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".")
@@ -152,6 +158,10 @@ object Main {
 
         val cmd = CommandLine(CommandMain::class.java)
             .setCommandName(command)
+            .addSubcommand(CommandSpec.forAnnotatedObject(GenerateCompletion()).also {
+                it.usageMessage().hidden(true)
+                it.remove(it.findOption("-h"))
+            })
             .addSubcommand(CommandAnalyze.COMMAND_NAME, CommandAnalyze.mkCommandSpec())
             .addSubcommand(CommandAlign.COMMAND_NAME, CommandAlign.mkCommandSpec())
             .addSubcommand(CommandRefineTagsAndSort.COMMAND_NAME, CommandRefineTagsAndSort.Cmd::class.java)
@@ -236,7 +246,7 @@ object Main {
                     .addSubcommand(Presets.LIST_PRESETS_COMMAND_NAME, CommandListPresets::class.java)
             )
 
-            //hidden
+            // hidden
             .addSubcommand("alignmentsStat", CommandAlignmentsStats::class.java)
             .addSubcommand("bam2fastq", CommandBAM2fastq::class.java)
             .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones::class.java)
@@ -345,7 +355,7 @@ object Main {
                 )
 
                 else -> {
-                    //try to use long names for options. It's too expensive to rewrite picocli code, so temporary remove short aliases from options
+                    // try to use long names for options. It's too expensive to rewrite picocli code, so temporary remove short aliases from options
                     val optionsToConvert = commandSpec.options().toList()
                         .filter {
                             try {
@@ -353,11 +363,11 @@ object Main {
                                 true
                             } catch (e: UnsupportedOperationException) {
                                 check(e.message == "Cannot remove ArgSpec that is part of an ArgGroup")
-                                //can't remove option from argGroup
+                                // can't remove option from argGroup
                                 false
                             }
                         }
-                    //rebuild options with only longest names
+                    // rebuild options with only longest names
                     val withLongNames = optionsToConvert
                         .map { optionSpec ->
                             OptionSpec.builder(optionSpec)
@@ -371,7 +381,7 @@ object Main {
                             .thenComparing { option: OptionSpec -> option.order() },
                         false
                     )
-                    //return original options
+                    // return original options
                     withLongNames.forEach { commandSpec.remove(it) }
                     optionsToConvert.forEach { commandSpec.add(it) }
                     result

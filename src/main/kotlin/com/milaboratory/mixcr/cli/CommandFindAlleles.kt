@@ -27,7 +27,7 @@ import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.CloneRebuild
-import com.milaboratory.mixcr.alleles.FindAllelesParameters
+import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
 import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.alleles.OverallAllelesStatistics
 import com.milaboratory.mixcr.basictypes.ClnsWriter
@@ -42,6 +42,7 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.K_OM
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
@@ -209,12 +210,12 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp.value)
     }
 
-    private val findAllelesParameters: FindAllelesParameters by lazy {
+    private val findAllelesParameters: CommandFindAllelesParams by lazy {
         val findAllelesParametersName = "default"
-        var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
+        var result: CommandFindAllelesParams = CommandFindAllelesParams.presets.getByName(findAllelesParametersName)
             ?: throw ValidationException("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
-            result = JsonOverrider.override(result, FindAllelesParameters::class.java, overrides)
+            result = JsonOverrider.override(result, CommandFindAllelesParams::class.java, overrides)
                 ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
         result
@@ -314,43 +315,13 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val alleles = (VAlleles + JAlleles).toMutableMap()
         val usedGenes = collectUsedGenes(datasets, alleles)
         registerNotProcessedVJ(alleles, usedGenes)
-        val resultLibrary = buildLibrary(libraryRegistry, originalLibrary, usedGenes.values)
+        val resultLibrary = buildLibrary(libraryRegistry, originalLibrary, usedGenes.values.flatten())
         libraryOutputs.forEach { libraryOutput ->
             libraryOutput.toAbsolutePath().parent.createDirectories()
             if (libraryOutput.matches(InputFileType.JSON)) {
-                GlobalObjectMappers.getOneLine().writeValue(libraryOutput.toFile(), arrayOf(resultLibrary.data))
+                K_OM.writeValue(libraryOutput.toFile(), arrayOf(resultLibrary.data))
             } else if (libraryOutput.matches(InputFileType.FASTA)) {
-                FastaWriter<NucleotideSequence>(libraryOutput.toFile()).use { writer ->
-                    var id = 0L
-                    resultLibrary.primaryGenes
-                        .sortedBy { it.name }
-                        .forEach { gene ->
-                            val geneFeaturesForFoundAllele =
-                                gene.data.meta[AllelesBuilder.metaKey.alleleMutationsReliableRegion]
-                                    ?.map { GeneFeature.parse(it) }
-                                    ?.sorted()
-                            when {
-                                geneFeaturesForFoundAllele != null -> {
-                                    geneFeaturesForFoundAllele.forEach { geneFeature ->
-                                        val varianceOf =
-                                            originalLibrary[gene.data.meta[AllelesBuilder.metaKey.alleleVariantOf]!!.first()]
-                                        val range = varianceOf.referencePoints.getRange(geneFeature)
-                                        val sequence = gene.getFeature(geneFeature)
-                                        writer.write(FastaRecord(id++, "${gene.name} $range $geneFeature", sequence))
-                                    }
-                                }
-
-                                else -> {
-                                    val range = Range(
-                                        gene.referencePoints.firstAvailablePosition,
-                                        gene.referencePoints.lastAvailablePosition
-                                    )
-                                    val sequence = gene.getSequence(range)
-                                    writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
-                                }
-                            }
-                        }
-                }
+                resultLibrary.writeToFASTA(libraryOutput, originalLibrary)
             } else {
                 throw ApplicationException("Unsupported file type for export library, $libraryOutput")
             }
@@ -408,6 +379,40 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         }
         ReportUtil.writeReportToStdout(report)
         reportOptions.appendToFiles(report)
+    }
+
+    private fun VDJCLibrary.writeToFASTA(libraryOutput: Path, originalLibrary: VDJCLibrary) {
+        FastaWriter<NucleotideSequence>(libraryOutput.toFile()).use { writer ->
+            var id = 0L
+            primaryGenes
+                .sortedBy { it.name }
+                .forEach { gene ->
+                    val geneFeaturesForFoundAllele =
+                        gene.data.meta[AllelesBuilder.metaKey.alleleMutationsReliableRegion]
+                            ?.map { GeneFeature.parse(it) }
+                            ?.sorted()
+                    when {
+                        geneFeaturesForFoundAllele != null -> {
+                            geneFeaturesForFoundAllele.forEach { geneFeature ->
+                                val varianceOf =
+                                    originalLibrary[gene.data.meta[AllelesBuilder.metaKey.alleleVariantOf]!!.first()]
+                                val range = varianceOf.referencePoints.getRange(geneFeature)
+                                val sequence = gene.getFeature(geneFeature)
+                                writer.write(FastaRecord(id++, "${gene.name} $range $geneFeature", sequence))
+                            }
+                        }
+
+                        else -> {
+                            val range = Range(
+                                gene.referencePoints.firstAvailablePosition,
+                                gene.referencePoints.lastAvailablePosition
+                            )
+                            val sequence = gene.getSequence(range)
+                            writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
+                        }
+                    }
+                }
+        }
     }
 
     private fun printAllelesMutationsOutput(
@@ -489,12 +494,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val cloneSet = CloneSet(
             clones,
             resultLibrary.primaryGenes,
-            cloneReader.header.copy(
-                foundAlleles = MiXCRHeader.FoundAlleles(
-                    resultLibrary.name,
-                    resultLibrary.data
-                )
-            ).addStepParams(MiXCRCommandDescriptor.findAlleles, CommandFindAllelesParams()),
+            cloneReader.header
+                .copy(foundAlleles = MiXCRHeader.FoundAlleles(resultLibrary.name, resultLibrary.data))
+                .addStepParams(MiXCRCommandDescriptor.findAlleles, findAllelesParameters),
             cloneReader.footer,
             cloneReader.ordering()
         )
@@ -523,14 +525,13 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     private fun registerNotProcessedVJ(
         alleles: MutableMap<String, List<VDJCGeneData>>,
-        usedGenes: Map<String, VDJCGeneData>
+        usedGenes: Map<String, List<VDJCGeneData>>
     ) {
-        usedGenes.forEach { (name, geneData) ->
-            if (geneData.geneType in VJ_REFERENCE) {
-                // if gene wasn't processed in alleles search, then register it as a single allele
-                if (!alleles.containsKey(name)) {
-                    alleles[geneData.geneName] = listOf(geneData)
-                }
+        for ((geneName, geneDatum) in usedGenes) {
+            // if gene wasn't processed in alleles search, then register it as a single allele
+            if (!alleles.containsKey(geneName)) {
+                if (geneDatum.first().geneType !in VJ_REFERENCE) continue
+                alleles[geneName] = geneDatum
             }
         }
     }
@@ -538,16 +539,16 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private fun collectUsedGenes(
         cloneReaders: List<CloneReader>,
         alleles: Map<String, List<VDJCGeneData>>
-    ): Map<String, VDJCGeneData> {
-        val usedGenes = mutableMapOf<String, VDJCGeneData>()
+    ): Map<String, List<VDJCGeneData>> {
+        val usedGenes = mutableMapOf<String, MutableList<VDJCGeneData>>()
         alleles.values
             .flatten()
-            .forEach { usedGenes[it.name] = it }
+            .forEach { usedGenes.computeIfAbsent(it.geneName) { mutableListOf() }.add(it) }
         for (cloneReader in cloneReaders) {
             for (gene in cloneReader.usedGenes) {
                 val geneName = gene.geneName
                 if (geneName !in alleles && geneName !in usedGenes) {
-                    usedGenes[geneName] = gene.data
+                    usedGenes.computeIfAbsent(geneName) { mutableListOf() }.add(gene.data)
                 }
             }
         }

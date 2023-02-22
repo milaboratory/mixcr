@@ -20,11 +20,11 @@ Usage: mixcr analyze [--add-step <step>] [--remove-step <step>] [-s <species>] [
                      [--export-productive-clones-only] [--no-reports] [--no-json-reports]
                      [--output-not-used-reads] [--use-local-temp] [--threads <n>]
                      [--force-overwrite] [--no-warnings] [--verbose] [--help] [--set-whitelist
-                     <key=value> | --reset-whitelist tag]... [-M <key=value>]... <preset_name>
-                     ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.
-                     gz]]|file.(fasta|bam|sam)) output_prefix
+                     <key=value> | --reset-whitelist tag]... [-M <key=value>]... <preset> ([file_I1.
+                     fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
+                     (fasta|bam|sam)) output_prefix
 Run full MiXCR pipeline for specific input.
-      <preset_name>          Name of the analysis preset.
+      <preset>               Name of the analysis preset.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
         (fasta|bam|sam))
                              Two fastq files for paired reads or one file for single read data.

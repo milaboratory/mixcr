@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import com.milaboratory.mixcr.export.FieldExtractorsFactoryWithPresets
@@ -55,6 +56,7 @@ fun <T : Any> FieldExtractorsFactory<T>.addOptionsToSpec(
                 .hideParamSyntax(true)
                 .hidden(field.deprecation != null)
                 .order(FieldExtractorsFactory.globalOrderInCli + index)
+                .completionCandidates(field.completionCandidates)
                 .build()
         )
     }
@@ -74,7 +76,7 @@ fun <T : Any> FieldExtractorsFactory<T>.addOptionsToSpec(
                         ?: throw IllegalArgumentException("Unknown preset $preset, expected one of ${presets.keys}")
                 }
                 .arity("1")
-                .paramLabel("<preset>")
+                .paramLabel(Labels.PRESET)
                 .build()
         )
         spec.addOption(

@@ -172,7 +172,10 @@ object CommandAssemble {
         var reportBuffers = false
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
+
+        @Mixin
+        lateinit var dontSavePresetOption: DontSavePresetOption
 
         @Mixin
         private var assembleMixins: AssembleMiXCRMixins? = null
@@ -330,8 +333,11 @@ object CommandAssemble {
                         assemblerRunner.getCloneSet(
                             inputHeader
                                 .withAssemblerParameters(cloneAssemblerParameters)
-                                .addStepParams(MiXCRCommandDescriptor.assemble, cmdParam)
-                                .copy(paramsSpec = paramSpec),
+                                .addStepParams(
+                                    MiXCRCommandDescriptor.assemble,
+                                    paramsResolver.resolve(paramSpec, printParameters = logger.verbose).second
+                                )
+                                .copy(paramsSpec = dontSavePresetOption.presetToSave(paramSpec)),
                             inputFooter
                         ),
                         ordering

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -101,7 +101,8 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         names = ["-c", "--chains"],
         paramLabel = Labels.CHAINS,
         showDefaultValue = ALWAYS,
-        order = OptionsOrder.main + 10_600
+        order = OptionsOrder.main + 10_600,
+        completionCandidates = ChainsCandidates::class
     )
     var chains: Chains = Chains.ALL
 
@@ -117,7 +118,8 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         description = ["Output only alignments which contain a corresponding gene feature"],
         names = ["-g", "--feature"],
         paramLabel = Labels.GENE_FEATURE,
-        order = OptionsOrder.main + 10_800
+        order = OptionsOrder.main + 10_800,
+        completionCandidates = GeneFeaturesCandidates::class
     )
     var feature: GeneFeature? = null
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -15,6 +15,7 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.stat.xcontinious.CorrelationMethod
 import com.milaboratory.miplots.writeFile
+import com.milaboratory.mixcr.cli.ChainsCandidates
 import com.milaboratory.mixcr.cli.ChainsUtil
 import com.milaboratory.mixcr.cli.ChainsUtil.name
 import com.milaboratory.mixcr.cli.ChainsUtil.toPath
@@ -55,7 +56,8 @@ class CommandOverlapScatter : MiXCRCommandWithOutputs() {
         names = ["--chains"],
         split = ",",
         paramLabel = Labels.CHAIN,
-        order = OptionsOrder.main + 10_100
+        order = OptionsOrder.main + 10_100,
+        completionCandidates = ChainsCandidates::class
     )
     var chains: Set<String>? = null
 

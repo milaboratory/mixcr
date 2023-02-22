@@ -19,7 +19,7 @@ import com.github.victools.jsonschema.generator.SchemaVersion
 import com.github.victools.jsonschema.module.jackson.JacksonModule
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRMixin
-import com.milaboratory.mixcr.alleles.FindAllelesParameters
+import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
 import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
@@ -31,7 +31,7 @@ import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
-import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
+import com.milaboratory.mixcr.trees.CommandFindShmTreesParams
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.util.K_PRETTY_OM
@@ -110,8 +110,8 @@ class CommandExportSchemas : Runnable {
             PreCloneAssemblerParameters::class,
             FullSeqAssemblerParameters::class,
             PartialAlignmentsAssemblerParameters::class,
-            FindAllelesParameters::class,
-            SHMTreeBuilderParameters::class,
+            CommandFindAllelesParams::class,
+            CommandFindShmTreesParams::class,
             PostanalysisParametersIndividual::class,
             PostanalysisParametersOverlap::class,
         )

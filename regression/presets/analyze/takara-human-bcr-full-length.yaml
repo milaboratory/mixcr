@@ -14,7 +14,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^N{30}(R1:*) \\ ^(UMI:N{12})N{10}(R2:*)"
+  tagPattern: "^N{7}(R1:*) \\ ^(UMI:N{12})N{10}(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   sampleTable: null
@@ -107,7 +107,7 @@ align:
         type: kaligner
         mapperKValue: 5
         floatingLeftBound: false
-        floatingRightBound: false
+        floatingRightBound: true
         mapperAbsoluteMinScore: 1.5
         mapperRelativeMinScore: 0.75
         mapperMatchScore: 1.0

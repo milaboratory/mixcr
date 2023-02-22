@@ -78,7 +78,8 @@ object CommandExportClones {
             ],
             names = ["-c", "--chains"],
             paramLabel = Labels.CHAINS,
-            order = OptionsOrder.main + 10_100
+            order = OptionsOrder.main + 10_100,
+            completionCandidates = ChainsCandidates::class
         )
         private var chains: String? = null
 
@@ -149,7 +150,7 @@ object CommandExportClones {
         lateinit var exportDefaults: ExportDefaultOptions
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
 
 
         override val paramsResolver =

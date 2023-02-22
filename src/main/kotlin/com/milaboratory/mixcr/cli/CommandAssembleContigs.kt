@@ -141,7 +141,10 @@ object CommandAssembleContigs {
         var debugReportFile: Path? = null
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
+
+        @Mixin
+        lateinit var dontSavePresetOption: DontSavePresetOption
 
         override val inputFiles get() = listOf(inputFile)
 
@@ -359,7 +362,7 @@ object CommandAssembleContigs {
             val resultHeader = header
                 .copy(allFullyCoveredBy = allFullyCoveredBy)
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
-                .copy(paramsSpec = paramsSpec)
+                .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
 
             val cloneSet = CloneSet(clones, genes, resultHeader, footer, ordering)
             ClnsWriter(outputFile).use { writer ->

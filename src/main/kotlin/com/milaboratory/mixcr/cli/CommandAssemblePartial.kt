@@ -113,7 +113,10 @@ object CommandAssemblePartial {
         lateinit var reportOptions: ReportOptions
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
+
+        @Mixin
+        lateinit var dontSavePresetOption: DontSavePresetOption
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -142,7 +145,7 @@ object CommandAssemblePartial {
                     header
                         .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
                         .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams)
-                        .copy(paramsSpec = paramsSpec),
+                        .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                     reader.usedGenes
                 )
                 val assembler = PartialAlignmentsAssembler(

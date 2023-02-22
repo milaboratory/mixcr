@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -108,7 +108,8 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
         paramLabel = Labels.GENE_FEATURE,
         defaultValue = "CDR3",
         showDefaultValue = ALWAYS,
-        order = OptionsOrder.main + 10_500
+        order = OptionsOrder.main + 10_500,
+        completionCandidates = GeneFeaturesCandidates::class
     )
     lateinit var geneFeatureToMatch: GeneFeature
 

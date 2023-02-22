@@ -71,7 +71,8 @@ object CommandExportAlignments {
             ],
             names = ["-c", "--chains"],
             paramLabel = Labels.CHAINS,
-            order = OptionsOrder.main + 10_100
+            order = OptionsOrder.main + 10_100,
+            completionCandidates = ChainsCandidates::class
         )
         private var chains: String? = null
 
@@ -115,7 +116,7 @@ object CommandExportAlignments {
         lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportAlignments
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
 
         override val inputFiles
             get() = listOf(inputFile)

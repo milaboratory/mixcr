@@ -58,7 +58,8 @@ object CommandExtend {
             description = ["V extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--v-anchor"],
             paramLabel = Labels.ANCHOR_POINT,
-            order = OptionsOrder.main + 10_100
+            order = OptionsOrder.main + 10_100,
+            completionCandidates = ReferencePointsCandidates::class
         )
         private var vAnchorPoint: ReferencePoint? = null
 
@@ -66,7 +67,8 @@ object CommandExtend {
             description = ["J extension anchor point.", DEFAULT_VALUE_FROM_PRESET],
             names = ["--j-anchor"],
             paramLabel = Labels.ANCHOR_POINT,
-            order = OptionsOrder.main + 10_200
+            order = OptionsOrder.main + 10_200,
+            completionCandidates = ReferencePointsCandidates::class
         )
         private var jAnchorPoint: ReferencePoint? = null
 
@@ -119,7 +121,8 @@ object CommandExtend {
             names = ["-c", "--chains"],
             paramLabel = Labels.CHAINS,
             showDefaultValue = ALWAYS,
-            order = OptionsOrder.main + 10_500
+            order = OptionsOrder.main + 10_500,
+            completionCandidates = ChainsCandidates::class
         )
         var chains: Chains = Chains.TCR
 
@@ -139,7 +142,10 @@ object CommandExtend {
         lateinit var threadsOption: ThreadsOption
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
+
+        @Mixin
+        lateinit var dontSavePresetOption: DontSavePresetOption
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -183,7 +189,7 @@ object CommandExtend {
                         cloneSet.header
                             .addStepParams(MiXCRCommandDescriptor.extend, process.params)
                             .copy(allFullyCoveredBy = null)
-                            .copy(paramsSpec = paramsSpec),
+                            .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                         cloneSet.footer,
                         cloneSet.ordering
                     )
@@ -200,9 +206,14 @@ object CommandExtend {
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     SmartProgressReporter.startProgressReport("Extending alignments", reader)
                     val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
-                    writer.writeHeader(reader.header.copy(paramsSpec = paramsSpec), reader.usedGenes)
-                    writer.setFooter(reader.footer)
                     val process = processWrapper(reader, paramsSpec, reader.parameters)
+                    writer.writeHeader(
+                        reader.header
+                            .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
+                            .addStepParams(MiXCRCommandDescriptor.extend, process.params),
+                        reader.usedGenes
+                    )
+                    writer.setFooter(reader.footer)
 
                     // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
                     // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure

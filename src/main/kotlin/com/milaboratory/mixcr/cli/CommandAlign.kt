@@ -634,9 +634,10 @@ object CommandAlign {
             description = ["Analysis preset. Sets key parameters of this and all downstream analysis steps. " +
                     "It is critical to carefully select the most appropriate preset for the data you analyse."],
             names = ["-p", "--preset"],
-            paramLabel = "<name>",
+            paramLabel = Labels.PRESET,
             required = true,
-            order = OptionsOrder.main + 1000
+            order = OptionsOrder.main + 1000,
+            completionCandidates = PresetsCandidates::class
         )
         lateinit var presetName: String
 
@@ -720,6 +721,9 @@ object CommandAlign {
 
         @Mixin
         lateinit var threads: ThreadsOption
+
+        @Mixin
+        lateinit var dontSavePresetOption: DontSavePresetOption
 
         @Option(
             description = ["Use higher compression for output file, 10~25%% slower, minus 30~50%% of file size."],
@@ -987,7 +991,7 @@ object CommandAlign {
                 writers?.writeHeader(
                     MiXCRHeader(
                         inputHash,
-                        paramsSpecPacked,
+                        dontSavePresetOption.presetToSave(paramsSpecPacked),
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         tagsExtractor.tagsInfo,
                         aligner.parameters,

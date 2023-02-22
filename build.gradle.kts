@@ -103,7 +103,7 @@ repositories {
     }
 }
 
-val mixcrAlgoVersion = "4.2.0-35-alleles"
+val mixcrAlgoVersion = "4.2.0-41-autocomplete_and_presets"
 val milibVersion = "2.3.0-19-alleles"
 val jacksonBomVersion = "2.14.1"
 

@@ -7,9 +7,9 @@ Usage: mixcr exportReportsTable [--with-upstreams] [--preset <preset>] [--preset
                                 [-droppedShortSeq] [-droppedLowQual] [-droppedFailedMapping]
                                 [-inputFileAssembleContigs] [-totalClonotypes]
                                 [-readsUsedInClonotypes] [-clonesWithChain] [-foundAllelesCount]
-                                [-foundTreesCount] [-cloneInTreesCount] [--force-overwrite]
-                                [--no-warnings] [--verbose] [--help] (data.(vdjca|clns|clna|shmt)
-                                |directory)... [report.tsv]
+                                [-foundDeNovaAllelesCount] [-foundTreesCount] [-cloneInTreesCount]
+                                [--force-overwrite] [--no-warnings] [--verbose] [--help] (data.
+                                (vdjca|clns|clna|shmt)|directory)... [report.tsv]
 Export reports from files in tabular format.
       (data.(vdjca|clns|clna|shmt)|directory)...
                              Path to input files or directories.
@@ -55,5 +55,7 @@ Possible fields to export
       -clonesWithChain       Percentage of clones aligned on specific chain (`assemble` command).
                                Will be exported all found chains.
       -foundAllelesCount     Count of found alleles.
+      -foundDeNovaAllelesCount
+                             Count of de nova found alleles.
       -foundTreesCount       Count of found trees.
       -cloneInTreesCount     Count of uniq clones that was included in trees.

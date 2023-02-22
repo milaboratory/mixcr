@@ -1,5 +1,5 @@
-Usage: mixcr align --preset <name> [--trimming-quality-threshold <n>] [--trimming-window-size <n>]
-                   [--write-all] [--tag-pattern-file <path>] [--tag-parse-unstranded]
+Usage: mixcr align --preset <preset> [--trimming-quality-threshold <n>] [--trimming-window-size
+                   <n>] [--write-all] [--tag-pattern-file <path>] [--tag-parse-unstranded]
                    [--tag-max-budget <n>] [--read-id-as-cell-tag] [--read-buffer <n>]
                    [--high-compression] [--not-aligned-I1 <path.fastq[.gz]>] [--not-aligned-I2
                    <path.fastq[.gz]>] [--not-aligned-R1 <path.fastq[.gz]>] [--not-aligned-R2 <path.
@@ -34,7 +34,7 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
                              Use {{n}} if you want to concatenate files from multiple lanes, like:
                              my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz
       alignments.vdjca       Path where to write output alignments
-  -p, --preset <name>        Analysis preset. Sets key parameters of this and all downstream
+  -p, --preset <preset>      Analysis preset. Sets key parameters of this and all downstream
                                analysis steps. It is critical to carefully select the most
                                appropriate preset for the data you analyse.
       --trimming-quality-threshold <n>

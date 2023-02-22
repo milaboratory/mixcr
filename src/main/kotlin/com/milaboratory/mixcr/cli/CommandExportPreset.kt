@@ -14,7 +14,11 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.cli.ParamsBundleSpecBaseAddress
+import com.milaboratory.cli.ParamsBundleSpecBaseEmbedded
 import com.milaboratory.cli.ParamsResolver
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.MiXCRParams
 import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -25,6 +29,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.util.K_YAML_OM
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
@@ -42,9 +47,10 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         @Option(
             names = ["--preset-name"],
             description = ["Preset name to export."],
-            paramLabel = "<preset>",
+            paramLabel = Labels.PRESET,
             required = true,
-            order = 1
+            order = 1,
+            completionCandidates = PresetsCandidates::class
         )
         var presetName: String? = null
 
@@ -64,7 +70,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     }
 
     @Mixin
-    lateinit var resetPreset: ResetPresetArgs
+    lateinit var resetPreset: ResetPresetOptions
 
     @ArgGroup(
         exclusive = true,
@@ -145,11 +151,14 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     override fun run1() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
                 assembleContigsMixins + exportMixins + pipelineMixins
-        val spec: MiXCRParamsSpec = when {
-            presetInput.presetName != null -> MiXCRParamsSpec(presetInput.presetName!!, mixins = mixinsFromArgs.mixins)
+        val bundleSpec = when {
+            presetInput.presetName != null -> {
+                ParamsBundleSpecBaseAddress(presetInput.presetName!!)
+            }
+
             else -> {
                 val inputFile = presetInput.input
-                val paramsSpec = when (IOUtil.extractFileType(inputFile)) {
+                val header = when (IOUtil.extractFileType(inputFile)) {
                     VDJCA -> VDJCAlignmentsReader(inputFile)
                         .use { reader -> reader.header }
 
@@ -160,14 +169,33 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                         .use { reader -> reader.header }
 
                     SHMT -> throw UnsupportedOperationException("Command doesn't support .shmt")
-                }.paramsSpec
+                }
+                val (originalPreset) = paramsResolver.resolve(
+                    header.paramsSpec, printParameters = false, validate = false
+                )
 
-                resetPreset.overridePreset(paramsSpec).addMixins(mixinsFromArgs.mixins)
+                fun <P : MiXCRParams, T : MiXCRCommandDescriptor<P, *>> paramsWithOverride(
+                    descriptor: T
+                ): P? = header.stepParams[descriptor].firstOrNull() ?: descriptor.extractFromBundle(originalPreset)
+
+                val bundle = MiXCRParamsBundle(
+                    flags = originalPreset.flags,
+                    pipeline = originalPreset.pipeline,
+                    align = paramsWithOverride(MiXCRCommandDescriptor.align),
+                    refineTagsAndSort = paramsWithOverride(MiXCRCommandDescriptor.refineTagsAndSort),
+                    assemblePartial = paramsWithOverride(MiXCRCommandDescriptor.assemblePartial),
+                    extend = paramsWithOverride(MiXCRCommandDescriptor.extend),
+                    assemble = paramsWithOverride(MiXCRCommandDescriptor.assemble),
+                    assembleContigs = paramsWithOverride(MiXCRCommandDescriptor.assembleContigs),
+                    exportAlignments = paramsWithOverride(MiXCRCommandDescriptor.exportAlignments),
+                    exportClones = paramsWithOverride(MiXCRCommandDescriptor.exportClones)
+                )
+                ParamsBundleSpecBaseEmbedded(bundle)
             }
         }
 
         val bundle = paramsResolver.resolve(
-            spec,
+            MiXCRParamsSpec(bundleSpec, mixins = mixinsFromArgs.mixins),
             printParameters = false,
             validate = !noValidation
         ).first

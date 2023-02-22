@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -57,7 +57,8 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
         names = ["-c", "--chains"],
         paramLabel = Labels.CHAINS,
         showDefaultValue = ALWAYS,
-        order = OptionsOrder.main + 10_100
+        order = OptionsOrder.main + 10_100,
+        completionCandidates = ChainsCandidates::class
     )
     var chains: Chains = Chains.ALL
 
@@ -65,7 +66,8 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
         description = ["Include only those alignments that contain specified feature."],
         names = ["-g", "--contains-feature"],
         paramLabel = Labels.GENE_FEATURE,
-        order = OptionsOrder.main + 10_200
+        order = OptionsOrder.main + 10_200,
+        completionCandidates = GeneFeaturesCandidates::class
     )
     var containsFeature: GeneFeature? = null
 
