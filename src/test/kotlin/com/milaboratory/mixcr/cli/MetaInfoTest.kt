@@ -1,11 +1,56 @@
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import org.junit.Test
 import picocli.CommandLine
 
 class MetaInfoTest {
+    @Test
+    fun `all command descriptor must be resolved by name`() {
+        MiXCRCommandDescriptor::class.sealedSubclasses.map { it.objectInstance!! }
+            .map { it.command }
+            .filter { commandName ->
+                MiXCRCommandDescriptor.fromStringOrNull(commandName) == null
+            } shouldBe emptyList()
+    }
+
+    @Test
+    fun `almost all commands from analyze should have reset preset option`() {
+        val cmd = Main.mkCmd()
+        val exclusions = setOf(
+            MiXCRCommandDescriptor.findAlleles,
+            MiXCRCommandDescriptor.findShmTrees,
+
+            MiXCRCommandDescriptor.align
+        )
+        (MiXCRCommandDescriptor::class.sealedSubclasses.map { it.objectInstance!! } - exclusions)
+            .map { it.command }
+            .filter { commandName ->
+                val command = cmd.allSubCommands().first { it.commandName == commandName }
+                command.commandSpec.findOption("--reset-preset") == null
+            } shouldBe emptyList()
+    }
+
+    @Test
+    fun `almost all commands from analyze should have dont save preset option`() {
+        val cmd = Main.mkCmd()
+        val exclusions = setOf(
+            MiXCRCommandDescriptor.findAlleles,
+            MiXCRCommandDescriptor.findShmTrees,
+
+            MiXCRCommandDescriptor.exportClones,
+            MiXCRCommandDescriptor.exportAlignments,
+        )
+        (MiXCRCommandDescriptor::class.sealedSubclasses.map { it.objectInstance!! } - exclusions)
+            .map { it.command }
+            .filter { commandName ->
+                val command = cmd.allSubCommands().first { it.commandName == commandName }
+                command.commandSpec.findOption("--dont-save-preset") == null
+            } shouldBe emptyList()
+    }
+
     @Test
     fun `all options must have specified order`() {
         val optionsWithoutOrder = Main.mkCmd().allSubCommands()

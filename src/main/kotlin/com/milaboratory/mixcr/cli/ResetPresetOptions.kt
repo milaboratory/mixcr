@@ -15,7 +15,7 @@ import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import picocli.CommandLine.Option
 
-class ResetPresetArgs {
+class ResetPresetOptions {
     @Option(
         description = ["Reset preset from input file to new value. All previous mix-ins will be removed"],
         names = ["--reset-preset"],

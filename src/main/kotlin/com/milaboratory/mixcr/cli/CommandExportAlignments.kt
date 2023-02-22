@@ -116,7 +116,7 @@ object CommandExportAlignments {
         lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportAlignments
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
 
         override val inputFiles
             get() = listOf(inputFile)

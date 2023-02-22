@@ -23,7 +23,6 @@ import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.basictypes.ClnsReader
-import io.repseq.core.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
@@ -32,10 +31,10 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.CloneWithDatasetId
+import com.milaboratory.mixcr.trees.CommandFindShmTreesParams
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.trees.SHMTreeBuilder
 import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
-import com.milaboratory.mixcr.trees.SHMTreeBuilderParameters
 import com.milaboratory.mixcr.trees.SHMTreeResult
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
@@ -52,6 +51,7 @@ import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.XSV
 import com.milaboratory.util.exhaustive
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
@@ -116,7 +116,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         arity = "2..*",
         paramLabel = "$inputsLabel $outputLabel",
         hideParamSyntax = true,
-        //help is covered by mkCommandSpec
+        // help is covered by mkCommandSpec
         hidden = true
     )
     lateinit var inOut: List<Path>
@@ -218,12 +218,12 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     @Mixin
     lateinit var useLocalTemp: UseLocalTempOption
 
-    private val shmTreeBuilderParameters: SHMTreeBuilderParameters by lazy {
-        val shmTreeBuilderParametersName = "default"
-        var result: SHMTreeBuilderParameters = SHMTreeBuilderParameters.presets.getByName(shmTreeBuilderParametersName)
-            ?: throw ValidationException("Unknown parameters: $shmTreeBuilderParametersName")
+    private val shmTreeBuilderParameters: CommandFindShmTreesParams by lazy {
+        val presetNAme = "default"
+        var result = CommandFindShmTreesParams.presets.getByName(presetNAme)
+            ?: throw ValidationException("Unknown parameters: $presetNAme")
         if (overrides.isNotEmpty()) {
-            result = JsonOverrider.override(result, SHMTreeBuilderParameters::class.java, overrides)
+            result = JsonOverrider.override(result, CommandFindShmTreesParams::class.java, overrides)
                 ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
         result
@@ -328,7 +328,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val report: BuildSHMTreeReport
         outputTreesPath.toAbsolutePath().parent.createDirectories()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            shmTreesWriter.writeHeader(datasets, CommandFindShmTreesParams())
+            shmTreesWriter.writeHeader(datasets, shmTreeBuilderParameters)
 
             val writer = shmTreesWriter.treesWriter()
 
@@ -341,11 +341,11 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             val allDatasetsHasCellTags = datasets.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
             if (allDatasetsHasCellTags) {
                 when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
-                    is SHMTreeBuilderParameters.SingleCell.NoOP -> {
+                    is CommandFindShmTreesParams.SingleCell.NoOP -> {
 //                    warn("Single cell tags will not be used, but it's possible on this data")
                     }
 
-                    is SHMTreeBuilderParameters.SingleCell.SimpleClustering -> {
+                    is CommandFindShmTreesParams.SingleCell.SimpleClustering -> {
                         shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) {
                             writeResults(writer, it, scoringSet, generateGlobalTreeIds = true)
                         }

@@ -142,7 +142,10 @@ object CommandExtend {
         lateinit var threadsOption: ThreadsOption
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
+
+        @Mixin
+        lateinit var dontSavePresetOption: DontSavePresetOption
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -186,7 +189,7 @@ object CommandExtend {
                         cloneSet.header
                             .addStepParams(MiXCRCommandDescriptor.extend, process.params)
                             .copy(allFullyCoveredBy = null)
-                            .copy(paramsSpec = paramsSpec),
+                            .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                         cloneSet.footer,
                         cloneSet.ordering
                     )
@@ -203,9 +206,14 @@ object CommandExtend {
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     SmartProgressReporter.startProgressReport("Extending alignments", reader)
                     val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
-                    writer.writeHeader(reader.header.copy(paramsSpec = paramsSpec), reader.usedGenes)
-                    writer.setFooter(reader.footer)
                     val process = processWrapper(reader, paramsSpec, reader.parameters)
+                    writer.writeHeader(
+                        reader.header
+                            .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
+                            .addStepParams(MiXCRCommandDescriptor.extend, process.params),
+                        reader.usedGenes
+                    )
+                    writer.setFooter(reader.footer)
 
                     // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
                     // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure

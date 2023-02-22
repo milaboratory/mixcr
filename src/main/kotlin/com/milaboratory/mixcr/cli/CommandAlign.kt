@@ -722,6 +722,9 @@ object CommandAlign {
         @Mixin
         lateinit var threads: ThreadsOption
 
+        @Mixin
+        lateinit var dontSavePresetOption: DontSavePresetOption
+
         @Option(
             description = ["Use higher compression for output file, 10~25%% slower, minus 30~50%% of file size."],
             names = ["--high-compression"],
@@ -988,7 +991,7 @@ object CommandAlign {
                 writers?.writeHeader(
                     MiXCRHeader(
                         inputHash,
-                        paramsSpecPacked,
+                        dontSavePresetOption.presetToSave(paramsSpecPacked),
                         MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
                         tagsExtractor.tagsInfo,
                         aligner.parameters,

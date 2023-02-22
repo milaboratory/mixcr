@@ -224,7 +224,10 @@ object CommandRefineTagsAndSort {
         var refineAndSortMixins: List<RefineTagsAndSortMixins> = mutableListOf()
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
+
+        @Mixin
+        lateinit var dontSavePresetOption: DontSavePresetOption
 
         private val mixins get() = refineAndSortMixins.mixins
 
@@ -431,7 +434,7 @@ object CommandRefineTagsAndSort {
                         header
                             .updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) }
                             .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams)
-                            .copy(paramsSpec = paramsSpec),
+                            .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)

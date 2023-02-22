@@ -150,7 +150,7 @@ object CommandExportClones {
         lateinit var exportDefaults: ExportDefaultOptions
 
         @Mixin
-        lateinit var resetPreset: ResetPresetArgs
+        lateinit var resetPreset: ResetPresetOptions
 
 
         override val paramsResolver =

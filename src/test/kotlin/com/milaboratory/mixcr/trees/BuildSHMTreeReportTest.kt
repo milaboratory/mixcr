@@ -21,7 +21,7 @@ class BuildSHMTreeReportTest {
             listOf(
                 BuildSHMTreeReport.StepResult(
                     BuildSHMTreeStep.BuildingInitialTrees(
-                        SHMTreeBuilderParameters.ClusterizationAlgorithm.SingleLinkage(
+                        CommandFindShmTreesParams.ClusterizationAlgorithm.SingleLinkage(
                             5,
                             1.0
                         )

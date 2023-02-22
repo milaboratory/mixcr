@@ -27,7 +27,7 @@ import com.milaboratory.mixcr.AssembleContigsMixins
 import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.CloneRebuild
-import com.milaboratory.mixcr.alleles.FindAllelesParameters
+import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
 import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.alleles.OverallAllelesStatistics
 import com.milaboratory.mixcr.basictypes.ClnsWriter
@@ -210,12 +210,12 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp.value)
     }
 
-    private val findAllelesParameters: FindAllelesParameters by lazy {
+    private val findAllelesParameters: CommandFindAllelesParams by lazy {
         val findAllelesParametersName = "default"
-        var result: FindAllelesParameters = FindAllelesParameters.presets.getByName(findAllelesParametersName)
+        var result: CommandFindAllelesParams = CommandFindAllelesParams.presets.getByName(findAllelesParametersName)
             ?: throw ValidationException("Unknown parameters: $findAllelesParametersName")
         if (overrides.isNotEmpty()) {
-            result = JsonOverrider.override(result, FindAllelesParameters::class.java, overrides)
+            result = JsonOverrider.override(result, CommandFindAllelesParams::class.java, overrides)
                 ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
         result
@@ -494,12 +494,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val cloneSet = CloneSet(
             clones,
             resultLibrary.primaryGenes,
-            cloneReader.header.copy(
-                foundAlleles = MiXCRHeader.FoundAlleles(
-                    resultLibrary.name,
-                    resultLibrary.data
-                )
-            ).addStepParams(MiXCRCommandDescriptor.findAlleles, CommandFindAllelesParams()),
+            cloneReader.header
+                .copy(foundAlleles = MiXCRHeader.FoundAlleles(resultLibrary.name, resultLibrary.data))
+                .addStepParams(MiXCRCommandDescriptor.findAlleles, findAllelesParameters),
             cloneReader.footer,
             cloneReader.ordering()
         )
