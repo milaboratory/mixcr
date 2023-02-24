@@ -51,7 +51,7 @@ import kotlin.io.path.Path
 object CommandExportClones {
     const val COMMAND_NAME = MiXCRCommandDescriptor.exportClones.name
 
-    fun CommandExportClonesParams.mkFilter(): Filter<Clone> {
+    private fun CommandExportClonesParams.mkFilter(): Filter<Clone> {
         val chains = Chains.parse(chains)
         return Filter {
             if (filterOutOfFrames)
@@ -217,6 +217,7 @@ object CommandExportClones {
                 printParameters = logger.verbose && outputFile != null
             )
 
+            ValidationException.chainsExist(Chains.parse(params.chains), initialSet.usedGenes)
             // Calculating splitting keys
             val splitFileKeys = params.splitFilesBy
             val splitFileKeyExtractors: List<CloneGroupingKey> = splitFileKeys.map { parseGroupingKey(header, it) }

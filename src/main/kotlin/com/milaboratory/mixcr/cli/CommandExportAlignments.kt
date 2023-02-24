@@ -38,6 +38,7 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.exhaustive
 import io.repseq.core.Chains
 import io.repseq.core.GeneType
+import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -136,9 +137,11 @@ object CommandExportAlignments {
                     printParameters = logger.verbose && outputFile != null
                 )
 
+                ValidationException.chainsExist(Chains.parse(params.chains), data.usedGenes)
+
                 val headerForExport = MetaForExport(
                     allTagsInfo = listOf(header.tagsInfo),
-                    //in case of input clna file, allFullyCoveredBy has nothing to do with alignments
+                    // in case of input clna file, allFullyCoveredBy has nothing to do with alignments
                     allFullyCoveredBy = null,
                     data.info.footer.reports
                 )
@@ -167,7 +170,8 @@ object CommandExportAlignments {
     data class AlignmentsAndMetaInfo(
         val port: OutputPort<VDJCAlignments>,
         val closeable: AutoCloseable,
-        val info: MiXCRFileInfo
+        val info: MiXCRFileInfo,
+        val usedGenes: MutableList<VDJCGene>
     ) : AutoCloseable by closeable
 
     @JvmStatic
@@ -178,7 +182,7 @@ object CommandExportAlignments {
                     inputFile,
                     VDJCLibraryRegistry.getDefault()
                 )
-                AlignmentsAndMetaInfo(vdjcaReader, vdjcaReader, vdjcaReader)
+                AlignmentsAndMetaInfo(vdjcaReader, vdjcaReader, vdjcaReader, vdjcaReader.usedGenes)
             }
 
             IOUtil.MiXCRFileType.CLNA -> {
@@ -192,7 +196,7 @@ object CommandExportAlignments {
 
                     override fun take(): VDJCAlignments? = source.take()
                 }
-                AlignmentsAndMetaInfo(port, clnaReader, clnaReader)
+                AlignmentsAndMetaInfo(port, clnaReader, clnaReader, clnaReader.usedGenes)
             }
 
             IOUtil.MiXCRFileType.CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $inputFile")

@@ -129,7 +129,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         paramLabel = "<seq>",
         order = OptionsOrder.main + 10_900
     )
-    var readContains: String? = null
+    var readContains: NucleotideSequence? = null
 
     @Option(
         description = ["Custom filter"],
@@ -201,7 +201,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
             resultFilter = resultFilter.and { vdjcAlignments ->
                 (0 until vdjcAlignments.numberOfTargets())
                     .map { i -> vdjcAlignments.getTarget(i).sequence }
-                    .any { sequence -> sequence.toString().contains(readContains!!) }
+                    .any { sequence -> sequence.toString().contains(readContains!!.toString()) }
             }
         }
         if (cdr3Equals != null) {
@@ -221,6 +221,8 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         var total: Long = 0
         var filtered: Long = 0
         CommandExportAlignments.openAlignmentsPort(input).use { readerAndHeader ->
+            ValidationException.chainsExist(chains, readerAndHeader.usedGenes)
+
             (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it.toFile()), 32768)) }
                 ?: System.out).use { output ->
                 readerAndHeader.port.use { reader ->

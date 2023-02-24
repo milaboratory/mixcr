@@ -173,6 +173,8 @@ object CommandExtend {
         private fun processClns() {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val cloneSet = reader.readCloneSet()
+
+                ValidationException.chainsExist(chains, cloneSet.usedGenes)
                 val outputPort = cloneSet.asOutputPort()
                 val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
                 val process = processWrapper(outputPort, paramsSpec, cloneSet.header.alignerParameters!!)
