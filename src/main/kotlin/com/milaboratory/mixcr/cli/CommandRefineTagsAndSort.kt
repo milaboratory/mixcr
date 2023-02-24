@@ -159,7 +159,7 @@ object CommandRefineTagsAndSort {
             hidden = true
         )
         fun whitelist(map: Map<String, String>) {
-            throw ApplicationException("\"-w\" and \"--whitelist\" options are deprecated, please use ${AlignMixins.SetWhitelist.CMD_OPTION_SET} instead.")
+            throw ValidationException("\"-w\" and \"--whitelist\" options are deprecated, please use ${AlignMixins.SetWhitelist.CMD_OPTION_SET} instead.")
         }
 
         override val paramsResolver =

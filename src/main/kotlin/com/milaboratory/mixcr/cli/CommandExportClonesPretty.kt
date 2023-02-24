@@ -34,7 +34,6 @@ import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
 import java.nio.file.Path
-import java.util.*
 
 @Command(
     description = ["Export verbose information about clones."]
@@ -111,7 +110,7 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
         paramLabel = "<seq>",
         order = OptionsOrder.main + 10_700
     )
-    var csContain: String? = null
+    var csContain: NucleotideSequence? = null
 
     override val inputFiles
         get() = listOf(input)
@@ -134,7 +133,7 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
                 .any { bestHit -> chains.intersects(bestHit.gene.chains) }
         }
         if (csContain != null) {
-            val csContain = csContain!!.uppercase(Locale.getDefault())
+            val csContain = csContain!!.toString()
             resultFilter = resultFilter.and { clone: Clone ->
                 (0 until clone.numberOfTargets())
                     .map { i -> clone.getTarget(i).sequence }
@@ -160,6 +159,7 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
         var total: Long = 0
         var filtered: Long = 0
         val cloneSet = CloneSetIO.read(input)
+        ValidationException.chainsExist(chains, cloneSet.usedGenes)
         (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it.toFile()), 32768)) }
             ?: System.out).use { output ->
             val countBefore = limitBefore ?: Int.MAX_VALUE

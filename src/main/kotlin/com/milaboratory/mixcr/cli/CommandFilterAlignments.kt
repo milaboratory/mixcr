@@ -138,6 +138,8 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
 
     override fun run1() {
         inputReader.use { reader ->
+            ValidationException.chainsExist(chains, reader.usedGenes)
+
             outputWriter.use { writer ->
                 val sReads = when {
                     limit != 0L -> reader.limit(limit)
