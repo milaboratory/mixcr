@@ -38,7 +38,8 @@ abstract class CommandPaExport : MiXCRCommand() {
         names = ["--chains"],
         paramLabel = Labels.CHAIN,
         order = OptionsOrder.main + 5_000,
-        completionCandidates = ChainsCandidates::class
+        completionCandidates = ChainsCandidates::class,
+        split = ","
     )
     var chains: Set<String>? = null
 
