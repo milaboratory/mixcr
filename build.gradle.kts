@@ -6,7 +6,19 @@ import de.undercouch.gradle.tasks.download.Download
 import groovy.lang.Closure
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
+import proguard.gradle.ProGuardTask
 import java.net.InetAddress
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.guardsquare:proguard-gradle:7.2.1") {
+            exclude("com.android.tools.build", "gradle")
+        }
+    }
+}
 
 gradle.startParameter.excludedTaskNames += listOf(
     "assembleDist",
@@ -70,6 +82,12 @@ tasks.withType<JavaExec> {
     }
 }
 
+tasks.jar {
+    manifest {
+        attributes("Main-Class" to "com.milaboratory.mixcr.cli.Main")
+    }
+}
+
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
@@ -103,15 +121,30 @@ repositories {
     }
 }
 
+val toObfuscate by configurations.creating
+val proguardDependencies by configurations.creating
+
 val mixcrAlgoVersion = "4.2.0-45-develop"
 val milibVersion = "2.3.0-19-alleles"
 val jacksonBomVersion = "2.14.1"
+val milmVersion = "2.7.0"
+
+// TODO try use mixcrAlgoVersion as platform for toObfuscate
+val migexVersion = "0.0.1-33-main"
+val mitoolVersion = "1.6.0-33-dummy_preset"
+val repseqioVersion = "1.7.0-10-alleles_model"
 
 dependencies {
     api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
+    implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
-    // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
-    implementation("com.milaboratory:milm2-jvm:2.7.0")
+    toObfuscate("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:milib:$milibVersion") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:mitool:$mitoolVersion") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:migex:$migexVersion") { exclude("*", "*") }
+    toObfuscate("io.repseq:repseqio:$repseqioVersion") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:milm2-jvm:$milmVersion") { exclude("*", "*") }
+    proguardDependencies("org.projectlombok:lombok:1.18.26")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -121,12 +154,21 @@ dependencies {
     implementation("com.github.victools:jsonschema-generator:4.27.0")
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
 
+    runtimeOnly("org.apache.logging.log4j:log4j-core:2.20.0")
+
     testImplementation("junit:junit:4.13.2")
-    implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
+    testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 
     testImplementation("org.lz4:lz4-java:1.8.0")
+}
+
+val obfuscateRuntime by configurations.creating {
+    isVisible = false
+    (configurations.runtimeClasspath.get().resolve() - toObfuscate.resolve()).forEach { input ->
+        dependencies.add(project.dependencies.create(files(input)))
+    }
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
@@ -164,7 +206,47 @@ tasks.processResources {
     dependsOn(generatePresetFileList)
 }
 
+val obfuscate by tasks.registering(ProGuardTask::class) {
+    group = "build"
+
+    configuration("mixcr.pro")
+
+    dependsOn(tasks.jar)
+
+    injars(tasks.jar)
+    injars(toObfuscate)
+    libraryjars(obfuscateRuntime)
+    libraryjars(proguardDependencies)
+
+    outjars(buildDir.resolve("libs/mixcr-obfuscated.jar"))
+
+    printconfiguration(buildDir.resolve("proguard.config.pro"))
+    dump(buildDir.resolve("proguard.dump"))
+    printmapping(buildDir.resolve("proguard-mapping.txt"))
+
+    if (org.gradle.internal.jvm.Jvm.current().jre == null)
+        listOf("java.base.jmod", "java.prefs.jmod", "java.scripting.jmod").map {
+            libraryjars(
+                hashMapOf("jarfilter" to "!**.jar", "filter" to "!module-info.class"),
+                org.gradle.internal.jvm.Jvm.current().javaHome.resolve("jmods/${it}").absolutePath
+            )
+        }
+    else
+        listOf("rt.jar", "jce.jar", "jsse.jar").map {
+            libraryjars(org.gradle.internal.jvm.Jvm.current().jre!!.resolve("lib/${it}"))
+        }
+}
+
+val shadowJarDependencies by configurations.creating {
+    isVisible = false
+    (obfuscate.get().outJarFiles + obfuscateRuntime.resolve()).forEach { toAdd ->
+        dependencies.add(project.dependencies.create(files(toAdd)))
+    }
+}
+
 val shadowJar = tasks.withType<ShadowJar> {
+    dependsOn(obfuscate)
+    configurations = listOf(shadowJarDependencies)
 //    minimize {
 //        exclude(dependency("io.repseq:repseqio"))
 //        exclude(dependency("com.milaboratory:milib"))
