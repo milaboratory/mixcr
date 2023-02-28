@@ -18,19 +18,24 @@
     overrides:
       parameters:
         postFilter:
-          type: "filter_groups"
+          type: filter_groups
           groupingKeys:
-            - "UMI"
+            - UMI
           predicates:
             - metrics:
                 - type: "group_metric_sum_weight"
                   reportHist:
                     log: true
-                    binNumber: 0 # don't limit number of bins, use only minBinWidth
-                    minBinWidth: 0.2 # in respect to log10 of the value
+                    binNumber: 0
+                    minBinWidth: 0.2
               operator:
-                type: "group_operator_otsu1"
+                type: group_operator_advanced_thresholding
+                algo:
+                  type: otsu
+                histTransformers:
+                  # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                  - type: inflate
+                    fraction: 0.15
                 logX: true
-                # Fallback behaviour for low total number of UMIs: accept all UMIs if there are 29 or fewer UMIs
-                minimalSample: 30
+                minimalSample: 20
                 fallbackThreshold: 1.0
