@@ -127,7 +127,7 @@ val toObfuscate: Configuration by configurations.creating {
     shouldResolveConsistentlyWith(configurations.runtimeClasspath.get())
 }
 
-val mixcrAlgoVersion = "4.2.0-45-develop"
+val mixcrAlgoVersion = "4.2.0-51-proguard"
 val milibVersionForTestFixtures = "2.3.0-19-alleles"
 val jacksonBomVersion = "2.14.1"
 val milmVersion = "2.7.0"
