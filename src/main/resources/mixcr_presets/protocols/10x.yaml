@@ -42,13 +42,19 @@
               - allTags:Molecule
             predicates:
               - metrics:
-                  - type: group_metric_sum_weight
+                  - type: "group_metric_sum_weight"
                     reportHist:
                       log: true
                       binNumber: 0
                       minBinWidth: 0.2
                 operator:
-                  type: group_operator_otsu1
+                  type: group_operator_advanced_thresholding
+                  algo:
+                    type: otsu
+                  histTransformers:
+                    # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                    - type: inflate
+                      fraction: 0.15
                   logX: true
                   minimalSample: 20
                   fallbackThreshold: 1.0
@@ -57,18 +63,22 @@
               - allTags:Cell
             predicates:
               - metrics:
-                  - type: group_metric_nunique
+                  - type: "group_metric_nunique"
                     reportHist:
                       log: true
                       binNumber: 0
                       minBinWidth: 0.2
-                    keys:
-                      - allTags:Molecule
                 operator:
-                  type: group_operator_otsu1
+                  type: group_operator_advanced_thresholding
+                  algo:
+                    type: otsu
+                  histTransformers:
+                    # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                    - type: inflate
+                      fraction: 0.15
                   logX: true
                   minimalSample: 20
-                  fallbackThreshold: 2.0
+                  fallbackThreshold: 1.0
   assemblePartial:
     inheritFrom: assemblePartial-universal
   assemble:
@@ -159,13 +169,19 @@
               - allTags:Molecule
             predicates:
               - metrics:
-                  - type: group_metric_sum_weight
+                  - type: "group_metric_sum_weight"
                     reportHist:
                       log: true
                       binNumber: 0
                       minBinWidth: 0.2
                 operator:
-                  type: group_operator_otsu1
+                  type: group_operator_advanced_thresholding
+                  algo:
+                    type: otsu
+                  histTransformers:
+                    # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                    - type: inflate
+                      fraction: 0.15
                   logX: true
                   minimalSample: 20
                   fallbackThreshold: 1.0
