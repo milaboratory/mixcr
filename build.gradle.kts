@@ -236,7 +236,6 @@ val obfuscate by tasks.registering(ProGuardTask::class) {
     outjars(buildDir.resolve("libs/mixcr-obfuscated.jar"))
 
     printconfiguration(buildDir.resolve("proguard.config.pro"))
-    dump(buildDir.resolve("proguard.dump"))
     printmapping(buildDir.resolve("proguard-mapping.txt"))
 
     if (org.gradle.internal.jvm.Jvm.current().jre == null)

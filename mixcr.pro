@@ -1,6 +1,8 @@
+-optimizationpasses 5
+
 -dontwarn lombok.**
 
--forceprocessing
+#-forceprocessing
 #-addconfigurationdebugging
 
 -keep enum * { *; }
@@ -60,11 +62,11 @@
 #-keepattributes RuntimeVisibleTypeAnnotations
 #-keepattributes RuntimeInvisibleTypeAnnotations
 
-#TODO try remove (will be saved by -keep of target class)
 #for working reflection
 -keep class kotlin.Metadata
 
-#-flattenpackagehierarchy
+-repackageclasses com.milaboratory.o
+-allowaccessmodification
 
 -verbose
 -dontnote com.milaboratory.primitivio.SerializersManager
