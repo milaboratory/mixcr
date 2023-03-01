@@ -68,6 +68,8 @@
                       log: true
                       binNumber: 0
                       minBinWidth: 0.2
+                    keys:
+                      - allTags:Molecule
                 operator:
                   type: group_operator_advanced_thresholding
                   algo:
