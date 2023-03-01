@@ -122,29 +122,27 @@ repositories {
     }
 }
 
-val toObfuscate by configurations.creating
+val toObfuscate: Configuration by configurations.creating {
+    @Suppress("UnstableApiUsage")
+    shouldResolveConsistentlyWith(configurations.runtimeClasspath.get())
+}
 
 val mixcrAlgoVersion = "4.2.0-45-develop"
-val milibVersion = "2.3.0-19-alleles"
+val milibVersionForTestFixtures = "2.3.0-19-alleles"
 val jacksonBomVersion = "2.14.1"
 val milmVersion = "2.7.0"
-
-// TODO try use mixcrAlgoVersion as platform for toObfuscate
-val migexVersion = "0.0.1-33-main"
-val mitoolVersion = "1.6.0-33-dummy_preset"
-val repseqioVersion = "1.7.0-10-alleles_model"
 
 dependencies {
     api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
     platform("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
     implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
-    toObfuscate("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") { exclude("*", "*") }
-    toObfuscate("com.milaboratory:milib:$milibVersion") { exclude("*", "*") }
-    toObfuscate("com.milaboratory:mitool:$mitoolVersion") { exclude("*", "*") }
-    toObfuscate("com.milaboratory:migex:$migexVersion") { exclude("*", "*") }
-    toObfuscate("io.repseq:repseqio:$repseqioVersion") { exclude("*", "*") }
-    toObfuscate("com.milaboratory:milm2-jvm:$milmVersion") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:milib") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:mitool") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:migex") { exclude("*", "*") }
+    toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -157,7 +155,7 @@ dependencies {
     runtimeOnly("org.apache.logging.log4j:log4j-core:2.20.0")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
+    testImplementation(testFixtures("com.milaboratory:milib:$milibVersionForTestFixtures"))
     testImplementation("org.mockito:mockito-all:1.10.19")
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 
@@ -167,24 +165,22 @@ dependencies {
 }
 
 val obfuscateRuntime: Configuration by configurations.creating {
+    fun ResolvedModuleVersion.asMap() = mapOf(
+        "group" to id.group,
+        "name" to id.name,
+        "version" to id.version
+    )
+
     defaultDependencies {
         val toExclude = toObfuscate.resolvedConfiguration.resolvedArtifacts
-            .map {
-                it.moduleVersion.id.group to it.moduleVersion.id.name
-            }
+            .map { it.moduleVersion.id.group to it.moduleVersion.id.name }
             .toSet()
 
         configurations.runtimeClasspath.get().resolvedConfiguration.resolvedArtifacts
-            .filter { (it.moduleVersion.id.group to it.moduleVersion.id.name) !in toExclude }
+            .filterNot { (it.moduleVersion.id.group to it.moduleVersion.id.name) in toExclude }
             .forEach {
                 add(
-                    project.dependencies.create(
-                        mapOf(
-                            "group" to it.moduleVersion.id.group,
-                            "name" to it.moduleVersion.id.name,
-                            "version" to it.moduleVersion.id.version
-                        )
-                    )
+                    project.dependencies.create(it.moduleVersion.asMap())
                 )
             }
     }
