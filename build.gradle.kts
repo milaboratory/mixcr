@@ -1,5 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.SHADOW_GROUP
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import de.undercouch.gradle.tasks.download.Download
@@ -122,7 +123,6 @@ repositories {
 }
 
 val toObfuscate by configurations.creating
-val proguardDependencies by configurations.creating
 
 val mixcrAlgoVersion = "4.2.0-45-develop"
 val milibVersion = "2.3.0-19-alleles"
@@ -136,6 +136,7 @@ val repseqioVersion = "1.7.0-10-alleles_model"
 
 dependencies {
     api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
+    platform("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
     implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
     toObfuscate("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") { exclude("*", "*") }
@@ -144,7 +145,6 @@ dependencies {
     toObfuscate("com.milaboratory:migex:$migexVersion") { exclude("*", "*") }
     toObfuscate("io.repseq:repseqio:$repseqioVersion") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm:$milmVersion") { exclude("*", "*") }
-    proguardDependencies("org.projectlombok:lombok:1.18.26")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -161,13 +161,32 @@ dependencies {
     testImplementation("org.mockito:mockito-all:1.10.19")
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 
+    testImplementation("org.reflections:reflections:0.10.2")
+
     testImplementation("org.lz4:lz4-java:1.8.0")
 }
 
-val obfuscateRuntime by configurations.creating {
-    isVisible = false
-    (configurations.runtimeClasspath.get().resolve() - toObfuscate.resolve()).forEach { input ->
-        dependencies.add(project.dependencies.create(files(input)))
+val obfuscateRuntime: Configuration by configurations.creating {
+    defaultDependencies {
+        val toExclude = toObfuscate.resolvedConfiguration.resolvedArtifacts
+            .map {
+                it.moduleVersion.id.group to it.moduleVersion.id.name
+            }
+            .toSet()
+
+        configurations.runtimeClasspath.get().resolvedConfiguration.resolvedArtifacts
+            .filter { (it.moduleVersion.id.group to it.moduleVersion.id.name) !in toExclude }
+            .forEach {
+                add(
+                    project.dependencies.create(
+                        mapOf(
+                            "group" to it.moduleVersion.id.group,
+                            "name" to it.moduleVersion.id.name,
+                            "version" to it.moduleVersion.id.version
+                        )
+                    )
+                )
+            }
     }
 }
 
@@ -212,11 +231,11 @@ val obfuscate by tasks.registering(ProGuardTask::class) {
     configuration("mixcr.pro")
 
     dependsOn(tasks.jar)
+    dependsOn(obfuscateRuntime.buildDependencies)
 
     injars(tasks.jar)
     injars(toObfuscate)
     libraryjars(obfuscateRuntime)
-    libraryjars(proguardDependencies)
 
     outjars(buildDir.resolve("libs/mixcr-obfuscated.jar"))
 
@@ -237,36 +256,23 @@ val obfuscate by tasks.registering(ProGuardTask::class) {
         }
 }
 
-val shadowJarDependencies by configurations.creating {
-    isVisible = false
-    (obfuscate.get().outJarFiles + obfuscateRuntime.resolve()).forEach { toAdd ->
-        dependencies.add(project.dependencies.create(files(toAdd)))
-    }
-}
-
-val shadowJar = tasks.withType<ShadowJar> {
+val shadowJarAfterObfuscation by tasks.creating(ShadowJar::class) {
+    group = SHADOW_GROUP
+    description = "Create a combined JAR of obfuscated project and runtime dependencies"
+    manifest.inheritFrom(tasks.jar.get().manifest)
     dependsOn(obfuscate)
-    configurations = listOf(shadowJarDependencies)
-//    minimize {
-//        exclude(dependency("io.repseq:repseqio"))
-//        exclude(dependency("com.milaboratory:milib"))
-//        exclude(dependency("org.lz4:lz4-java"))
-//        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
-//
-//        exclude(dependency("log4j:log4j"))
-//        exclude(dependency("org.slf4j:slf4j-api"))
-//        exclude(dependency("commons-logging:commons-logging"))
-//        exclude(dependency("ch.qos.logback:logback-core"))
-//        exclude(dependency("ch.qos.logback:logback-classic"))
-//        exclude(dependency("org.jetbrains.kotlin:.*"))
-//    }
+    from(obfuscate.get().outJarFiles)
+    archiveClassifier.set("all")
+    // copy from com/github/jengelman/gradle/plugins/shadow/ShadowJavaPlugin.groovy:86
+    exclude("META-INF/INDEX.LIST", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
+    configurations = listOf(obfuscateRuntime)
 }
 
 val distributionZip by tasks.registering(Zip::class) {
     group = "distribution"
     archiveFileName.set("${project.name}.zip")
     destinationDirectory.set(file("$buildDir/distributions"))
-    from(shadowJar) {
+    from(shadowJarAfterObfuscation) {
         rename("-.*\\.jar", "\\.jar")
     }
     from("${project.rootDir}/${project.name}")
@@ -275,7 +281,7 @@ val distributionZip by tasks.registering(Zip::class) {
 
 val prepareDockerContext by tasks.registering(Copy::class) {
     group = "docker"
-    from(shadowJar) {
+    from(shadowJarAfterObfuscation) {
         rename("-.*\\.jar", "\\.jar")
     }
     from("${project.rootDir}/${project.name}")

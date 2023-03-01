@@ -14,8 +14,6 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.matches
-import com.milaboratory.mixcr.StepDataCollection
-import com.milaboratory.mixcr.allReports
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
@@ -25,6 +23,8 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.ReportFieldsExtractors
 import com.milaboratory.mixcr.export.ReportFieldsExtractors.ReportsWithSource
 import com.milaboratory.mixcr.export.RowMetaForExport
+import com.milaboratory.mixcr.presets.StepDataCollection
+import com.milaboratory.mixcr.presets.allReports
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec

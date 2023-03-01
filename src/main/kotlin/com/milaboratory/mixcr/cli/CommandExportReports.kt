@@ -13,8 +13,8 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.ReportHelper

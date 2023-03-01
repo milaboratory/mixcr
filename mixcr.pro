@@ -1,20 +1,37 @@
+-dontwarn lombok.**
+
+-forceprocessing
 #-addconfigurationdebugging
 
-#-keep class com.milaboratory.**, io.repseq.** { *; }
+-keep enum * { *; }
+
+-keep class com.milaboratory.mitool.cli.** { *; }
+-keep class com.milaboratory.mitool.refinement.gfilter.** { *; }
+
 -keep class com.milaboratory.mixcr.cli.** { *; }
--keep class **.*Version* { *; }
--keep class com.milaboratory.milm.MiXCRMain { *; }
-#TODO it should be obfuscated
-#-keep class com.milaboratory.milm.LM { *; }
+-keep class com.milaboratory.mixcr.presets.** { *; }
+-keep class com.milaboratory.mixcr.postanalysis.ui.** { *; }
+-keep class com.milaboratory.milm.metric.** { *; }
+-keep class com.milaboratory.**.*Parameters* { *; }
+-keep class com.milaboratory.**.*Report { *; }
+-keep class com.milaboratory.**.*Report$* { *; }
 
--keep @com.fasterxml.jackson.annotation.* class **.* { *; }
+-keep class io.repseq.gen.dist.*Model { *; }
 
-#-keepclassmembers class * {
-#  @com.fasterxml.jackson.annotation.JsonProperty *;
-#}
-#-keepclassmembers class * {
-#  @com.fasterxml.jackson.annotation.JsonCreator *;
-#}
+-keep @com.milaboratory.util.DoNotObfuscate class *
+-keep @com.milaboratory.util.DoNotObfuscateFull class * { *; }
+
+#seiralization of primitivio
+-keep class * extends com.milaboratory.primitivio.Serializer
+-keep class * extends com.milaboratory.primitivio.ObjectMapperProvider
+
+#usage of jackson
+-keep class * extends com.fasterxml.jackson.**
+
+-keep @com.fasterxml.jackson.** class * { *; }
+
+# for some reason it's not working
+#-keep class * extends @com.fasterxml.jackson.** * { *; }
 
 
 #for TypeReference of jackson

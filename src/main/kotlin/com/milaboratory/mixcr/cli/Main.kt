@@ -22,7 +22,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.mitool.pattern.SequenceSetCollection
-import com.milaboratory.mixcr.Presets
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter
@@ -41,6 +40,7 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign
 import com.milaboratory.mixcr.cli.qc.CommandExportQcChainUsage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
+import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager

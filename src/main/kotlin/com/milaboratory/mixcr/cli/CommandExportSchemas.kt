@@ -17,8 +17,6 @@ import com.github.victools.jsonschema.generator.SchemaGenerator
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder
 import com.github.victools.jsonschema.generator.SchemaVersion
 import com.github.victools.jsonschema.module.jackson.JacksonModule
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRMixin
 import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
 import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
@@ -30,6 +28,8 @@ import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParamet
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRMixin
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.CommandFindShmTreesParams
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport

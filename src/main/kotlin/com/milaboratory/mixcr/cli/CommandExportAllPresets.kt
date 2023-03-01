@@ -13,9 +13,9 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.ParamsResolver
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.presets.MiXCRParamsSpec
+import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.util.K_YAML_OM
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters

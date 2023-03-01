@@ -11,10 +11,10 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.AlignMixins
-import com.milaboratory.mixcr.Flags
-import com.milaboratory.mixcr.Presets
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.Flags
+import com.milaboratory.mixcr.presets.Presets
 import picocli.CommandLine
 import picocli.CommandLine.Command
 

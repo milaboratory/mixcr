@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -18,13 +18,13 @@ import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mitool.data.CriticalThresholdCollection;
-import com.milaboratory.mixcr.MiXCRParamsSpec;
-import com.milaboratory.mixcr.MiXCRStepParams;
-import com.milaboratory.mixcr.MiXCRStepReports;
-import com.milaboratory.mixcr.Presets;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
+import com.milaboratory.mixcr.presets.MiXCRParamsSpec;
+import com.milaboratory.mixcr.presets.MiXCRStepParams;
+import com.milaboratory.mixcr.presets.MiXCRStepReports;
+import com.milaboratory.mixcr.presets.Presets;
 import io.repseq.core.GeneType;
 
 import static com.milaboratory.core.alignment.AlignmentTestUtils.assertAlignment;

@@ -14,13 +14,13 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
-import com.milaboratory.mixcr.AlignMixins
-import com.milaboratory.mixcr.Flags
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRMixin
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.Presets
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.Flags
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRMixin
+import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.presets.Presets
 import kotlin.reflect.KProperty1
 
 abstract class MiXCRParamsResolver<P : Any>(
