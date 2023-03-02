@@ -35,4 +35,6 @@ for filename in $FILES; do
   mixcr postanalysis individual --default-downsampling none --default-weight-function none "regression/${id}.clns" "${id}_pa.json"
 
   mixcr exportReports "regression/${id}.clns" "${id}_report.txt"
+
+  assert "cat ${id}_report.txt | grep 'file has too old version' | wc -l" "0"
 done
