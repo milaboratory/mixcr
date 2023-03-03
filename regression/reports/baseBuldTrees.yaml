@@ -240,17 +240,6 @@ upstreams:
       - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz
       outputFiles:
       - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
-      trimmingReport:
-        type: readTrimmerReport
-        total: 49700
-        r1LeftTrimmedEvents: 0
-        r1RightTrimmedEvents: 0
-        r2LeftTrimmedEvents: 16
-        r2RightTrimmedEvents: 19
-        r1LeftTrimmedNucleotides: 0
-        r1RightTrimmedNucleotides: 0
-        r2LeftTrimmedNucleotides: 831
-        r2RightTrimmedNucleotides: 2744
       totalReadsProcessed: 49700
       aligned: 49560
       notAligned: 140
@@ -263,14 +252,19 @@ upstreams:
         LowTotalScore: 0
         NoBarcode: 84
         SampleNotMatched: 0
-      chimeras: 0
       overlapped: 47614
-      alignmentAidedOverlaps: 320
       overlappedAligned: 47575
       overlappedNotAligned: 39
-      pairedEndAlignmentConflicts: 1270
+      alignmentAidedOverlaps: 320
+      noCDR3PartsAlignments: 3
+      partialAlignments: 217
+      chimeras: 0
       vChimeras: 50
       jChimeras: 0
+      pairedEndAlignmentConflicts: 1270
+      realignedWithForcedNonFloatingBound: 4644
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1584
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1584
       chainUsage:
         type: chainUsage
         chimeras: 0
@@ -281,11 +275,17 @@ upstreams:
             nonFunctional: 1062
             isOOF: 732
             hasStops: 330
-      realignedWithForcedNonFloatingBound: 4644
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 1584
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 1584
-      noCDR3PartsAlignments: 3
-      partialAlignments: 217
+      trimmingReport:
+        type: readTrimmerReport
+        total: 49700
+        r1LeftTrimmedEvents: 0
+        r1RightTrimmedEvents: 0
+        r2LeftTrimmedEvents: 16
+        r2RightTrimmedEvents: 19
+        r1LeftTrimmedNucleotides: 0
+        r1RightTrimmedNucleotides: 0
+        r2LeftTrimmedNucleotides: 831
+        r2RightTrimmedNucleotides: 2744
       tagParsingReport:
         total: 49700
         matched: 49616
@@ -908,6 +908,7 @@ upstreams:
                 "15": 10
                 "17": 7
                 "19": 12
+      sampleStat: null
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
@@ -921,25 +922,25 @@ upstreams:
         inputGroups: 2913
         groupsWithNoAssemblingFeature: 77
         inputAlignments: 47195
-        inputAssemblingFeatureSequences: 44960
-        clonotypes: 2807
-        assemblingFeatureSequencesInZeroPreClones: 83
-        clonotypesPerGroup:
+        inputAlignmentsWithAssemblingFeature: 44960
+        corePreClonesDroppedByTagSuffix: 0
+        coreAlignmentsDroppedByTagSuffix: 0
+        preClones: 2807
+        preClonesPerGroup:
           "0": 29
           "1": 2807
+        assemblingFeatureSequencesInZeroPreClones: 83
         coreAlignments: 44851
+        tagConflicts: 0
+        geneAndTagConflicts: 0
+        geneConflicts: {}
         discardedCoreAlignments: 109
         empiricallyAssignedAlignments: 1209
         vjEmpiricallyAssignedAlignments: 0
-        umiEmpiricallyAssignedAlignments: 0
-        gatEmpiricallyAssignedAlignments: 1209
+        tagEmpiricallyAssignedAlignments: 0
+        geneAndTagEmpiricallyAssignedAlignments: 1209
         empiricalAssignmentConflicts: 0
         unassignedAlignments: 227
-        umiConflicts: 0
-        gatConflicts: 0
-        geneConflicts: {}
-        coreClonotypesDroppedByTagSuffix: 0
-        coreAlignmentsDroppedByTagSuffix: 0
       totalReadsProcessed: 49700
       initialClonesCreated: 1279
       readsDroppedNoTargetSequence: 2235
@@ -1248,17 +1249,6 @@ upstreams:
       - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz
       outputFiles:
       - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
-      trimmingReport:
-        type: readTrimmerReport
-        total: 29871
-        r1LeftTrimmedEvents: 0
-        r1RightTrimmedEvents: 0
-        r2LeftTrimmedEvents: 12
-        r2RightTrimmedEvents: 12
-        r1LeftTrimmedNucleotides: 0
-        r1RightTrimmedNucleotides: 0
-        r2LeftTrimmedNucleotides: 414
-        r2RightTrimmedNucleotides: 1858
       totalReadsProcessed: 29871
       aligned: 29499
       notAligned: 372
@@ -1271,14 +1261,19 @@ upstreams:
         LowTotalScore: 0
         NoBarcode: 42
         SampleNotMatched: 0
-      chimeras: 0
       overlapped: 27888
-      alignmentAidedOverlaps: 241
       overlappedAligned: 27576
       overlappedNotAligned: 312
-      pairedEndAlignmentConflicts: 1307
+      alignmentAidedOverlaps: 241
+      noCDR3PartsAlignments: 0
+      partialAlignments: 72
+      chimeras: 0
       vChimeras: 66
       jChimeras: 1
+      pairedEndAlignmentConflicts: 1307
+      realignedWithForcedNonFloatingBound: 4364
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1358
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1358
       chainUsage:
         type: chainUsage
         chimeras: 0
@@ -1289,11 +1284,17 @@ upstreams:
             nonFunctional: 591
             isOOF: 369
             hasStops: 222
-      realignedWithForcedNonFloatingBound: 4364
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 1358
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 1358
-      noCDR3PartsAlignments: 0
-      partialAlignments: 72
+      trimmingReport:
+        type: readTrimmerReport
+        total: 29871
+        r1LeftTrimmedEvents: 0
+        r1RightTrimmedEvents: 0
+        r2LeftTrimmedEvents: 12
+        r2RightTrimmedEvents: 12
+        r1LeftTrimmedNucleotides: 0
+        r1RightTrimmedNucleotides: 0
+        r2LeftTrimmedNucleotides: 414
+        r2RightTrimmedNucleotides: 1858
       tagParsingReport:
         total: 29871
         matched: 29829
@@ -1934,6 +1935,7 @@ upstreams:
                 "15": 5
                 "17": 11
                 "19": 4
+      sampleStat: null
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
@@ -1947,25 +1949,25 @@ upstreams:
         inputGroups: 77
         groupsWithNoAssemblingFeature: 8
         inputAlignments: 29031
-        inputAssemblingFeatureSequences: 26513
-        clonotypes: 68
-        assemblingFeatureSequencesInZeroPreClones: 15
-        clonotypesPerGroup:
+        inputAlignmentsWithAssemblingFeature: 26513
+        corePreClonesDroppedByTagSuffix: 0
+        coreAlignmentsDroppedByTagSuffix: 0
+        preClones: 68
+        preClonesPerGroup:
           "0": 1
           "1": 68
+        assemblingFeatureSequencesInZeroPreClones: 15
         coreAlignments: 26479
+        tagConflicts: 0
+        geneAndTagConflicts: 0
+        geneConflicts: {}
         discardedCoreAlignments: 34
         empiricallyAssignedAlignments: 1204
         vjEmpiricallyAssignedAlignments: 0
-        umiEmpiricallyAssignedAlignments: 0
-        gatEmpiricallyAssignedAlignments: 1204
+        tagEmpiricallyAssignedAlignments: 0
+        geneAndTagEmpiricallyAssignedAlignments: 1204
         empiricalAssignmentConflicts: 0
         unassignedAlignments: 272
-        umiConflicts: 0
-        gatConflicts: 0
-        geneConflicts: {}
-        coreClonotypesDroppedByTagSuffix: 0
-        coreAlignmentsDroppedByTagSuffix: 0
       totalReadsProcessed: 29871
       initialClonesCreated: 46
       readsDroppedNoTargetSequence: 2518

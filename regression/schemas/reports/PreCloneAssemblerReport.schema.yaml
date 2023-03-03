@@ -4,15 +4,11 @@ allOf:
   properties:
     assemblingFeatureSequencesInZeroPreClones:
       type: integer
-    clonotypes:
-      type: integer
-    clonotypesPerGroup:
-      type: object
     coreAlignments:
       type: integer
     coreAlignmentsDroppedByTagSuffix:
       type: integer
-    coreClonotypesDroppedByTagSuffix:
+    corePreClonesDroppedByTagSuffix:
       type: integer
     discardedCoreAlignments:
       type: integer
@@ -20,9 +16,9 @@ allOf:
       type: integer
     empiricallyAssignedAlignments:
       type: integer
-    gatConflicts:
+    geneAndTagConflicts:
       type: integer
-    gatEmpiricallyAssignedAlignments:
+    geneAndTagEmpiricallyAssignedAlignments:
       type: integer
     geneConflicts:
       type: object
@@ -30,13 +26,17 @@ allOf:
       type: integer
     inputAlignments:
       type: integer
-    inputAssemblingFeatureSequences:
+    inputAlignmentsWithAssemblingFeature:
       type: integer
     inputGroups:
       type: integer
-    umiConflicts:
+    preClones:
       type: integer
-    umiEmpiricallyAssignedAlignments:
+    preClonesPerGroup:
+      type: object
+    tagConflicts:
+      type: integer
+    tagEmpiricallyAssignedAlignments:
       type: integer
     unassignedAlignments:
       type: integer

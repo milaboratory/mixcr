@@ -1,15 +1,16 @@
 Usage: mixcr exportPlots cdr3metrics [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
-                                     (|>|>=|=|<=|<)value>...]]... [--chains <chain>]... [--metric
-                                     <metric>[,<metric>...]]... [--plot-type <plotType>]
-                                     [--primary-group <meta>] [--primary-group-values <value>[,
-                                     <value>...]]... [--secondary-group <meta>]
-                                     [--secondary-group-values <value>[,<value>...]]... [--facet-by
-                                     <meta>] [--hide-overall-p-value] [--pairwise-comparisons]
-                                     [--ref-group <refGroup>] [--hide-non-significant] [--paired]
-                                     [--method <method>] [--method-multiple-groups <method>]
-                                     [--p-adjust-method <method>] [--show-significance] [--width
-                                     <n>] [--height <n>] [--no-warnings] [--verbose] [--help] pa.
-                                     json[.gz] output.(pdf|eps|svg|png|jpeg)
+                                     (|>|>=|=|<=|<)value>...]]... [--chains <chain>[,
+                                     <chain>...]]... [--metric <metric>[,<metric>...]]...
+                                     [--plot-type <plotType>] [--primary-group <meta>]
+                                     [--primary-group-values <value>[,<value>...]]...
+                                     [--secondary-group <meta>] [--secondary-group-values <value>[,
+                                     <value>...]]... [--facet-by <meta>] [--hide-overall-p-value]
+                                     [--pairwise-comparisons] [--ref-group <refGroup>]
+                                     [--hide-non-significant] [--paired] [--method <method>]
+                                     [--method-multiple-groups <method>] [--p-adjust-method
+                                     <method>] [--show-significance] [--width <n>] [--height <n>]
+                                     [--no-warnings] [--verbose] [--help] pa.json[.gz] output.
+                                     (pdf|eps|svg|png|jpeg)
 Export CDR3 metrics
       pa.json[.gz]          Input file with postanalysis results.
       output.(pdf|eps|svg|png|jpeg)
@@ -19,7 +20,8 @@ Export CDR3 metrics
       --filter <meta(|>|>=|=|<=|<)value>[,<meta(|>|>=|=|<=|<)value>...]
                             Filter samples to put on a plot by their metadata values. Filter allows
                               equality (`species=cat`) or arithmetic comparison (`age>=10`) etc.
-      --chains <chain>      Export only for specified immunological chains.
+      --chains <chain>[,<chain>...]
+                            Export only for specified immunological chains.
       --metric <metric>[,<metric>...]
                             Output only specified list of metrics.
                             Possible values are: cdr3lenAA, cdr3lenNT, ndnLenNT, addedNNT,

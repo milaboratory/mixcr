@@ -8,7 +8,6 @@ align:
   - single_cell_vdj_t_subset_R2.fastq.gz
   outputFiles:
   - ./baseSingleCell.raw.vdjca
-  trimmingReport: null
   totalReadsProcessed: 46879
   aligned: 40756
   notAligned: 6123
@@ -21,14 +20,19 @@ align:
     LowTotalScore: 0
     NoBarcode: 0
     SampleNotMatched: 0
-  chimeras: 0
   overlapped: 0
-  alignmentAidedOverlaps: 0
   overlappedAligned: 0
   overlappedNotAligned: 0
-  pairedEndAlignmentConflicts: 0
+  alignmentAidedOverlaps: 0
+  noCDR3PartsAlignments: 17758
+  partialAlignments: 22307
+  chimeras: 0
   vChimeras: 0
   jChimeras: 0
+  pairedEndAlignmentConflicts: 0
+  realignedWithForcedNonFloatingBound: 0
+  realignedWithForcedNonFloatingRightBoundInLeftRead: 0
+  realignedWithForcedNonFloatingLeftBoundInRightRead: 0
   chainUsage:
     type: chainUsage
     chimeras: 0
@@ -54,11 +58,7 @@ align:
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
-  realignedWithForcedNonFloatingBound: 0
-  realignedWithForcedNonFloatingRightBoundInLeftRead: 0
-  realignedWithForcedNonFloatingLeftBoundInRightRead: 0
-  noCDR3PartsAlignments: 17758
-  partialAlignments: 22307
+  trimmingReport: null
   tagParsingReport:
     total: 46879
     matched: 46879
@@ -102,6 +102,7 @@ align:
                 "0": 46879
           costDistributions:
             "0": 46879
+  sampleStat: null
 assemble:
   type: assemblerReport
   commandLine: assemble --report ./baseSingleCell.raw.assemble.report.txt --json-report
@@ -116,27 +117,27 @@ assemble:
     inputGroups: 60
     groupsWithNoAssemblingFeature: 1
     inputAlignments: 26902
-    inputAssemblingFeatureSequences: 822
-    clonotypes: 59
-    assemblingFeatureSequencesInZeroPreClones: 3
-    clonotypesPerGroup:
+    inputAlignmentsWithAssemblingFeature: 822
+    corePreClonesDroppedByTagSuffix: 0
+    coreAlignmentsDroppedByTagSuffix: 0
+    preClones: 59
+    preClonesPerGroup:
       "0": 1
       "1": 57
       "2": 1
+    assemblingFeatureSequencesInZeroPreClones: 3
     coreAlignments: 761
+    tagConflicts: 1
+    geneAndTagConflicts: 2
+    geneConflicts:
+      Variable: 2
     discardedCoreAlignments: 61
     empiricallyAssignedAlignments: 13503
     vjEmpiricallyAssignedAlignments: 0
-    umiEmpiricallyAssignedAlignments: 0
-    gatEmpiricallyAssignedAlignments: 13503
+    tagEmpiricallyAssignedAlignments: 0
+    geneAndTagEmpiricallyAssignedAlignments: 13503
     empiricalAssignmentConflicts: 0
     unassignedAlignments: 12583
-    umiConflicts: 1
-    gatConflicts: 2
-    geneConflicts:
-      Variable: 2
-    coreClonotypesDroppedByTagSuffix: 0
-    coreAlignmentsDroppedByTagSuffix: 0
   totalReadsProcessed: 46687
   initialClonesCreated: 7
   readsDroppedNoTargetSequence: 26080

@@ -1,6 +1,6 @@
 Usage: mixcr exportPlots diversity [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
-                                   (|>|>=|=|<=|<)value>...]]... [--chains <chain>]... [--metric
-                                   <metric>[,<metric>...]]... [--plot-type <plotType>]
+                                   (|>|>=|=|<=|<)value>...]]... [--chains <chain>[,<chain>...]]...
+                                   [--metric <metric>[,<metric>...]]... [--plot-type <plotType>]
                                    [--primary-group <meta>] [--primary-group-values <value>[,
                                    <value>...]]... [--secondary-group <meta>]
                                    [--secondary-group-values <value>[,<value>...]]... [--facet-by
@@ -19,7 +19,8 @@ Export diversity metrics
       --filter <meta(|>|>=|=|<=|<)value>[,<meta(|>|>=|=|<=|<)value>...]
                             Filter samples to put on a plot by their metadata values. Filter allows
                               equality (`species=cat`) or arithmetic comparison (`age>=10`) etc.
-      --chains <chain>      Export only for specified immunological chains.
+      --chains <chain>[,<chain>...]
+                            Export only for specified immunological chains.
       --metric <metric>[,<metric>...]
                             Output only specified list of metrics.
                             Possible values are: observed, shannonWiener, chao1,
