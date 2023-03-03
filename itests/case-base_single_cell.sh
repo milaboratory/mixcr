@@ -35,8 +35,8 @@ assert "cat base_single_cell.vdjcontigs.assembleContigs.report.json | head -n 1 
 
 assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.contigs.clns | wc -l" "6"
 assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.contigs.clns | wc -l" "6"
-assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "58"
-assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "58"
+assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
+assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "60"
 
 # shellcheck disable=SC2016
 awkcmd='{s+=$1} END {printf "%.0f", s}'
