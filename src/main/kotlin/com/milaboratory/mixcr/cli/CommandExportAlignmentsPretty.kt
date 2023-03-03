@@ -20,11 +20,8 @@ import com.milaboratory.app.logger
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.basictypes.tag.LongTagValue
-import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
-import com.milaboratory.mixcr.basictypes.tag.SequenceTagValue
-import com.milaboratory.mixcr.basictypes.tag.StringTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.basictypes.tag.extractSequence
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.afiltering.AFilter
 import com.milaboratory.util.NSequenceWithQualityPrintHelper
@@ -358,12 +355,8 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
             println()
             println(">>> Tags:")
             tagsInfo.forEach { tag ->
-                val toPrint = when (val tagValue = alignments.tagCount.singleOrNull(tag.index).extractKey()) {
-                    is SequenceAndQualityTagValue -> tagValue.data.sequence
-                    is SequenceTagValue -> tagValue.value
-                    is LongTagValue -> tagValue.value
-                    is StringTagValue -> tagValue.value
-                }
+                val tagValue = alignments.tagCount.singleOrNull(tag.index).extractKey()
+                val toPrint = tagValue.extractSequence()
                 println(">>> ${tag.name}: $toPrint")
             }
         }
