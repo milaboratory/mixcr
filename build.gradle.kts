@@ -103,7 +103,7 @@ repositories {
     }
 }
 
-val mixcrAlgoVersion = "4.2.0-47-develop"
+val mixcrAlgoVersion = "4.2.0-51-tiny_things"
 val milibVersion = "2.3.0-19-alleles"
 val jacksonBomVersion = "2.14.1"
 
