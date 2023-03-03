@@ -356,7 +356,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
             println(">>> Tags:")
             tagsInfo.forEach { tag ->
                 val tagValue = alignments.tagCount.singleOrNull(tag.index).extractKey()
-                val toPrint = tagValue.extractSequence()
+                val toPrint = tagValue.extractSequence() ?: tagValue.toString()
                 println(">>> ${tag.name}: $toPrint")
             }
         }

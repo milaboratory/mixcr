@@ -106,7 +106,7 @@ repositories {
 
 val milibVersion = "2.3.0-20-master"
 val mitoolVersion = "1.6.0-40-main"
-val mixcrAlgoVersion = "4.2.0-53-tiny_things"
+val mixcrAlgoVersion = "4.2.0-54-tiny_things"
 val jacksonBomVersion = "2.14.2"
 
 dependencies {
