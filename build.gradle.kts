@@ -103,12 +103,20 @@ repositories {
     }
 }
 
+
+val milibVersion = "2.3.0-20-master"
+val mitoolVersion = "1.6.0-40-main"
 val mixcrAlgoVersion = "4.2.0-47-develop"
-val milibVersion = "2.3.0-19-alleles"
-val jacksonBomVersion = "2.14.1"
+val jacksonBomVersion = "2.14.2"
 
 dependencies {
-    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
+    api("com.milaboratory:milib:$milibVersion")
+    api("com.milaboratory:mitool:$mitoolVersion")
+
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion"){
+        exclude("com.milaboratory", "mitool")
+        exclude("com.milaboratory", "milib")
+    }
 
     // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
     implementation("com.milaboratory:milm2-jvm:2.7.0")
