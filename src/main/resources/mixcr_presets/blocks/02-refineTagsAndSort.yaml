@@ -42,5 +42,5 @@
                     minimalSample: 20
                     fallbackThreshold: 1.0
                   - type: group_operator_cumtop
-                    share: 0.95
+                    share: 0.85
                     round: Down
