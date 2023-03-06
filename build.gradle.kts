@@ -127,18 +127,24 @@ val toObfuscate: Configuration by configurations.creating {
     shouldResolveConsistentlyWith(configurations.runtimeClasspath.get())
 }
 
+val obfuscationLibs: Configuration by configurations.creating
+
 val mixcrAlgoVersion = "4.2.0-51-proguard"
 val milibVersion = "2.3.0-20-master"
 val mitoolVersion = "1.6.0-40-main"
 
+val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
 val milmVersion = "2.7.0"
+
+val cliktVersion = "3.5.0"
+val jcommanderVersion = "1.72"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
     api("com.milaboratory:mitool:$mitoolVersion")
 
-    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion"){
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") {
         exclude("com.milaboratory", "mitool")
         exclude("com.milaboratory", "milib")
     }
@@ -150,17 +156,25 @@ dependencies {
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
 
+    // proguard require classes that were unherited
+    obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
+    obfuscationLibs("com.beust:jcommander:$jcommanderVersion") { exclude("*", "*") }
+
     implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    implementation("info.picocli:picocli:4.6.3")
+    // this way dependency will not be transient, but will be included in application
+    compileOnly("info.picocli:picocli:$picocliVersion")
+    shadow("info.picocli:picocli:$picocliVersion")
+    testRuntimeOnly("info.picocli:picocli:$picocliVersion")
+
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("com.github.victools:jsonschema-generator:4.27.0")
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
 
-    runtimeOnly("org.apache.logging.log4j:log4j-core:2.20.0")
+    shadow("org.apache.logging.log4j:log4j-core:2.20.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
@@ -240,6 +254,8 @@ val obfuscate by tasks.registering(ProGuardTask::class) {
     injars(tasks.jar)
     injars(toObfuscate)
     libraryjars(obfuscateRuntime)
+    libraryjars(configurations.shadow)
+    libraryjars(obfuscationLibs)
 
     outjars(buildDir.resolve("libs/mixcr-obfuscated.jar"))
 
@@ -268,7 +284,7 @@ val shadowJarAfterObfuscation by tasks.creating(ShadowJar::class) {
     archiveClassifier.set("all")
     // copy from com/github/jengelman/gradle/plugins/shadow/ShadowJavaPlugin.groovy:86
     exclude("META-INF/INDEX.LIST", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
-    configurations = listOf(obfuscateRuntime)
+    configurations = listOf(obfuscateRuntime, project.configurations.shadow.get())
 }
 
 val distributionZip by tasks.registering(Zip::class) {
