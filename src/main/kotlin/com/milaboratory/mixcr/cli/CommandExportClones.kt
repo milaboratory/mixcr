@@ -237,7 +237,7 @@ object CommandExportClones {
                                 it.field.equals("-allTags", ignoreCase = true) ||
                                         it.field.equals("-tags", ignoreCase = true)
                             }
-                            .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0]) }
+                            .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0])!! }
                         if (params.fields.any { it.field.equals("-cellId", ignoreCase = true) }) {
                             tagsExportedByGroups = tagsExportedByGroups + TagType.Cell
                         }

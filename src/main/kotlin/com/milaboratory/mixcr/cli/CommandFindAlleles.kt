@@ -55,6 +55,7 @@ import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VJ_REFERENCE
 import io.repseq.core.GeneType.Variable
+import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCGene
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
@@ -293,6 +294,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "Require the same features to align for all input files"
         }
         val featureToAlign = datasets.first().header.featuresToAlign
+        ValidationException.require(featureToAlign.getFeatureToAlign(Variable)!!.contains(FR1Begin)) {
+            "Input files must be aligned by V feature containing FR1Begin"
+        }
 
         val allelesBuilder = AllelesBuilder.create(
             findAllelesParameters,

@@ -1,9 +1,9 @@
 Usage: mixcr exportPlots overlap [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
-                                 (|>|>=|=|<=|<)value>...]]... [--chains <chain>]... [--no-dendro]
-                                 [--color-key <meta>]... [--fill-diagonal] [--metric <metric>]...
-                                 [--palette <s>] [--h-labels-size <d>] [--v-labels-size <d>]
-                                 [--width <n>] [--height <n>] [--no-warnings] [--verbose] [--help]
-                                 pa.json[.gz] output.(pdf|eps|svg|png|jpeg)
+                                 (|>|>=|=|<=|<)value>...]]... [--chains <chain>[,<chain>...]]...
+                                 [--no-dendro] [--color-key <meta>]... [--fill-diagonal] [--metric
+                                 <metric>]... [--palette <s>] [--h-labels-size <d>]
+                                 [--v-labels-size <d>] [--width <n>] [--height <n>] [--no-warnings]
+                                 [--verbose] [--help] pa.json[.gz] output.(pdf|eps|svg|png|jpeg)
 Export overlap heatmaps
       pa.json[.gz]          Input file with postanalysis results.
       output.(pdf|eps|svg|png|jpeg)
@@ -13,7 +13,8 @@ Export overlap heatmaps
       --filter <meta(|>|>=|=|<=|<)value>[,<meta(|>|>=|=|<=|<)value>...]
                             Filter samples to put on a plot by their metadata values. Filter allows
                               equality (`species=cat`) or arithmetic comparison (`age>=10`) etc.
-      --chains <chain>      Export only for specified immunological chains.
+      --chains <chain>[,<chain>...]
+                            Export only for specified immunological chains.
       --no-dendro           Don't add dendrograms
       --color-key <meta>    Add color key layer to the heatmap. One may write `--color-key x_meta`
                               to draw color key horizontally (default) or `--color-key y_meta` to
