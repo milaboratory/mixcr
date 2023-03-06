@@ -59,18 +59,7 @@ $defs:
         type: array
         items:
           anyOf:
-          - anyOf:
-            - $ref: '#/$defs/AdvancedThresholdingOp-2'
-            - $ref: '#/$defs/Otsu1Op'
-            - $ref: '#/$defs/CumtopOp'
-            - $ref: '#/$defs/MinimalRecursiveShareOp'
-            - $ref: '#/$defs/TopNOp'
-            type: object
-            properties:
-              type:
-                const: HistGroupFilterOperator
-            required:
-            - type
+          - $ref: '#/$defs/HistGroupFilterOperator-2'
           - allOf:
             - type: object
               properties:
@@ -202,6 +191,8 @@ $defs:
       properties:
         accept:
           $ref: '#/$defs/HistHalf'
+        round:
+          $ref: '#/$defs/HistThresholdRoundingMode'
         share:
           type: number
     - type: object
@@ -249,6 +240,15 @@ $defs:
                   required:
                   - type
                 - $ref: '#/$defs/CumtopOp'
+                - anyOf:
+                  - $ref: '#/$defs/HighestThreshold'
+                  - $ref: '#/$defs/LowestThreshold'
+                  type: object
+                  properties:
+                    type:
+                      const: GroupPartitionerOperator
+                  required:
+                  - type
                 - $ref: '#/$defs/MinimalRecursiveShareOp'
                 - $ref: '#/$defs/TopNOp'
                 - allOf:
@@ -274,6 +274,22 @@ $defs:
           const: filter_groups
       required:
       - type
+  HighestThreshold:
+    allOf:
+    - type: object
+      properties:
+        accept:
+          $ref: '#/$defs/HistHalf'
+        operators:
+          type: array
+          items:
+            $ref: '#/$defs/HistGroupFilterOperator-2'
+    - type: object
+      properties:
+        type:
+          const: group_operator_highest_threshold
+      required:
+      - type
   HistCollectionSpec:
     type: object
     properties:
@@ -285,11 +301,33 @@ $defs:
         type: number
       multiplyWeightByKey:
         type: boolean
+  HistGroupFilterOperator-1:
+    anyOf:
+    - $ref: '#/$defs/AdvancedThresholdingOp-2'
+    - $ref: '#/$defs/Otsu1Op'
+    - $ref: '#/$defs/CumtopOp'
+    - $ref: '#/$defs/HighestThreshold'
+    - $ref: '#/$defs/LowestThreshold'
+    - $ref: '#/$defs/MinimalRecursiveShareOp'
+    - $ref: '#/$defs/TopNOp'
+  HistGroupFilterOperator-2:
+    $ref: '#/$defs/HistGroupFilterOperator-1'
+    type: object
+    properties:
+      type:
+        const: HistGroupFilterOperator
+    required:
+    - type
   HistHalf:
     type: string
     enum:
     - Low
     - High
+  HistThresholdRoundingMode:
+    type: string
+    enum:
+    - Up
+    - Down
   InGroupsFilter-1:
     type: object
     properties:
@@ -332,6 +370,22 @@ $defs:
       properties:
         type:
           const: group_metric_kmer_diversity
+      required:
+      - type
+  LowestThreshold:
+    allOf:
+    - type: object
+      properties:
+        accept:
+          $ref: '#/$defs/HistHalf'
+        operators:
+          type: array
+          items:
+            $ref: '#/$defs/HistGroupFilterOperator-2'
+    - type: object
+      properties:
+        type:
+          const: group_operator_lowest_threshold
       required:
       - type
   MinimalRecursiveShareOp:
@@ -413,6 +467,8 @@ $defs:
           $ref: '#/$defs/HistHalf'
         "n":
           type: integer
+        round:
+          $ref: '#/$defs/HistThresholdRoundingMode'
     - type: object
       properties:
         type:

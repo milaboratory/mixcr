@@ -31,4 +31,6 @@ for filename in $FILES; do
   mixcr exportShmTreesNewick "regression/${id}.shmt" "${id}_newick"
 
   mixcr exportReports "regression/${id}.shmt" "${id}_report.txt"
+
+  assert "cat ${id}_report.txt | grep 'file has too old version' | wc -l" "0"
 done

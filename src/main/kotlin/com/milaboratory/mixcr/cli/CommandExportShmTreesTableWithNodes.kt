@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -112,7 +112,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                         it.field.equals("-allTags", ignoreCase = true) ||
                                 it.field.equals("-tags", ignoreCase = true)
                     }
-                    .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0]) }
+                    .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0])!! }
                 val newSpitBy = tagsExportedByGroups.maxOrNull()
                 if (newSpitBy != null && out != null) {
                     println("Clone splitting by ${newSpitBy.name} added automatically because -tags ${newSpitBy.name} field is present in the list.")

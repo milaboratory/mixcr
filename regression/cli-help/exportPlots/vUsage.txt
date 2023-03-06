@@ -1,10 +1,10 @@
 Usage: mixcr exportPlots vUsage [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
-                                (|>|>=|=|<=|<)value>...]]... [--chains <chain>]... [--family-usage]
-                                [--no-samples-dendro] [--no-genes-dendro] [--color-key <key>]...
-                                [--bar-plot] [--bar-plot-by-sample] [--facet-by <s>] [--palette
-                                <s>] [--h-labels-size <d>] [--v-labels-size <d>] [--width <n>]
-                                [--height <n>] [--no-warnings] [--verbose] [--help] pa.json[.gz]
-                                output.(pdf|eps|svg|png|jpeg)
+                                (|>|>=|=|<=|<)value>...]]... [--chains <chain>[,<chain>...]]...
+                                [--family-usage] [--no-samples-dendro] [--no-genes-dendro]
+                                [--color-key <key>]... [--bar-plot] [--bar-plot-by-sample]
+                                [--facet-by <s>] [--palette <s>] [--h-labels-size <d>]
+                                [--v-labels-size <d>] [--width <n>] [--height <n>] [--no-warnings]
+                                [--verbose] [--help] pa.json[.gz] output.(pdf|eps|svg|png|jpeg)
 Export V gene usage
       pa.json[.gz]           Input file with postanalysis results.
       output.(pdf|eps|svg|png|jpeg)
@@ -15,7 +15,8 @@ Export V gene usage
                              Filter samples to put on a plot by their metadata values. Filter
                                allows equality (`species=cat`) or arithmetic comparison (`age>=10`)
                                etc.
-      --chains <chain>       Export only for specified immunological chains.
+      --chains <chain>[,<chain>...]
+                             Export only for specified immunological chains.
       --family-usage         Show gene family usage instead.
       --no-samples-dendro    Don't add samples dendrogram on heatmap.
       --no-genes-dendro      Don't add genes dendrogram on heatmap.

@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.fasterxml.jackson.core.JacksonException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -100,22 +101,43 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
             null -> CloseShieldOutputStream.wrap(System.out)
             else -> outputPath!!.outputStream()
         }.use { o ->
-            if (outputFormatFlags?.json == true || outputFormatFlags?.yaml == true) {
-                val tree =
-                    if (step != null)
-                        K_OM.valueToTree(footer.reports.getTrees(step!!))
-                    else
-                        footer.reports.asTree()
-                if (outputFormatFlags?.json == true)
-                    K_OM.writeValue(o, tree)
-                else
-                    K_YAML_OM.writeValue(o, tree)
-            } else {
-                val helper = ReportHelper(o, outputPath != null)
-                (if (step != null) footer.reports[MiXCRCommandDescriptor.fromString(step!!)]
-                else footer.reports.map.values.flatten()).forEach { report ->
-                    report.writeHeader(helper)
-                    report.writeReport(helper)
+            when {
+                outputFormatFlags?.json == true || outputFormatFlags?.yaml == true -> {
+                    val tree = when {
+                        step != null -> K_OM.valueToTree(footer.reports.getTrees(step!!))
+                        else -> footer.reports.asTree()
+                    }
+                    when (outputFormatFlags?.json) {
+                        true -> K_OM.writeValue(o, tree)
+                        else -> K_YAML_OM.writeValue(o, tree)
+                    }
+                }
+
+                else -> {
+                    val helper = ReportHelper(o, outputPath != null)
+                    val steps = when {
+                        step != null -> listOf(step!!)
+                        else -> footer.reports.collection.steps
+                    }
+                    steps
+                        .map { MiXCRCommandDescriptor.fromString(it) }
+                        .flatMap { commandDescriptor ->
+                            footer.reports.getBytes(commandDescriptor).map {
+                                try {
+                                    K_OM.readValue(it, commandDescriptor.reportClass.java)
+                                } catch (e: JacksonException) {
+                                    null
+                                }
+                            }
+                        }
+                        .forEach { report ->
+                            if (report == null) {
+                                helper.println("Can't read report, file has too old version")
+                            } else {
+                                report.writeHeader(helper)
+                                report.writeReport(helper)
+                            }
+                        }
                 }
             }
         }

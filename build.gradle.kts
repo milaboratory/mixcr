@@ -128,14 +128,20 @@ val toObfuscate: Configuration by configurations.creating {
 }
 
 val mixcrAlgoVersion = "4.2.0-51-proguard"
-val milibVersionForTestFixtures = "2.3.0-19-alleles"
-val jacksonBomVersion = "2.14.1"
+val milibVersion = "2.3.0-20-master"
+val mitoolVersion = "1.6.0-40-main"
+
+val jacksonBomVersion = "2.14.2"
 val milmVersion = "2.7.0"
 
 dependencies {
-    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
-    platform("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
-    implementation("com.milaboratory:milm2-jvm:$milmVersion")
+    api("com.milaboratory:milib:$milibVersion")
+    api("com.milaboratory:mitool:$mitoolVersion")
+
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion"){
+        exclude("com.milaboratory", "mitool")
+        exclude("com.milaboratory", "milib")
+    }
 
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milib") { exclude("*", "*") }
@@ -143,6 +149,8 @@ dependencies {
     toObfuscate("com.milaboratory:migex") { exclude("*", "*") }
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
+
+    implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -155,7 +163,7 @@ dependencies {
     runtimeOnly("org.apache.logging.log4j:log4j-core:2.20.0")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation(testFixtures("com.milaboratory:milib:$milibVersionForTestFixtures"))
+    testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 

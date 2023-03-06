@@ -12,6 +12,7 @@ $defs:
           - $ref: '#/$defs/GenericHistOpReport'
           - $ref: '#/$defs/GroupFilterReport-2'
           - $ref: '#/$defs/InGroupsFilterReport-2'
+          - $ref: '#/$defs/MultiHistOpReport'
   AndTaggedFilterReport-2:
     $ref: '#/$defs/AndTaggedFilterReport-1'
     type: object
@@ -89,6 +90,7 @@ $defs:
               - $ref: '#/$defs/GenericHistOpReport'
               - $ref: '#/$defs/GroupFilterReport-2'
               - $ref: '#/$defs/InGroupsFilterReport-2'
+              - $ref: '#/$defs/MultiHistOpReport'
       totalWeight:
         type: number
       totalWeightAccepted:
@@ -111,6 +113,7 @@ $defs:
         - $ref: '#/$defs/GenericHistOpReport'
         - $ref: '#/$defs/GroupFilterReport-2'
         - $ref: '#/$defs/InGroupsFilterReport-2'
+        - $ref: '#/$defs/MultiHistOpReport'
       nestedPerGroupReports:
         type: object
       numberOfGroups:
@@ -123,6 +126,22 @@ $defs:
         const: filter_in_groups_report
     required:
     - type
+  MultiHistOpReport:
+    allOf:
+    - type: object
+      properties:
+        nestedThresholds:
+          type: array
+          items:
+            type: number
+        threshold:
+          type: number
+    - type: object
+      properties:
+        type:
+          const: multi_operator_hist_report
+      required:
+      - type
 type: object
 properties:
   alignmentsFilteredByTagPrefix:
@@ -182,21 +201,18 @@ properties:
       - $ref: '#/$defs/GenericHistOpReport'
       - $ref: '#/$defs/GroupFilterReport-2'
       - $ref: '#/$defs/InGroupsFilterReport-2'
+      - $ref: '#/$defs/MultiHistOpReport'
   preCloneAssemblerReport:
     allOf:
     - type: object
       properties:
         assemblingFeatureSequencesInZeroPreClones:
           type: integer
-        clonotypes:
-          type: integer
-        clonotypesPerGroup:
-          type: object
         coreAlignments:
           type: integer
         coreAlignmentsDroppedByTagSuffix:
           type: integer
-        coreClonotypesDroppedByTagSuffix:
+        corePreClonesDroppedByTagSuffix:
           type: integer
         discardedCoreAlignments:
           type: integer
@@ -204,9 +220,9 @@ properties:
           type: integer
         empiricallyAssignedAlignments:
           type: integer
-        gatConflicts:
+        geneAndTagConflicts:
           type: integer
-        gatEmpiricallyAssignedAlignments:
+        geneAndTagEmpiricallyAssignedAlignments:
           type: integer
         geneConflicts:
           type: object
@@ -214,13 +230,17 @@ properties:
           type: integer
         inputAlignments:
           type: integer
-        inputAssemblingFeatureSequences:
+        inputAlignmentsWithAssemblingFeature:
           type: integer
         inputGroups:
           type: integer
-        umiConflicts:
+        preClones:
           type: integer
-        umiEmpiricallyAssignedAlignments:
+        preClonesPerGroup:
+          type: object
+        tagConflicts:
+          type: integer
+        tagEmpiricallyAssignedAlignments:
           type: integer
         unassignedAlignments:
           type: integer

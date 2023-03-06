@@ -1,5 +1,46 @@
 $schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  Filter:
+    type: object
+    properties:
+      useClonesWithCountGreaterThen:
+        type: integer
 type: object
 properties:
-  dummy:
+  filterForDataWithUmi:
+    $ref: '#/$defs/Filter'
+  filterForDataWithoutUmi:
+    $ref: '#/$defs/Filter'
+  productiveOnly:
     type: boolean
+  searchAlleleParameter:
+    type: object
+    properties:
+      coefficientForNaiveClonesInScore:
+        type: number
+      diversityRatioToSearchCommonMutationsInAnAllele:
+        type: number
+      diversityThresholds:
+        type: object
+        properties:
+          diversityForSkipTestForRatioForZeroAllele:
+            type: number
+          minDiversityForAllele:
+            type: number
+          minDiversityForMutation:
+            type: number
+      minCountOfNaiveClonesToAddAllele:
+        type: integer
+      minRelativePenaltyBetweenAllelesForCloneAlign:
+        type: number
+      topByScore:
+        type: number
+  searchMutationsInCDR3:
+    type: object
+    properties:
+      minClonesCount:
+        type: integer
+      minDiversity:
+        type: number
+      minPartOfTheSameLetter:
+        type: number
