@@ -287,6 +287,10 @@ val shadowJarAfterObfuscation by tasks.creating(ShadowJar::class) {
     configurations = listOf(obfuscateRuntime, project.configurations.shadow.get())
 }
 
+shadow {
+    configurations += project.configurations.shadow.get()
+}
+
 val distributionZip by tasks.registering(Zip::class) {
     group = "distribution"
     archiveFileName.set("${project.name}.zip")
