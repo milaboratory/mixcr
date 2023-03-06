@@ -76,6 +76,7 @@ object Main {
             exitProcess(0)
         }
         val versionInfo = VersionInfo.getVersionInfoForArtifact("mixcr")
+        System.setProperty("application", "mixcr.${versionInfo.version}.${versionInfo.revision}")
         MiXCRMain.mixcrArtefactName = "mixcr." +
                 versionInfo.version + "." +
                 versionInfo.branch + "." +
@@ -84,8 +85,9 @@ object Main {
         MiXCRMain.main(*args)
         MiXCRMain.lm.reportFeature("app", "mixcr")
         MiXCRMain.lm.reportFeature("mixcr.version", versionInfo.version)
-        if (args.isNotEmpty()) MiXCRMain.lm.reportFeature("mixcr.subcommand1", args[0])
-        if (args.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", args[1])
+        val actualArgs = args.toList() - "-h"
+        if (actualArgs.isNotEmpty()) MiXCRMain.lm.reportFeature("mixcr.subcommand1", actualArgs[0])
+        if (actualArgs.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", actualArgs[1])
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
         SequenceSetCollection.addSearchPath(Path(System.getProperty("user.home"), ".mixcr", "presets"))

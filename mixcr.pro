@@ -10,6 +10,8 @@
 -keep class com.milaboratory.mitool.cli.** { *; }
 -keep class com.milaboratory.mitool.refinement.gfilter.** { *; }
 
+-keep class com.milaboratory.milm.MiXCRMain { public static void main(); }
+
 -keep class com.milaboratory.mixcr.cli.** { *; }
 -keep class com.milaboratory.mixcr.presets.** { *; }
 -keep class com.milaboratory.mixcr.postanalysis.ui.** { *; }
