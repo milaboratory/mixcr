@@ -7,6 +7,7 @@ import de.undercouch.gradle.tasks.download.Download
 import groovy.lang.Closure
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import proguard.gradle.ProGuardTask
 import java.net.InetAddress
 
@@ -69,6 +70,10 @@ java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     withSourcesJar()
     withJavadocJar()
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
 }
 
 application {
@@ -135,7 +140,7 @@ val mitoolVersion = "1.6.0-40-main"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
-val milmVersion = "2.7.0"
+val milmVersion = "2.8.0-2-trap"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
@@ -168,7 +173,7 @@ dependencies {
     // this way dependency will not be transient, but will be included in application
     compileOnly("info.picocli:picocli:$picocliVersion")
     shadow("info.picocli:picocli:$picocliVersion")
-    testRuntimeOnly("info.picocli:picocli:$picocliVersion")
+    testImplementation("info.picocli:picocli:$picocliVersion")
 
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("com.github.victools:jsonschema-generator:4.27.0")
@@ -180,6 +185,10 @@ dependencies {
     testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
+
+    // for working reflection scanning
+    testImplementation("com.github.ajalt.clikt:clikt:3.5.0")
+    testImplementation("com.beust:jcommander:1.72")
 
     testImplementation("org.reflections:reflections:0.10.2")
 
