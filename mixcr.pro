@@ -31,11 +31,12 @@
 
 #usage of jackson
 -keep class * extends com.fasterxml.jackson.**
-
 -keep @com.fasterxml.jackson.** class * { *; }
-
 # for some reason it's not working
 #-keep class * extends @com.fasterxml.jackson.** * { *; }
+
+#for usage of kotlinx.dataframe
+-keep @org.jetbrains.kotlinx.dataframe.annotations.DataSchema class * { *; }
 
 
 #for TypeReference of jackson
@@ -47,7 +48,11 @@
 -keepattributes RuntimeVisibleParameterAnnotations
 -keepattributes AnnotationDefault
 
-#-keepattributes SourceFile
+#for readable stacktrace
+-renamesourcefileattribute SourceFile
+-keepattributes LineNumberTable
+-keepattributes SourceFile
+
 #-keepattributes SourceDir
 #-keepattributes Record
 #-keepattributes PermittedSubclasses
@@ -56,7 +61,6 @@
 #-keepattributes Synthetic
 #-keepattributes MethodParameters
 #-keepattributes Exceptions
-#-keepattributes LineNumberTable
 #-keepattributes LocalVariableTable
 #-keepattributes LocalVariableTypeTable
 #-keepattributes RuntimeInvisibleAnnotations
