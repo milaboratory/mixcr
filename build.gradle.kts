@@ -134,9 +134,9 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.2.0-51-proguard"
-val milibVersion = "2.3.0-20-master"
-val mitoolVersion = "1.6.0-40-main"
+val mixcrAlgoVersion = "4.2.0-64-proguard"
+val milibVersion = "2.3.0-21-proguard"
+val mitoolVersion = "1.6.0-49-proguard"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
@@ -187,8 +187,8 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 
     // for working reflection scanning
-    testImplementation("com.github.ajalt.clikt:clikt:3.5.0")
-    testImplementation("com.beust:jcommander:1.72")
+    testImplementation("com.github.ajalt.clikt:clikt:$cliktVersion")
+    testImplementation("com.beust:jcommander:$jcommanderVersion")
 
     testImplementation("org.reflections:reflections:0.10.2")
 
