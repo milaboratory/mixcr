@@ -18,10 +18,6 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
-import com.milaboratory.mixcr.AssembleContigsMixins
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
@@ -30,6 +26,10 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.AssembleContigsMixins
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRParamsSpec
+import com.milaboratory.mixcr.presets.MiXCRStepParams
 import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.CloneWithDatasetId

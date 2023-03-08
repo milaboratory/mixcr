@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.cli.DummyParamsBundleSpec
-import com.milaboratory.mixcr.MiXCRParamsSpec
+import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import picocli.CommandLine.Option
 
 class DontSavePresetOption {

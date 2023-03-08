@@ -35,14 +35,14 @@ jobs:
 
       # Tests
       test-unit: true
-      test-unit-before-tasks: shadowJar
+      test-unit-before-tasks: shadowJarAfterObfuscation
       test-unit-cache: true
       test-unit-cache-paths: |
         ./src/test/resources/sequences/big/**
       test-unit-cache-key: 'tests-sequences-v1'
 
       test-integration: true
-      test-integration-before-tasks: shadowJar
+      test-integration-before-tasks: shadowJarAfterObfuscation
       test-integration-tasks: ''
       test-integration-cache: true
       test-integration-cache-paths: |

@@ -11,8 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import picocli.CommandLine.Option
 
 class ResetPresetOptions {

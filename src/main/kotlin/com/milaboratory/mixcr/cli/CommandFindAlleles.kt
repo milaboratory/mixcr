@@ -23,8 +23,6 @@ import com.milaboratory.core.Range
 import com.milaboratory.core.io.sequence.fasta.FastaRecord
 import com.milaboratory.core.io.sequence.fasta.FastaWriter
 import com.milaboratory.core.sequence.NucleotideSequence
-import com.milaboratory.mixcr.AssembleContigsMixins
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.CloneRebuild
 import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
@@ -39,6 +37,8 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.AssembleContigsMixins
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider

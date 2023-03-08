@@ -1,12 +1,26 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.SHADOW_GROUP
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.palantir.gradle.gitversion.VersionDetails
 import de.undercouch.gradle.tasks.download.Download
 import groovy.lang.Closure
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import proguard.gradle.ProGuardTask
 import java.net.InetAddress
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.guardsquare:proguard-gradle:7.2.1") {
+            exclude("com.android.tools.build", "gradle")
+        }
+    }
+}
 
 gradle.startParameter.excludedTaskNames += listOf(
     "assembleDist",
@@ -58,6 +72,10 @@ java {
     withJavadocJar()
 }
 
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
 application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
     applicationDefaultJvmArgs = listOf("-Xmx8g")
@@ -67,6 +85,12 @@ tasks.withType<JavaExec> {
     if (project.hasProperty("runWorkingDir")) {
         val runWorkingDir: String by project
         workingDir = file(runWorkingDir)
+    }
+}
+
+tasks.jar {
+    manifest {
+        attributes("Main-Class" to "com.milaboratory.mixcr.cli.Main")
     }
 }
 
@@ -103,38 +127,94 @@ repositories {
     }
 }
 
+val toObfuscate: Configuration by configurations.creating {
+    @Suppress("UnstableApiUsage")
+    shouldResolveConsistentlyWith(configurations.runtimeClasspath.get())
+}
 
-val milibVersion = "2.3.0-20-master"
-val mitoolVersion = "1.6.0-40-main"
-val mixcrAlgoVersion = "4.2.0-57-gene-features-v2"
+val obfuscationLibs: Configuration by configurations.creating
+
+val mixcrAlgoVersion = "4.2.0-68-proguard"
+val milibVersion = "2.3.0-22-master"
+val mitoolVersion = "1.6.0-50-main"
+
+val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
+val milmVersion = "2.8.0-3-main"
+
+val cliktVersion = "3.5.0"
+val jcommanderVersion = "1.72"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
     api("com.milaboratory:mitool:$mitoolVersion")
 
-    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion"){
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") {
         exclude("com.milaboratory", "mitool")
         exclude("com.milaboratory", "milib")
     }
 
-    // implementation("com.milaboratory:milm2-jvm:1.0-SNAPSHOT") { isChanging = true }
-    implementation("com.milaboratory:milm2-jvm:2.7.0")
+    toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:milib") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:mitool") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:migex") { exclude("*", "*") }
+    toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
+    toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
+
+    // proguard require classes that were unherited
+    obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
+    obfuscationLibs("com.beust:jcommander:$jcommanderVersion") { exclude("*", "*") }
+
+    implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    implementation("info.picocli:picocli:4.6.3")
+    // this way dependency will not be transient, but will be included in application
+    compileOnly("info.picocli:picocli:$picocliVersion")
+    shadow("info.picocli:picocli:$picocliVersion")
+    testImplementation("info.picocli:picocli:$picocliVersion")
+
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("com.github.victools:jsonschema-generator:4.27.0")
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
 
+    shadow("org.apache.logging.log4j:log4j-core:2.20.0")
+
     testImplementation("junit:junit:4.13.2")
-    implementation(testFixtures("com.milaboratory:milib:$milibVersion"))
+    testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 
+    // for working reflection scanning
+    testImplementation("com.github.ajalt.clikt:clikt:$cliktVersion")
+    testImplementation("com.beust:jcommander:$jcommanderVersion")
+
+    testImplementation("org.reflections:reflections:0.10.2")
+
     testImplementation("org.lz4:lz4-java:1.8.0")
+}
+
+val obfuscateRuntime: Configuration by configurations.creating {
+    fun ResolvedModuleVersion.asMap() = mapOf(
+        "group" to id.group,
+        "name" to id.name,
+        "version" to id.version
+    )
+
+    defaultDependencies {
+        val toExclude = toObfuscate.resolvedConfiguration.resolvedArtifacts
+            .map { it.moduleVersion.id.group to it.moduleVersion.id.name }
+            .toSet()
+
+        configurations.runtimeClasspath.get().resolvedConfiguration.resolvedArtifacts
+            .filterNot { (it.moduleVersion.id.group to it.moduleVersion.id.name) in toExclude }
+            .forEach {
+                add(
+                    project.dependencies.create(it.moduleVersion.asMap())
+                )
+            }
+    }
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
@@ -172,27 +252,59 @@ tasks.processResources {
     dependsOn(generatePresetFileList)
 }
 
-val shadowJar = tasks.withType<ShadowJar> {
-//    minimize {
-//        exclude(dependency("io.repseq:repseqio"))
-//        exclude(dependency("com.milaboratory:milib"))
-//        exclude(dependency("org.lz4:lz4-java"))
-//        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
-//
-//        exclude(dependency("log4j:log4j"))
-//        exclude(dependency("org.slf4j:slf4j-api"))
-//        exclude(dependency("commons-logging:commons-logging"))
-//        exclude(dependency("ch.qos.logback:logback-core"))
-//        exclude(dependency("ch.qos.logback:logback-classic"))
-//        exclude(dependency("org.jetbrains.kotlin:.*"))
-//    }
+val obfuscate by tasks.registering(ProGuardTask::class) {
+    group = "build"
+
+    configuration("mixcr.pro")
+
+    dependsOn(tasks.jar)
+    dependsOn(obfuscateRuntime.buildDependencies)
+
+    injars(tasks.jar)
+    injars(toObfuscate)
+    libraryjars(obfuscateRuntime)
+    libraryjars(configurations.shadow)
+    libraryjars(obfuscationLibs)
+
+    outjars(buildDir.resolve("libs/mixcr-obfuscated.jar"))
+
+    printconfiguration(buildDir.resolve("proguard.config.pro"))
+    printmapping(buildDir.resolve("proguard-mapping.txt"))
+
+    if (org.gradle.internal.jvm.Jvm.current().jre == null)
+        listOf("java.base.jmod", "java.prefs.jmod", "java.scripting.jmod").map {
+            libraryjars(
+                hashMapOf("jarfilter" to "!**.jar", "filter" to "!module-info.class"),
+                org.gradle.internal.jvm.Jvm.current().javaHome.resolve("jmods/${it}").absolutePath
+            )
+        }
+    else
+        listOf("rt.jar", "jce.jar", "jsse.jar").map {
+            libraryjars(org.gradle.internal.jvm.Jvm.current().jre!!.resolve("lib/${it}"))
+        }
+}
+
+val shadowJarAfterObfuscation by tasks.creating(ShadowJar::class) {
+    group = SHADOW_GROUP
+    description = "Create a combined JAR of obfuscated project and runtime dependencies"
+    manifest.inheritFrom(tasks.jar.get().manifest)
+    dependsOn(obfuscate)
+    from(obfuscate.get().outJarFiles)
+    archiveClassifier.set("all")
+    // copy from com/github/jengelman/gradle/plugins/shadow/ShadowJavaPlugin.groovy:86
+    exclude("META-INF/INDEX.LIST", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
+    configurations = listOf(obfuscateRuntime, project.configurations.shadow.get())
+}
+
+shadow {
+    configurations += project.configurations.shadow.get()
 }
 
 val distributionZip by tasks.registering(Zip::class) {
     group = "distribution"
     archiveFileName.set("${project.name}.zip")
     destinationDirectory.set(file("$buildDir/distributions"))
-    from(shadowJar) {
+    from(shadowJarAfterObfuscation) {
         rename("-.*\\.jar", "\\.jar")
     }
     from("${project.rootDir}/${project.name}")
@@ -201,7 +313,7 @@ val distributionZip by tasks.registering(Zip::class) {
 
 val prepareDockerContext by tasks.registering(Copy::class) {
     group = "docker"
-    from(shadowJar) {
+    from(shadowJarAfterObfuscation) {
         rename("-.*\\.jar", "\\.jar")
     }
     from("${project.rootDir}/${project.name}")

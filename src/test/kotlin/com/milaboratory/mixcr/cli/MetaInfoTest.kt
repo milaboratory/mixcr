@@ -1,6 +1,6 @@
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import org.junit.Test

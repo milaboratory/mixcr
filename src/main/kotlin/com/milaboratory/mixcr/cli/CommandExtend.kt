@@ -19,9 +19,6 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.CloneSet
@@ -35,6 +32,9 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.util.VDJCObjectExtender
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters

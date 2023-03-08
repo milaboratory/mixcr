@@ -10,6 +10,9 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
+import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.presets.MiXCRStepReports
+import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.test.TestUtil.assertJson
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM

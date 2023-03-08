@@ -19,8 +19,6 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
@@ -32,6 +30,8 @@ import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.SmartProgressReporter

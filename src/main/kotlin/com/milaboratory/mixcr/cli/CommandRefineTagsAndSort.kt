@@ -28,9 +28,6 @@ import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractor
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractorsFactory
-import com.milaboratory.mixcr.AlignMixins
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParamsBundle
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
@@ -43,6 +40,9 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
+import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.util.CanReportProgress

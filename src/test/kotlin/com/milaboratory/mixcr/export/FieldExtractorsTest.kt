@@ -11,9 +11,9 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.MiXCRStepReports
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner
+import com.milaboratory.mixcr.presets.MiXCRStepReports
 import com.milaboratory.mixcr.tests.MiXCRTestUtils
 import com.milaboratory.mixcr.tests.TargetBuilder
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets

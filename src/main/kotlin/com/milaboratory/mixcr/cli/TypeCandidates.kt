@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.mixcr.Presets
+import com.milaboratory.mixcr.presets.Presets
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.ReferencePoint

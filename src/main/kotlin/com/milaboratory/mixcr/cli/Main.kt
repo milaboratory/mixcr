@@ -22,7 +22,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.milm.MiXCRMain
 import com.milaboratory.miplots.StandardPlots
 import com.milaboratory.mitool.pattern.SequenceSetCollection
-import com.milaboratory.mixcr.Presets
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.cli.postanalysis.CommandDownsample
 import com.milaboratory.mixcr.cli.postanalysis.CommandOverlapScatter
@@ -41,6 +40,7 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign
 import com.milaboratory.mixcr.cli.qc.CommandExportQcChainUsage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
+import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
@@ -76,6 +76,7 @@ object Main {
             exitProcess(0)
         }
         val versionInfo = VersionInfo.getVersionInfoForArtifact("mixcr")
+        System.setProperty("application", "mixcr.${versionInfo.version}.${versionInfo.revision}")
         MiXCRMain.mixcrArtefactName = "mixcr." +
                 versionInfo.version + "." +
                 versionInfo.branch + "." +
@@ -84,8 +85,9 @@ object Main {
         MiXCRMain.main(*args)
         MiXCRMain.lm.reportFeature("app", "mixcr")
         MiXCRMain.lm.reportFeature("mixcr.version", versionInfo.version)
-        if (args.isNotEmpty()) MiXCRMain.lm.reportFeature("mixcr.subcommand1", args[0])
-        if (args.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", args[1])
+        val actualArgs = args.toList() - "-h"
+        if (actualArgs.isNotEmpty()) MiXCRMain.lm.reportFeature("mixcr.subcommand1", actualArgs[0])
+        if (actualArgs.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", actualArgs[1])
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
         GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
         SequenceSetCollection.addSearchPath(Path(System.getProperty("user.home"), ".mixcr", "presets"))

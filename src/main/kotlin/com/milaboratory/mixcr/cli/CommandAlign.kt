@@ -41,11 +41,6 @@ import com.milaboratory.mitool.helpers.FileGroup
 import com.milaboratory.mitool.helpers.PathPatternExpandException
 import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mitool.use
-import com.milaboratory.mixcr.AlignMixins.LimitInput
-import com.milaboratory.mixcr.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.MiXCRParamsBundle
-import com.milaboratory.mixcr.MiXCRParamsSpec
-import com.milaboratory.mixcr.MiXCRStepParams
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -72,6 +67,11 @@ import com.milaboratory.mixcr.cli.CommandAlignPipeline.listToSampleName
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
+import com.milaboratory.mixcr.presets.AlignMixins.LimitInput
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.presets.MiXCRParamsSpec
+import com.milaboratory.mixcr.presets.MiXCRStepParams
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
