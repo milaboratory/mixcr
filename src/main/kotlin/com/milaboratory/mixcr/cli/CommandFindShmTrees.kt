@@ -19,10 +19,12 @@ import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AssembleContigsMixins
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -445,8 +447,9 @@ private class MiXCRHeaderMerger {
         upstreamParams += fileName to header.stepParams
         if (allFullyCoveredBy == null) {
             featuresToAlignMap = header.featuresToAlignMap
-            foundAlleles = header.foundAlleles
-            allFullyCoveredBy = header.allFullyCoveredBy
+            foundAlleles = header.foundAlleles!!
+            allFullyCoveredBy = header.allFullyCoveredBy!!
+            HasFeatureToAlign(featuresToAlignMap!!).validateCompositeFeatures(allFullyCoveredBy!!)
         } else {
             check(featuresToAlignMap == header.featuresToAlignMap) { "Different featuresToAlignMap" }
             check(foundAlleles == header.foundAlleles) { "Different library" }

@@ -28,11 +28,13 @@ import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -240,6 +242,8 @@ object CommandAssemble {
                     }
                 }
 
+                validateParams(cmdParam, inputHeader.featuresToAlign)
+
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if ((outputFile.extension == "clna" && !cmdParam.clnaOutput) ||
                     (outputFile.extension == "clns" && cmdParam.clnaOutput)
@@ -413,6 +417,10 @@ object CommandAssemble {
                 }
             }
         }
+    }
+
+    fun validateParams(cmdParam: CommandAssembleParams, featureToAlign: HasFeatureToAlign) {
+        featureToAlign.validateCompositeFeatures(*cmdParam.cloneAssemblerParameters.assemblingFeatures)
     }
 }
 

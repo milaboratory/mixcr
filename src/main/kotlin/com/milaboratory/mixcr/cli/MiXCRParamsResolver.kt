@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.Flags
@@ -42,6 +43,19 @@ abstract class MiXCRParamsResolver<P : Any>(
             bundle.assemble?.clnaOutput == false
         )
             throw ValidationException("assembleContigs step required clnaOutput=true on assemble step")
+
+        bundle.align?.parameters?.featuresToAlignMap?.let { HasFeatureToAlign(it) }?.let { featuresToAlign ->
+            if (bundle.pipeline?.steps?.contains(MiXCRCommandDescriptor.assemble) == true) {
+                bundle.assemble?.let { params ->
+                    CommandAssemble.validateParams(params, featuresToAlign)
+                }
+            }
+            if (bundle.pipeline?.steps?.contains(MiXCRCommandDescriptor.assembleContigs) == true) {
+                bundle.assembleContigs?.let { params ->
+                    CommandAssembleContigs.validateParams(params, featuresToAlign)
+                }
+            }
+        }
     }
 }
 

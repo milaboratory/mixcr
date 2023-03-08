@@ -30,12 +30,14 @@ import com.milaboratory.mixcr.basictypes.ClnAReader.CloneAlignments
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -171,6 +173,8 @@ object CommandAssembleContigs {
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
                 paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec).addMixins(mixinsToAdd)
                 cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
+
+                validateParams(cmdParams, reader.header.featuresToAlign)
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."
@@ -379,6 +383,24 @@ object CommandAssembleContigs {
                 writer.setFooter(footer.addStepReport(MiXCRCommandDescriptor.assembleContigs, report))
             }
         }
+    }
+
+    fun validateParams(
+        cmdParams: CommandAssembleContigsParams,
+        featuresToAlign: HasFeatureToAlign
+    ) {
+        listOfNotNull(
+            cmdParams.parameters.subCloningRegions,
+            cmdParams.parameters.assemblingRegions,
+            when (val postFiltering = cmdParams.parameters.postFiltering) {
+                is PostFiltering.MinimalContigLength -> null
+                PostFiltering.NoFiltering -> null
+                is PostFiltering.OnlyCovering -> postFiltering.geneFeatures
+                PostFiltering.OnlyFullyAssembled -> null
+                PostFiltering.OnlyFullyDefined -> null
+                is PostFiltering.OnlyUnambiguouslyCovering -> postFiltering.geneFeatures
+            }
+        ).forEach { featuresToAlign.validateCompositeFeatures(it) }
     }
 }
 

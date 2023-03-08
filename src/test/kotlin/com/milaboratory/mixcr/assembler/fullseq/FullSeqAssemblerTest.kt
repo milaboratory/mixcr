@@ -23,7 +23,6 @@ import com.milaboratory.core.sequence.SequenceQuality
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.basictypes.Clone
-import io.repseq.core.GeneFeatures
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
@@ -35,6 +34,7 @@ import gnu.trove.set.hash.TIntHashSet
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import org.apache.commons.math3.random.RandomDataGenerator
 import org.apache.commons.math3.random.Well19937c
@@ -428,7 +428,7 @@ class FullSeqAssemblerTest {
         val DEFAULT_PARAMETERS = FullSeqAssemblerParameters(
             0.1, 80, 120,
             3, 7, 0.25, 3.0,
-            0.5, 50, GeneFeatures.fromOrdinal(GeneFeature.VDJRegion), null, PostFiltering.NoFiltering,
+            0.5, 50, GeneFeatures(GeneFeature.VDJRegion), null, PostFiltering.NoFiltering,
             QualityTrimmerParameters(20.0f, 8), 20, false, false
         )
         val masterSeq1WT = MasterSequence(
