@@ -140,7 +140,7 @@ val mitoolVersion = "1.6.0-50-main"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
-val milmVersion = "2.8.0-3-main"
+val milmVersion = "3.0.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
