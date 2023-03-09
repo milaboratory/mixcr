@@ -389,6 +389,7 @@ object CommandAssembleContigs {
         cmdParams: CommandAssembleContigsParams,
         featuresToAlign: HasFeatureToAlign
     ) {
+        @Suppress("DEPRECATION")
         listOfNotNull(
             cmdParams.parameters.subCloningRegions,
             cmdParams.parameters.assemblingRegions,

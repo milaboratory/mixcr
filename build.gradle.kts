@@ -161,7 +161,7 @@ dependencies {
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
 
-    // proguard require classes that were unherited
+    // proguard require classes that were inherited
     obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
     obfuscationLibs("com.beust:jcommander:$jcommanderVersion") { exclude("*", "*") }
 

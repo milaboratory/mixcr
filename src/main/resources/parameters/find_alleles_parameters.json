@@ -23,6 +23,7 @@
       "minClonesCount": 5,
       "minPartOfTheSameLetter": 0.7,
       "minDiversity": 0.5
-    }
+    },
+    "maxCountForPossibleRemoval": 10
   }
 }
