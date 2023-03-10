@@ -8,6 +8,7 @@
       "useClonesWithCountGreaterThen": 1
     },
     "searchAlleleParameter": {
+      "minClonesCountForAlleleSearch": 10,
       "topByScore": 0.65,
       "coefficientForNaiveClonesInScore": 2.0,
       "minRelativePenaltyBetweenAllelesForCloneAlign": 0.15,

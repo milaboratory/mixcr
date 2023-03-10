@@ -306,7 +306,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             datasets.flatMap { it.usedGenes }.distinct(),
             featureToAlign,
             allFullyCoveredBy,
-            reportBuilder,
             threadsOptions.value
         )
 
@@ -380,7 +379,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             printAllelesMutationsOutput(
                 results,
                 reportBuilder.overallAllelesStatistics,
-                report,
                 allelesMutationsOutput
             )
         }
@@ -425,7 +423,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private fun printAllelesMutationsOutput(
         result: List<AlleleSearchResult>,
         allelesStatistics: OverallAllelesStatistics,
-        report: FindAllelesReport,
         allelesMutationsOutput: Path
     ) {
         PrintStream(allelesMutationsOutput.toFile()).use { output ->
@@ -435,8 +432,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 this["type"] = { it.gene.geneType }
                 this["status"] = { it.status }
                 this["enoughInfo"] = { allele ->
-                    val history = report.searchHistoryForBCells[allele.gene.geneName]
-                    history?.alleles?.result?.isNotEmpty() ?: false
+                    allele.status.enoughInfo
                 }
                 this[AllelesBuilder.metaKey.alleleMutationsReliableRegion] = { allele ->
                     if (allele.status == DE_NOVA) {
