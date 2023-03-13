@@ -228,6 +228,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         libraryOutputs.forEach { output ->
             ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.FASTA)
         }
+        ValidationException.require(findAllelesParameters.searchAlleleParameter.minClonesCountForAlleleSearch >= findAllelesParameters.maxCountForPossibleRemoval) {
+            "`searchAlleleParameter.minClonesCountForAlleleSearch` should be greater or equal then `maxCountForPossibleRemoval`"
+        }
         if ((listOfNotNull(outputClnsOptions.outputTemplate, allelesMutationsOutput) + libraryOutputs).isEmpty()) {
             throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
         }
@@ -518,7 +521,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         originalLibrary: VDJCLibrary,
         usedGenes: Collection<AlleleSearchResult>
     ): VDJCLibrary {
-        val genesToAdd = usedGenes.filter { it.status.exist }.map { it.gene }
+        val vAndJ = usedGenes.filter { it.status.exist }.map { it.gene }
+        val restGenes = originalLibrary.primaryGenes.filter { it.geneType !in VJ_REFERENCE }.map { it.data }
+        val genesToAdd = vAndJ + restGenes
         val resultLibrary = VDJCLibrary(
             VDJCLibraryData(originalLibrary.data, genesToAdd),
             originalLibrary.name + "_with_found_alleles",
