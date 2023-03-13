@@ -28,10 +28,7 @@ import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets;
 import com.milaboratory.test.TestUtil;
 import com.milaboratory.util.RandomUtil;
 import com.milaboratory.util.TempFileManager;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.GeneType;
-import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCLibraryRegistry;
+import io.repseq.core.*;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Assert;
 import org.junit.Test;
@@ -267,14 +264,14 @@ public class PartialAlignmentsAssemblerTest {
     }
 
     public static InputTestData createTestData(long seed) throws Exception {
-        EnumMap<GeneType, String> geneNames = new EnumMap<GeneType, String>(GeneType.class) {{
-            put(Variable, "TRBV20-1*00");
-            put(Diversity, "TRBD2*00");
-            put(Joining, "TRBJ2-6*00");
-            put(Constant, "TRBC2*00");
+        EnumMap<GeneType, GeneVariantName> geneNames = new EnumMap<GeneType, GeneVariantName>(GeneType.class) {{
+            put(Variable, new GeneVariantName("TRBV20-1*00"));
+            put(Diversity, new GeneVariantName("TRBD2*00"));
+            put(Joining, new GeneVariantName("TRBJ2-6*00"));
+            put(Constant, new GeneVariantName("TRBC2*00"));
         }};
 
-        //config
+        // config
         RandomGenerator rnd = RandomUtil.getThreadLocalRandom();
         rnd.setSeed(seed);
 

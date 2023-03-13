@@ -323,7 +323,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
                 hits = if (onlyTop) arrayOf(hits[0]) else hits
                 for (hit in hits) {
                     exists = true
-                    output.println(hit.gene.name + " (total score = " + hit.score + ")")
+                    output.println(hit.gene.name.name + " (total score = " + hit.score + ")")
                     for (i in 0 until alignments.numberOfTargets()) {
                         val alignment = hit.getAlignment(i) ?: continue
                         output.println("Alignment of Sequence" + i + " (score = " + alignment.score + "):")

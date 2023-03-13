@@ -55,6 +55,7 @@ import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VJ_REFERENCE
 import io.repseq.core.GeneType.Variable
+import io.repseq.core.GeneVariantName
 import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
@@ -403,7 +404,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                         geneFeaturesForFoundAllele != null -> {
                             geneFeaturesForFoundAllele.forEach { geneFeature ->
                                 val varianceOf =
-                                    originalLibrary[gene.data.meta[AllelesBuilder.metaKey.alleleVariantOf]!!.first()]
+                                    originalLibrary[GeneVariantName(gene.data.meta[AllelesBuilder.metaKey.alleleVariantOf]!!.first())]
                                 val range = varianceOf.referencePoints.getRange(geneFeature)
                                 val sequence = gene.getFeature(geneFeature)
                                 writer.write(FastaRecord(id++, "${gene.name} $range $geneFeature", sequence))
