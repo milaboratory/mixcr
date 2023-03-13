@@ -1,0 +1,3400 @@
+[
+  {
+    "taxonId": 9606,
+    "speciesNames": [
+      "homosapiens",
+      "homsap",
+      "hs",
+      "hsa",
+      "human"
+    ],
+    "genes": [
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-2*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 419082,
+          "L1Begin": 418982,
+          "VIntronBegin": 418936,
+          "L2Begin": 418851,
+          "FR1Begin": 418840,
+          "CDR1Begin": 418765,
+          "FR2Begin": 418741,
+          "CDR2Begin": 418690,
+          "FR3Begin": 418666,
+          "CDR3Begin": 418555,
+          "VEnd": 418544
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-3*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 437610,
+          "L1Begin": 437510,
+          "VIntronBegin": 437464,
+          "L2Begin": 437379,
+          "FR1Begin": 437368,
+          "CDR1Begin": 437293,
+          "FR2Begin": 437269,
+          "CDR2Begin": 437218,
+          "FR3Begin": 437194,
+          "CDR3Begin": 437083,
+          "VEnd": 437072
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-8*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 515352,
+          "L1Begin": 515252,
+          "VIntronBegin": 515206,
+          "L2Begin": 515120,
+          "FR1Begin": 515109,
+          "CDR1Begin": 515034,
+          "FR2Begin": 515010,
+          "CDR2Begin": 514959,
+          "FR3Begin": 514935,
+          "CDR3Begin": 514824,
+          "VEnd": 514813
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-12*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 555138,
+          "L1Begin": 555038,
+          "VIntronBegin": 554992,
+          "L2Begin": 554907,
+          "FR1Begin": 554896,
+          "CDR1Begin": 554821,
+          "FR2Begin": 554797,
+          "CDR2Begin": 554748,
+          "FR3Begin": 554748,
+          "CDR3Begin": 554748,
+          "VEnd": 554748
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-14*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 578555,
+          "FR1Begin": 578544,
+          "CDR1Begin": 578526,
+          "FR2Begin": 578502,
+          "CDR2Begin": 578451,
+          "FR3Begin": 578427,
+          "CDR3Begin": 578316,
+          "VEnd": 578305
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-17*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 607303,
+          "L1Begin": 607203,
+          "VIntronBegin": 607157,
+          "L2Begin": 607072,
+          "FR1Begin": 607061,
+          "CDR1Begin": 606986,
+          "FR2Begin": 606962,
+          "CDR2Begin": 606912,
+          "FR3Begin": 606888,
+          "CDR3Begin": 606777,
+          "VEnd": 606766
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-18*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 617849,
+          "L1Begin": 617749,
+          "VIntronBegin": 617703,
+          "L2Begin": 617619,
+          "FR1Begin": 617608,
+          "CDR1Begin": 617533,
+          "FR2Begin": 617509,
+          "CDR2Begin": 617458,
+          "FR3Begin": 617434,
+          "CDR3Begin": 617323,
+          "VEnd": 617312
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-24*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 709461,
+          "L1Begin": 709361,
+          "VIntronBegin": 709315,
+          "L2Begin": 709230,
+          "FR1Begin": 709219,
+          "CDR1Begin": 709144,
+          "FR2Begin": 709120,
+          "CDR2Begin": 709069,
+          "FR3Begin": 709045,
+          "CDR3Begin": 708934,
+          "VEnd": 708923
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-45*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 988865,
+          "L1Begin": 988765,
+          "VIntronBegin": 988719,
+          "L2Begin": 988634,
+          "FR1Begin": 988623,
+          "CDR1Begin": 988548,
+          "FR2Begin": 988524,
+          "CDR2Begin": 988473,
+          "FR3Begin": 988449,
+          "CDR3Begin": 988338,
+          "VEnd": 988327
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-46*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 992983,
+          "L1Begin": 992883,
+          "VIntronBegin": 992837,
+          "L2Begin": 992752,
+          "FR1Begin": 992741,
+          "CDR1Begin": 992666,
+          "FR2Begin": 992642,
+          "CDR2Begin": 992591,
+          "FR3Begin": 992567,
+          "CDR3Begin": 992456,
+          "VEnd": 992445
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-58*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1104289,
+          "L1Begin": 1104189,
+          "VIntronBegin": 1104143,
+          "L2Begin": 1104058,
+          "FR1Begin": 1104047,
+          "CDR1Begin": 1103972,
+          "FR2Begin": 1103948,
+          "CDR2Begin": 1103897,
+          "FR3Begin": 1103873,
+          "CDR3Begin": 1103762,
+          "VEnd": 1103751
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-67*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1162537,
+          "L1Begin": 1162437,
+          "VIntronBegin": 1162391,
+          "L2Begin": 1162308,
+          "FR1Begin": 1162297,
+          "CDR1Begin": 1162222,
+          "FR2Begin": 1162194,
+          "CDR2Begin": 1162143,
+          "FR3Begin": 1162119,
+          "CDR3Begin": 1162008,
+          "VEnd": 1161997
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-68*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1185738,
+          "L1Begin": 1185638,
+          "VIntronBegin": 1185593,
+          "L2Begin": 1185504,
+          "FR1Begin": 1185493,
+          "CDR1Begin": 1185418,
+          "FR2Begin": 1185394,
+          "CDR2Begin": 1185343,
+          "FR3Begin": 1185319,
+          "CDR3Begin": 1185208,
+          "VEnd": 1185158
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV1-69D*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1198800,
+          "L1Begin": 1198700,
+          "VIntronBegin": 1198654,
+          "L2Begin": 1198568,
+          "FR1Begin": 1198557,
+          "CDR1Begin": 1198482,
+          "FR2Begin": 1198458,
+          "CDR2Begin": 1198407,
+          "FR3Begin": 1198383,
+          "CDR3Begin": 1198272,
+          "VEnd": 1198261
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#6029046-6031481",
+        "name": "IGHV1OR21-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1535,
+          "L1Begin": 1435,
+          "VIntronBegin": 1389,
+          "L2Begin": 1306,
+          "FR1Begin": 1295,
+          "CDR1Begin": 1220,
+          "FR2Begin": 1196,
+          "CDR2Begin": 1145,
+          "FR3Begin": 1121,
+          "CDR3Begin": 1010,
+          "VEnd": 999
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV2-5*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 470422,
+          "L1Begin": 470322,
+          "VIntronBegin": 470276,
+          "L2Begin": 470190,
+          "FR1Begin": 470179,
+          "CDR1Begin": 470104,
+          "FR2Begin": 470074,
+          "CDR2Begin": 470023,
+          "FR3Begin": 470002,
+          "CDR3Begin": 469891,
+          "VEnd": 469878
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV2-10*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 535816,
+          "L1Begin": 535716,
+          "VIntronBegin": 535673,
+          "L2Begin": 535587,
+          "FR1Begin": 535576,
+          "CDR1Begin": 535501,
+          "FR2Begin": 535471,
+          "CDR2Begin": 535420,
+          "FR3Begin": 535399,
+          "CDR3Begin": 535288,
+          "VEnd": 535275
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV2-26*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 734299,
+          "L1Begin": 734199,
+          "VIntronBegin": 734153,
+          "L2Begin": 734067,
+          "FR1Begin": 734056,
+          "CDR1Begin": 733981,
+          "FR2Begin": 733951,
+          "CDR2Begin": 733900,
+          "FR3Begin": 733879,
+          "CDR3Begin": 733768,
+          "VEnd": 733755
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV2-70*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "UTR5Begin": 1207290,
+          "L1Begin": 1207190,
+          "VIntronBegin": 1207144,
+          "L2Begin": 1207058,
+          "FR1Begin": 1207047,
+          "CDR1Begin": 1206972,
+          "FR2Begin": 1206942,
+          "CDR2Begin": 1206891,
+          "FR3Begin": 1206870,
+          "CDR3Begin": 1206759,
+          "VEnd": 1206746
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV2-70*B",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "primary",
+        "alleleInfo": {
+          "parent": "IGHV2-70*00",
+          "reliableRegions": "{FR1Begin:VEnd}",
+          "mutations": "ST154A",
+          "originalAnchorPoints": {
+            "UTR5Begin": 1207290,
+            "L1Begin": 1207190,
+            "VIntronBegin": 1207144,
+            "L2Begin": 1207058,
+            "FR1Begin": 1207047,
+            "CDR1Begin": 1206972,
+            "FR2Begin": 1206942,
+            "CDR2Begin": 1206891,
+            "FR3Begin": 1206870,
+            "CDR3Begin": 1206759,
+            "VEnd": 1206746
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-6*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 488076,
+          "L1Begin": 487976,
+          "VIntronBegin": 487930,
+          "L2Begin": 487827,
+          "FR1Begin": 487816,
+          "CDR1Begin": 487742,
+          "FR2Begin": 487718,
+          "CDR2Begin": 487667,
+          "FR3Begin": 487643,
+          "CDR3Begin": 487532,
+          "VEnd": 487521
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-7*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 494692,
+          "L1Begin": 494592,
+          "VIntronBegin": 494546,
+          "L2Begin": 494443,
+          "FR1Begin": 494432,
+          "CDR1Begin": 494357,
+          "FR2Begin": 494333,
+          "CDR2Begin": 494282,
+          "FR3Begin": 494258,
+          "CDR3Begin": 494147,
+          "VEnd": 494136
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-9*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 528565,
+          "L1Begin": 528465,
+          "VIntronBegin": 528419,
+          "L2Begin": 528328,
+          "FR1Begin": 528317,
+          "CDR1Begin": 528242,
+          "FR2Begin": 528218,
+          "CDR2Begin": 528167,
+          "FR3Begin": 528143,
+          "CDR3Begin": 528032,
+          "VEnd": 528019
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-11*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 549513,
+          "L1Begin": 549413,
+          "VIntronBegin": 549367,
+          "L2Begin": 549270,
+          "FR1Begin": 549259,
+          "CDR1Begin": 549184,
+          "FR2Begin": 549160,
+          "CDR2Begin": 549109,
+          "FR3Begin": 549085,
+          "CDR3Begin": 548974,
+          "VEnd": 548963
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-13*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 562421,
+          "L1Begin": 562321,
+          "VIntronBegin": 562275,
+          "L2Begin": 562172,
+          "FR1Begin": 562161,
+          "CDR1Begin": 562086,
+          "FR2Begin": 562062,
+          "CDR2Begin": 562011,
+          "FR3Begin": 561990,
+          "CDR3Begin": 561879,
+          "VEnd": 561868
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-15*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 586607,
+          "L1Begin": 586507,
+          "VIntronBegin": 586461,
+          "L2Begin": 586358,
+          "FR1Begin": 586347,
+          "CDR1Begin": 586272,
+          "FR2Begin": 586248,
+          "CDR2Begin": 586197,
+          "FR3Begin": 586167,
+          "CDR3Begin": 586056,
+          "VEnd": 586045
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-16*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 598180,
+          "L1Begin": 598080,
+          "VIntronBegin": 598034,
+          "L2Begin": 597933,
+          "FR1Begin": 597922,
+          "CDR1Begin": 597847,
+          "FR2Begin": 597823,
+          "CDR2Begin": 597772,
+          "FR3Begin": 597748,
+          "CDR3Begin": 597637,
+          "VEnd": 597626
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-19*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 629410,
+          "FR1Begin": 629410,
+          "CDR1Begin": 629338,
+          "FR2Begin": 629314,
+          "CDR2Begin": 629263,
+          "FR3Begin": 629239,
+          "CDR3Begin": 629128,
+          "VEnd": 629117
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-20*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 643911,
+          "L1Begin": 643811,
+          "VIntronBegin": 643765,
+          "L2Begin": 643662,
+          "FR1Begin": 643651,
+          "CDR1Begin": 643576,
+          "FR2Begin": 643552,
+          "CDR2Begin": 643501,
+          "FR3Begin": 643477,
+          "CDR3Begin": 643366,
+          "VEnd": 643355
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-21*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 668010,
+          "L1Begin": 667910,
+          "VIntronBegin": 667864,
+          "L2Begin": 667763,
+          "FR1Begin": 667752,
+          "CDR1Begin": 667677,
+          "FR2Begin": 667653,
+          "CDR2Begin": 667602,
+          "FR3Begin": 667578,
+          "CDR3Begin": 667467,
+          "VEnd": 667456
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-22*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 690698,
+          "L1Begin": 690598,
+          "VIntronBegin": 690552,
+          "L2Begin": 690449,
+          "FR1Begin": 690438,
+          "CDR1Begin": 690363,
+          "FR2Begin": 690339,
+          "CDR2Begin": 690288,
+          "FR3Begin": 690258,
+          "CDR3Begin": 690147,
+          "VEnd": 690136
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-23*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 701535,
+          "L1Begin": 701435,
+          "VIntronBegin": 701389,
+          "L2Begin": 701286,
+          "FR1Begin": 701275,
+          "CDR1Begin": 701200,
+          "FR2Begin": 701176,
+          "CDR2Begin": 701125,
+          "FR3Begin": 701101,
+          "CDR3Begin": 700990,
+          "VEnd": 700979
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-25*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 721957,
+          "L1Begin": 721857,
+          "VIntronBegin": 721811,
+          "L2Begin": 721710,
+          "FR1Begin": 721699,
+          "CDR1Begin": 721624,
+          "FR2Begin": 721600,
+          "CDR2Begin": 721549,
+          "FR3Begin": 721525,
+          "CDR3Begin": 721414,
+          "VEnd": 721403
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-29*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 764024,
+          "L1Begin": 763924,
+          "VIntronBegin": 763878,
+          "L2Begin": 763775,
+          "FR1Begin": 763764,
+          "CDR1Begin": 763689,
+          "FR2Begin": 763665,
+          "CDR2Begin": 763614,
+          "FR3Begin": 763590,
+          "CDR3Begin": 763479,
+          "VEnd": 763466
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-30*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 767989,
+          "L1Begin": 767889,
+          "VIntronBegin": 767843,
+          "L2Begin": 767742,
+          "FR1Begin": 767731,
+          "CDR1Begin": 767656,
+          "FR2Begin": 767632,
+          "CDR2Begin": 767581,
+          "FR3Begin": 767557,
+          "CDR3Begin": 767446,
+          "VEnd": 767435
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-30-2*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 777289,
+          "L1Begin": 777189,
+          "VIntronBegin": 777143,
+          "L2Begin": 777049,
+          "FR1Begin": 777038,
+          "CDR1Begin": 776963,
+          "FR2Begin": 776939,
+          "CDR2Begin": 776888,
+          "FR3Begin": 776864,
+          "CDR3Begin": 776753,
+          "VEnd": 776740
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-32*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 838012,
+          "L1Begin": 837912,
+          "VIntronBegin": 837866,
+          "L2Begin": 837763,
+          "FR1Begin": 837752,
+          "CDR1Begin": 837677,
+          "FR2Begin": 837653,
+          "CDR2Begin": 837602,
+          "FR3Begin": 837578,
+          "CDR3Begin": 837467,
+          "VEnd": 837454
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-33*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 841654,
+          "L1Begin": 841554,
+          "VIntronBegin": 841508,
+          "L2Begin": 841407,
+          "FR1Begin": 841396,
+          "CDR1Begin": 841321,
+          "FR2Begin": 841297,
+          "CDR2Begin": 841246,
+          "FR3Begin": 841222,
+          "CDR3Begin": 841111,
+          "VEnd": 841100
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-33-2*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 850956,
+          "L1Begin": 850856,
+          "VIntronBegin": 850810,
+          "L2Begin": 850716,
+          "FR1Begin": 850705,
+          "CDR1Begin": 850630,
+          "FR2Begin": 850606,
+          "CDR2Begin": 850555,
+          "FR3Begin": 850531,
+          "CDR3Begin": 850420,
+          "VEnd": 850407
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-35*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 871253,
+          "L1Begin": 871153,
+          "VIntronBegin": 871107,
+          "L2Begin": 871006,
+          "FR1Begin": 870995,
+          "CDR1Begin": 870920,
+          "FR2Begin": 870896,
+          "CDR2Begin": 870845,
+          "FR3Begin": 870821,
+          "CDR3Begin": 870710,
+          "VEnd": 870699
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-36*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 874642,
+          "L1Begin": 874542,
+          "VIntronBegin": 874496,
+          "L2Begin": 874391,
+          "FR1Begin": 874380,
+          "CDR1Begin": 874306,
+          "FR2Begin": 874273,
+          "CDR2Begin": 874222,
+          "FR3Begin": 874198,
+          "CDR3Begin": 874087,
+          "VEnd": 874079
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-37*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 878525,
+          "L1Begin": 878425,
+          "VIntronBegin": 878379,
+          "L2Begin": 878280,
+          "FR1Begin": 878269,
+          "CDR1Begin": 878184,
+          "FR2Begin": 878160,
+          "CDR2Begin": 878109,
+          "FR3Begin": 878085,
+          "CDR3Begin": 877981,
+          "VEnd": 877975
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-38*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 892354,
+          "L1Begin": 892254,
+          "VIntronBegin": 892208,
+          "L2Begin": 892105,
+          "FR1Begin": 892094,
+          "CDR1Begin": 892019,
+          "FR2Begin": 891995,
+          "CDR2Begin": 891944,
+          "FR3Begin": 891926,
+          "CDR3Begin": 891815,
+          "VEnd": 891804
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-41*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 924991,
+          "L1Begin": 924891,
+          "VIntronBegin": 924845,
+          "L2Begin": 924742,
+          "FR1Begin": 924731,
+          "CDR1Begin": 924656,
+          "FR2Begin": 924632,
+          "CDR2Begin": 924581,
+          "FR3Begin": 924557,
+          "CDR3Begin": 924455,
+          "VEnd": 924436
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-42*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 945113,
+          "L1Begin": 945013,
+          "VIntronBegin": 944995,
+          "L2Begin": 944892,
+          "FR1Begin": 944880,
+          "CDR1Begin": 944805,
+          "FR2Begin": 944781,
+          "CDR2Begin": 944730,
+          "FR3Begin": 944700,
+          "CDR3Begin": 944589,
+          "VEnd": 944578
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-43*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 952144,
+          "L1Begin": 952044,
+          "VIntronBegin": 951998,
+          "L2Begin": 951895,
+          "FR1Begin": 951884,
+          "CDR1Begin": 951809,
+          "FR2Begin": 951785,
+          "CDR2Begin": 951734,
+          "FR3Begin": 951710,
+          "CDR3Begin": 951599,
+          "VEnd": 951586
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-47*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1000460,
+          "L1Begin": 1000360,
+          "VIntronBegin": 1000310,
+          "L2Begin": 1000208,
+          "FR1Begin": 1000197,
+          "CDR1Begin": 1000122,
+          "FR2Begin": 1000098,
+          "CDR2Begin": 1000047,
+          "FR3Begin": 1000026,
+          "CDR3Begin": 999915,
+          "VEnd": 999904
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-48*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1019767,
+          "L1Begin": 1019667,
+          "VIntronBegin": 1019621,
+          "L2Begin": 1019518,
+          "FR1Begin": 1019507,
+          "CDR1Begin": 1019432,
+          "FR2Begin": 1019408,
+          "CDR2Begin": 1019357,
+          "FR3Begin": 1019333,
+          "CDR3Begin": 1019222,
+          "VEnd": 1019211
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-49*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1038891,
+          "L1Begin": 1038791,
+          "VIntronBegin": 1038745,
+          "L2Begin": 1038642,
+          "FR1Begin": 1038631,
+          "CDR1Begin": 1038556,
+          "FR2Begin": 1038532,
+          "CDR2Begin": 1038481,
+          "FR3Begin": 1038451,
+          "CDR3Begin": 1038340,
+          "VEnd": 1038329
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-50*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1048035,
+          "L1Begin": 1047935,
+          "VIntronBegin": 1047889,
+          "L2Begin": 1047787,
+          "FR1Begin": 1047776,
+          "CDR1Begin": 1047702,
+          "FR2Begin": 1047678,
+          "CDR2Begin": 1047627,
+          "FR3Begin": 1047603,
+          "CDR3Begin": 1047492,
+          "VEnd": 1047479
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-52*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1068303,
+          "L1Begin": 1068203,
+          "VIntronBegin": 1068157,
+          "L2Begin": 1068059,
+          "FR1Begin": 1068048,
+          "CDR1Begin": 1067973,
+          "FR2Begin": 1067949,
+          "CDR2Begin": 1067898,
+          "FR3Begin": 1067874,
+          "CDR3Begin": 1067763,
+          "VEnd": 1067752
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-53*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1074612,
+          "L1Begin": 1074512,
+          "VIntronBegin": 1074466,
+          "L2Begin": 1074365,
+          "FR1Begin": 1074354,
+          "CDR1Begin": 1074279,
+          "FR2Begin": 1074255,
+          "CDR2Begin": 1074204,
+          "FR3Begin": 1074183,
+          "CDR3Begin": 1074072,
+          "VEnd": 1074061
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-54*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1083286,
+          "L1Begin": 1083186,
+          "VIntronBegin": 1083140,
+          "L2Begin": 1083047,
+          "FR1Begin": 1083036,
+          "CDR1Begin": 1082961,
+          "FR2Begin": 1082937,
+          "CDR2Begin": 1082886,
+          "FR3Begin": 1082862,
+          "CDR3Begin": 1082751,
+          "VEnd": 1082738
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-57*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1100609,
+          "FR1Begin": 1100607,
+          "CDR1Begin": 1100523,
+          "FR2Begin": 1100499,
+          "CDR2Begin": 1100448,
+          "FR3Begin": 1100424,
+          "CDR3Begin": 1100310,
+          "VEnd": 1100303
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-60*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1113148,
+          "L1Begin": 1113048,
+          "VIntronBegin": 1113002,
+          "L2Begin": 1112899,
+          "FR1Begin": 1112888,
+          "CDR1Begin": 1112812,
+          "FR2Begin": 1112788,
+          "CDR2Begin": 1112737,
+          "FR3Begin": 1112713,
+          "CDR3Begin": 1112602,
+          "VEnd": 1112591
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-62*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1125080,
+          "L1Begin": 1124980,
+          "VIntronBegin": 1124934,
+          "L2Begin": 1124831,
+          "FR1Begin": 1124820,
+          "CDR1Begin": 1124745,
+          "FR2Begin": 1124721,
+          "CDR2Begin": 1124670,
+          "FR3Begin": 1124646,
+          "CDR3Begin": 1124535,
+          "VEnd": 1124524
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-63*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1134175,
+          "L1Begin": 1134075,
+          "VIntronBegin": 1134029,
+          "L2Begin": 1133926,
+          "FR1Begin": 1133915,
+          "CDR1Begin": 1133840,
+          "FR2Begin": 1133816,
+          "CDR2Begin": 1133765,
+          "FR3Begin": 1133741,
+          "CDR3Begin": 1133630,
+          "VEnd": 1133607
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-64*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1139673,
+          "L1Begin": 1139573,
+          "VIntronBegin": 1139527,
+          "L2Begin": 1139424,
+          "FR1Begin": 1139413,
+          "CDR1Begin": 1139338,
+          "FR2Begin": 1139314,
+          "CDR2Begin": 1139263,
+          "FR3Begin": 1139239,
+          "CDR3Begin": 1139128,
+          "VEnd": 1139117
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-65*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1148027,
+          "L1Begin": 1147927,
+          "VIntronBegin": 1147881,
+          "L2Begin": 1147785,
+          "FR1Begin": 1147774,
+          "CDR1Begin": 1147699,
+          "FR2Begin": 1147674,
+          "CDR2Begin": 1147623,
+          "FR3Begin": 1147593,
+          "CDR3Begin": 1147482,
+          "VEnd": 1147432
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-66*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1156960,
+          "L1Begin": 1156860,
+          "VIntronBegin": 1156814,
+          "L2Begin": 1156713,
+          "FR1Begin": 1156702,
+          "CDR1Begin": 1156627,
+          "FR2Begin": 1156603,
+          "CDR2Begin": 1156552,
+          "FR3Begin": 1156531,
+          "CDR3Begin": 1156420,
+          "VEnd": 1156409
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-71*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1211888,
+          "L1Begin": 1211788,
+          "VIntronBegin": 1211742,
+          "L2Begin": 1211639,
+          "FR1Begin": 1211628,
+          "CDR1Begin": 1211553,
+          "FR2Begin": 1211529,
+          "CDR2Begin": 1211478,
+          "FR3Begin": 1211448,
+          "CDR3Begin": 1211337,
+          "VEnd": 1211326
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-72*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "UTR5Begin": 1227420,
+          "L1Begin": 1227320,
+          "VIntronBegin": 1227274,
+          "L2Begin": 1227171,
+          "FR1Begin": 1227160,
+          "CDR1Begin": 1227085,
+          "FR2Begin": 1227061,
+          "CDR2Begin": 1227010,
+          "FR3Begin": 1226980,
+          "CDR3Begin": 1226869,
+          "VEnd": 1226858
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-72*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "UTR5Begin": 1227420,
+          "L1Begin": 1227320,
+          "VIntronBegin": 1227274,
+          "L2Begin": 1227171,
+          "FR1Begin": 1227160,
+          "CDR1Begin": 1227085,
+          "FR2Begin": 1227061,
+          "CDR2Begin": 1227010,
+          "FR3Begin": 1226980,
+          "CDR3Begin": 1226869,
+          "VEnd": 1226858
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-72*B",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHV3-72*00",
+          "reliableRegions": "{FR1Begin:VEnd}",
+          "mutations": "SG154A",
+          "originalAnchorPoints": {
+            "UTR5Begin": 1227420,
+            "L1Begin": 1227320,
+            "VIntronBegin": 1227274,
+            "L2Begin": 1227171,
+            "FR1Begin": 1227160,
+            "CDR1Begin": 1227085,
+            "FR2Begin": 1227061,
+            "CDR2Begin": 1227010,
+            "FR3Begin": 1226980,
+            "CDR3Begin": 1226869,
+            "VEnd": 1226858
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-73*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1239420,
+          "L1Begin": 1239320,
+          "VIntronBegin": 1239274,
+          "L2Begin": 1239171,
+          "FR1Begin": 1239160,
+          "CDR1Begin": 1239085,
+          "FR2Begin": 1239061,
+          "CDR2Begin": 1239010,
+          "FR3Begin": 1238980,
+          "CDR3Begin": 1238869,
+          "VEnd": 1238858
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-74*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1247168,
+          "L1Begin": 1247068,
+          "VIntronBegin": 1247022,
+          "L2Begin": 1246919,
+          "FR1Begin": 1246908,
+          "CDR1Begin": 1246833,
+          "FR2Begin": 1246809,
+          "CDR2Begin": 1246758,
+          "FR3Begin": 1246734,
+          "CDR3Begin": 1246623,
+          "VEnd": 1246612
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-75*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1260419,
+          "L1Begin": 1260319,
+          "VIntronBegin": 1260274,
+          "L2Begin": 1260170,
+          "FR1Begin": 1260159,
+          "CDR1Begin": 1260071,
+          "FR2Begin": 1260047,
+          "CDR2Begin": 1259996,
+          "FR3Begin": 1259972,
+          "CDR3Begin": 1259860,
+          "VEnd": 1259849
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-76*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1264580,
+          "L1Begin": 1264480,
+          "VIntronBegin": 1264434,
+          "L2Begin": 1264333,
+          "FR1Begin": 1264322,
+          "CDR1Begin": 1264247,
+          "FR2Begin": 1264223,
+          "CDR2Begin": 1264174,
+          "FR3Begin": 1264150,
+          "CDR3Begin": 1264039,
+          "VEnd": 1264030
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-79*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1304361,
+          "L1Begin": 1304261,
+          "VIntronBegin": 1304216,
+          "L2Begin": 1304124,
+          "FR1Begin": 1304105,
+          "CDR1Begin": 1304038,
+          "FR2Begin": 1304014,
+          "CDR2Begin": 1303963,
+          "FR3Begin": 1303939,
+          "CDR3Begin": 1303828,
+          "VEnd": 1303808
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-4*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "UTR5Begin": 444434,
+          "L1Begin": 444334,
+          "VIntronBegin": 444288,
+          "L2Begin": 444206,
+          "FR1Begin": 444195,
+          "CDR1Begin": 444120,
+          "FR2Begin": 444093,
+          "CDR2Begin": 444042,
+          "FR3Begin": 444021,
+          "CDR3Begin": 443910,
+          "VEnd": 443899
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-4*B",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHV4-4*00",
+          "reliableRegions": "{FR1Begin:VEnd}",
+          "mutations": "ST154A",
+          "originalAnchorPoints": {
+            "UTR5Begin": 444434,
+            "L1Begin": 444334,
+            "VIntronBegin": 444288,
+            "L2Begin": 444206,
+            "FR1Begin": 444195,
+            "CDR1Begin": 444120,
+            "FR2Begin": 444093,
+            "CDR2Begin": 444042,
+            "FR3Begin": 444021,
+            "CDR3Begin": 443910,
+            "VEnd": 443899
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-28*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 757149,
+          "L1Begin": 757049,
+          "VIntronBegin": 757003,
+          "L2Begin": 756921,
+          "FR1Begin": 756910,
+          "CDR1Begin": 756835,
+          "FR2Begin": 756808,
+          "CDR2Begin": 756757,
+          "FR3Begin": 756736,
+          "CDR3Begin": 756625,
+          "VEnd": 756614
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-30-2*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 782176,
+          "L1Begin": 782076,
+          "VIntronBegin": 782030,
+          "L2Begin": 781948,
+          "FR1Begin": 781937,
+          "CDR1Begin": 781862,
+          "FR2Begin": 781832,
+          "CDR2Begin": 781781,
+          "FR3Begin": 781760,
+          "CDR3Begin": 781649,
+          "VEnd": 781638
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-31*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 831134,
+          "L1Begin": 831034,
+          "VIntronBegin": 830988,
+          "L2Begin": 830906,
+          "FR1Begin": 830895,
+          "CDR1Begin": 830820,
+          "FR2Begin": 830790,
+          "CDR2Begin": 830739,
+          "FR3Begin": 830718,
+          "CDR3Begin": 830607,
+          "VEnd": 830596
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-34*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 855503,
+          "L1Begin": 855403,
+          "VIntronBegin": 855357,
+          "L2Begin": 855274,
+          "FR1Begin": 855263,
+          "CDR1Begin": 855188,
+          "FR2Begin": 855164,
+          "CDR2Begin": 855113,
+          "FR3Begin": 855092,
+          "CDR3Begin": 854981,
+          "VEnd": 854970
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-39*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 903549,
+          "L1Begin": 903449,
+          "VIntronBegin": 903403,
+          "L2Begin": 903320,
+          "FR1Begin": 903309,
+          "CDR1Begin": 903234,
+          "FR2Begin": 903204,
+          "CDR2Begin": 903153,
+          "FR3Begin": 903132,
+          "CDR3Begin": 903021,
+          "VEnd": 903010
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-55*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "UTR5Begin": 1088046,
+          "L1Begin": 1087946,
+          "VIntronBegin": 1087900,
+          "L2Begin": 1087817,
+          "FR1Begin": 1087806,
+          "CDR1Begin": 1087731,
+          "FR2Begin": 1087704,
+          "CDR2Begin": 1087653,
+          "FR3Begin": 1087632,
+          "CDR3Begin": 1087521,
+          "VEnd": 1087510
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-55*B",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHV4-55*00",
+          "reliableRegions": "{FR1Begin:VEnd}",
+          "mutations": "ST154A",
+          "originalAnchorPoints": {
+            "UTR5Begin": 1088046,
+            "L1Begin": 1087946,
+            "VIntronBegin": 1087900,
+            "L2Begin": 1087817,
+            "FR1Begin": 1087806,
+            "CDR1Begin": 1087731,
+            "FR2Begin": 1087704,
+            "CDR2Begin": 1087653,
+            "FR3Begin": 1087632,
+            "CDR3Begin": 1087521,
+            "VEnd": 1087510
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-59*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1109175,
+          "L1Begin": 1109075,
+          "VIntronBegin": 1109029,
+          "L2Begin": 1108947,
+          "FR1Begin": 1108936,
+          "CDR1Begin": 1108861,
+          "FR2Begin": 1108837,
+          "CDR2Begin": 1108786,
+          "FR3Begin": 1108765,
+          "CDR3Begin": 1108654,
+          "VEnd": 1108643
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-61*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1121051,
+          "L1Begin": 1120951,
+          "VIntronBegin": 1120905,
+          "L2Begin": 1120823,
+          "FR1Begin": 1120812,
+          "CDR1Begin": 1120737,
+          "FR2Begin": 1120707,
+          "CDR2Begin": 1120656,
+          "FR3Begin": 1120635,
+          "CDR3Begin": 1120524,
+          "VEnd": 1120513
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-80*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1309455,
+          "L1Begin": 1309355,
+          "VIntronBegin": 1309309,
+          "L2Begin": 1309226,
+          "FR1Begin": 1309215,
+          "CDR1Begin": 1309112,
+          "FR2Begin": 1309103,
+          "CDR2Begin": 1309062,
+          "FR3Begin": 1309041,
+          "CDR3Begin": 1308952,
+          "VEnd": 1308951
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV5-51*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1060655,
+          "L1Begin": 1060555,
+          "VIntronBegin": 1060509,
+          "L2Begin": 1060426,
+          "FR1Begin": 1060415,
+          "CDR1Begin": 1060340,
+          "FR2Begin": 1060316,
+          "CDR2Begin": 1060265,
+          "FR3Begin": 1060241,
+          "CDR3Begin": 1060130,
+          "VEnd": 1060119
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV5-78*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1287816,
+          "L1Begin": 1287716,
+          "VIntronBegin": 1287670,
+          "L2Begin": 1287587,
+          "FR1Begin": 1287576,
+          "CDR1Begin": 1287501,
+          "FR2Begin": 1287477,
+          "CDR2Begin": 1287426,
+          "FR3Begin": 1287402,
+          "CDR3Begin": 1287291,
+          "VEnd": 1287281
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV6-1*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 372248,
+          "L1Begin": 372148,
+          "VIntronBegin": 372099,
+          "L2Begin": 372016,
+          "FR1Begin": 372005,
+          "CDR1Begin": 371930,
+          "FR2Begin": 371900,
+          "CDR2Begin": 371849,
+          "FR3Begin": 371822,
+          "CDR3Begin": 371711,
+          "VEnd": 371700
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV7-4-1*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 457658,
+          "L1Begin": 457558,
+          "VIntronBegin": 457512,
+          "L2Begin": 457428,
+          "FR1Begin": 457417,
+          "CDR1Begin": 457342,
+          "FR2Begin": 457318,
+          "CDR2Begin": 457267,
+          "FR3Begin": 457243,
+          "CDR3Begin": 457132,
+          "VEnd": 457121
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV7-27*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 750693,
+          "L1Begin": 750593,
+          "VIntronBegin": 750547,
+          "L2Begin": 750463,
+          "FR1Begin": 750452,
+          "CDR1Begin": 750377,
+          "FR2Begin": 750353,
+          "CDR2Begin": 750302,
+          "FR3Begin": 750278,
+          "CDR3Begin": 750179,
+          "VEnd": 750179
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV7-34-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 859143,
+          "L1Begin": 859043,
+          "VIntronBegin": 858997,
+          "L2Begin": 858913,
+          "FR1Begin": 858902,
+          "CDR1Begin": 858830,
+          "FR2Begin": 858806,
+          "CDR2Begin": 858755,
+          "FR3Begin": 858731,
+          "CDR3Begin": 858620,
+          "VEnd": 858609
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV7-40*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 906863,
+          "FR1Begin": 906863,
+          "CDR1Begin": 906863,
+          "FR2Begin": 906857,
+          "CDR2Begin": 906806,
+          "FR3Begin": 906782,
+          "CDR3Begin": 906671,
+          "VEnd": 906660
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV7-56*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1091691,
+          "L1Begin": 1091591,
+          "VIntronBegin": 1091545,
+          "L2Begin": 1091461,
+          "FR1Begin": 1091450,
+          "CDR1Begin": 1091375,
+          "FR2Begin": 1091351,
+          "CDR2Begin": 1091300,
+          "FR3Begin": 1091277,
+          "CDR3Begin": 1091167,
+          "VEnd": 1091156
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV7-81*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 1311286,
+          "L1Begin": 1311186,
+          "VIntronBegin": 1311140,
+          "L2Begin": 1311056,
+          "FR1Begin": 1311045,
+          "CDR1Begin": 1310970,
+          "FR2Begin": 1310946,
+          "CDR2Begin": 1310895,
+          "FR3Begin": 1310871,
+          "CDR3Begin": 1310760,
+          "VEnd": 1310749
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV8-51-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1065186,
+          "FR1Begin": 1065175,
+          "CDR1Begin": 1065100,
+          "FR2Begin": 1065076,
+          "CDR2Begin": 1065025,
+          "FR3Begin": 1065001,
+          "CDR3Begin": 1064890,
+          "VEnd": 1064879
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-1-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 377338,
+          "VEnd": 376884
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-15-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 596228,
+          "FR1Begin": 596228,
+          "CDR1Begin": 596180,
+          "FR2Begin": 596150,
+          "CDR2Begin": 596099,
+          "FR3Begin": 596078,
+          "CDR3Begin": 595961,
+          "VEnd": 595957
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-20-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 645244,
+          "VEnd": 645205
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-22-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 696002,
+          "FR1Begin": 696001,
+          "CDR1Begin": 695947,
+          "FR2Begin": 695926,
+          "CDR2Begin": 695875,
+          "FR3Begin": 695854,
+          "CDR3Begin": 695740,
+          "VEnd": 695733
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-26-2*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 747319,
+          "VEnd": 747006
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-28-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 762047,
+          "VEnd": 761792
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-30-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 775309,
+          "FR1Begin": 775309,
+          "CDR1Begin": 775261,
+          "FR2Begin": 775231,
+          "CDR2Begin": 775183,
+          "FR3Begin": 775162,
+          "CDR3Begin": 775048,
+          "VEnd": 775035
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-30-21*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 787056,
+          "VEnd": 786803
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-33-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 848974,
+          "FR1Begin": 848974,
+          "CDR1Begin": 848926,
+          "FR2Begin": 848896,
+          "CDR2Begin": 848848,
+          "FR3Begin": 848827,
+          "CDR3Begin": 848713,
+          "VEnd": 848700
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-40-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 922318,
+          "VEnd": 922241
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-43-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 954324,
+          "VEnd": 954114
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-44-2*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 975789,
+          "VEnd": 975552
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-46-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 997557,
+          "L1Begin": 997457,
+          "VIntronBegin": 997411,
+          "L2Begin": 997326,
+          "VEnd": 997168
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-49-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1045978,
+          "FR1Begin": 1045978,
+          "CDR1Begin": 1045930,
+          "FR2Begin": 1045900,
+          "CDR2Begin": 1045849,
+          "FR3Begin": 1045828,
+          "CDR3Begin": 1045711,
+          "VEnd": 1045707
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-51-2*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1066353,
+          "FR1Begin": 1066353,
+          "CDR1Begin": 1066305,
+          "FR2Begin": 1066275,
+          "CDR2Begin": 1066230,
+          "FR3Begin": 1066209,
+          "CDR3Begin": 1066095,
+          "VEnd": 1066090
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-53-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1081327,
+          "FR1Begin": 1081327,
+          "CDR1Begin": 1081279,
+          "FR2Begin": 1081249,
+          "CDR2Begin": 1081189,
+          "FR3Begin": 1081183,
+          "CDR3Begin": 1081069,
+          "VEnd": 1081057
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-60-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1119368,
+          "VEnd": 1119099
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-62-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1132183,
+          "FR1Begin": 1132183,
+          "CDR1Begin": 1132135,
+          "FR2Begin": 1132105,
+          "CDR2Begin": 1132057,
+          "FR3Begin": 1132036,
+          "CDR3Begin": 1131925,
+          "VEnd": 1131910
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-65-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1153439,
+          "FR1Begin": 1153438,
+          "CDR1Begin": 1153390,
+          "FR2Begin": 1153369,
+          "CDR2Begin": 1153309,
+          "FR3Begin": 1153288,
+          "CDR3Begin": 1153174,
+          "VEnd": 1153166
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-67-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1167937,
+          "VEnd": 1167787
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-74-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1257583,
+          "VEnd": 1257414
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVII-78-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1302065,
+          "VEnd": 1301790
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-2-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 433813,
+          "FR1Begin": 433803,
+          "CDR1Begin": 433731,
+          "FR2Begin": 433707,
+          "CDR2Begin": 433656,
+          "FR3Begin": 433632,
+          "CDR3Begin": 433518,
+          "VEnd": 433511
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-5-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 471741,
+          "VEnd": 471642
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-5-2*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 477837,
+          "FR1Begin": 477835,
+          "CDR1Begin": 477799,
+          "FR2Begin": 477775,
+          "CDR2Begin": 477724,
+          "FR3Begin": 477703,
+          "CDR3Begin": 477589,
+          "VEnd": 477576
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-11-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 552804,
+          "VEnd": 552617
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-13-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 575027,
+          "VEnd": 574728
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-16-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 603476,
+          "FR1Begin": 603460,
+          "CDR1Begin": 603391,
+          "FR2Begin": 603367,
+          "CDR2Begin": 603316,
+          "FR3Begin": 603292,
+          "CDR3Begin": 603178,
+          "VEnd": 603171
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-22-2*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 697347,
+          "L1Begin": 697247,
+          "VIntronBegin": 697202,
+          "L2Begin": 697100,
+          "VEnd": 697059
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-25-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 726184,
+          "VEnd": 725942
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-26-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 742071,
+          "FR1Begin": 742059,
+          "CDR1Begin": 741984,
+          "FR2Begin": 741960,
+          "CDR2Begin": 741909,
+          "FR3Begin": 741885,
+          "CDR3Begin": 741771,
+          "VEnd": 741764
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-38-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 899621,
+          "VEnd": 899328
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-44*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 959896,
+          "L1Begin": 959796,
+          "VIntronBegin": 959750,
+          "L2Begin": 959651,
+          "VEnd": 959619
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-47-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1012838,
+          "VEnd": 1012534
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-67-2*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1168595,
+          "VEnd": 1168496
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-67-3*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1174283,
+          "FR1Begin": 1174280,
+          "CDR1Begin": 1174244,
+          "FR2Begin": 1174220,
+          "CDR2Begin": 1174169,
+          "FR3Begin": 1174148,
+          "CDR3Begin": 1174022,
+          "VEnd": 1174008
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-67-4*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1176750,
+          "VEnd": 1176444
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-76-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1268239,
+          "VEnd": 1267932
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIII-82*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "L2Begin": 1316012,
+          "FR1Begin": 1316003,
+          "CDR1Begin": 1315931,
+          "FR2Begin": 1315925,
+          "CDR2Begin": 1315883,
+          "FR3Begin": 1315841,
+          "CDR3Begin": 1315727,
+          "VEnd": 1315720
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHVIV-44-1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 971275,
+          "L1Begin": 971175,
+          "VIntronBegin": 971129,
+          "L2Begin": 971046,
+          "VEnd": 970746
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD1-1*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 351462,
+          "DEnd": 351445
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD1-7*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 341868,
+          "DEnd": 341851
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD1-14*00",
+        "geneType": "D",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 332599,
+          "DEnd": 332582
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD1-20*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 323146,
+          "DEnd": 323129
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD1-26*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 313073,
+          "DEnd": 313053
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD2-2*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 348800,
+          "DEnd": 348769
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD2-8*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 339186,
+          "DEnd": 339155
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD2-15*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 329932,
+          "DEnd": 329901
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD2-21*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 320550,
+          "DEnd": 320522
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD3-3*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 346333,
+          "DEnd": 346302
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD3-9*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 336656,
+          "DEnd": 336625
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD3-10*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 336472,
+          "DEnd": 336441
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD3-16*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 327615,
+          "DEnd": 327578
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD3-22*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 318081,
+          "DEnd": 318050
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD4-4*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 345181,
+          "DEnd": 345165
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD4-11*00",
+        "geneType": "D",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 335576,
+          "DEnd": 335560
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD4-17*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 326468,
+          "DEnd": 326452
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD4-23*00",
+        "geneType": "D",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 316908,
+          "DEnd": 316889
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD5-5*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 344220,
+          "DEnd": 344200
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD5-12*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 334616,
+          "DEnd": 334593
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD5-18*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 325507,
+          "DEnd": 325484
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD5-24*00",
+        "geneType": "D",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 315942,
+          "DEnd": 315922
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD6-6*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 342372,
+          "DEnd": 342354
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD6-13*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 333107,
+          "DEnd": 333086
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD6-19*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 323658,
+          "DEnd": 323637
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD6-25*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 313576,
+          "DEnd": 313558
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD7-27*00",
+        "geneType": "D",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "DBegin": 297993,
+          "DEnd": 297982
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ1*00",
+        "geneType": "J",
+        "isFunctional": true,
+        "type": "alternative",
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "JBegin": 297890,
+          "FR4Begin": 297869,
+          "FR4End": 297838
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ1*B",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHJ1*00",
+          "reliableRegions": "{JBegin:FR4End}",
+          "mutations": "SG35T",
+          "originalAnchorPoints": {
+            "JBegin": 297890,
+            "FR4Begin": 297869,
+            "FR4End": 297838
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ1P*00",
+        "geneType": "J",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "JBegin": 298109,
+          "FR4Begin": 298088,
+          "FR4End": 298057
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ2*00",
+        "geneType": "J",
+        "isFunctional": true,
+        "type": "alternative",
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "JBegin": 297683,
+          "FR4Begin": 297661,
+          "FR4End": 297630
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ2*B",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHJ2*00",
+          "reliableRegions": "{JBegin:FR4End}",
+          "mutations": "ST35C",
+          "originalAnchorPoints": {
+            "JBegin": 297683,
+            "FR4Begin": 297661,
+            "FR4End": 297630
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ2P*00",
+        "geneType": "J",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "JBegin": 297284,
+          "FR4Begin": 297261,
+          "FR4End": 297226
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ3*00",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "JBegin": 297068,
+          "FR4Begin": 297049,
+          "FR4End": 297018
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ3*B",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHJ3*00",
+          "reliableRegions": "{JBegin:FR4End}",
+          "mutations": "ST35C",
+          "originalAnchorPoints": {
+            "JBegin": 297068,
+            "FR4Begin": 297049,
+            "FR4End": 297018
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ3P*00",
+        "geneType": "J",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "JBegin": 295897,
+          "FR4Begin": 295877,
+          "FR4End": 295848
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ4*00",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "JBegin": 296694,
+          "FR4Begin": 296677,
+          "FR4End": 296646
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ4*B",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHJ4*00",
+          "reliableRegions": "{JBegin:FR4End}",
+          "mutations": "SA35T",
+          "originalAnchorPoints": {
+            "JBegin": 296694,
+            "FR4Begin": 296677,
+            "FR4End": 296646
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ5*00",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "JBegin": 296296,
+          "FR4Begin": 296276,
+          "FR4End": 296245
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ5*B",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHJ5*00",
+          "reliableRegions": "{JBegin:FR4End}",
+          "mutations": "SG35T",
+          "originalAnchorPoints": {
+            "JBegin": 296296,
+            "FR4Begin": 296276,
+            "FR4End": 296245
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ6*00",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
+        "anchorPoints": {
+          "JBegin": 295692,
+          "FR4Begin": 295660,
+          "FR4End": 295629
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ6*B",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "alleleInfo": {
+          "parent": "IGHJ6*00",
+          "reliableRegions": "{JBegin:FR4End}",
+          "mutations": "SC35T",
+          "originalAnchorPoints": {
+            "JBegin": 295692,
+            "FR4Begin": 295660,
+            "FR4End": 295629
+          }
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHA1*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 141429,
+          "CExon1End": 141124,
+          "CEnd": 141124
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHA2*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 2302,
+          "CExon1End": 2000,
+          "CEnd": 2000
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHD*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 278014,
+          "CExon1End": 277712,
+          "CEnd": 277712
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHE*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 15053,
+          "CExon1End": 14745,
+          "CEnd": 14745
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHEP1*00",
+        "geneType": "C",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 154552,
+          "CExon1End": 154234,
+          "CEnd": 154234
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHG1*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 175144,
+          "CExon1End": 174851,
+          "CEnd": 174851
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHG2*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 77966,
+          "CExon1End": 77673,
+          "CEnd": 77673
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHG3*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 203732,
+          "CExon1End": 203439,
+          "CEnd": 203439
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHG4*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 58936,
+          "CExon1End": 58643,
+          "CEnd": 58643
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHGP*00",
+        "geneType": "C",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 103310,
+          "CExon1End": 102822,
+          "CEnd": 102822
+        }
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHM*00",
+        "geneType": "C",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "anchorPoints": {
+          "CBegin": 288659,
+          "CExon1End": 288348,
+          "CEnd": 288348
+        }
+      }
+    ]
+  }
+]

@@ -229,7 +229,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         libraryOutputs.forEach { output ->
             ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.FASTA)
         }
-        ValidationException.require(findAllelesParameters.searchAlleleParameter.minClonesCountForAlleleSearch >= findAllelesParameters.maxCountForPossibleRemoval) {
+        ValidationException.require(findAllelesParameters.searchAlleleParameterForSecondRound.minClonesCountForAlleleSearch >= findAllelesParameters.maxCountForPossibleRemoval) {
             "`searchAlleleParameter.minClonesCountForAlleleSearch` should be greater or equal then `maxCountForPossibleRemoval`"
         }
         if ((listOfNotNull(outputClnsOptions.outputTemplate, allelesMutationsOutput) + libraryOutputs).isEmpty()) {
@@ -281,8 +281,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val originalLibrary = datasets.first().usedGenes.first().parentLibrary
 
         for (geneType in VJ_REFERENCE) {
-            val scores =
-                datasets.map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
+            val scores = datasets.map {
+                it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring
+            }
             ValidationException.requireDistinct(scores) {
                 "Require the same ${geneType.letter} scoring for all input files"
             }
@@ -300,29 +301,67 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "Input files must be aligned by V feature containing FR1Begin"
         }
 
+        val repeatedGeneNamesInBaseGenes = originalLibrary.allGenes
+            .map { it.data.alleleInfo?.parent ?: it.name }
+            .distinct()
+            .groupBy { it.geneName }
+            .filterValues { it.size > 1 }
+        ValidationException.require(repeatedGeneNamesInBaseGenes.isEmpty()) {
+            "Several base genes ${repeatedGeneNamesInBaseGenes.values} point to the same gene group: ${repeatedGeneNamesInBaseGenes.keys}"
+        }
+
+        val stepsCount = 7
         val allelesBuilder = AllelesBuilder.create(
-            findAllelesParameters,
+            "Step 1 of $stepsCount",
             clonesFilter,
             originalLibrary.allGenes,
             tempDest,
             datasets,
             scoring,
-            datasets.flatMap { it.usedGenes }.distinct(),
             featureToAlign,
             allFullyCoveredBy,
             threadsOptions.value
         )
 
-        val JAlleles = allelesBuilder.searchForAlleles(Joining, emptyMap())
-        val VAlleles = allelesBuilder.searchForAlleles(
+        val JAllelesFromFirstRound = allelesBuilder.searchForAlleles(
+            "Step 2 of $stepsCount",
+            findAllelesParameters.searchAlleleParameterForFirstRound,
+            null,
+            Joining,
+            emptyMap()
+        )
+        val VAllelesFromFirstRound = allelesBuilder.searchForAlleles(
+            "Step 3 of $stepsCount",
+            findAllelesParameters.searchAlleleParameterForFirstRound,
+            null,
             Variable,
-            JAlleles
+            JAllelesFromFirstRound
+                .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
+                .filterValues { it.isNotEmpty() }
+        )
+        reportBuilder.reportFirstRound((JAllelesFromFirstRound.values + VAllelesFromFirstRound.values).flatten())
+        val JAllelesFromSecondRound = allelesBuilder.searchForAlleles(
+            "Step 4 of $stepsCount",
+            findAllelesParameters.searchAlleleParameterForSecondRound,
+            findAllelesParameters.searchMutationsInCDR3,
+            Joining,
+            VAllelesFromFirstRound
+                .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
+                .filterValues { it.isNotEmpty() }
+        )
+        val VAllelesFromSecondRound = allelesBuilder.searchForAlleles(
+            "Step 5 of $stepsCount",
+            findAllelesParameters.searchAlleleParameterForSecondRound,
+            findAllelesParameters.searchMutationsInCDR3,
+            Variable,
+            JAllelesFromSecondRound
                 .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
                 .filterValues { it.isNotEmpty() }
         )
         val results = allelesBuilder.removeAllelesIfPossible(
+            "Step 6 of $stepsCount",
             originalLibrary,
-            VAlleles + JAlleles,
+            VAllelesFromSecondRound + JAllelesFromSecondRound,
             findAllelesParameters.maxCountForPossibleRemoval
         )
         reportBuilder.reportResults(results)
@@ -352,9 +391,10 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 cloneReader.header.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
+                val reportPrefix = "Step 7 of $stepsCount"
                 val message = when (outputClnsOptions.outputTemplate) {
-                    null -> "Recalculating scores ${inputFiles[i]}"
-                    else -> "Realigning ${inputFiles[i]}"
+                    null -> "$reportPrefix: recalculating scores ${inputFiles[i]}"
+                    else -> "$reportPrefix: realigning ${inputFiles[i]}"
                 }
                 val withRecalculatedScores = cloneRebuild.recalculateScores(
                     port.reportProgress(message),
