@@ -17,10 +17,12 @@
 -keep class com.milaboratory.mixcr.postanalysis.ui.** { *; }
 -keep class com.milaboratory.milm.metric.** { *; }
 -keep class com.milaboratory.**.*Parameters* { *; }
+-keep class com.milaboratory.**.*Parameters*$* { *; }
 -keep class com.milaboratory.**.*Report { *; }
 -keep class com.milaboratory.**.*Report$* { *; }
 
 -keep class io.repseq.gen.dist.*Model { *; }
+-keep class io.repseq.gen.dist.*Model$* { *; }
 
 -keep @com.milaboratory.util.DoNotObfuscate class *
 -keep @com.milaboratory.util.DoNotObfuscateFull class * { *; }
