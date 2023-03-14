@@ -379,7 +379,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         }
         val allelesMapping = results
             .filter { it.status.exist }
-            .groupBy({ it.gene.geneName }, { resultLibrary[it.gene.name].id })
+            .groupBy({ AllelesBuilder.nameOfBaseGene(it.gene) }, { resultLibrary[it.gene.name].id })
         val writerCloseCallbacks = mutableListOf<(FindAllelesReport) -> Unit>()
         datasets.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
