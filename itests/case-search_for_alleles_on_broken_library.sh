@@ -54,4 +54,4 @@ assert "head -n 1 alleles/report.json | jq -r .statuses.NOT_CHANGED_NOT_ENOUGH_I
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
 #count is too low for this gene
-assert "grep '\*B' alleles/description.tsv" "IGHV4-55*B"
+assert "grep '\*B' alleles/description.tsv | cut -f1" "IGHV4-55*B"
