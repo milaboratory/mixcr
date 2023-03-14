@@ -19,7 +19,6 @@ import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
-import com.milaboratory.mixcr.cli.chainsExist
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorStat
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorSummary
@@ -129,7 +128,8 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         val datasets =
             inputFiles.map { file -> ClonotypeDataset(file.toString(), file, VDJCLibraryRegistry.getDefault()) }
 
-        ValidationException.chainsExist(chains, datasets.flatMap { it.usedGenes })
+        // datasets are not initialized
+        // ValidationException.chainsExist(chains, datasets.flatMap { it.usedGenes })
 
         val preprocessor = DownsamplingParameters
             .parse(downsampling, CommandPa.extractTagsInfo(inputFiles), false, onlyProductive)
