@@ -49,4 +49,9 @@ mixcr findAlleles \
 
 assert "head -n 1 alleles/report.json | jq -r .statuses.FOUND_KNOWN_VARIANT" "5"
 assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVA" "3"
+assert "head -n 1 alleles/report.json | jq -r .statuses.ALIGNED_ON_KNOWN_VARIANT" "2"
+assert "head -n 1 alleles/report.json | jq -r .statuses.NOT_CHANGED_NOT_ENOUGH_INFO" "1"
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
+
+#count is too low for this gene
+assert "grep '\*B' alleles/description.tsv" "IGHV4-55*B"
