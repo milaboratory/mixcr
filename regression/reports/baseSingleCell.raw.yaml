@@ -317,13 +317,16 @@ refineTagsAndSort:
         - allTags:Cell
         - allTags:Molecule
         numberOfGroups: 106
-        numberOfGroupsAccepted: 87
+        numberOfGroupsAccepted: 89
         totalWeight: 40753.0
-        totalWeightAccepted: 40648.0
+        totalWeightAccepted: 40698.0
         operatorReports:
         - operatorReport:
-            type: generic_hist_report
-            threshold: 36.0
+            type: multi_operator_hist_report
+            threshold: 24.0
+            nestedThresholds:
+            - 24.0
+            - 410.0
           metricHists:
           - bins:
             - from: 1.0
@@ -380,9 +383,9 @@ refineTagsAndSort:
         groupingKeys:
         - allTags:Cell
         - allTags:Molecule
-        numberOfGroups: 87
+        numberOfGroups: 89
         numberOfGroupsAccepted: 60
-        totalWeight: 40648.0
+        totalWeight: 40698.0
         totalWeightAccepted: 27094.0
         operatorReports:
         - operatorReport:
@@ -391,7 +394,7 @@ refineTagsAndSort:
           - bins:
             - from: 55.0
               to: 60.95
-              weight: 23.0
+              weight: 25.0
             - from: 60.95
               to: 66.9
               weight: 1.0
