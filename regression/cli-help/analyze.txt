@@ -19,8 +19,8 @@ Usage: mixcr analyze [--add-step <step>] [--remove-step <step>] [-s <species>] [
                      (geneLabel|tag):key>] [--reset-export-clone-grouping]
                      [--export-productive-clones-only] [--no-reports] [--no-json-reports]
                      [--output-not-used-reads] [--use-local-temp] [--threads <n>]
-                     [--force-overwrite] [--no-warnings] [--verbose] [--help] [--set-whitelist
-                     <key=value> | --reset-whitelist tag]... [-M <key=value>]... <preset> ([file_I1.
+                     [--force-overwrite] [--no-warnings] [--verbose] [--help] [--reset-whitelist
+                     tag | --set-whitelist <key=value>]... [-M <key=value>]... <preset> ([file_I1.
                      fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
                      (fasta|bam|sam)) output_prefix
 Run full MiXCR pipeline for specific input.
