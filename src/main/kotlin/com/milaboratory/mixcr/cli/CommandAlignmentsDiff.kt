@@ -130,6 +130,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     override fun validate() {
         ValidationException.requireFileType(in1, InputFileType.VDJCA)
         ValidationException.requireFileType(in2, InputFileType.VDJCA)
+        ValidationException.requireFileType(report, InputFileType.TXT)
     }
 
     override fun run1() {
