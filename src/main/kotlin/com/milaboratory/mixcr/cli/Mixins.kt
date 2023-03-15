@@ -43,6 +43,7 @@ import com.milaboratory.mixcr.presets.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.GenericMixin
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.presets.PipelineMixins.RemovePipelineStep
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.SetWhitelist
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
@@ -103,25 +104,29 @@ class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
         mixIn(RemovePipelineStep(step))
 }
 
-class RefineTagsAndSortMixins : MiXCRMixinCollector() {
+class RefineTagsAndSortMiXCRMixins : MiXCRMixinCollector() {
     @Option(
-        description = [AlignMixins.SetWhitelist.DESCRIPTION_SET],
-        names = [AlignMixins.SetWhitelist.CMD_OPTION_SET],
+        description = [SetWhitelist.DESCRIPTION_SET],
+        names = [SetWhitelist.CMD_OPTION_SET],
         paramLabel = Labels.OVERRIDES,
         order = OptionsOrder.mixins.refineTagsAndSort + 100
     )
     fun setWhitelist(assignment: String) = parseAssignment(assignment) { tag, value ->
-        mixIn(AlignMixins.SetWhitelist(tag, value))
+        mixIn(SetWhitelist(tag, value))
     }
 
     @Option(
-        description = [AlignMixins.SetWhitelist.DESCRIPTION_RESET],
-        names = [AlignMixins.SetWhitelist.CMD_OPTION_RESET],
+        description = [SetWhitelist.DESCRIPTION_RESET],
+        names = [SetWhitelist.CMD_OPTION_RESET],
         paramLabel = "tag",
         order = OptionsOrder.mixins.refineTagsAndSort + 200
     )
     fun resetWhitelist(tag: String) {
-        mixIn(AlignMixins.SetWhitelist(tag, null))
+        mixIn(SetWhitelist(tag, null))
+    }
+
+    companion object {
+        const val DESCRIPTION = "Params for ${CommandRefineTagsAndSort.COMMAND_NAME} command:%n"
     }
 }
 
@@ -569,6 +574,9 @@ class GenericMiXCRMixins : MiXCRMixinCollector() {
 
 private fun parseAssignment(assignment: String, action: (field: String, value: String) -> Unit) {
     val equalitySignPosition = assignment.indexOf('=')
+    ValidationException.require(equalitySignPosition > 0) {
+        "Can't parse $assignment, it should contain '=' symbol"
+    }
     val field = assignment.substring(0, equalitySignPosition)
     val value = assignment.substring(equalitySignPosition + 1)
     action(field, value)
