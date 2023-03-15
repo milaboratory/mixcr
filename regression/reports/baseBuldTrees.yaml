@@ -14,61 +14,61 @@ findShmTrees:
         type: BronKerbosch
         commonMutationsCountForClustering: 5
         maxNDNDistanceForClustering: 1.0
-    clonesWasAdded: 317
-    cloneNodesWasAdded: 316
-    treesCountDelta: 119
+    clonesWasAdded: 328
+    cloneNodesWasAdded: 327
+    treesCountDelta: 124
     commonVJMutationsCounts:
-      size: 119
-      sum: 1930.0
+      size: 124
+      sum: 2009.0
       min: 4.0
       max: 53.0
-      avg: 16.21848
-      quadraticMean: 18.49006
-      stdDeviation: 8.91690
+      avg: 16.20161
+      quadraticMean: 18.53310
+      stdDeviation: 9.03559
       percentile25: 9.0
       percentile50: 15.0
       percentile75: 21.0
     clonesCountInTrees:
-      size: 119
-      sum: 317.0
+      size: 124
+      sum: 328.0
       min: 2.0
       max: 11.0
-      avg: 2.66386
-      quadraticMean: 3.08561
-      stdDeviation: 1.56377
+      avg: 2.64516
+      quadraticMean: 3.06383
+      stdDeviation: 1.55230
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
     wildcardsScore:
-      size: 119
-      sum: 7.85303
+      size: 124
+      sum: 9.18636
       min: 0.0
-      max: 1.0
-      avg: 0.06599
-      quadraticMean: 0.19497
-      stdDeviation: 0.18424
+      max: 1.33333
+      avg: 0.07408
+      quadraticMean: 0.22543
+      stdDeviation: 0.21377
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     wildcardsScoreForRoots:
-      size: 119
-      sum: 24.58496
+      size: 124
+      sum: 28.58496
       min: 0.0
-      max: 3.0
-      avg: 0.20659
-      quadraticMean: 0.59889
-      stdDeviation: 0.56450
+      max: 4.0
+      avg: 0.23052
+      quadraticMean: 0.68792
+      stdDeviation: 0.65078
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     maxNDNsWildcardsScoreInTree:
-      size: 119
-      sum: 24.58496
+      size: 124
+      sum: 28.58496
       min: 0.0
-      max: 3.0
-      avg: 0.20659
-      quadraticMean: 0.59889
-      stdDeviation: 0.56450
+      max: 4.0
+      avg: 0.23052
+      quadraticMean: 0.68792
+      stdDeviation: 0.65078
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
@@ -91,57 +91,57 @@ findShmTrees:
     cloneNodesWasAdded: 6
     treesCountDelta: 0
     commonVJMutationsCounts:
-      size: 119
-      sum: 1930.0
+      size: 124
+      sum: 2009.0
       min: 4.0
       max: 53.0
-      avg: 16.21848
-      quadraticMean: 18.49006
-      stdDeviation: 8.91690
+      avg: 16.20161
+      quadraticMean: 18.53310
+      stdDeviation: 9.03559
       percentile25: 9.0
       percentile50: 15.0
       percentile75: 21.0
     clonesCountInTrees:
-      size: 119
-      sum: 323.0
+      size: 124
+      sum: 334.0
       min: 2.0
       max: 13.0
-      avg: 2.71428
-      quadraticMean: 3.25782
-      stdDeviation: 1.80931
+      avg: 2.69354
+      quadraticMean: 3.23039
+      stdDeviation: 1.79056
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
     wildcardsScore:
-      size: 119
-      sum: 7.85303
+      size: 124
+      sum: 9.18636
       min: 0.0
-      max: 1.0
-      avg: 0.06599
-      quadraticMean: 0.19497
-      stdDeviation: 0.18424
+      max: 1.33333
+      avg: 0.07408
+      quadraticMean: 0.22543
+      stdDeviation: 0.21377
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     wildcardsScoreForRoots:
-      size: 119
-      sum: 24.58496
+      size: 124
+      sum: 28.58496
       min: 0.0
-      max: 3.0
-      avg: 0.20659
-      quadraticMean: 0.59889
-      stdDeviation: 0.56450
+      max: 4.0
+      avg: 0.23052
+      quadraticMean: 0.68792
+      stdDeviation: 0.65078
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     maxNDNsWildcardsScoreInTree:
-      size: 119
-      sum: 24.58496
+      size: 124
+      sum: 28.58496
       min: 0.0
-      max: 3.0
-      avg: 0.20659
-      quadraticMean: 0.59889
-      stdDeviation: 0.56450
+      max: 4.0
+      avg: 0.23052
+      quadraticMean: 0.68792
+      stdDeviation: 0.65078
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
@@ -163,57 +163,57 @@ findShmTrees:
     cloneNodesWasAdded: 0
     treesCountDelta: 0
     commonVJMutationsCounts:
-      size: 119
-      sum: 1930.0
+      size: 124
+      sum: 2009.0
       min: 4.0
       max: 53.0
-      avg: 16.21848
-      quadraticMean: 18.49006
-      stdDeviation: 8.91690
+      avg: 16.20161
+      quadraticMean: 18.53310
+      stdDeviation: 9.03559
       percentile25: 9.0
       percentile50: 15.0
       percentile75: 21.0
     clonesCountInTrees:
-      size: 119
-      sum: 323.0
+      size: 124
+      sum: 334.0
       min: 2.0
       max: 13.0
-      avg: 2.71428
-      quadraticMean: 3.25782
-      stdDeviation: 1.80931
+      avg: 2.69354
+      quadraticMean: 3.23039
+      stdDeviation: 1.79056
       percentile25: 2.0
       percentile50: 2.0
       percentile75: 3.0
     wildcardsScore:
-      size: 119
-      sum: 7.85303
+      size: 124
+      sum: 9.18636
       min: 0.0
-      max: 1.0
-      avg: 0.06599
-      quadraticMean: 0.19497
-      stdDeviation: 0.18424
+      max: 1.33333
+      avg: 0.07408
+      quadraticMean: 0.22543
+      stdDeviation: 0.21377
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     wildcardsScoreForRoots:
-      size: 119
-      sum: 24.58496
+      size: 124
+      sum: 28.58496
       min: 0.0
-      max: 3.0
-      avg: 0.20659
-      quadraticMean: 0.59889
-      stdDeviation: 0.56450
+      max: 4.0
+      avg: 0.23052
+      quadraticMean: 0.68792
+      stdDeviation: 0.65078
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
     maxNDNsWildcardsScoreInTree:
-      size: 119
-      sum: 24.58496
+      size: 124
+      sum: 28.58496
       min: 0.0
-      max: 3.0
-      avg: 0.20659
-      quadraticMean: 0.59889
-      stdDeviation: 0.56450
+      max: 4.0
+      avg: 0.23052
+      quadraticMean: 0.68792
+      stdDeviation: 0.65078
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
@@ -228,7 +228,7 @@ findShmTrees:
       percentile25: NaN
       percentile50: NaN
       percentile75: NaN
-  totalClonesProcessed: 1295
+  totalClonesProcessed: 1324
 upstreams:
   alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns:
     align:
@@ -919,54 +919,53 @@ upstreams:
       - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
       preCloneAssemblerReport:
         type: preCloneAssemblerReport
-        inputGroups: 2913
-        groupsWithNoAssemblingFeature: 77
-        inputAlignments: 47195
-        inputAlignmentsWithAssemblingFeature: 44960
+        inputGroups: 3036
+        groupsWithNoAssemblingFeature: 97
+        inputAlignments: 47687
+        inputAlignmentsWithAssemblingFeature: 45363
         corePreClonesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
-        preClones: 2807
+        preClones: 2939
         preClonesPerGroup:
-          "0": 29
-          "1": 2807
-        assemblingFeatureSequencesInZeroPreClones: 83
-        coreAlignments: 44851
+          "1": 2939
+        assemblingFeatureSequencesInZeroPreClones: 0
+        coreAlignments: 45337
         tagConflicts: 0
         geneAndTagConflicts: 0
         geneConflicts: {}
-        discardedCoreAlignments: 109
-        empiricallyAssignedAlignments: 1209
+        discardedCoreAlignments: 26
+        empiricallyAssignedAlignments: 1331
         vjEmpiricallyAssignedAlignments: 0
         tagEmpiricallyAssignedAlignments: 0
-        geneAndTagEmpiricallyAssignedAlignments: 1209
+        geneAndTagEmpiricallyAssignedAlignments: 1331
         empiricalAssignmentConflicts: 0
-        unassignedAlignments: 227
+        unassignedAlignments: 31
       totalReadsProcessed: 49700
-      initialClonesCreated: 1279
-      readsDroppedNoTargetSequence: 2235
+      initialClonesCreated: 1308
+      readsDroppedNoTargetSequence: 2324
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 46002
-      readsDroppedFailedMapping: 53
-      lowQualityRescued: 5
-      clonesClustered: 30
-      readsClustered: 433
-      clones: 1249
+      coreReads: 46512
+      readsDroppedFailedMapping: 139
+      lowQualityRescued: 17
+      clonesClustered: 31
+      readsClustered: 438
+      clones: 1277
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 45574
-      readsInClonesBeforeClustering: 46007
+      readsInClones: 46091
+      readsInClonesBeforeClustering: 46529
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: chainUsage
         chimeras: 0
-        total: 1249
+        total: 1277
         chains:
           IGH:
-            total: 1249
-            nonFunctional: 34
-            isOOF: 29
+            total: 1277
+            nonFunctional: 35
+            isOOF: 30
             hasStops: 5
       clonesFilteredInPostFiltering: 0
       readsFilteredInPostFiltering: 0.0
@@ -1010,14 +1009,14 @@ upstreams:
             discardedEnrichedMutations: []
             filteredOutByNaiveCount:
             - mutations: ""
-              count: 55
-              countOfSureAlign: 55
+              count: 56
+              countOfSureAlign: 56
               naiveCount: 1
             result: []
-          clonesCount: 55
+          clonesCount: 56
           diversity: 19
           enoughDiversity: true
-          differentMutationsCount: 21
+          differentMutationsCount: 22
           mutationsWithEnoughDiversityCount: 0
         IGHJ3:
           alleles:
@@ -1027,10 +1026,10 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 219
-          diversity: 38
+          clonesCount: 226
+          diversity: 39
           enoughDiversity: true
-          differentMutationsCount: 43
+          differentMutationsCount: 46
           mutationsWithEnoughDiversityCount: 10
         IGHJ4:
           alleles:
@@ -1040,11 +1039,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 634
-          diversity: 47
+          clonesCount: 644
+          diversity: 48
           enoughDiversity: true
           differentMutationsCount: 67
-          mutationsWithEnoughDiversityCount: 27
+          mutationsWithEnoughDiversityCount: 28
         IGHJ5:
           alleles:
             addedKnownAllele: null
@@ -1053,7 +1052,7 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 137
+          clonesCount: 140
           diversity: 33
           enoughDiversity: true
           differentMutationsCount: 35
@@ -1066,7 +1065,7 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - SC55A
-          clonesCount: 188
+          clonesCount: 192
           diversity: 45
           enoughDiversity: true
           differentMutationsCount: 42
@@ -1080,11 +1079,11 @@ upstreams:
             result:
             - ST311G
             - "SG170A,ST259C,ST311G,SA335T"
-          clonesCount: 260
+          clonesCount: 263
           diversity: 55
           enoughDiversity: true
-          differentMutationsCount: 488
-          mutationsWithEnoughDiversityCount: 102
+          differentMutationsCount: 491
+          mutationsWithEnoughDiversityCount: 103
         IGHV3-72:
           alleles:
             addedKnownAllele: null
@@ -1093,11 +1092,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 413
-          diversity: 57
+          clonesCount: 419
+          diversity: 58
           enoughDiversity: true
-          differentMutationsCount: 628
-          mutationsWithEnoughDiversityCount: 185
+          differentMutationsCount: 630
+          mutationsWithEnoughDiversityCount: 186
         IGHV4-4:
           alleles:
             addedKnownAllele: null
@@ -1106,11 +1105,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 572
-          diversity: 77
+          clonesCount: 588
+          diversity: 78
           enoughDiversity: true
-          differentMutationsCount: 679
-          mutationsWithEnoughDiversityCount: 262
+          differentMutationsCount: 683
+          mutationsWithEnoughDiversityCount: 271
         IGHV4-55:
           alleles:
             addedKnownAllele: null
@@ -1127,16 +1126,16 @@ upstreams:
           enoughDiversity: false
           differentMutationsCount: 20
           mutationsWithEnoughDiversityCount: 0
-      clonesCountWithNoChangeOfScore: 894
-      clonesCountWithNegativeScoreChange: 49
+      clonesCountWithNoChangeOfScore: 913
+      clonesCountWithNegativeScoreChange: 50
       clonesScoreDeltaStats:
-        size: 401
-        sum: 21053.99987
+        size: 411
+        sum: 21401.99990
         min: -58.0
         max: 232.0
-        avg: 52.50374
-        quadraticMean: 73.13005
-        stdDeviation: 50.96901
+        avg: 52.07299
+        quadraticMean: 72.63041
+        stdDeviation: 50.69352
       foundAlleles: 3
       deNovaAlleles: 3
       zygotes:
@@ -1144,29 +1143,29 @@ upstreams:
         "2": 1
       allelesScoreChange:
         IGHJ6*00-M1-CDR3-3-438433022:
-          size: 183
-          sum: 7946.0
+          size: 188
+          sum: 8178.0
           min: -58.0
           max: 116.0
-          avg: 43.42076
-          quadraticMean: 58.07918
-          stdDeviation: 38.67820
+          avg: 43.5
+          quadraticMean: 58.07707
+          stdDeviation: 38.58257
         IGHV2-70*00-M1-426287302:
-          size: 170
-          sum: 2378.0
+          size: 174
+          sum: 2436.0
           min: -29.0
           max: 29.0
-          avg: 13.98823
+          avg: 13.99999
           quadraticMean: 29.0
-          stdDeviation: 25.47837
+          stdDeviation: 25.47014
         IGHV2-70*00-M4-2071078005:
-          size: 97
-          sum: 10730.0
+          size: 98
+          sum: 10788.0
           min: 58.0
           max: 116.0
-          avg: 110.61855
-          quadraticMean: 111.81363
-          stdDeviation: 16.38879
+          avg: 110.08163
+          quadraticMean: 111.39587
+          stdDeviation: 17.14863
     refineTagsAndSort:
       type: refineTagsAndSort
       commandLine: refineTagsAndSort align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
@@ -1177,7 +1176,7 @@ upstreams:
       - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       correctionReport:
         inputRecords: 49560
-        outputRecords: 47195
+        outputRecords: 47687
         steps:
         - tagName: UMI
           inputGroups: 1
@@ -1198,13 +1197,16 @@ upstreams:
           groupingKeys:
           - UMI
           numberOfGroups: 4404
-          numberOfGroupsAccepted: 2913
+          numberOfGroupsAccepted: 3036
           totalWeight: 49560.0
-          totalWeightAccepted: 47195.0
+          totalWeightAccepted: 47687.0
           operatorReports:
           - operatorReport:
-              type: generic_hist_report
-              threshold: 5.0
+              type: multi_operator_hist_report
+              threshold: 4.0
+              nestedThresholds:
+              - 4.0
+              - 9.0
             metricHists:
             - bins:
               - from: 1.0
@@ -1952,46 +1954,45 @@ upstreams:
         inputAlignmentsWithAssemblingFeature: 26513
         corePreClonesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
-        preClones: 68
+        preClones: 69
         preClonesPerGroup:
-          "0": 1
-          "1": 68
-        assemblingFeatureSequencesInZeroPreClones: 15
-        coreAlignments: 26479
+          "1": 69
+        assemblingFeatureSequencesInZeroPreClones: 0
+        coreAlignments: 26493
         tagConflicts: 0
         geneAndTagConflicts: 0
         geneConflicts: {}
-        discardedCoreAlignments: 34
-        empiricallyAssignedAlignments: 1204
+        discardedCoreAlignments: 20
+        empiricallyAssignedAlignments: 1208
         vjEmpiricallyAssignedAlignments: 0
         tagEmpiricallyAssignedAlignments: 0
-        geneAndTagEmpiricallyAssignedAlignments: 1204
+        geneAndTagEmpiricallyAssignedAlignments: 1208
         empiricalAssignmentConflicts: 0
-        unassignedAlignments: 272
+        unassignedAlignments: 254
       totalReadsProcessed: 29871
-      initialClonesCreated: 46
+      initialClonesCreated: 47
       readsDroppedNoTargetSequence: 2518
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 27683
+      coreReads: 27701
       readsDroppedFailedMapping: 0
       lowQualityRescued: 0
       clonesClustered: 0
       readsClustered: 0
-      clones: 46
+      clones: 47
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 27683
-      readsInClonesBeforeClustering: 27683
+      readsInClones: 27701
+      readsInClonesBeforeClustering: 27701
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: chainUsage
         chimeras: 0
-        total: 46
+        total: 47
         chains:
           IGH:
-            total: 46
+            total: 47
             nonFunctional: 1
             isOOF: 1
             hasStops: 0
@@ -2037,14 +2038,14 @@ upstreams:
             discardedEnrichedMutations: []
             filteredOutByNaiveCount:
             - mutations: ""
-              count: 55
-              countOfSureAlign: 55
+              count: 56
+              countOfSureAlign: 56
               naiveCount: 1
             result: []
-          clonesCount: 55
+          clonesCount: 56
           diversity: 19
           enoughDiversity: true
-          differentMutationsCount: 21
+          differentMutationsCount: 22
           mutationsWithEnoughDiversityCount: 0
         IGHJ3:
           alleles:
@@ -2054,10 +2055,10 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 219
-          diversity: 38
+          clonesCount: 226
+          diversity: 39
           enoughDiversity: true
-          differentMutationsCount: 43
+          differentMutationsCount: 46
           mutationsWithEnoughDiversityCount: 10
         IGHJ4:
           alleles:
@@ -2067,11 +2068,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 634
-          diversity: 47
+          clonesCount: 644
+          diversity: 48
           enoughDiversity: true
           differentMutationsCount: 67
-          mutationsWithEnoughDiversityCount: 27
+          mutationsWithEnoughDiversityCount: 28
         IGHJ5:
           alleles:
             addedKnownAllele: null
@@ -2080,7 +2081,7 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 137
+          clonesCount: 140
           diversity: 33
           enoughDiversity: true
           differentMutationsCount: 35
@@ -2093,7 +2094,7 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - SC55A
-          clonesCount: 188
+          clonesCount: 192
           diversity: 45
           enoughDiversity: true
           differentMutationsCount: 42
@@ -2107,11 +2108,11 @@ upstreams:
             result:
             - ST311G
             - "SG170A,ST259C,ST311G,SA335T"
-          clonesCount: 260
+          clonesCount: 263
           diversity: 55
           enoughDiversity: true
-          differentMutationsCount: 488
-          mutationsWithEnoughDiversityCount: 102
+          differentMutationsCount: 491
+          mutationsWithEnoughDiversityCount: 103
         IGHV3-72:
           alleles:
             addedKnownAllele: null
@@ -2120,11 +2121,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 413
-          diversity: 57
+          clonesCount: 419
+          diversity: 58
           enoughDiversity: true
-          differentMutationsCount: 628
-          mutationsWithEnoughDiversityCount: 185
+          differentMutationsCount: 630
+          mutationsWithEnoughDiversityCount: 186
         IGHV4-4:
           alleles:
             addedKnownAllele: null
@@ -2133,11 +2134,11 @@ upstreams:
             filteredOutByNaiveCount: []
             result:
             - ""
-          clonesCount: 572
-          diversity: 77
+          clonesCount: 588
+          diversity: 78
           enoughDiversity: true
-          differentMutationsCount: 679
-          mutationsWithEnoughDiversityCount: 262
+          differentMutationsCount: 683
+          mutationsWithEnoughDiversityCount: 271
         IGHV4-55:
           alleles:
             addedKnownAllele: null
@@ -2154,16 +2155,16 @@ upstreams:
           enoughDiversity: false
           differentMutationsCount: 20
           mutationsWithEnoughDiversityCount: 0
-      clonesCountWithNoChangeOfScore: 894
-      clonesCountWithNegativeScoreChange: 49
+      clonesCountWithNoChangeOfScore: 913
+      clonesCountWithNegativeScoreChange: 50
       clonesScoreDeltaStats:
-        size: 401
-        sum: 21053.99987
+        size: 411
+        sum: 21401.99990
         min: -58.0
         max: 232.0
-        avg: 52.50374
-        quadraticMean: 73.13005
-        stdDeviation: 50.96901
+        avg: 52.07299
+        quadraticMean: 72.63041
+        stdDeviation: 50.69352
       foundAlleles: 3
       deNovaAlleles: 3
       zygotes:
@@ -2171,29 +2172,29 @@ upstreams:
         "2": 1
       allelesScoreChange:
         IGHJ6*00-M1-CDR3-3-438433022:
-          size: 183
-          sum: 7946.0
+          size: 188
+          sum: 8178.0
           min: -58.0
           max: 116.0
-          avg: 43.42076
-          quadraticMean: 58.07918
-          stdDeviation: 38.67820
+          avg: 43.5
+          quadraticMean: 58.07707
+          stdDeviation: 38.58257
         IGHV2-70*00-M1-426287302:
-          size: 170
-          sum: 2378.0
+          size: 174
+          sum: 2436.0
           min: -29.0
           max: 29.0
-          avg: 13.98823
+          avg: 13.99999
           quadraticMean: 29.0
-          stdDeviation: 25.47837
+          stdDeviation: 25.47014
         IGHV2-70*00-M4-2071078005:
-          size: 97
-          sum: 10730.0
+          size: 98
+          sum: 10788.0
           min: 58.0
           max: 116.0
-          avg: 110.61855
-          quadraticMean: 111.81363
-          stdDeviation: 16.38879
+          avg: 110.08163
+          quadraticMean: 111.39587
+          stdDeviation: 17.14863
     refineTagsAndSort:
       type: refineTagsAndSort
       commandLine: refineTagsAndSort align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
@@ -2230,8 +2231,11 @@ upstreams:
           totalWeightAccepted: 29031.0
           operatorReports:
           - operatorReport:
-              type: generic_hist_report
+              type: multi_operator_hist_report
               threshold: 19.0
+              nestedThresholds:
+              - 19.0
+              - 284.0
             metricHists:
             - bins:
               - from: 1.0
