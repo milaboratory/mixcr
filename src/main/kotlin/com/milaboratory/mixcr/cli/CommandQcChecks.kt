@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
@@ -19,21 +20,27 @@ import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.qc.QcChecker
+import com.milaboratory.mixcr.qc.QcChecker.QualityStatus.BAD
+import com.milaboratory.mixcr.qc.QcChecker.QualityStatus.GOOD
+import com.milaboratory.mixcr.qc.QcChecker.QualityStatus.MIDDLE
 import com.milaboratory.util.K_PRETTY_OM
+import org.apache.logging.log4j.core.tools.picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Parameters
+import java.io.PrintStream
 import java.nio.file.Path
 
 object CommandQcChecks {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.qcCheck.name
+    const val COMMAND_NAME = MiXCRCommandDescriptor.qc.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandQcChecksParams> {
         @Mixin
         lateinit var resetPreset: ResetPresetOptions
 
         override val paramsResolver: ParamsResolver<MiXCRParamsBundle, CommandQcChecksParams>
-            get() = object : MiXCRParamsResolver<CommandQcChecksParams>(MiXCRParamsBundle::qcChecks) {
+            get() = object : MiXCRParamsResolver<CommandQcChecksParams>(MiXCRParamsBundle::qc) {
                 override fun POverridesBuilderOps<CommandQcChecksParams>.paramsOverrides() {
                 }
             }
@@ -46,7 +53,7 @@ object CommandQcChecks {
     class Cmd : CmdBase() {
         @Parameters(
             description = ["Path to input file."],
-            paramLabel = "input.(vdjca|clns|clna|shmt)",
+            paramLabel = "input.(vdjca|clns|clna)",
             index = "0"
         )
         lateinit var input: Path
@@ -66,7 +73,7 @@ object CommandQcChecks {
             get() = listOfNotNull(output)
 
         override fun validate() {
-            ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNX, InputFileType.SHMT)
+            ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNX)
             ValidationException.requireFileType(output, InputFileType.TXT, InputFileType.JSON)
         }
 
@@ -84,13 +91,14 @@ object CommandQcChecks {
                 .filter { it.supports(reports) }
                 .flatMap { it.check(reports) }
             val output = output
+            results.print(System.out, Ansi.AUTO)
             when {
                 output == null -> {
-                    TODO()
+                    // already printed
                 }
 
                 InputFileType.TXT.matches(output) -> {
-                    TODO()
+                    results.print(PrintStream(output.toFile()), Ansi.OFF)
                 }
 
                 InputFileType.JSON.matches(output) -> {
@@ -98,6 +106,30 @@ object CommandQcChecks {
                 }
 
                 else -> throw IllegalArgumentException()
+            }
+            val failedChecks = results.count { it.status == BAD }
+            val message = "Failed $failedChecks of ${results.size} qc checks"
+            if (params.errorOnFailedCheck) {
+                if (failedChecks > 0) {
+                    throw ApplicationException(message)
+                }
+            } else {
+                logger.warn { message }
+            }
+        }
+
+        private fun List<QcChecker.QcCheckResult>.print(out: PrintStream, ansi: Ansi) {
+            groupBy { it.step }.forEach { (step, checks) ->
+                out.println("$step:")
+                checks.forEach { check ->
+                    val color = when (check.status) {
+                        BAD -> "red"
+                        GOOD -> "green"
+                        MIDDLE -> "yellow"
+                    }
+                    val text = ansi.Text("\t${check.check.javaClass.simpleName}: @|fg($color) ${check.message}|@")
+                    out.println(text.toString())
+                }
             }
         }
     }

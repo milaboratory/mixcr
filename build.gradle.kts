@@ -296,7 +296,7 @@ val shadowJarAfterObfuscation by tasks.creating(ShadowJar::class) {
     configurations = listOf(obfuscateRuntime, project.configurations.shadow.get())
 }
 
-shadow {
+tasks.named<ShadowJar>("shadowJar") {
     configurations += project.configurations.shadow.get()
 }
 

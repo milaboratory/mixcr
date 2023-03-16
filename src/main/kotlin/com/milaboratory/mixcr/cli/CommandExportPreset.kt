@@ -188,7 +188,8 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                     assemble = paramsWithOverride(MiXCRCommandDescriptor.assemble),
                     assembleContigs = paramsWithOverride(MiXCRCommandDescriptor.assembleContigs),
                     exportAlignments = paramsWithOverride(MiXCRCommandDescriptor.exportAlignments),
-                    exportClones = paramsWithOverride(MiXCRCommandDescriptor.exportClones)
+                    exportClones = paramsWithOverride(MiXCRCommandDescriptor.exportClones),
+                    qc = paramsWithOverride(MiXCRCommandDescriptor.qc)
                 )
                 ParamsBundleSpecBaseEmbedded(bundle)
             }

@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
+properties:
+  checks:
+    type: array
+    items:
+      anyOf:
+      - type: object
+        properties:
+          middle:
+            type: number
+          tag:
+            type: string
+          upper:
+            type: number
+      - type: object
+        properties:
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          middle:
+            type: number
+          upper:
+            type: number
+  errorOnFailedCheck:
+    type: boolean
