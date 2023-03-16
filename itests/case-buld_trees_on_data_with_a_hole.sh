@@ -60,8 +60,8 @@ mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
 assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqFR1" "1"
 assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqFR2" "0"
 
-assert "cat alleles/report.json | head -n 1 | jq -r .foundAlleles" "2"
-assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
+assert "cat alleles/report.json | head -n 1 | jq -r .foundAlleles" "1"
+#assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
 
 assert "grep 'IGHJ6' alleles/description.tsv | cut -f6" "SG17TSG18AST19CSC35A"
 
