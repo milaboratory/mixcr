@@ -141,7 +141,7 @@ val repseqioVersion = "1.7.0-36-intersect-debug"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
-val milmVersion = "3.1.0"
+val milmVersion = "3.3.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
