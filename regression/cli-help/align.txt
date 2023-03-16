@@ -12,11 +12,12 @@ Usage: mixcr align --preset <preset> [--trimming-quality-threshold <n>] [--trimm
                    [--floating-right-alignment-boundary (<gene_type>|<anchor_point>)]
                    [--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)]] [--tag-pattern
                    <pattern>] [--keep-non-CDR3-alignments] [--drop-non-CDR3-alignments]
-                   [--limit-input <n>] [--assemble-clonotypes-by <gene_features>]
-                   [--split-clones-by <gene_type>]... [--dont-split-clones-by <gene_type>]...
-                   [--assemble-contigs-by <gene_features>] [--impute-germline-on-export]
-                   [--dont-impute-germline-on-export] [--prepend-export-clones-field <field>
-                   [<param>...]]... [--append-export-clones-field <field> [<param>...]]...
+                   [--limit-input <n>] [--set-whitelist <key=value>] [--reset-whitelist tag]
+                   [--assemble-clonotypes-by <gene_features>] [--split-clones-by <gene_type>]...
+                   [--dont-split-clones-by <gene_type>]... [--assemble-contigs-by <gene_features>]
+                   [--impute-germline-on-export] [--dont-impute-germline-on-export]
+                   [--prepend-export-clones-field <field> [<param>...]]...
+                   [--append-export-clones-field <field> [<param>...]]...
                    [--prepend-export-alignments-field <field> [<param>...]]...
                    [--append-export-alignments-field <field> [<param>...]]...
                    [--add-export-clone-table-splitting <(geneLabel|tag):key>]
@@ -143,6 +144,14 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.
   -h, --help                 Show this help message and exit.
+Params for refineTagsAndSort command:
+      --set-whitelist <key=value>
+                             Sets the whitelist for a specific tag to guide the tag refinement
+                               procedure.
+                             Usage: --set-whitelist CELL=preset:737K-august-2016 or --set-whitelist
+                               UMI=file:my_umi_whitelist.txt .
+      --reset-whitelist tag  Resets the whitelist for a specific tag so that unguided refinement
+                               procedure will be applied for it
 Params for assemble command:
       --assemble-clonotypes-by <gene_features>
                              Specify gene features used to assemble clonotypes. One may specify any
