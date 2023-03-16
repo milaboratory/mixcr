@@ -1,9 +1,9 @@
 Usage: mixcr refineTagsAndSort [--dont-correct] [--power <d>] [--substitution-rate <d>]
                                [--indel-rate <d>] [--min-quality <n>] [--max-substitutions <n>]
                                [--max-indels <n>] [--max-errors <n>] [--memory-budget <n>]
-                               [--report <path>] [--json-report <path>] [--use-local-temp]
-                               [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                               [--set-whitelist <key=value> | --reset-whitelist tag]... alignments.
+                               [--set-whitelist <key=value>] [--reset-whitelist tag] [--report
+                               <path>] [--json-report <path>] [--use-local-temp]
+                               [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.
                                vdjca alignments.corrected.vdjca
 Applies error correction algorithm for tag sequences and sorts resulting file by tags.
       alignments.vdjca       Path to input alignments

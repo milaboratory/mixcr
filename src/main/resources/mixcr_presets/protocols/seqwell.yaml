@@ -1,0 +1,136 @@
+"seqwell-vdj-cdr3":
+  flags:
+    - species
+  pipeline:
+    - "align"
+    - "refineTagsAndSort"
+    - "assemble"
+    - "exportClones"
+  align:
+    inheritFrom: "align-kaligner2-base-v1"
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(R1:*)\^(CELL:N{12})(UMI:N{8})
+  refineTagsAndSort:
+    inheritFrom: "refineTagsAndSort-base"
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: "group_metric_sum_weight"
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        histTransformers:
+                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                          - type: inflate
+                            fraction: 0.15
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+            - type: "filter_groups"
+              groupingKeys:
+                - "allTags:Cell"
+              predicates:
+                - metrics:
+                    - type: "group_metric_nunique"
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                      keys:
+                        - "allTags:Molecule"
+                  operator:
+                    type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    histTransformers:
+                      # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                      - type: inflate
+                        fraction: 0.15
+                        value: 1
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: "assemble-base-with-consensus"
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ ]
+    fields:
+      - field: "-cloneId"
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-readCount"
+      - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-nFeature"
+        args: [ "FR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR1" ]
+      - field: "-nFeature"
+        args: [ "CDR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR1" ]
+      - field: "-nFeature"
+        args: [ "FR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR2" ]
+      - field: "-nFeature"
+        args: [ "CDR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR2" ]
+      - field: "-nFeature"
+        args: [ "FR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR3" ]
+      - field: "-nFeature"
+        args: [ "CDR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR3" ]
+      - field: "-nFeature"
+        args: [ "FR4" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR4" ]
+      - field: "-aaFeature"
+        args: [ "FR1" ]
+      - field: "-aaFeature"
+        args: [ "CDR1" ]
+      - field: "-aaFeature"
+        args: [ "FR2" ]
+      - field: "-aaFeature"
+        args: [ "CDR2" ]
+      - field: "-aaFeature"
+        args: [ "FR3" ]
+      - field: "-aaFeature"
+        args: [ "CDR3" ]
+      - field: "-aaFeature"
+        args: [ "FR4" ]
+      - field: "-defaultAnchorPoints"
