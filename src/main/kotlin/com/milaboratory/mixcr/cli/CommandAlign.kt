@@ -649,6 +649,14 @@ object CommandAlign {
 
         @ArgGroup(
             validate = false,
+            heading = RefineTagsAndSortMiXCRMixins.DESCRIPTION,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.refineTagsAndSort
+        )
+        var refineTagsAndSortMixins: List<RefineTagsAndSortMiXCRMixins> = mutableListOf()
+
+        @ArgGroup(
+            validate = false,
             heading = AssembleMiXCRMixins.DESCRIPTION,
             multiplicity = "0..*",
             order = OptionsOrder.mixins.assemble
@@ -678,8 +686,8 @@ object CommandAlign {
         var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
 
         private val mixins: MiXCRMixinCollection
-            get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + assembleMixins +
-                    assembleContigsMixins + exportMixins + genericMixins
+            get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + refineTagsAndSortMixins +
+                    assembleMixins + assembleContigsMixins + exportMixins + genericMixins
 
         @Parameters(
             index = "0",

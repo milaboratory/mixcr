@@ -123,10 +123,12 @@ object CommandAnalyze {
         var alignMixins: List<AlignMiXCRMixins> = mutableListOf()
 
         @ArgGroup(
+            validate = false,
+            heading = RefineTagsAndSortMiXCRMixins.DESCRIPTION,
             multiplicity = "0..*",
             order = OptionsOrder.mixins.refineTagsAndSort
         )
-        var refineAndSortMixins: List<RefineTagsAndSortMixins> = mutableListOf()
+        var refineAndSortMixins: List<RefineTagsAndSortMiXCRMixins> = mutableListOf()
 
         @ArgGroup(
             validate = false,
