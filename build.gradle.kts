@@ -185,6 +185,7 @@ dependencies {
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
 
     shadow("org.apache.logging.log4j:log4j-core:2.20.0")
+    testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
