@@ -42,6 +42,7 @@ class MetaInfoTest {
 
             MiXCRCommandDescriptor.exportClones,
             MiXCRCommandDescriptor.exportAlignments,
+            MiXCRCommandDescriptor.qc,
         )
         (MiXCRCommandDescriptor::class.sealedSubclasses.map { it.objectInstance!! } - exclusions)
             .map { it.command }
@@ -53,7 +54,7 @@ class MetaInfoTest {
 
     @Test
     fun `all options must have specified order`() {
-        val optionsWithoutOrder = Main.mkCmd().allSubCommands()
+        val optionsWithoutOrder = Main.mkCmd().allVisibleSubCommands()
             .flatMap { commandLine ->
                 commandLine.commandSpec.options()
                     .filterNot { it.hidden() }
@@ -65,7 +66,7 @@ class MetaInfoTest {
 
     @Test
     fun `all required options must be first in help`() {
-        val optionsWithoutOrder = Main.mkCmd().allSubCommands()
+        val optionsWithoutOrder = Main.mkCmd().allVisibleSubCommands()
             .flatMap { commandLine ->
                 val (required, notRequired) = commandLine.commandSpec.options()
                     .filterNot { it.hidden() }
@@ -81,7 +82,7 @@ class MetaInfoTest {
 
     @Test
     fun `all arg groups must have specified order`() {
-        val optionsWithNotUniqOrder = Main.mkCmd().allSubCommands().flatMap { commandLine ->
+        val optionsWithNotUniqOrder = Main.mkCmd().allVisibleSubCommands().flatMap { commandLine ->
             commandLine.commandSpec.argGroups()
                 .filter { it.order() == -1 }
                 .map { argGroupSpec ->
@@ -94,7 +95,7 @@ class MetaInfoTest {
 
     @Test
     fun `all options must uniq order`() {
-        Main.mkCmd().allSubCommands().forEach { commandLine ->
+        Main.mkCmd().allVisibleSubCommands().forEach { commandLine ->
             val notUniqOrders = commandLine.commandSpec.options()
                 .filterNot { it.hidden() }
                 .groupBy { it.order() }
@@ -107,8 +108,12 @@ class MetaInfoTest {
         }
     }
 
-    private fun CommandLine.allSubCommands(): Collection<CommandLine> = subcommands
+    private fun CommandLine.allVisibleSubCommands(): Collection<CommandLine> = subcommands
         .values
         .filterNot { it.commandSpec.usageMessage().hidden() }
+        .flatMap { it.allVisibleSubCommands() + it }
+
+    private fun CommandLine.allSubCommands(): Collection<CommandLine> = subcommands
+        .values
         .flatMap { it.allSubCommands() + it }
 }
