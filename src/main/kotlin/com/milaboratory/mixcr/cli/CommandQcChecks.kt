@@ -85,11 +85,10 @@ object CommandQcChecks {
                 printParameters = logger.verbose && output != null
             )
 
-            val reports = fileInfo.footer.reports
             val results = params.checks
                 .map { it.checker() }
-                .filter { it.supports(reports) }
-                .flatMap { it.check(reports) }
+                .filter { it.supports(fileInfo) }
+                .flatMap { it.check(fileInfo) }
             val output = output
             results.print(System.out, Ansi.AUTO)
             when {
