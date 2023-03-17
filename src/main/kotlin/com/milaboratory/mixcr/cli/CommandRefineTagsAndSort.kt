@@ -246,7 +246,6 @@ object CommandRefineTagsAndSort {
         override fun run1() {
             val startTimeMillis = System.currentTimeMillis()
 
-
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: TagCorrectionReport?
             var thresholds: Map<CriticalThresholdKey, Double> = emptyMap()
