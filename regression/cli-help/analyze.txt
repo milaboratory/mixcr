@@ -6,12 +6,12 @@ Usage: mixcr analyze [--add-step <step>] [--remove-step <step>] [-s <species>] [
                      [--floating-right-alignment-boundary (<gene_type>|<anchor_point>)]
                      [--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)]]
                      [--tag-pattern <pattern>] [--keep-non-CDR3-alignments]
-                     [--drop-non-CDR3-alignments] [--limit-input <n>] [--assemble-clonotypes-by
-                     <gene_features>] [--split-clones-by <gene_type>]... [--dont-split-clones-by
-                     <gene_type>]... [--assemble-contigs-by <gene_features>]
-                     [--impute-germline-on-export] [--dont-impute-germline-on-export]
-                     [--prepend-export-clones-field <field> [<param>...]]...
-                     [--append-export-clones-field <field> [<param>...]]...
+                     [--drop-non-CDR3-alignments] [--limit-input <n>] [--set-whitelist <key=value>]
+                     [--reset-whitelist tag] [--assemble-clonotypes-by <gene_features>]
+                     [--split-clones-by <gene_type>]... [--dont-split-clones-by <gene_type>]...
+                     [--assemble-contigs-by <gene_features>] [--impute-germline-on-export]
+                     [--dont-impute-germline-on-export] [--prepend-export-clones-field <field>
+                     [<param>...]]... [--append-export-clones-field <field> [<param>...]]...
                      [--prepend-export-alignments-field <field> [<param>...]]...
                      [--append-export-alignments-field <field> [<param>...]]...
                      [--add-export-clone-table-splitting <(geneLabel|tag):key>]
@@ -19,10 +19,9 @@ Usage: mixcr analyze [--add-step <step>] [--remove-step <step>] [-s <species>] [
                      (geneLabel|tag):key>] [--reset-export-clone-grouping]
                      [--export-productive-clones-only] [--no-reports] [--no-json-reports]
                      [--output-not-used-reads] [--use-local-temp] [--threads <n>]
-                     [--force-overwrite] [--no-warnings] [--verbose] [--help] [--set-whitelist
-                     <key=value> | --reset-whitelist tag]... [-M <key=value>]... <preset> ([file_I1.
-                     fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
-                     (fasta|bam|sam)) output_prefix
+                     [--force-overwrite] [--no-warnings] [--verbose] [--help] [-M <key=value>]...
+                     <preset> ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz]
+                     [file_R2.fastq[.gz]]|file.(fasta|bam|sam)) output_prefix
 Run full MiXCR pipeline for specific input.
       <preset>               Name of the analysis preset.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
@@ -33,13 +32,6 @@ Run full MiXCR pipeline for specific input.
       output_prefix          Path prefix telling mixcr where to put all output files. If arguments
                                ends with file separator, then outputs will be written in specified
                                directory.
-      --set-whitelist <key=value>
-                             Sets the whitelist for a specific tag to guide the tag refinement
-                               procedure.
-                             Usage: --set-whitelist CELL=preset:737K-august-2016 or --set-whitelist
-                               UMI=file:my_umi_whitelist.txt .
-      --reset-whitelist tag  Resets the whitelist for a specific tag so that unguided refinement
-                               procedure will be applied for it
   -M  <key=value>            Overrides arbitrary preset parameter
       --no-reports           Don't output report files for each of the steps
       --no-json-reports      Don't output json report files for each of the steps
@@ -107,6 +99,14 @@ Params for align command:
                              Drop all alignments that do not cover CDR3 region or cover it only
                                partially.
       --limit-input <n>      Maximal number of reads to process on `align`
+Params for refineTagsAndSort command:
+      --set-whitelist <key=value>
+                             Sets the whitelist for a specific tag to guide the tag refinement
+                               procedure.
+                             Usage: --set-whitelist CELL=preset:737K-august-2016 or --set-whitelist
+                               UMI=file:my_umi_whitelist.txt .
+      --reset-whitelist tag  Resets the whitelist for a specific tag so that unguided refinement
+                               procedure will be applied for it
 Params for assemble command:
       --assemble-clonotypes-by <gene_features>
                              Specify gene features used to assemble clonotypes. One may specify any

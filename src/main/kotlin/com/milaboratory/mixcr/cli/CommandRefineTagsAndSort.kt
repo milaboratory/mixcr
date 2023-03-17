@@ -40,9 +40,9 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
-import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
 import com.milaboratory.util.CanReportProgress
@@ -159,7 +159,7 @@ object CommandRefineTagsAndSort {
             hidden = true
         )
         fun whitelist(map: Map<String, String>) {
-            throw ValidationException("\"-w\" and \"--whitelist\" options are deprecated, please use ${AlignMixins.SetWhitelist.CMD_OPTION_SET} instead.")
+            throw ValidationException("\"-w\" and \"--whitelist\" options are deprecated, please use ${RefineTagsAndSortMixins.SetWhitelist.CMD_OPTION_SET} instead.")
         }
 
         override val paramsResolver =
@@ -177,8 +177,8 @@ object CommandRefineTagsAndSort {
                         TagCorrectorParameters::maxIndels setIfNotNull maxIndels
                         TagCorrectorParameters::maxTotalErrors setIfNotNull maxTotalErrors
                     }
+                }
             }
-        }
     }
 
     @Command(
@@ -218,10 +218,11 @@ object CommandRefineTagsAndSort {
         lateinit var reportOptions: ReportOptions
 
         @ArgGroup(
+            validate = false,
             multiplicity = "0..*",
             order = OptionsOrder.mixins.refineTagsAndSort
         )
-        var refineAndSortMixins: List<RefineTagsAndSortMixins> = mutableListOf()
+        var refineAndSortMixins: List<RefineTagsAndSortMiXCRMixins> = mutableListOf()
 
         @Mixin
         lateinit var resetPreset: ResetPresetOptions
@@ -244,7 +245,6 @@ object CommandRefineTagsAndSort {
 
         override fun run1() {
             val startTimeMillis = System.currentTimeMillis()
-
 
             val refineTagsAndSortReport: RefineTagsAndSortReport
             val mitoolReport: TagCorrectionReport?
@@ -386,7 +386,7 @@ object CommandRefineTagsAndSort {
 
                     // Reusable routine to perform hash-based soring of alignments by tag with specific index
                     var sorterCounter = 0
-                    //TODO sortByHashOnDiskHierarchically?
+                    // TODO sortByHashOnDiskHierarchically?
                     val hashSort: OutputPort<VDJCAlignments>.(tagIdx: Int) -> OutputPortWithProgress<VDJCAlignments> =
                         { tIdx -> // <- index inside the alignment object
                             sortByHashOnDisk(
@@ -417,7 +417,7 @@ object CommandRefineTagsAndSort {
 
                     // Sorting by other tags
                     for (tIdx in tagNames.size - 2 downTo 0) {
-                        //TODO used that sortByHashOnDisk returns OutputPortWithProgress
+                        // TODO used that sortByHashOnDisk returns OutputPortWithProgress
                         SmartProgressReporter.startProgressReport(
                             "Sorting alignments by " + tagNames[tIdx],
                             SmartProgressReporter.extractProgress(sorted, numberOfAlignments)

@@ -134,13 +134,14 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.2.0-77-alleles"
-val milibVersion = "2.3.0-22-master"
-val mitoolVersion = "1.6.0-50-main"
+val mixcrAlgoVersion = "4.2.0-78-ignore-non-productive-in-consensus"
+val milibVersion = "2.3.0-24-fix_obfuscation"
+val mitoolVersion = "1.6.0-57-main"
+val repseqioVersion = "1.7.0-36-intersect-debug"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
-val milmVersion = "3.0.0"
+val milmVersion = "3.3.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
@@ -148,10 +149,12 @@ val jcommanderVersion = "1.72"
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
     api("com.milaboratory:mitool:$mitoolVersion")
+    api("io.repseq:repseqio:$repseqioVersion")
 
     api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") {
         exclude("com.milaboratory", "mitool")
         exclude("com.milaboratory", "milib")
+        exclude("io.repseq", "repseqio")
     }
 
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
@@ -170,10 +173,12 @@ dependencies {
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    // this way dependency will not be transient, but will be included in application
-    compileOnly("info.picocli:picocli:$picocliVersion")
-    shadow("info.picocli:picocli:$picocliVersion")
-    testImplementation("info.picocli:picocli:$picocliVersion")
+    implementation("info.picocli:picocli:$picocliVersion")
+
+    // // this way dependency will not be transient, but will be included in application
+    // compileOnly("info.picocli:picocli:$picocliVersion")
+    // shadow("info.picocli:picocli:$picocliVersion")
+    // testImplementation("info.picocli:picocli:$picocliVersion")
 
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("com.github.victools:jsonschema-generator:4.27.0")
