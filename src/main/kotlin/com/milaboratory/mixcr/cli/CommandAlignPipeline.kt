@@ -12,7 +12,6 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
-import com.milaboratory.app.logger
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.sequence.NSQTuple
 import com.milaboratory.mitool.container.MicRecord
@@ -50,9 +49,9 @@ object CommandAlignPipeline {
         cmdParams: CommandAlignParams,
         fileGroups: CommandAlign.InputFileGroups
     ): TagsExtractor {
-        var plan: ReadSearchPlan? = null
+        val plan: ReadSearchPlan?
         val readTags = mutableListOf<String>()
-        var readTagShortcuts: List<ReadTagShortcut>? = null
+        val readTagShortcuts: List<ReadTagShortcut>?
         var tagExtractors = mutableListOf<TagExtractorWithInfo>()
         var sampleTable = cmdParams.sampleTable
 
@@ -66,7 +65,7 @@ object CommandAlignPipeline {
                 if (tagName.matches(readGroupPattern))
                     readTags += tagName
                 else {
-                    val type = detectTagTypeByName(tagName) ?: continue
+                    val type = TagType.detectByTagName(tagName) ?: continue
                     tagExtractors += TagExtractorWithInfo(
                         PatternTag(plan.tagShortcut(tagName)),
                         TagInfo(type, TagValueType.SequenceAndQuality, tagName, 0 /* will be changed below */)
@@ -79,6 +78,9 @@ object CommandAlignPipeline {
             if (readTagShortcuts.size > 2) throw ValidationException(
                 "Tag pattern contains too many read groups, only R1 or R1+R2 combinations are supported."
             )
+        } else {
+            plan = null
+            readTagShortcuts = null
         }
 
         val fileTags = fileGroups.tags
@@ -94,7 +96,7 @@ object CommandAlignPipeline {
             )
         } else
             fileTags.forEach { tagName ->
-                val type = detectTagTypeByName(tagName) ?: return@forEach
+                val type = TagType.detectByTagName(tagName) ?: return@forEach
                 tagExtractors += TagExtractorWithInfo(
                     FileTag(tagName),
                     TagInfo(type, TagValueType.NonSequence, tagName, 0 /* will be changed below */)
@@ -165,7 +167,7 @@ object CommandAlignPipeline {
     }
 
     fun inferSampleTable(fileGroups: CommandAlign.InputFileGroups): CommandAlignParams.SampleTable {
-        val sampleTagNames = fileGroups.tags.filter { detectTagTypeByName(it) == TagType.Sample }
+        val sampleTagNames = fileGroups.tags.filter { TagType.detectByTagName(it) == TagType.Sample }
         return CommandAlignParams.SampleTable(
             sampleTagNames,
             fileGroups.fileGroups
@@ -455,17 +457,6 @@ object CommandAlignPipeline {
 
         val sampleStat get() = tagMapper?.sampleStat
     }
-
-    fun detectTagTypeByName(name: String): TagType? =
-        when {
-            name.startsWith("S") -> TagType.Sample
-            name.startsWith("CELL") -> TagType.Cell
-            name.startsWith("UMI") || name.startsWith("MI") -> TagType.Molecule
-            else -> {
-                logger.warn("Can't recognize tag type for name \"$name\", this tag will be ignored during analysis.")
-                null
-            }
-        }
 
     enum class ProcessingBundleStatus {
         Good,

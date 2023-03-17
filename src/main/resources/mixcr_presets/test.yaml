@@ -157,6 +157,9 @@
 "10x-vdj-tcr-qc-test":
   inheritFrom: 10x-vdj-tcr
   deprecation: "This preset is only for tests"
+  validation:
+    - type: TagPatternShouldContainsTagType
+      tagType: Cell
   qc:
     checks:
       - type: ReadsNotAligned

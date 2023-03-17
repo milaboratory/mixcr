@@ -181,6 +181,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                 val bundle = MiXCRParamsBundle(
                     flags = originalPreset.flags,
                     pipeline = originalPreset.pipeline,
+                    validation = originalPreset.validation,
                     align = paramsWithOverride(MiXCRCommandDescriptor.align),
                     refineTagsAndSort = paramsWithOverride(MiXCRCommandDescriptor.refineTagsAndSort),
                     assemblePartial = paramsWithOverride(MiXCRCommandDescriptor.assemblePartial),
