@@ -1,0 +1,33 @@
+generic-amplicon:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - materialType
+    - leftAlignmentMode
+    - rightAlignmentMode
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+
+generic-amplicon-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - materialType
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  validation:
+    - type: TagPatternWithUMI
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base-umi
+  assemble:
+    inheritFrom: assemble-base-umi
+  exportClones:
+    inheritFrom: exportClones-base-umi
