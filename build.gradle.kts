@@ -231,12 +231,12 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
 
 val generatePresetFileList by tasks.registering {
     group = "build"
-    val outputFile = file("${sourceSets.main.get().output.resourcesDir}/mixcr_presets/file_list.txt")
+    val outputFile = file("${sourceSets.main.get().output.resourcesDir}/presets/file_list.txt")
     doLast {
         val yamls = layout.files({
-            file("src/main/resources/mixcr_presets").walk()
+            file("src/main/resources/presets").walk()
                 .filter { it.extension == "yaml" }
-                .map { it.relativeTo(file("src/main/resources/mixcr_presets")) }
+                .map { it.relativeTo(file("src/main/resources/presets")) }
                 .toList()
         })
         outputFile.ensureParentDirsCreated()

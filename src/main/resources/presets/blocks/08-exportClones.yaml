@@ -1,0 +1,99 @@
+exportClones-base:
+  abstract: true
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-readFraction"
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+exportClones-base-umi:
+  abstract: true
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-readFraction"
+      - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-uniqueTagFraction"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+exportClones-base-single-cell-no-umi:
+  abstract: true
+  exportClones:
+    chains: ALL
+    splitFilesBy: []
+    fields:
+      - field: "-cloneId"
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-readCount"
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+exportClones-base-single-cell-with-umi:
+  abstract: true
+  exportClones:
+    chains: ALL
+    splitFilesBy: []
+    fields:
+      - field: "-cloneId"
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-readCount"
+      - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"

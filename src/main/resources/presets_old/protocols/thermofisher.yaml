@@ -1,0 +1,89 @@
+"oncomine-human-tcr-base":
+  abstract: true
+  inheritFrom: bundle-kaligner1-v1-base
+  mixins:
+    - type: MaterialTypeRNA
+    - type: SetSpecies
+      species: hs
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+
+"oncomine-human-bcr-base":
+  abstract: true
+  inheritFrom: oncomine-human-tcr-base
+  align:
+    inheritFrom: bundle-kaligner2-v1-base
+
+"oncomine-human-tcrb-lr-cdr3":
+  inheritFrom: oncomine-human-tcr-base
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+"oncomine-human-tcrb-lr-full-length":
+  inheritFrom: oncomine-human-tcr-base
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:FR4End}" ]
+
+"oncomine-human-tcrb-sr-cdr3":
+  inheritFrom: oncomine-human-tcr-base
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: J
+
+"oncomine-human-bcr-ihg-lr-cdr3":
+  inheritFrom: oncomine-human-tcrb-lr-cdr3
+  align:
+    inheritFrom: bundle-kaligner2-v1-base
+
+"oncomine-human-bcr-igh-lr-full-length":
+  inheritFrom: oncomine-human-tcrb-lr-full-length
+  align:
+    inheritFrom: bundle-kaligner2-v1-base
+
+
+"oncomine-human-bcr-igh-sr-cdr3":
+  inheritFrom: oncomine-human-tcrb-sr-cdr3
+  align:
+    inheritFrom: bundle-kaligner2-v1-base
+
+"oncomine-human-bcr-pan-clonality-cdr3":
+  inheritFrom: oncomine-human-bcr-igh-sr-cdr3
+  mixins:
+    - type: MaterialTypeDNA
+
+"oncomine-human-igh-fr3-j":
+  inheritFrom: oncomine-human-bcr-pan-clonality-cdr3
+
+"oncomine-human-igh-fr2-j":
+  inheritFrom: oncomine-human-bcr-pan-clonality-cdr3
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR2Begin:CDR3End}" ]
+
+"oncomine-human-igh-fr1-j":
+  inheritFrom: oncomine-human-bcr-pan-clonality-cdr3
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:CDR3End}" ]
+
+"oncomine-human-igh-leader-j":
+  inheritFrom: oncomine-human-bcr-pan-clonality-cdr3
+  mixins:
+    - type: MaterialTypeDNA
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{FR1Begin:CDR3End}" ]
+
+"oncomine-human-tcr-pan-clonality-cdr3":
+  inheritFrom: oncomine-human-tcrb-sr-cdr3
+  mixins:
+    - type: MaterialTypeDNA

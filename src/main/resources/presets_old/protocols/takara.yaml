@@ -1,0 +1,147 @@
+"takara-bcr-umi-base":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner2-global-x
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+
+"takara-tcr-umi-base":
+  abstract: true
+  inheritFrom: bundle-umi-rna-kaligner1-global-x
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+
+"takara-tcr-base":
+  abstract: true
+  inheritFrom: bundle-kaligner1-v1-base
+  mixins:
+    - type: MaterialTypeRNA
+    - type: SetTagPattern
+      tagPattern: ^(R1:*) \ ^N{40}(R2:*)
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      geneType: C
+      floating: true
+
+"takara-bcr-base":
+  abstract: true
+  inheritFrom: takara-tcr-base
+  align:
+    inheritFrom: bundle-kaligner2-v1-base
+
+
+"takara-human-bcr-cdr3":
+  inheritFrom: takara-bcr-umi-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+"takara-human-bcr-full-length":
+  inheritFrom: takara-bcr-umi-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+"takara-human-tcr-V2-cdr3":
+  inheritFrom: takara-tcr-umi-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+"takara-human-tcr-V2-full-length":
+  inheritFrom: takara-tcr-umi-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+"takara-human-tcr-V1-cdr3":
+  inheritFrom: takara-tcr-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+"takara-human-tcr-V1-full-length":
+  inheritFrom: takara-tcr-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+
+"takara-mouse-bcr-cdr3":
+  inheritFrom: takara-bcr-base
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+"takara-mouse-bcr-full-length":
+  inheritFrom: takara-bcr-base
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+
+"takara-mouse-tcr-cdr3":
+  inheritFrom: takara-tcr-base
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+
+"takara-mouse-tcr-full-length":
+  inheritFrom: takara-tcr-base
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]

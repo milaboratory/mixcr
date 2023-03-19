@@ -1,0 +1,28 @@
+"abhelix-human-bcr-cdr3":
+  inheritFrom: bundle-kaligner2-v1-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+
+"abhelix-human-bcr-full-length":
+  inheritFrom: abhelix-human-bcr-cdr3
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{FR1Begin:FR4End}" ]
+
+"abhelix-human-tcr-cdr3":
+  inheritFrom: abhelix-human-bcr-cdr3
+  align:
+    inheritFrom: align-kaligner1-base-v1
+
+"abhelix-human-tcr-full-length":
+  inheritFrom: abhelix-human-tcr-cdr3
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{FR1Begin:FR4End}" ]

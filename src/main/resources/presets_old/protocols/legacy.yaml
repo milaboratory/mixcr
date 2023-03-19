@@ -1,0 +1,21 @@
+#
+# Legacy presets from 4.0 parameter sets
+#
+
+"legacy-4.0-default":
+  inheritFrom: bundle-base
+  deprecation: "Legacy preset for backward capability with 4.0 version"
+  align:
+    inheritFrom: align-legacy-4.0-default
+
+"legacy-4.0-rna-seq":
+  inheritFrom: bundle-base
+  deprecation: "Legacy preset for backward capability with 4.0 version"
+  align:
+    inheritFrom: align-legacy-4.0-rna-seq
+
+"legacy-4.0-kAligner2":
+  inheritFrom: bundle-base
+  deprecation: "Legacy preset for backward capability with 4.0 version"
+  align:
+    inheritFrom: align-legacy-4.0-kaligner2

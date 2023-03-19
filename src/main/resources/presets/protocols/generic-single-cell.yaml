@@ -1,0 +1,94 @@
+# Low throughput (plates etc) amplicon-based single cell, no UMIs
+generic-lt-single-cell-amplicon:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  refineTagsAndSort:
+    # run only error correction, no any filters
+    inheritFrom: refineTagsAndSort-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base-cell
+  exportClones:
+    inheritFrom: exportClones-base-single-cell-no-umi
+
+# High throughput amplicon-based single cell, no UMIs
+generic-ht-single-cell-amplicon:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  refineTagsAndSort:
+    # run error correction and basic cell filtering
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_groups
+          groupingKeys:
+            - allTags:Cell
+          predicates:
+            - metrics:
+                - type: "group_metric_nunique"
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                  keys:
+                    - allTags:Read
+              operator:
+                type: group_operator_advanced_thresholding
+                algo:
+                  type: otsu
+                histTransformers:
+                  # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                  - type: inflate
+                    fraction: 0.15
+                logX: true
+                minimalSample: 20
+                fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: assemble-with-consensus-base-cell
+  exportClones:
+    inheritFrom: exportClones-base-single-cell-no-umi
+
+# Low throughput (plates etc) amplicon-based single cell, with UMIs
+generic-lt-single-cell-amplicon-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  refineTagsAndSort:
+    # run error correction and UMI filtering
+    inheritFrom: refineTagsAndSort-base-umi
+  assemble:
+    inheritFrom: assemble-with-consensus-base-cell
+  exportClones:
+    inheritFrom: exportClones-base-single-cell-no-umi

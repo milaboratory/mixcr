@@ -1,0 +1,7 @@
+"extend-universal":
+  abstract: true
+  extend:
+    vAnchor: CDR3Begin
+    jAnchor: CDR3End
+    minimalVScore: 50
+    minimalJScore: 50
