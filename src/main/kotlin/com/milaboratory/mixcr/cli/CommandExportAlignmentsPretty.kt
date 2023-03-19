@@ -215,6 +215,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
 
     override fun validate() {
         ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNA)
+        ValidationException.requireFileType(out, InputFileType.TXT)
     }
 
     override fun run1() {

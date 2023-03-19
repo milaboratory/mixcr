@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -13,6 +13,8 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.VoidProcessor
 import cc.redberry.pipe.util.forEachInParallel
+import com.milaboratory.app.InputFileType
+import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.info.AlignmentInfoCollector
@@ -79,6 +81,11 @@ class CommandAlignmentsStats : MiXCRCommandWithOutputs() {
 
     override val outputFiles
         get() = listOfNotNull(out)
+
+    override fun validate() {
+        ValidationException.requireFileType(input, InputFileType.VDJCA)
+        ValidationException.requireFileType(out, InputFileType.TXT)
+    }
 
     override fun run1() {
         val collectors = targetFeatures.map { GeneFeatureCoverageCollector(it) } +

@@ -154,6 +154,18 @@
         allowPartialAlignments: true
         allowNoCDR3PartAlignments: true
 
+"10x-vdj-tcr-qc-test":
+  inheritFrom: 10x-vdj-tcr
+  deprecation: "This preset is only for tests"
+  validation:
+    - type: TagPatternShouldContainsTagType
+      tagType: Cell
+  qc:
+    checks:
+      - type: ReadsNotAligned
+        upper: 0.99
+        middle: 0.95
+
 #
 # 10x tests
 #
@@ -619,3 +631,22 @@
       - field: "-allNFeaturesWithMinQuality"
       - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
+
+"test-gf-intersection":
+  inheritFrom: bundle-umi-rna-kaligner2-global-x
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(UMI:N{12})GGG(R1:*) \ ^(R2:*)
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: "VDJTranscriptWithout5UTR"
+    - type: AddExportClonesField
+      field: "-aaFeature"
+      args: [ "VDJRegion" ]
+      insertIndex: -1

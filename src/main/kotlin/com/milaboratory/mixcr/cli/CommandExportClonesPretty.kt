@@ -152,6 +152,7 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
 
     override fun validate() {
         ValidationException.requireFileType(input, InputFileType.CLNX)
+        ValidationException.requireFileType(out, InputFileType.TXT)
     }
 
     override fun run1() {

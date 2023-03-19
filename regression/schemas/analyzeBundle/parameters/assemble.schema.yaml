@@ -105,7 +105,7 @@ $defs:
       codeToWildcard:
         type: array
         items:
-          $ref: '#/$defs/Wildcard'
+          $ref: '#/$defs/cp'
       countOfBasicLetters:
         type: integer
       empty:
@@ -135,11 +135,11 @@ $defs:
           no_entry_value:
             type: string
       wildcardForAnyLetter:
-        $ref: '#/$defs/Wildcard'
+        $ref: '#/$defs/cp'
       wildcardsList:
         type: array
         items:
-          $ref: '#/$defs/Wildcard'
+          $ref: '#/$defs/cp'
   AndKeyedFilter-1:
     type: object
     properties:
@@ -491,29 +491,23 @@ $defs:
           const: group_operator_top
       required:
       - type
-  Wildcard:
+  cp:
     type: object
     properties:
-      bSymbol:
+      a:
         type: string
-      basicMask:
-        type: integer
-      basicMatchingCodes:
+      b:
+        type: string
+      c:
         type: array
         items:
           type: string
-      basicSize:
+      d:
         type: string
-      cSymbol:
-        type: string
-      code:
-        type: string
-      mask:
+      e:
         type: integer
-      matchingCodes:
-        type: array
-        items:
-          type: string
+      f:
+        type: integer
 type: object
 properties:
   cellLevel:

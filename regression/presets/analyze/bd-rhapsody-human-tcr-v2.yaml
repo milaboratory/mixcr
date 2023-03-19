@@ -178,10 +178,23 @@ refineTagsAndSort:
               minBinWidth: 0.2
               multiplyWeightByKey: false
           operator:
-            type: group_operator_otsu1
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 1.0
+            type: group_operator_lowest_threshold
+            operators:
+            - type: group_operator_advanced_thresholding
+              algo:
+                type: otsu
+              histTransformers:
+              - type: inflate
+                fraction: 0.15
+                value: 1.0
+              logX: true
+              minimalSample: 20
+              fallbackThreshold: 1.0
+              accept: High
+            - type: group_operator_cumtop
+              share: 0.85
+              round: Down
+              accept: High
             accept: High
       - type: filter_groups
         groupingKeys:

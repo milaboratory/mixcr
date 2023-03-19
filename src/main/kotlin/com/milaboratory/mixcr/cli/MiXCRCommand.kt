@@ -48,6 +48,7 @@ abstract class MiXCRCommand : Runnable {
 
         const val width = 100_000
         const val height = 100_000 + 100
+        const val qcOnEveryStep = 101_000
 
         @Suppress("ClassName")
         object mixins {

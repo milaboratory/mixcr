@@ -56,6 +56,10 @@ abstract class MiXCRParamsResolver<P : Any>(
                 }
             }
         }
+
+        bundle.validation?.items?.forEach { validation ->
+            validation.validate(bundle)
+        }
     }
 }
 

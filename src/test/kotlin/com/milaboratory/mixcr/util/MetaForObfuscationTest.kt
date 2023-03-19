@@ -10,6 +10,7 @@ import com.fasterxml.jackson.module.kotlin.isKotlinClass
 import com.milaboratory.mixcr.postanalysis.SetPreprocessorFactory
 import com.milaboratory.mixcr.postanalysis.WeightFunction
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction
+import com.milaboratory.primitivio.Serializer
 import com.milaboratory.util.DoNotObfuscateFull
 import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
@@ -108,6 +109,27 @@ class MetaForObfuscationTest {
             result.groupBy { it.`package`.name } shouldBe emptyMap()
         }
     }
+
+    /**
+     * Annotation exclusions in proguard are not recursive. But it's more convenient in this way
+     */
+    @Test
+    fun `all classes that are inner to classes annotated by DoNotObfuscateFull should be kept too`() {
+        val annotatedClasses = applicationClasses()
+            .filter { clazz ->
+                clazz.allEnclosingClasses().any { it.getAnnotation(DoNotObfuscateFull::class.java) != null }
+            }
+        val result = annotatedClasses
+            .filterNot { it.isAnonymousClass }
+            .filterNot { it.classWillBeKept() }
+            .toList()
+        "Classes that must be marked with @DoNotObfuscateFull".asClue {
+            result.groupBy { it.`package`.name } shouldBe emptyMap()
+        }
+    }
+
+    private fun Class<*>.allEnclosingClasses(): List<Class<*>> =
+        listOfNotNull(enclosingClass) + (enclosingClass?.allEnclosingClasses() ?: emptyList())
 
     private fun applicationClasses() = targetPackages.flatMap { targetPackage ->
         Reflections(targetPackage)
@@ -225,13 +247,17 @@ class MetaForObfuscationTest {
 
     private fun Class<*>.classWillBeKept(): Boolean =
         getAnnotation(DoNotObfuscateFull::class.java) != null
+                || superclass?.`package`?.name?.startsWith("com.fasterxml.jackson") == true
+                || Serializer::class.java in interfaces
                 || annotations.any { it.isJackson() }
                 || excludedPackages.any { `package`?.name?.startsWith(it) == true }
-                || name.contains("Parameters")
-                || name.endsWith("Report")
+                || name.contains("Parameters") || enclosingClass?.name?.endsWith("Parameters") == true
+                || name.endsWith("Report") || enclosingClass?.name?.endsWith("Report") == true
                 || isEnum
                 || (`package`?.name?.startsWith("io.repseq.gen.dist") == true && name.endsWith("Model"))
-                || enclosingClass?.classWillBeKept() == true
+                || (enclosingClass?.`package`?.name?.startsWith("io.repseq.gen.dist") == true && enclosingClass.name.endsWith(
+            "Model"
+        ))
 
     private fun Class<*>.isJacksonAnnotated() = allAnnotations().any { it.isJackson() }
 

@@ -93,6 +93,9 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
                 ValidationException.requireFileType(outputPath, InputFileType.YAML)
             }
         }
+        if (outputFormatFlags == null) {
+            ValidationException.requireFileType(outputPath, InputFileType.TXT)
+        }
     }
 
     override fun run1() {
