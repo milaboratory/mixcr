@@ -301,13 +301,19 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "Input files must be aligned by V feature containing FR1Begin"
         }
 
-        val repeatedGeneNamesInBaseGenes = originalLibrary.allGenes
-            .map { it.data.alleleInfo?.parent ?: it.name }
+        val baseGenes = originalLibrary.allGenes
+            .mapNotNull { it.data.alleleInfo?.parent }
             .distinct()
-            .groupBy { it.geneName }
-            .filterValues { it.size > 1 }
-        ValidationException.require(repeatedGeneNamesInBaseGenes.isEmpty()) {
-            "Several base genes ${repeatedGeneNamesInBaseGenes.values} point to the same gene group: ${repeatedGeneNamesInBaseGenes.keys}"
+        val absentBaseGenes = baseGenes.filter { it !in originalLibrary }
+        ValidationException.require(absentBaseGenes.isEmpty()) {
+            "All base genes must be presented in the library, $absentBaseGenes are absent."
+        }
+
+        val recursiveAllelesInLibrary = baseGenes
+            .map { originalLibrary[it] }
+            .filter { it.data.alleleInfo != null }
+        ValidationException.require(recursiveAllelesInLibrary.isEmpty()) {
+            "Recursive allele variants are not supported, $recursiveAllelesInLibrary should not refer to other genes."
         }
 
         val stepsCount = 7
