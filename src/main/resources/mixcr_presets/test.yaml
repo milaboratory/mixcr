@@ -154,6 +154,18 @@
         allowPartialAlignments: true
         allowNoCDR3PartAlignments: true
 
+"10x-vdj-tcr-qc-test":
+  inheritFrom: 10x-vdj-tcr
+  deprecation: "This preset is only for tests"
+  validation:
+    - type: TagPatternShouldContainsTagType
+      tagType: Cell
+  qc:
+    checks:
+      - type: ReadsNotAligned
+        upper: 0.99
+        middle: 0.95
+
 #
 # 10x tests
 #

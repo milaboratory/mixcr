@@ -175,6 +175,7 @@ object Main {
             .addSubcommand(CommandFindAlleles.COMMAND_NAME, CommandFindAlleles::class.java)
             .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees.mkCommandSpec())
             .addSubcommand("downsample", CommandDownsample::class.java)
+            .addSubcommand(CommandQcChecks.COMMAND_NAME, CommandQcChecks.Cmd::class.java)
             .commandsGroup(
                 CommandsGroup("Postanalysis commands")
                     .addSubcommand(

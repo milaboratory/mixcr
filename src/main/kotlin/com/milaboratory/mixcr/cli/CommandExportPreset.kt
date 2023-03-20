@@ -181,6 +181,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                 val bundle = MiXCRParamsBundle(
                     flags = originalPreset.flags,
                     pipeline = originalPreset.pipeline,
+                    validation = originalPreset.validation,
                     align = paramsWithOverride(MiXCRCommandDescriptor.align),
                     refineTagsAndSort = paramsWithOverride(MiXCRCommandDescriptor.refineTagsAndSort),
                     assemblePartial = paramsWithOverride(MiXCRCommandDescriptor.assemblePartial),
@@ -188,7 +189,8 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                     assemble = paramsWithOverride(MiXCRCommandDescriptor.assemble),
                     assembleContigs = paramsWithOverride(MiXCRCommandDescriptor.assembleContigs),
                     exportAlignments = paramsWithOverride(MiXCRCommandDescriptor.exportAlignments),
-                    exportClones = paramsWithOverride(MiXCRCommandDescriptor.exportClones)
+                    exportClones = paramsWithOverride(MiXCRCommandDescriptor.exportClones),
+                    qc = paramsWithOverride(MiXCRCommandDescriptor.qc)
                 )
                 ParamsBundleSpecBaseEmbedded(bundle)
             }

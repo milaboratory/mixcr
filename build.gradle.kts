@@ -134,8 +134,8 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0"
-val milibVersion = "2.4.0"
+val mixcrAlgoVersion = "4.3.0-6-develop"
+val milibVersion = "2.4.0-2-master"
 val mitoolVersion = "1.7.0"
 val repseqioVersion = "1.8.0"
 
@@ -185,6 +185,7 @@ dependencies {
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
 
     shadow("org.apache.logging.log4j:log4j-core:2.20.0")
+    testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
