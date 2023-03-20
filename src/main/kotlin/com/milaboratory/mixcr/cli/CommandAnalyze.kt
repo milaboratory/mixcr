@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.helpers.PathPatternExpandException
@@ -37,6 +38,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteExisting
 import kotlin.io.path.exists
+import kotlin.io.path.extension
 import kotlin.system.exitProcess
 
 object CommandAnalyze {
@@ -188,6 +190,13 @@ object CommandAnalyze {
         private var dryRun: Boolean = false
 
         @Option(
+            hidden = true,
+            names = ["--run-qc-on-each-step"],
+            order = OptionsOrder.qcOnEveryStep
+        )
+        private var qcAfterEachStep: Boolean = false
+
+        @Option(
             description = ["Don't output report files for each of the steps"],
             names = ["--no-reports"],
             order = OptionsOrder.report + 100
@@ -288,6 +297,40 @@ object CommandAnalyze {
             // Adding all other steps
             pipeline.drop(1).forEach { cmd ->
                 planBuilder.addStep(cmd)
+            }
+
+            if (bundle.qc?.checks?.isNotEmpty() == true) {
+                val stepsPossibleToCheck = planBuilder.executionPlan.filter { step ->
+                    step.output
+                        .map { Paths.get(it) }
+                        .any { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
+                }
+                val stepsToCheck = when {
+                    qcAfterEachStep -> stepsPossibleToCheck
+                    else -> stepsPossibleToCheck.takeLast(1)
+                }
+                var counter = 0
+                for (step in stepsToCheck) {
+                    val indexOfStep = planBuilder.executionPlan.indexOf(step)
+                    step.output
+                        .map { Paths.get(it) }
+                        .filter { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
+                        .forEach { output ->
+                            planBuilder.executionPlan.add(
+                                indexOfStep + 1,
+                                ExecutionStep(
+                                    MiXCRCommandDescriptor.qc.command,
+                                    counter++,
+                                    emptyList(),
+                                    emptyList(),
+                                    listOf(output.toString()),
+                                    listOf(
+                                        output.toString().removeSuffix(output.extension) + output.extension + ".qc.txt"
+                                    )
+                                )
+                            )
+                        }
+                }
             }
 
             // Using created plan

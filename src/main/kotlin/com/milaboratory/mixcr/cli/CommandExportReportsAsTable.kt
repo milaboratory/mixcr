@@ -24,7 +24,7 @@ import com.milaboratory.mixcr.export.ReportFieldsExtractors
 import com.milaboratory.mixcr.export.ReportFieldsExtractors.ReportsWithSource
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.presets.StepDataCollection
-import com.milaboratory.mixcr.presets.allReports
+import com.milaboratory.mixcr.presets.allReportsRecursive
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec
@@ -111,14 +111,14 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
                     footer.reports.collection.upstreamReportsWithSources()
                         .forEach { output.put(it) }
                 }
-                output.put(ReportsWithSource(input.toString(), footer.reports.collection.allReports()))
+                output.put(ReportsWithSource(input.toString(), footer.reports.collection.allReportsRecursive()))
             }
         }
     }
 
     private fun StepDataCollection<MiXCRCommandReport>.upstreamReportsWithSources(): List<ReportsWithSource> =
         upstreamCollections.flatMap { (sourceName, collection) ->
-            collection.upstreamReportsWithSources() + ReportsWithSource(sourceName, collection.allReports())
+            collection.upstreamReportsWithSources() + ReportsWithSource(sourceName, collection.allReportsRecursive())
         }
 
     companion object {
