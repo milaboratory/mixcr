@@ -1,10 +1,5 @@
 bundle-base:
   abstract: true
-  flags:
-    - species
-    - materialType
-  pipeline:
-    inheritFrom: pipeline-base
   align:
     inheritFrom: align-base
   exportAlignments:

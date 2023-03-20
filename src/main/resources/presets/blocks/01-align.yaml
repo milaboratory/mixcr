@@ -1101,3 +1101,9 @@ align-shotgun-base:
   inheritFrom: align-legacy-4.0-kaligner2
   flags:
     - materialType
+
+align-base-single-cell-shotgun:
+  abstract: true
+  inheritFrom: align-legacy-4.0-kaligner2
+  flags:
+    - materialType
