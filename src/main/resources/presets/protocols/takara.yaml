@@ -1,4 +1,4 @@
-milab-human-bcr-multiplex:
+"takara-smartseq-human-bcr":
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -6,37 +6,8 @@ milab-human-bcr-multiplex:
     - assemble
     - exportClones
   mixins:
-    - type: SetSpecies
-      species: hsa
-    - type: MaterialTypeRNA
     - type: SetTagPattern
-      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: false
-      geneType: C
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
-    - type: SetSplitClonesBy
-      geneType: C
-      value: true
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "{CDR1Begin:FR4End}" ]
-
-
-milab-human-tcr-rna-race:
-  inheritFrom: generic-amplicon-with-umi
-  mixins:
-    - type: SetSpecies
-      species: hsa
-    - type: MaterialTypeRNA
-    - type: SetTagPattern
-      tagPattern: ^(R1:*) \ ^tggtatcaacgcagagt(UMI:N{14})N{10}(R2:*)
+      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
@@ -47,47 +18,78 @@ milab-human-tcr-rna-race:
       value: true
     - type: SetSplitClonesBy
       geneType: J
+      value: true
+    - type: SetSplitClonesBy
+      geneType: C
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
 
+"takara-human-bcr-profiling":
+  inheritFrom: takara-smartseq-human-bcr
 
-milab-human-tcr-rna-multiplex:
-  inheritFrom: generic-amplicon-with-umi
+"takara-smartseq-human-tcr":
+  inheritFrom: takara-smartseq-human-bcr
   mixins:
-    - type: SetSpecies
-      species: hsa
+    - type: SetTagPattern
+      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
+
+"takara-human-tcr-profiling-v2":
+  inheritFrom: takara-smartseq-human-tcr
+
+"takara-human-tcr-profiling":
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
     - type: MaterialTypeRNA
     - type: SetTagPattern
-      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{21}(R1:*) \ ^N{20}(R2:*)
+      tagPattern: ^(R1:*) \ ^N{40}(R2:*)
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
-      floating: false
       geneType: C
+      floating: true
     - type: SetSplitClonesBy
       geneType: V
       value: true
     - type: SetSplitClonesBy
       geneType: J
       value: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
 
-
-milab-human-tcr-dna-multiplex:
+"takara-mouse-bcr-profiling":
   inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
   mixins:
-    - type: SetSpecies
-      species: hsa
-    - type: MaterialTypeDNA
+    - type: MaterialTypeRNA
+    - type: SetTagPattern
+      tagPattern: ^(R1:*) \ ^N{40}(R2:*)
     - type: LeftAlignmentBoundaryNoPoint
-      floating: true
+      floating: false
     - type: RightAlignmentBoundaryNoPoint
+      geneType: C
       floating: true
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
       geneType: J
+      value: true
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
 
-
-milab-mouse-tcr-rna-race:
-  inheritFrom: milab-human-tcr-rna-race
-  mixins:
-    - type: SetSpecies
-      species: mmu
+"takara-mouse-tcr-profiling":
+  inheritFrom: takara-mouse-bcr-profiling
