@@ -55,10 +55,10 @@ import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VJ_REFERENCE
 import io.repseq.core.GeneType.Variable
-import io.repseq.core.GeneVariantName
 import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
+import io.repseq.dto.VDJCGeneData.metaKey
 import io.repseq.dto.VDJCLibraryData
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
@@ -378,7 +378,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             if (libraryOutput.matches(InputFileType.JSON)) {
                 K_OM.writeValue(libraryOutput.toFile(), arrayOf(resultLibrary.data))
             } else if (libraryOutput.matches(InputFileType.FASTA)) {
-                resultLibrary.writeToFASTA(libraryOutput, originalLibrary)
+                resultLibrary.writeToFASTA(libraryOutput)
             } else {
                 throw ApplicationException("Unsupported file type for export library, $libraryOutput")
             }
@@ -436,22 +436,20 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         reportOptions.appendToFiles(report)
     }
 
-    private fun VDJCLibrary.writeToFASTA(libraryOutput: Path, originalLibrary: VDJCLibrary) {
+    private fun VDJCLibrary.writeToFASTA(libraryOutput: Path) {
         FastaWriter<NucleotideSequence>(libraryOutput.toFile()).use { writer ->
             var id = 0L
             primaryGenes
                 .sortedBy { it.name }
                 .forEach { gene ->
                     val geneFeaturesForFoundAllele =
-                        gene.data.meta[AllelesBuilder.metaKey.alleleMutationsReliableRegion]
+                        gene.data.meta[metaKey.alleleMutationsReliableRegion]
                             ?.map { GeneFeature.parse(it) }
                             ?.sorted()
                     when {
                         geneFeaturesForFoundAllele != null -> {
                             geneFeaturesForFoundAllele.forEach { geneFeature ->
-                                val varianceOf =
-                                    originalLibrary[GeneVariantName(gene.data.meta[AllelesBuilder.metaKey.alleleVariantOf]!!.first())]
-                                val range = varianceOf.referencePoints.getRange(geneFeature)
+                                val range = gene.referencePoints.getRange(geneFeature)
                                 val sequence = gene.getFeature(geneFeature)
                                 writer.write(FastaRecord(id++, "${gene.name} $range $geneFeature", sequence))
                             }
@@ -482,21 +480,21 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 this["type"] = { it.gene.geneType }
                 this["status"] = { it.status }
                 this["enoughInfo"] = { allele ->
-                    allele.status.enoughInfo
+                    allele.enoughInfo
                 }
-                this[AllelesBuilder.metaKey.alleleMutationsReliableRegion] = { allele ->
+                this[metaKey.alleleMutationsReliableRegion] = { allele ->
                     if (allele.status == DE_NOVA) {
-                        allele.gene.meta[AllelesBuilder.metaKey.alleleMutationsReliableRegion]
+                        allele.gene.meta[metaKey.alleleMutationsReliableRegion]
                     } else ""
                 }
                 this["mutations"] = { allele ->
                     if (allele.status == DE_NOVA) {
-                        allele.gene.meta[AllelesBuilder.metaKey.alleleMutations]?.first() ?: ""
+                        allele.gene.meta[metaKey.alleleMutations]?.first() ?: ""
                     } else ""
                 }
                 this["varianceOf"] = { allele ->
                     if (allele.status == DE_NOVA) {
-                        allele.gene.meta[AllelesBuilder.metaKey.alleleVariantOf]?.first() ?: ""
+                        allele.gene.meta[metaKey.alleleVariantOf]?.first() ?: ""
                     } else ""
                 }
                 this["naivesCount"] = { allele ->

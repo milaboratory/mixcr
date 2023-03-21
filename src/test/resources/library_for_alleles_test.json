@@ -426,13 +426,47 @@
       },
       {
         "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV2-70*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHV2-70*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHV2-70*01",
+          "reliableRegions": [
+            "VRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "UTR5Begin": 1207290,
+            "L1Begin": 1207190,
+            "VIntronBegin": 1207144,
+            "L2Begin": 1207058,
+            "FR1Begin": 1207047,
+            "CDR1Begin": 1206972,
+            "FR2Begin": 1206942,
+            "CDR2Begin": 1206891,
+            "FR3Begin": 1206870,
+            "CDR3Begin": 1206759,
+            "VEnd": 1206746
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
         "name": "IGHV2-70*01",
         "geneType": "V",
         "isFunctional": true,
         "chains": [
           "IGH"
         ],
-        "type": "primary",
+        "type": "alternative",
         "anchorPoints": {
           "UTR5Begin": 1207290,
           "L1Begin": 1207190,
@@ -458,7 +492,7 @@
         "type": "alternative",
         "alleleInfo": {
           "parent": "IGHV2-70*01",
-          "reliableRegions": "{FR1Begin:VEnd}",
+          "reliableRegions": "VRegion",
           "mutations": "ST154G",
           "originalAnchorPoints": {
             "UTR5Begin": 1207290,
@@ -482,16 +516,50 @@
       },
       {
         "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV2-70D*00",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHV2-70D*04"
+        },
+        "alleleInfo": {
+          "parent": "IGHV2-70*01",
+          "reliableRegions": [
+            "VRegion"
+          ],
+          "mutations": "SG13AST102CST154GSA178T",
+          "originalAnchorPoints": {
+            "UTR5Begin": 1207290,
+            "L1Begin": 1207190,
+            "VIntronBegin": 1207144,
+            "L2Begin": 1207058,
+            "FR1Begin": 1207047,
+            "CDR1Begin": 1206972,
+            "FR2Begin": 1206942,
+            "CDR2Begin": 1206891,
+            "FR3Begin": 1206870,
+            "CDR3Begin": 1206759,
+            "VEnd": 1206746
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
         "name": "IGHV2-70D*04",
         "geneType": "V",
         "isFunctional": true,
         "chains": [
           "IGH"
         ],
-        "type": "primary",
+        "type": "alternative",
         "alleleInfo": {
           "parent": "IGHV2-70*01",
-          "reliableRegions": "{FR1Begin:VEnd}",
+          "reliableRegions": "VRegion",
           "mutations": "SG13AST102CST154GSA178T",
           "originalAnchorPoints": {
             "UTR5Begin": 1207290,
@@ -508,9 +576,9 @@
           }
         },
         "meta": {
-          "alleleMutationsReliableRegion": "{FR1Begin:VEnd}",
-          "alleleMutations": "SG13AST102CST154GSA178T",
-          "alleleVariantOf": "IGHV2-70*01"
+          "alleleMutations": "",
+          "alleleMutationsReliableRegion": "VRegion",
+          "alleleVariantOf": "IGHV2-70D*04"
         }
       },
       {
@@ -524,7 +592,7 @@
         "type": "alternative",
         "alleleInfo": {
           "parent": "IGHV2-70*01",
-          "reliableRegions": "{FR1Begin:VEnd}",
+          "reliableRegions": "VRegion",
           "mutations": "SG13AST102CST154GSA178TSG194T",
           "originalAnchorPoints": {
             "UTR5Begin": 1207290,
@@ -541,7 +609,7 @@
           }
         },
         "meta": {
-          "alleleMutationsReliableRegion": "{FR1Begin:VEnd}",
+          "alleleMutationsReliableRegion": "VRegion",
           "alleleMutations": "SG194T",
           "alleleVariantOf": "IGHV2-70D*04"
         }
@@ -1494,6 +1562,41 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHV3-72*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHV3-72*01",
+          "reliableRegions": [
+            "VRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "UTR5Begin": 1227420,
+            "L1Begin": 1227320,
+            "VIntronBegin": 1227274,
+            "L2Begin": 1227171,
+            "FR1Begin": 1227160,
+            "CDR1Begin": 1227085,
+            "FR2Begin": 1227061,
+            "CDR2Begin": 1227010,
+            "FR3Begin": 1226980,
+            "CDR3Begin": 1226869,
+            "VEnd": 1226858
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV3-72*01",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "UTR5Begin": 1227420,
           "L1Begin": 1227320,
@@ -1626,6 +1729,41 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHV4-4*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHV4-4*01",
+          "reliableRegions": [
+            "VRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "UTR5Begin": 444434,
+            "L1Begin": 444334,
+            "VIntronBegin": 444288,
+            "L2Begin": 444206,
+            "FR1Begin": 444195,
+            "CDR1Begin": 444120,
+            "FR2Begin": 444093,
+            "CDR2Begin": 444042,
+            "FR3Begin": 444021,
+            "CDR3Begin": 443910,
+            "VEnd": 443899
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-4*01",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "UTR5Begin": 444434,
           "L1Begin": 444334,
@@ -1648,6 +1786,41 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHV4-28*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHV4-28*01",
+          "reliableRegions": [
+            "VRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "UTR5Begin": 757149,
+            "L1Begin": 757049,
+            "VIntronBegin": 757003,
+            "L2Begin": 756921,
+            "FR1Begin": 756910,
+            "CDR1Begin": 756835,
+            "FR2Begin": 756808,
+            "CDR2Begin": 756757,
+            "FR3Begin": 756736,
+            "CDR3Begin": 756625,
+            "VEnd": 756614
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-28*01",
+        "geneType": "V",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "UTR5Begin": 757149,
           "L1Begin": 757049,
@@ -1780,6 +1953,41 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHV4-55*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHV4-55*01",
+          "reliableRegions": [
+            "VRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "UTR5Begin": 1088046,
+            "L1Begin": 1087946,
+            "VIntronBegin": 1087900,
+            "L2Begin": 1087817,
+            "FR1Begin": 1087806,
+            "CDR1Begin": 1087731,
+            "FR2Begin": 1087704,
+            "CDR2Begin": 1087653,
+            "FR3Begin": 1087632,
+            "CDR3Begin": 1087521,
+            "VEnd": 1087510
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHV4-55*01",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "UTR5Begin": 1088046,
           "L1Begin": 1087946,
@@ -3055,6 +3263,33 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHJ1*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHJ1*01",
+          "reliableRegions": [
+            "JRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "JBegin": 297890,
+            "FR4Begin": 297869,
+            "FR4End": 297838
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ1*01",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "JBegin": 297890,
           "FR4Begin": 297869,
@@ -3083,6 +3318,33 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHJ2*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHJ2*01",
+          "reliableRegions": [
+            "JRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "JBegin": 297683,
+            "FR4Begin": 297661,
+            "FR4End": 297630
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ2*01",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "JBegin": 297683,
           "FR4Begin": 297661,
@@ -3111,6 +3373,33 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHJ3*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHJ3*01",
+          "reliableRegions": [
+            "JRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "JBegin": 297068,
+            "FR4Begin": 297049,
+            "FR4End": 297018
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ3*01",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "JBegin": 297068,
           "FR4Begin": 297049,
@@ -3139,6 +3428,33 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHJ4*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHJ4*01",
+          "reliableRegions": [
+            "JRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "JBegin": 296694,
+            "FR4Begin": 296677,
+            "FR4End": 296646
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ4*01",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "JBegin": 296694,
           "FR4Begin": 296677,
@@ -3153,6 +3469,33 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHJ5*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHJ5*01",
+          "reliableRegions": [
+            "JRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "JBegin": 296296,
+            "FR4Begin": 296276,
+            "FR4End": 296245
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ5*01",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
+        "type": "alternative",
         "anchorPoints": {
           "JBegin": 296296,
           "FR4Begin": 296276,
@@ -3167,11 +3510,38 @@
         "chains": [
           "IGH"
         ],
+        "meta": {
+          "alias": "true",
+          "alleleVariantOf": "IGHJ6*01"
+        },
+        "alleleInfo": {
+          "parent": "IGHJ6*01",
+          "reliableRegions": [
+            "JRegion"
+          ],
+          "mutations": "",
+          "originalAnchorPoints": {
+            "JBegin": 295692,
+            "FR4Begin": 295660,
+            "FR4End": 295629
+          }
+        },
+        "type": "primary"
+      },
+      {
+        "baseSequence": "nuccore://NC_060938.1#99839124-101157136",
+        "name": "IGHJ6*01",
+        "geneType": "J",
+        "isFunctional": true,
+        "chains": [
+          "IGH"
+        ],
         "anchorPoints": {
           "JBegin": 295692,
           "FR4Begin": 295660,
           "FR4End": 295629
-        }
+        },
+        "type": "alternative"
       },
       {
         "baseSequence": "nuccore://NC_060938.1#99839124-101157136",

@@ -96,7 +96,10 @@ assert "grep -c 'IGHV2-70\*15' alleles/description.tsv" "1"
 #1 found alleles based on IGHV2-70*01
 assert "grep -c 'IGHV2-70D\*04' alleles/description.tsv" "1"
 keyOfRelativeMutations=`head -n 1 alleles/description.tsv | sed 's/mutations/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
-assert "grep 'IGHJ6' alleles/description.tsv | cut -f$keyOfRelativeMutations" "SG17TSG18AST19CSC35A"
+assert "grep 'IGHJ6\*01' alleles/description.tsv | cut -f$keyOfRelativeMutations" "SG17TSG18AST19CSC35A"
+
+assert "grep '\*01' alleles/description.tsv | wc -l" "8"
+assert "grep 'IGHV4-55\*00' alleles/description.tsv | wc -l" "1"
 
 keyOfNumberOfCones=`head -n 1 trees/trees.tsv | sed 's/numberOfClonesInTree/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 keyOfCDR3=`head -n 1 trees/trees.tsv | sed 's/nSeqCDR3OfMrca/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
