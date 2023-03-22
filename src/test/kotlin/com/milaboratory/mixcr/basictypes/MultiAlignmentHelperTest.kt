@@ -17,6 +17,7 @@ import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.SequenceQuality
 import io.kotest.matchers.collections.shouldContainInOrder
+import io.repseq.core.GeneVariantName
 import org.junit.Test
 
 /**
@@ -31,25 +32,25 @@ class MultiAlignmentHelperTest {
         val seq2 = NucleotideSequence("GATACGATACATTAGAGACCACAGATACA")
         val inputs = listOf(
             MultiAlignmentHelper.AlignmentInput(
-                "Query0",
+                GeneVariantName("Query0"),
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq1),
                 10,
                 20
             ),
             MultiAlignmentHelper.AlignmentInput(
-                "Query1",
+                GeneVariantName("Query1"),
                 Aligner.alignGlobalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq1),
                 12,
                 30
             ),
             MultiAlignmentHelper.AlignmentInput(
-                "Query2",
+                GeneVariantName("Query2"),
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq2),
                 14,
                 30
             ),
             MultiAlignmentHelper.AlignmentInput(
-                "Query3",
+                GeneVariantName("Query3"),
                 Aligner.alignGlobalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq2),
                 16,
                 30
@@ -180,19 +181,19 @@ class MultiAlignmentHelperTest {
         val seq3 = NucleotideSequence("CATCAGGTATCGCCCTGGTACG")
         val inputs = listOf(
             MultiAlignmentHelper.AlignmentInput(
-                "",
+                GeneVariantName(""),
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq1),
                 10,
                 20
             ),
             MultiAlignmentHelper.AlignmentInput(
-                "",
+                GeneVariantName(""),
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq2),
                 12,
                 30
             ),
             MultiAlignmentHelper.AlignmentInput(
-                "",
+                GeneVariantName(""),
                 Aligner.alignLocalAffine(AffineGapAlignmentScoring.getNucleotideBLASTScoring(), seq0, seq3),
                 14,
                 30

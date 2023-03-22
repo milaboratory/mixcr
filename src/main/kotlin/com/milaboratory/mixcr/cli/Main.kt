@@ -46,9 +46,12 @@ import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
 import io.repseq.core.Chains
+import io.repseq.core.GeneFamilyName
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeatures
+import io.repseq.core.GeneName
 import io.repseq.core.GeneType
+import io.repseq.core.GeneVariantName
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.seqbase.SequenceResolvers
@@ -338,6 +341,9 @@ object Main {
         registerConverter { Chains.parse(it) }
         registerConverter { NucleotideSequence(it) }
         registerConverter { AminoAcidSequence(it) }
+        registerConverter { GeneVariantName(it) }
+        registerConverter { GeneName(it) }
+        registerConverter { GeneFamilyName(it) }
         registerConverter { arg ->
             StandardPlots.PlotType.values().find { it.cliName == arg.lowercase() }
                 ?: throw ValidationException("unknown plot type: $arg")

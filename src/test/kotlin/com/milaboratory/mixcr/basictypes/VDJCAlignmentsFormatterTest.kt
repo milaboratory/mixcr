@@ -19,6 +19,7 @@ import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper.Builder.build
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 import io.repseq.core.ExtendedReferencePointsBuilder
+import io.repseq.core.GeneVariantName
 import io.repseq.core.ReferencePoint
 import org.junit.Test
 
@@ -100,7 +101,7 @@ class VDJCAlignmentsFormatterTest {
             Range(0, seq.size()),
             "",
             al.sequence1.sequence,
-            listOf(MultiAlignmentHelper.AlignmentInput("", al, 10, 20)),
+            listOf(MultiAlignmentHelper.AlignmentInput(GeneVariantName(""), al, 10, 20)),
             listOf(MultiAlignmentHelper.AminoAcidInput(partitioning))
         )
         if (show) println(ml)
@@ -128,7 +129,7 @@ class VDJCAlignmentsFormatterTest {
             Range(0, seq.size()),
             "",
             al.sequence1,
-            listOf(MultiAlignmentHelper.AlignmentInput("", al, 20, 30)),
+            listOf(MultiAlignmentHelper.AlignmentInput(GeneVariantName(""), al, 20, 30)),
             listOf(MultiAlignmentHelper.AminoAcidInput(partitioning))
         )
         if (show) println(ml)

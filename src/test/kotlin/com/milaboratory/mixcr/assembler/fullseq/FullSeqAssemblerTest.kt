@@ -393,7 +393,7 @@ class FullSeqAssemblerTest {
                 .filter { obj: Alignment<NucleotideSequence?>? -> Objects.nonNull(obj) }
                 .anyMatch { a: Alignment<NucleotideSequence?> -> !a.absoluteMutations.isEmpty }
         }
-            .filter { al: VDJCAlignments -> al.getBestHit(GeneType.Variable).gene.name.contains("3-74") }
+            .filter { al: VDJCAlignments -> al.getBestHit(GeneType.Variable).gene.name.name.contains("3-74") }
             .forEach { al: VDJCAlignments ->
                 for (i in 0 until al.numberOfTargets()) {
                     println(MultiAlignmentHelper.Builder.formatMultiAlignments(al, i).format())

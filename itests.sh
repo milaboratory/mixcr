@@ -147,6 +147,7 @@ if [[ $run_tests == true ]]; then
   ln -s -f ../src/test/resources/sequences/umi_ig_data_2_subset_R2.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R2.fastq.gz
   ln -s -f ../src/test/resources/bam/unsorted.bam ${dir}/test_target/unsorted.bam
   ln -s -f ../src/test/resources/library_for_alleles_test.json ${dir}/test_target/library_for_alleles_test.json
+  ln -s -f ../src/test/resources/sligtly_broken_library_for_alleles_test.json ${dir}/test_target/sligtly_broken_library_for_alleles_test.json
   cd ${dir}
 
   echo "======================================="

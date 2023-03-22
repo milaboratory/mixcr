@@ -55,6 +55,7 @@ import com.milaboratory.util.exhaustive
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
+import io.repseq.core.GeneVariantName
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -158,7 +159,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         paramLabel = "<gene_name>",
         order = OptionsOrder.main + 10_100
     )
-    var VGenesToFilter: Set<String> = mutableSetOf()
+    var VGenesToFilter: Set<GeneVariantName> = mutableSetOf()
 
     @Option(
         description = ["List of JGene names to filter clones"],
@@ -166,7 +167,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         paramLabel = "<gene_name>",
         order = OptionsOrder.main + 10_200
     )
-    var JGenesToFilter: Set<String> = mutableSetOf()
+    var JGenesToFilter: Set<GeneVariantName> = mutableSetOf()
 
     @Option(
         description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
