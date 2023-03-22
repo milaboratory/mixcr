@@ -74,6 +74,7 @@ object Main {
 
     @JvmStatic
     fun main(vararg args: String) {
+        initializeSystem()
         if ("-v" in args) {
             CommandMain.VersionProvider().version.forEach { println(it) }
             exitProcess(0)
@@ -109,47 +110,10 @@ object Main {
         }
     }
 
-    private fun assertionsDisabled(): Boolean {
-        return System.getProperty("noAssertions") != null
-    }
+    private fun assertionsDisabled(): Boolean = System.getProperty("noAssertions") != null
 
     fun mkCmd(): CommandLine {
         System.setProperty("picocli.usage.width", "100")
-
-        // Getting command string if executed from script
-        val command = System.getProperty("mixcr.command", "java -jar mixcr.jar")
-        if (!initialized) {
-            // Checking whether we are running a test version
-            if (!assertionsDisabled() && !VersionInfo.getVersionInfoForArtifact("mixcr").isProductionBuild) // If so, enable asserts
-                ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true)
-            TempFileManager.setPrefix("mixcr_")
-            var cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache")
-            val repseqioCacheEnv = System.getenv("REPSEQIO_CACHE")
-            if (repseqioCacheEnv != null) {
-                cachePath = Paths.get(repseqioCacheEnv)
-            }
-            // if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
-            // TODO add mechanism to deny http requests
-            SequenceResolvers.initDefaultResolver(cachePath)
-            val libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries")
-            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".")
-            if (System.getProperty("mixcr.path") != null) {
-                val bin = Paths.get(System.getProperty("mixcr.path"))
-                val searchPath = bin.resolve("libraries")
-                if (Files.exists(searchPath)) VDJCLibraryRegistry.getDefault()
-                    .addPathResolverWithPartialSearch(searchPath)
-            }
-            if (System.getProperty("library.path") != null) VDJCLibraryRegistry.getDefault()
-                .addPathResolverWithPartialSearch(
-                    System.getProperty("library.path")
-                )
-            if (System.getenv("MIXCR_LIBRARY_PATH") != null) VDJCLibraryRegistry.getDefault()
-                .addPathResolverWithPartialSearch(
-                    System.getenv("MIXCR_LIBRARY_PATH")
-                )
-            if (Files.exists(libraries)) VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries)
-            initialized = true
-        }
 
         val groups: MutableList<Pair<String, Set<String>>> = mutableListOf()
 
@@ -160,6 +124,9 @@ object Main {
             groups += group.name to group.commands.map { it.first }.toSet()
             return this
         }
+
+        // Getting command string if executed from script
+        val command = System.getProperty("mixcr.command", "java -jar mixcr.jar")
 
         val cmd = CommandLine(CommandMain::class.java)
             .setCommandName(command)
@@ -288,6 +255,41 @@ object Main {
             .overrideSynopsysHelp()
             .registerConvertors()
             .registerExceptionHandlers()
+    }
+
+    fun initializeSystem() {
+        if (!initialized) {
+            // Checking whether we are running a test version
+            if (!assertionsDisabled() && !VersionInfo.getVersionInfoForArtifact("mixcr").isProductionBuild) // If so, enable asserts
+                ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true)
+            TempFileManager.setPrefix("mixcr_")
+            var cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache")
+            val repseqioCacheEnv = System.getenv("REPSEQIO_CACHE")
+            if (repseqioCacheEnv != null) {
+                cachePath = Paths.get(repseqioCacheEnv)
+            }
+            // if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
+            // TODO add mechanism to deny http requests
+            SequenceResolvers.initDefaultResolver(cachePath)
+            val libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries")
+            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".")
+            if (System.getProperty("mixcr.path") != null) {
+                val bin = Paths.get(System.getProperty("mixcr.path"))
+                val searchPath = bin.resolve("libraries")
+                if (Files.exists(searchPath)) VDJCLibraryRegistry.getDefault()
+                    .addPathResolverWithPartialSearch(searchPath)
+            }
+            if (System.getProperty("library.path") != null) VDJCLibraryRegistry.getDefault()
+                .addPathResolverWithPartialSearch(
+                    System.getProperty("library.path")
+                )
+            if (System.getenv("MIXCR_LIBRARY_PATH") != null) VDJCLibraryRegistry.getDefault()
+                .addPathResolverWithPartialSearch(
+                    System.getenv("MIXCR_LIBRARY_PATH")
+                )
+            if (Files.exists(libraries)) VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries)
+            initialized = true
+        }
     }
 
     private fun CommandLine.registerExceptionHandlers(): CommandLine {
