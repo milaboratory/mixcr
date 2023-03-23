@@ -24,7 +24,7 @@ import com.milaboratory.core.io.sequence.fasta.FastaRecord
 import com.milaboratory.core.io.sequence.fasta.FastaWriter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AlleleSearchResult
-import com.milaboratory.mixcr.alleles.AlleleSearchResult.Status.DE_NOVA
+import com.milaboratory.mixcr.alleles.AlleleSearchResult.Status.DE_NOVO
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.CloneRebuild
 import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
@@ -483,17 +483,17 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                     allele.enoughInfo
                 }
                 this[metaKey.alleleMutationsReliableRegion] = { allele ->
-                    if (allele.status == DE_NOVA) {
+                    if (allele.status == DE_NOVO) {
                         allele.gene.meta[metaKey.alleleMutationsReliableRegion]
                     } else ""
                 }
                 this["mutations"] = { allele ->
-                    if (allele.status == DE_NOVA) {
+                    if (allele.status == DE_NOVO) {
                         allele.gene.meta[metaKey.alleleMutations]?.first() ?: ""
                     } else ""
                 }
                 this["varianceOf"] = { allele ->
-                    if (allele.status == DE_NOVA) {
+                    if (allele.status == DE_NOVO) {
                         allele.gene.meta[metaKey.alleleVariantOf]?.first() ?: ""
                     } else ""
                 }
