@@ -26,8 +26,8 @@ generic-amplicon-with-umi:
   validation:
     - type: TagPatternWithUMI
   refineTagsAndSort:
-    inheritFrom: refineTagsAndSort-base-umi
+    inheritFrom: refineTagsAndSort-amplicon-umi-base
   assemble:
-    inheritFrom: assemble-base-umi
+    inheritFrom: assemble-umi-base
   exportClones:
-    inheritFrom: exportClones-base-umi
+    inheritFrom: exportClones-umi-base

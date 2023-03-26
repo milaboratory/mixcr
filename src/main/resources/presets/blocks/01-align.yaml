@@ -1087,8 +1087,9 @@
       saveOriginalReads: false
       smartForceEdgeAlignments: true
 
+#############################
 
-align-base:
+align-amplicon-base:
   abstract: true
   inheritFrom: align-legacy-4.0-kaligner2
   flags:
@@ -1098,12 +1099,18 @@ align-base:
 
 align-shotgun-base:
   abstract: true
-  inheritFrom: align-legacy-4.0-kaligner2
+  inheritFrom: align-legacy-4.0-rna-seq
   flags:
     - materialType
 
-align-base-single-cell-shotgun:
+align-single-cell-shotgun-base:
   abstract: true
-  inheritFrom: align-legacy-4.0-kaligner2
+  inheritFrom: align-kaligner2-single-cell-v1
+  flags:
+    - materialType
+
+align-long-read-base:
+  abstract: true
+  inheritFrom: align-kaligner2-long-read
   flags:
     - materialType

@@ -21,7 +21,7 @@ exportClones-base:
       - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
 
-exportClones-base-umi:
+exportClones-umi-base:
   abstract: true
   exportClones:
     chains: ALL
@@ -48,7 +48,7 @@ exportClones-base-umi:
       - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
 
-exportClones-base-single-cell-no-umi:
+exportClones-single-cell-no-umi-base:
   abstract: true
   exportClones:
     chains: ALL
@@ -72,7 +72,7 @@ exportClones-base-single-cell-no-umi:
       - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
 
-exportClones-base-single-cell-with-umi:
+exportClones-single-cell-with-umi-base:
   abstract: true
   exportClones:
     chains: ALL

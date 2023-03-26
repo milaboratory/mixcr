@@ -1,4 +1,4 @@
-# Tag correction only, no filters
+# Tag correction only, no filters (Single-cell LT without UMI)
 refineTagsAndSort-base:
   abstract: true
   refineTagsAndSort:
@@ -12,8 +12,8 @@ refineTagsAndSort-base:
       maxIndels: 2
       maxTotalErrors: 3
 
-# With correction and UMI filtering (no Cell filters)
-refineTagsAndSort-base-umi:
+# With correction and UMI filtering (no Cell filters) (Amplicon with UMI)
+refineTagsAndSort-amplicon-umi-base:
   abstract: true
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
@@ -46,4 +46,3 @@ refineTagsAndSort-base-umi:
                   - type: group_operator_cumtop
                     share: 0.85
                     round: Down
-
