@@ -214,6 +214,8 @@ object CommandAssemble {
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
                         return@resolve cp
 
+                    // All the code below executed only if inferMinRecordsPerConsensus == true
+
                     if (cp.consensusAssemblerParameters!!.assembler.minRecordsPerConsensus != 0) {
                         println(
                             "WARNING: minRecordsPerConsensus has non default value (not equal to 0), the automatic " +
@@ -222,10 +224,10 @@ object CommandAssemble {
                         return@resolve cp
                     }
 
-                    val groupingLevel = if (cp.cellLevel) TagType.Cell else TagType.Molecule
-                    val groupingTags = (0 until inputHeader.tagsInfo.getDepthFor(groupingLevel))
+                    // Here we search specifically for "reads per UMI" threshold, even if we do cell-level assembly,
+                    // as the most meaningful estimation for the minRecordsPerConsensus parameter
+                    val groupingTags = (0 until inputHeader.tagsInfo.getDepthFor(TagType.Molecule))
                         .map { i -> inputHeader.tagsInfo[i].name }
-
                     val threshold = inputFooter.thresholds[MinGroupsPerGroup(groupingTags, null)]
                     if (threshold == null) {
                         println(
