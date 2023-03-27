@@ -69,8 +69,6 @@ import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.io.path.createDirectories
 import kotlin.io.path.isDirectory
@@ -320,7 +318,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val allelesBuilder = AllelesBuilder.create(
             "Step 1 of $stepsCount",
             clonesFilter,
-            originalLibrary.allGenes,
+            originalLibrary,
             tempDest,
             datasets,
             scoring,
@@ -342,8 +340,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             null,
             Variable,
             JAllelesFromFirstRound
-                .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
-                .filterValues { it.isNotEmpty() }
         )
         reportBuilder.reportFirstRound((JAllelesFromFirstRound.values + VAllelesFromFirstRound.values).flatten())
         val JAllelesFromSecondRound = allelesBuilder.searchForAlleles(
@@ -352,8 +348,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             findAllelesParameters.searchMutationsInCDR3,
             Joining,
             VAllelesFromFirstRound
-                .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
-                .filterValues { it.isNotEmpty() }
         )
         val VAllelesFromSecondRound = allelesBuilder.searchForAlleles(
             "Step 5 of $stepsCount",
@@ -361,15 +355,21 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             findAllelesParameters.searchMutationsInCDR3,
             Variable,
             JAllelesFromSecondRound
-                .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
-                .filterValues { it.isNotEmpty() }
         )
-        val results = allelesBuilder.removeAllelesIfPossible(
+        val allelesAfterRemoval = allelesBuilder.removeAllelesIfPossible(
             "Step 6 of $stepsCount",
             originalLibrary,
             VAllelesFromSecondRound + JAllelesFromSecondRound,
-            findAllelesParameters.maxCountForPossibleRemoval
+            findAllelesParameters.maxCountForPossibleRemoval,
+            scoring
         )
+        // what variants will be used to replace genes in hits (key is base gene name).
+        val allelesMapping = allelesAfterRemoval
+            .filter { it.status.exist }
+            // Duplicates will be grouped by several key
+            .groupBy { it.searchedOn }
+        // if some genes are equal by assemble feature (without marking as variant), there may be duplicates
+        val results = allelesAfterRemoval.distinctBy { it.result.name }
         reportBuilder.reportResults(results)
 
         val resultLibrary = buildLibrary(libraryRegistry, originalLibrary, results)
@@ -383,9 +383,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 throw ApplicationException("Unsupported file type for export library, $libraryOutput")
             }
         }
-        val allelesMapping = results
-            .filter { it.status.exist }
-            .groupBy({ AllelesBuilder.nameOfBaseGene(it.gene) }, { resultLibrary[it.gene.name].id })
         val writerCloseCallbacks = mutableListOf<(FindAllelesReport) -> Unit>()
         datasets.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
@@ -475,64 +472,64 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     ) {
         PrintStream(allelesMutationsOutput.toFile()).use { output ->
             val columns = buildMap<String, (allele: AlleleSearchResult) -> Any?> {
-                this["alleleName"] = { it.gene.name }
-                this["geneName"] = { it.gene.geneName }
-                this["type"] = { it.gene.geneType }
+                this["alleleName"] = { it.result.name }
+                this["geneName"] = { it.result.geneName }
+                this["type"] = { it.result.geneType }
                 this["status"] = { it.status }
                 this["enoughInfo"] = { allele ->
                     allele.enoughInfo
                 }
                 this[metaKey.alleleMutationsReliableRegion] = { allele ->
                     if (allele.status == DE_NOVO) {
-                        allele.gene.meta[metaKey.alleleMutationsReliableRegion]
+                        allele.result.meta[metaKey.alleleMutationsReliableRegion]
                     } else ""
                 }
                 this["mutations"] = { allele ->
                     if (allele.status == DE_NOVO) {
-                        allele.gene.meta[metaKey.alleleMutations]?.first() ?: ""
+                        allele.result.meta[metaKey.alleleMutations]?.first() ?: ""
                     } else ""
                 }
                 this["varianceOf"] = { allele ->
                     if (allele.status == DE_NOVO) {
-                        allele.gene.meta[metaKey.alleleVariantOf]?.first() ?: ""
+                        allele.result.meta[metaKey.alleleVariantOf]?.first() ?: ""
                     } else ""
                 }
                 this["naivesCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).naives(filtered = false)
+                    allelesStatistics.stats(allele.result.name).naives(filtered = false)
                 }
                 this["nonProductiveCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).nonProductive()
+                    allelesStatistics.stats(allele.result.name).nonProductive()
                 }
                 this["lowerDiversityBound"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).diversity()
+                    allelesStatistics.stats(allele.result.name).diversity()
                 }
                 this["clonesCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).count(filtered = false)
+                    allelesStatistics.stats(allele.result.name).count(filtered = false)
                 }
                 this["totalClonesCountForGene"] = { allele ->
-                    allelesStatistics.baseGeneCount(allele.gene.geneName)
+                    allelesStatistics.baseGeneCount(allele.result.geneName)
                 }
                 this["clonesCountWithNegativeScoreChange"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).withNegativeScoreChange(filtered = false)
+                    allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = false)
                 }
                 this["filteredForAlleleSearchNaivesCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).naives(filtered = true)
+                    allelesStatistics.stats(allele.result.name).naives(filtered = true)
                 }
                 this["filteredForAlleleSearchClonesCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).count(filtered = true)
+                    allelesStatistics.stats(allele.result.name).count(filtered = true)
                 }
                 this["filteredForAlleleSearchClonesCountWithNegativeScoreChange"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).withNegativeScoreChange(filtered = true)
+                    allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = true)
                 }
                 this["scoreDelta"] = { allele ->
-                    val summaryStatistics = allelesStatistics.stats(allele.gene.name).scoreDelta
+                    val summaryStatistics = allelesStatistics.stats(allele.result.name).scoreDelta
                     if (summaryStatistics.n == 0L) "" else
                         GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
                 }
             }
             val records = result.sortedWith(
-                Comparator.comparing { allele: AlleleSearchResult -> allele.gene.geneType }
-                    .thenComparing { allele: AlleleSearchResult -> allele.gene.name }
+                Comparator.comparing { allele: AlleleSearchResult -> allele.result.geneType }
+                    .thenComparing { allele: AlleleSearchResult -> allele.result.name }
             )
             writeXSV(output, records, columns, chooseDelimiter(allelesMutationsOutput))
         }
@@ -566,7 +563,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         originalLibrary: VDJCLibrary,
         usedGenes: Collection<AlleleSearchResult>
     ): VDJCLibrary {
-        val vAndJ = usedGenes.filter { it.status.exist }.map { it.gene }
+        val vAndJ = usedGenes.filter { it.status.exist }.map { it.result }
         val restGenes = originalLibrary.primaryGenes.filter { it.geneType !in VJ_REFERENCE }.map { it.data }
         val genesToAdd = vAndJ + restGenes
         val resultLibrary = VDJCLibrary(
