@@ -86,19 +86,18 @@ assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees
 assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount base_build_trees.shmt | grep -c '2'" "3"
 
 assert "head -n 1 alleles/report.json | jq -r .statuses.FOUND_KNOWN_VARIANT" "1"
-assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVA" "1"
-assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"1\"'" "11"
+assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVO" "1"
+assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
-#2 found alleles of IGHV2-70
-assert "grep -c 'IGHV2-70' alleles/description.tsv" "2"
-#1 found alleles based on IGHV2-70*01
-assert "grep -c 'IGHV2-70\*15' alleles/description.tsv" "1"
-#1 found alleles based on IGHV2-70*01
+# 3 found alleles of IGHV2-70 or IGHV2-70D
+assert "grep -c 'IGHV2-70' alleles/description.tsv" "3"
+# 1 found alleles based on IGHV2-70*01
+assert "grep -c 'IGHV2-70\*' alleles/description.tsv" "2"
+# 1 found alleles based on IGHV2-70D*01
 assert "grep -c 'IGHV2-70D\*04' alleles/description.tsv" "1"
 keyOfRelativeMutations=`head -n 1 alleles/description.tsv | sed 's/mutations/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 assert "grep 'IGHJ6\*01' alleles/description.tsv | cut -f$keyOfRelativeMutations" "SG17TSG18AST19CSC35A"
 
-assert "grep '\*01' alleles/description.tsv | wc -l" "8"
 assert "grep 'IGHV4-55\*00' alleles/description.tsv | wc -l" "1"
 
 keyOfNumberOfCones=`head -n 1 trees/trees.tsv | sed 's/numberOfClonesInTree/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`

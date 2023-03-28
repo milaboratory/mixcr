@@ -307,12 +307,15 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
 
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
+            "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
         ValidationException.requireDistinct(datasets.map { it.header.allFullyCoveredBy }) {
             "Input files must be cut by the same geneFeature"
         }
         val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
+        ValidationException.require(allFullyCoveredBy != GeneFeatures(GeneFeature.CDR3)) {
+            "Assemble feature must cover more than CDR3"
+        }
 
         val shmTreeBuilderOrchestrator = SHMTreeBuilderOrchestrator(
             shmTreeBuilderParameters,

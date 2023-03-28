@@ -45,6 +45,7 @@ import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
+import com.sun.management.OperatingSystemMXBean
 import io.repseq.core.Chains
 import io.repseq.core.GeneFamilyName
 import io.repseq.core.GeneFeature
@@ -64,6 +65,7 @@ import picocli.CommandLine.Model.OptionSpec
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADING
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
+import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.io.path.Path
@@ -404,8 +406,27 @@ object Main {
 
     private fun CommandLine.registerLogger(): CommandLine {
         setExecutionStrategy { parseResult ->
-            logger.verbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
-            logger.noWarnings = parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            val setVerbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
+            logger.verbose = logger.verbose || setVerbose
+            logger.noWarnings = logger.noWarnings ||
+                    parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            if (setVerbose) {
+                logger.debug {
+                    val memoryInOS = try {
+                        (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalPhysicalMemorySize
+                    } catch (e: Throwable) {
+                        null
+                    }
+                    val memoryInJVMMessage = "${Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB} Mb"
+                    val memoryInOSMessage = memoryInOS?.let { "${it / FileUtils.ONE_MB} Mb" }
+
+                    val availableProcessors = Runtime.getRuntime().availableProcessors()
+                    val usedCPU = parseResult.subcommands()
+                        .firstNotNullOfOrNull { it.matchedOption("--treads")?.getValue<Int?>() }
+                    "Available CPU: $availableProcessors, used CPU: ${usedCPU ?: "unspecified"}. " +
+                            "Available memory: ${memoryInOSMessage ?: "unknown"}, used memory: $memoryInJVMMessage"
+                }
+            }
             CommandLine.RunLast().execute(parseResult)
         }
 
