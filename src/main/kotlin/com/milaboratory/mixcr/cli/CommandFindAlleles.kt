@@ -52,6 +52,7 @@ import com.milaboratory.util.XSV.chooseDelimiter
 import com.milaboratory.util.XSV.writeXSV
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VJ_REFERENCE
 import io.repseq.core.GeneType.Variable
@@ -266,12 +267,15 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
+            "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
         ValidationException.requireDistinct(datasets.map { it.header.allFullyCoveredBy }) {
             "Input files must be cut by the same geneFeature"
         }
         val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
+        ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
+            "Assemble feature must cover more than CDR3"
+        }
 
         ValidationException.requireDistinct(datasets.flatMap { it.usedGenes }.map { it.id.libraryId }) {
             "input files must be aligned on the same library"

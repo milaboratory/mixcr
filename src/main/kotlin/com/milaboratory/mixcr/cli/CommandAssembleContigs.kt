@@ -51,6 +51,7 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.StreamUtil
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
@@ -162,6 +163,7 @@ object CommandAssembleContigs {
 
             val cmdParams: CommandAssembleContigsParams
             val paramsSpec: MiXCRParamsSpec
+            val assemblingRegions: GeneFeatures?
 
             val reportBuilder = FullSeqAssemblerReportBuilder()
             var totalClonesCount = 0
@@ -173,6 +175,7 @@ object CommandAssembleContigs {
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
                 paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec).addMixins(mixinsToAdd)
                 cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
+                assemblingRegions = cmdParams.parameters.assemblingRegions
 
                 validateParams(cmdParams, reader.header.featuresToAlign)
 
@@ -184,7 +187,7 @@ object CommandAssembleContigs {
                     "Supports only non-composite gene features as an assemblingFeature."
                 }
 
-                cmdParams.parameters.assemblingRegions?.let { assemblingRegions ->
+                if (assemblingRegions != null) {
                     val fullyIncluded = assemblingRegions.features.any { assemblingRegion ->
                         GeneFeature.intersection(assemblingRegion, assemblingFeature) == assemblingFeature
                     }
@@ -354,17 +357,21 @@ object CommandAssembleContigs {
                     clones += clone.setId(cloneId++)
                 }
             }
-            val allFullyCoveredBy = if (
-                cmdParams.parameters.assemblingRegions != null &&
-                cmdParams.parameters.subCloningRegions == cmdParams.parameters.assemblingRegions &&
-                cmdParams.parameters.postFiltering == PostFiltering.OnlyUnambiguouslyCovering(cmdParams.parameters.assemblingRegions!!)
-            ) {
-                cmdParams.parameters.assemblingRegions
-            } else {
-                null
+            @Suppress("DEPRECATION")
+            val allFullyCoveredBy = when {
+                assemblingRegions == null -> false
+                assemblingRegions != cmdParams.parameters.subCloningRegions -> false
+                else -> when (val postFiltering = cmdParams.parameters.postFiltering) {
+                    is PostFiltering.OnlyUnambiguouslyCovering -> postFiltering.geneFeatures == assemblingRegions
+                    PostFiltering.OnlyFullyDefined -> true
+                    is PostFiltering.OnlyCovering -> false
+                    PostFiltering.OnlyFullyAssembled -> false
+                    is PostFiltering.MinimalContigLength -> false
+                    PostFiltering.NoFiltering -> false
+                }
             }
             val resultHeader = header
-                .copy(allFullyCoveredBy = allFullyCoveredBy)
+                .copy(allFullyCoveredBy = if (allFullyCoveredBy) assemblingRegions else null)
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
                 .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
 
