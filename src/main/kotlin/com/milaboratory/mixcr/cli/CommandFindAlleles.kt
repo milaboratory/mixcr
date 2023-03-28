@@ -176,6 +176,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     @Mixin
     lateinit var reportOptions: ReportOptions
 
+    @Suppress("unused")
     @Mixin
     lateinit var debugDir: DebugDirOption
 
