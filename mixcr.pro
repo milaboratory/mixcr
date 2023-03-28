@@ -1,6 +1,8 @@
 -optimizationpasses 5
 
 -dontwarn lombok.**
+-dontwarn java.lang.management.ManagementFactory
+-dontwarn com.sun.management.OperatingSystemMXBean
 
 #-forceprocessing
 #-addconfigurationdebugging
