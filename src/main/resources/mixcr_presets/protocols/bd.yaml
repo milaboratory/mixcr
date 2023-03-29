@@ -189,6 +189,7 @@
 "bd-rhapsody-v1-base":
   inheritFrom: bd-rhapsody-base
   refineTagsAndSort:
+    inheritFrom: bd-rhapsody-base
     overrides:
       whitelists:
         CELL1: builtin:rhapsody-cell1
@@ -198,6 +199,7 @@
 "bd-rhapsody-v2-base":
   inheritFrom: bd-rhapsody-base
   refineTagsAndSort:
+    inheritFrom: bd-rhapsody-base
     overrides:
       whitelists:
         CELL1: builtin:rhapsody-enhanced-beads-cell1
