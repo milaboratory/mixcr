@@ -18,6 +18,7 @@ import cc.redberry.pipe.util.drain
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.app.matches
 import com.milaboratory.core.Range
 import com.milaboratory.core.io.sequence.fasta.FastaRecord
@@ -274,6 +275,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "Input files must be cut by the same geneFeature"
         }
         val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
+        logger.debug { "Feature for search alleles: $allFullyCoveredBy" }
         ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
             "Assemble feature must cover more than CDR3"
         }
@@ -282,6 +284,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "input files must be aligned on the same library"
         }
         val originalLibrary = datasets.first().usedGenes.first().parentLibrary
+        logger.debug { "Name of the original library: ${originalLibrary.libraryId.libraryName}" }
 
         for (geneType in VJ_REFERENCE) {
             val scores = datasets.map {
@@ -363,10 +366,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         )
         val allelesAfterRemoval = allelesBuilder.removeAllelesIfPossible(
             "Step 6 of $stepsCount",
-            originalLibrary,
             VAllelesFromSecondRound + JAllelesFromSecondRound,
-            findAllelesParameters.maxCountForPossibleRemoval,
-            scoring
+            findAllelesParameters.maxCountForPossibleRemoval
         )
         // what variants will be used to replace genes in hits (key is base gene name).
         val allelesMapping = allelesAfterRemoval
@@ -487,6 +488,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 this[metaKey.alleleMutationsReliableRegion] = { allele ->
                     if (allele.status == DE_NOVO) {
                         allele.result.meta[metaKey.alleleMutationsReliableRegion]
+                            ?.map { GeneFeature.parse(it) }
+                            ?.sorted()
+                            ?.map { GeneFeature.encode(it) }
                     } else ""
                 }
                 this["mutations"] = { allele ->
