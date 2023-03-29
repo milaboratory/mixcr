@@ -8,10 +8,6 @@
   align:
     inheritFrom: align-kaligner1-single-cell-v1
   refineTagsAndSort:
-    whitelists:
-      CELL1: builtin:rhapsody-cell1
-      CELL2: builtin:rhapsody-cell2
-      CELL3: builtin:rhapsody-cell3
     runCorrection: true
     parameters:
       correctionPower: 0.001
@@ -190,8 +186,27 @@
         args: [ "FR4" ]
       - field: "-defaultAnchorPoints"
 
-"bd-rhapsody-human-tcr-v1":
+"bd-rhapsody-v1-base":
   inheritFrom: bd-rhapsody-base
+  refineTagsAndSort:
+    overrides:
+      whitelists:
+        CELL1: builtin:rhapsody-cell1
+        CELL2: builtin:rhapsody-cell2
+        CELL3: builtin:rhapsody-cell3
+
+"bd-rhapsody-v2-base":
+  inheritFrom: bd-rhapsody-base
+  refineTagsAndSort:
+    overrides:
+      whitelists:
+        CELL1: builtin:rhapsody-enhanced-beads-cell1
+        CELL2: builtin:rhapsody-enhanced-beads-cell2
+        CELL3: builtin:rhapsody-enhanced-beads-cell3
+
+
+"bd-rhapsody-human-tcr-v1":
+  inheritFrom: bd-rhapsody-v1-base
   mixins:
     - type: SetSpecies
       species: hs
@@ -204,7 +219,7 @@
         ^gggaaacatctgcatcaagttg(R2:*)
 
 "bd-rhapsody-human-tcr-v2":
-  inheritFrom: bd-rhapsody-base
+  inheritFrom: bd-rhapsody-v2-base
   mixins:
     - type: SetSpecies
       species: hs
@@ -220,7 +235,7 @@
         ^gggaaacatctgcatcaagttg(R2:*)
 
 "bd-rhapsody-human-bcr-v1":
-  inheritFrom: bd-rhapsody-base
+  inheritFrom: bd-rhapsody-v1-base
   mixins:
     - type: SetSpecies
       species: hs
@@ -236,7 +251,7 @@
         ^accagtgtggccttgttg(R2:*)
 
 "bd-rhapsody-human-bcr-v2":
-  inheritFrom: bd-rhapsody-base
+  inheritFrom: bd-rhapsody-v2-base
   mixins:
     - type: SetSpecies
       species: hs
@@ -257,7 +272,7 @@
 # MOUSE
 
 "bd-rhapsody-mouse-tcr-v1":
-  inheritFrom: bd-rhapsody-base
+  inheritFrom: bd-rhapsody-v1-base
   mixins:
     - type: SetSpecies
       species: mmu
@@ -271,7 +286,7 @@
         ^aatagtaggcttgggagaaaagtctg(R2:*)
 
 "bd-rhapsody-mouse-tcr-v2":
-  inheritFrom: bd-rhapsody-base
+  inheritFrom: bd-rhapsody-v2-base
   mixins:
     - type: SetSpecies
       species: mmu
@@ -288,7 +303,7 @@
         ^aatagtaggcttgggagaaaagtctg(R2:*)
 
 "bd-rhapsody-mouse-bcr-v1":
-  inheritFrom: bd-rhapsody-base
+  inheritFrom: bd-rhapsody-v1-base
   mixins:
     - type: SetSpecies
       species: mmu
@@ -308,7 +323,7 @@
         ^cagtgtggctttgttttcct(R2:*)
 
 "bd-rhapsody-mouse-bcr-v2":
-  inheritFrom: bd-rhapsody-base
+  inheritFrom: bd-rhapsody-v2-base
   mixins:
     - type: SetSpecies
       species: mmu
@@ -337,12 +352,12 @@
   align:
     inheritFrom: align-kaligner2-single-cell-v1
     overrides:
-      tagPattern: ^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+      tagPattern: ^N{0:13}ggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
   refineTagsAndSort:
     whitelists:
-      CELL1: builtin:rhapsody-cell1
-      CELL2: builtin:rhapsody-cell2
-      CELL3: builtin:rhapsody-cell3
+      CELL1: builtin:rhapsody-enhanced-beads-cell1
+      CELL2: builtin:rhapsody-enhanced-beads-cell2
+      CELL3: builtin:rhapsody-enhanced-beads-cell3
     runCorrection: true
     parameters:
       correctionPower: 0.001
