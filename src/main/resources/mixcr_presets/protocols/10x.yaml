@@ -208,11 +208,13 @@
                     k: 12
                     minimalQuality: 20
                     topShare: 0.7
+                    minSequenceCount: 5
                     reportHist:
                       binNumber: 40
                 operator:
                   type: group_operator_range
                   lower: 200
+                  acceptNaN: true
           - type: filter_groups
             groupingKeys:
               - allTags:Cell
