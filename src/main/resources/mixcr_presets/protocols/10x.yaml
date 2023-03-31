@@ -208,7 +208,7 @@
                     k: 12
                     minimalQuality: 20
                     topShare: 0.7
-                    minSequenceCount: 5
+                    minSequenceCount: 4
                     reportHist:
                       binNumber: 40
                 operator:
