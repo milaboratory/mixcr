@@ -239,7 +239,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        ValidationException.require(inputFiles.isNotEmpty()) { "there is no files to process" }
+        ValidationException.requireNotEmpty(inputFiles) { "there is no files to process" }
         inputFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNS)
         }
@@ -281,7 +281,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
         reportBuilder.totalClonesProcessed = datasets.sumOf { it.numberOfClones() }
 
-        ValidationException.requireDistinct(datasets.map { it.header.featuresToAlignMap }) {
+        ValidationException.requireTheSame(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
         }
         val featureToAlign = datasets.first().header.featuresToAlign
@@ -289,7 +289,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         for (geneType in GeneType.VJ_REFERENCE) {
             val scores = datasets
                 .map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
-            ValidationException.requireDistinct(scores) {
+            ValidationException.requireTheSame(scores) {
                 "Input files must have the same $geneType scoring"
             }
         }
@@ -302,14 +302,14 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         ValidationException.require(datasets.all { it.header.foundAlleles != null }) {
             "Input files must be processed by ${CommandFindAlleles.COMMAND_NAME}"
         }
-        ValidationException.requireDistinct(datasets.map { it.header.foundAlleles }) {
+        ValidationException.requireTheSame(datasets.map { it.header.foundAlleles }) {
             "All input files must be assembled with the same alleles"
         }
 
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        ValidationException.requireDistinct(datasets.map { it.header.allFullyCoveredBy }) {
+        ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy }) {
             "Input files must be cut by the same geneFeature"
         }
         val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
