@@ -55,6 +55,7 @@ import com.milaboratory.util.exhaustive
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
+import io.repseq.core.GeneVariantName
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -158,7 +159,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         paramLabel = "<gene_name>",
         order = OptionsOrder.main + 10_100
     )
-    var VGenesToFilter: Set<String> = mutableSetOf()
+    var VGenesToFilter: Set<GeneVariantName> = mutableSetOf()
 
     @Option(
         description = ["List of JGene names to filter clones"],
@@ -166,7 +167,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         paramLabel = "<gene_name>",
         order = OptionsOrder.main + 10_200
     )
-    var JGenesToFilter: Set<String> = mutableSetOf()
+    var JGenesToFilter: Set<GeneVariantName> = mutableSetOf()
 
     @Option(
         description = ["List of CDR3 nucleotide sequence lengths to filter clones"],
@@ -306,12 +307,15 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
 
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
+            "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
         ValidationException.requireDistinct(datasets.map { it.header.allFullyCoveredBy }) {
             "Input files must be cut by the same geneFeature"
         }
         val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
+        ValidationException.require(allFullyCoveredBy != GeneFeatures(GeneFeature.CDR3)) {
+            "Assemble feature must cover more than CDR3"
+        }
 
         val shmTreeBuilderOrchestrator = SHMTreeBuilderOrchestrator(
             shmTreeBuilderParameters,

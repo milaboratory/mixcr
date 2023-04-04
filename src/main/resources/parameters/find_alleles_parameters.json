@@ -7,7 +7,21 @@
     "filterForDataWithoutUmi": {
       "useClonesWithCountGreaterThen": 1
     },
-    "searchAlleleParameter": {
+    "searchAlleleParameterForFirstRound": {
+      "minClonesCountForAlleleSearch": 20,
+      "topByScore": 0.3,
+      "coefficientForNaiveClonesInScore": 2.0,
+      "minRelativePenaltyBetweenAllelesForCloneAlign": 0.15,
+      "diversityThresholds": {
+        "minDiversityForMutation": 0.06,
+        "minDiversityForAllele": 0.04,
+        "diversityForSkipTestForRatioForZeroAllele": 0.1
+      },
+      "diversityRatioToSearchCommonMutationsInAnAllele": 0.95,
+      "minCountOfNaiveClonesToAddAllele": 0
+    },
+    "searchAlleleParameterForSecondRound": {
+      "minClonesCountForAlleleSearch": 10,
       "topByScore": 0.65,
       "coefficientForNaiveClonesInScore": 2.0,
       "minRelativePenaltyBetweenAllelesForCloneAlign": 0.15,
@@ -23,6 +37,7 @@
       "minClonesCount": 5,
       "minPartOfTheSameLetter": 0.7,
       "minDiversity": 0.5
-    }
+    },
+    "maxCountForPossibleRemoval": 10
   }
 }

@@ -45,10 +45,14 @@ import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
+import com.sun.management.OperatingSystemMXBean
 import io.repseq.core.Chains
+import io.repseq.core.GeneFamilyName
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeatures
+import io.repseq.core.GeneName
 import io.repseq.core.GeneType
+import io.repseq.core.GeneVariantName
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.seqbase.SequenceResolvers
@@ -61,6 +65,7 @@ import picocli.CommandLine.Model.OptionSpec
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADING
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
+import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.io.path.Path
@@ -71,6 +76,7 @@ object Main {
 
     @JvmStatic
     fun main(vararg args: String) {
+        initializeSystem()
         if ("-v" in args) {
             CommandMain.VersionProvider().version.forEach { println(it) }
             exitProcess(0)
@@ -106,47 +112,10 @@ object Main {
         }
     }
 
-    private fun assertionsDisabled(): Boolean {
-        return System.getProperty("noAssertions") != null
-    }
+    private fun assertionsDisabled(): Boolean = System.getProperty("noAssertions") != null
 
     fun mkCmd(): CommandLine {
         System.setProperty("picocli.usage.width", "100")
-
-        // Getting command string if executed from script
-        val command = System.getProperty("mixcr.command", "java -jar mixcr.jar")
-        if (!initialized) {
-            // Checking whether we are running a test version
-            if (!assertionsDisabled() && !VersionInfo.getVersionInfoForArtifact("mixcr").isProductionBuild) // If so, enable asserts
-                ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true)
-            TempFileManager.setPrefix("mixcr_")
-            var cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache")
-            val repseqioCacheEnv = System.getenv("REPSEQIO_CACHE")
-            if (repseqioCacheEnv != null) {
-                cachePath = Paths.get(repseqioCacheEnv)
-            }
-            // if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
-            // TODO add mechanism to deny http requests
-            SequenceResolvers.initDefaultResolver(cachePath)
-            val libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries")
-            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".")
-            if (System.getProperty("mixcr.path") != null) {
-                val bin = Paths.get(System.getProperty("mixcr.path"))
-                val searchPath = bin.resolve("libraries")
-                if (Files.exists(searchPath)) VDJCLibraryRegistry.getDefault()
-                    .addPathResolverWithPartialSearch(searchPath)
-            }
-            if (System.getProperty("library.path") != null) VDJCLibraryRegistry.getDefault()
-                .addPathResolverWithPartialSearch(
-                    System.getProperty("library.path")
-                )
-            if (System.getenv("MIXCR_LIBRARY_PATH") != null) VDJCLibraryRegistry.getDefault()
-                .addPathResolverWithPartialSearch(
-                    System.getenv("MIXCR_LIBRARY_PATH")
-                )
-            if (Files.exists(libraries)) VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries)
-            initialized = true
-        }
 
         val groups: MutableList<Pair<String, Set<String>>> = mutableListOf()
 
@@ -157,6 +126,9 @@ object Main {
             groups += group.name to group.commands.map { it.first }.toSet()
             return this
         }
+
+        // Getting command string if executed from script
+        val command = System.getProperty("mixcr.command", "java -jar mixcr.jar")
 
         val cmd = CommandLine(CommandMain::class.java)
             .setCommandName(command)
@@ -287,6 +259,41 @@ object Main {
             .registerExceptionHandlers()
     }
 
+    fun initializeSystem() {
+        if (!initialized) {
+            // Checking whether we are running a test version
+            if (!assertionsDisabled() && !VersionInfo.getVersionInfoForArtifact("mixcr").isProductionBuild) // If so, enable asserts
+                ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true)
+            TempFileManager.setPrefix("mixcr_")
+            var cachePath = Paths.get(System.getProperty("user.home"), ".mixcr", "cache")
+            val repseqioCacheEnv = System.getenv("REPSEQIO_CACHE")
+            if (repseqioCacheEnv != null) {
+                cachePath = Paths.get(repseqioCacheEnv)
+            }
+            // if (System.getProperty("allow.http") != null || System.getenv("MIXCR_ALLOW_HTTP") != null)
+            // TODO add mechanism to deny http requests
+            SequenceResolvers.initDefaultResolver(cachePath)
+            val libraries = Paths.get(System.getProperty("user.home"), ".mixcr", "libraries")
+            VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(".")
+            if (System.getProperty("mixcr.path") != null) {
+                val bin = Paths.get(System.getProperty("mixcr.path"))
+                val searchPath = bin.resolve("libraries")
+                if (Files.exists(searchPath)) VDJCLibraryRegistry.getDefault()
+                    .addPathResolverWithPartialSearch(searchPath)
+            }
+            if (System.getProperty("library.path") != null) VDJCLibraryRegistry.getDefault()
+                .addPathResolverWithPartialSearch(
+                    System.getProperty("library.path")
+                )
+            if (System.getenv("MIXCR_LIBRARY_PATH") != null) VDJCLibraryRegistry.getDefault()
+                .addPathResolverWithPartialSearch(
+                    System.getenv("MIXCR_LIBRARY_PATH")
+                )
+            if (Files.exists(libraries)) VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries)
+            initialized = true
+        }
+    }
+
     private fun CommandLine.registerExceptionHandlers(): CommandLine {
         val defaultParameterExceptionHandler = parameterExceptionHandler
         setParameterExceptionHandler { ex, args ->
@@ -336,6 +343,9 @@ object Main {
         registerConverter { Chains.parse(it) }
         registerConverter { NucleotideSequence(it) }
         registerConverter { AminoAcidSequence(it) }
+        registerConverter { GeneVariantName(it) }
+        registerConverter { GeneName(it) }
+        registerConverter { GeneFamilyName(it) }
         registerConverter { arg ->
             StandardPlots.PlotType.values().find { it.cliName == arg.lowercase() }
                 ?: throw ValidationException("unknown plot type: $arg")
@@ -396,8 +406,27 @@ object Main {
 
     private fun CommandLine.registerLogger(): CommandLine {
         setExecutionStrategy { parseResult ->
-            logger.verbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
-            logger.noWarnings = parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            val setVerbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
+            logger.verbose = logger.verbose || setVerbose
+            logger.noWarnings = logger.noWarnings ||
+                    parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            if (setVerbose) {
+                logger.debug {
+                    val memoryInOS = try {
+                        (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalPhysicalMemorySize
+                    } catch (e: Throwable) {
+                        null
+                    }
+                    val memoryInJVMMessage = "${Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB} Mb"
+                    val memoryInOSMessage = memoryInOS?.let { "${it / FileUtils.ONE_MB} Mb" }
+
+                    val availableProcessors = Runtime.getRuntime().availableProcessors()
+                    val usedCPU = parseResult.subcommands()
+                        .firstNotNullOfOrNull { it.matchedOption("--treads")?.getValue<Int?>() }
+                    "Available CPU: $availableProcessors, used CPU: ${usedCPU ?: "unspecified"}. " +
+                            "Available memory: ${memoryInOSMessage ?: "unknown"}, used memory: $memoryInJVMMessage"
+                }
+            }
             CommandLine.RunLast().execute(parseResult)
         }
 

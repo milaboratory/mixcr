@@ -46,7 +46,7 @@
           relativeMinScore:
           scoring:
       addReadsCountOnClustering: false
-      badQualityThreshold: 20
+      badQualityThreshold: 21
       maxBadPointsPercent: 0.7
       mappingThreshold: 2of5
     inferMinRecordsPerConsensus: false

@@ -9,6 +9,7 @@ object TestMain {
         if (MiXCRMain.lm == null) {
             MiXCRMain.main()
         }
+        Main.initializeSystem()
     }
 
     fun execute(args: String) {

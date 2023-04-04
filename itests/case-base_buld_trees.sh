@@ -82,22 +82,23 @@ done
 assert "mixcr exportReportsTable --no-header base_build_trees.shmt | wc -l" "1"
 assert "mixcr exportReportsTable --with-upstreams --no-header base_build_trees.shmt | wc -l" "3"
 
-assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "1"
-assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount base_build_trees.shmt | grep -c '3'" "3"
+assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt" "2"
+assert "mixcr exportReportsTable --with-upstreams --no-header -foundAllelesCount base_build_trees.shmt | grep -c '2'" "3"
 
-assert "head -n 1 alleles/report.json | jq -r .foundAlleles" "3"
-assert "head -n 1 alleles/report.json | jq -r .deNovaAlleles" "2"
+assert "head -n 1 alleles/report.json | jq -r .statuses.FOUND_KNOWN_VARIANT" "1"
+assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVO" "1"
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
-#2 found alleles of IGHV2-70
-assert "grep -c 'IGHV2-70' alleles/description.tsv" "2"
-#2 found alleles based on IGHV2-70*01
-assert "grep -c 'IGHV2-70\*01' alleles/description.tsv" "2"
-#relative mutations
-assert "grep 'IGHV2-70\*01' alleles/description.tsv | cut -f6" "\nSG13AST102CSA178T"
-#for most mutated allele
-assert "grep 'IGHV2-70\*01-M' alleles/description.tsv | cut -f6" "SG13AST102CSA178T"
-assert "grep 'IGHJ6' alleles/description.tsv | cut -f6" "SG17TSG18AST19CSC35A"
+# 3 found alleles of IGHV2-70 or IGHV2-70D
+assert "grep -c 'IGHV2-70' alleles/description.tsv" "3"
+# 1 found alleles based on IGHV2-70*01
+assert "grep -c 'IGHV2-70\*' alleles/description.tsv" "2"
+# 1 found alleles based on IGHV2-70D*01
+assert "grep -c 'IGHV2-70D\*04' alleles/description.tsv" "1"
+keyOfRelativeMutations=`head -n 1 alleles/description.tsv | sed 's/mutations/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
+assert "grep 'IGHJ6\*01' alleles/description.tsv | cut -f$keyOfRelativeMutations" "SG17TSG18AST19CSC35A"
+
+assert "grep 'IGHV4-55\*00' alleles/description.tsv | wc -l" "1"
 
 keyOfNumberOfCones=`head -n 1 trees/trees.tsv | sed 's/numberOfClonesInTree/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 keyOfCDR3=`head -n 1 trees/trees.tsv | sed 's/nSeqCDR3OfMrca/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`

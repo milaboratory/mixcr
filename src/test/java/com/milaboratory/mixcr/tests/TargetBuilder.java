@@ -24,10 +24,10 @@ public class TargetBuilder {
         public final VDJCGene v, d, j, c;
 
         public VDJCGenes(VDJCLibrary library, String v, String d, String j, String c) {
-            this.v = library.get(v);
-            this.d = library.get(d);
-            this.j = library.get(j);
-            this.c = library.get(c);
+            this.v = library.get(new GeneVariantName(v));
+            this.d = library.get(new GeneVariantName(d));
+            this.j = library.get(new GeneVariantName(j));
+            this.c = library.get(new GeneVariantName(c));
         }
 
         public VDJCGenes(VDJCGene v, VDJCGene d, VDJCGene j, VDJCGene c) {

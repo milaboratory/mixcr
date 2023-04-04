@@ -53,4 +53,6 @@ for filename in $FILES; do
   fi
 
   mixcr exportReports "regression/${id}.vdjca" "${id}_report.txt"
+
+  assert "cat ${id}_report.txt | grep 'file has too old version' | wc -l" "0"
 done
