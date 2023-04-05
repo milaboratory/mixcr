@@ -445,28 +445,12 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             primaryGenes
                 .sortedBy { it.name }
                 .forEach { gene ->
-                    val geneFeaturesForFoundAllele =
-                        gene.data.meta[metaKey.alleleMutationsReliableRegion]
-                            ?.map { GeneFeature.parse(it) }
-                            ?.sorted()
-                    when {
-                        geneFeaturesForFoundAllele != null -> {
-                            geneFeaturesForFoundAllele.forEach { geneFeature ->
-                                val range = gene.referencePoints.getRange(geneFeature)
-                                val sequence = gene.getFeature(geneFeature)
-                                writer.write(FastaRecord(id++, "${gene.name} $range $geneFeature", sequence))
-                            }
-                        }
-
-                        else -> {
-                            val range = Range(
-                                gene.referencePoints.firstAvailablePosition,
-                                gene.referencePoints.lastAvailablePosition
-                            )
-                            val sequence = gene.getSequence(range)
-                            writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
-                        }
-                    }
+                    val range = Range(
+                        gene.referencePoints.firstAvailablePosition,
+                        gene.referencePoints.lastAvailablePosition
+                    )
+                    val sequence = gene.getSequence(range)
+                    writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
                 }
         }
     }
