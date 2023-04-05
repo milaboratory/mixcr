@@ -8,6 +8,7 @@
       "useClonesWithCountGreaterThen": 1
     },
     "searchAlleleParameterForFirstRound": {
+      "clonesToSearchCap": 10000,
       "minClonesCountForAlleleSearch": 20,
       "topByScore": 0.3,
       "coefficientForNaiveClonesInScore": 2.0,
@@ -21,6 +22,7 @@
       "minCountOfNaiveClonesToAddAllele": 0
     },
     "searchAlleleParameterForSecondRound": {
+      "clonesToSearchCap": 10000,
       "minClonesCountForAlleleSearch": 10,
       "topByScore": 0.65,
       "coefficientForNaiveClonesInScore": 2.0,
