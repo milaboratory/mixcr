@@ -137,11 +137,11 @@ val obfuscationLibs: Configuration by configurations.creating
 val mixcrAlgoVersion = "4.3.0-46-allele_fix"
 val milibVersion = "2.4.0-7-master"
 val mitoolVersion = "1.7.0-5-main"
-val repseqioVersion = "1.8.0-20-master"
+val repseqioVersion = "1.8.0-21-master"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
-val milmVersion = "3.4.0"
+val milmVersion = "3.5.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
