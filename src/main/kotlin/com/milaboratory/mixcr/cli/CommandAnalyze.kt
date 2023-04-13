@@ -321,11 +321,11 @@ object CommandAnalyze {
                                 ExecutionStep(
                                     MiXCRCommandDescriptor.qc.command,
                                     counter++,
-                                    emptyList(),
+                                    listOf("--print-to-stdout"),
                                     emptyList(),
                                     listOf(output.toString()),
                                     listOf(
-                                        output.toString().removeSuffix(output.extension) + output.extension + ".qc.txt"
+                                        output.toString().removeSuffix(output.extension) + "qc.txt"
                                     )
                                 )
                             )
@@ -358,7 +358,7 @@ object CommandAnalyze {
 
                 // Executing the plan
                 for (executionStep in plan) {
-                    println("====================")
+                    println("\n" + Util.surround("mixcr ${executionStep.command}", ">", "<"))
                     println("Running:")
                     println(executionStep)
                     val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()

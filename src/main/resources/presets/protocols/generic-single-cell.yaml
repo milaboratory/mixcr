@@ -206,8 +206,8 @@ generic-lt-single-cell-fragmented-with-umi:
   assemble:
     inheritFrom: assemble-with-consensus-base
     overrides:
-      cellLevel: true
       clnaOutput: true
+      cellLevel: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -450,10 +450,9 @@ generic-ht-single-cell-fragmented-with-umi:
     # run error correction and UMI filtering
     inheritFrom: refineTagsAndSort-base-umi
   assemble:
-    clnaOutput: true
-    cellLevel: true
     inheritFrom: assemble-with-consensus-base
     overrides:
+      cellLevel: true
       clnaOutput: true
       cloneAssemblerParameters:
         postFilters:

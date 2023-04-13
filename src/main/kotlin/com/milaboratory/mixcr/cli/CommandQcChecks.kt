@@ -20,14 +20,15 @@ import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
-import com.milaboratory.mixcr.qc.QcChecker
-import com.milaboratory.mixcr.qc.QcChecker.QualityStatus.BAD
-import com.milaboratory.mixcr.qc.QcChecker.QualityStatus.GOOD
-import com.milaboratory.mixcr.qc.QcChecker.QualityStatus.MIDDLE
+import com.milaboratory.mixcr.qc.checks.QcChecker.QcCheckResult
+import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.ALERT
+import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.OK
+import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.WARN
 import com.milaboratory.util.K_PRETTY_OM
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.PrintStream
 import java.nio.file.Path
@@ -66,6 +67,24 @@ object CommandQcChecks {
         )
         var output: Path? = null
 
+        @Option(
+            description = ["Export in json format."],
+            names = ["--json"],
+        )
+        private var json = false
+
+        @Option(
+            description = ["Print to stdout."],
+            names = ["--print-to-stdout"],
+        )
+        private var printToStdout = false
+
+        @Option(
+            description = ["Print warning if some checks not passed to stderr."],
+            names = ["--print-warn"],
+        )
+        private var printWarn = false
+
         override val inputFiles
             get() = listOf(input)
 
@@ -90,43 +109,61 @@ object CommandQcChecks {
                 .filter { it.supports(fileInfo) }
                 .flatMap { it.check(fileInfo) }
             val output = output
-            results.print(System.out, Ansi.AUTO)
+
+            if (output != null && printToStdout)
+                results.print(System.out, Ansi.AUTO)
+
+            if (output == null) {
+                if (json)
+                    K_PRETTY_OM.writeValue(System.out, results)
+                else
+                    results.print(System.out, Ansi.AUTO)
+            }
+
             when {
                 output == null -> {
                     // already printed
+                }
+
+                json || InputFileType.JSON.matches(output) -> {
+                    K_PRETTY_OM.writeValue(output.toFile(), results)
                 }
 
                 InputFileType.TXT.matches(output) -> {
                     results.print(PrintStream(output.toFile()), Ansi.OFF)
                 }
 
-                InputFileType.JSON.matches(output) -> {
-                    K_PRETTY_OM.writeValue(output.toFile(), results)
-                }
-
                 else -> throw IllegalArgumentException()
             }
-            val failedChecks = results.count { it.status == BAD }
+            val failedChecks = results.count { it.status == ALERT }
             val message = "Failed $failedChecks of ${results.size} qc checks"
+            if (printWarn) {
+                logger.warn { message }
+            }
             if (params.errorOnFailedCheck) {
                 if (failedChecks > 0) {
                     throw ApplicationException(message)
                 }
-            } else {
-                logger.warn { message }
             }
         }
 
-        private fun List<QcChecker.QcCheckResult>.print(out: PrintStream, ansi: Ansi) {
-            groupBy { it.step }.forEach { (step, checks) ->
-                out.println("$step:")
+        private fun List<QcCheckResult>.print(out: PrintStream, ansi: Ansi) {
+            out.println()
+
+            val labelLength = this.maxOf { it.check.label.length }
+            groupBy { it.step }.forEach { (_, checks) ->
+                // out.println("Quality checks for $step:")
+
                 checks.forEach { check ->
+                    val label = check.check.label + ":" + " ".repeat(labelLength - check.check.label.length)
+
                     val color = when (check.status) {
-                        BAD -> "red"
-                        GOOD -> "green"
-                        MIDDLE -> "yellow"
+                        ALERT -> "red"
+                        OK -> "green"
+                        WARN -> "yellow"
                     }
-                    val text = ansi.Text("\t${check.check.javaClass.simpleName}: @|fg($color) ${check.message}|@")
+                    val message = if (check.status == OK) "" else "(${check.message})"
+                    val text = ansi.Text("  $label @|fg($color) ${check.status.text}|@ ${message}")
                     out.println(text.toString())
                 }
             }

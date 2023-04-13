@@ -9,7 +9,6 @@
     - type: SetSpecies
       species: hsa
     - type: MaterialTypeRNA
-    - type: SetTagPattern
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint

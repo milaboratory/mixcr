@@ -4,6 +4,7 @@ assemble-base:
     sortBySequence: false
     clnaOutput: false
     cellLevel: false
+    inferMinRecordsPerConsensus: false
     cloneAssemblerParameters:
       assemblingFeatures:
         - CDR3
@@ -49,16 +50,15 @@ assemble-base:
       badQualityThreshold: 20
       maxBadPointsPercent: 0.7
       mappingThreshold: 2of5
-    inferMinRecordsPerConsensus: false
 
 assemble-with-consensus-base:
   abstract: true
   assemble:
     inheritFrom: assemble-base
     overrides:
+      inferMinRecordsPerConsensus: true
       consensusAssemblerParameters:
         assembler:
-          inferMinRecordsPerConsensus: true
           aAssemblerParameters:
             bandWidth: 4
             scoring:
@@ -90,3 +90,6 @@ assemble-with-consensus-base:
           clusteringFilter:
             type: relativeConcentration
             specificMutationProbability: 1E-4
+
+assemble-umi-base:
+  inheritFrom: assemble-with-consensus-base

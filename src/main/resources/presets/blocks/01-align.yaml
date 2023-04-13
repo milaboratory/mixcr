@@ -1114,3 +1114,11 @@ align-long-read-base:
   inheritFrom: align-kaligner2-long-read
   flags:
     - materialType
+
+align-base:
+  abstract: true
+  inheritFrom: align-legacy-4.0-kaligner2
+  flags:
+    - materialType
+    - leftAlignmentMode
+    - rightAlignmentMode
