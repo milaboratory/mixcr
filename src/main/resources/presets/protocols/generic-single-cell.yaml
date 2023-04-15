@@ -13,6 +13,8 @@ generic-lt-single-cell-amplicon:
     - exportClones
   mixins:
     - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-amplicon
   assemble:
     inheritFrom: assemble-with-consensus-base
     overrides:
@@ -52,7 +54,7 @@ generic-lt-single-cell-amplicon-with-umi:
   mixins:
     - type: MaterialTypeRNA
   align:
-    inheritFrom: align-single-cell-shotgun-base
+    inheritFrom: align-amplicon
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:
@@ -127,6 +129,8 @@ generic-lt-single-cell-fragmented:
     - exportClones
   mixins:
     - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-single-cell
   assemble:
     inheritFrom: assemble-with-consensus-base
     overrides:
@@ -168,7 +172,7 @@ generic-lt-single-cell-fragmented-with-umi:
   mixins:
     - type: MaterialTypeRNA
   align:
-    inheritFrom: align-single-cell-shotgun-base
+    inheritFrom: align-single-cell
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:
@@ -246,6 +250,8 @@ generic-ht-single-cell-amplicon:
     - exportClones
   mixins:
     - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-amplicon
   refineTagsAndSort:
     # run error correction and basic cell filtering
     inheritFrom: refineTagsAndSort-base
@@ -294,6 +300,8 @@ generic-ht-single-cell-amplicon-with-umi:
     - exportClones
   mixins:
     - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-amplicon
   refineTagsAndSort:
     # run error correction and UMI filtering
     inheritFrom: refineTagsAndSort-base-umi
@@ -373,7 +381,7 @@ generic-ht-single-cell-fragmented:
   mixins:
     - type: MaterialTypeRNA
   align:
-    inheritFrom: align-single-cell-shotgun-base
+    inheritFrom: align-single-cell
   refineTagsAndSort:
     # run only error correction, no any filters
     inheritFrom: refineTagsAndSort-base
@@ -445,7 +453,7 @@ generic-ht-single-cell-fragmented-with-umi:
   mixins:
     - type: MaterialTypeRNA
   align:
-    inheritFrom: align-single-cell-shotgun-base
+    inheritFrom: align-single-cell
   refineTagsAndSort:
     # run error correction and UMI filtering
     inheritFrom: refineTagsAndSort-base-umi

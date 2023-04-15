@@ -13,7 +13,7 @@ shotgun-base:
     - assembleContigs
     - exportClones
   align:
-    inheritFrom: align-shotgun-base
+    inheritFrom: align-shotgun
 
 rna-seq:
   inheritFrom: shotgun-base

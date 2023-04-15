@@ -1,7 +1,10 @@
 bundle-base:
   abstract: true
-  align:
-    inheritFrom: align-base
+  flags:
+    - species
+    - materialType
+    - leftAlignmentMode
+    - rightAlignmentMode
   exportAlignments:
     inheritFrom: exportAlignments-base
   assemblePartial:

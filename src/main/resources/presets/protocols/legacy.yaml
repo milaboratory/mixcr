@@ -1,0 +1,10 @@
+takara-human-bcr-cdr3:
+  deprecation: "Deprecated."
+  inheritFrom: takara-smartseq-human-bcr
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
+
+takara-human-bcr-full-length:
+  deprecation: "Deprecated."
+  inheritFrom: takara-smartseq-human-bcr
