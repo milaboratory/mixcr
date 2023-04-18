@@ -26,7 +26,7 @@ jobs:
     needs:
       - init
 
-    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4-beta
+    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4
     with:
       # Environment
       java-version: '11'
