@@ -90,6 +90,3 @@ assemble-with-consensus-base:
           clusteringFilter:
             type: relativeConcentration
             specificMutationProbability: 1E-4
-
-assemble-umi-base:
-  inheritFrom: assemble-with-consensus-base
