@@ -1,4 +1,4 @@
-"ampliseq-tcrb-sr-cdr3":
+"ampliseq-tcrb-sr":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -15,7 +15,7 @@
       geneType: J
 
 "ampliseq-tcrb-plus":
-  inheritFrom: ampliseq-tcrb-sr-cdr3
+  inheritFrom: ampliseq-tcrb-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]

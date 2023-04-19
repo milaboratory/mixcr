@@ -20,13 +20,13 @@
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:FR4End}"]
 
-"irepertoire-mouse-rna-sr":
+"irepertoire-repseq-mouse-sr":
   inheritFrom: irepertoire-repseq-human-sr
   mixins:
     - type: SetSpecies
       species: mmu
 
-"irepertoire-mouse-rna-lr":
+"irepertoire-repseq-mouse-lr":
   inheritFrom: irepertoire-repseq-human-sr
   mixins:
     - type: SetSpecies
