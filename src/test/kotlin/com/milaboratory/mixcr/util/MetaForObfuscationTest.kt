@@ -233,7 +233,7 @@ class MetaForObfuscationTest {
     }
 
     private fun ParameterizedType.allTypes(): List<Class<*>> {
-        val exclusions = arrayOf(
+        val exclusions = setOf(
             SpectratypeKeyFunction::class.java,
             SetPreprocessorFactory::class.java,
             WeightFunction::class.java
