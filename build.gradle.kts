@@ -134,9 +134,9 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-47-develop"
-val milibVersion = "2.4.0-7-master"
-val mitoolVersion = "1.7.0-5-main"
+val mixcrAlgoVersion = "4.3.0-52-migex"
+val milibVersion = "2.4.0-17-migex"
+val mitoolVersion = "1.7.0-11-migex"
 val repseqioVersion = "1.8.0-21-master"
 
 val picocliVersion = "4.6.3"
@@ -160,7 +160,6 @@ dependencies {
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milib") { exclude("*", "*") }
     toObfuscate("com.milaboratory:mitool") { exclude("*", "*") }
-    toObfuscate("com.milaboratory:migex") { exclude("*", "*") }
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
 

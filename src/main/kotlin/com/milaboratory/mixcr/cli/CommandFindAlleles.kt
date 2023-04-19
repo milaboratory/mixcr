@@ -223,7 +223,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        ValidationException.require(inputFiles.isNotEmpty()) { "there is no files to process" }
+        ValidationException.requireNotEmpty(inputFiles) { "there is no files to process" }
         inputFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNX)
         }
@@ -271,7 +271,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        ValidationException.requireDistinct(datasets.map { it.header.allFullyCoveredBy }) {
+        ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy }) {
             "Input files must be cut by the same geneFeature"
         }
         val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
@@ -280,7 +280,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "Assemble feature must cover more than CDR3"
         }
 
-        ValidationException.requireDistinct(datasets.flatMap { it.usedGenes }.map { it.id.libraryId }) {
+        ValidationException.requireTheSame(datasets.flatMap { it.usedGenes }.map { it.id.libraryId }) {
             "input files must be aligned on the same library"
         }
         val originalLibrary = datasets.first().usedGenes.first().parentLibrary
@@ -290,7 +290,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             val scores = datasets.map {
                 it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring
             }
-            ValidationException.requireDistinct(scores) {
+            ValidationException.requireTheSame(scores) {
                 "Require the same ${geneType.letter} scoring for all input files"
             }
         }
@@ -299,7 +299,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             J = datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
         )
 
-        ValidationException.requireDistinct(datasets.map { it.header.featuresToAlignMap }) {
+        ValidationException.requireTheSame(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
         }
         val featureToAlign = datasets.first().header.featuresToAlign
@@ -311,15 +311,15 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .mapNotNull { it.data.alleleInfo?.parent }
             .distinct()
         val absentBaseGenes = baseGenes.filter { it !in originalLibrary }
-        ValidationException.require(absentBaseGenes.isEmpty()) {
-            "All base genes must be presented in the library, $absentBaseGenes are absent."
+        ValidationException.requireEmpty(absentBaseGenes) {
+            "All base genes must be presented in the library"
         }
 
         val recursiveAllelesInLibrary = baseGenes
             .map { originalLibrary[it] }
             .filter { it.data.alleleInfo != null }
-        ValidationException.require(recursiveAllelesInLibrary.isEmpty()) {
-            "Recursive allele variants are not supported, $recursiveAllelesInLibrary should not refer to other genes."
+        ValidationException.requireEmpty(recursiveAllelesInLibrary) {
+            "Recursive allele variants are not supported."
         }
 
         val stepsCount = 7

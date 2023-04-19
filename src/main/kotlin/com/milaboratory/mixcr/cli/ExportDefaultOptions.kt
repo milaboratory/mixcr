@@ -70,7 +70,7 @@ class ExportDefaultOptions : (List<ExportFieldDescription>) -> List<ExportFieldD
                 else -> defaultFields + addedFields
             }
         }
-        ValidationException.require(result.isNotEmpty()) {
+        ValidationException.requireNotEmpty(result) {
             "nothing to export, no fields are specified"
         }
         return result
