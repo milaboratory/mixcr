@@ -20,7 +20,6 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.app.matches
-import com.milaboratory.core.Range
 import com.milaboratory.core.io.sequence.fasta.FastaRecord
 import com.milaboratory.core.io.sequence.fasta.FastaWriter
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -53,7 +52,13 @@ import com.milaboratory.util.XSV.chooseDelimiter
 import com.milaboratory.util.XSV.writeXSV
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneFeature.CRegion
+import io.repseq.core.GeneFeature.DRegion
+import io.repseq.core.GeneFeature.JRegion
+import io.repseq.core.GeneFeature.VRegion
 import io.repseq.core.GeneFeatures
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Diversity
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VJ_REFERENCE
 import io.repseq.core.GeneType.Variable
@@ -139,8 +144,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         description = [
             "Paths where to write library with found alleles and other genes that exits in inputs.",
             "For `.json` library will be written in reqpseqio format.",
-            "For `.fasta` library will be written in FASTA format with gene name and reliable range in description. " +
-                    "There will be several records for one gene if clnx were assembled by composite gene feature.",
+            "For `.fasta` library will be written in FASTA format with gene name and feature name in description.",
         ],
         names = ["--export-library"],
         paramLabel = "<path.(json|fasta)>",
@@ -149,7 +153,27 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     var libraryOutputs: List<Path> = mutableListOf()
 
     @set:Option(
-        description = ["Path where to write descriptions and stats for all result alleles, existed and new."],
+        description = [
+            "Path where to write descriptions and stats for all result alleles, existed and new.",
+            "Available columns:",
+            "alleleName - result allele name. If it's de nova, then before `-M` is nearest known variant, M{n} is how many mutations in it and CDR3-{n} is how many mutations in CDR3, at the end uniq hash.",
+            "geneName - gene name, the same for zigotes",
+            "type - gene type (Variable or Joining)",
+            "status - ${AlleleSearchResult.Status.helpDescription}.",
+            "enoughInfo - is there enough clones to search by the main algorithm.",
+            "mutations - list of mutations for de nova alleles.",
+            "varianceOf - name of nearest known gene variant for de nova allele.",
+            "naivesCount - how many naive clones aligned to this allele.",
+            "nonProductiveCount - how many non productive clones aligned to this allele.",
+            "lowerDiversityBound - diversity of CDR3 length and different genes (different J for V allele and J for V allele).",
+            "clonesCount - how many clones aligned to this allele.",
+            "totalClonesCountForGene - how many clones in all alleles of this gene (after realigning).",
+            "clonesCountWithNegativeScoreChange - how many clones get lower score after aligned to this allele.",
+            "filteredForAlleleSearchNaivesCount - how many naive clones aligned to this allele and was used in searching.",
+            "filteredForAlleleSearchClonesCount - how many clones aligned to this allele and was used in searching.",
+            "filteredForAlleleSearchClonesCountWithNegativeScoreChange - how many clones get lower score after aligned to this allele and was used in searching before",
+            "scoreDelta - stats for score change of clones afeter aligning to this allele."
+        ],
         names = ["--export-alleles-mutations"],
         paramLabel = "<path>",
         order = OptionsOrder.main + 10_200
@@ -229,9 +253,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         }
         libraryOutputs.forEach { output ->
             ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.FASTA)
-        }
-        ValidationException.require(findAllelesParameters.searchAlleleParameterForSecondRound.minClonesCountForAlleleSearch >= findAllelesParameters.maxCountForPossibleRemoval) {
-            "`searchAlleleParameter.minClonesCountForAlleleSearch` should be greater or equal then `maxCountForPossibleRemoval`"
         }
         if ((listOfNotNull(outputClnsOptions.outputTemplate, allelesMutationsOutput) + libraryOutputs).isEmpty()) {
             throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
@@ -366,16 +387,19 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         )
         val allelesAfterRemoval = allelesBuilder.removeAllelesIfPossible(
             "Step 6 of $stepsCount",
-            VAllelesFromSecondRound + JAllelesFromSecondRound,
-            findAllelesParameters.maxCountForPossibleRemoval
+            VAllelesFromSecondRound + JAllelesFromSecondRound
         )
+        // if some genes are equal by assemble feature (without marking as variant, for example, the only difference in UTR), there may be duplicates
+        val results = allelesAfterRemoval
+            .groupBy { it.result.name }
+            // group and sort in reproductive way
+            .mapValues { (_, value) -> value.minBy { it.searchedOn } }
+            .values.sortedBy { it.result.name }
         // what variants will be used to replace genes in hits (key is base gene name).
-        val allelesMapping = allelesAfterRemoval
+        val allelesMapping = results
             .filter { it.status.exist }
             // Duplicates will be grouped by several key
             .groupBy { it.searchedOn }
-        // if some genes are equal by assemble feature (without marking as variant), there may be duplicates
-        val results = allelesAfterRemoval.distinctBy { it.result.name }
         reportBuilder.reportResults(results)
 
         val resultLibrary = buildLibrary(libraryRegistry, originalLibrary, results)
@@ -445,18 +469,21 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             primaryGenes
                 .sortedBy { it.name }
                 .forEach { gene ->
-                    val range = Range(
-                        gene.referencePoints.firstAvailablePosition,
-                        gene.referencePoints.lastAvailablePosition
-                    )
+                    val feature = when (gene.geneType) {
+                        Variable -> VRegion
+                        Joining -> JRegion
+                        Diversity -> DRegion
+                        Constant -> CRegion
+                    }
+                    val range = gene.referencePoints.getRange(feature)
                     val sequence = gene.getSequence(range)
-                    writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
+                    writer.write(FastaRecord(id++, "${gene.name} ${GeneFeature.encode(feature)}", sequence))
                 }
         }
     }
 
     private fun printAllelesMutationsOutput(
-        result: List<AlleleSearchResult>,
+        result: Collection<AlleleSearchResult>,
         allelesStatistics: OverallAllelesStatistics,
         allelesMutationsOutput: Path
     ) {
@@ -554,9 +581,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private fun buildLibrary(
         libraryRegistry: VDJCLibraryRegistry,
         originalLibrary: VDJCLibrary,
-        usedGenes: Collection<AlleleSearchResult>
+        results: Collection<AlleleSearchResult>
     ): VDJCLibrary {
-        val vAndJ = usedGenes.filter { it.status.exist }.map { it.result }
+        val vAndJ = results.filter { it.status.exist }.map { it.result }
         val restGenes = originalLibrary.primaryGenes.filter { it.geneType !in VJ_REFERENCE }.map { it.data }
         val genesToAdd = vAndJ + restGenes
         val resultLibrary = VDJCLibrary(
