@@ -324,10 +324,6 @@ oncomine-human-bcr-ihg-lr-full-length:
   deprecation: "The preset is deprecated. Please use oncomine-human-igh-lr."
   inheritFrom: oncomine-human-igh-lr
 
-oncomine-human-tcrb-sr:
-  deprecation: "The preset is deprecated. Please use oncomine-human-igh-lr."
-  inheritFrom: oncomine-human-igh-lr
-
 oncomine-human-bcr-pan-clonality-cdr3:
   deprecation: "The preset is deprecated. Please use oncomine-human-bcr-pan-clonality."
   inheritFrom: oncomine-human-bcr-pan-clonality
