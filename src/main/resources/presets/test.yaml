@@ -679,7 +679,7 @@
       insertIndex: -1
 
 "generic-tcr-amplicon-separate-samples-umi":
-  inheritFrom: bundle-umi-kaligner1-v1-base
+  inheritFrom: generic-amplicon-with-umi
   flags:
     - sampleTable
   mixins:

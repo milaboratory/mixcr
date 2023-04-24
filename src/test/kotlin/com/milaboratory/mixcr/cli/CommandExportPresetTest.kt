@@ -24,6 +24,7 @@ class CommandExportPresetTest {
                     "--append-export-clones-field -aaFeature VDJRegion " +
                     "--append-export-clones-field -aaFeature VRegion " +
                     "--append-export-clones-field -aaFeature JRegion " +
+                    "--floating-left-alignment-boundary --floating-right-alignment-boundary C" +
                     "--preset-name test-tcr-shotgun ${output.path}"
         )
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
@@ -37,7 +38,7 @@ class CommandExportPresetTest {
         val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
-            "exportPreset --species hs --dna " +
+            "exportPreset --species hs --dna --floating-left-alignment-boundary --floating-right-alignment-boundary C" +
                     "--append-export-clones-field -allAAFeatures " +
                     "--preset-name test-tcr-shotgun ${output.path}"
         )
@@ -49,7 +50,7 @@ class CommandExportPresetTest {
     fun `add assemble contig step`() {
         val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
-        TestMain.execute("exportPreset --species hs --dna --add-step assembleContigs --preset-name test-tcr-shotgun ${output.path}")
+        TestMain.execute("exportPreset --species hs --floating-left-alignment-boundary --floating-right-alignment-boundary C --dna --add-step assembleContigs --preset-name test-tcr-shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
         result.pipeline!!.steps shouldContain MiXCRCommandDescriptor.assembleContigs
         result.assemble!!.clnaOutput shouldBe true
@@ -59,7 +60,7 @@ class CommandExportPresetTest {
     fun `remove two steps`() {
         val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
-        TestMain.execute("exportPreset --species hs --dna --remove-step exportClones --remove-step exportAlignments --preset-name test-tcr-shotgun ${output.path}")
+        TestMain.execute("exportPreset --floating-left-alignment-boundary --floating-right-alignment-boundary C --species hs --dna --remove-step exportClones --remove-step exportAlignments --preset-name test-tcr-shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
         result.pipeline!!.steps shouldNotContain MiXCRCommandDescriptor.exportClones
         result.pipeline!!.steps shouldNotContain MiXCRCommandDescriptor.exportAlignments
