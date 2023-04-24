@@ -48,7 +48,7 @@ cd "$dir/src/test/resources/sequences/big/"
 
 cd yf_sample_data
 
-parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze generic-bcr-amplicon -f \
+parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze generic-amplicon -f \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \
