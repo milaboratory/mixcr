@@ -70,7 +70,7 @@ class CommandExportPresetTest {
         val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
-            "exportPreset --preset-name generic-bcr-amplicon-umi " +
+            "exportPreset --preset-name generic-amplicon-with-umi " +
                     "--species hsa --rna " +
                     "--remove-step exportClones --remove-step exportAlignments " +
                     "--tag-pattern ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) " +
