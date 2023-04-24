@@ -15,7 +15,7 @@
       geneType: C
 
 "irepertoire-repseq-human-lr":
-  inheritFrom: irepertoire-human-rna-sr
+  inheritFrom: irepertoire-repseq-human-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:FR4End}"]
@@ -35,10 +35,10 @@
       features: ["{CDR2Begin:FR4End}"]
 
 "irepertoire-repseq-plus-human":
-  inheritFrom: irepertoire-human-rna-lr
+  inheritFrom: irepertoire-repseq-human-lr
 
 "irepertoire-repseq-plus-mouse":
-  inheritFrom: irepertoire-mouse-rna-lr
+  inheritFrom: irepertoire-repseq-mouse-lr
 
 
 "irepertoire-repseq-human-dna-sr":
@@ -58,7 +58,7 @@
       geneType: J
 
 "irepertoire-repseq-human-dna-lr":
-  inheritFrom: irepertoire-repseq-dna-human-sr
+  inheritFrom: irepertoire-repseq-human-dna-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:CDR3End}"]

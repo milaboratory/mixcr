@@ -36,7 +36,7 @@ generic-lt-single-cell-amplicon:
                     type: group_operator_cumtop
                     share: 0.95
   exportClones:
-    inheritFrom: exportClones-base-single-cell-no-umi
+    inheritFrom: exportClones-single-cell-no-umi-base
 
 # Low throughput (plates etc) amplicon-based single cell, with UMIs
 generic-lt-single-cell-amplicon-with-umi:
@@ -304,7 +304,7 @@ generic-ht-single-cell-amplicon-with-umi:
     inheritFrom: align-amplicon
   refineTagsAndSort:
     # run error correction and UMI filtering
-    inheritFrom: refineTagsAndSort-base-umi
+    inheritFrom: refineTagsAndSort-base
     overrides:
       parameters:
         postFilter:
@@ -386,8 +386,6 @@ generic-ht-single-cell-fragmented:
     # run only error correction, no any filters
     inheritFrom: refineTagsAndSort-base
     overrides:
-      clnaOutput: true
-      cellLevel: true
       parameters:
         postFilter:
           type: filter_groups
@@ -415,6 +413,7 @@ generic-ht-single-cell-fragmented:
     inheritFrom: assemble-with-consensus-base
     overrides:
       clnaOutput: true
+      cellLevel: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -456,7 +455,39 @@ generic-ht-single-cell-fragmented-with-umi:
     inheritFrom: align-single-cell
   refineTagsAndSort:
     # run error correction and UMI filtering
-    inheritFrom: refineTagsAndSort-base-umi
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        histTransformers:
+                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                          - type: inflate
+                            fraction: 0.15
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
   assemble:
     inheritFrom: assemble-with-consensus-base
     overrides:
