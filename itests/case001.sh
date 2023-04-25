@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-mixcr align -p align-amplicon --species hs \
+mixcr align -p generic-amplicon --species hs \
             --dna \
             -OsaveOriginalReads=true \
             --floating-left-alignment-boundary \
