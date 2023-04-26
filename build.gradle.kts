@@ -1,3 +1,4 @@
+
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.SHADOW_GROUP
@@ -6,9 +7,11 @@ import com.palantir.gradle.gitversion.VersionDetails
 import de.undercouch.gradle.tasks.download.Download
 import groovy.lang.Closure
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
+import org.gradle.process.internal.DefaultExecSpec
+import org.gradle.process.internal.ExecActionFactory
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import proguard.gradle.ProGuardTask
+import java.io.ByteArrayOutputStream
 import java.net.InetAddress
 
 buildscript {
@@ -214,12 +217,122 @@ val obfuscateRuntime: Configuration by configurations.creating {
 
         configurations.runtimeClasspath.get().resolvedConfiguration.resolvedArtifacts
             .filterNot { (it.moduleVersion.id.group to it.moduleVersion.id.name) in toExclude }
-            .forEach {
-                add(
-                    project.dependencies.create(it.moduleVersion.asMap())
-                )
-            }
+            .forEach { add(project.dependencies.create(it.moduleVersion.asMap())) }
     }
+}
+
+val fetchGitTags by tasks.registering(Exec::class) {
+    commandLine = listOf("git", "fetch", "--all", "--tags")
+}
+
+open class ListGitTagsTask : Exec() {
+    @Internal
+    val tags: ListProperty<String> = objectFactory.listProperty()
+
+    init {
+        commandLine = listOf("git", "tag")
+        val output = ByteArrayOutputStream()
+        standardOutput = output
+        doLast {
+            tags.set(output.toString().trim().split("\n"))
+        }
+    }
+}
+
+val listGitTags by tasks.registering(ListGitTagsTask::class) {
+    dependsOn(fetchGitTags)
+}
+
+@CacheableTask
+open class CheckoutPresetsTask @Inject constructor(
+    @Inject
+    val objectFactory: ObjectFactory,
+    @Inject
+    val execActionFactory: ExecActionFactory
+) : DefaultTask() {
+    @Input
+    val tags: ListProperty<String> = objectFactory.listProperty()
+
+    @OutputDirectory
+    val output: File = project.sourceSets.main.get().output.resourcesDir!!.resolve("mixcr_presets/old_presets")
+
+    @TaskAction
+    protected fun exec() {
+        val localDirectoryPath = project.buildDir.resolve("git_repo_for_presets")
+        localDirectoryPath.mkdirs()
+
+        val remoteRepositoryUrl = "git@github.com:milaboratory/mixcr.git"
+        val targetDirectory = "src/main/resources/mixcr_presets"
+        execute {
+            workingDir(localDirectoryPath)
+            commandLine("git", "init", "-q")
+        }
+        val currentRemote = ByteArrayOutputStream().use { output ->
+            execute {
+                standardOutput = output
+                commandLine("git", "remote")
+            }
+            output.toString().trim()
+        }
+        if (currentRemote != "origin") {
+            execute {
+                workingDir(localDirectoryPath)
+                commandLine("git", "remote", "add", "origin", remoteRepositoryUrl)
+            }
+        }
+        execute {
+            workingDir(localDirectoryPath)
+            commandLine("git", "fetch", "-q", "--all", "--tags")
+        }
+        execute {
+            workingDir(localDirectoryPath)
+            commandLine("git", "sparse-checkout", "set", targetDirectory)
+        }
+        output.deleteRecursively()
+        output.mkdirs()
+        tags.get().forEach { tag ->
+            execute {
+                workingDir(localDirectoryPath)
+                commandLine("git", "checkout", "-q", "tags/$tag")
+            }
+            val targetDir = output.resolve(tag.removePrefix("v"))
+            localDirectoryPath.resolve(targetDirectory).copyRecursively(targetDir)
+            writePresetsList(targetDir, targetDir.resolve("file_list.txt"))
+        }
+    }
+
+    private fun writePresetsList(dirWithPresets: File, outputFile: File) {
+        val yamls = dirWithPresets.walk()
+            .filter { it.extension == "yaml" }
+            .map { dirWithPresets.toPath().relativize(it.toPath()) }
+            .toList()
+        outputFile.toPath().toAbsolutePath().parent.toFile().mkdirs()
+        outputFile.writeText(
+            yamls
+                .sorted()
+                .joinToString("\n")
+        )
+    }
+
+    private fun execute(block: ExecSpec.() -> Unit) {
+        val execAction = execActionFactory.newExecAction()
+        val execSpec = objectFactory.newInstance(DefaultExecSpec::class.java)
+        block(execSpec)
+        execSpec.copyTo(execAction)
+        execAction.execute()
+    }
+}
+
+val fetchPreviousPresets by tasks.registering(CheckoutPresetsTask::class) {
+    group = "build"
+    dependsOn(listGitTags)
+    tags.set(listGitTags.get().tags.map { tags ->
+        tags
+            .filter { it.startsWith("v") }
+            .map { it.removePrefix("v") }
+            .filterNot { it.startsWith("1.") || it.startsWith("2.") || it.startsWith("3.") || it.startsWith("4.0") }
+            .map { "v$it" }
+    })
 }
 
 val writeBuildProperties by tasks.registering(WriteProperties::class) {
@@ -234,27 +347,38 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("timestamp", System.currentTimeMillis())
 }
 
-val generatePresetFileList by tasks.registering {
-    group = "build"
-    val outputFile = file("${sourceSets.main.get().output.resourcesDir}/mixcr_presets/file_list.txt")
-    doLast {
-        val yamls = layout.files({
-            file("src/main/resources/mixcr_presets").walk()
-                .filter { it.extension == "yaml" }
-                .map { it.relativeTo(file("src/main/resources/mixcr_presets")) }
-                .toList()
-        })
-        outputFile.ensureParentDirsCreated()
-        outputFile.writeText(yamls
-            .map { relativePath(it) }
-            .sorted()
-            .joinToString("\n"))
+@CacheableTask
+open class GeneratePresetFileListTask : DefaultTask() {
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    val dirWithPresets = project.file("src/main/resources/mixcr_presets")
+
+    @OutputFile
+    val outputFile = project.sourceSets.main.get().output.resourcesDir!!.resolve("mixcr_presets/file_list.txt")
+
+    @TaskAction
+    fun run() {
+        val yamls = dirWithPresets.walk()
+            .filter { it.extension == "yaml" }
+            .map { dirWithPresets.toPath().relativize(it.toPath()) }
+            .toList()
+        outputFile.toPath().toAbsolutePath().parent.toFile().mkdirs()
+        outputFile.writeText(
+            yamls
+                .sorted()
+                .joinToString("\n")
+        )
     }
+}
+
+val generatePresetFileList by tasks.registering(GeneratePresetFileListTask::class) {
+    group = "build"
 }
 
 tasks.processResources {
     dependsOn(writeBuildProperties)
     dependsOn(generatePresetFileList)
+    dependsOn(fetchPreviousPresets)
 }
 
 val obfuscate by tasks.registering(ProGuardTask::class) {
@@ -414,3 +538,4 @@ tasks.test {
     }
     longTests?.let { systemProperty("longTests", it) }
 }
+
