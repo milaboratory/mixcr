@@ -90,21 +90,21 @@ cd ../
 mkdir -p regression
 cd regression
 files=(
-  'V04_baseBuldTrees.shmt',
-  'V05_base_build_trees.shmt',
-  'V06_base_build_trees.shmt',
+  'V04_baseBuldTrees.shmt'
+  'V05_base_build_trees.shmt'
+  'V06_base_build_trees.shmt'
 
-  'V10_baseSingleCell_vdjcontigs.clna', 'V10_case3.clna',
-  'V11_base_single_cell.vdjcontigs.clna', 'V11_case3.clna',
-  'V12_base_single_cell.vdjcontigs.clna', 'V12_case3.clna'
+  'V10_baseSingleCell_vdjcontigs.clna' 'V10_case3.clna'
+  'V11_base_single_cell.vdjcontigs.clna' 'V11_case3.clna'
+  'V12_base_single_cell.vdjcontigs.clna' 'V12_case3.clna'
 
-  'V15_baseSingleCell_vdjcontigs.clns', 'V15_case3.clns',
-  'V16_base_single_cell.vdjcontigs.contigs.clns', 'V16_case3.contigs.clns',
-  'V17_base_single_cell.vdjcontigs.contigs.clns', 'V17_case3.contigs.clns',
+  'V15_baseSingleCell_vdjcontigs.clns' 'V15_case3.clns'
+  'V16_base_single_cell.vdjcontigs.contigs.clns' 'V16_case3.contigs.clns'
+  'V17_base_single_cell.vdjcontigs.contigs.clns' 'V17_case3.contigs.clns'
 
-  'V20_baseSingleCell_vdjcontigs.vdjca', 'V20_case3.vdjca',
-  'V21_base_single_cell.vdjcontigs.vdjca', 'V21_case3.vdjca',
-  'V22_base_single_cell.vdjcontigs.vdjca', 'V22_case3.vdjca'
+  'V20_baseSingleCell_vdjcontigs.vdjca' 'V20_case3.vdjca'
+  'V21_base_single_cell.vdjcontigs.vdjca' 'V21_case3.vdjca'
+  'V22_base_single_cell.vdjcontigs.vdjca' 'V22_case3.vdjca'
 )
 
 for file in "${files[@]}"; do
