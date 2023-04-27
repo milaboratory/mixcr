@@ -1,3 +1,13 @@
+# Generic Depricated
+
+generic-tcr-amplicon:
+  deprecation: "The preset is deprecated. Please use generic-amplicon."
+  inheritFrom: generic-amplicon
+
+generic-bcr-amplicon:
+  deprecation: "The preset is deprecated. Please use generic-amplicon."
+  inheritFrom: generic-amplicon
+
 # Takara Depricated presets
 
 takara-human-bcr-cdr3:
