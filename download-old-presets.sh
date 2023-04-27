@@ -16,7 +16,7 @@ mkdir exported_presets
 
 for preset in $presets; do
   echo -e "Exporting ${preset}\033[K\r\c"
-  mixcr -Xmx256m exportPreset --preset-name $preset --no-validation exported_presets/${preset}.yaml
+  ./mixcr -Xmx256m exportPreset --preset-name $preset --no-validation exported_presets/${preset}.yaml
 done
 echo
 
