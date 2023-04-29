@@ -179,7 +179,7 @@
       tagType: Cell
   qc:
     checks:
-      - type: ReadsOffTarget
+      - type: OffTargetReads
         upper: 0.99
         middle: 0.95
 

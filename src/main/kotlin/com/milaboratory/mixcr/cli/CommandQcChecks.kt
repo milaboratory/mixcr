@@ -20,7 +20,7 @@ import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
-import com.milaboratory.mixcr.qc.checks.QcChecker.QcCheckResult
+import com.milaboratory.mixcr.qc.checks.QcCheckResult
 import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.ALERT
 import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.OK
 import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.WARN
@@ -150,20 +150,27 @@ object CommandQcChecks {
         private fun List<QcCheckResult>.print(out: PrintStream, ansi: Ansi) {
             out.println()
 
-            val labelLength = this.maxOf { it.check.label.length }
+            val labelLength = this.maxOf { it.label.length }
+            val printedValueLength = this.maxOf { it.payload[QcCheckResult.printedValue]?.toString()?.length ?: 0 }
             groupBy { it.step }.forEach { (_, checks) ->
                 // out.println("Quality checks for $step:")
 
                 checks.forEach { check ->
-                    val label = check.check.label + ":" + " ".repeat(labelLength - check.check.label.length)
+                    val printedValue = check.payload[QcCheckResult.printedValue]?.toString() ?: ""
+                    val label =
+                        check.label + ": " +
+                                " ".repeat(labelLength - check.label.length) +
+                                printedValue +
+                                " ".repeat(printedValueLength - printedValue.length)
+
 
                     val color = when (check.status) {
                         ALERT -> "red"
                         OK -> "green"
                         WARN -> "yellow"
                     }
-                    val message = if (check.status == OK) "" else "(${check.message})"
-                    val text = ansi.Text("  $label @|fg($color) ${check.status.text}|@ ${message}")
+
+                    val text = ansi.Text("  $label [@|fg($color) ${check.status.text}|@]")
                     out.println(text.toString())
                 }
             }

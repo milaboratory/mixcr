@@ -316,19 +316,21 @@ object CommandAnalyze {
                         .map { Paths.get(it) }
                         .filter { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
                         .forEach { output ->
-                            planBuilder.executionPlan.add(
-                                indexOfStep + 1,
-                                ExecutionStep(
-                                    MiXCRCommandDescriptor.qc.command,
-                                    counter++,
-                                    listOf("--print-to-stdout"),
-                                    emptyList(),
-                                    listOf(output.toString()),
-                                    listOf(
-                                        output.toString().removeSuffix(output.extension) + "qc.txt"
-                                    )
+                            val qcStep = ExecutionStep(
+                                MiXCRCommandDescriptor.qc.command,
+                                counter++,
+                                listOf("--print-to-stdout"),
+                                emptyList(),
+                                listOf(output.toString()),
+                                listOf(
+                                    output.toString().removeSuffix(output.extension) + "qc.txt"
                                 )
                             )
+                            if (qcAfterEachStep)
+                                planBuilder.executionPlan.add(indexOfStep + 1, qcStep)
+                            else
+                            // run as very last step
+                                planBuilder.executionPlan.add(qcStep)
                         }
                 }
             }
