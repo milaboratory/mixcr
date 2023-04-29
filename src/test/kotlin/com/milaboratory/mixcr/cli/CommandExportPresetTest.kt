@@ -24,7 +24,7 @@ class CommandExportPresetTest {
                     "--append-export-clones-field -aaFeature VDJRegion " +
                     "--append-export-clones-field -aaFeature VRegion " +
                     "--append-export-clones-field -aaFeature JRegion " +
-                    "--floating-left-alignment-boundary --floating-right-alignment-boundary C" +
+                    "--floating-left-alignment-boundary --floating-right-alignment-boundary C " +
                     "--preset-name test-tcr-shotgun ${output.path}"
         )
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
@@ -38,7 +38,7 @@ class CommandExportPresetTest {
         val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
-            "exportPreset --species hs --dna --floating-left-alignment-boundary --floating-right-alignment-boundary C" +
+            "exportPreset --species hs --dna --floating-left-alignment-boundary --floating-right-alignment-boundary C " +
                     "--append-export-clones-field -allAAFeatures " +
                     "--preset-name test-tcr-shotgun ${output.path}"
         )
@@ -71,7 +71,7 @@ class CommandExportPresetTest {
         val output = TempFileManager.newTempDir().toPath().resolve("output.yaml").toFile()
         output.delete()
         TestMain.execute(
-            "exportPreset --preset-name generic-amplicon-with-umi " +
+            "exportPreset --preset-name generic-amplicon " +
                     "--species hsa --rna " +
                     "--remove-step exportClones --remove-step exportAlignments " +
                     "--tag-pattern ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) " +

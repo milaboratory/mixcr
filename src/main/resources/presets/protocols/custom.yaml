@@ -43,7 +43,7 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
 
-"han-et-al-2014-tcr":
+"han-et-al-2014":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -93,7 +93,7 @@
               type: group_operator_cumtop
               share: 0.99
   assemble:
-    inheritFrom: assemble-base-with-consensus
+    inheritFrom: assemble-with-consensus-base
     overrides:
       consensusAssemblerParameters:
         assembler:
@@ -199,11 +199,6 @@
       - field: "-aaFeature"
         args: [ "FR4" ]
       - field: "-defaultAnchorPoints"
-
-"han-et-al-2014-bcr":
-  inheritFrom: han-et-al-2014-tcr
-  align:
-    inheritFrom: bundle-kaligner2-v1-base
 
 "vergani-et-al-2017-cdr3":
   inheritFrom: generic-amplicon-with-umi
