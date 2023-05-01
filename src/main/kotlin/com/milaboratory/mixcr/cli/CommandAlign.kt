@@ -37,9 +37,9 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
-import com.milaboratory.mitool.helpers.FileGroup
-import com.milaboratory.mitool.helpers.PathPatternExpandException
-import com.milaboratory.mitool.helpers.parseAndRunAndCorrelateFSPattern
+import com.milaboratory.util.FileGroup
+import com.milaboratory.util.PathPatternExpandException
+import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
