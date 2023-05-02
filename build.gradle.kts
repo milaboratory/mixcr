@@ -111,11 +111,6 @@ repositories {
 
     mavenCentral()
 
-    // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
-    maven {
-        url = uri("https://pub.maven.milaboratory.com")
-    }
-
     maven {
         url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
         authentication {
@@ -137,7 +132,7 @@ val obfuscationLibs: Configuration by configurations.creating
 val mixcrAlgoVersion = "4.3.0-76-new-presets"
 val milibVersion = "2.4.0-21-master"
 val mitoolVersion = "1.7.0-17-main"
-val repseqioVersion = "1.8.0-21-master"
+val repseqioVersion = "1.8.0-27-master"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.14.2"
