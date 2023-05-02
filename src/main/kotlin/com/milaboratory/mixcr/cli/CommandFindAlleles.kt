@@ -385,17 +385,15 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             Variable,
             JAllelesFromSecondRound
         )
-        val allelesAfterRemoval = allelesBuilder.removeAllelesIfPossible(
+        val results = allelesBuilder.removeAllelesIfPossible(
             "Step 6 of $stepsCount",
             VAllelesFromSecondRound + JAllelesFromSecondRound
         )
-        // if some genes are equal by assemble feature (without marking as variant, for example, the only difference in UTR), there may be duplicates
-        val results = allelesAfterRemoval
-            .groupBy { it.result.name }
-            // group and sort in reproductive way
-            .mapValues { (_, value) -> value.minBy { it.searchedOn } }
-            .values.sortedBy { it.result.name }
-        // what variants will be used to replace genes in hits (key is base gene name).
+        // There are maybe case of the same allele found on different genes if the actual difference outside of gene feature to search
+        ValidationException.requireDistinct(results.map { allele -> "${allele.result.name} found on ${allele.searchedOn}" }) {
+            "There are duplicates of found alleles"
+        }
+        // what variants will be used to replace genes in hits (key is base gene of original hit).
         val allelesMapping = results
             .filter { it.status.exist }
             // Duplicates will be grouped by several key
