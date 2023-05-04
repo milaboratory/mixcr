@@ -73,6 +73,9 @@ generic-amplicon-with-umi:
       - type: OffTargetReads
         middle: 0.1
         upper: 0.2
+      - type: ReadsWithNoVOrJHits
+        middle: 0.1
+        upper: 0.2
       - type: ReadsWithNoBarcode
         middle: 0.1
         upper: 0.2
