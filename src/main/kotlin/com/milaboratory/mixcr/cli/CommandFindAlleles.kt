@@ -69,7 +69,6 @@ import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData.metaKey
-import io.repseq.dto.VDJCLibraryData
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -598,7 +597,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val restGenes = originalLibrary.primaryGenes.filter { it.geneType !in VJ_REFERENCE }.map { it.data }
         val genesToAdd = vAndJ + restGenes
         val resultLibrary = VDJCLibrary(
-            VDJCLibraryData(originalLibrary.data, genesToAdd),
+            originalLibrary.data.useAsTemplate(genesToAdd),
             originalLibrary.name + "_with_found_alleles",
             libraryRegistry,
             originalLibrary.context
