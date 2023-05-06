@@ -65,6 +65,7 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.presets.AlignMixins.LimitInput
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotIfNotBlank
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRStepParams
@@ -97,19 +98,24 @@ import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Model.PositionalParamSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.nio.charset.Charset
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
 import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.set
+import kotlin.io.path.bufferedWriter
 import kotlin.io.path.readText
 import kotlin.math.max
 
 object CommandAlign {
     const val COMMAND_NAME = MiXCRCommandDescriptor.align.name
+
+    const val SAVE_OUTPUT_FILE_NAMES_OPTION = "--save-output-file-names"
 
     fun List<CommandAlignParams.SampleTable.Row>.bySampleName() = groupBy { it.sample }
 
@@ -270,23 +276,23 @@ object CommandAlign {
             fun fill(type: String) {
                 when (type) {
                     "R1" -> {
-                        notAlignedReadsR1 = outputDir.resolve("$prefix.not_aligned.R1.fastq.gz")
-                        notParsedReadsR1 = outputDir.resolve("$prefix.not_parsed.R1.fastq.gz")
+                        notAlignedReadsR1 = outputDir.resolve("${prefix.dotIfNotBlank()}not_aligned.R1.fastq.gz")
+                        notParsedReadsR1 = outputDir.resolve("${prefix.dotIfNotBlank()}not_parsed.R1.fastq.gz")
                     }
 
                     "R2" -> {
-                        notAlignedReadsR2 = outputDir.resolve("$prefix.not_aligned.R2.fastq.gz")
-                        notParsedReadsR2 = outputDir.resolve("$prefix.not_parsed.R2.fastq.gz")
+                        notAlignedReadsR2 = outputDir.resolve("${prefix.dotIfNotBlank()}not_aligned.R2.fastq.gz")
+                        notParsedReadsR2 = outputDir.resolve("${prefix.dotIfNotBlank()}not_parsed.R2.fastq.gz")
                     }
 
                     "I1" -> {
-                        notAlignedReadsI1 = outputDir.resolve("$prefix.not_aligned.I1.fastq.gz")
-                        notParsedReadsI1 = outputDir.resolve("$prefix.not_parsed.I1.fastq.gz")
+                        notAlignedReadsI1 = outputDir.resolve("${prefix.dotIfNotBlank()}not_aligned.I1.fastq.gz")
+                        notParsedReadsI1 = outputDir.resolve("${prefix.dotIfNotBlank()}not_parsed.I1.fastq.gz")
                     }
 
                     "I2" -> {
-                        notAlignedReadsI2 = outputDir.resolve("$prefix.not_aligned.I2.fastq.gz")
-                        notParsedReadsI2 = outputDir.resolve("$prefix.not_parsed.I2.fastq.gz")
+                        notAlignedReadsI2 = outputDir.resolve("${prefix.dotIfNotBlank()}not_aligned.I2.fastq.gz")
+                        notParsedReadsI2 = outputDir.resolve("${prefix.dotIfNotBlank()}not_parsed.I2.fastq.gz")
                     }
 
                     else -> throw IllegalArgumentException()
@@ -744,6 +750,16 @@ object CommandAlign {
         @Mixin
         lateinit var pathsForNotAligned: PathsForNotAligned
 
+        @Option(
+            description = [
+                "Using this option, the process will create a text file with the list of output *.vdjca files.",
+                "Only file names are added, not full paths."
+            ],
+            names = [SAVE_OUTPUT_FILE_NAMES_OPTION],
+            hidden = true
+        )
+        private var outputFileList: Path? = null
+
         private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins.mixins) }
 
         /** Output file header will contain packed version of the parameter specs,
@@ -1140,11 +1156,29 @@ object CommandAlign {
                 "." -> null
                 else -> {
                     object : Writers() {
+                        private val lock = Any()
+                        private val sampleNameWriter = outputFileList?.bufferedWriter(
+                            Charset.defaultCharset(), DEFAULT_BUFFER_SIZE,
+                            StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
+                        )
+
                         override fun writerFactory(sample: List<String>) = run {
+                            val sampleName = addSampleToFileName(outputFile.fileName.toString(), sample)
+                            synchronized(lock) {
+                                sampleNameWriter?.appendLine(sampleName)
+                            }
                             VDJCAlignmentsWriter(
-                                outputFile.resolveSibling(addSampleToFileName(outputFile.fileName.toString(), sample)),
+                                outputFile.resolveSibling(sampleName),
                                 concurrencyLimiter, VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
                             )
+                        }
+
+                        override fun close() {
+                            try {
+                                sampleNameWriter?.close()
+                            } finally {
+                                super.close()
+                            }
                         }
                     }
                 }
@@ -1170,8 +1204,8 @@ object CommandAlign {
 
             operator fun get(sample: List<String>) =
                 // computeIfAbsent also performs synchronization
-                writers.computeIfAbsent(sample) {
-                    val writer = writerFactory(it)
+                writers.computeIfAbsent(sample) { sampleKey ->
+                    val writer = writerFactory(sampleKey)
                     if (header != null)
                         writer.writeHeader(header!!, genes!!)
                     writer
@@ -1187,7 +1221,7 @@ object CommandAlign {
                     writer.setNumberOfProcessedReads(value)
             }
 
-            override fun close() {
+            override open fun close() {
                 var re: Exception? = null
                 for (w in writers.values)
                     try {
@@ -1208,12 +1242,36 @@ object CommandAlign {
         }
     }
 
-    fun addSampleToFileName(fileName: String, sample: List<String>): String {
+    private fun toPrexixAndExtension(seedFileName: String): Pair<String, String> {
+        val dotIndex = seedFileName.lastIndexOf('.')
+        return seedFileName.substring(0, dotIndex) to seedFileName.substring(dotIndex)
+    }
+
+    fun addSampleToFileName(seedFileName: String, sample: List<String>): String {
         val sampleName = listToSampleName(sample)
-        val dotIndex = fileName.lastIndexOf('.')
-        val prefix = fileName.substring(0, dotIndex)
-        val extension = fileName.substring(dotIndex)
+        val (prefix, extension) = toPrexixAndExtension(seedFileName)
         val insert = if (sampleName == "") "" else ".$sampleName"
         return prefix + insert + extension
+    }
+
+    data class FileAndSample(val fileName: String, val sample: String)
+
+    /** Opposite operation to [addSampleToFileName] */
+    fun listSamplesForSeedFileName(seedFileName: String, fileNames: List<String>): List<FileAndSample> {
+        val (prefix, extension) = toPrexixAndExtension(seedFileName)
+        val result = mutableListOf<FileAndSample>()
+        var emptySampleDetected = false
+        fileNames.map { name ->
+            require(name.startsWith(prefix) && name.endsWith(extension))
+            if (emptySampleDetected)
+                throw IllegalArgumentException("Unexpected file sequence.")
+            var sample = name.removePrefix(prefix).removeSuffix(extension)
+            if (sample == "")
+                emptySampleDetected = true
+            else
+                sample = sample.removePrefix(".")
+            result += FileAndSample(name, sample)
+        }
+        return result
     }
 }

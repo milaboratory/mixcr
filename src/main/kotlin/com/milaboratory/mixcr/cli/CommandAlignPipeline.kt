@@ -32,6 +32,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagValue
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.tag.TechnicalTag.TAG_PATTERN_READ_VARIANT_ID
+import com.milaboratory.mixcr.basictypes.tag.suffixInfo
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
 import com.milaboratory.util.UNNAMED_GROUP_NAME_PREFIX
 import com.milaboratory.util.listComparator
@@ -77,7 +78,12 @@ object CommandAlignPipeline {
 
             tagExtractors += TagExtractorWithInfo(
                 PatternVariantIdTag,
-                TagInfo(TagType.Technical, TagValueType.NonSequence, TAG_PATTERN_READ_VARIANT_ID, 0 /* will be changed below */)
+                TagInfo(
+                    TagType.Technical,
+                    TagValueType.NonSequence,
+                    TAG_PATTERN_READ_VARIANT_ID,
+                    0 /* will be changed below */
+                )
             )
 
             readTagShortcuts = readTags.map { name -> plan.tagShortcut(name) }
@@ -133,7 +139,7 @@ object CommandAlignPipeline {
                 // Technical tags are printed only if transformation will take place
                 .filter { willHaveTransformers || it.key != TagType.Technical }
                 .forEach { (tagType: TagType, extractors: List<TagExtractorWithInfo>) ->
-                    println("  $tagType tags: " + extractors.joinToString(", ") { it.tagInfo.name })
+                    println("  $tagType tags: " + extractors.joinToString(", ") { "${it.tagInfo.name}(${it.tagInfo.valueType.shortString})" })
                 }
         }
 
@@ -164,7 +170,7 @@ object CommandAlignPipeline {
             currentTagsInfo
                 .groupBy { it.type }
                 .forEach { (tagType: TagType, infos: List<TagInfo>) ->
-                    println("  $tagType tags: " + infos.joinToString(", ") { it.name })
+                    println("  $tagType tags: " + infos.joinToString(", ") { "${it.name}(${it.valueType.shortString})" })
                 }
         }
 
@@ -173,7 +179,8 @@ object CommandAlignPipeline {
             emptyList(),
             tagExtractors.map { it.tagExtractor },
             transformers,
-            currentTagsInfo
+            cmdParams.splitBySample,
+            currentTagsInfo,
         )
     }
 
@@ -410,7 +417,8 @@ object CommandAlignPipeline {
         private val headerPatterns: List<HeaderPattern>,
         private val tagExtractors: List<TagExtractor>,
         private val tagTransformers: List<CommandAlignParams.TagsTransformer>,
-        val tagsInfo: TagsInfo
+        private val isolateSamples: Boolean,
+        tagsInfoAfterExtraction: TagsInfo
     ) {
         init {
             require((plan != null) == (readShortcuts != null))
@@ -419,15 +427,17 @@ object CommandAlignPipeline {
             }
         }
 
-        private val sampleTagIds = tagsInfo
-            .allTagsOfType(TagType.Sample)
-            .map { it.index }
-            .toIntArray()
+        private val sampleTagsDepth = tagsInfoAfterExtraction.getDepthFor(TagType.Sample)
+        val tagsInfo =
+            if (isolateSamples)
+                tagsInfoAfterExtraction.suffixInfo(sampleTagsDepth)
+            else
+                tagsInfoAfterExtraction
 
         val pairedPatternPayload = readShortcuts?.size?.let { it == 2 }
 
         val inputReads = AtomicLong()
-        val matchedHeaders = AtomicLong()
+        private val matchedHeaders = AtomicLong()
         val reportAgg = plan?.let { ParseReportAggregator(it) }
 
         fun parse(bundle: ProcessingBundle): ProcessingBundle {
@@ -445,7 +455,6 @@ object CommandAlignPipeline {
                     val result = plan.search(bundle.read)
                     reportAgg!!.consume(result)
                     if (result.hit == null) return bundle.copy(status = ProcessingBundleStatus.NotParsed)
-                    variantId = result.hit!!.variantId
                     NSQTuple(
                         bundle.read.id,
                         *Array(readShortcuts!!.size) { i -> result.getTagValue(readShortcuts[i]).value }
@@ -470,12 +479,18 @@ object CommandAlignPipeline {
                 tags = tagTransformer.transform(tags)
                     ?: return bundle.copy(status = ProcessingBundleStatus.NotMatched)
 
-            return bundle.copy(
-                sequence = newSeq,
-                tags = TagTuple(*tags),
-                sample = sampleTagIds
-                    .map { tags[it].extractKey().toString() }
-            )
+            return if (isolateSamples)
+                bundle.copy(
+                    sequence = newSeq,
+                    tags = TagTuple(*tags.copyOfRange(sampleTagsDepth, tags.size)),
+                    sample = tags.copyOfRange(0, sampleTagsDepth)
+                        .map { it.extractKey().toString() }
+                )
+            else
+                bundle.copy(
+                    sequence = newSeq,
+                    tags = TagTuple(*tags),
+                )
         }
 
         // val sampleStat get() = tagMapper?.sampleStat

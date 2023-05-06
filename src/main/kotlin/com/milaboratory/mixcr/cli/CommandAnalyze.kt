@@ -11,18 +11,20 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.util.PathPatternExpandException
-import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.mixcr.cli.CommandAlign.bySampleName
+import com.milaboratory.mixcr.cli.CommandAlign.SAVE_OUTPUT_FILE_NAMES_OPTION
+import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AnyMiXCRCommand
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotIfNotBlank
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRPipeline
+import com.milaboratory.util.PathPatternExpandException
+import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
+import com.milaboratory.util.requireSingleton
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -38,7 +40,8 @@ import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteExisting
 import kotlin.io.path.exists
-import kotlin.io.path.extension
+import kotlin.io.path.name
+import kotlin.io.path.readLines
 import kotlin.system.exitProcess
 
 object CommandAnalyze {
@@ -267,108 +270,101 @@ object CommandAnalyze {
                     it.first to it.second.steps.sorted()
                 }
 
+            // Pre-calculating set of actions requiring a QC to be executed after them
+            val commandToRunQcFor = mutableSetOf<AnyMiXCRCommand>()
+            if (bundle.qc?.checks?.isNotEmpty() == true) {
+                commandToRunQcFor +=
+                    pipeline.findLast { it.outputSupportsQc } as AnyMiXCRCommand
+                if (qcAfterEachStep)
+                    commandToRunQcFor += pipeline.filter { it.outputSupportsQc }
+            }
+
             // Creating execution plan
             if (pipeline[0] != MiXCRCommandDescriptor.align)
                 throw ValidationException("Pipeline must stat from the align action.")
+
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
                 !noReports, !noJsonReports,
                 inputTemplates, threadsOption, useLocalTemp
             )
 
-            // Calculating samples
-            val samples =
-                if (bundle.align!!.splitBySample)
-                    (if (bundle.align!!.inferSampleTable) CommandAlignPipeline.inferSampleTable(inputFileGroups)
-                    else bundle.align!!.sampleTable)
-                        ?.samples?.bySampleName()?.keys?.toList() ?: emptyList()
-                else
-                    emptyList()
+            // Helper function, captures commandToRunQcFor
+            fun PlanBuilder.addStepAndQc(
+                cmd: AnyMiXCRCommand,
+                extraArgs: List<String> = emptyList()
+            ) {
+                addStep(cmd, extraArgs)
+                if (cmd in commandToRunQcFor)
+                    addQC()
+            }
+
+            // Adding an option to save output files by align
+            val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotIfNotBlank()}align.list")
+                .takeIf { bundle.align!!.splitBySample }
+            val extraAlignArgs =
+                sampleFileList?.let { listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, it.toString()) } ?: emptyList()
 
             // Adding "align" step
-            if (outputNoUsedReads) {
+            if (outputNoUsedReads)
                 pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
-            }
-            planBuilder.addStep(
+            planBuilder.addStepAndQc(
                 MiXCRCommandDescriptor.align,
-                listOf("--preset", presetName) + mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign(),
-                samples
+                listOf("--preset", presetName) + extraAlignArgs
+                        + mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign()
             )
+
+            planBuilder.executeSteps(forceOverwrite, dryRun)
+
+            // Taking into account that there are multiple outputs from the align command
+            if (sampleFileList != null) {
+                planBuilder.setActualAlignOutputs(sampleFileList.readLines())
+                sampleFileList.deleteExisting()
+            }
+
             // Adding all other steps
             pipeline.drop(1).forEach { cmd ->
-                planBuilder.addStep(cmd)
+                planBuilder.addStepAndQc(cmd)
             }
 
-            if (bundle.qc?.checks?.isNotEmpty() == true) {
-                val stepsPossibleToCheck = planBuilder.executionPlan.filter { step ->
-                    step.output
-                        .map { Paths.get(it) }
-                        .any { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
-                }
-                val stepsToCheck = when {
-                    qcAfterEachStep -> stepsPossibleToCheck
-                    else -> stepsPossibleToCheck.takeLast(1)
-                }
-                var counter = 0
-                for (step in stepsToCheck) {
-                    val indexOfStep = planBuilder.executionPlan.indexOf(step)
-                    step.output
-                        .map { Paths.get(it) }
-                        .filter { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
-                        .forEach { output ->
-                            planBuilder.executionPlan.add(
-                                indexOfStep + 1,
-                                ExecutionStep(
-                                    MiXCRCommandDescriptor.qc.command,
-                                    counter++,
-                                    emptyList(),
-                                    emptyList(),
-                                    listOf(output.toString()),
-                                    listOf(
-                                        output.toString().removeSuffix(output.extension) + output.extension + ".qc.txt"
-                                    )
-                                )
-                            )
-                        }
-                }
-            }
+            // Executing all actions after align
+            planBuilder.executeSteps(forceOverwrite, dryRun)
 
-            // Using created plan
-            val plan = planBuilder.executionPlan
+            println("Analysis finished successfully.")
 
-            if (dryRun) {
-                // Printing commands that would have been executed
-                plan.forEach { pe -> println(pe) }
-            } else {
-                // Cleanup output files before executing the plan, if requested by the user
-                if (forceOverwrite) {
-                    var removedOne = false
-                    plan.flatMap { it.output }.forEach {
-                        val op = Path(it)
-                        if (op.exists()) {
-                            if (!removedOne) {
-                                println("Cleanup:")
-                                removedOne = true
-                            }
-                            println("  - removing: $it")
-                            op.deleteExisting()
-                        }
-                    }
-                }
-
-                // Executing the plan
-                for (executionStep in plan) {
-                    println("====================")
-                    println("Running:")
-                    println(executionStep)
-                    val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
-                    val exitCode = Main.mkCmd().execute(*actualArgs)
-                    if (exitCode != 0)
-                    // Terminating execution if one of the steps resulted in error
-                        exitProcess(exitCode)
-                }
-                println("Analysis finished successfully.")
-            }
+            // if (bundle.qc?.checks?.isNotEmpty() == true) {
+            //     val stepsPossibleToCheck = planBuilder.executionPlan.filter { step ->
+            //         step.output
+            //             .map { Paths.get(it) }
+            //             .any { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
+            //     }
+            //     val stepsToCheck = when {
+            //         qcAfterEachStep -> stepsPossibleToCheck
+            //         else -> stepsPossibleToCheck.takeLast(1)
+            //     }
+            //     var counter = 0
+            //     for (step in stepsToCheck) {
+            //         val indexOfStep = planBuilder.executionPlan.indexOf(step)
+            //         step.output
+            //             .map { Paths.get(it) }
+            //             .filter { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
+            //             .forEach { output ->
+            //                 planBuilder.executionPlan.add(
+            //                     indexOfStep + 1,
+            //                     ExecutionStep(
+            //                         MiXCRCommandDescriptor.qc.command,
+            //                         counter++,
+            //                         emptyList(),
+            //                         emptyList(),
+            //                         listOf(output.toString()),
+            //                         listOf(
+            //                             output.toString().removeSuffix(output.extension) + output.extension + ".qc.txt"
+            //                         )
+            //                     )
+            //                 )
+            //             }
+            //     }
+            // }
         }
 
         class InputFileSet(val sampleName: String, val fileNames: List<String>)
@@ -383,14 +379,75 @@ object CommandAnalyze {
             private val threadsOption: ThreadsOption,
             private val useLocalTemp: UseLocalTempOption,
         ) {
-            val executionPlan = mutableListOf<ExecutionStep>()
+            private val executionPlan = mutableListOf<ExecutionStep>()
             private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
             private var nextInputs: List<InputFileSet> = listOf(InputFileSet("", initialInputs.map { it.toString() }))
 
+            private var qcRounds = 0
+
+            fun setActualAlignOutputs(fileNames: List<String>) {
+                val outputSeed = Path(nextInputs.requireSingleton().fileNames.requireSingleton()).name
+                val samples = listSamplesForSeedFileName(outputSeed, fileNames)
+                nextInputs = samples.map {
+                    InputFileSet(it.sample, listOf(outputFolder.resolve(it.fileName).toString()))
+                }
+            }
+
+            fun executeSteps(forceOverwrite: Boolean, dryRun: Boolean) {
+                if (dryRun) {
+                    // Printing commands that would have been executed
+                    executionPlan.forEach { pe -> println(pe) }
+                } else {
+                    // Cleanup output files before executing the plan, if requested by the user
+                    if (forceOverwrite) {
+                        var removedOne = false
+                        executionPlan.flatMap { it.output }.forEach {
+                            val op = Path(it)
+                            if (op.exists()) {
+                                if (!removedOne) {
+                                    println("Cleanup:")
+                                    removedOne = true
+                                }
+                                println("  - removing: $it")
+                                op.deleteExisting()
+                            }
+                        }
+                    }
+
+                    // Executing the plan
+                    for (executionStep in executionPlan) {
+                        println("====================")
+                        println("Running:")
+                        println(executionStep)
+                        val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
+                        val exitCode = Main.mkCmd().execute(*actualArgs)
+                        if (exitCode != 0)
+                        // Terminating execution if one of the steps resulted in error
+                            exitProcess(exitCode)
+                    }
+                }
+
+                // Clearing the list of planned steps as they already executed
+                executionPlan.clear()
+            }
+
+            fun addQC() {
+                for (nextInput in nextInputs) {
+                    check(nextInput.fileNames.size == 1)
+                    executionPlan += ExecutionStep(
+                        MiXCRCommandDescriptor.qc.command,
+                        qcRounds++,
+                        emptyList(),
+                        emptyList(),
+                        listOf(nextInput.fileNames.first()),
+                        listOf(nextInput.fileNames.first() + ".qc.txt")
+                    )
+                }
+            }
+
             fun addStep(
                 cmd: AnyMiXCRCommand,
-                extraArgs: List<String> = emptyList(),
-                vdjcaSamples: List<List<String>> = emptyList(),
+                extraArgs: List<String> = emptyList()
             ) {
                 val round = rounds.compute(cmd) { c, p ->
                     if (p == null)
@@ -411,7 +468,7 @@ object CommandAnalyze {
                     val arguments = mutableListOf<String>()
 
                     if (outputReports)
-                        cmd.reportName(outputNamePrefixFull, paramsBundle, round)
+                        cmd.textReportName(outputNamePrefixFull, paramsBundle, round)
                             ?.let {
                                 arguments += listOf("--report", outputFolder.resolve(it).toString())
                             }
@@ -443,28 +500,29 @@ object CommandAnalyze {
                         output,
                     )
 
-                    if (vdjcaSamples.isEmpty())
-                        nextInputsBuilder +=
-                            InputFileSet(
-                                inputs.sampleName,
-                                listOf(
-                                    outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round))
-                                        .toString()
-                                )
+                    // if (vdjcaSamples.isEmpty())
+                    nextInputsBuilder +=
+                        InputFileSet(
+                            inputs.sampleName,
+                            listOf(
+                                outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round))
+                                    .toString()
                             )
-                    else {
-                        assert(inputs.sampleName == "")
-                        nextInputsBuilder += vdjcaSamples.map { sample ->
-                            val outputName = cmd.outputName(outputNamePrefixFull, paramsBundle, round)
-                            InputFileSet(
-                                CommandAlignPipeline.listToSampleName(sample),
-                                listOf(
-                                    outputFolder.resolve(CommandAlign.addSampleToFileName(outputName, sample))
-                                        .toString()
-                                )
-                            )
-                        }
-                    }
+                        )
+
+                    // else {
+                    //     assert(inputs.sampleName == "")
+                    //     nextInputsBuilder += vdjcaSamples.map { sample ->
+                    //         val outputName = cmd.outputName(outputNamePrefixFull, paramsBundle, round)
+                    //         InputFileSet(
+                    //             CommandAlignPipeline.listToSampleName(sample),
+                    //             listOf(
+                    //                 outputFolder.resolve(CommandAlign.addSampleToFileName(outputName, sample))
+                    //                     .toString()
+                    //             )
+                    //         )
+                    //     }
+                    // }
                 }
 
                 nextInputs = nextInputsBuilder
