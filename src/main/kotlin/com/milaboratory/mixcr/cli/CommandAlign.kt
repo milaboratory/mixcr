@@ -37,9 +37,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
-import com.milaboratory.util.FileGroup
-import com.milaboratory.util.PathPatternExpandException
-import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -58,8 +55,8 @@ import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.TripleEndFastq
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundle
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotAligned
+import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotMatched
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotParsed
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.SampleNotMatched
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.listToSampleName
@@ -75,12 +72,15 @@ import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
+import com.milaboratory.util.FileGroup
 import com.milaboratory.util.LightFileDescriptor
 import com.milaboratory.util.OutputPortWithProgress
+import com.milaboratory.util.PathPatternExpandException
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.limit
+import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.util.use
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.VRegion
@@ -100,6 +100,7 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
 import java.util.regex.Pattern
 import kotlin.collections.component1
@@ -815,12 +816,12 @@ object CommandAlign {
 
         @Suppress("UNCHECKED_CAST")
         private fun createReader(): OutputPortWithProgress<ProcessingBundle> {
-            val sampleDescriptions = cmdParams.sampleTable?.samples
-                ?.bySampleName()
-                ?.values?.map { matchers ->
-                    matchers.joinToString(" | ") { it.matchingInfoString() }
-                }
-                ?: emptyList()
+            // val sampleDescriptions = cmdParams.sampleTable?.samples
+            //     ?.bySampleName()
+            //     ?.values?.map { matchers ->
+            //         matchers.joinToString(" | ") { it.matchingInfoString() }
+            //     }
+            //     ?: emptyList()
 
             val samplePattern = cmdParams.tagPattern.toString()
 
@@ -833,7 +834,7 @@ object CommandAlign {
                         files,
                         paramsSpecPacked.base.consistentHashString(),
                         samplePattern,
-                        sampleDescriptions
+                        emptyList()
                     )
                     BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
                         .map { ProcessingBundle(it) }
@@ -847,7 +848,7 @@ object CommandAlign {
                         listOf(inputFile),
                         paramsSpecPacked.base.consistentHashString(),
                         samplePattern,
-                        sampleDescriptions
+                        emptyList()
                     )
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
@@ -861,7 +862,7 @@ object CommandAlign {
                         inputFileGroups.allFiles,
                         paramsSpecPacked.base.consistentHashString(),
                         samplePattern,
-                        sampleDescriptions
+                        emptyList()
                     )
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     FastqGroupReader(inputFileGroups.fileGroups, cmdParams.replaceWildcards, readBufferSize)
@@ -990,11 +991,11 @@ object CommandAlign {
                 )
             ) { reader, writers, notAlignedWriter, notParsedWriter ->
                 // Pre-create all writers
-                val samples = tagsExtractor.samples
-                if (samples == null || !cmdParams.splitBySample)
-                    writers?.get(emptyList())
-                else
-                    samples.forEach { sample -> writers?.get(sample) }
+                // val samples = tagsExtractor.samples
+                // if (samples == null || !cmdParams.splitBySample)
+                //     writers?.get(emptyList())
+                // else
+                //     samples.forEach { sample -> writers?.get(sample) }
 
                 writers?.writeHeader(
                     MiXCRHeader(
@@ -1033,7 +1034,7 @@ object CommandAlign {
                         val parsed = tagsExtractor.parse(it)
                         if (parsed.status == NotParsed)
                             reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.NoBarcode)
-                        if (parsed.status == SampleNotMatched)
+                        if (parsed.status == NotMatched)
                             reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.SampleNotMatched)
                         parsed
                     }
@@ -1070,7 +1071,7 @@ object CommandAlign {
                     .unchunked()
                     .ordered { it.read.id }
                     .forEach { bundle ->
-                        if (bundle.status == NotParsed || bundle.status == SampleNotMatched)
+                        if (bundle.status == NotParsed || bundle.status == NotMatched)
                             notParsedWriter?.write(bundle.read)
                         if (bundle.status == NotAligned)
                             notAlignedWriter?.write(bundle.read)
@@ -1106,9 +1107,10 @@ object CommandAlign {
                 writers?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
-                reportBuilder.setSampleStat(tagsExtractor.sampleStat
-                    ?.map { listToSampleName(it.key) to it.value }
-                    ?.toMap(TreeMap()))
+                // TODO re-enable stats
+                // reportBuilder.setSampleStat(tagsExtractor.sampleStat
+                //     ?.map { listToSampleName(it.key) to it.value }
+                //     ?.toMap(TreeMap()))
                 val report = reportBuilder.buildReport()
                 writers?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
@@ -1151,7 +1153,7 @@ object CommandAlign {
         abstract inner class Writers : AutoCloseable {
             private var header: MiXCRHeader? = null
             private var genes: List<VDJCGene>? = null
-            private val writers = mutableMapOf<List<String>, VDJCAlignmentsWriter>()
+            private val writers = ConcurrentHashMap<List<String>, VDJCAlignmentsWriter>()
             protected val concurrencyLimiter: Semaphore = Semaphore(max(1, threads.value / 8))
 
             abstract fun writerFactory(sample: List<String>): VDJCAlignmentsWriter
@@ -1167,6 +1169,7 @@ object CommandAlign {
             }
 
             operator fun get(sample: List<String>) =
+                // computeIfAbsent also performs synchronization
                 writers.computeIfAbsent(sample) {
                     val writer = writerFactory(it)
                     if (header != null)

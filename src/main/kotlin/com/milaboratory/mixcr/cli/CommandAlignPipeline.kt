@@ -31,7 +31,9 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValue
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.basictypes.tag.TechnicalTag.TAG_PATTERN_READ_VARIANT_ID
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
+import com.milaboratory.util.UNNAMED_GROUP_NAME_PREFIX
 import com.milaboratory.util.listComparator
 import jetbrains.datalore.plot.config.asMutable
 import java.util.*
@@ -53,8 +55,9 @@ object CommandAlignPipeline {
         val readTags = mutableListOf<String>()
         val readTagShortcuts: List<ReadTagShortcut>?
         var tagExtractors = mutableListOf<TagExtractorWithInfo>()
-        var sampleTable = cmdParams.sampleTable
+        val transformationSteps = cmdParams.tagTransformationSteps
 
+        // Tag pattern parsing
         if (cmdParams.tagPattern != null) {
             val searchSettings = ReadSearchSettings(
                 SearchSettings.Default.copy(bitBudget = cmdParams.tagMaxBudget),
@@ -72,6 +75,11 @@ object CommandAlignPipeline {
                     )
                 }
 
+            tagExtractors += TagExtractorWithInfo(
+                PatternVariantIdTag,
+                TagInfo(TagType.Technical, TagValueType.NonSequence, TAG_PATTERN_READ_VARIANT_ID, 0 /* will be changed below */)
+            )
+
             readTagShortcuts = readTags.map { name -> plan.tagShortcut(name) }
             if (readTagShortcuts.isEmpty())
                 throw ValidationException("Tag pattern has no read (payload) groups, nothing to align.")
@@ -83,6 +91,7 @@ object CommandAlignPipeline {
             readTagShortcuts = null
         }
 
+        // Groups from input file names or "read-id-as-cell-tag" activation
         val fileTags = fileGroups.tags
         if (cmdParams.readIdAsCellTag) {
             if (fileTags != listOf(cellSplitGroupLabel))
@@ -96,93 +105,95 @@ object CommandAlignPipeline {
             )
         } else
             fileTags.forEach { tagName ->
-                val type = TagType.detectByTagName(tagName) ?: return@forEach
+                // Adding only those groups for which user specified a name
+                if (tagName.startsWith(UNNAMED_GROUP_NAME_PREFIX))
+                    return@forEach
+                // Uncategorized groups are added as Technical, to be available for potential transformation below the pipeline
+                val type = TagType.detectByTagName(tagName) ?: TagType.Technical
                 tagExtractors += TagExtractorWithInfo(
                     FileTag(tagName),
                     TagInfo(type, TagValueType.NonSequence, tagName, 0 /* will be changed below */)
                 )
             }
 
+        // Sorting according to natural tag ordering
         tagExtractors = tagExtractors
             .sortedBy { it.tagInfo }
             .mapIndexed { i, tag -> tag.withInfoIndex(i) }
             .asMutable()
 
-        if (tagExtractors.size != 0) {
-            if (sampleTable != null)
-                println("The following tags and their roles were recognised before sample mapping:")
-            else
-                println("The following tags and their roles were recognised:")
+        val willHaveTransformers = transformationSteps.isNotEmpty()
+
+        if (tagExtractors.size != 0 && willHaveTransformers) {
+            println("The following tags and their roles were recognised before tag transformation:")
             if (readTagShortcuts != null)
                 println("  Payload tags: " + readTags.joinToString(", "))
-
             tagExtractors
                 .groupBy { it.tagInfo.type }
+                // Technical tags are printed only if transformation will take place
+                .filter { willHaveTransformers || it.key != TagType.Technical }
                 .forEach { (tagType: TagType, extractors: List<TagExtractorWithInfo>) ->
                     println("  $tagType tags: " + extractors.joinToString(", ") { it.tagInfo.name })
                 }
         }
 
-        val finalExtractors = tagExtractors
+        // Pre-calculating transformations provided by preset and mixins
+        val preTransformExtractors = tagExtractors
             .sortedBy { it.tagInfo }
             .mapIndexed { i, tag -> tag.withInfoIndex(i) }
-
-        val originalTagsInfo = TagsInfo(0, *finalExtractors.map { it.tagInfo }.toTypedArray())
-
-        if (cmdParams.inferSampleTable) {
-            if (sampleTable != null)
-                throw ValidationException("Can't set inferSampleTable=true and manually provide sample table at the same time.")
-            val sampleTagNames = finalExtractors.filter { it.tagInfo.type == TagType.Sample }.map { it.tagInfo.name }
-            val notFileSampleTags = sampleTagNames.toSet() - fileTags.toSet()
-            if (notFileSampleTags.isNotEmpty())
-                throw ValidationException(
-                    "Sample table can be reconstructed only for file-name-derived sample tags. " +
-                            "The following sample tags has different origin: ${notFileSampleTags.joinToString(", ")}."
-                )
-            sampleTable = inferSampleTable(fileGroups)
+        val preTransformTagsInfo = TagsInfo(0, *preTransformExtractors.map { it.tagInfo }.toTypedArray())
+        var currentTagsInfo = preTransformTagsInfo
+        val transformers = mutableListOf<CommandAlignParams.TagsTransformer>()
+        for (transformationStep in transformationSteps) {
+            val tr = transformationStep.createTransformer(currentTagsInfo)
+            currentTagsInfo = tr.outputTagsInfo
+            transformers += tr
         }
 
-        if (originalTagsInfo.any { it.type == TagType.Sample } && sampleTable == null)
-            throw ValidationException("Sample barcodes without sample table are not supported")
+        // If required adding a transformer to remove all leftover technical tags
+        CommandAlignParams.cutTechnicalTagsIfRequired(currentTagsInfo)?.also { tr ->
+            currentTagsInfo = tr.outputTagsInfo
+            transformers += tr
+        }
 
-        val (tagMapper, tagsInfo) =
-            sampleTable?.toTagMapper(originalTagsInfo, !cmdParams.splitBySample) ?: (null to originalTagsInfo)
+        if (currentTagsInfo.size > 0) {
+            println("The following tags and their roles will be associated with each output alignment:")
 
-        if (sampleTable != null) {
-            println("The following tags and their roles were recognised after sample mapping:")
-            tagsInfo
+            if (readTagShortcuts != null)
+                println("  Payload tags: " + readTags.joinToString(", "))
+            currentTagsInfo
                 .groupBy { it.type }
-                .forEach { (tagType: TagType, extractors: List<TagInfo>) ->
-                    println("  $tagType tags: " + extractors.joinToString(", ") { it.name })
+                .forEach { (tagType: TagType, infos: List<TagInfo>) ->
+                    println("  $tagType tags: " + infos.joinToString(", ") { it.name })
                 }
         }
 
         return TagsExtractor(
             plan, readTagShortcuts,
             emptyList(),
-            finalExtractors.map { it.tagExtractor },
-            tagMapper,
-            tagsInfo
+            tagExtractors.map { it.tagExtractor },
+            transformers,
+            currentTagsInfo
         )
     }
 
-    fun inferSampleTable(fileGroups: CommandAlign.InputFileGroups): CommandAlignParams.SampleTable {
-        val sampleTagNames = fileGroups.tags.filter { TagType.detectByTagName(it) == TagType.Sample }
-        return CommandAlignParams.SampleTable(
-            sampleTagNames,
-            fileGroups.fileGroups
-                .map { fg -> sampleTagNames.map { fg.getTag(it) } }
-                .toSortedSet(listComparator())
-                .map { sample ->
-                    CommandAlignParams.SampleTable.Row(
-                        matchTags = sampleTagNames
-                            .mapIndexed { i, tn -> tn to sample[i] }
-                            .toMap(TreeMap()),
-                        sample = sample
-                    )
-                }
-        )
-    }
+    // fun inferSampleTable(fileGroups: CommandAlign.InputFileGroups): CommandAlignParams.SampleTable {
+    //     val sampleTagNames = fileGroups.tags.filter { TagType.detectByTagName(it) == TagType.Sample }
+    //     return CommandAlignParams.SampleTable(
+    //         sampleTagNames,
+    //         fileGroups.fileGroups
+    //             .map { fg -> sampleTagNames.map { fg.getTag(it) } }
+    //             .toSortedSet(listComparator())
+    //             .map { sample ->
+    //                 CommandAlignParams.SampleTable.Row(
+    //                     matchTags = sampleTagNames
+    //                         .mapIndexed { i, tn -> tn to sample[i] }
+    //                         .toMap(TreeMap()),
+    //                     sample = sample
+    //                 )
+    //             }
+    //     )
+    // }
 
     sealed interface TagExtractor {
         fun extract(
@@ -200,6 +211,15 @@ object CommandAlignPipeline {
             headerMatches: List<Matcher>,
             patternMatch: MicRecord?
         ) = SequenceAndQualityTagValue(patternMatch!!.getTagValue(shortcut).value)
+    }
+
+    private object PatternVariantIdTag : TagExtractor {
+        override fun extract(
+            originalReadId: Long,
+            fileTags: List<Pair<String, String>>,
+            headerMatches: List<Matcher>,
+            patternMatch: MicRecord?
+        ) = LongTagValue(patternMatch!!.hit!!.variantId.toLong())
     }
 
     private data class FileTag(val tagName: String) : TagExtractor {
@@ -316,71 +336,71 @@ object CommandAlignPipeline {
         }
     }
 
-    private fun CommandAlignParams.SampleTable.toTagMapper(
-        originalInfo: TagsInfo,
-        addSampleTag: Boolean
-    ): Pair<TagMapper, TagsInfo> = run {
-        // Tags appearing at least once in the list of tags to be matched (sorted)
-        val matchingTagNames = samples.flatMap { it.matchTags.keys }
-            .toSortedSet()
-            .toList()
-
-        // All unique sample names (sorted)
-        val sampleNames = samples.map { it.sample }
-            .toSortedSet(listComparator())
-            .toList()
-
-        val matchingTagIds = matchingTagNames
-            .map {
-                (originalInfo[it] ?: throw ValidationException("No tag with name \"$it\"")).index
-            }.toIntArray()
-
-        val matchers = samples.map { sample ->
-            TagMapperMatcher(
-                sample.matchVariantId,
-                matchingTagNames.map { sample.matchTags[it] },
-                sampleNames.indexOf(sample.sample)
-            )
-        }
-
-        val sampleTagInfos =
-            if (addSampleTag)
-                sampleTagNames.map { sampleTagName ->
-                    TagInfo(TagType.Sample, TagValueType.NonSequence, sampleTagName, -1)
-                }
-            else
-                emptyList()
-
-        val tagsInfosTmp =
-            (originalInfo
-                // Important note: now all the original sample tags are removed in all cases
-                .filter { it.type != TagType.Sample }
-                .toList()
-                    + sampleTagInfos).sorted()
-
-        val mappingValueIndices = mutableListOf<Int>()
-        val originalTagMapping = IntArray(originalInfo.size) { -1 }
-        val tagsInfosAfterMapping = tagsInfosTmp.mapIndexed { newIdx, tagInfo ->
-            if (tagInfo.index == -1) {
-                mappingValueIndices += newIdx
-            } else {
-                assert(originalTagMapping[tagInfo.index] == -1)
-                originalTagMapping[tagInfo.index] = newIdx
-            }
-            tagInfo.withIndex(newIdx)
-        }
-
-        assert(mappingValueIndices.isNotEmpty() == addSampleTag)
-
-        TagMapper(
-            matchingTagIds,
-            matchers,
-            sampleNames,
-            originalTagMapping,
-            mappingValueIndices.toIntArray(),
-            tagsInfosAfterMapping.size
-        ) to TagsInfo(0, *tagsInfosAfterMapping.toTypedArray())
-    }
+    // private fun CommandAlignParams.SampleTable.toTagMapper(
+    //     originalInfo: TagsInfo,
+    //     addSampleTag: Boolean
+    // ): Pair<TagMapper, TagsInfo> = run {
+    //     // Tags appearing at least once in the list of tags to be matched (sorted)
+    //     val matchingTagNames = samples.flatMap { it.matchTags.keys }
+    //         .toSortedSet()
+    //         .toList()
+    //
+    //     // All unique sample names (sorted)
+    //     val sampleNames = samples.map { it.sample }
+    //         .toSortedSet(listComparator())
+    //         .toList()
+    //
+    //     val matchingTagIds = matchingTagNames
+    //         .map {
+    //             (originalInfo[it] ?: throw ValidationException("No tag with name \"$it\"")).index
+    //         }.toIntArray()
+    //
+    //     val matchers = samples.map { sample ->
+    //         TagMapperMatcher(
+    //             sample.matchVariantId,
+    //             matchingTagNames.map { sample.matchTags[it] },
+    //             sampleNames.indexOf(sample.sample)
+    //         )
+    //     }
+    //
+    //     val sampleTagInfos =
+    //         if (addSampleTag)
+    //             sampleTagNames.map { sampleTagName ->
+    //                 TagInfo(TagType.Sample, TagValueType.NonSequence, sampleTagName, -1)
+    //             }
+    //         else
+    //             emptyList()
+    //
+    //     val tagsInfosTmp =
+    //         (originalInfo
+    //             // Important note: now all the original sample tags are removed in all cases
+    //             .filter { it.type != TagType.Sample }
+    //             .toList()
+    //                 + sampleTagInfos).sorted()
+    //
+    //     val mappingValueIndices = mutableListOf<Int>()
+    //     val originalTagMapping = IntArray(originalInfo.size) { -1 }
+    //     val tagsInfosAfterMapping = tagsInfosTmp.mapIndexed { newIdx, tagInfo ->
+    //         if (tagInfo.index == -1) {
+    //             mappingValueIndices += newIdx
+    //         } else {
+    //             assert(originalTagMapping[tagInfo.index] == -1)
+    //             originalTagMapping[tagInfo.index] = newIdx
+    //         }
+    //         tagInfo.withIndex(newIdx)
+    //     }
+    //
+    //     assert(mappingValueIndices.isNotEmpty() == addSampleTag)
+    //
+    //     TagMapper(
+    //         matchingTagIds,
+    //         matchers,
+    //         sampleNames,
+    //         originalTagMapping,
+    //         mappingValueIndices.toIntArray(),
+    //         tagsInfosAfterMapping.size
+    //     ) to TagsInfo(0, *tagsInfosAfterMapping.toTypedArray())
+    // }
 
     class TagsExtractor(
         /** Not null if tag pattern was specified */
@@ -389,7 +409,7 @@ object CommandAlignPipeline {
         private val readShortcuts: List<ReadTagShortcut>?,
         private val headerPatterns: List<HeaderPattern>,
         private val tagExtractors: List<TagExtractor>,
-        private val tagMapper: TagMapper?,
+        private val tagTransformers: List<CommandAlignParams.TagsTransformer>,
         val tagsInfo: TagsInfo
     ) {
         init {
@@ -399,8 +419,10 @@ object CommandAlignPipeline {
             }
         }
 
-        val samples: List<List<String>>? = tagMapper?.samples
-        val sampleNames get() = samples?.map { listToSampleName(it) }
+        private val sampleTagIds = tagsInfo
+            .allTagsOfType(TagType.Sample)
+            .map { it.index }
+            .toIntArray()
 
         val pairedPatternPayload = readShortcuts?.size?.let { it == 2 }
 
@@ -431,7 +453,7 @@ object CommandAlignPipeline {
                 } else
                     bundle.sequence to null
 
-            val tags = tagExtractors
+            var tags = tagExtractors
                 .map {
                     it.extract(
                         bundle.originalReadId,
@@ -440,28 +462,29 @@ object CommandAlignPipeline {
                         patternMatch
                     )
                 }
+                .toTypedArray()
 
-            val (mappedTags, sample) =
-                if (tagMapper == null)
-                    tags to emptyList()
-                else
-                    tagMapper.apply(variantId, tags)
-                        ?: return bundle.copy(status = ProcessingBundleStatus.SampleNotMatched)
+            // TODO collect report stats!!!
+
+            for (tagTransformer in tagTransformers)
+                tags = tagTransformer.transform(tags)
+                    ?: return bundle.copy(status = ProcessingBundleStatus.NotMatched)
 
             return bundle.copy(
                 sequence = newSeq,
-                tags = TagTuple(*mappedTags.toTypedArray()),
-                sample = sample
+                tags = TagTuple(*tags),
+                sample = sampleTagIds
+                    .map { tags[it].extractKey().toString() }
             )
         }
 
-        val sampleStat get() = tagMapper?.sampleStat
+        // val sampleStat get() = tagMapper?.sampleStat
     }
 
     enum class ProcessingBundleStatus {
         Good,
         NotParsed,
-        SampleNotMatched,
+        NotMatched,
         NotAligned,
     }
 
