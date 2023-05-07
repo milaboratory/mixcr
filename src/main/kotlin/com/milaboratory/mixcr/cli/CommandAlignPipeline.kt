@@ -56,7 +56,7 @@ object CommandAlignPipeline {
         val readTags = mutableListOf<String>()
         val readTagShortcuts: List<ReadTagShortcut>?
         var tagExtractors = mutableListOf<TagExtractorWithInfo>()
-        val transformationSteps = cmdParams.tagTransformationSteps
+        val transformationSteps = cmdParams.allTagTransformationSteps
 
         // Tag pattern parsing
         if (cmdParams.tagPattern != null) {
@@ -447,8 +447,6 @@ object CommandAlignPipeline {
             if (headerMatches.size != headerPatterns.size)
                 return bundle.copy(status = ProcessingBundleStatus.NotParsed)
             matchedHeaders.incrementAndGet()
-
-            var variantId = -1
 
             val (newSeq, patternMatch) =
                 if (plan != null) {

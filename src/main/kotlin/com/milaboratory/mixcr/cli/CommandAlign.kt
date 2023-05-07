@@ -73,6 +73,7 @@ import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
+import com.milaboratory.primitivio.blocks.SemaphoreWithInfo
 import com.milaboratory.util.FileGroup
 import com.milaboratory.util.LightFileDescriptor
 import com.milaboratory.util.OutputPortWithProgress
@@ -104,7 +105,6 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Semaphore
 import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.set
@@ -1120,13 +1120,19 @@ object CommandAlign {
                         writers?.get(if (cmdParams.splitBySample) bundle.sample else emptyList())?.write(alignment)
                     }
 
+                // If nothing was written, writing empty file with empty key
+                if (writers?.keys?.isEmpty() == true)
+                    writers[emptyList()]
+
                 writers?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
+
                 // TODO re-enable stats
                 // reportBuilder.setSampleStat(tagsExtractor.sampleStat
                 //     ?.map { listToSampleName(it.key) to it.value }
                 //     ?.toMap(TreeMap()))
+
                 val report = reportBuilder.buildReport()
                 writers?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
@@ -1188,7 +1194,9 @@ object CommandAlign {
             private var header: MiXCRHeader? = null
             private var genes: List<VDJCGene>? = null
             private val writers = ConcurrentHashMap<List<String>, VDJCAlignmentsWriter>()
-            protected val concurrencyLimiter: Semaphore = Semaphore(max(1, threads.value / 8))
+            protected val concurrencyLimiter = SemaphoreWithInfo(max(1, threads.value / 8))
+
+            val keys: Set<List<String>> get() = writers.keys
 
             abstract fun writerFactory(sample: List<String>): VDJCAlignmentsWriter
 
@@ -1221,7 +1229,7 @@ object CommandAlign {
                     writer.setNumberOfProcessedReads(value)
             }
 
-            override open fun close() {
+            override fun close() {
                 var re: Exception? = null
                 for (w in writers.values)
                     try {
