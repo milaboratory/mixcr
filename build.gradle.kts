@@ -111,10 +111,6 @@ repositories {
 
     mavenCentral()
 
-    // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
-    maven {
-        url = uri("https://pub.maven.milaboratory.com")
-    }
 
     maven {
         url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
@@ -231,7 +227,7 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("branch", gitDetails.branchName ?: "no_branch")
     property("host", InetAddress.getLocalHost().hostName)
     property("production", productionBuild == true)
-    property("timestamp", System.currentTimeMillis())
+    property("timestamp", if (isMiCi) System.currentTimeMillis() else 0L)
 }
 
 val unzipOldPresets by tasks.registering(Copy::class) {

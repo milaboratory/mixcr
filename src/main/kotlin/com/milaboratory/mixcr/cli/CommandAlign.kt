@@ -37,9 +37,6 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
-import com.milaboratory.util.FileGroup
-import com.milaboratory.util.PathPatternExpandException
-import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -75,12 +72,16 @@ import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignmentFailCause
+import com.milaboratory.primitivio.blocks.SemaphoreWithInfo
+import com.milaboratory.util.FileGroup
 import com.milaboratory.util.LightFileDescriptor
 import com.milaboratory.util.OutputPortWithProgress
+import com.milaboratory.util.PathPatternExpandException
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.limit
+import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.util.use
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.VRegion
@@ -100,7 +101,6 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.Semaphore
 import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.set
@@ -1152,7 +1152,7 @@ object CommandAlign {
             private var header: MiXCRHeader? = null
             private var genes: List<VDJCGene>? = null
             private val writers = mutableMapOf<List<String>, VDJCAlignmentsWriter>()
-            protected val concurrencyLimiter: Semaphore = Semaphore(max(1, threads.value / 8))
+            protected val concurrencyLimiter: SemaphoreWithInfo = SemaphoreWithInfo(max(1, threads.value / 8))
 
             abstract fun writerFactory(sample: List<String>): VDJCAlignmentsWriter
 
