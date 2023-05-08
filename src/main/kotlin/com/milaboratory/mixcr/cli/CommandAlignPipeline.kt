@@ -33,6 +33,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.tag.TechnicalTag.TAG_PATTERN_READ_VARIANT_ID
 import com.milaboratory.mixcr.basictypes.tag.suffixInfo
+import com.milaboratory.mixcr.cli.CommandAlignParams.Companion.allTagTransformationSteps
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.Good
 import com.milaboratory.util.UNNAMED_GROUP_NAME_PREFIX
 import com.milaboratory.util.listComparator

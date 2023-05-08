@@ -20,13 +20,13 @@ import org.junit.Before
 import org.junit.Test
 
 class ChainUsageStatsBuilderTest {
-    @Before
-    fun before() {
-        GlobalObjectMappers.addModifier {
-            it.registerModule(kotlinModule())
-
-        }
-    }
+    // @Before
+    // fun before() {
+    //     GlobalObjectMappers.addModifier {
+    //         it.registerModule(kotlinModule())
+    //
+    //     }
+    // }
 
     @Test
     fun serializationTest() {

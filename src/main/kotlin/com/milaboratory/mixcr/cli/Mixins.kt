@@ -431,12 +431,12 @@ object ExportMiXCRMixins {
     }
 
     private interface Generic : MiXCRMixinRegister {
-        private fun addExportClonesField(args: List<String>, prepend: Boolean) {
+        fun addExportClonesField(args: List<String>, prepend: Boolean) {
             require(args.isNotEmpty())
             mixIn(AddExportClonesField(if (prepend) 0 else -1, args.first(), args.drop(1)))
         }
 
-        private fun addExportAlignmentsField(args: List<String>, prepend: Boolean) {
+        fun addExportAlignmentsField(args: List<String>, prepend: Boolean) {
             require(args.isNotEmpty())
             mixIn(AddExportAlignmentsField(if (prepend) 0 else -1, args.first(), args.drop(1)))
         }
