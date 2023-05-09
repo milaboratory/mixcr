@@ -150,15 +150,11 @@ object CommandAlignPipeline {
             .mapIndexed { i, tag -> tag.withInfoIndex(i) }
         val preTransformTagsInfo = TagsInfo(0, *preTransformExtractors.map { it.tagInfo }.toTypedArray())
         var currentTagsInfo = preTransformTagsInfo
-        val transformers = mutableListOf<CommandAlignParams.TagsTransformer>()
-        for (transformationStep in transformationSteps) {
-            val tr = transformationStep.createTransformer(currentTagsInfo)
-            currentTagsInfo = tr.outputTagsInfo
-            transformers += tr
-        }
+        val transformers = mutableListOf<TagsTransformer>()
 
-        // If required adding a transformer to remove all leftover technical tags
-        CommandAlignParams.cutTechnicalTagsIfRequired(currentTagsInfo)?.also { tr ->
+        // If required also adding a transformer to remove all leftover technical tags
+        for (transformationStep in (transformationSteps + TagTransformationSteps.CutTechnicalTags)) {
+            val tr = transformationStep.createTransformer(currentTagsInfo) ?: continue
             currentTagsInfo = tr.outputTagsInfo
             transformers += tr
         }
@@ -417,7 +413,7 @@ object CommandAlignPipeline {
         private val readShortcuts: List<ReadTagShortcut>?,
         private val headerPatterns: List<HeaderPattern>,
         private val tagExtractors: List<TagExtractor>,
-        private val tagTransformers: List<CommandAlignParams.TagsTransformer>,
+        private val tagTransformers: List<TagsTransformer>,
         private val isolateSamples: Boolean,
         tagsInfoAfterExtraction: TagsInfo
     ) {
@@ -492,7 +488,7 @@ object CommandAlignPipeline {
                 )
         }
 
-        // val sampleStat get() = tagMapper?.sampleStat
+        val transformerReports get() = tagTransformers.mapNotNull { it.report }
     }
 
     enum class ProcessingBundleStatus {

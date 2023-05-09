@@ -1127,6 +1127,7 @@ object CommandAlign {
                 writers?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
+                reportBuilder.setTransformerReports(tagsExtractor.transformerReports)
 
                 // TODO re-enable stats
                 // reportBuilder.setSampleStat(tagsExtractor.sampleStat
