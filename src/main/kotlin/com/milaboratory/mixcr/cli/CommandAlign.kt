@@ -1129,11 +1129,6 @@ object CommandAlign {
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
                 reportBuilder.setTransformerReports(tagsExtractor.transformerReports)
 
-                // TODO re-enable stats
-                // reportBuilder.setSampleStat(tagsExtractor.sampleStat
-                //     ?.map { listToSampleName(it.key) to it.value }
-                //     ?.toMap(TreeMap()))
-
                 val report = reportBuilder.buildReport()
                 writers?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
 
@@ -1251,14 +1246,14 @@ object CommandAlign {
         }
     }
 
-    private fun toPrexixAndExtension(seedFileName: String): Pair<String, String> {
+    private fun toPrefixAndExtension(seedFileName: String): Pair<String, String> {
         val dotIndex = seedFileName.lastIndexOf('.')
         return seedFileName.substring(0, dotIndex) to seedFileName.substring(dotIndex)
     }
 
     fun addSampleToFileName(seedFileName: String, sample: List<String>): String {
         val sampleName = listToSampleName(sample)
-        val (prefix, extension) = toPrexixAndExtension(seedFileName)
+        val (prefix, extension) = toPrefixAndExtension(seedFileName)
         val insert = if (sampleName == "") "" else ".$sampleName"
         return prefix + insert + extension
     }
@@ -1267,7 +1262,7 @@ object CommandAlign {
 
     /** Opposite operation to [addSampleToFileName] */
     fun listSamplesForSeedFileName(seedFileName: String, fileNames: List<String>): List<FileAndSample> {
-        val (prefix, extension) = toPrexixAndExtension(seedFileName)
+        val (prefix, extension) = toPrefixAndExtension(seedFileName)
         val result = mutableListOf<FileAndSample>()
         var emptySampleDetected = false
         fileNames.map { name ->

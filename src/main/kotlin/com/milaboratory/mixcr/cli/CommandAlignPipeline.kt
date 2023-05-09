@@ -150,7 +150,7 @@ object CommandAlignPipeline {
             .mapIndexed { i, tag -> tag.withInfoIndex(i) }
         val preTransformTagsInfo = TagsInfo(0, *preTransformExtractors.map { it.tagInfo }.toTypedArray())
         var currentTagsInfo = preTransformTagsInfo
-        val transformers = mutableListOf<TagsTransformer>()
+        val transformers = mutableListOf<TagTransformer>()
 
         // If required also adding a transformer to remove all leftover technical tags
         for (transformationStep in (transformationSteps + TagTransformationSteps.CutTechnicalTags)) {
@@ -413,7 +413,7 @@ object CommandAlignPipeline {
         private val readShortcuts: List<ReadTagShortcut>?,
         private val headerPatterns: List<HeaderPattern>,
         private val tagExtractors: List<TagExtractor>,
-        private val tagTransformers: List<TagsTransformer>,
+        private val tagTransformers: List<TagTransformer>,
         private val isolateSamples: Boolean,
         tagsInfoAfterExtraction: TagsInfo
     ) {
