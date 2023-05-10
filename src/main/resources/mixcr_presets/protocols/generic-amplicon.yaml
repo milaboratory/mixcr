@@ -24,16 +24,12 @@
 
 "generic-tcr-amplicon-separate-samples-umi":
   inheritFrom: bundle-umi-kaligner1-v1-base
-  flags:
-    - sampleTable
   mixins:
     - type: SetSplitBySample
       value: true
 
 "generic-bcr-amplicon-separate-samples-umi":
   inheritFrom: bundle-umi-kaligner2-v1-base
-  flags:
-    - sampleTable
   mixins:
     - type: SetSplitBySample
       value: true

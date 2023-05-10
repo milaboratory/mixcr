@@ -16,7 +16,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.2.1") {
+        classpath("com.guardsquare:proguard-gradle:7.2.2") {
             exclude("com.android.tools.build", "gradle")
         }
     }
@@ -67,13 +67,13 @@ version = if (version != "unspecified") version else ""
 description = "MiXCR"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
     withJavadocJar()
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 application {
@@ -130,14 +130,14 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-64-alleles"
-val milibVersion = "2.4.0-25-migex"
-val mitoolVersion = "1.7.0-17-main"
+val mixcrAlgoVersion = "4.3.0-78-develop"
+val milibVersion = "2.4.0-32-master"
+val mitoolVersion = "1.7.0-18-main"
 val repseqioVersion = "1.8.0-21-master"
 
 val picocliVersion = "4.6.3"
-val jacksonBomVersion = "2.14.2"
-val milmVersion = "3.5.0"
+val jacksonBomVersion = "2.15.0"
+val milmVersion = "3.7.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
