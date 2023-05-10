@@ -63,7 +63,6 @@ import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.io.File
 import java.nio.file.Path
 import java.security.MessageDigest
 import kotlin.io.path.createDirectories
@@ -340,7 +339,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
             buildFrom?.let { buildFrom ->
                 val result =
-                    shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom.toFile()), threads.value)
+                    shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom), threads.value)
                 writeResults(writer, result, scoringSet, generateGlobalTreeIds = false)
                 return
             }
@@ -379,7 +378,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         reportOptions.appendToFiles(report)
     }
 
-    private fun readUserInput(userInputFile: File): Map<CloneWithDatasetId.ID, Int> {
+    private fun readUserInput(userInputFile: Path): Map<CloneWithDatasetId.ID, Int> {
         val fileNameToDatasetId = inputFiles.withIndex().associate { it.value.toString() to it.index }
         return XSV.readXSV(userInputFile, listOf("treeId", "fileName", "cloneId"), "\t") { rows ->
             rows.associate { row ->

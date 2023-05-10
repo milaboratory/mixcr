@@ -506,13 +506,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 this["enoughInfo"] = { allele ->
                     allele.enoughInfo
                 }
-                this[metaKey.alleleMutationsReliableRegion] = { allele ->
-                    if (allele.status == DE_NOVO) {
-                        allele.result.meta[metaKey.alleleMutationsReliableRegion]
-                            ?.map { GeneFeature.parse(it) }
-                            ?.sorted()
-                            ?.map { GeneFeature.encode(it) }
-                    } else ""
+                this["reliableRegion"] = { allele ->
+                    allele.reliableRegion?.encode() ?: ""
                 }
                 this["mutations"] = { allele ->
                     if (allele.status == DE_NOVO) {
