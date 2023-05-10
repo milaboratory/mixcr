@@ -39,6 +39,8 @@ import com.milaboratory.util.UNNAMED_GROUP_NAME_PREFIX
 import com.milaboratory.util.listComparator
 import jetbrains.datalore.plot.config.asMutable
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicLongArray
 import java.util.regex.Matcher
@@ -340,71 +342,10 @@ object CommandAlignPipeline {
         }
     }
 
-    // private fun CommandAlignParams.SampleTable.toTagMapper(
-    //     originalInfo: TagsInfo,
-    //     addSampleTag: Boolean
-    // ): Pair<TagMapper, TagsInfo> = run {
-    //     // Tags appearing at least once in the list of tags to be matched (sorted)
-    //     val matchingTagNames = samples.flatMap { it.matchTags.keys }
-    //         .toSortedSet()
-    //         .toList()
-    //
-    //     // All unique sample names (sorted)
-    //     val sampleNames = samples.map { it.sample }
-    //         .toSortedSet(listComparator())
-    //         .toList()
-    //
-    //     val matchingTagIds = matchingTagNames
-    //         .map {
-    //             (originalInfo[it] ?: throw ValidationException("No tag with name \"$it\"")).index
-    //         }.toIntArray()
-    //
-    //     val matchers = samples.map { sample ->
-    //         TagMapperMatcher(
-    //             sample.matchVariantId,
-    //             matchingTagNames.map { sample.matchTags[it] },
-    //             sampleNames.indexOf(sample.sample)
-    //         )
-    //     }
-    //
-    //     val sampleTagInfos =
-    //         if (addSampleTag)
-    //             sampleTagNames.map { sampleTagName ->
-    //                 TagInfo(TagType.Sample, TagValueType.NonSequence, sampleTagName, -1)
-    //             }
-    //         else
-    //             emptyList()
-    //
-    //     val tagsInfosTmp =
-    //         (originalInfo
-    //             // Important note: now all the original sample tags are removed in all cases
-    //             .filter { it.type != TagType.Sample }
-    //             .toList()
-    //                 + sampleTagInfos).sorted()
-    //
-    //     val mappingValueIndices = mutableListOf<Int>()
-    //     val originalTagMapping = IntArray(originalInfo.size) { -1 }
-    //     val tagsInfosAfterMapping = tagsInfosTmp.mapIndexed { newIdx, tagInfo ->
-    //         if (tagInfo.index == -1) {
-    //             mappingValueIndices += newIdx
-    //         } else {
-    //             assert(originalTagMapping[tagInfo.index] == -1)
-    //             originalTagMapping[tagInfo.index] = newIdx
-    //         }
-    //         tagInfo.withIndex(newIdx)
-    //     }
-    //
-    //     assert(mappingValueIndices.isNotEmpty() == addSampleTag)
-    //
-    //     TagMapper(
-    //         matchingTagIds,
-    //         matchers,
-    //         sampleNames,
-    //         originalTagMapping,
-    //         mappingValueIndices.toIntArray(),
-    //         tagsInfosAfterMapping.size
-    //     ) to TagsInfo(0, *tagsInfosAfterMapping.toTypedArray())
-    // }
+    class SampleStat(val sampleKey: List<String>) {
+        val reads = AtomicLong()
+        val hash = AtomicInteger()
+    }
 
     class TagsExtractor(
         /** Not null if tag pattern was specified */
@@ -437,6 +378,8 @@ object CommandAlignPipeline {
         private val matchedHeaders = AtomicLong()
         val reportAgg = plan?.let { ParseReportAggregator(it) }
 
+        val sampleStats = ConcurrentHashMap<List<String>, SampleStat>()
+
         fun parse(bundle: ProcessingBundle): ProcessingBundle {
             inputReads.incrementAndGet()
 
@@ -468,18 +411,23 @@ object CommandAlignPipeline {
                 }
                 .toTypedArray()
 
-            // TODO collect report stats!!!
-
             for (tagTransformer in tagTransformers)
                 tags = tagTransformer.transform(tags)
                     ?: return bundle.copy(status = ProcessingBundleStatus.NotMatched)
+
+            // String sample key for file splitting and stats
+            val sampleKey = tags.copyOfRange(0, sampleTagsDepth)
+                .map { it.extractKey().toString() }
+
+            val sampleStat = sampleStats.computeIfAbsent(sampleKey) { key -> SampleStat(key) }
+            sampleStat.reads.incrementAndGet()
+            sampleStat.hash.addAndGet(newSeq.hashCode())
 
             return if (isolateSamples)
                 bundle.copy(
                     sequence = newSeq,
                     tags = TagTuple(*tags.copyOfRange(sampleTagsDepth, tags.size)),
-                    sample = tags.copyOfRange(0, sampleTagsDepth)
-                        .map { it.extractKey().toString() }
+                    sample = sampleKey,
                 )
             else
                 bundle.copy(

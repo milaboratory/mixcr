@@ -770,6 +770,13 @@ object CommandAlign {
 
         private val cmdParams get() = bpPair.second
 
+        private val allInputFiles
+            get() = when (inputFileGroups.inputType) {
+                BAM -> inputFileGroups.fileGroups.first().files
+                Fasta -> listOf(inputFileGroups.fileGroups.first().files.first())
+                else -> inputFileGroups.allFiles
+            }
+
         val alignerParameters: VDJCAlignerParameters by lazy {
             val parameters = cmdParams.parameters
             // Detect if automatic featureToAlign correction is required
@@ -832,26 +839,19 @@ object CommandAlign {
 
         @Suppress("UNCHECKED_CAST")
         private fun createReader(): OutputPortWithProgress<ProcessingBundle> {
-            // val sampleDescriptions = cmdParams.sampleTable?.samples
-            //     ?.bySampleName()
-            //     ?.values?.map { matchers ->
-            //         matchers.joinToString(" | ") { it.matchingInfoString() }
-            //     }
-            //     ?: emptyList()
-
-            val samplePattern = cmdParams.tagPattern.toString()
+            MiXCRMain.lm.reportApplicationInputs(
+                true, false,
+                allInputFiles,
+                paramsSpecPacked.base.consistentHashString(),
+                cmdParams.tagPattern.toString(),
+                emptyList()
+            )
 
             return when (inputFileGroups.inputType) {
                 BAM -> {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    MiXCRMain.lm.reportApplicationInputs(
-                        files,
-                        paramsSpecPacked.base.consistentHashString(),
-                        samplePattern,
-                        emptyList()
-                    )
                     BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
                         .map { ProcessingBundle(it) }
                 }
@@ -860,12 +860,6 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
-                    MiXCRMain.lm.reportApplicationInputs(
-                        listOf(inputFile),
-                        paramsSpecPacked.base.consistentHashString(),
-                        samplePattern,
-                        emptyList()
-                    )
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
@@ -874,12 +868,6 @@ object CommandAlign {
                 }
 
                 else -> { // All fastq file types
-                    MiXCRMain.lm.reportApplicationInputs(
-                        inputFileGroups.allFiles,
-                        paramsSpecPacked.base.consistentHashString(),
-                        samplePattern,
-                        emptyList()
-                    )
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     FastqGroupReader(inputFileGroups.fileGroups, cmdParams.replaceWildcards, readBufferSize)
                         .map { ProcessingBundle(it.read, it.fileTags, it.originalReadId) }
@@ -1119,6 +1107,20 @@ object CommandAlign {
 
                         writers?.get(if (cmdParams.splitBySample) bundle.sample else emptyList())?.write(alignment)
                     }
+
+                // Stats
+                val stats = tagsExtractor.sampleStats.values.sortedBy { -it.reads.get() }
+                val cumsum = stats.runningFold(0L) { acc, sampleStat -> acc + sampleStat.reads.get() }
+                val cutOff =
+                    cumsum.indexOfFirst { it >= cumsum.last() * 95 / 100 }.let { if (it < 0) stats.size else it }
+                val cleanStats = stats.take(cutOff)
+                MiXCRMain.lm.reportApplicationInputs(
+                    false, true,
+                    allInputFiles,
+                    paramsSpecPacked.base.consistentHashString(),
+                    cmdParams.tagPattern.toString(),
+                    cleanStats.map { it.hash.get() }
+                )
 
                 // If nothing was written, writing empty file with empty key
                 if (writers?.keys?.isEmpty() == true)
