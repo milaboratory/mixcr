@@ -1119,7 +1119,7 @@ object CommandAlign {
                     allInputFiles,
                     paramsSpecPacked.base.consistentHashString(),
                     cmdParams.tagPattern.toString(),
-                    cleanStats.map { it.hash.get() }
+                    cleanStats.map { it.hash.get().toString() }
                 )
 
                 // If nothing was written, writing empty file with empty key
