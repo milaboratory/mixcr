@@ -8,6 +8,14 @@
       "useClonesWithCountGreaterThen": 1
     },
     "searchAlleleParameterForFirstRound": {
+      "clonesToSearchCap": {
+        "limitClones": 10000,
+        "preferIsotypes": [
+          "IGHM",
+          "IGHD"
+        ],
+        "seedForShuffle": 0
+      },
       "minClonesCountForAlleleSearch": 20,
       "topByScore": 0.3,
       "coefficientForNaiveClonesInScore": 2.0,
@@ -18,9 +26,18 @@
         "diversityForSkipTestForRatioForZeroAllele": 0.1
       },
       "diversityRatioToSearchCommonMutationsInAnAllele": 0.95,
+      "minNaiveClonesCountForAlleleSearch": 0,
       "minCountOfNaiveClonesToAddAllele": 0
     },
     "searchAlleleParameterForSecondRound": {
+      "clonesToSearchCap": {
+        "limitClones": 10000,
+        "preferIsotypes": [
+          "IGHM",
+          "IGHD"
+        ],
+        "seedForShuffle": 0
+      },
       "minClonesCountForAlleleSearch": 10,
       "topByScore": 0.65,
       "coefficientForNaiveClonesInScore": 2.0,
@@ -31,13 +48,13 @@
         "diversityForSkipTestForRatioForZeroAllele": 0.1
       },
       "diversityRatioToSearchCommonMutationsInAnAllele": 0.95,
+      "minNaiveClonesCountForAlleleSearch": 2,
       "minCountOfNaiveClonesToAddAllele": 2
     },
     "searchMutationsInCDR3": {
       "minClonesCount": 5,
       "minPartOfTheSameLetter": 0.7,
       "minDiversity": 0.5
-    },
-    "maxCountForPossibleRemoval": 10
+    }
   }
 }

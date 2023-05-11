@@ -94,8 +94,8 @@ object Main {
         val actualArgs = args.toList() - "-h"
         if (actualArgs.isNotEmpty()) MiXCRMain.lm.reportFeature("mixcr.subcommand1", actualArgs[0])
         if (actualArgs.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", actualArgs[1])
-        GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
-        GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
+        // GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
+        // GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
         SequenceSetCollection.addSearchPath(Path(System.getProperty("user.home"), ".mixcr", "presets"))
         val commandLine = mkCmd()
         try {

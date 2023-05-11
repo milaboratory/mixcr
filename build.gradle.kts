@@ -16,7 +16,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.2.1") {
+        classpath("com.guardsquare:proguard-gradle:7.2.2") {
             exclude("com.android.tools.build", "gradle")
         }
     }
@@ -67,13 +67,13 @@ version = if (version != "unspecified") version else ""
 description = "MiXCR"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
     withJavadocJar()
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 application {
@@ -134,14 +134,14 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-44-develop"
-val milibVersion = "2.4.0-5-master"
-val mitoolVersion = "1.7.0-7-filter-nan"
-val repseqioVersion = "1.8.0-11-master"
+val mixcrAlgoVersion = "4.3.0-78-develop"
+val milibVersion = "2.4.0-32-master"
+val mitoolVersion = "1.7.0-21-filter-nan"
+val repseqioVersion = "1.8.0-21-master"
 
 val picocliVersion = "4.6.3"
-val jacksonBomVersion = "2.14.2"
-val milmVersion = "3.4.0"
+val jacksonBomVersion = "2.15.0"
+val milmVersion = "3.7.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
@@ -160,7 +160,6 @@ dependencies {
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milib") { exclude("*", "*") }
     toObfuscate("com.milaboratory:mitool") { exclude("*", "*") }
-    toObfuscate("com.milaboratory:migex") { exclude("*", "*") }
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
 
@@ -235,14 +234,30 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("timestamp", System.currentTimeMillis())
 }
 
+val unzipOldPresets by tasks.registering(Copy::class) {
+    val outputDir = sourceSets.main.get().output.resourcesDir!!.resolve("mixcr_presets/old_version")
+    doFirst {
+        outputDir.deleteRecursively()
+        outputDir.mkdirs()
+    }
+
+    val archives = projectDir.resolve("old_presets").listFiles()!!
+
+    archives.forEach { archive ->
+        from(tarTree(archive))
+        into(outputDir)
+    }
+}
+
 val generatePresetFileList by tasks.registering {
     group = "build"
-    val outputFile = file("${sourceSets.main.get().output.resourcesDir}/mixcr_presets/file_list.txt")
+    val outputFile = sourceSets.main.get().output.resourcesDir!!.resolve("mixcr_presets/file_list.txt")
     doLast {
+        val source = sourceSets.main.get().output.resourcesDir!!.resolve("mixcr_presets")
         val yamls = layout.files({
-            file("src/main/resources/mixcr_presets").walk()
+            source.walk()
                 .filter { it.extension == "yaml" }
-                .map { it.relativeTo(file("src/main/resources/mixcr_presets")) }
+                .map { it.relativeTo(source) }
                 .toList()
         })
         outputFile.ensureParentDirsCreated()
@@ -254,8 +269,9 @@ val generatePresetFileList by tasks.registering {
 }
 
 tasks.processResources {
+    dependsOn(unzipOldPresets)
     dependsOn(writeBuildProperties)
-    dependsOn(generatePresetFileList)
+    finalizedBy(generatePresetFileList)
 }
 
 val obfuscate by tasks.registering(ProGuardTask::class) {
