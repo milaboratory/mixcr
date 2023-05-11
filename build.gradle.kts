@@ -270,7 +270,17 @@ tasks.processResources {
     finalizedBy(generatePresetFileList)
 }
 
+val checkObfuscation by tasks.registering(Test::class) {
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+
+    include("**/MetaForObfuscationTest*")
+    useJUnit()
+}
+
+
 val obfuscate by tasks.registering(ProGuardTask::class) {
+    dependsOn(checkObfuscation)
     group = "build"
 
     configuration("mixcr.pro")
