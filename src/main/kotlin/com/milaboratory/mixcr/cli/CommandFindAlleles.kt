@@ -294,10 +294,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy }) {
+        val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"
         }
-        val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
         logger.debug { "Feature for search alleles: $allFullyCoveredBy" }
         ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
             "Assemble feature must cover more than CDR3"
