@@ -12,7 +12,6 @@ assembleContigs-base:
       minimalMeanNormalizedQuality: 5
       alignmentEdgeRegionSize: 7
       minimalNonEdgePointsFraction: 0.25
-      subCloningRegions:
       trimmingParameters:
         averageQualityThreshold: 10
         windowSize: 8

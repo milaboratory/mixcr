@@ -30,22 +30,22 @@ assemble-base:
           maxAlignmentWidthLinear: 5
           maxAlignmentWidthAffine: 500
           relativeMinScore:
-          scoring:
+          scoring: null
         jParameters:
           maxAlignmentWidthLinear: 5
           maxAlignmentWidthAffine: 500
           relativeMinScore:
-          scoring:
+          scoring: null
         dParameters:
           absoluteMinScore:
           relativeMinScore:
           maxHits:
-          scoring:
+          scoring: null
         cParameters:
           maxAlignmentWidthLinear: 5
           maxAlignmentWidthAffine: 500
           relativeMinScore:
-          scoring:
+          scoring: null
       addReadsCountOnClustering: false
       badQualityThreshold: 20
       maxBadPointsPercent: 0.7
