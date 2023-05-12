@@ -485,7 +485,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                     // allow empty region only for C
                     if (range != null || gene.geneType != Constant) {
                         val sequence = gene.getSequence(range)
-                        writer.write(FastaRecord(id++, "${gene.name} ${GeneFeature.encode(feature)}", sequence))
+                        writer.write(FastaRecord(id++, "${gene.name}|region=${GeneFeature.encode(feature)}", sequence))
                     }
                 }
         }
