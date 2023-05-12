@@ -54,7 +54,10 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.CRegion
 import io.repseq.core.GeneFeature.DRegion
+import io.repseq.core.GeneFeature.Exon1
 import io.repseq.core.GeneFeature.JRegion
+import io.repseq.core.GeneFeature.L2
+import io.repseq.core.GeneFeature.V5UTRGermline
 import io.repseq.core.GeneFeature.VRegion
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType.Constant
@@ -300,6 +303,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
             "Assemble feature must cover more than CDR3"
         }
+        ValidationException.require(allFullyCoveredBy.intersection(GeneFeature(V5UTRGermline, Exon1, L2)) == null) {
+            "Can't build alleles by regions broader then VRegion, got $allFullyCoveredBy"
+        }
 
         ValidationException.requireTheSame(datasets.flatMap { it.usedGenes }.map { it.id.libraryId }) {
             "input files must be aligned on the same library"
@@ -385,24 +391,26 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             Variable,
             JAllelesFromSecondRound
         )
-        val allelesAfterRemoval = allelesBuilder.removeAllelesIfPossible(
+        // cleanup results
+        var allelesAfterRemoval = allelesBuilder.removeAllelesIfPossible(
             "Step 6 of $stepsCount",
             VAllelesFromSecondRound + JAllelesFromSecondRound
         )
-        // if some genes are equal by assemble feature (without marking as variant, for example, the only difference in UTR), there may be duplicates
-        val results = allelesAfterRemoval
-            .groupBy { it.result.name }
-            // group and sort in reproductive way
-            .mapValues { (_, value) -> value.minBy { it.searchedOn } }
-            .values.sortedBy { it.result.name }
-        // what variants will be used to replace genes in hits (key is base gene name).
-        val allelesMapping = results
+        allelesAfterRemoval = allelesBuilder.removeDuplicatedDeNovoAlleles(allelesAfterRemoval)
+        // what variants will be used to replace genes in hits (key is base gene of original hit).
+        val allelesMapping = allelesAfterRemoval
             .filter { it.status.exist }
             // Duplicates will be grouped by several key
             .groupBy { it.searchedOn }
-        reportBuilder.reportResults(results)
+        // There are maybe case of the same allele found on different genes if the actual difference outside of gene feature to search
+        ApplicationException.checkDistinct(allelesAfterRemoval.map { allele -> "${allele.result.name} found on ${allele.searchedOn}" }) {
+            "There are duplicates of found alleles"
+        }
+        // without differentiability of searched on
+        val result = allelesAfterRemoval.distinctBy { it.result.name }
+        reportBuilder.reportResults(result)
 
-        val resultLibrary = buildLibrary(libraryRegistry, originalLibrary, results)
+        val resultLibrary = buildLibrary(libraryRegistry, originalLibrary, result)
         libraryOutputs.forEach { libraryOutput ->
             libraryOutput.toAbsolutePath().parent.createDirectories()
             if (libraryOutput.matches(InputFileType.JSON)) {
@@ -454,7 +462,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             allelesMutationsOutput.toAbsolutePath().parent.createDirectories()
             printAllelesMutationsOutput(
-                results,
+                result,
                 reportBuilder.overallAllelesStatistics,
                 allelesMutationsOutput
             )
@@ -476,8 +484,11 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                         Constant -> CRegion
                     }
                     val range = gene.referencePoints.getRange(feature)
-                    val sequence = gene.getSequence(range)
-                    writer.write(FastaRecord(id++, "${gene.name} ${GeneFeature.encode(feature)}", sequence))
+                    // allow empty region only for C
+                    if (range != null || gene.geneType != Constant) {
+                        val sequence = gene.getSequence(range)
+                        writer.write(FastaRecord(id++, "${gene.name} ${GeneFeature.encode(feature)}", sequence))
+                    }
                 }
         }
     }
