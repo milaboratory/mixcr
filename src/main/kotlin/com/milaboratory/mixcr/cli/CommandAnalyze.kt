@@ -14,9 +14,11 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.cli.CommandAlign.SAVE_OUTPUT_FILE_NAMES_OPTION
+import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
 import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AnyMiXCRCommand
+import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotIfNotBlank
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
@@ -232,12 +234,23 @@ object CommandAnalyze {
             override fun POverridesBuilderOps<MiXCRPipeline>.paramsOverrides() {}
         }
 
-        private val inputFileGroups
-            get() = try {
-                CommandAlign.InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
+        private val inputSampleSheet: FullSampleSheetParsed? by lazy {
+            if (inputTemplates.size == 1 && inputTemplates[0].name.endsWith(".tsv"))
+                FullSampleSheetParsed.parse(inputTemplates[0])
+            else
+                null
+        }
+
+        /** I.e. list of mate-pair files */
+        private val inputFileGroups: CommandAlign.InputFileGroups by lazy {
+            try {
+                inputSampleSheet
+                    ?.inputFileGroups
+                    ?: CommandAlign.InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
             } catch (e: PathPatternExpandException) {
                 throw ValidationException(e.message!!)
             }
+        }
 
         override fun validate() {
             CommandAlign.checkInputTemplates(inputTemplates)

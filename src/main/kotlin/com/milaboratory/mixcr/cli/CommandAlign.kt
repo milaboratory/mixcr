@@ -37,6 +37,10 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
+import com.milaboratory.mitool.pattern.search.ReadSearchMode
+import com.milaboratory.mitool.pattern.search.ReadSearchPlan
+import com.milaboratory.mitool.pattern.search.ReadSearchSettings
+import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -46,6 +50,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCHit
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.tag.TechnicalTag.TAG_INPUT_IDX
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
@@ -64,6 +69,7 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.presets.AlignMixins.LimitInput
+import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotIfNotBlank
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
@@ -109,6 +115,7 @@ import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.set
 import kotlin.io.path.bufferedWriter
+import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.math.max
 
@@ -118,6 +125,14 @@ object CommandAlign {
     const val SAVE_OUTPUT_FILE_NAMES_OPTION = "--save-output-file-names"
 
     fun List<CommandAlignParams.SampleTable.Row>.bySampleName() = groupBy { it.sample }
+
+    val FullSampleSheetParsed.inputFileGroups
+        get() = inputs?.let { inputs ->
+            InputFileGroups(
+                inputs.mapIndexed { idx, paths ->
+                    FileGroup(paths.map { path!!.resolve(it) }, listOf(TAG_INPUT_IDX to idx.toString()))
+                })
+        }
 
     class InputFileGroups(
         val fileGroups: List<FileGroup>
@@ -710,10 +725,19 @@ object CommandAlign {
 
         private val inputTemplates get() = inOut.dropLast(1)
 
+        private val inputSampleSheet: FullSampleSheetParsed? by lazy {
+            if (inputTemplates.size == 1 && inputTemplates[0].name.endsWith(".tsv"))
+                FullSampleSheetParsed.parse(inputTemplates[0])
+            else
+                null
+        }
+
         /** I.e. list of mate-pair files */
         private val inputFileGroups: InputFileGroups by lazy {
             try {
-                InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
+                inputSampleSheet
+                    ?.inputFileGroups
+                    ?: InputFileGroups(inputTemplates.parseAndRunAndCorrelateFSPattern())
             } catch (e: PathPatternExpandException) {
                 throw ValidationException(e.message!!)
             }
@@ -768,7 +792,27 @@ object CommandAlign {
 
         private val bpPair by lazy { paramsResolver.resolve(paramsSpec, printParameters = logger.verbose) }
 
-        private val cmdParams get() = bpPair.second
+        private val cmdParams by lazy {
+            var params = bpPair.second
+
+            // If sample sheet is specified as an input, adding corresponding tag transformations,
+            // and optionally overriding the tag pattern
+            inputSampleSheet?.let { sampleSheet ->
+                sampleSheet.tagPattern?.let {
+                    params = params.copy(tagPattern = it)
+                }
+
+                // Prepending tag transformation step
+                val matchingTags = params.tagPattern?.let {
+                    ReadSearchPlan.create(it, ReadSearchSettings(SearchSettings.Default, ReadSearchMode.Direct)).allTags
+                } ?: emptySet()
+                params = params.copy(
+                    tagTransformationSteps = listOf(sampleSheet.tagTransformation(matchingTags)) + params.tagTransformationSteps
+                )
+            }
+
+            params
+        }
 
         private val allInputFiles
             get() = when (inputFileGroups.inputType) {
@@ -807,6 +851,7 @@ object CommandAlign {
                 )
                 parameters.vAlignerParameters.geneFeatureToAlign = correctingFeature
             }
+
             parameters
         }
 
