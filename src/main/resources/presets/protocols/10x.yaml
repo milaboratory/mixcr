@@ -93,10 +93,7 @@
                     topShare: 0.7
                     minSequenceCount: 4
                     reportHist:
-                      log: false
                       binNumber: 40
-                      minBinWidth: 0.0
-                      multiplyWeightByKey: false
                 operator:
                   type: group_operator_range
                   lower: 150.0
@@ -164,7 +161,6 @@
                         log: true
                         binNumber: 0
                         minBinWidth: 0.1
-                        multiplyWeightByKey: false
                       keys:
                         - allTags:Molecule
                   operator:
