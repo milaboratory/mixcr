@@ -128,10 +128,10 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-98-new-presets"
-val milibVersion = "2.4.0-32-master"
+val mixcrAlgoVersion = "4.3.0-112-new-presets"
+val milibVersion = "2.4.0-41-master"
 val mitoolVersion = "1.7.0-22-main"
-val repseqioVersion = "1.8.0-27-master"
+val repseqioVersion = "1.8.0-45-master"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.0"
@@ -225,7 +225,7 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("branch", gitDetails.branchName ?: "no_branch")
     property("host", InetAddress.getLocalHost().hostName)
     property("production", productionBuild == true)
-    property("timestamp", System.currentTimeMillis())
+    property("timestamp", if (isMiCi) System.currentTimeMillis() else 0L)
 }
 
 val unzipOldPresets by tasks.registering(Copy::class) {
@@ -268,7 +268,16 @@ tasks.processResources {
     finalizedBy(generatePresetFileList)
 }
 
+val checkObfuscation by tasks.registering(Test::class) {
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+
+    include("**/MetaForObfuscationTest*")
+    useJUnit()
+}
+
 val obfuscate by tasks.registering(ProGuardTask::class) {
+    dependsOn(checkObfuscation)
     group = "build"
 
     configuration("mixcr.pro")

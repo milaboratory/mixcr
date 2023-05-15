@@ -69,7 +69,6 @@ import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData.metaKey
-import io.repseq.dto.VDJCLibraryData
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -295,10 +294,9 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy }) {
+        val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"
         }
-        val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
         logger.debug { "Feature for search alleles: $allFullyCoveredBy" }
         ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
             "Assemble feature must cover more than CDR3"
@@ -487,7 +485,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                     // allow empty region only for C
                     if (range != null || gene.geneType != Constant) {
                         val sequence = gene.getSequence(range)
-                        writer.write(FastaRecord(id++, "${gene.name} ${GeneFeature.encode(feature)}", sequence))
+                        writer.write(FastaRecord(id++, "${gene.name}|region=${GeneFeature.encode(feature)}", sequence))
                     }
                 }
         }
@@ -507,13 +505,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 this["enoughInfo"] = { allele ->
                     allele.enoughInfo
                 }
-                this[metaKey.alleleMutationsReliableRegion] = { allele ->
-                    if (allele.status == DE_NOVO) {
-                        allele.result.meta[metaKey.alleleMutationsReliableRegion]
-                            ?.map { GeneFeature.parse(it) }
-                            ?.sorted()
-                            ?.map { GeneFeature.encode(it) }
-                    } else ""
+                this["reliableRegion"] = { allele ->
+                    allele.reliableRegion?.encode() ?: ""
                 }
                 this["mutations"] = { allele ->
                     if (allele.status == DE_NOVO) {
@@ -598,7 +591,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val restGenes = originalLibrary.primaryGenes.filter { it.geneType !in VJ_REFERENCE }.map { it.data }
         val genesToAdd = vAndJ + restGenes
         val resultLibrary = VDJCLibrary(
-            VDJCLibraryData(originalLibrary.data, genesToAdd),
+            originalLibrary.data.useAsTemplate(genesToAdd),
             originalLibrary.name + "_with_found_alleles",
             libraryRegistry,
             originalLibrary.context
