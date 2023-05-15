@@ -2,6 +2,8 @@
   abstract: true
   flags:
     - species
+  mixins:
+    - type: MaterialTypeRNA
   align:
     inheritFrom: align-single-cell
     overrides:
@@ -195,6 +197,7 @@
 
 "10x-5gex":
   inheritFrom: 10x-vdj
+
 
 
 

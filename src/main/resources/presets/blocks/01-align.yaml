@@ -426,6 +426,7 @@ align-single-cell:
   abstract: true
   flags:
     - species
+    - materialType
   align:
     species: ''
     libraryName: default
@@ -465,7 +466,7 @@ align-single-cell:
           alignmentStopPenalty: 0
           absoluteMinScore: 150
           relativeMinScore: 0.8
-          maxHits: 9
+          maxHits: 3
           scoring:
             type: affine
             alphabet: nucleotide
