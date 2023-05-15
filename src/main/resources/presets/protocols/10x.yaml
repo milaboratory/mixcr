@@ -149,7 +149,6 @@
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
-                    accept: High
             aggregateReport: true
           - type: filter_in_groups
             isolationKeys:
@@ -171,7 +170,6 @@
                   operator:
                     type: group_operator_cumtop
                     share: 0.99
-                    accept: High
             aggregateReport: true
           - type: filter_in_groups
             isolationKeys:
