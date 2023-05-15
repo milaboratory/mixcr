@@ -63,7 +63,6 @@ import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.io.File
 import java.nio.file.Path
 import java.security.MessageDigest
 import kotlin.io.path.createDirectories
@@ -309,10 +308,9 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy }) {
+        val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"
         }
-        val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
         ValidationException.require(allFullyCoveredBy != GeneFeatures(GeneFeature.CDR3)) {
             "Assemble feature must cover more than CDR3"
         }
@@ -340,7 +338,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
             buildFrom?.let { buildFrom ->
                 val result =
-                    shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom.toFile()), threads.value)
+                    shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom), threads.value)
                 writeResults(writer, result, scoringSet, generateGlobalTreeIds = false)
                 return
             }
@@ -379,7 +377,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         reportOptions.appendToFiles(report)
     }
 
-    private fun readUserInput(userInputFile: File): Map<CloneWithDatasetId.ID, Int> {
+    private fun readUserInput(userInputFile: Path): Map<CloneWithDatasetId.ID, Int> {
         val fileNameToDatasetId = inputFiles.withIndex().associate { it.value.toString() to it.index }
         return XSV.readXSV(userInputFile, listOf("treeId", "fileName", "cloneId"), "\t") { rows ->
             rows.associate { row ->

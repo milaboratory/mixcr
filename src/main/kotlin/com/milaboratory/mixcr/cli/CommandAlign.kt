@@ -771,6 +771,13 @@ object CommandAlign {
         )
         var highCompression = false
 
+        @Option(
+            description = ["Align on all gene variants, not only that marked as primary."],
+            names = ["--align-on-all-gene-variants"],
+            hidden = true
+        )
+        var alignOnAllVariants = false
+
         @Mixin
         lateinit var pathsForNotAligned: PathsForNotAligned
 
@@ -831,7 +838,7 @@ object CommandAlign {
                 parameters.vAlignerParameters.geneFeatureToAlign.hasReversedRegions() -> VRegionWithP
                 else -> VRegion
             }
-            for (gene in vdjcLibrary.getPrimaryGenes(Chains.parse(cmdParams.chains))) {
+            for (gene in getGenesForAligning()) {
                 if (gene.geneType == GeneType.Variable) {
                     totalV++
                     if (!parameters.containsRequiredFeature(gene)) {
@@ -882,7 +889,6 @@ object CommandAlign {
                 }
         }
 
-        @Suppress("UNCHECKED_CAST")
         private fun createReader(): OutputPortWithProgress<ProcessingBundle> {
             MiXCRMain.lm.reportApplicationInputs(
                 true, false,
@@ -981,7 +987,7 @@ object CommandAlign {
             )
             var numberOfExcludedNFGenes = 0
             var numberOfExcludedFGenes = 0
-            for (gene in vdjcLibrary.getPrimaryGenes(Chains.parse(cmdParams.chains))) {
+            for (gene in getGenesForAligning()) {
                 alignerParameters.getFeatureToAlign(gene.geneType) ?: continue
 
                 val featureSequence = alignerParameters.extractFeatureToAlign(gene)
@@ -1184,6 +1190,14 @@ object CommandAlign {
                 reportOptions.appendToFiles(report)
             }
         }
+
+        private fun getGenesForAligning() =
+            if (alignOnAllVariants) {
+                vdjcLibrary.getAllGenes(Chains.parse(cmdParams.chains))
+                    .filterNot { it.data.isAlias }
+            } else {
+                vdjcLibrary.getPrimaryGenes(Chains.parse(cmdParams.chains))
+            }
 
         @Suppress("UNCHECKED_CAST")
         private fun failedReadsWriter(i1: Path?, i2: Path?, r1: Path?, r2: Path?): SequenceWriter<SequenceRead>? =
