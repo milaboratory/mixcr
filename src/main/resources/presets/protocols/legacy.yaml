@@ -340,3 +340,40 @@ oncomine-human-bcr-pan-clonality-cdr3:
 
 oncomine-human-tcr-pan-clonality-cdr3:
   deprecation: "The preset is deprecated. Please use oncomine-human-tcr-pan-clonality."
+  inheritFrom: oncomine-human-tcr-pan-clonality
+
+
+# 10x deprecated presets
+
+10x-vdj-tcr:
+  deprecation: "The preset is deprecated. Please use 10x-vdj."
+  inheritFrom: 10x-vdj
+
+10x-vdj-tcr-full-length:
+  deprecation: "The preset is deprecated. Please use 10x-vdj."
+  inheritFrom: 10x-vdj
+  mixins:
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+10x-vdj-bcr:
+  deprecation: "The preset is deprecated. Please use 10x-vdj."
+  inheritFrom: 10x-vdj
+
+10x-vdj-bcr-full-length:
+  deprecation: "The preset is deprecated. Please use 10x-vdj."
+  inheritFrom: 10x-vdj
+  mixins:
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+10x-5gex-cdr3:
+  deprecation: "The preset is deprecated. Please use 10x-5gex."
+  inheritFrom: 10x-5gex
+
+10x-5gex-full-length:
+  deprecation: "The preset is deprecated. Please use 10x-5gex."
+  inheritFrom: 10x-5gex
+  mixins:
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
