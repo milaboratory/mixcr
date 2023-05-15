@@ -340,4 +340,3 @@ oncomine-human-bcr-pan-clonality-cdr3:
 
 oncomine-human-tcr-pan-clonality-cdr3:
   deprecation: "The preset is deprecated. Please use oncomine-human-tcr-pan-clonality."
-  inheritFrom: oncomine-human-tcr-pan-clonality
