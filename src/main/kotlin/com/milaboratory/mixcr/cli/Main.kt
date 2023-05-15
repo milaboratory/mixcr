@@ -11,9 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
@@ -42,7 +39,6 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
 import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
-import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
 import com.sun.management.OperatingSystemMXBean
