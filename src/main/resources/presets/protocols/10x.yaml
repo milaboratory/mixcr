@@ -1,26 +1,19 @@
-"align-kaligner1-10x":
+"align-vdj-10x":
   abstract: true
   flags:
     - species
+  mixins:
+    - type: MaterialTypeRNA
   align:
     inheritFrom: align-single-cell
     overrides:
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
 
-"align-kaligner2-10x":
-  abstract: true
-  flags:
-    - species
-  align:
-    inheritFrom: align-single-cell
-    overrides:
-      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
-
-"10x-vdj-tcr":
+"10x-vdj":
   pipeline:
     inheritFrom: pipeline-single-cell-shotgun
   align:
-    inheritFrom: align-kaligner1-10x
+    inheritFrom: align-vdj-10x
   refineTagsAndSort:
     whitelists:
       CELL: builtin:737K-august-2016
@@ -86,117 +79,6 @@
                   logX: true
                   minimalSample: 20
                   fallbackThreshold: 1.0
-  assemblePartial:
-    inheritFrom: assemblePartial-base
-  assemble:
-    inheritFrom: assemble-with-consensus-base
-    overrides:
-      clnaOutput: true
-      cloneAssemblerParameters:
-        postFilters:
-          - type: filter_in_groups
-            isolationKeys:
-              - geneLabel:ReliableChain
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - clone
-              predicates:
-                - metrics:
-                    - type: group_metric_nunique
-                      keys:
-                        - allTags:Molecule
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.95
-          - type: filter_in_groups
-            isolationKeys:
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - clone
-              predicates:
-                - metrics:
-                    - type: group_metric_nunique
-                      keys:
-                        - allTags:Molecule
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.99
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - clone
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    keys:
-                      - allTags:Molecule
-                operator:
-                  type: group_operator_range
-                  lower: 2.0
-  assembleContigs:
-    inheritFrom: assembleContigs-base
-  exportAlignments:
-    inheritFrom: exportAlignments-base
-  exportClones:
-    inheritFrom: exportClones-single-cell-with-umi-base
-
-"10x-vdj-tcr-full-length":
-  inheritFrom: 10x-vdj-tcr
-  mixins:
-    - type: SetContigAssemblingFeatures
-      features: [ "VDJRegion" ]
-
-"10x-vdj-bcr":
-  pipeline:
-    inheritFrom: pipeline-single-cell-shotgun
-  align:
-    inheritFrom: align-kaligner2-10x
-  refineTagsAndSort:
-    whitelists:
-      CELL: builtin:737K-august-2016
-    runCorrection: true
-    parameters:
-      correctionPower: 0.001
-      backgroundSubstitutionRate: 0.001
-      backgroundIndelRate: 1.0e-05
-      minQuality: 12
-      maxSubstitutions: 2
-      maxIndels: 2
-      maxTotalErrors: 3
-      postFilter:
-        type: filter_and
-        operands:
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - allTags:Molecule
-            predicates:
-              - metrics:
-                  - type: "group_metric_sum_weight"
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                operator:
-                  type: group_operator_lowest_threshold
-                  operators:
-                    - type: group_operator_advanced_thresholding
-                      algo:
-                        type: otsu
-                      histTransformers:
-                        # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                        - type: inflate
-                          fraction: 0.15
-                      logX: true
-                      minimalSample: 20
-                      fallbackThreshold: 1.0
-                    - type: group_operator_cumtop
-                      share: 0.85
-                      round: Down
           - type: filter_groups
             groupingKeys:
               - allTags:Cell
@@ -204,7 +86,8 @@
             predicates:
               - metrics:
                   - type: group_metric_kmer_diversity
-                    sequences: [ "targets" ]
+                    sequences:
+                      - targets
                     k: 12
                     minimalQuality: 20
                     topShare: 0.7
@@ -213,29 +96,37 @@
                       binNumber: 40
                 operator:
                   type: group_operator_range
-                  lower: 200
-                  acceptNaN: true
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                    keys:
-                      - allTags:Molecule
-                operator:
-                  type: group_operator_range
-                  lower: 3.0
+                  lower: 150.0
   assemblePartial:
     inheritFrom: assemblePartial-base
   assemble:
     inheritFrom: assemble-with-consensus-base
     overrides:
       clnaOutput: true
+      cellLevel: true
+      consensusAssemblerParameters:
+        assembler:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: simple(match = 5, mismatch = -4)
+              gapPenalty: -14
+            minAlignmentScore: 40
+            maxNormalizedAlignmentPenalty: 0.15
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: false
+            maxQuality: 45
+          maxIterations: 6
+          minAltSeedQualityScore: 11
+          minAltSeedNormalizedPenalty: 0.35
+          altSeedPenaltyTolerance: 0.3
+          minRecordSharePerConsensus: 1E-4
+          minRecordsPerConsensus: 0
+          minRecursiveRecordShare: 0.001
+          minQualityScore: 0
+          maxConsensuses: 10
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -249,11 +140,33 @@
               predicates:
                 - metrics:
                     - type: group_metric_nunique
+                      reportHist: null
                       keys:
                         - allTags:Molecule
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+            aggregateReport: true
+          - type: filter_in_groups
+            isolationKeys:
+              - clone
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.1
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+            aggregateReport: true
           - type: filter_in_groups
             isolationKeys:
               - allTags:Cell
@@ -268,19 +181,7 @@
                         - allTags:Molecule
                   operator:
                     type: group_operator_cumtop
-                    share: 0.99
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - clone
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    keys:
-                      - allTags:Molecule
-                operator:
-                  type: "group_operator_range"
-                  lower: 2.0
+                    share: 0.95
   assembleContigs:
     inheritFrom: assembleContigs-base
   exportAlignments:
@@ -288,32 +189,9 @@
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
 
-"10x-vdj-bcr-full-length":
-  inheritFrom: 10x-vdj-bcr
-  mixins:
-    - type: SetContigAssemblingFeatures
-      features: [ "VDJRegion" ]
+"10x-5gex":
+  inheritFrom: 10x-vdj
 
-"10x-5gex-cdr3":
-  inheritFrom: 10x-vdj-bcr
-  refineTagsAndSort:
-    whitelists:
-      CELL: builtin:737K-august-2016
-    runCorrection: true
-    parameters:
-      correctionPower: 0.001
-      backgroundSubstitutionRate: 0.001
-      backgroundIndelRate: 1.0e-05
-      minQuality: 12
-      maxSubstitutions: 2
-      maxIndels: 2
-      maxTotalErrors: 3
-
-"10x-5gex-full-length":
-  inheritFrom: 10x-5gex-cdr3
-  mixins:
-    - type: SetContigAssemblingFeatures
-      features: [ "VDJRegion" ]
 
 
 
