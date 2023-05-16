@@ -68,6 +68,7 @@ import com.milaboratory.mixcr.cli.CommandAlignPipeline.listToSampleName
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
+import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.AlignMixins.LimitInput
 import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -412,7 +413,8 @@ object CommandAlign {
                 paths[0],
                 InputFileType.FASTQ,
                 InputFileType.FASTA,
-                InputFileType.BAM
+                InputFileType.BAM,
+                InputFileType.TSV
             )
 
             2 -> {
@@ -791,7 +793,11 @@ object CommandAlign {
         )
         private var outputFileList: Path? = null
 
-        private val paramsSpec by lazy { MiXCRParamsSpec(presetName, mixins.mixins) }
+        private val paramsSpec by lazy {
+            MiXCRParamsSpec(presetName, mixins.mixins +
+                    listOfNotNull(inputSampleSheet?.tagPattern?.let { AlignMixins.SetTagPattern(it) })
+            )
+        }
 
         /** Output file header will contain packed version of the parameter specs,
         i.e. all external presets and will be packed into the spec object.*/
@@ -805,9 +811,7 @@ object CommandAlign {
             // If sample sheet is specified as an input, adding corresponding tag transformations,
             // and optionally overriding the tag pattern
             inputSampleSheet?.let { sampleSheet ->
-                sampleSheet.tagPattern?.let {
-                    params = params.copy(tagPattern = it)
-                }
+                // tagPattern is set via mixin (see above)
 
                 // Prepending tag transformation step
                 val matchingTags = params.tagPattern?.let {
@@ -1179,6 +1183,7 @@ object CommandAlign {
 
                 writers?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
+
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
                 reportBuilder.setTransformerReports(tagsExtractor.transformerReports)
 

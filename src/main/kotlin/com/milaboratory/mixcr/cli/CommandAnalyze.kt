@@ -17,6 +17,7 @@ import com.milaboratory.mixcr.cli.CommandAlign.SAVE_OUTPUT_FILE_NAMES_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
 import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.AnyMiXCRCommand
 import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -272,8 +273,9 @@ object CommandAnalyze {
             if (!outputFolder.exists())
                 outputFolder.createDirectories()
 
-            // Creating params spec
-            val mixins = mixins.mixins
+            // Creating params spec, the same way it is done in align
+            val mixins = mixins.mixins +
+                    listOfNotNull(inputSampleSheet?.tagPattern?.let { AlignMixins.SetTagPattern(it) })
             val paramsSpec = MiXCRParamsSpec(presetName, mixins)
 
             // Resolving parameters and sorting the pipeline according to the natural command order
