@@ -27,7 +27,7 @@ mixcr analyze generic-tcr-amplicon \
   --split-clones-by V --split-clones-by J --split-clones-by C \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case8
 
-assert "cat case8.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "237737"
+assert "cat case8.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "237736"
 assert "cat case8.assemble.report.json | head -n 1 | jq -r .readsInClones" "199564"
 assert "cat case8.assemble.report.json | head -n 1 | jq -r .clones" "25614"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "277"
