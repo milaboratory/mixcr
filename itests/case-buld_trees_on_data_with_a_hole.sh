@@ -69,8 +69,12 @@ assert "grep 'IGHJ6' alleles/description.tsv | cut -f$keyOfRelativeMutations" "S
 
 keyOfNumberOfCones=`head -n 1 trees/trees.tsv | sed 's/numberOfClonesInTree/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 keyOfCDR3=`head -n 1 trees/trees.tsv | sed 's/nSeqCDR3OfMrca/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
+
+expectedBiggestTreeSize=4
+expectedBiggestTreeCDR3="TGTGCTAGAGTGGGCAATGGCTGGGCCCTTGACTTCTGG"
 # biggest tree
 # `tail +2` - skip first line with column names
 # `sort -n -r -k $i` - reverse numeric sort by i column (numberOfClonesInTree in this case)
-assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfNumberOfCones}'" "4"
-assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfCDR3}'" "TGTGCTAGAGTGGGCAATGGCTGGGCCCTTGACTTCTGG"
+assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfNumberOfCones}'" "$expectedBiggestTreeSize"
+
+assert "tail +2 trees/trees.tsv | cut -f $keyOfNumberOfCones,$keyOfCDR3 | grep $expectedBiggestTreeSize | cut -f 2 | grep -c $expectedBiggestTreeCDR3" "1"

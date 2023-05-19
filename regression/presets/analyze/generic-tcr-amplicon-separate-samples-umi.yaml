@@ -1,5 +1,4 @@
 flags:
-- sampleTable
 - tagPattern
 - leftAlignmentMode
 - rightAlignmentMode
