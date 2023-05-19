@@ -46,6 +46,7 @@ plugins {
 
 val miRepoAccessKeyId: String? by project
 val miRepoSecretAccessKey: String? by project
+val miRepoSessionToken: String? by project
 
 val productionBuild: Boolean? by project
 
@@ -122,6 +123,7 @@ repositories {
             credentials(AwsCredentials::class) {
                 accessKey = miRepoAccessKeyId
                 secretKey = miRepoSecretAccessKey
+                sessionToken = miRepoSessionToken
             }
         }
     }
