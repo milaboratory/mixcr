@@ -26,6 +26,7 @@ import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.io.path.bufferedWriter
 import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.readLines
 import kotlin.io.path.readText
 
 class PresetsTest {
@@ -47,79 +48,8 @@ class PresetsTest {
         val existInVdiOnline = presets
             .map { it.presetName }
             .toSet()
-        val exclusions = setOf(
-            "10x-5gex-cdr3",
-            "10x-vdj-bcr-full-length",
-            "10x-vdj-tcr-full-length",
-            "abhelix-human-bcr-cdr3",
-            "abhelix-human-tcr-cdr3",
-            "ampliseq-tcrb-plus-cdr3",
-            "bd-rhapsody-human-bcr-full-length",
-            "bd-rhapsody-human-tcr-full-length",
-            "bd-rhapsody-mouse-bcr-full-length",
-            "bd-rhapsody-mouse-tcr-full-length",
-            "biomed2-human-bcr-cdr3",
-            "exom-cdr3",
-            "exom-full-length",
-            "exome-cdr3",
-            "exome-full-length",
-            "generic-bcr-amplicon",
-            "generic-bcr-amplicon-separate-samples-umi",
-            "generic-bcr-amplicon-umi",
-            "generic-tcr-amplicon",
-            "generic-tcr-amplicon-separate-samples-umi",
-            "generic-tcr-amplicon-umi",
-            "han-et-al-2014-bcr",
-            "han-et-al-2014-tcr",
-            "irepertoire-human-dna-trb-lr",
-            "irepertoire-human-dna-trb-sr",
-            "irepertoire-human-rna-tcr-lr",
-            "irepertoire-human-rna-tcr-sr",
-            "irepertoire-mouse-rna-tcr-lr",
-            "irepertoire-mouse-rna-tcr-sr",
-            "mikelov-et-al-2021",
-            "milab-human-bcr-multiplex-cdr3",
-            "milab-human-tcr-rna-race-cdr3",
-            "milab-mouse-tcr-rna-race-cdr3",
-            "nebnext-human-bcr-base",
-            "nebnext-human-bcr-cdr3",
-            "nebnext-human-bcr-full-length",
-            "nebnext-human-tcr-base",
-            "nebnext-human-tcr-bcr-base",
-            "nebnext-human-tcr-bcr-cdr3",
-            "nebnext-human-tcr-cdr3",
-            "nebnext-human-tcr-full-length",
-            "nebnext-mouse-bcr-base",
-            "nebnext-mouse-bcr-cdr3",
-            "nebnext-mouse-bcr-full-length",
-            "nebnext-mouse-tcr-base",
-            "nebnext-mouse-tcr-bcr-base",
-            "nebnext-mouse-tcr-bcr-cdr3",
-            "nebnext-mouse-tcr-cdr3",
-            "nebnext-mouse-tcr-full-length",
-            "oncomine-human-bcr-ihg-lr-cdr3",
-            "oncomine-human-tcrb-lr-cdr3",
-            "ont-rna-seq-vdj-full-length",
-            "qiaseq-human-tcr-cdr3",
-            "qiaseq-mouse-tcr-cdr3",
-            "rnaseq-bcr-cdr3",
-            "rnaseq-bcr-full-length",
-            "rnaseq-cdr3",
-            "rnaseq-full-length",
-            "rnaseq-tcr-cdr3",
-            "rnaseq-tcr-full-length",
-            "seqwell-vdj-cdr3",
-            "singleron-2.0.1-vdj-cdr3",
-            "smartseq2-vdj-full-length",
-            "split-seq-vdj-3gex",
-            "takara-human-bcr-full-length",
-            "takara-human-tcr-V1-cdr3",
-            "takara-human-tcr-V2-cdr3",
-            "takara-mouse-bcr-cdr3",
-            "takara-mouse-tcr-cdr3",
-            "vergani-et-al-2017-cdr3",
-            "vergani-et-al-2017-full-length"
-        )
+        val exclusions = Paths.get(PresetsTest::class.java.getResource("/exclusions_from_vdj_online.txt")!!.file)
+            .readLines().toSet()
         "some presets from exclusion are not exists".asClue {
             exclusions.filterNot { it in Presets.visiblePresets } shouldBe emptyList()
         }
