@@ -131,7 +131,7 @@ object CommandAlign {
         get() = inputs?.let { inputs ->
             InputFileGroups(
                 inputs.mapIndexed { idx, paths ->
-                    FileGroup(paths.map { path!!.resolve(it) }, listOf(TAG_INPUT_IDX to idx.toString()))
+                    FileGroup(paths.map { basePath!!.resolve(it) }, listOf(TAG_INPUT_IDX to idx.toString()))
                 })
         }
 
