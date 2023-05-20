@@ -31,21 +31,25 @@ import kotlin.io.path.readText
 
 class PresetsTest {
     @Test
-    fun `vdj online presets, all exist`() {
-        val presets = readVdjOnlinePresets()
-        "some presets from vdj_online_presets.json are not exist anymore".asClue {
-            presets
-                .map { it.presetName }
-                .filterNot { it in Presets.visiblePresets }
-                .sorted()
-                .also { println(it) } shouldBe emptyList()
-        }
+    fun `some presets from vdj_online_presets_json are not exist anymore`() {
+        readVdjOnlinePresets()
+            .map { it.presetName }
+            .filterNot { it in Presets.visiblePresets }
+            .sorted()
+            .also { println(it) } shouldBe emptyList()
+    }
+
+    @Test
+    fun `values in vdj_online_presets_json should be uniq, add #n in the end`() {
+        readVdjOnlinePresets()
+            .groupingBy { it.value }.eachCount()
+            .filterValues { it > 1 }
+            .keys shouldBe emptySet()
     }
 
     @Test
     fun `vdj online presets, all visible presets included`() {
-        val presets = readVdjOnlinePresets()
-        val existInVdiOnline = presets
+        val existInVdiOnline = readVdjOnlinePresets()
             .map { it.presetName }
             .toSet()
         val exclusions = Paths.get(PresetsTest::class.java.getResource("/exclusions_from_vdj_online.txt")!!.file)
