@@ -1,0 +1,266 @@
+[
+  {
+    "text": "Human Ig RNA Multiplex",
+    "value": "milab-human-bcr-multiplex-full-length",
+    "company": "Milaboratories"
+  },
+  {
+    "text": "Human TCR RNA Multiplex",
+    "value": "milab-human-tcr-rna-multiplex-cdr3",
+    "company": "Milaboratories"
+  },
+  {
+    "text": "Human TCR RNA",
+    "value": "milab-human-tcr-rna-race-full-length",
+    "company": "Milaboratories"
+  },
+  {
+    "text": "Human TCR DNA Multiplex",
+    "value": "milab-human-tcr-dna-multiplex-cdr3",
+    "company": "Milaboratories"
+  },
+  {
+    "text": "Mouse TCR RNA",
+    "value": "milab-mouse-tcr-rna-race-full-length",
+    "company": "Milaboratories"
+  },
+  {
+    "text": "SMART-Seq Human BCR (with UMIs)",
+    "value": "takara-human-bcr-cdr3#1",
+    "company": "Takara Bio"
+  },
+  {
+    "text": "SMARTer Human BCR IgG IgM H/K/L Profiling Kit",
+    "value": "takara-human-bcr-cdr3#2",
+    "company": "Takara Bio"
+  },
+  {
+    "text": "SMARTer Human TCR a/b Profiling Kit v2",
+    "value": "takara-human-tcr-V2-full-length",
+    "company": "Takara Bio"
+  },
+  {
+    "text": "SMARTer Human TCR a/b Profiling Kit",
+    "value": "takara-human-tcr-V1-full-length",
+    "company": "Takara Bio"
+  },
+  {
+    "text": "SMARTer Mouse BCR IgG H/K/L Profiling Kit",
+    "value": "takara-mouse-bcr-full-length",
+    "company": "Takara Bio"
+  },
+  {
+    "text": "SMARTer Mouse TCR a/b Profiling Kit",
+    "value": "takara-mouse-tcr-full-length",
+    "company": "Takara Bio"
+  },
+  {
+    "text": "Single cell VDJ TCR",
+    "value": "10x-vdj-tcr",
+    "company": "10x Genomics",
+    "species": [
+      "hs",
+      "mmu"
+    ]
+  },
+  {
+    "text": "Single cell VDJ BCR",
+    "value": "10x-vdj-bcr",
+    "company": "10x Genomics",
+    "species": [
+      "hs",
+      "mmu"
+    ]
+  },
+  {
+    "text": "Single cell 5' gene expression",
+    "value": "10x-5gex-full-length",
+    "company": "10x Genomics",
+    "species": [
+      "hs",
+      "mmu"
+    ]
+  },
+  {
+    "text": "AmpliSeq for Illumina Immune Repertoire Plus, TCR beta Panel",
+    "value": "ampliseq-tcrb-plus-full-length",
+    "company": "AmpliSeq",
+    "singleR": true
+  },
+  {
+    "text": "AmpliSeq™ for Illumina® TCR beta-SR Panel",
+    "value": "ampliseq-tcrb-sr-cdr3",
+    "company": "AmpliSeq",
+    "singleR": true
+  },
+  {
+    "text": "QIAseq™ Human TCR Panel Immune Repertoire RNA Library Kit",
+    "value": "qiaseq-human-tcr-full-length",
+    "company": "Qiagen"
+  },
+  {
+    "text": "QIAseq™ Mouse TCR Panel Immune Repertoire RNA Library Kit",
+    "value": "qiaseq-mouse-tcr-full-length",
+    "company": "Qiagen"
+  },
+  {
+    "text": "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling / Cellecta",
+    "value": "cellecta-air-human",
+    "company": "Cellecta"
+  },
+  {
+    "text": "Human RepSeq+ Reagent System",
+    "value": "irepertoire-human-rna-repseq-plus",
+    "company": "iRepertoire"
+  },
+  {
+    "text": "Human RepSeq RNA Long Read Reagent System",
+    "value": "irepertoire-human-rna-bcr-lr",
+    "company": "iRepertoire"
+  },
+  {
+    "text": "Human RepSeq RNA Short Read Reagent System",
+    "value": "irepertoire-human-rna-bcr-sr",
+    "company": "iRepertoire"
+  },
+  {
+    "text": "Mouse RepSeq RNA Long Read Reagent System",
+    "value": "irepertoire-mouse-rna-bcr-lr",
+    "company": "iRepertoire"
+  },
+  {
+    "text": "Mouse RepSeq RNA Short Read Reagent System",
+    "value": "irepertoire-mouse-rna-bcr-sr",
+    "company": "iRepertoire"
+  },
+  {
+    "text": "Human gDNA RepSeq Long Read Reagent System",
+    "value": "irepertoire-human-dna-igh-lr",
+    "company": "iRepertoire"
+  },
+  {
+    "text": "Human gDNA RepSeq Short Read Reagent System",
+    "value": "irepertoire-human-dna-igh-sr",
+    "company": "iRepertoire"
+  },
+  {
+    "text": "Oncomine™ TCR Beta‑LR Assay",
+    "value": "oncomine-human-tcrb-lr-full-length",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ TCR Beta‑SR Assay",
+    "value": "oncomine-human-tcrb-sr-cdr3",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ BCR IGH‑LR Assay Kit",
+    "value": "oncomine-human-bcr-igh-lr-full-length",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ BCR IGH‑SR Assay",
+    "value": "oncomine-human-bcr-igh-sr-cdr3",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ BCR Pan-Clonality Assay",
+    "value": "oncomine-human-bcr-pan-clonality-cdr3",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ IGH FR3(d)-J Assay",
+    "value": "oncomine-human-igh-fr3-j",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ IGH FR2-J Assay",
+    "value": "oncomine-human-igh-fr2-j",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ IGH FR1-J Assay",
+    "value": "oncomine-human-igh-fr1-j",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ IGHV Leader-J Assay",
+    "value": "oncomine-human-igh-leader-j",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "Oncomine™ TCR Pan-Clonality Assay",
+    "value": "oncomine-human-tcr-pan-clonality-cdr3",
+    "company": "Thermo Fisher",
+    "singleR": true
+  },
+  {
+    "text": "AbHelix BCR data",
+    "value": "abhelix-human-bcr-full-length",
+    "company": "AbHelix"
+  },
+  {
+    "text": "AbHelix TCR data",
+    "value": "abhelix-human-tcr-full-length",
+    "company": "AbHelix"
+  },
+  {
+    "text": "VDJ CDR3 Protocol with V1 beads (Human TCR)",
+    "value": "bd-rhapsody-human-tcr-v1",
+    "company": "BD Rhapsody™"
+  },
+  {
+    "text": "VDJ CDR3 Protocol with V1 beads (Human BCR)",
+    "value": "bd-rhapsody-human-bcr-v1",
+    "company": "BD Rhapsody™"
+  },
+  {
+    "text": "VDJ CDR3 Protocol with V1 beads (Mouse TCR)",
+    "value": "bd-rhapsody-mouse-tcr-v1",
+    "company": "BD Rhapsody™"
+  },
+  {
+    "text": "VDJ CDR3 Protocol with V1 beads (Mouse BCR)",
+    "value": "bd-rhapsody-mouse-bcr-v1",
+    "company": "BD Rhapsody™"
+  },
+  {
+    "text": "VDJ CDR3 Protocol with Enhanced Bead (Human TCR)",
+    "value": "bd-rhapsody-human-tcr-v2",
+    "company": "BD Rhapsody™"
+  },
+  {
+    "text": "VDJ CDR3 Protocol with Enhanced Bead (Human BCR)",
+    "value": "bd-rhapsody-human-bcr-v2",
+    "company": "BD Rhapsody™"
+  },
+  {
+    "text": "VDJ CDR3 Protocol with Enhanced Bead (Mouse TCR)",
+    "value": "bd-rhapsody-mouse-tcr-v2",
+    "company": "BD Rhapsody™"
+  },
+  {
+    "text": "VDJ CDR3 Protocol with Enhanced Bead (Mouse BCR)",
+    "value": "bd-rhapsody-mouse-bcr-v2",
+    "company": "BD Rhapsody™"
+  },
+  {
+    "text": "Parse Biosciences Parse Evercode™ single-cell",
+    "value": "parse-bio-vdj-3gex",
+    "company": "Parse Biosciences"
+  },
+  {
+    "text": "Biomed2",
+    "value": "biomed2-human-bcr-full-length",
+    "company": "Biomed2"
+  }
+]

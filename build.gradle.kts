@@ -111,11 +111,6 @@ repositories {
 
     mavenCentral()
 
-    // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
-    maven {
-        url = uri("https://pub.maven.milaboratory.com")
-    }
-
     maven {
         url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
         authentication {
