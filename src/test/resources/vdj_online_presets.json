@@ -254,6 +254,16 @@
     "company": "BD Rhapsody™"
   },
   {
+    "text": "NEBNext® Immune Sequencing Kit (Human)",
+    "value": "nebnext-human-tcr-bcr-full-length",
+    "company": "New England Biolabs"
+  },
+  {
+    "text": "NEBNext® Immune Sequencing Kit (Mouse)",
+    "value": "nebnext-mouse-tcr-bcr-full-length",
+    "company": "New England Biolabs"
+  },
+  {
     "text": "Parse Biosciences Parse Evercode™ single-cell",
     "value": "parse-bio-vdj-3gex",
     "company": "Parse Biosciences"
