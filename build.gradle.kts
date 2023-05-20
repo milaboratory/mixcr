@@ -130,17 +130,16 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-101-vdja_online"
-val milibVersion = "2.4.0-42-master"
-val mitoolVersion = "1.7.0-25-main"
-val repseqioVersion = "1.8.0-45-master"
+val mixcrAlgoVersion = "4.3.0-105-develop"
+val milibVersion = "2.4.0-45-master"
+val mitoolVersion = "1.7.0-28-main"
+val repseqioVersion = "1.8.0-59-master"
 
 val picocliVersion = "4.6.3"
-val jacksonBomVersion = "2.15.0"
+val jacksonBomVersion = "2.15.1"
 val milmVersion = "3.7.0"
 
 val cliktVersion = "3.5.0"
-val jcommanderVersion = "1.72"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
@@ -161,7 +160,6 @@ dependencies {
 
     // proguard require classes that were inherited
     obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
-    obfuscationLibs("com.beust:jcommander:$jcommanderVersion") { exclude("*", "*") }
 
     implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
@@ -187,9 +185,7 @@ dependencies {
     testImplementation("org.mockito:mockito-all:1.10.19")
     testImplementation("io.kotest:kotest-assertions-core:5.3.0")
 
-    // for working reflection scanning
     testImplementation("com.github.ajalt.clikt:clikt:$cliktVersion")
-    testImplementation("com.beust:jcommander:$jcommanderVersion")
 
     testImplementation("org.reflections:reflections:0.10.2")
 
