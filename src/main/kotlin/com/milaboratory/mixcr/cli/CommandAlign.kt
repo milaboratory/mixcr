@@ -1175,8 +1175,13 @@ object CommandAlign {
                 if (writers?.keys?.isEmpty() == true)
                     writers[emptyList()]
 
-                tagsExtractor.sampleStats.forEach { (k, v) ->
-                    writers?.getExisting(k)?.setNumberOfProcessedReads(v.reads.get())
+                writers?.keys?.forEach { sample ->
+                    writers[sample].setNumberOfProcessedReads(
+                        if (sample.isEmpty())
+                            tagsExtractor.inputReads.get()
+                        else
+                            tagsExtractor.sampleStats[sample]!!.reads.get()
+                    )
                 }
 
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
