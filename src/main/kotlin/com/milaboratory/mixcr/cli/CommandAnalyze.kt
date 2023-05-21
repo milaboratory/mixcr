@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.cli.CommandAlign.SAVE_OUTPUT_FILE_NAMES_OPTION
+import com.milaboratory.mixcr.cli.CommandAlign.STRICT_SAMPLE_NAME_MATCHING_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
 import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -224,6 +225,15 @@ object CommandAnalyze {
         )
         private var outputNoUsedReads: Boolean = false
 
+        @Option(
+            description = [
+                "Perform strict matching against input sample sheet (one substitution will be allowed by default).",
+                "This option only valid if input file is *.tsv sample sheet."
+            ],
+            names = [STRICT_SAMPLE_NAME_MATCHING_OPTION],
+        )
+        private var strictMatching = false
+
         // parsing inOut
 
         private val inputTemplates get() = inOut.dropLast(1).map { Paths.get(it) }
@@ -260,6 +270,9 @@ object CommandAnalyze {
                 ValidationException.requireFileExists(input)
             }
             ValidationException.requireNoExtension(Paths.get(outSuffix))
+
+            if (strictMatching && inputSampleSheet == null)
+                throw ValidationException("$STRICT_SAMPLE_NAME_MATCHING_OPTION is valid only with sample sheet input, i.e. a *.tsv file.")
         }
 
         override fun run0() {
@@ -318,7 +331,8 @@ object CommandAnalyze {
             val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list")
                 .takeIf { bundle.align!!.splitBySample }
             val extraAlignArgs =
-                sampleFileList?.let { listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, it.toString()) } ?: emptyList()
+                (sampleFileList?.let { listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, it.toString()) } ?: emptyList()) +
+                        (if (strictMatching) listOf(STRICT_SAMPLE_NAME_MATCHING_OPTION) else emptyList())
 
             // Adding "align" step
             if (outputNoUsedReads)

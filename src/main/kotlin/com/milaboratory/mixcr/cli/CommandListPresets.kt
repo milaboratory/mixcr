@@ -56,5 +56,7 @@ private val flagOptions = mapOf(
             "(${AlignMixins.AlignmentBoundaryConstants.RIGHT_FLOATING_CMD_OPTION} (${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})|\n" +
             "${AlignMixins.AlignmentBoundaryConstants.RIGHT_RIGID_CMD_OPTION} [(${Labels.GENE_TYPE}|${Labels.ANCHOR_POINT})])",
     Flags.TagPattern to "${AlignMixins.SetTagPattern.CMD_OPTION} <pattern>",
-    Flags.SampleTable to "${AlignMixins.SetSampleTable.CMD_OPTION} sample_table.tsv",
+    Flags.SampleTable to
+            "${AlignMixins.SetSampleTable.CMD_OPTION_FUZZY} sample_table.tsv\n" +
+            "${AlignMixins.SetSampleTable.CMD_OPTION_STRICT} sample_table.tsv",
 )

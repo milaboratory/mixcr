@@ -43,7 +43,7 @@ mixcr analyze generic-tcr-amplicon-separate-samples-umi \
   --rna \
   --rigid-left-alignment-boundary \
   --rigid-right-alignment-boundary C \
-  --sample-table sample_table_1.tsv \
+  --sample-table-strict sample_table_1.tsv \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case024-sample-barcode-split_1
@@ -58,7 +58,7 @@ mixcr analyze generic-tcr-amplicon-separate-samples-umi \
   --rna \
   --rigid-left-alignment-boundary \
   --rigid-right-alignment-boundary C \
-  --sample-table sample_table_2.tsv \
+  --sample-table-strict sample_table_2.tsv \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case024-sample-barcode-split_2
@@ -74,7 +74,7 @@ mixcr analyze generic-tcr-amplicon-separate-samples-umi \
   --rna \
   --rigid-left-alignment-boundary \
   --rigid-right-alignment-boundary C \
-  --sample-table sample_table_3.tsv \
+  --sample-table-strict sample_table_3.tsv \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case024-sample-barcode-split_3

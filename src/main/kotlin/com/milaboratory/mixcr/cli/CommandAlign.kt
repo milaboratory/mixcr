@@ -124,6 +124,7 @@ object CommandAlign {
     const val COMMAND_NAME = MiXCRCommandDescriptor.align.name
 
     const val SAVE_OUTPUT_FILE_NAMES_OPTION = "--save-output-file-names"
+    const val STRICT_SAMPLE_NAME_MATCHING_OPTION = "--strict-sample-sheet-matching"
 
     fun List<CommandAlignParams.SampleTable.Row>.bySampleName() = groupBy { it.sample }
 
@@ -665,6 +666,15 @@ object CommandAlign {
         )
         lateinit var presetName: String
 
+        @Option(
+            description = [
+                "Perform strict matching against input sample sheet (one substitution will be allowed by default).",
+                "This option only valid if input file is *.tsv sample sheet."
+            ],
+            names = [STRICT_SAMPLE_NAME_MATCHING_OPTION],
+        )
+        private var strictMatching = false
+
         @Mixin
         var pipelineMixins: PipelineMiXCRMixinsHidden? = null
 
@@ -819,7 +829,12 @@ object CommandAlign {
                     ReadSearchPlan.create(it, ReadSearchSettings(SearchSettings.Default, ReadSearchMode.Direct)).allTags
                 } ?: emptySet()
                 params = params.copy(
-                    tagTransformationSteps = listOf(sampleSheet.tagTransformation(matchingTags)) + params.tagTransformationSteps
+                    tagTransformationSteps = listOf(
+                        sampleSheet.tagTransformation(
+                            matchingTags,
+                            !strictMatching
+                        )
+                    ) + params.tagTransformationSteps
                 )
             }
 
@@ -948,6 +963,9 @@ object CommandAlign {
                             "(e.g. '$libraryLocations', and put just a library name as -b / --library option value (e.g. '--library mylibrary')."
                 )
             }
+
+            if (strictMatching && inputSampleSheet == null)
+                throw ValidationException("$STRICT_SAMPLE_NAME_MATCHING_OPTION is valid only with sample sheet input, i.e. a *.tsv file.")
         }
 
         /**

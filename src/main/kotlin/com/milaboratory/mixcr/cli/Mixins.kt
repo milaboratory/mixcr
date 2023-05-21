@@ -179,18 +179,27 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
     )
     fun inferSampleTable(@Suppress("UNUSED_PARAMETER") f: Boolean) {
         println(AlignMixins.InferSampleTable.CMD_OPTION + " deprecated and has no effect.")
-        // mixIn(AlignMixins.InferSampleTable)
     }
-    
+
     @Option(
-        description = ["Loads sample table from a tab separated file."],
-        names = [AlignMixins.SetSampleTable.CMD_OPTION],
+        description = ["Loads sample table from a tab separated file (one substitution will be allowed during matching)"],
+        names = [AlignMixins.SetSampleTable.CMD_OPTION_FUZZY],
         arity = "1",
         paramLabel = "sample_table.tsv",
         order = OptionsOrder.mixins.align + 330
     )
-    fun sampleTable(arg: String) =
-        mixIn(AlignMixins.SetSampleTable(arg, null))
+    fun sampleTableFuzzy(arg: String) =
+        mixIn(AlignMixins.SetSampleTable(arg, null, true))
+
+    @Option(
+        description = ["Loads sample table from a tab separated file (strict matching will be used)."],
+        names = [AlignMixins.SetSampleTable.CMD_OPTION_STRICT],
+        arity = "1",
+        paramLabel = "sample_table.tsv",
+        order = OptionsOrder.mixins.align + 331
+    )
+    fun sampleTableStrict(arg: String) =
+        mixIn(AlignMixins.SetSampleTable(arg, null, false))
 
     //
     // Material type
