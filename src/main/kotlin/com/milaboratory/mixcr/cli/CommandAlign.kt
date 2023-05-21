@@ -672,6 +672,7 @@ object CommandAlign {
                 "This option only valid if input file is *.tsv sample sheet."
             ],
             names = [STRICT_SAMPLE_NAME_MATCHING_OPTION],
+            order = OptionsOrder.main + 1100,
         )
         private var strictMatching = false
 
