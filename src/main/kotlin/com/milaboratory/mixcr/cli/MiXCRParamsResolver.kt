@@ -84,11 +84,13 @@ val presetFlagsMessages = mapOf(
     Flags.TagPattern to
             "This preset requires to specify tag pattern, \n" +
             "please use ${AlignMixins.SetTagPattern.CMD_OPTION} mix-in to set it, alternatively " +
-            "tag pattern can be provided with sample table using ${AlignMixins.SetSampleTable.CMD_OPTION} mixin.",
+            "tag pattern can be provided with sample table using ${AlignMixins.SetSampleTable.CMD_OPTION_FUZZY} or " +
+            "${AlignMixins.SetSampleTable.CMD_OPTION_STRICT} mixin.",
 
     Flags.SampleTable to
             "This preset requires to specify sample table, \n" +
-            "please use ${AlignMixins.SetSampleTable.CMD_OPTION} mix-in.",
+            "please use ${AlignMixins.SetSampleTable.CMD_OPTION_FUZZY} or " +
+            "${AlignMixins.SetSampleTable.CMD_OPTION_STRICT} mix-in.",
 )
 
 
