@@ -459,6 +459,4 @@ object CommandAlignPipeline {
         val ok get() = status == Good
         fun mapSequence(mapping: (NSQTuple) -> NSQTuple) = copy(sequence = mapping(sequence))
     }
-
-    fun listToSampleName(sample: List<String>) = sample.joinToString("_")
 }

@@ -43,6 +43,7 @@ mixcr analyze generic-tcr-amplicon-separate-samples-umi \
   --rna \
   --rigid-left-alignment-boundary \
   --rigid-right-alignment-boundary C \
+  --strict-sample-sheet-matching \
   sample_sheet_1.tsv \
   case026-sample-barcode-split_1
 
@@ -62,6 +63,7 @@ mixcr analyze generic-tcr-amplicon-separate-samples-umi \
   --rna \
   --rigid-left-alignment-boundary \
   --rigid-right-alignment-boundary C \
+  --strict-sample-sheet-matching \
   sample_sheet_2.tsv \
   case026-sample-barcode-split_2
 

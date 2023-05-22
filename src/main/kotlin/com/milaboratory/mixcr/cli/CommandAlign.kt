@@ -64,7 +64,6 @@ import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.No
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.ProcessingBundleStatus.NotParsed
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.cellSplitGroupLabel
 import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.listToSampleName
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
@@ -72,10 +71,11 @@ import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.AlignMixins.LimitInput
 import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotIfNotBlank
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotAfterIfNotBlank
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRStepParams
+import com.milaboratory.mixcr.presets.listToSampleName
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -124,6 +124,7 @@ object CommandAlign {
     const val COMMAND_NAME = MiXCRCommandDescriptor.align.name
 
     const val SAVE_OUTPUT_FILE_NAMES_OPTION = "--save-output-file-names"
+    const val STRICT_SAMPLE_NAME_MATCHING_OPTION = "--strict-sample-sheet-matching"
 
     fun List<CommandAlignParams.SampleTable.Row>.bySampleName() = groupBy { it.sample }
 
@@ -131,7 +132,7 @@ object CommandAlign {
         get() = inputs?.let { inputs ->
             InputFileGroups(
                 inputs.mapIndexed { idx, paths ->
-                    FileGroup(paths.map { path!!.resolve(it) }, listOf(TAG_INPUT_IDX to idx.toString()))
+                    FileGroup(paths.map { basePath!!.resolve(it) }, listOf(TAG_INPUT_IDX to idx.toString()))
                 })
         }
 
@@ -292,23 +293,23 @@ object CommandAlign {
             fun fill(type: String) {
                 when (type) {
                     "R1" -> {
-                        notAlignedReadsR1 = outputDir.resolve("${prefix.dotIfNotBlank()}not_aligned.R1.fastq.gz")
-                        notParsedReadsR1 = outputDir.resolve("${prefix.dotIfNotBlank()}not_parsed.R1.fastq.gz")
+                        notAlignedReadsR1 = outputDir.resolve("${prefix.dotAfterIfNotBlank()}not_aligned.R1.fastq.gz")
+                        notParsedReadsR1 = outputDir.resolve("${prefix.dotAfterIfNotBlank()}not_parsed.R1.fastq.gz")
                     }
 
                     "R2" -> {
-                        notAlignedReadsR2 = outputDir.resolve("${prefix.dotIfNotBlank()}not_aligned.R2.fastq.gz")
-                        notParsedReadsR2 = outputDir.resolve("${prefix.dotIfNotBlank()}not_parsed.R2.fastq.gz")
+                        notAlignedReadsR2 = outputDir.resolve("${prefix.dotAfterIfNotBlank()}not_aligned.R2.fastq.gz")
+                        notParsedReadsR2 = outputDir.resolve("${prefix.dotAfterIfNotBlank()}not_parsed.R2.fastq.gz")
                     }
 
                     "I1" -> {
-                        notAlignedReadsI1 = outputDir.resolve("${prefix.dotIfNotBlank()}not_aligned.I1.fastq.gz")
-                        notParsedReadsI1 = outputDir.resolve("${prefix.dotIfNotBlank()}not_parsed.I1.fastq.gz")
+                        notAlignedReadsI1 = outputDir.resolve("${prefix.dotAfterIfNotBlank()}not_aligned.I1.fastq.gz")
+                        notParsedReadsI1 = outputDir.resolve("${prefix.dotAfterIfNotBlank()}not_parsed.I1.fastq.gz")
                     }
 
                     "I2" -> {
-                        notAlignedReadsI2 = outputDir.resolve("${prefix.dotIfNotBlank()}not_aligned.I2.fastq.gz")
-                        notParsedReadsI2 = outputDir.resolve("${prefix.dotIfNotBlank()}not_parsed.I2.fastq.gz")
+                        notAlignedReadsI2 = outputDir.resolve("${prefix.dotAfterIfNotBlank()}not_aligned.I2.fastq.gz")
+                        notParsedReadsI2 = outputDir.resolve("${prefix.dotAfterIfNotBlank()}not_parsed.I2.fastq.gz")
                     }
 
                     else -> throw IllegalArgumentException()
@@ -665,6 +666,16 @@ object CommandAlign {
         )
         lateinit var presetName: String
 
+        @Option(
+            description = [
+                "Perform strict matching against input sample sheet (one substitution will be allowed by default).",
+                "This option only valid if input file is *.tsv sample sheet."
+            ],
+            names = [STRICT_SAMPLE_NAME_MATCHING_OPTION],
+            order = OptionsOrder.main + 1100,
+        )
+        private var strictMatching = false
+
         @Mixin
         var pipelineMixins: PipelineMiXCRMixinsHidden? = null
 
@@ -794,8 +805,9 @@ object CommandAlign {
         private var outputFileList: Path? = null
 
         private val paramsSpec by lazy {
-            MiXCRParamsSpec(presetName, mixins.mixins +
-                    listOfNotNull(inputSampleSheet?.tagPattern?.let { AlignMixins.SetTagPattern(it) })
+            MiXCRParamsSpec(
+                presetName, mixins.mixins +
+                        listOfNotNull(inputSampleSheet?.tagPattern?.let { AlignMixins.SetTagPattern(it) })
             )
         }
 
@@ -818,7 +830,12 @@ object CommandAlign {
                     ReadSearchPlan.create(it, ReadSearchSettings(SearchSettings.Default, ReadSearchMode.Direct)).allTags
                 } ?: emptySet()
                 params = params.copy(
-                    tagTransformationSteps = listOf(sampleSheet.tagTransformation(matchingTags)) + params.tagTransformationSteps
+                    tagTransformationSteps = listOf(
+                        sampleSheet.tagTransformation(
+                            matchingTags,
+                            !strictMatching
+                        )
+                    ) + params.tagTransformationSteps
                 )
             }
 
@@ -947,6 +964,9 @@ object CommandAlign {
                             "(e.g. '$libraryLocations', and put just a library name as -b / --library option value (e.g. '--library mylibrary')."
                 )
             }
+
+            if (strictMatching && inputSampleSheet == null)
+                throw ValidationException("$STRICT_SAMPLE_NAME_MATCHING_OPTION is valid only with sample sheet input, i.e. a *.tsv file.")
         }
 
         /**
@@ -1049,13 +1069,6 @@ object CommandAlign {
                     pathsForNotAligned.notParsedReadsR2
                 )
             ) { reader, writers, notAlignedWriter, notParsedWriter ->
-                // Pre-create all writers
-                // val samples = tagsExtractor.samples
-                // if (samples == null || !cmdParams.splitBySample)
-                //     writers?.get(emptyList())
-                // else
-                //     samples.forEach { sample -> writers?.get(sample) }
-
                 writers?.writeHeader(
                     MiXCRHeader(
                         inputHash,
@@ -1181,7 +1194,15 @@ object CommandAlign {
                 if (writers?.keys?.isEmpty() == true)
                     writers[emptyList()]
 
-                writers?.setNumberOfProcessedReads(tagsExtractor.inputReads.get())
+                writers?.keys?.forEach { sample ->
+                    writers[sample].setNumberOfProcessedReads(
+                        if (sample.isEmpty())
+                            tagsExtractor.inputReads.get()
+                        else
+                            tagsExtractor.sampleStats[sample]!!.reads.get()
+                    )
+                }
+
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
 
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
@@ -1281,14 +1302,11 @@ object CommandAlign {
                     writer
                 }
 
+            fun getExisting(sample: List<String>) = writers[sample]!!
+
             fun setFooter(footer: MiXCRFooter) {
                 for (writer in writers.values)
                     writer.setFooter(footer)
-            }
-
-            fun setNumberOfProcessedReads(value: Long) {
-                for (writer in writers.values)
-                    writer.setNumberOfProcessedReads(value)
             }
 
             override fun close() {
@@ -1317,6 +1335,7 @@ object CommandAlign {
         return seedFileName.substring(0, dotIndex) to seedFileName.substring(dotIndex)
     }
 
+    // Consistent with com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.align.outputName
     fun addSampleToFileName(seedFileName: String, sample: List<String>): String {
         val sampleName = listToSampleName(sample)
         val (prefix, extension) = toPrefixAndExtension(seedFileName)

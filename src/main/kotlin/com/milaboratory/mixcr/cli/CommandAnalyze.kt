@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.cli.CommandAlign.SAVE_OUTPUT_FILE_NAMES_OPTION
+import com.milaboratory.mixcr.cli.CommandAlign.STRICT_SAMPLE_NAME_MATCHING_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
 import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -21,7 +22,7 @@ import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.AnyMiXCRCommand
 import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotIfNotBlank
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotAfterIfNotBlank
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRPipeline
@@ -107,7 +108,7 @@ object CommandAnalyze {
 
         @Parameters(
             index = "1",
-            arity = "2..3",
+            arity = "2..5",
             paramLabel = "$inputsLabel $outputLabel",
             // help is covered by mkCommandSpec
             hidden = true
@@ -224,6 +225,16 @@ object CommandAnalyze {
         )
         private var outputNoUsedReads: Boolean = false
 
+        @Option(
+            description = [
+                "Perform strict matching against input sample sheet (one substitution will be allowed by default).",
+                "This option only valid if input file is *.tsv sample sheet."
+            ],
+            names = [STRICT_SAMPLE_NAME_MATCHING_OPTION],
+            order = OptionsOrder.report + 300
+        )
+        private var strictMatching = false
+
         // parsing inOut
 
         private val inputTemplates get() = inOut.dropLast(1).map { Paths.get(it) }
@@ -260,6 +271,9 @@ object CommandAnalyze {
                 ValidationException.requireFileExists(input)
             }
             ValidationException.requireNoExtension(Paths.get(outSuffix))
+
+            if (strictMatching && inputSampleSheet == null)
+                throw ValidationException("$STRICT_SAMPLE_NAME_MATCHING_OPTION is valid only with sample sheet input, i.e. a *.tsv file.")
         }
 
         override fun run0() {
@@ -267,7 +281,7 @@ object CommandAnalyze {
             val outputIsFolder = outSuffix.endsWith(File.separator)
             val outputPath = Path(outSuffix)
             val outputNamePrefix = if (!outputIsFolder) outputPath.fileName.toString() else ""
-            val outputFolder = if (!outputIsFolder) outputPath.parent ?: Path(".") else outputPath
+            val outputFolder = if (!outputIsFolder) outputPath.parent ?: Path("") else outputPath
 
             // Creating output folder if not yet exists
             if (!outputFolder.exists())
@@ -315,10 +329,11 @@ object CommandAnalyze {
             }
 
             // Adding an option to save output files by align
-            val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotIfNotBlank()}align.list")
+            val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list")
                 .takeIf { bundle.align!!.splitBySample }
             val extraAlignArgs =
-                sampleFileList?.let { listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, it.toString()) } ?: emptyList()
+                (sampleFileList?.let { listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, it.toString()) } ?: emptyList()) +
+                        (if (strictMatching) listOf(STRICT_SAMPLE_NAME_MATCHING_OPTION) else emptyList())
 
             // Adding "align" step
             if (outputNoUsedReads)
@@ -346,40 +361,6 @@ object CommandAnalyze {
             planBuilder.executeSteps(forceOverwrite, dryRun)
 
             println("Analysis finished successfully.")
-
-            // if (bundle.qc?.checks?.isNotEmpty() == true) {
-            //     val stepsPossibleToCheck = planBuilder.executionPlan.filter { step ->
-            //         step.output
-            //             .map { Paths.get(it) }
-            //             .any { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
-            //     }
-            //     val stepsToCheck = when {
-            //         qcAfterEachStep -> stepsPossibleToCheck
-            //         else -> stepsPossibleToCheck.takeLast(1)
-            //     }
-            //     var counter = 0
-            //     for (step in stepsToCheck) {
-            //         val indexOfStep = planBuilder.executionPlan.indexOf(step)
-            //         step.output
-            //             .map { Paths.get(it) }
-            //             .filter { InputFileType.CLNX.matches(it) || InputFileType.VDJCA.matches(it) }
-            //             .forEach { output ->
-            //                 planBuilder.executionPlan.add(
-            //                     indexOfStep + 1,
-            //                     ExecutionStep(
-            //                         MiXCRCommandDescriptor.qc.command,
-            //                         counter++,
-            //                         emptyList(),
-            //                         emptyList(),
-            //                         listOf(output.toString()),
-            //                         listOf(
-            //                             output.toString().removeSuffix(output.extension) + output.extension + ".qc.txt"
-            //                         )
-            //                     )
-            //                 )
-            //             }
-            //     }
-            // }
         }
 
         class InputFileSet(val sampleName: String, val fileNames: List<String>)
@@ -477,19 +458,19 @@ object CommandAnalyze {
                 val nextInputsBuilder = mutableListOf<InputFileSet>()
 
                 nextInputs.forEach { inputs ->
-                    val outputNamePrefixFull = if (inputs.sampleName != "")
-                        outputNamePrefix + "." + inputs.sampleName else outputNamePrefix
+                    // val outputNamePrefixFull = if (inputs.sampleName != "")
+                    //     outputNamePrefix.dotIfNotBlank() + inputs.sampleName else outputNamePrefix
 
                     val arguments = mutableListOf<String>()
 
                     if (outputReports)
-                        cmd.textReportName(outputNamePrefixFull, paramsBundle, round)
+                        cmd.textReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
                             ?.let {
                                 arguments += listOf("--report", outputFolder.resolve(it).toString())
                             }
 
                     if (outputJsonReports)
-                        cmd.jsonReportName(outputNamePrefixFull, paramsBundle, round)
+                        cmd.jsonReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
                             ?.let {
                                 arguments += listOf("--json-report", outputFolder.resolve(it).toString())
                             }
@@ -503,7 +484,8 @@ object CommandAnalyze {
                     }
 
                     val output = listOf(
-                        outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round)).toString()
+                        outputFolder.resolve(cmd.outputName(outputNamePrefix, inputs.sampleName, paramsBundle, round))
+                            .toString()
                     )
 
                     executionPlan += ExecutionStep(
@@ -520,7 +502,14 @@ object CommandAnalyze {
                         InputFileSet(
                             inputs.sampleName,
                             listOf(
-                                outputFolder.resolve(cmd.outputName(outputNamePrefixFull, paramsBundle, round))
+                                outputFolder.resolve(
+                                    cmd.outputName(
+                                        outputNamePrefix,
+                                        inputs.sampleName,
+                                        paramsBundle,
+                                        round
+                                    )
+                                )
                                     .toString()
                             )
                         )
