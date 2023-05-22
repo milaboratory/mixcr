@@ -163,7 +163,8 @@ align-shotgun:
       libraryStructure: Unknown
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
-        minSumScore: 80
+        minSumScore: 60
+        edgeRealignmentMinScoreOverride: 35
         relativeMinScore: 0.97
         parameters:
           type: kaligner
@@ -442,7 +443,8 @@ align-single-cell:
     parameters:
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
-        minSumScore: 150
+        minSumScore: 60
+        edgeRealignmentMinScoreOverride: 35
         relativeMinScore: 0.97
         parameters:
           type: kaligner2
