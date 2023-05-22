@@ -88,9 +88,9 @@ jobs:
         { "MI_LICENSE": ${{ toJSON(secrets.MI_LICENSE) }} }
 
       GRADLE_PROPERTIES: |
-        miRepoAccessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }}
-        miRepoSecretAccessKey= ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        miRepoSessionToken= ${{ secrets.AWS_SESSION_TOKEN }}
+        miRepoAccessKeyId=${{ env.AWS_ACCESS_KEY_ID }}
+        miRepoSecretAccessKey= ${{ env.AWS_SECRET_ACCESS_KEY }}
+        miRepoSessionToken= ${{ env.AWS_SESSION_TOKEN }}
 
       TELEGRAM_NOTIFICATION_TARGET: ${{ secrets.TG_CHANNEL_MIBUILDS }}
       TELEGRAM_API_TOKEN: ${{ secrets.TG_CI_BOT_TOKEN }}
