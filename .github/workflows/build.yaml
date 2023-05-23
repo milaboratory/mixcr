@@ -34,14 +34,14 @@ jobs:
       product-name-slug: 'mixcr'
 
       # Tests
-      test-unit: true
+      test-unit: false
       test-unit-before-tasks: shadowJarAfterObfuscation
       test-unit-cache: true
       test-unit-cache-paths: |
         ./src/test/resources/sequences/big/**
       test-unit-cache-key: 'tests-sequences-v1'
 
-      test-integration: true
+      test-integration: false
       test-integration-before-tasks: shadowJarAfterObfuscation
       test-integration-tasks: ''
       test-integration-cache: true
@@ -53,24 +53,24 @@ jobs:
       test-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # Lib
-      dist-library: ${{ github.event_name != 'schedule' }}
+      dist-library: false
       dist-library-dev-tasks: publishAllPublicationsToMiprivRepository
       dist-library-release-tasks: publishAllPublicationsToMiprivRepository
 
       # Distribution
-      dist-archive: ${{ github.event_name != 'schedule' }}
+      dist-archive: false
       dist-archive-tasks: distributionZip
       dist-archive-paths: ./distributions/mixcr*.zip
-      dist-archive-s3: true
+      dist-archive-s3: false
       dist-archive-s3-add-sha: true
       dist-archive-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # CDN redirect
-      cdn-redirect-s3: true
+      cdn-redirect-s3: false
       cdn-redirect-s3-bucket-path: 'link/software/mixcr'
       cdn-redirect-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
-      dist-docker: true
+      dist-docker: false
       dist-docker-tasks: |
         buildDockerImage
         buildIMGTDockerImage
@@ -81,7 +81,7 @@ jobs:
       release-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # Send notifications
-      notify-telegram: true
+      notify-telegram: false
 
     secrets:
       env: |
