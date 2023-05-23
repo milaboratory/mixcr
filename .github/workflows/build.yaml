@@ -34,7 +34,7 @@ jobs:
       product-name-slug: 'mixcr'
 
       # Tests
-      test-unit: false
+      test-unit: true
       test-unit-before-tasks: shadowJarAfterObfuscation
       test-unit-cache: true
       test-unit-cache-paths: |
