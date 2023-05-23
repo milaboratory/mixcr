@@ -82,6 +82,8 @@ jobs:
 
       # Send notifications
       notify-telegram: false
+      env: |
+        { "GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED": "true" }
 
     secrets:
       env: |
