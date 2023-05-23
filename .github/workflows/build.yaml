@@ -81,7 +81,7 @@ jobs:
       release-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # Send notifications
-      notify-telegram: false
+      notify-telegram: true
       env: |
         { "GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED": "true" }
 
