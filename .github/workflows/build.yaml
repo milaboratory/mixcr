@@ -53,15 +53,15 @@ jobs:
       test-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # Lib
-      dist-library: false
+      dist-library: true
       dist-library-dev-tasks: publishAllPublicationsToMiprivRepository
       dist-library-release-tasks: publishAllPublicationsToMiprivRepository
 
       # Distribution
-      dist-archive: false
+      dist-archive: true
       dist-archive-tasks: distributionZip
       dist-archive-paths: ./distributions/mixcr*.zip
-      dist-archive-s3: false
+      dist-archive-s3: true
       dist-archive-s3-add-sha: true
       dist-archive-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
@@ -70,7 +70,7 @@ jobs:
       cdn-redirect-s3-bucket-path: 'link/software/mixcr'
       cdn-redirect-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
-      dist-docker: false
+      dist-docker: true
       dist-docker-tasks: |
         buildDockerImage
         buildIMGTDockerImage
