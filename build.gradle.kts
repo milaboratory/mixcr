@@ -335,7 +335,7 @@ val prepareIMGTDockerContext by tasks.registering(Download::class) {
 }
 
 val commonDockerContents: Dockerfile.() -> Unit = {
-    from("amazoncorretto:17-jre")
+    from("amazoncorretto:17")
     label(mapOf("maintainer" to "MiLaboratories Inc <support@milaboratories.com>"))
     runCommand("mkdir /work /opt/${project.name}")
     workingDir("/work")
