@@ -402,7 +402,7 @@ val buildIMGTDockerImage by tasks.registering(DockerBuildImage::class) {
 
 publishing {
     repositories {
-        if (miRepoAccessKeyId != null && miRepoSecretAccessKey != null && miRepoSessionToken != null) {
+        if (miRepoAccessKeyId != null && miRepoSecretAccessKey != null) {
             maven {
                 name = "mipriv"
                 url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
@@ -411,7 +411,7 @@ publishing {
                     credentials(AwsCredentials::class) {
                         accessKey = miRepoAccessKeyId!!
                         secretKey = miRepoSecretAccessKey!!
-			sessionToken = miRepoSessionToken!!
+                        sessionToken = miRepoSessionToken
                     }
                 }
             }
