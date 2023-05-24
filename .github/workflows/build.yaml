@@ -13,11 +13,11 @@ jobs:
   init:
     runs-on: ubuntu-latest
     steps:
-      - uses: milaboratory/github-ci/actions/context/init@v3
+      - uses: milaboratory/github-ci/actions/context/init@v4
         with:
           version-canonize: false
       - id: context
-        uses: milaboratory/github-ci/actions/context@v3
+        uses: milaboratory/github-ci/actions/context@v4
 
     outputs:
       is-release: ${{ steps.context.outputs.is-release }}
@@ -26,7 +26,7 @@ jobs:
     needs:
       - init
 
-    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v3
+    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4
     with:
       # Environment
       java-version: '11'
@@ -50,6 +50,8 @@ jobs:
       test-integration-cache-key: 'tests-sequences-v1'
       test-integration-python-version: '3.9'
 
+      test-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
+
       # Lib
       dist-library: ${{ github.event_name != 'schedule' }}
       dist-library-dev-tasks: publishAllPublicationsToMiprivRepository
@@ -61,10 +63,12 @@ jobs:
       dist-archive-paths: ./distributions/mixcr*.zip
       dist-archive-s3: true
       dist-archive-s3-add-sha: true
+      dist-archive-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # CDN redirect
       cdn-redirect-s3: true
       cdn-redirect-s3-bucket-path: 'link/software/mixcr'
+      cdn-redirect-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       dist-docker: true
       dist-docker-tasks: |
@@ -74,6 +78,7 @@ jobs:
 
       # Release configuration
       release-github-draft: true
+      release-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # Send notifications
       notify-telegram: true
@@ -83,11 +88,7 @@ jobs:
         { "MI_LICENSE": ${{ toJSON(secrets.MI_LICENSE) }} }
 
       GRADLE_PROPERTIES: |
-        miRepoAccessKeyId=${{ secrets.AWS_CI_ACCESS_KEY_ID }}
-        miRepoSecretAccessKey= ${{ secrets.AWS_CI_SECRET_ACCESS_KEY }}
-
-      AWS_KEY_ID: ${{ secrets.AWS_CI_ACCESS_KEY_ID }}
-      AWS_KEY_SECRET: ${{ secrets.AWS_CI_SECRET_ACCESS_KEY }}
+        org.gradle.caching=true
 
       TELEGRAM_NOTIFICATION_TARGET: ${{ secrets.TG_CHANNEL_MIBUILDS }}
       TELEGRAM_API_TOKEN: ${{ secrets.TG_CI_BOT_TOKEN }}

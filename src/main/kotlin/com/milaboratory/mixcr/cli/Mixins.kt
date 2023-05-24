@@ -38,7 +38,6 @@ import com.milaboratory.mixcr.presets.ExportMixins
 import com.milaboratory.mixcr.presets.ExportMixins.AddExportAlignmentsField
 import com.milaboratory.mixcr.presets.ExportMixins.AddExportClonesField
 import com.milaboratory.mixcr.presets.ExportMixins.DontImputeGermlineOnExport
-import com.milaboratory.mixcr.presets.ExportMixins.ExportClonesAddFileSplitting.*
 import com.milaboratory.mixcr.presets.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.GenericMixin
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
@@ -172,23 +171,35 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
         mixIn(AlignMixins.SetSplitBySample(false))
 
     @Option(
-        description = ["Infer sample table (supports only sample tags derived from file names)."],
+        description = ["[Deprecated] Infer sample table (supports only sample tags derived from file names)."],
         names = [AlignMixins.InferSampleTable.CMD_OPTION],
         arity = "0",
-        order = OptionsOrder.mixins.align + 320
+        order = OptionsOrder.mixins.align + 320,
+        hidden = true,
     )
-    fun inferSampleTable(@Suppress("UNUSED_PARAMETER") f: Boolean) =
-        mixIn(AlignMixins.InferSampleTable)
+    fun inferSampleTable(@Suppress("UNUSED_PARAMETER") f: Boolean) {
+        println(AlignMixins.InferSampleTable.CMD_OPTION + " deprecated and has no effect.")
+    }
 
     @Option(
-        description = ["Loads sample table from a tab separated file."],
-        names = [AlignMixins.SetSampleTable.CMD_OPTION],
+        description = ["Loads sample table from a tab separated file (one substitution will be allowed during matching)"],
+        names = [AlignMixins.SetSampleTable.CMD_OPTION_FUZZY],
         arity = "1",
         paramLabel = "sample_table.tsv",
         order = OptionsOrder.mixins.align + 330
     )
-    fun sampleTable(arg: String) =
-        mixIn(AlignMixins.SetSampleTable(arg, null))
+    fun sampleTableFuzzy(arg: String) =
+        mixIn(AlignMixins.SetSampleTable(arg, null, true))
+
+    @Option(
+        description = ["Loads sample table from a tab separated file (strict matching will be used)."],
+        names = [AlignMixins.SetSampleTable.CMD_OPTION_STRICT],
+        arity = "1",
+        paramLabel = "sample_table.tsv",
+        order = OptionsOrder.mixins.align + 331
+    )
+    fun sampleTableStrict(arg: String) =
+        mixIn(AlignMixins.SetSampleTable(arg, null, false))
 
     //
     // Material type
@@ -429,12 +440,12 @@ object ExportMiXCRMixins {
     }
 
     private interface Generic : MiXCRMixinRegister {
-        private fun addExportClonesField(args: List<String>, prepend: Boolean) {
+        fun addExportClonesField(args: List<String>, prepend: Boolean) {
             require(args.isNotEmpty())
             mixIn(AddExportClonesField(if (prepend) 0 else -1, args.first(), args.drop(1)))
         }
 
-        private fun addExportAlignmentsField(args: List<String>, prepend: Boolean) {
+        fun addExportAlignmentsField(args: List<String>, prepend: Boolean) {
             require(args.isNotEmpty())
             mixIn(AddExportAlignmentsField(if (prepend) 0 else -1, args.first(), args.drop(1)))
         }

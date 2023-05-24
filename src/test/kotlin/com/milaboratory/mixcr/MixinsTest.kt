@@ -1,6 +1,16 @@
 package com.milaboratory.mixcr
 
-import com.milaboratory.mixcr.cli.CommandAlignParams
+import com.milaboratory.core.sequence.NSequenceWithQuality
+import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
+import com.milaboratory.mixcr.basictypes.tag.StringTagValue
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
+import com.milaboratory.mixcr.basictypes.tag.TagType.Cell
+import com.milaboratory.mixcr.basictypes.tag.TagType.Sample
+import com.milaboratory.mixcr.basictypes.tag.TagType.Technical
+import com.milaboratory.mixcr.basictypes.tag.TagValueType.NonSequence
+import com.milaboratory.mixcr.basictypes.tag.TagValueType.SequenceAndQuality
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.basictypes.tag.TechnicalTag
 import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.test.TestUtil
 import com.milaboratory.util.K_YAML_OM
@@ -23,17 +33,42 @@ class MixinsTest {
             "^attagaca\\^attacaca(CELL1:NNNN)||^attagaca\\^gacatata(CELL1:NNNN)".replace(" ", ""),
             parsed.tagPattern!!.replace(" ", "")
         )
-        Assert.assertEquals(
-            parsed.sampleTable,
-            CommandAlignParams.SampleTable(
-                listOf("Sample"),
-                listOf(
-                    CommandAlignParams.SampleTable.Row(sortedMapOf("CELL1" to "ATTG"), 0, listOf("S1")),
-                    CommandAlignParams.SampleTable.Row(sortedMapOf("CELL1" to "ACCC"), 0, listOf("S2")),
-                    CommandAlignParams.SampleTable.Row(sortedMapOf("CELL1" to "ATTG"), 1, listOf("S3")),
-                    CommandAlignParams.SampleTable.Row(sortedMapOf("CELL1" to "ACCC"), 1, listOf("S4")),
-                )
+
+        val transformation = parsed.createTagTransformationStep(false)
+
+        val transformer = transformation.createTransformer(
+            TagsInfo(
+                0,
+                TagInfo(Cell, SequenceAndQuality, "CELL1", 0),
+                TagInfo(Technical, NonSequence, TechnicalTag.TAG_PATTERN_READ_VARIANT_ID, 1)
             )
         )
+
+        Assert.assertEquals(
+            TagsInfo(
+                0,
+                TagInfo(Sample, NonSequence, "Sample", 0),
+            ),
+            transformer.outputTagsInfo
+        )
+
+        listOf(
+            listOf("ATTG", "0", "S1"),
+            listOf("ACCC", "0", "S2"),
+            listOf("ATTG", "1", "S3"),
+            listOf("ACCC", "1", "S4")
+        ).forEach { testValue ->
+            Assert.assertArrayEquals(
+                arrayOf(
+                    StringTagValue(testValue[2])
+                ),
+                transformer.transform(
+                    arrayOf(
+                        SequenceAndQualityTagValue(NSequenceWithQuality(testValue[0])),
+                        StringTagValue(testValue[1])
+                    )
+                )
+            )
+        }
     }
 }

@@ -94,7 +94,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         arity = "2..*",
         paramLabel = "$inputsLabel $outputLabel",
         hideParamSyntax = true,
-        //help is covered by mkCommandSpec
+        // help is covered by mkCommandSpec
         hidden = true
     )
     var inOut: List<Path> = mutableListOf()
@@ -233,7 +233,8 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         overlap.mkElementsPort().use { port ->
             overlapBrowser.overlap(countsByChain, port).forEach { row ->
                 for ((ch, cloneOverlapGroup) in row) {
-                    writers[ch]!!.writeRow(rowMetaForExport, cloneOverlapGroup)
+                    if (chainsToWrite.contains(ch))
+                        writers[ch]!!.writeRow(rowMetaForExport, cloneOverlapGroup)
                 }
             }
         }

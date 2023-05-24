@@ -10,4 +10,4 @@ cd "${script_dir}/../.." || exit
 ./ensure-test-data.sh
 
 # Builds pre-processed test data
-./prepare-test-data.sh
+./prepare-test-data.sh unit
