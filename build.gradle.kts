@@ -359,14 +359,14 @@ val prepareIMGTDockerContext by tasks.registering(Download::class) {
 }
 
 val commonDockerContents: Dockerfile.() -> Unit = {
-    from("eclipse-temurin:17-jre")
+    from("amazoncorretto:17")
     label(mapOf("maintainer" to "MiLaboratories Inc <support@milaboratories.com>"))
     runCommand("mkdir /work /opt/${project.name}")
+    runCommand("yum install procps -y") // Needed for image compatibility with nextflow
     workingDir("/work")
     environmentVariable("PATH", "/opt/${project.name}:\${PATH}")
     copyFile("LICENSE", "/opt/${project.name}/LICENSE")
     copyFile(project.name, "/opt/${project.name}/${project.name}")
-    entryPoint(project.name)
     copyFile("${project.name}.jar", "/opt/${project.name}/${project.name}.jar")
 }
 
