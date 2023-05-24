@@ -16,9 +16,8 @@ generic-lt-single-cell-amplicon:
   align:
     inheritFrom: align-amplicon
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
-      cellLevel: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -90,9 +89,8 @@ generic-lt-single-cell-amplicon-with-umi:
                         share: 0.85
                         round: Down
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
-      clnaOutput: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -132,10 +130,9 @@ generic-lt-single-cell-fragmented:
   align:
     inheritFrom: align-single-cell
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
       clnaOutput: true
-      cellLevel: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -208,10 +205,9 @@ generic-lt-single-cell-fragmented-with-umi:
                         share: 0.85
                         round: Down
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
       clnaOutput: true
-      cellLevel: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -280,7 +276,26 @@ generic-ht-single-cell-amplicon:
                 minimalSample: 20
                 fallbackThreshold: 1.0
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
 
@@ -361,7 +376,26 @@ generic-ht-single-cell-amplicon-with-umi:
                     minimalSample: 20
                     fallbackThreshold: 1.0
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
 
@@ -410,10 +444,9 @@ generic-ht-single-cell-fragmented:
                 minimalSample: 20
                 fallbackThreshold: 1.0
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
       clnaOutput: true
-      cellLevel: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -489,9 +522,8 @@ generic-ht-single-cell-fragmented-with-umi:
                         share: 0.85
                         round: Down
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
-      cellLevel: true
       clnaOutput: true
       cloneAssemblerParameters:
         postFilters:
