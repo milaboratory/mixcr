@@ -13,11 +13,11 @@ jobs:
   init:
     runs-on: ubuntu-latest
     steps:
-      - uses: milaboratory/github-ci/actions/context/init@v4
+      - uses: milaboratory/github-ci/actions/context/init@v4-beta
         with:
           version-canonize: false
       - id: context
-        uses: milaboratory/github-ci/actions/context@v4
+        uses: milaboratory/github-ci/actions/context@v4-beta
 
     outputs:
       is-release: ${{ steps.context.outputs.is-release }}
@@ -26,7 +26,7 @@ jobs:
     needs:
       - init
 
-    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4
+    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4-beta
     with:
       # Environment
       java-version: '11'
@@ -50,8 +50,6 @@ jobs:
       test-integration-cache-key: 'tests-sequences-v1'
       test-integration-python-version: '3.9'
 
-      test-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
-
       # Lib
       dist-library: ${{ github.event_name != 'schedule' }}
       dist-library-dev-tasks: publishAllPublicationsToMiprivRepository
@@ -63,12 +61,10 @@ jobs:
       dist-archive-paths: ./distributions/mixcr*.zip
       dist-archive-s3: true
       dist-archive-s3-add-sha: true
-      dist-archive-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # CDN redirect
       cdn-redirect-s3: true
       cdn-redirect-s3-bucket-path: 'link/software/mixcr'
-      cdn-redirect-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       dist-docker: true
       dist-docker-tasks: |
@@ -78,7 +74,6 @@ jobs:
 
       # Release configuration
       release-github-draft: true
-      release-s3-iam-role-to-assume: 'arn:aws:iam::013783277167:role/milab-euce1-prod-github-oidc-role-mixcr'
 
       # Send notifications
       notify-telegram: true
