@@ -88,7 +88,9 @@
                   lower: 150.0
                   acceptNaN: true
   assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
+      clnaOutput: true
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
