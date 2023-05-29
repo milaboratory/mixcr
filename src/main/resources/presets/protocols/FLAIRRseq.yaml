@@ -1,0 +1,26 @@
+"flairr-seq":
+  inheritFrom: generic-amplicon-with-umi
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetTagPattern
+      tagPattern: aagcagtggtatcaacgCAGAGt(UMI:NNNNtNNNNtNNNN)tcttggg(R1:*)ctcatgctccgtgatgcatg$ |
+                  aagcagtggtatcaacgCAGAGt(UMI:NNNNtNNNNtNNNN)tcttggg(R1:*)gaatggaacacgggggagac$
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-amplicon
+    override:
+      tagUnstranded: true
