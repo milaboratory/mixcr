@@ -241,7 +241,7 @@
       maxHits: 5
       relativeMinVFR3CDR3Score: 0.7
       allowPartialAlignments: true
-      allowNoCDR3PartAlignments: false
+      allowNoCDR3PartAlignments: true
       allowChimeras: false
       alignmentBoundaryTolerance: 5
       minChimeraDetectionScore: 120
