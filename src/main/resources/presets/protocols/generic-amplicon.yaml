@@ -1,0 +1,131 @@
+generic-amplicon:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - materialType
+    - leftAlignmentMode
+    - rightAlignmentMode
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-amplicon
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.9
+      - type: OffTargetReads
+        middle: 0.1
+        upper: 0.2
+      - type: OverlappedReadsMoreBetter
+        middle: 0.9
+        upper: 0.95
+      - type: OverlappedReadsLessBetter
+        middle: 0.9
+        upper: 0.95
+      - type: ReadsUsedInClonotypes
+        middle: 0.7
+        upper: 0.8
+      - type: AlignmentsWithNoAssemblingFeature
+        middle: 0.05
+        upper: 0.1
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.05
+        upper: 0.1
+      - type: AlignmentsClusteredInAssembler
+        middle: 0.05
+        upper: 0.1
+      - type: ClonesClusteredInAssembler
+        middle: 0.05
+        upper: 0.1
+
+generic-amplicon-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - materialType
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  validation:
+    - type: TagPatternShouldContainsTagName
+      tagName: UMI
+  align:
+    inheritFrom: align-amplicon
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-amplicon-umi-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+  exportClones:
+    inheritFrom: exportClones-umi-base
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.9
+      - type: OffTargetReads
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsWithNoVOrJHits
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsWithNoBarcode
+        middle: 0.1
+        upper: 0.2
+      - type: OverlappedReadsMoreBetter
+        middle: 0.9
+        upper: 0.95
+      - type: OverlappedReadsLessBetter
+        middle: 0.9
+        upper: 0.95
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.05
+        upper: 0.1
+      - type: TagArtificialDiversityEliminated
+        tag: UMI
+        middle: 0.5
+        upper: 0.8
+      - type: ReadsDroppedInTagCorrection
+        tag: UMI
+        middle: 0.05
+        upper: 0.1
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.05
+        upper: 0.1
+      - type: TagGroupsWithNoAssemblingFeature
+        middle: 0.1
+        upper: 0.2
+      - type: TagGroupsWithMultipleConsensuses
+        middle: 0.001
+        upper: 0.1
+      - type: UnassignedAlignments
+        middle: 0.05
+        upper: 0.1
+      - type: ReadsUsedInClonotypes
+        middle: 0.8
+        upper: 0.9
+      - type: AlignmentsWithNoAssemblingFeature
+        middle: 0.2
+        upper: 0.1
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.05
+        upper: 0.1
+      - type: AlignmentsClusteredInAssembler
+        middle: 0.05
+        upper: 0.1
+      - type: ClonesClusteredInAssembler
+        middle: 0.05
+        upper: 0.1
+      - type: ClonesDroppedInPostFiltering
+        middle: 0.05
+        upper: 0.1
+      - type: AlignmentsDroppedInPostFiltering
+        middle: 0.05
+        upper: 0.1

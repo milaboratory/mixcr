@@ -1,0 +1,21 @@
+"biomed2-human-bcr":
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetTagPattern
+      tagPattern: ^N{32}(R1:*)\^N{26}(R2:*)
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:CDR3End}" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: J
+    - type: MaterialTypeRNA
+
+

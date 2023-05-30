@@ -19,6 +19,9 @@ set -e
 mixcr align --preset test-generic \
       -s hs \
       -OvParameters.geneFeatureToAlign=VGeneWithP -OsaveOriginalReads=true \
+      --floating-left-alignment-boundary \
+      --floating-right-alignment-boundary C \
+      --rna \
       test_R1.fastq test_R2.fastq case15.vdjca
 mixcr assemble case15.vdjca case15.clns
 mixcr assemble -a case15.vdjca case15.clna

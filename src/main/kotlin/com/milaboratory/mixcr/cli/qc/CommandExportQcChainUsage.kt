@@ -21,8 +21,8 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.exportTypes
-import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAlign
-import com.milaboratory.mixcr.qc.ChainUsage.chainUsageAssemble
+import com.milaboratory.mixcr.qc.plots.ChainUsage.chainUsageAlign
+import com.milaboratory.mixcr.qc.plots.ChainUsage.chainUsageAssemble
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec

@@ -1,0 +1,92 @@
+assemble-base:
+  abstract: true
+  assemble:
+    sortBySequence: false
+    clnaOutput: false
+    cellLevel: false
+    inferMinRecordsPerConsensus: false
+    cloneAssemblerParameters:
+      assemblingFeatures:
+        - CDR3
+      minimalQuality: 0
+      minimalClonalSequenceLength: 12
+      qualityAggregationType: Max
+      separateByV: false
+      separateByJ: false
+      separateByC: false
+      maximalPreClusteringRatio: 1
+      preClusteringScoreFilteringRatio: 2
+      preClusteringCountFilteringRatio: 2
+      cloneClusteringParameters:
+        searchDepth: 2
+        allowedMutationsInNRegions: 1
+        searchParameters: twoMismatchesOrIndels
+        minimalTagSetOverlap: -1
+        clusteringFilter:
+          type: relativeConcentration
+          specificMutationProbability: 0.001
+      cloneFactoryParameters:
+        vParameters:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore:
+          scoring: null
+        jParameters:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore:
+          scoring: null
+        dParameters:
+          absoluteMinScore:
+          relativeMinScore:
+          maxHits:
+          scoring: null
+        cParameters:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore:
+          scoring: null
+      addReadsCountOnClustering: false
+      badQualityThreshold: 20
+      maxBadPointsPercent: 0.7
+      mappingThreshold: 2of5
+
+assemble-with-consensus-base:
+  abstract: true
+  assemble:
+    inheritFrom: assemble-base
+    overrides:
+      inferMinRecordsPerConsensus: true
+      consensusAssemblerParameters:
+        assembler:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: simple(match = 5, mismatch = -4)
+              gapPenalty: -14
+            minAlignmentScore: 40
+            maxNormalizedAlignmentPenalty: 0.15
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: false
+            maxQuality: 45
+          maxIterations: 6
+          minAltSeedQualityScore: 11
+          minAltSeedNormalizedPenalty: 0.35
+          altSeedPenaltyTolerance: 0.3
+          minRecordsPerConsensus: 0
+          minQualityScore: 0
+          minRecordSharePerConsensus: 0.2
+          minRecursiveRecordShare: 0.4
+          maxConsensuses: 3
+        minTagSuffixShare: 0
+      cloneAssemblerParameters:
+        cloneClusteringParameters:
+          searchDepth: 2
+          allowedMutationsInNRegions: 1
+          searchParameters: twoMismatchesOrIndels
+          minimalTagSetOverlap: -1
+          clusteringFilter:
+            type: relativeConcentration
+            specificMutationProbability: 1E-4

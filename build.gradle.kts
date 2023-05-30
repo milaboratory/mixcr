@@ -10,7 +10,6 @@ import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import proguard.gradle.ProGuardTask
 import java.net.InetAddress
-
 buildscript {
     repositories {
         mavenCentral()
@@ -112,7 +111,6 @@ repositories {
 
     mavenCentral()
 
-
     maven {
         url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
         authentication {
@@ -132,7 +130,7 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-110-develop"
+val mixcrAlgoVersion = "4.3.0-135-new-presets"
 val milibVersion = "2.4.0-45-master"
 val mitoolVersion = "1.7.0-28-main"
 val repseqioVersion = "1.8.0-59-master"
@@ -233,7 +231,7 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
 }
 
 val unzipOldPresets by tasks.registering(Copy::class) {
-    val outputDir = sourceSets.main.get().output.resourcesDir!!.resolve("mixcr_presets/old_version")
+    val outputDir = sourceSets.main.get().output.resourcesDir!!.resolve("presets/old_version")
     doFirst {
         outputDir.deleteRecursively()
         outputDir.mkdirs()
@@ -249,9 +247,9 @@ val unzipOldPresets by tasks.registering(Copy::class) {
 
 val generatePresetFileList by tasks.registering {
     group = "build"
-    val outputFile = sourceSets.main.get().output.resourcesDir!!.resolve("mixcr_presets/file_list.txt")
+    val outputFile = sourceSets.main.get().output.resourcesDir!!.resolve("presets/file_list.txt")
     doLast {
-        val source = sourceSets.main.get().output.resourcesDir!!.resolve("mixcr_presets")
+        val source = sourceSets.main.get().output.resourcesDir!!.resolve("presets")
         val yamls = layout.files({
             source.walk()
                 .filter { it.extension == "yaml" }
@@ -279,7 +277,6 @@ val checkObfuscation by tasks.registering(Test::class) {
     include("**/MetaForObfuscationTest*")
     useJUnit()
 }
-
 
 val obfuscate by tasks.registering(ProGuardTask::class) {
     dependsOn(checkObfuscation)
@@ -440,3 +437,4 @@ tasks.test {
     }
     longTests?.let { systemProperty("longTests", it) }
 }
+

@@ -16,7 +16,7 @@ import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.writeFile
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.exportTypes
-import com.milaboratory.mixcr.qc.AlignmentQC.alignQc
+import com.milaboratory.mixcr.qc.plots.AlignmentQC.alignQc
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec

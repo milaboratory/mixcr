@@ -1,0 +1,17 @@
+"abhelix-human":
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{FR1Begin:FR4End}" ]

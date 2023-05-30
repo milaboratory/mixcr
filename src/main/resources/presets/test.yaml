@@ -1,0 +1,687 @@
+"test-mikelov-et-al-2021-without-contigs":
+  deprecation: "This preset is only for tests"
+  inheritFrom: generic-amplicon-with-umi
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+
+    - type: SetTagPattern
+      tagPattern: |
+        ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
+        ^(R1F:N{0:2}(C:rggggaagacsgatg)(R1:*)) |
+        ^(R1F:N{0:2}(C:agcgggaagaccttg)(R1:*)) |
+        ^(R1F:N{0:2}(C:tatgatggggaacac)(R1:*)) \
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTACCTGTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTATGCATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCACCATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCAGATTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCCTGTTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGAAATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGTTATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNACGATNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNATTCGNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNCCGTCNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNGATACNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNTACGTNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCACTGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCCATGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCTAGTNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCAAANNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCTGCNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGGATANNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTAACCNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
+
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryWithPoint
+      floating: false
+      anchorPoint: CBegin(+15)
+
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+"test-mikelov-et-al-2021-with-contigs":
+  deprecation: "This preset is only for tests"
+  inheritFrom: generic-amplicon-with-umi
+  mixins:
+    - type: AddPipelineStep
+      step: assembleContigs
+
+    - type: SetSpecies
+      species: hs
+
+    - type: SetTagPattern
+      tagPattern: |
+        ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
+        ^(R1F:N{0:2}(C:rggggaagacsgatg)(R1:*)) |
+        ^(R1F:N{0:2}(C:agcgggaagaccttg)(R1:*)) |
+        ^(R1F:N{0:2}(C:tatgatggggaacac)(R1:*)) \
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTACCTGTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTATGCATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCACCATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCAGATTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCCTGTTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGAAATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGTTATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNACGATNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNATTCGNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNCCGTCNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNGATACNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNTACGTNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCACTGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCCATGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCTAGTNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCAAANNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCTGCNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGGATANNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTAACCNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
+
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryWithPoint
+      floating: false
+      anchorPoint: CBegin(+15)
+
+"test-airr-long-ig-base":
+  deprecation: "This preset is only for tests"
+  inheritFrom: bundle-base
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-amplicon
+    overrides:
+      species: hsa
+      parameters:
+        saveOriginalReads: true
+  assemble:
+    inheritFrom: assemble-base
+    overrides:
+      cloneAssemblerParameters:
+        maxBadPointsPercent: 0
+        separateByC: true
+        cloneClusteringParameters:
+          searchDepth: 4
+          clusteringFilter:
+            type: "relativeConcentration"
+            specificMutationProbability: 1E-3
+
+"test-generic":
+  deprecation: "This preset is only for tests"
+  inheritFrom: bundle-base
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-amplicon
+
+"test-subCloningRegions":
+  deprecation: "This preset is only for tests"
+  inheritFrom: bundle-base
+  pipeline:
+    - align
+    - assemble
+    - assembleContigs
+    - exportClones
+  align:
+    inheritFrom: align-amplicon
+  assembleContigs:
+    inheritFrom: bundle-base
+    overrides:
+      parameters:
+        subCloningRegions: [ "VDJRegion" ]
+        assemblingRegions: [ "VDJRegion" ]
+        postFiltering:
+          type: OnlyFullyDefined
+
+#
+# Shotgun
+#
+
+"test-tcr-shotgun":
+  deprecation: "This preset is only for tests"
+  inheritFrom: bundle-base
+  flags:
+    - materialType
+  pipeline:
+    - align
+    - assemblePartial
+    - assemblePartial
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-shotgun
+    overrides:
+      parameters:
+        allowPartialAlignments: true
+        allowNoCDR3PartAlignments: true
+
+"10x-vdj-tcr-qc-test":
+  inheritFrom: 10x-vdj-tcr
+  deprecation: "This preset is only for tests"
+  validation:
+    - type: TagPatternShouldContainsTagType
+      tagType: Cell
+  qc:
+    checks:
+      - type: OffTargetReads
+        upper: 0.99
+        middle: 0.95
+
+#
+# 10x tests
+#
+
+"10x-vdj-tcr-multi-barcode-test":
+  deprecation: "This preset is only for tests"
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - assemble
+    - assembleContigs
+    - exportClones
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      tagPattern: ^(CELL1:N{8})(CELL2:N{8})(UMI1:N{5})(UMI2:N{5})\^(R2:*)
+  refineTagsAndSort:
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_and
+        operands:
+          - type: filter_groups
+            groupingKeys:
+              - CELL1
+              - CELL2
+              - UMI1
+              - UMI2
+            predicates:
+              - metrics:
+                  - type: group_metric_sum_weight
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                operator:
+                  type: group_operator_otsu1
+                  logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
+          - type: filter_groups
+            groupingKeys:
+              - CELL1
+              - CELL2
+            predicates:
+              - metrics:
+                  - type: group_metric_nunique
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                    keys:
+                      - UMI1
+                      - UMI2
+                operator:
+                  type: group_operator_range
+                  lower: 3.0
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - tag:CELL1
+              - tag:CELL2
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - tag:UMI1
+                        - tag:UMI2
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+          - type: filter_in_groups
+            isolationKeys:
+              - tag:CELL1
+              - tag:CELL2
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - tag:UMI1
+                        - tag:UMI2
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ ]
+    fields:
+      - field: "-cloneId"
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-readCount"
+      - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+"pereshlop-test":
+  deprecation: "This preset is only for tests"
+  inheritFrom: bundle-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-amplicon
+    overrides:
+      readIdAsCellTag: true
+  refineTagsAndSort:
+    runCorrection: false
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+"10x-vdj-tcr-alias-multi-barcode-test":
+  deprecation: "This preset is only for tests"
+  inheritFrom: 10x-vdj-tcr
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(CELL1:N{8})(CELL2:N{8})(UMI1:N{5})(UMI2:N{5})\^(R2:*)
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+          - type: filter_in_groups
+            isolationKeys:
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+
+"single-cell-as-sample-no-split":
+  deprecation: "This preset is only for tests"
+  inheritFrom: bundle-base
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      tagPattern: ^(SMPL:N{16})(UMI:N{10})\^(R2:*)
+      sampleTable:
+        sampleTagName: SAMPLE
+        samples:
+          - matchTags:
+              SMPL: "GGATTACTCATTGCCC"
+            sampleName: sample0
+          - matchTags:
+              SMPL: "CTGAAGTTCAAGGTAA"
+            sampleName: sample1
+          - matchTags:
+              SMPL: "AACTCCCAGATCCTGT"
+            sampleName: sample2
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: "filter_in_groups"
+          isolationKeys:
+            - "allTags:Sample"
+          nestedFilter:
+            type: "filter_groups"
+            groupingKeys:
+              - "allTags:Molecule"
+            predicates:
+              - metrics:
+                  - type: "group_metric_sum_weight"
+                    reportHist:
+                      log: true
+                      binNumber: 0 # don't limit number of bins, use only minBinWidth
+                      minBinWidth: 0.2 # in respect to log10 of the value
+                operator:
+                  type: "group_operator_otsu1"
+                  logX: true
+                  # Fallback behaviour for low total number of UMIs: accept all UMIs if there are 29 or fewer UMIs
+                  minimalSample: 30
+                  fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+  exportClones:
+    chains: ALL
+    splitByTags: [ "SAMPLE" ]
+    splitFilesBy: [ "tag:SAMPLE", "geneLabel:ReliableChain" ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-readFraction"
+      - field: "-tags"
+        args: [ "Sample" ]
+      - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-uniqueTagFraction"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+"single-cell-as-sample-split":
+  deprecation: "This preset is only for tests"
+  inheritFrom: bundle-base
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      splitBySample: true
+      tagPattern: ^(SMPL:N{16})(UMI:N{10})\^(R2:*)
+      sampleTable:
+        sampleTagName: SAMPLE
+        samples:
+          - matchTags:
+              SMPL: "GGATTACTCATTGCCC"
+            sampleName: sample0
+          - matchTags:
+              SMPL: "CTGAAGTTCAAGGTAA"
+            sampleName: sample1
+          - matchTags:
+              SMPL: "AACTCCCAGATCCTGT"
+            sampleName: sample2
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: "filter_groups"
+          groupingKeys:
+            - "allTags:Molecule"
+          predicates:
+            - metrics:
+                - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0 # don't limit number of bins, use only minBinWidth
+                    minBinWidth: 0.2 # in respect to log10 of the value
+              operator:
+                type: "group_operator_otsu1"
+                logX: true
+                # Fallback behaviour for low total number of UMIs: accept all UMIs if there are 29 or fewer UMIs
+                minimalSample: 30
+                fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-readFraction"
+      - field: "-tags"
+        args: [ "Sample" ]
+      - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-uniqueTagFraction"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+"umi-guided-consensus-test":
+  deprecation: "This preset is only for tests"
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - assemble
+    - assembleContigs
+    - exportClones
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      tagPattern: ^(UMI:N{26})\^(R2:*)
+  refineTagsAndSort:
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter:
+        type: "filter_groups"
+        groupingKeys:
+          - "UMI"
+        predicates:
+          - metrics:
+              - type: "group_metric_sum_weight"
+                reportHist:
+                  log: true
+                  binNumber: 0
+                  minBinWidth: 0.2
+            operator:
+              type: "group_operator_otsu1"
+              logX: true
+              minimalSample: 30
+              fallbackThreshold: 1.0
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      clnaOutput: true
+      consensusAssemblerParameters:
+        assembler:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: simple(match = 5, mismatch = -4)
+              gapPenalty: -14
+            minAlignmentScore: 40
+            maxNormalizedAlignmentPenalty: 0.15
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: false
+            maxQuality: 45
+          maxIterations: 6
+          minAltSeedQualityScore: 11
+          minAltSeedNormalizedPenalty: 0.35
+          altSeedPenaltyTolerance: 0.3
+          minRecordSharePerConsensus: 0.2
+          minRecordsPerConsensus: 0
+          minRecursiveRecordShare: 0.4
+          minQualityScore: 0
+          maxConsensuses: 1
+        minTagSuffixShare: 0
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+"test-gf-intersection":
+  inheritFrom: generic-amplicon-with-umi
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(UMI:N{12})GGG(R1:*) \ ^(R2:*)
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: SetSplitClonesBy
+      geneType: C
+    - type: SetSpecies
+      species: hs
+    - type: SetClonotypeAssemblingFeatures
+      features: "VDJTranscriptWithout5UTR"
+    - type: AddExportClonesField
+      field: "-aaFeature"
+      args: [ "VDJRegion" ]
+      insertIndex: -1
+
+"generic-tcr-amplicon-separate-samples-umi":
+  inheritFrom: generic-amplicon-with-umi
+  flags:
+    - sampleTable
+  mixins:
+    - type: SetSplitBySample
+      value: true

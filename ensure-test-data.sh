@@ -89,6 +89,7 @@ cd ../
 
 mkdir -p regression
 cd regression
+
 files=$(curl -sS https://s3.amazonaws.com/files.milaboratory.com/test-data/regression/list)
 
 for file in $files; do
