@@ -1,4 +1,4 @@
-milab-human-bcr-multiplex:
+milab-human-ig-rna-multiplex:
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
