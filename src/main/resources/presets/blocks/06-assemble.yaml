@@ -115,8 +115,8 @@ assemble-with-consensus-sc-cell-level:
           minAltSeedQualityScore: 11
           minAltSeedNormalizedPenalty: 0.35
           altSeedPenaltyTolerance: 0.3
-          minRecordSharePerConsensus: 1E-4
+          minRecordSharePerConsensus: 0.05
           minRecordsPerConsensus: 0
-          minRecursiveRecordShare: 0.001
+          minRecursiveRecordShare: 0.2
           minQualityScore: 0
-          maxConsensuses: 10
+          maxConsensuses: 6
