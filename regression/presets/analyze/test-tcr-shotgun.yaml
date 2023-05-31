@@ -3,11 +3,11 @@ flags:
 - species
 pipeline:
 - align
-- extend
 - assemblePartial
 - assemblePartial
 - assemble
 - exportClones
+validation: null
 align:
   species: ""
   libraryName: default
@@ -21,16 +21,17 @@ align:
   tagPattern: null
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
+  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 80
+      minSumScore: 60
       relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner
         mapperKValue: 5
@@ -177,11 +178,13 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
+  command: assemblePartial
 extend:
   vAnchor: CDR3Begin
   jAnchor: FR4Begin
   minimalVScore: 50
   minimalJScore: 50
+  command: extend
 assemble:
   sortBySequence: false
   clnaOutput: false
@@ -249,6 +252,7 @@ assemble:
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: false
+  command: assemble
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -271,6 +275,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  command: assembleContigs
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -314,3 +319,4 @@ exportClones:
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []
+qc: null

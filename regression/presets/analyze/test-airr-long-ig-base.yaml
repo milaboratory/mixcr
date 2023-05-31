@@ -1,9 +1,11 @@
 flags:
 - species
+- materialType
 pipeline:
 - align
 - assemble
 - exportClones
+validation: null
 align:
   species: hsa
   libraryName: default
@@ -17,10 +19,10 @@ align:
   tagPattern: null
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
+  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -35,21 +37,21 @@ align:
         floatingRightBound: true
         mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 95
+        mapperMatchScore: 98
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 6
-        mapperMaxClusters: 4
+        mapperSlotCount: 8
+        mapperMaxClusters: 11
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 100
-        mapperRelativeMinScore: 0.8
-        mapperMinSeedsDistance: 5
-        mapperMaxSeedsDistance: 5
+        mapperAbsoluteMinScore: 103
+        mapperRelativeMinScore: 0.81
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 8
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 3
+        maxHits: 2
         scoring:
           type: affine
           alphabet: nucleotide
@@ -185,11 +187,13 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
+  command: assemblePartial
 extend:
   vAnchor: CDR3Begin
   jAnchor: FR4Begin
   minimalVScore: 50
   minimalJScore: 50
+  command: extend
 assemble:
   sortBySequence: false
   clnaOutput: false
@@ -257,6 +261,7 @@ assemble:
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: false
+  command: assemble
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -279,6 +284,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  command: assembleContigs
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -322,3 +328,4 @@ exportClones:
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []
+qc: null

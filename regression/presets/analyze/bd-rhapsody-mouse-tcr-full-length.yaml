@@ -6,10 +6,11 @@ pipeline:
 - assemble
 - assembleContigs
 - exportClones
+validation: null
 align:
   species: mmu
   libraryName: default
-  trimmingQualityThreshold: 0
+  trimmingQualityThreshold: 10
   trimmingWindowSize: 6
   chains: ALL
   replaceWildcards: true
@@ -20,39 +21,46 @@ align:
     ^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
+  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 50
+      minSumScore: 60
       relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
       parameters:
-        type: kaligner
-        mapperKValue: 8
+        type: kaligner2
+        mapperNValue: 9
+        mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinScore: 59.0
-        mapperRelativeMinScore: 0.91
-        mapperMatchScore: 17.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 10
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
-        relativeMinScore: 0.87
-        maxHits: 9
+        mapperAbsoluteMinClusterScore: 250
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 127
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 15
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 250
+        mapperRelativeMinScore: 0.75
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 6
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
         scoring:
-          type: linear
+          type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
     dParameters:
       geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
@@ -65,53 +73,59 @@ align:
         gapPenalty: -12
     jParameters:
       geneFeatureToAlign: JRegionWithP
-      minSumScore: 40
+      minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: kaligner
-        mapperKValue: 5
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
         floatingLeftBound: true
         floatingRightBound: false
-        mapperAbsoluteMinScore: 37.0
-        mapperRelativeMinScore: 0.76
-        mapperMatchScore: 16.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 7
-        mapperMaxSeedsDistance: 7
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
-        relativeMinScore: 0.87
-        maxHits: 9
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
         scoring:
-          type: linear
+          type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
     cParameters:
       geneFeatureToAlign: CExon1
       minSumScore: 40
       relativeMinScore: 0.97
       parameters:
         type: kaligner
-        mapperKValue: 9
+        mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: false
         mapperAbsoluteMinScore: 95.0
-        mapperRelativeMinScore: 0.61
-        mapperMatchScore: 5.0
+        mapperRelativeMinScore: 0.63
+        mapperMatchScore: 128.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 9
-        mapperMaxSeedsDistance: 19
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 18
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 3
+        maxHits: 4
         scoring:
           type: linear
           alphabet: nucleotide
@@ -191,6 +205,16 @@ refineTagsAndSort:
               round: Down
               accept: High
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Cell
+      - allTags:Molecule
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -212,6 +236,7 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
+  command: assemblePartial
 extend: null
 assemble:
   sortBySequence: false
@@ -322,8 +347,18 @@ assemble:
             type: group_operator_cumtop
             share: 0.99
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - clone
+        requiredSequences: []
       aggregateReport: true
-  inferMinRecordsPerConsensus: false
+      expectedSorting:
+      - geneLabel:ReliableChain
+      - allTags:Cell
+      - clone
+  inferMinRecordsPerConsensus: true
+  command: assemble
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -346,6 +381,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  command: assembleContigs
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -393,3 +429,4 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
+qc: null

@@ -34,6 +34,8 @@ $defs:
         type: integer
 type: object
 properties:
+  command:
+    type: object
   jAnchor:
     $ref: '#/$defs/ReferencePoint'
   minimalJScore:

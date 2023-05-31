@@ -27,11 +27,57 @@ of V and J genes and the same features to align.
                                exits in inputs.
                              For `.json` library will be written in reqpseqio format.
                              For `.fasta` library will be written in FASTA format with gene name
-                               and reliable range in description. There will be several records for
-                               one gene if clnx were assembled by composite gene feature.
+                               and feature name in description.
       --export-alleles-mutations <path>
                              Path where to write descriptions and stats for all result alleles,
                                existed and new.
+                             Available columns:
+                             alleleName - result allele name. If it's de nova, then before `-M` is
+                               nearest known variant, M{n} is how many mutations in it and CDR3-{n}
+                               is how many mutations in CDR3, at the end uniq hash.
+                             geneName - gene name, the same for zigotes
+                             type - gene type (Variable or Joining)
+                             status - DE_NOVO: De novo alleles
+                             FOUND_KNOWN_VARIANT: Found allele identical to one of genes in the
+                               library, but it's not a main variant. If enoughInfo is true, then it
+                               was found by main algorithm. In some cases gene name could be
+                               changed. If enoughInfo is false, then it was found by aligning
+                               clones on known variants.
+                             ALIGNED_ON_KNOWN_VARIANT: Not enough info for search, but aligned on
+                               known allele
+                             NOT_CHANGED_AFTER_SEARCH: Not changed after search
+                             NO_CLONES_TO_SEARCH: No clones to search
+                             COULD_NOT_BE_ALIGNED_ON_KNOWN_VARIANT: Have clones to search, but not
+                               enough info for search and can't be aligned on known variant
+                             REMOVED_BECAUSE_NO_TOP_HITS_IN_RESULT_FILES: No top hits in result
+                               files
+                             REMOVED_BECAUSE_NO_TOP_HITS_IN_SOURCE_FILES: No top hits in source
+                               files
+                             REMOVED_BECAUSE_NOT_REPRESENTED_IN_SOURCE_FILES: Not represented in
+                               source files
+                             .
+                             enoughInfo - is there enough clones to search by the main algorithm.
+                             mutations - list of mutations for de nova alleles.
+                             varianceOf - name of nearest known gene variant for de nova allele.
+                             naivesCount - how many naive clones aligned to this allele.
+                             nonProductiveCount - how many non productive clones aligned to this
+                               allele.
+                             lowerDiversityBound - diversity of CDR3 length and different genes
+                               (different J for V allele and J for V allele).
+                             clonesCount - how many clones aligned to this allele.
+                             totalClonesCountForGene - how many clones in all alleles of this gene
+                               (after realigning).
+                             clonesCountWithNegativeScoreChange - how many clones get lower score
+                               after aligned to this allele.
+                             filteredForAlleleSearchNaivesCount - how many naive clones aligned to
+                               this allele and was used in searching.
+                             filteredForAlleleSearchClonesCount - how many clones aligned to this
+                               allele and was used in searching.
+                             filteredForAlleleSearchClonesCountWithNegativeScoreChange - how many
+                               clones get lower score after aligned to this allele and was used in
+                               searching before
+                             scoreDelta - stats for score change of clones afeter aligning to this
+                               allele.
   -O  <key=value>            Overrides default build SHM parameter values
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).

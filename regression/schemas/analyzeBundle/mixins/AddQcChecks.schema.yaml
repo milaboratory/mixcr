@@ -1,0 +1,178 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+allOf:
+- type: object
+  properties:
+    args:
+      type: array
+      items:
+        anyOf:
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            tag:
+              type: string
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            tag:
+              type: string
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+- type: object
+  properties:
+    type:
+      const: AddQcChecks
+  required:
+  - type
