@@ -187,18 +187,21 @@ object CommandAssemble {
         @Option(
             description = ["Write consensus alignments"],
             names = ["--consensus-alignments"],
+            hidden = true,
         )
         var consensusAlignments: Path? = null
 
         @Option(
             description = ["Write consensus state statistics"],
             names = ["--consensus-state-stat"],
+            hidden = true,
         )
         var consensusStateStats: Path? = null
 
         @Option(
             description = ["Write consensus state statistics"],
             names = ["--downsample-consensus-state-stat"],
+            hidden = true,
         )
         var consensusStateStatsDownsampling: Double? = null
 
