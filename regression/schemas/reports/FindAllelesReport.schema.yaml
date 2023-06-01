@@ -1,4 +1,7 @@
 $schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  Map(Status,Integer):
+    type: object
 type: object
 properties:
   allelesScoreChange:
@@ -26,20 +29,25 @@ properties:
         type: number
   commandLine:
     type: string
-  deNovaAlleles:
-    type: integer
-  foundAlleles:
-    type: integer
+  firstRoundResults:
+    $ref: "#/$defs/Map(Status,Integer)"
   inputFiles:
     type: array
     items:
       type: string
+  notEnoughInformation:
+    type: array
+    items:
+      type: object
+      properties:
+        name:
+          type: string
   outputFiles:
     type: array
     items:
       type: string
-  searchHistoryForBCells:
-    type: object
+  statuses:
+    $ref: "#/$defs/Map(Status,Integer)"
   version:
     type: string
   zygotes:

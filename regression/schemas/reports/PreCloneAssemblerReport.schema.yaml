@@ -24,6 +24,8 @@ allOf:
       type: object
     groupsWithNoAssemblingFeature:
       type: integer
+    ignoredAlignments:
+      type: integer
     inputAlignments:
       type: integer
     inputAlignmentsWithAssemblingFeature:
