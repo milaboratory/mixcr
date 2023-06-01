@@ -7,8 +7,8 @@
     - exportClones
   mixins:
     - type: SetTagPattern
-      tagPattern: aagcagtggtatcaacgCAGAGt(UMI:NNNNtNNNNtNNNN)tcttggg(R1:*)ctcatgctccgtgatgcatg$ |
-                  aagcagtggtatcaacgCAGAGt(UMI:NNNNtNNNNtNNNN)tcttggg(R1:*)gaatggaacacgggggagac$
+      tagPattern: aagcagtggtatcaacgCAGAGt(UMI:NNNNtNNNNtNNNN)tcttggg(R1:*)CTCATGctccgtgatgcatg(SAMPLE:N{16})$ |
+                  aagcagtggtatcaacgCAGAGt(UMI:NNNNtNNNNtNNNN)tcttggg(R1:*)GAATGGaacacgggggagac(SAMPLE:N{16})$
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
     - type: LeftAlignmentBoundaryNoPoint
@@ -24,3 +24,12 @@
     inheritFrom: align-amplicon
     overrides:
       tagUnstranded: true
+      splitBySample: true
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      cloneAssemblerParameters:
+        cloneClusteringParameters:
+          clusteringFilter:
+            type: relativeConcentration
+            specificMutationProbability: 1E-4
