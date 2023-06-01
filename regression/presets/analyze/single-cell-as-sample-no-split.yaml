@@ -5,6 +5,7 @@ pipeline:
 - refineTagsAndSort
 - assemble
 - exportClones
+validation: null
 align:
   species: ""
   libraryName: default
@@ -18,6 +19,8 @@ align:
   tagPattern: "^(SMPL:N{16})(UMI:N{10})\\^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
+  tagTransformationSteps: []
   sampleTable:
     sampleTagNames:
     - SAMPLE
@@ -38,8 +41,6 @@ align:
       sample:
       - sample2
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -192,7 +193,15 @@ refineTagsAndSort:
             minimalSample: 30
             fallbackThreshold: 1.0
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - allTags:Molecule
+        requiredSequences: []
       aggregateReport: true
+      expectedSorting:
+      - allTags:Sample
+      - allTags:Molecule
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -214,11 +223,13 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
+  command: assemblePartial
 extend:
   vAnchor: CDR3Begin
   jAnchor: FR4Begin
   minimalVScore: 50
   minimalJScore: 50
+  command: extend
 assemble:
   sortBySequence: false
   clnaOutput: false
@@ -303,12 +314,13 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 20
+    badQualityThreshold: 21
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: false
+  command: assemble
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -331,6 +343,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  command: assembleContigs
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -384,3 +397,4 @@ exportClones:
   - tag:SAMPLE
   - geneLabel:ReliableChain
   groupClonesBy: []
+qc: null

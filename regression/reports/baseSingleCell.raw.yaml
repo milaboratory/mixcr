@@ -1,13 +1,14 @@
 align:
   type: alignerReport
-  commandLine: align --report ./baseSingleCell.raw.align.report.txt --json-report
-    ./baseSingleCell.raw.align.report.json --preset 10x-vdj-bcr --species hs single_cell_vdj_t_subset_R1.fastq.gz
-    single_cell_vdj_t_subset_R2.fastq.gz ./baseSingleCell.raw.vdjca
+  commandLine: align --report baseSingleCell.raw.align.report.txt --json-report baseSingleCell.raw.align.report.json
+    --preset 10x-vdj-bcr --species hs single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz
+    baseSingleCell.raw.vdjca
   inputFiles:
   - single_cell_vdj_t_subset_R1.fastq.gz
   - single_cell_vdj_t_subset_R2.fastq.gz
   outputFiles:
-  - ./baseSingleCell.raw.vdjca
+  - baseSingleCell.raw.vdjca
+    rev=7e33a934c7; lib=repseqio.v2.2
   totalReadsProcessed: 46879
   aligned: 40756
   notAligned: 6123
@@ -102,16 +103,16 @@ align:
                 "0": 46879
           costDistributions:
             "0": 46879
-  sampleStat: null
+  transformerReports: []
 assemble:
   type: assemblerReport
-  commandLine: assemble --report ./baseSingleCell.raw.assemble.report.txt --json-report
-    ./baseSingleCell.raw.assemble.report.json ./baseSingleCell.raw.passembled.1.vdjca
-    ./baseSingleCell.raw.clna
+  commandLine: assemble --report baseSingleCell.raw.assemble.report.txt --json-report
+    baseSingleCell.raw.assemble.report.json baseSingleCell.rawpassembled.1.vdjca baseSingleCell.raw.clna
   inputFiles:
-  - ./baseSingleCell.raw.passembled.1.vdjca
+  - baseSingleCell.rawpassembled.1.vdjca
   outputFiles:
-  - ./baseSingleCell.raw.clna
+  - baseSingleCell.raw.clna
+    rev=7e33a934c7; lib=repseqio.v2.2
   preCloneAssemblerReport:
     type: preCloneAssemblerReport
     inputGroups: 60
@@ -137,8 +138,11 @@ assemble:
     tagEmpiricallyAssignedAlignments: 0
     geneAndTagEmpiricallyAssignedAlignments: 13503
     empiricalAssignmentConflicts: 0
+    ignoredAlignments: 0
     unassignedAlignments: 12583
   totalReadsProcessed: 46687
+  totalAlignmentsProcessed: 59
+  totalAlignedReadsProcessed: 14456
   initialClonesCreated: 7
   readsDroppedNoTargetSequence: 26080
   readsDroppedTooShortClonalSequence: 0
@@ -223,13 +227,14 @@ assemble:
   alignmentsFilteredByTagPrefix: 0
 assembleContigs:
   type: fullSeqAssemblerReport
-  commandLine: assembleContigs --report ./baseSingleCell.raw.assembleContigs.report.txt
-    --json-report ./baseSingleCell.raw.assembleContigs.report.json ./baseSingleCell.raw.clna
-    ./baseSingleCell.raw.contigs.clns
+  commandLine: assembleContigs --report baseSingleCell.raw.assembleContigs.report.txt
+    --json-report baseSingleCell.raw.assembleContigs.report.json baseSingleCell.raw.clna
+    baseSingleCell.raw.contigs.clns
   inputFiles:
-  - ./baseSingleCell.raw.clna
+  - baseSingleCell.raw.clna
   outputFiles:
-  - ./baseSingleCell.raw.contigs.clns
+  - baseSingleCell.raw.contigs.clns
+    rev=7e33a934c7; lib=repseqio.v2.2
   clonesWithAmbiguousLetters: 4
   clonesWithAmbiguousLettersInSplittingRegion: 0
   readsWithAmbiguousLetters: 12695.0
@@ -247,13 +252,14 @@ assembleContigs:
   assemblePrematureTerminationEvents: 0.0
 assemblePartial:
   type: partialAlignmentsAssemblerReport
-  commandLine: assemblePartial --report ./baseSingleCell.raw.assemblePartial.report.txt
-    --json-report ./baseSingleCell.raw.assemblePartial.report.json ./baseSingleCell.raw.refined.vdjca
-    ./baseSingleCell.raw.passembled.1.vdjca
+  commandLine: assemblePartial --report baseSingleCell.raw.assemblePartial.report.txt
+    --json-report baseSingleCell.raw.assemblePartial.report.json baseSingleCell.raw.refined.vdjca
+    baseSingleCell.rawpassembled.1.vdjca
   inputFiles:
-  - ./baseSingleCell.raw.refined.vdjca
+  - baseSingleCell.raw.refined.vdjca
   outputFiles:
-  - ./baseSingleCell.raw.passembled.1.vdjca
+  - baseSingleCell.rawpassembled.1.vdjca
+    rev=7e33a934c7; lib=repseqio.v2.2
   independentRuns: 60
   totalProcessed: 27094
   outputAlignments: 26902
@@ -262,7 +268,7 @@ assemblePartial:
   leftTooShortNRegion: 506
   kMerDiversity: 2013
   droppedWildcardsInKMer: 0
-  droppedSmallOverlapNRegion: 381
+  droppedSmallOverlapNRegion: 382
   droppedNoNRegion: 0
   leftParts: 398
   rightParts: 8584
@@ -271,38 +277,39 @@ assemblePartial:
   partialAlignmentsAsIs: 26069
 refineTagsAndSort:
   type: refineTagsAndSort
-  commandLine: refineTagsAndSort --report ./baseSingleCell.raw.refine.report.txt --json-report
-    ./baseSingleCell.raw.refine.report.json ./baseSingleCell.raw.vdjca ./baseSingleCell.raw.refined.vdjca
+  commandLine: refineTagsAndSort --report baseSingleCell.raw.refine.report.txt --json-report
+    baseSingleCell.raw.refine.report.json baseSingleCell.raw.vdjca baseSingleCell.raw.refined.vdjca
   inputFiles:
-  - ./baseSingleCell.raw.vdjca
+  - baseSingleCell.raw.vdjca
   outputFiles:
-  - ./baseSingleCell.raw.refined.vdjca
+  - baseSingleCell.raw.refined.vdjca
+    rev=7e33a934c7; lib=repseqio.v2.2
   correctionReport:
     inputRecords: 40756
     outputRecords: 27094
     steps:
     - tagName: CELL
       inputGroups: 1
-      inputDiversity: 161
+      inputDiversity: 162
       inputCount: 40756
       coreDiversity: 52
-      coreCount: 40539
-      directlyCorrectedDiversity: 156
+      coreCount: 40535
+      directlyCorrectedDiversity: 157
       directlyCorrectedCount: 776
       filteredDiversity: 2
       filteredCount: 2
-      recursivelyCorrected: 70
+      recursivelyCorrected: 72
       diversityFilteredByWhitelist: 0
       outputDiversity: 3
       outputCount: 40754
     - tagName: UMI
       inputGroups: 3
-      inputDiversity: 409
+      inputDiversity: 410
       inputCount: 40754
       coreDiversity: 166
-      coreCount: 40468
-      directlyCorrectedDiversity: 302
-      directlyCorrectedCount: 359
+      coreCount: 40467
+      directlyCorrectedDiversity: 303
+      directlyCorrectedCount: 360
       filteredDiversity: 1
       filteredCount: 1
       recursivelyCorrected: 13

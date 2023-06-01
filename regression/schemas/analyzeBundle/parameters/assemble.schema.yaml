@@ -5,6 +5,8 @@ $defs:
     properties:
       accept:
         $ref: '#/$defs/HistHalf'
+      acceptNaN:
+        type: boolean
       algorithm:
         anyOf:
         - allOf:
@@ -105,7 +107,7 @@ $defs:
       codeToWildcard:
         type: array
         items:
-          $ref: '#/$defs/cp'
+          $ref: '#/$defs/bR'
       countOfBasicLetters:
         type: integer
       empty:
@@ -135,14 +137,18 @@ $defs:
           no_entry_value:
             type: string
       wildcardForAnyLetter:
-        $ref: '#/$defs/cp'
+        $ref: '#/$defs/bR'
       wildcardsList:
         type: array
         items:
-          $ref: '#/$defs/cp'
+          $ref: '#/$defs/bR'
   AndKeyedFilter-1:
     type: object
     properties:
+      expectedSorting:
+        type: array
+        items:
+          type: string
       filters:
         type: array
         items:
@@ -150,6 +156,10 @@ $defs:
           - $ref: '#/$defs/AndKeyedFilter-2'
           - $ref: '#/$defs/GroupFilter'
           - $ref: '#/$defs/InGroupsFilter-2'
+      requiredSequences:
+        type: array
+        items:
+          type: string
   AndKeyedFilter-2:
     $ref: '#/$defs/AndKeyedFilter-1'
     type: object
@@ -191,6 +201,8 @@ $defs:
       properties:
         accept:
           $ref: '#/$defs/HistHalf'
+        acceptNaN:
+          type: boolean
         round:
           $ref: '#/$defs/HistThresholdRoundingMode'
         share:
@@ -205,6 +217,10 @@ $defs:
     allOf:
     - type: object
       properties:
+        expectedSorting:
+          type: array
+          items:
+            type: string
         groupingKeys:
           type: array
           items:
@@ -214,6 +230,10 @@ $defs:
           items:
             type: object
             properties:
+              expectedSorting:
+                type: array
+                items:
+                  type: string
               metrics:
                 type: array
                 items:
@@ -254,6 +274,8 @@ $defs:
                 - allOf:
                   - type: object
                     properties:
+                      acceptNaN:
+                        type: boolean
                       lower:
                         type: number
                       lowerExclusive:
@@ -268,6 +290,14 @@ $defs:
                         const: group_operator_range
                     required:
                     - type
+              requiredSequences:
+                type: array
+                items:
+                  type: string
+        requiredSequences:
+          type: array
+          items:
+            type: string
     - type: object
       properties:
         type:
@@ -280,6 +310,8 @@ $defs:
       properties:
         accept:
           $ref: '#/$defs/HistHalf'
+        acceptNaN:
+          type: boolean
         operators:
           type: array
           items:
@@ -333,6 +365,10 @@ $defs:
     properties:
       aggregateReport:
         type: boolean
+      expectedSorting:
+        type: array
+        items:
+          type: string
       isolationKeys:
         type: array
         items:
@@ -355,6 +391,8 @@ $defs:
     - type: object
       properties:
         k:
+          type: integer
+        minSequenceCount:
           type: integer
         minimalQuality:
           type: integer
@@ -394,6 +432,8 @@ $defs:
       properties:
         accept:
           $ref: '#/$defs/HistHalf'
+        acceptNaN:
+          type: boolean
         operators:
           type: array
           items:
@@ -410,6 +450,8 @@ $defs:
       properties:
         accept:
           $ref: '#/$defs/HistHalf'
+        acceptNaN:
+          type: boolean
         minimalShare:
           type: number
     - type: object
@@ -440,6 +482,8 @@ $defs:
       properties:
         accept:
           $ref: '#/$defs/HistHalf'
+        acceptNaN:
+          type: boolean
         fallbackThreshold:
           type: number
         logX:
@@ -481,6 +525,8 @@ $defs:
       properties:
         accept:
           $ref: '#/$defs/HistHalf'
+        acceptNaN:
+          type: boolean
         "n":
           type: integer
         round:
@@ -491,7 +537,7 @@ $defs:
           const: group_operator_top
       required:
       - type
-  cp:
+  bR:
     type: object
     properties:
       a:
@@ -634,6 +680,8 @@ properties:
         type: boolean
       separateByV:
         type: boolean
+  command:
+    type: object
   consensusAssemblerParameters:
     type: object
     properties:

@@ -46,8 +46,10 @@ Usage: mixcr exportAlignments [--chains <chains>] [--impute-germline-on-export]
                               [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains]
                               [-topChains] [-geneLabel <label>]... [-tagCounts] [-cellId [<
                               (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
-                              [-uniqueTagCount <(Molecule|Cell|Sample)>]... [--force-overwrite]
-                              [--no-warnings] [--verbose] [--help] data.(vdjca|clna) [table.tsv]
+                              [-uniqueTagCount <(Molecule|Cell|Sample)>]... [-hasStops
+                              <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
+                              <gene_feature>]... [--force-overwrite] [--no-warnings] [--verbose]
+                              [--help] data.(vdjca|clna) [table.tsv]
 Export V/D/J/C alignments into tab delimited file.
       data.(vdjca|clna)      Path to input file
       [table.tsv]            Path where to write export table. Will write to output if omitted.
@@ -323,3 +325,8 @@ Possible fields to export
                              All tags values (i.e. CELL barcode or UMI sequence)
       -uniqueTagCount <(Molecule|Cell|Sample)>
                              Unique tag count
+      -hasStops <gene_feature>
+                             Whether gene feature has stop codons inside
+      -isOOF <gene_feature>  Whether gene feature is OOF
+      -isProductive <gene_feature>
+                             Whether specified gene feature is productive (no stops and not OOF)

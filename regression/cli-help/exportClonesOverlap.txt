@@ -47,9 +47,10 @@ Usage: mixcr exportClonesOverlap [--chains <chain>[,<chain>...]]... [--criteria 
                                  [-topChains] [-geneLabel <label>]... [-tagCounts] [-cellId [<
                                  (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
                                  [-uniqueTagCount <(Molecule|Cell|Sample)>]... [-uniqueTagFraction <
-                                 (Molecule|Cell|Sample)>]... [-cellGroup] [--force-overwrite]
-                                 [--no-warnings] [--verbose] [--help] cloneset.(clns|clna)...
-                                 output.tsv
+                                 (Molecule|Cell|Sample)>]... [-cellGroup] [-hasStops
+                                 <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
+                                 <gene_feature>]... [--force-overwrite] [--no-warnings] [--verbose]
+                                 [--help] cloneset.(clns|clna)... output.tsv
 Build cloneset overlap and export into tab delimited file.
       cloneset.(clns|clna)...
                              Paths to input files
@@ -322,3 +323,8 @@ Possible fields to export
                              Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
                                collected.
       -cellGroup             Cell group
+      -hasStops <gene_feature>
+                             Whether gene feature has stop codons inside
+      -isOOF <gene_feature>  Whether gene feature is OOF
+      -isProductive <gene_feature>
+                             Whether specified gene feature is productive (no stops and not OOF)
