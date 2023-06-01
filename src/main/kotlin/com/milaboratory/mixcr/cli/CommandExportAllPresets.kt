@@ -34,15 +34,17 @@ class CommandExportAllPresets : Runnable, MiXCRPresetAwareCommand<Unit> {
         outputDir.toFile().mkdirs()
         val analyzePresetsDir = outputDir.resolve("analyze")
         analyzePresetsDir.toFile().mkdirs()
-        for (presetName in Presets.nonAbstractPresetNames) {
-            val (bundle, _) = paramsResolver.resolve(
-                MiXCRParamsSpec(presetName),
-                printParameters = false,
-                validate = false
-            )
-            val of = analyzePresetsDir.resolve("$presetName.yaml")
-            K_YAML_OM.writeValue(of.toFile(), bundle)
-        }
+        Presets.nonAbstractPresetNames
+            .filter { !it.contains("-legacy-v") }
+            .forEach { presetName ->
+                val (bundle, _) = paramsResolver.resolve(
+                    MiXCRParamsSpec(presetName),
+                    printParameters = false,
+                    validate = false
+                )
+                val of = analyzePresetsDir.resolve("$presetName.yaml")
+                K_YAML_OM.writeValue(of.toFile(), bundle)
+            }
     }
 
     override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
