@@ -22,5 +22,5 @@
     - type: MaterialTypeRNA
   align:
     inheritFrom: align-amplicon
-    override:
+    overrides:
       tagUnstranded: true
