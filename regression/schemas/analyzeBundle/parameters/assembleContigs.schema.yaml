@@ -9,6 +9,8 @@ $defs:
           type: string
 type: object
 properties:
+  command:
+    type: object
   ignoreTags:
     type: boolean
   parameters:

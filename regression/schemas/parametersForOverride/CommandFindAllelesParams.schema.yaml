@@ -1,21 +1,19 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 $defs:
-  Filter:
+  AlleleMutationsSearchParameters:
     type: object
     properties:
-      useClonesWithCountGreaterThen:
-        type: integer
-type: object
-properties:
-  filterForDataWithUmi:
-    $ref: '#/$defs/Filter'
-  filterForDataWithoutUmi:
-    $ref: '#/$defs/Filter'
-  productiveOnly:
-    type: boolean
-  searchAlleleParameter:
-    type: object
-    properties:
+      clonesToSearchCap:
+        type: object
+        properties:
+          limitClones:
+            type: integer
+          preferIsotypes:
+            type: array
+            items:
+              type: string
+          seedForShuffle:
+            type: integer
       coefficientForNaiveClonesInScore:
         type: number
       diversityRatioToSearchCommonMutationsInAnAllele:
@@ -29,12 +27,39 @@ properties:
             type: number
           minDiversityForMutation:
             type: number
+      enrichMutations:
+        type: boolean
+      minClonesCountForAlleleSearch:
+        type: integer
       minCountOfNaiveClonesToAddAllele:
+        type: integer
+      minNaiveClonesCountForAlleleSearch:
         type: integer
       minRelativePenaltyBetweenAllelesForCloneAlign:
         type: number
+      runOnSplitSubsets:
+        type: boolean
       topByScore:
         type: number
+      tryToAddZeroAllele:
+        type: boolean
+  Filter:
+    type: object
+    properties:
+      useClonesWithCountGreaterThen:
+        type: integer
+type: object
+properties:
+  filterForDataWithUmi:
+    $ref: '#/$defs/Filter'
+  filterForDataWithoutUmi:
+    $ref: '#/$defs/Filter'
+  productiveOnly:
+    type: boolean
+  searchAlleleParameterForFirstRound:
+    $ref: '#/$defs/AlleleMutationsSearchParameters'
+  searchAlleleParameterForSecondRound:
+    $ref: '#/$defs/AlleleMutationsSearchParameters'
   searchMutationsInCDR3:
     type: object
     properties:

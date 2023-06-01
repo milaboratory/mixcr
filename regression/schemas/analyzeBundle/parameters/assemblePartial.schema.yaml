@@ -3,6 +3,8 @@ type: object
 properties:
   cellLevel:
     type: boolean
+  command:
+    type: object
   dropPartial:
     type: boolean
   overlappedOnly:
