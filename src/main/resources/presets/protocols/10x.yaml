@@ -1,19 +1,8 @@
-"align-vdj-10x":
-  abstract: true
-  flags:
-    - species
-  mixins:
-    - type: MaterialTypeRNA
-  align:
-    inheritFrom: align-single-cell
-    overrides:
-      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
-
 "10x-vdj":
-  pipeline:
-    inheritFrom: pipeline-single-cell-shotgun
-  align:
-    inheritFrom: align-vdj-10x
+  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
   refineTagsAndSort:
     whitelists:
       CELL: builtin:737K-august-2016
@@ -97,36 +86,11 @@
                 operator:
                   type: group_operator_range
                   lower: 150.0
-  assemblePartial:
-    inheritFrom: assemblePartial-base
+                  acceptNaN: true
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
       clnaOutput: true
-      cellLevel: true
-      consensusAssemblerParameters:
-        assembler:
-          aAssemblerParameters:
-            bandWidth: 4
-            scoring:
-              type: linear
-              alphabet: nucleotide
-              subsMatrix: simple(match = 5, mismatch = -4)
-              gapPenalty: -14
-            minAlignmentScore: 40
-            maxNormalizedAlignmentPenalty: 0.15
-            trimMinimalSumQuality: 0
-            trimReferenceRegion: false
-            maxQuality: 45
-          maxIterations: 6
-          minAltSeedQualityScore: 11
-          minAltSeedNormalizedPenalty: 0.35
-          altSeedPenaltyTolerance: 0.3
-          minRecordSharePerConsensus: 1E-4
-          minRecordsPerConsensus: 0
-          minRecursiveRecordShare: 0.001
-          minQualityScore: 0
-          maxConsensuses: 10
       cloneAssemblerParameters:
         postFilters:
           - type: filter_in_groups
@@ -182,15 +146,23 @@
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
-  assembleContigs:
-    inheritFrom: assembleContigs-base
-  exportAlignments:
-    inheritFrom: exportAlignments-base
-  exportClones:
-    inheritFrom: exportClones-single-cell-with-umi-base
 
 "10x-5gex":
   inheritFrom: 10x-vdj
+  refineTagsAndSort:
+    whitelists:
+      CELL: builtin:737K-august-2016
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter: null
+
 
 
 
