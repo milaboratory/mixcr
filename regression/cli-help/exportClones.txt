@@ -49,8 +49,9 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [-geneLabel <label>]... [-tagCounts] [-cellId [<(none|space|dash)>]]...
                           [-tags <(Molecule|Cell|Sample)>]... [-uniqueTagCount <
                           (Molecule|Cell|Sample)>]... [-uniqueTagFraction <(Molecule|Cell|Sample)
-                          >]... [-cellGroup] [--force-overwrite] [--no-warnings] [--verbose]
-                          [--help] data.(clns|clna) [table.tsv]
+                          >]... [-cellGroup] [-hasStops <gene_feature>]... [-isOOF
+                          <gene_feature>]... [-isProductive <gene_feature>]... [--force-overwrite]
+                          [--no-warnings] [--verbose] [--help] data.(clns|clna) [table.tsv]
 Export assembled clones into tab delimited file.
       data.(clns|clna)       Path to input file with clones
       [table.tsv]            Path where to write export table.
@@ -350,3 +351,8 @@ Possible fields to export
                              Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
                                collected.
       -cellGroup             Cell group
+      -hasStops <gene_feature>
+                             Whether gene feature has stop codons inside
+      -isOOF <gene_feature>  Whether gene feature is OOF
+      -isProductive <gene_feature>
+                             Whether specified gene feature is productive (no stops and not OOF)

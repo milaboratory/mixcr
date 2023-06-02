@@ -5,6 +5,7 @@ pipeline:
 - refineTagsAndSort
 - assemble
 - exportClones
+validation: null
 align:
   species: ""
   libraryName: default
@@ -21,10 +22,10 @@ align:
     ^NN(CELL2COLUMN:N{5})gagatctctgcttctgatggctc(R2:*)
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
+  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -174,6 +175,11 @@ refineTagsAndSort:
           type: group_operator_cumtop
           share: 0.99
           accept: High
+        expectedSorting: []
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Cell
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -195,11 +201,13 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
+  command: assemblePartial
 extend:
   vAnchor: CDR3Begin
   jAnchor: FR4Begin
   minimalVScore: 50
   minimalJScore: 50
+  command: extend
 assemble:
   sortBySequence: false
   clnaOutput: false
@@ -284,7 +292,7 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 20
+    badQualityThreshold: 21
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 0
@@ -308,8 +316,17 @@ assemble:
             type: group_operator_cumtop
             share: 0.99
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - clone
+        requiredSequences: []
       aggregateReport: true
+      expectedSorting:
+      - allTags:Cell
+      - clone
   inferMinRecordsPerConsensus: false
+  command: assemble
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -332,6 +349,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  command: assembleContigs
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -437,3 +455,4 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
+qc: null

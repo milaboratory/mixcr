@@ -30,6 +30,7 @@ properties:
     - Sample
     - Cell
     - Molecule
+    - Technical
   splitFilesBy:
     type: array
     items:
