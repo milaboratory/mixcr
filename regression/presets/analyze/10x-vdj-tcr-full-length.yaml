@@ -6,7 +6,6 @@ pipeline:
 - assemble
 - assembleContigs
 - exportClones
-validation: null
 align:
   species: ""
   libraryName: default
@@ -21,7 +20,6 @@ align:
   tagUnstranded: false
   tagMaxBudget: 10.0
   readIdAsCellTag: false
-  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
   limit: null
@@ -500,4 +498,3 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
-qc: null

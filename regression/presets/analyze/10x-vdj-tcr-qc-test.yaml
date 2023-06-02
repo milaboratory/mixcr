@@ -23,7 +23,6 @@ align:
   tagUnstranded: false
   tagMaxBudget: 10.0
   readIdAsCellTag: false
-  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
   limit: null
