@@ -226,6 +226,30 @@ object CommandAnalyze {
         private var outputNoUsedReads: Boolean = false
 
         @Option(
+            description = ["Write consensus alignments. Beware, output can be very big."],
+            names = ["--output-consensus-alignments"],
+            order = OptionsOrder.report + 220,
+            hidden = true,
+        )
+        private var consensusAlignments: Boolean = false
+
+        @Option(
+            description = ["Write consensus state statistics. Beware, output can be extremely big."],
+            names = ["--output-consensus-state-stat"],
+            order = OptionsOrder.report + 221,
+            hidden = true,
+        )
+        private var consensusStateStats: Boolean = false
+
+        @Option(
+            description = ["Specify downsampling coefficient to apply while collecting consensus state statistics."],
+            names = ["--downsample-consensus-state-stat"],
+            order = OptionsOrder.report + 222,
+            hidden = true,
+        )
+        private var consensusStateStatsDownsampling: Double? = null
+
+        @Option(
             description = [
                 "Perform strict matching against input sample sheet (one substitution will be allowed by default).",
                 "This option only valid if input file is *.tsv sample sheet."
@@ -321,7 +345,8 @@ object CommandAnalyze {
             // Helper function, captures commandToRunQcFor
             fun PlanBuilder.addStepAndQc(
                 cmd: AnyMiXCRCommand,
-                extraArgs: List<String> = emptyList()
+                extraArgs: (outputFolder: Path, prefix: String, sampleName: String, bundle: MiXCRParamsBundle, round: Int) -> List<String> =
+                    { _, _, _, _, _ -> emptyList() }
             ) {
                 addStep(cmd, extraArgs)
                 if (cmd in commandToRunQcFor)
@@ -338,11 +363,10 @@ object CommandAnalyze {
             // Adding "align" step
             if (outputNoUsedReads)
                 pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
-            planBuilder.addStepAndQc(
-                MiXCRCommandDescriptor.align,
-                listOf("--preset", presetName) + extraAlignArgs
-                        + mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign()
-            )
+            planBuilder.addStepAndQc(MiXCRCommandDescriptor.align) { _, _, _, _, _ ->
+                listOf("--preset", presetName) + extraAlignArgs +
+                        mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign()
+            }
 
             planBuilder.executeSteps(forceOverwrite, dryRun)
 
@@ -354,7 +378,34 @@ object CommandAnalyze {
 
             // Adding all other steps
             pipeline.drop(1).forEach { cmd ->
-                planBuilder.addStepAndQc(cmd)
+                planBuilder.addStepAndQc(cmd) { outputFolder, prefix, sampleName, bundle, round ->
+                    when (cmd) {
+                        MiXCRCommandDescriptor.assemble ->
+                            (if (consensusAlignments) listOf(
+                                "--consensus-alignments",
+                                outputFolder.resolve(
+                                    MiXCRCommandDescriptor.assemble.consensusAlignments(
+                                        prefix,
+                                        sampleName
+                                    )
+                                ).toString()
+                            )
+                            else emptyList()) + (if (consensusStateStats) listOf(
+                                "--consensus-state-stat",
+                                outputFolder.resolve(
+                                    MiXCRCommandDescriptor.assemble.consensusStateStats(
+                                        prefix,
+                                        sampleName
+                                    )
+                                ).toString()
+                            )
+                            else emptyList()) + (consensusStateStatsDownsampling?.let {
+                                listOf("--downsample-consensus-state-stat", it.toString())
+                            } ?: emptyList())
+
+                        else -> emptyList()
+                    }
+                }
             }
 
             // Executing all actions after align
@@ -443,7 +494,8 @@ object CommandAnalyze {
 
             fun addStep(
                 cmd: AnyMiXCRCommand,
-                extraArgs: List<String> = emptyList()
+                extraArgs: (outputFolder: Path, prefix: String, sampleName: String, bundle: MiXCRParamsBundle, round: Int) -> List<String> =
+                    { _, _, _, _, _ -> emptyList() }
             ) {
                 val round = rounds.compute(cmd) { c, p ->
                     if (p == null)
@@ -492,12 +544,11 @@ object CommandAnalyze {
                         cmd.command,
                         round,
                         arguments,
-                        extraArgs,
+                        extraArgs(outputFolder, outputNamePrefix, inputs.sampleName, paramsBundle, round),
                         inputs.fileNames,
                         output,
                     )
 
-                    // if (vdjcaSamples.isEmpty())
                     nextInputsBuilder +=
                         InputFileSet(
                             inputs.sampleName,
@@ -513,20 +564,6 @@ object CommandAnalyze {
                                     .toString()
                             )
                         )
-
-                    // else {
-                    //     assert(inputs.sampleName == "")
-                    //     nextInputsBuilder += vdjcaSamples.map { sample ->
-                    //         val outputName = cmd.outputName(outputNamePrefixFull, paramsBundle, round)
-                    //         InputFileSet(
-                    //             CommandAlignPipeline.listToSampleName(sample),
-                    //             listOf(
-                    //                 outputFolder.resolve(CommandAlign.addSampleToFileName(outputName, sample))
-                    //                     .toString()
-                    //             )
-                    //         )
-                    //     }
-                    // }
                 }
 
                 nextInputs = nextInputsBuilder
