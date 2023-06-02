@@ -27,8 +27,6 @@ $defs:
             type: number
           minDiversityForMutation:
             type: number
-      enrichMutations:
-        type: boolean
       minClonesCountForAlleleSearch:
         type: integer
       minCountOfNaiveClonesToAddAllele:
@@ -41,8 +39,6 @@ $defs:
         type: boolean
       topByScore:
         type: number
-      tryToAddZeroAllele:
-        type: boolean
   Filter:
     type: object
     properties:

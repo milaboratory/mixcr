@@ -4,7 +4,6 @@ pipeline:
 - refineTagsAndSort
 - assemble
 - exportClones
-validation: null
 align:
   species: mmu
   libraryName: default
@@ -34,7 +33,6 @@ align:
   tagUnstranded: false
   tagMaxBudget: 10.0
   readIdAsCellTag: false
-  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
   limit: null
@@ -394,4 +392,3 @@ exportClones:
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []
-qc: null
