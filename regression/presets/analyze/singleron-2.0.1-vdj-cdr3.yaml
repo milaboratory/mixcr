@@ -290,7 +290,6 @@ assemble:
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: false
-  command: assemble
 assembleContigs: null
 exportAlignments: null
 exportClones:

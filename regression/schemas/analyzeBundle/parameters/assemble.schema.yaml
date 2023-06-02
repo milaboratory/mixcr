@@ -680,8 +680,6 @@ properties:
         type: boolean
       separateByV:
         type: boolean
-  command:
-    type: object
   consensusAssemblerParameters:
     type: object
     properties:
