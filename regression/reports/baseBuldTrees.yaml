@@ -7,6 +7,7 @@ findShmTrees:
   - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
   outputFiles:
   - trees/result.shmt
+    lib=repseqio.v2.2
   stepResults:
   - step:
       name: BuildingInitialTrees
@@ -240,6 +241,7 @@ upstreams:
       - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz
       outputFiles:
       - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
+        lib=repseqio.v2.2
       totalReadsProcessed: 49700
       aligned: 49570
       notAligned: 130
@@ -917,6 +919,7 @@ upstreams:
       - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       outputFiles:
       - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
+        lib=repseqio.v2.2
       preCloneAssemblerReport:
         type: preCloneAssemblerReport
         inputGroups: 3035
@@ -989,6 +992,7 @@ upstreams:
       - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
       - alleles/description.tsv
       - alleles_library.json
+        lib=repseqio.v2.2
       clonesCountWithNoChangeOfScore: 1038
       clonesCountWithNegativeScoreChange: 10
       clonesScoreDeltaStats:
@@ -1040,6 +1044,7 @@ upstreams:
       - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       outputFiles:
       - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
+        lib=repseqio.v2.2
       correctionReport:
         inputRecords: 49570
         outputRecords: 47693
@@ -1117,6 +1122,7 @@ upstreams:
       - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz
       outputFiles:
       - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
+        lib=repseqio.v2.2
       totalReadsProcessed: 29871
       aligned: 29273
       notAligned: 598
@@ -1812,6 +1818,7 @@ upstreams:
       - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       outputFiles:
       - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
+        lib=repseqio.v2.2
       preCloneAssemblerReport:
         type: preCloneAssemblerReport
         inputGroups: 77
@@ -1884,6 +1891,7 @@ upstreams:
       - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
       - alleles/description.tsv
       - alleles_library.json
+        lib=repseqio.v2.2
       clonesCountWithNoChangeOfScore: 1038
       clonesCountWithNegativeScoreChange: 10
       clonesScoreDeltaStats:
@@ -1935,6 +1943,7 @@ upstreams:
       - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       outputFiles:
       - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
+        lib=repseqio.v2.2
       correctionReport:
         inputRecords: 29273
         outputRecords: 28804

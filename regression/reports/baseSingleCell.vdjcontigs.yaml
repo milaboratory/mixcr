@@ -9,6 +9,7 @@ align:
   - single_cell_vdj_t_subset_R2.fastq.gz
   outputFiles:
   - baseSingleCell.vdjcontigs.vdjca
+    lib=repseqio.v2.2
   totalReadsProcessed: 46879
   aligned: 40756
   notAligned: 6123
@@ -113,6 +114,7 @@ assemble:
   - baseSingleCell.vdjcontigspassembled.1.vdjca
   outputFiles:
   - baseSingleCell.vdjcontigs.clna
+    lib=repseqio.v2.2
   preCloneAssemblerReport:
     type: preCloneAssemblerReport
     inputGroups: 60
@@ -234,6 +236,7 @@ assembleContigs:
   - baseSingleCell.vdjcontigs.clna
   outputFiles:
   - baseSingleCell.vdjcontigs.contigs.clns
+    lib=repseqio.v2.2
   clonesWithAmbiguousLetters: 0
   clonesWithAmbiguousLettersInSplittingRegion: 0
   readsWithAmbiguousLetters: 0.0
@@ -258,6 +261,7 @@ assemblePartial:
   - baseSingleCell.vdjcontigs.refined.vdjca
   outputFiles:
   - baseSingleCell.vdjcontigspassembled.1.vdjca
+    lib=repseqio.v2.2
   independentRuns: 60
   totalProcessed: 27094
   outputAlignments: 26902
@@ -282,6 +286,7 @@ refineTagsAndSort:
   - baseSingleCell.vdjcontigs.vdjca
   outputFiles:
   - baseSingleCell.vdjcontigs.refined.vdjca
+    lib=repseqio.v2.2
   correctionReport:
     inputRecords: 40756
     outputRecords: 27094
