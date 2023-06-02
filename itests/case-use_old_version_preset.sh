@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-mixcr analyze generic-tcr-amplicon-legacy-v4.2.0 \
+mixcr analyze --verbose generic-tcr-amplicon-legacy-v4.2.0 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

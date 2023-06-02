@@ -255,9 +255,8 @@ class MetaForObfuscationTest {
                 || name.endsWith("Report") || enclosingClass?.name?.endsWith("Report") == true
                 || isEnum
                 || (`package`?.name?.startsWith("io.repseq.gen.dist") == true && name.endsWith("Model"))
-                || (enclosingClass?.`package`?.name?.startsWith("io.repseq.gen.dist") == true && enclosingClass.name.endsWith(
-            "Model"
-        ))
+                || (enclosingClass?.`package`?.name?.startsWith("io.repseq.gen.dist") == true &&
+                enclosingClass.name.endsWith("Model"))
 
     private fun Class<*>.isJacksonAnnotated() = allAnnotations().any { it.isJackson() }
 

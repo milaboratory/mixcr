@@ -69,7 +69,8 @@ function calculateMaxMb() {
     maxMb=$(((freeMb + inactiveMb - delta)))
     ;;
   Linux)
-    rFreeMb=$(free -m | grep Mem | awk '{ print $4 }')
+    # 7 is available
+    rFreeMb=$(free -m | grep Mem | awk '{ print $7 }')
     maxMb=$((rFreeMb - delta))
     ;;
   FreeBSD)
