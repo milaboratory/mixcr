@@ -179,7 +179,6 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
-  command: assemblePartial
 extend: null
 assemble:
   sortBySequence: false
@@ -271,7 +270,6 @@ assemble:
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: false
-  command: assemble
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -294,7 +292,6 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
-  command: assembleContigs
 exportAlignments:
   chains: ALL
   noHeader: false

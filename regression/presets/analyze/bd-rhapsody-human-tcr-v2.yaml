@@ -420,7 +420,6 @@ assemble:
       - clone
       requiredSequences: []
   inferMinRecordsPerConsensus: false
-  command: assemble
 assembleContigs: null
 exportAlignments: null
 exportClones:
