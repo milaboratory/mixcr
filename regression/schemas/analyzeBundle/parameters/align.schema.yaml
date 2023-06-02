@@ -15,8 +15,6 @@ properties:
     type: boolean
   chains:
     type: string
-  inferSampleTable:
-    type: boolean
   library:
     type: string
   limit:
@@ -125,6 +123,79 @@ properties:
     type: number
   tagPattern:
     type: string
+  tagTransformationSteps:
+    type: array
+    items:
+      anyOf:
+      - allOf:
+        - type: object
+          properties:
+            destinationTag:
+              type: string
+            name:
+              type: string
+            separator:
+              type: string
+            sourceTags:
+              type: array
+              items:
+                type: string
+        - type: object
+          properties:
+            type:
+              const: concatenateTags
+          required:
+          - type
+      - type: object
+        properties:
+          type:
+            const: cutTechnicalTags
+        required:
+        - type
+      - allOf:
+        - type: object
+          properties:
+            allowOneMismatch:
+              type: boolean
+            matchTags:
+              type: array
+              items:
+                type: string
+            name:
+              type: string
+            newTags:
+              type: array
+              items:
+                type: string
+            preserveMatchedTags:
+              type: array
+              items:
+                type: string
+            reportingLevel:
+              type: string
+              enum:
+              - NoReport
+              - SimpleReport
+              - VerboseReport
+            rules:
+              type: array
+              items:
+                type: object
+                properties:
+                  from:
+                    type: array
+                    items:
+                      type: string
+                  to:
+                    type: array
+                    items:
+                      type: string
+        - type: object
+          properties:
+            type:
+              const: mapTags
+          required:
+          - type
   tagUnstranded:
     type: boolean
   trimmingQualityThreshold:

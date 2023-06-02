@@ -17,10 +17,9 @@ align:
   tagPattern: null
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: true
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: true
   limit: null
   parameters:
     vParameters:
@@ -231,7 +230,7 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 20
+    badQualityThreshold: 21
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 0

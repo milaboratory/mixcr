@@ -1,14 +1,14 @@
 align:
   type: alignerReport
-  commandLine: align --report ./baseSingleCell.vdjcontigs.align.report.txt --json-report
-    ./baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --species hs
+  commandLine: align --report baseSingleCell.vdjcontigs.align.report.txt --json-report
+    baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --species hs
     --assemble-contigs-by VDJRegion single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz
-    ./baseSingleCell.vdjcontigs.vdjca
+    baseSingleCell.vdjcontigs.vdjca
   inputFiles:
   - single_cell_vdj_t_subset_R1.fastq.gz
   - single_cell_vdj_t_subset_R2.fastq.gz
   outputFiles:
-  - ./baseSingleCell.vdjcontigs.vdjca
+  - baseSingleCell.vdjcontigs.vdjca
   totalReadsProcessed: 46879
   aligned: 40756
   notAligned: 6123
@@ -103,16 +103,16 @@ align:
                 "0": 46879
           costDistributions:
             "0": 46879
-  sampleStat: null
+  transformerReports: []
 assemble:
   type: assemblerReport
-  commandLine: assemble --report ./baseSingleCell.vdjcontigs.assemble.report.txt --json-report
-    ./baseSingleCell.vdjcontigs.assemble.report.json ./baseSingleCell.vdjcontigs.passembled.1.vdjca
-    ./baseSingleCell.vdjcontigs.clna
+  commandLine: assemble --report baseSingleCell.vdjcontigs.assemble.report.txt --json-report
+    baseSingleCell.vdjcontigs.assemble.report.json baseSingleCell.vdjcontigspassembled.1.vdjca
+    baseSingleCell.vdjcontigs.clna
   inputFiles:
-  - ./baseSingleCell.vdjcontigs.passembled.1.vdjca
+  - baseSingleCell.vdjcontigspassembled.1.vdjca
   outputFiles:
-  - ./baseSingleCell.vdjcontigs.clna
+  - baseSingleCell.vdjcontigs.clna
   preCloneAssemblerReport:
     type: preCloneAssemblerReport
     inputGroups: 60
@@ -138,8 +138,11 @@ assemble:
     tagEmpiricallyAssignedAlignments: 0
     geneAndTagEmpiricallyAssignedAlignments: 13503
     empiricalAssignmentConflicts: 0
+    ignoredAlignments: 0
     unassignedAlignments: 12583
   totalReadsProcessed: 46687
+  totalAlignmentsProcessed: 59
+  totalAlignedReadsProcessed: 14456
   initialClonesCreated: 7
   readsDroppedNoTargetSequence: 26080
   readsDroppedTooShortClonalSequence: 0
@@ -224,13 +227,13 @@ assemble:
   alignmentsFilteredByTagPrefix: 0
 assembleContigs:
   type: fullSeqAssemblerReport
-  commandLine: assembleContigs --report ./baseSingleCell.vdjcontigs.assembleContigs.report.txt
-    --json-report ./baseSingleCell.vdjcontigs.assembleContigs.report.json ./baseSingleCell.vdjcontigs.clna
-    ./baseSingleCell.vdjcontigs.contigs.clns
+  commandLine: assembleContigs --report baseSingleCell.vdjcontigs.assembleContigs.report.txt
+    --json-report baseSingleCell.vdjcontigs.assembleContigs.report.json baseSingleCell.vdjcontigs.clna
+    baseSingleCell.vdjcontigs.contigs.clns
   inputFiles:
-  - ./baseSingleCell.vdjcontigs.clna
+  - baseSingleCell.vdjcontigs.clna
   outputFiles:
-  - ./baseSingleCell.vdjcontigs.contigs.clns
+  - baseSingleCell.vdjcontigs.contigs.clns
   clonesWithAmbiguousLetters: 0
   clonesWithAmbiguousLettersInSplittingRegion: 0
   readsWithAmbiguousLetters: 0.0
@@ -248,13 +251,13 @@ assembleContigs:
   assemblePrematureTerminationEvents: 0.0
 assemblePartial:
   type: partialAlignmentsAssemblerReport
-  commandLine: assemblePartial --report ./baseSingleCell.vdjcontigs.assemblePartial.report.txt
-    --json-report ./baseSingleCell.vdjcontigs.assemblePartial.report.json ./baseSingleCell.vdjcontigs.refined.vdjca
-    ./baseSingleCell.vdjcontigs.passembled.1.vdjca
+  commandLine: assemblePartial --report baseSingleCell.vdjcontigs.assemblePartial.report.txt
+    --json-report baseSingleCell.vdjcontigs.assemblePartial.report.json baseSingleCell.vdjcontigs.refined.vdjca
+    baseSingleCell.vdjcontigspassembled.1.vdjca
   inputFiles:
-  - ./baseSingleCell.vdjcontigs.refined.vdjca
+  - baseSingleCell.vdjcontigs.refined.vdjca
   outputFiles:
-  - ./baseSingleCell.vdjcontigs.passembled.1.vdjca
+  - baseSingleCell.vdjcontigspassembled.1.vdjca
   independentRuns: 60
   totalProcessed: 27094
   outputAlignments: 26902
@@ -263,7 +266,7 @@ assemblePartial:
   leftTooShortNRegion: 506
   kMerDiversity: 2013
   droppedWildcardsInKMer: 0
-  droppedSmallOverlapNRegion: 381
+  droppedSmallOverlapNRegion: 382
   droppedNoNRegion: 0
   leftParts: 398
   rightParts: 8584
@@ -272,39 +275,39 @@ assemblePartial:
   partialAlignmentsAsIs: 26069
 refineTagsAndSort:
   type: refineTagsAndSort
-  commandLine: refineTagsAndSort --report ./baseSingleCell.vdjcontigs.refine.report.txt
-    --json-report ./baseSingleCell.vdjcontigs.refine.report.json ./baseSingleCell.vdjcontigs.vdjca
-    ./baseSingleCell.vdjcontigs.refined.vdjca
+  commandLine: refineTagsAndSort --report baseSingleCell.vdjcontigs.refine.report.txt
+    --json-report baseSingleCell.vdjcontigs.refine.report.json baseSingleCell.vdjcontigs.vdjca
+    baseSingleCell.vdjcontigs.refined.vdjca
   inputFiles:
-  - ./baseSingleCell.vdjcontigs.vdjca
+  - baseSingleCell.vdjcontigs.vdjca
   outputFiles:
-  - ./baseSingleCell.vdjcontigs.refined.vdjca
+  - baseSingleCell.vdjcontigs.refined.vdjca
   correctionReport:
     inputRecords: 40756
     outputRecords: 27094
     steps:
     - tagName: CELL
       inputGroups: 1
-      inputDiversity: 161
+      inputDiversity: 162
       inputCount: 40756
       coreDiversity: 52
-      coreCount: 40539
-      directlyCorrectedDiversity: 156
+      coreCount: 40535
+      directlyCorrectedDiversity: 157
       directlyCorrectedCount: 776
       filteredDiversity: 2
       filteredCount: 2
-      recursivelyCorrected: 70
+      recursivelyCorrected: 72
       diversityFilteredByWhitelist: 0
       outputDiversity: 3
       outputCount: 40754
     - tagName: UMI
       inputGroups: 3
-      inputDiversity: 409
+      inputDiversity: 410
       inputCount: 40754
       coreDiversity: 166
-      coreCount: 40468
-      directlyCorrectedDiversity: 302
-      directlyCorrectedCount: 359
+      coreCount: 40467
+      directlyCorrectedDiversity: 303
+      directlyCorrectedCount: 360
       filteredDiversity: 1
       filteredCount: 1
       recursivelyCorrected: 13
