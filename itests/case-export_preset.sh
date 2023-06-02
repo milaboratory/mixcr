@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-mixcr analyze \
+mixcr analyze --verbose \
     --species hs \
     --rna \
     --floating-left-alignment-boundary \

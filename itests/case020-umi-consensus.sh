@@ -16,7 +16,7 @@ assert() {
 
 set -euxo pipefail
 
-mixcr analyze -f umi-guided-consensus-test \
+mixcr analyze --verbose -f umi-guided-consensus-test \
   --species hs \
   --assemble-contigs-by VDJRegion \
   single_cell_vdj_t_subset_R1.fastq.gz \

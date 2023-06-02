@@ -38,7 +38,7 @@ echo -e 'S1\tGGATTACTCATTGCCC\t^(CELL:N{16})(UMI:N{10})\\^(R2:*)\tsingle_cell_vd
 echo -e 'S2\tCTGAAGTTCAAGGTAA\t^(CELL:N{16})(UMI:N{10})\\^(R2:*)\tsingle_cell_vdj_t_subset_R1.fastq.gz\tsingle_cell_vdj_t_subset_R2.fastq.gz' >> sample_sheet_1.tsv
 echo -e 'S3\tAACTCCCAGATCCTGT\t^(CELL:N{16})(UMI:N{10})\\^(R2:*)\tsingle_cell_vdj_t_subset_R1.fastq.gz\tsingle_cell_vdj_t_subset_R2.fastq.gz' >> sample_sheet_1.tsv
 
-mixcr analyze generic-tcr-amplicon-separate-samples-umi \
+mixcr analyze --verbose generic-tcr-amplicon-separate-samples-umi \
   --species hs \
   --rna \
   --rigid-left-alignment-boundary \
@@ -58,7 +58,7 @@ echo -e 'S4\tGGATTACTCATTGCCC\t^(CELL:N{16})(UMI:N{10})\\^(R2:*)\tcopy_single_ce
 echo -e 'S5\tCTGAAGTTCAAGGTAA\t^(CELL:N{16})(UMI:N{10})\\^(R2:*)\tcopy_single_cell_vdj_t_subset_R1.fastq.gz\tcopy_single_cell_vdj_t_subset_R2.fastq.gz' >> sample_sheet_2.tsv
 echo -e 'S6\tAACTCCCAGATCCTGT\t^(CELL:N{16})(UMI:N{10})\\^(R2:*)\tcopy_single_cell_vdj_t_subset_R1.fastq.gz\tcopy_single_cell_vdj_t_subset_R2.fastq.gz' >> sample_sheet_2.tsv
 
-mixcr analyze generic-tcr-amplicon-separate-samples-umi \
+mixcr analyze --verbose generic-tcr-amplicon-separate-samples-umi \
   --species hs \
   --rna \
   --rigid-left-alignment-boundary \

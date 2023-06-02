@@ -29,7 +29,7 @@ assert() {
 
 set -euxo pipefail
 
-mixcr analyze 10x-vdj-tcr-qc-test \
+mixcr analyze --verbose 10x-vdj-tcr-qc-test \
   --species hs \
   -Mqc.errorOnFailedCheck=false \
   single_cell_vdj_t_subset_R1.fastq.gz \

@@ -18,7 +18,7 @@ assert() {
 
 set -euxo pipefail
 
-mixcr analyze 10x-vdj-tcr \
+mixcr analyze --verbose 10x-vdj-tcr \
   --species hs \
   --assemble-contigs-by VDJRegion \
   --reset-whitelist CELL \
