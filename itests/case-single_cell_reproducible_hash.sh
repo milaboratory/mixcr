@@ -19,7 +19,7 @@ set -euxo pipefail
 mkdir -p result_1
 cd result_1
 
-mixcr analyze 10x-vdj-bcr \
+mixcr analyze --verbose 10x-vdj-bcr \
   --species hs \
   ../single_cell_vdj_t_subset_R1.fastq.gz \
   ../single_cell_vdj_t_subset_R2.fastq.gz \
@@ -31,7 +31,7 @@ cd ../
 mkdir -p result_2
 cd result_2
 
-mixcr analyze 10x-vdj-bcr \
+mixcr analyze --verbose 10x-vdj-bcr \
   --species hs \
   ../single_cell_vdj_t_subset_R1.fastq.gz \
   ../single_cell_vdj_t_subset_R2.fastq.gz \

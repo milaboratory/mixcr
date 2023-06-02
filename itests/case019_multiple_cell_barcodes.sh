@@ -24,7 +24,7 @@ CELL2_TAG2=CAAGGTAA
 #make one of the clones to be contained in two cells
 cat single_cell_vdj_t_subset_R1.fastq.gz | gunzip | sed "s/${CELL1_TAG1}${CELL1_TAG2}T/${CELL2_TAG1}${CELL2_TAG2}T/g" | gzip > single_cell_vdj_t_subset_R1.modified.fastq.gz
 
-mixcr analyze -f 10x-vdj-tcr-multi-barcode-test \
+mixcr analyze --verbose -f 10x-vdj-tcr-multi-barcode-test \
   --species hs \
   single_cell_vdj_t_subset_R1.modified.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \

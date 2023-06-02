@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-! (mixcr analyze test-gf-intersection \
+! (mixcr analyze --verbose test-gf-intersection \
      --species hs \
      single_cell_vdj_t_subset_R1.fastq.gz \
      single_cell_vdj_t_subset_R2.fastq.gz \

@@ -18,7 +18,7 @@ assert() {
 
 set -eux
 
-mixcr analyze test-mikelov-et-al-2021-without-contigs \
+mixcr analyze --verbose test-mikelov-et-al-2021-without-contigs \
       --output-consensus-alignments \
       --output-consensus-state-stat \
       --downsample-consensus-state-stat 0.2 \
@@ -26,7 +26,7 @@ mixcr analyze test-mikelov-et-al-2021-without-contigs \
       umi_ig_data_2_subset_R2.fastq.gz \
       case11-without-contigs
 
-mixcr analyze test-mikelov-et-al-2021-with-contigs \
+mixcr analyze --verbose test-mikelov-et-al-2021-with-contigs \
       --output-consensus-alignments \
       --output-consensus-state-stat \
       --downsample-consensus-state-stat 0.2 \
