@@ -6,6 +6,7 @@ pipeline:
 - assemble
 - assembleContigs
 - exportClones
+validation: null
 align:
   species: mmu
   libraryName: default
@@ -20,10 +21,10 @@ align:
     ^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
+  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -191,6 +192,16 @@ refineTagsAndSort:
               round: Down
               accept: High
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Cell
+      - allTags:Molecule
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -212,6 +223,7 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
+  command: assemblePartial
 extend: null
 assemble:
   sortBySequence: false
@@ -322,8 +334,18 @@ assemble:
             type: group_operator_cumtop
             share: 0.99
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - clone
+        requiredSequences: []
       aggregateReport: true
+      expectedSorting:
+      - geneLabel:ReliableChain
+      - allTags:Cell
+      - clone
   inferMinRecordsPerConsensus: false
+  command: assemble
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -346,6 +368,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  command: assembleContigs
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -393,3 +416,4 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
+qc: null

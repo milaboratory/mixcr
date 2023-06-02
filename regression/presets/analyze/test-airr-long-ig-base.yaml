@@ -4,6 +4,7 @@ pipeline:
 - align
 - assemble
 - exportClones
+validation: null
 align:
   species: hsa
   libraryName: default
@@ -17,10 +18,10 @@ align:
   tagPattern: null
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
+  tagTransformationSteps: []
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -185,11 +186,13 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
+  command: assemblePartial
 extend:
   vAnchor: CDR3Begin
   jAnchor: FR4Begin
   minimalVScore: 50
   minimalJScore: 50
+  command: extend
 assemble:
   sortBySequence: false
   clnaOutput: false
@@ -251,12 +254,13 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 20
+    badQualityThreshold: 21
     maxBadPointsPercent: 0.0
     mappingThreshold: 2of5
     minimalQuality: 0
     postFilters: null
   inferMinRecordsPerConsensus: false
+  command: assemble
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -279,6 +283,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  command: assembleContigs
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -322,3 +327,4 @@ exportClones:
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []
+qc: null

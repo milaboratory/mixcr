@@ -25,5 +25,11 @@ properties:
             type: number
           upper:
             type: number
+      - type: object
+        properties:
+          type:
+            const: ReadLengthIsCompatibleWithAssemblingFeature
+        required:
+        - type
   errorOnFailedCheck:
     type: boolean

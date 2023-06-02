@@ -37,8 +37,7 @@ generic-bcr-amplicon                       (--floating-left-alignment-boundary [
                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
                                            (--dna|--rna)
                                            --species <name>
-generic-bcr-amplicon-separate-samples-umi  --sample-table sample_table.tsv
-                                           --tag-pattern <pattern>
+generic-bcr-amplicon-separate-samples-umi  --tag-pattern <pattern>
                                            (--floating-left-alignment-boundary [<anchor_point>]|
                                            --rigid-left-alignment-boundary [<anchor_point>])
                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
@@ -58,8 +57,7 @@ generic-tcr-amplicon                       (--floating-left-alignment-boundary [
                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
                                            (--dna|--rna)
                                            --species <name>
-generic-tcr-amplicon-separate-samples-umi  --sample-table sample_table.tsv
-                                           --tag-pattern <pattern>
+generic-tcr-amplicon-separate-samples-umi  --tag-pattern <pattern>
                                            (--floating-left-alignment-boundary [<anchor_point>]|
                                            --rigid-left-alignment-boundary [<anchor_point>])
                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
@@ -139,6 +137,7 @@ rnaseq-cdr3                                --species <name>
 rnaseq-full-length                         --species <name>
 rnaseq-tcr-cdr3                            --species <name>
 rnaseq-tcr-full-length                     --species <name>
+seqwell-vdj-cdr3                           --species <name>
 singleron-2.0.1-vdj-cdr3
 smartseq2-vdj-full-length                  --species <name>
 split-seq-vdj-3gex
@@ -152,6 +151,7 @@ takara-mouse-bcr-cdr3
 takara-mouse-bcr-full-length
 takara-mouse-tcr-cdr3
 takara-mouse-tcr-full-length
+test-gf-intersection
 vergani-et-al-2017-cdr3
 vergani-et-al-2017-full-length
 
