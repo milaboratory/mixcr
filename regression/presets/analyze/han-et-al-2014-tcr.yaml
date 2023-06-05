@@ -21,10 +21,9 @@ align:
     ^NN(CELL2COLUMN:N{5})gagatctctgcttctgatggctc(R2:*)
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -174,6 +173,11 @@ refineTagsAndSort:
           type: group_operator_cumtop
           share: 0.99
           accept: High
+        expectedSorting: []
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Cell
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -284,7 +288,7 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 20
+    badQualityThreshold: 21
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 0
@@ -308,7 +312,15 @@ assemble:
             type: group_operator_cumtop
             share: 0.99
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - clone
+        requiredSequences: []
       aggregateReport: true
+      expectedSorting:
+      - allTags:Cell
+      - clone
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false

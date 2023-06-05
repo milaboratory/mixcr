@@ -18,6 +18,7 @@ align:
   tagPattern: "^(SMPL:N{16})(UMI:N{10})\\^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
   sampleTable:
     sampleTagNames:
     - SAMPLE
@@ -38,8 +39,6 @@ align:
       sample:
       - sample2
   splitBySample: true
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -188,6 +187,11 @@ refineTagsAndSort:
           minimalSample: 30
           fallbackThreshold: 1.0
           accept: High
+        expectedSorting: []
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Molecule
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -298,7 +302,7 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 20
+    badQualityThreshold: 21
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 0

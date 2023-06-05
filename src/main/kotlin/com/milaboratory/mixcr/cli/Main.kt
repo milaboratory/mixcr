@@ -100,10 +100,11 @@ object Main {
             if (logger.verbose) {
                 e.printStackTrace()
             }
-            System.err.println("Not enough memory for run command, try to increase -Xmx.")
+            val memoryInOSMessage = memoryInOS()?.let { "${it / FileUtils.ONE_MB} Mb" }
+            System.err.println("Not enough memory for run command, try to increase -Xmx. Available memory: ${memoryInOSMessage ?: "unknown"}")
             System.err.println("Example: `mixcr -Xmx40g ${args.joinToString(" ")}`")
-            val gb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_GB
-            System.err.println("This run used approximately ${gb}g of memory")
+            val mb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB
+            System.err.println("This run used approximately ${mb}m of memory")
             exitProcess(2)
         }
     }
@@ -408,13 +409,8 @@ object Main {
                     parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
             if (setVerbose) {
                 logger.debug {
-                    val memoryInOS = try {
-                        (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalPhysicalMemorySize
-                    } catch (e: Throwable) {
-                        null
-                    }
                     val memoryInJVMMessage = "${Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB} Mb"
-                    val memoryInOSMessage = memoryInOS?.let { "${it / FileUtils.ONE_MB} Mb" }
+                    val memoryInOSMessage = memoryInOS()?.let { "${it / FileUtils.ONE_MB} Mb" }
 
                     val availableProcessors = Runtime.getRuntime().availableProcessors()
                     val usedCPU = parseResult.subcommands()
@@ -429,6 +425,13 @@ object Main {
         registerLoggerOptions(subcommands.values)
         return this
     }
+
+    private fun memoryInOS(): Long? =
+        try {
+            (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalPhysicalMemorySize
+        } catch (e: Throwable) {
+            null
+        }
 
     private fun registerLoggerOptions(commandLines: Collection<CommandLine>) {
         for (commandLine in commandLines) {

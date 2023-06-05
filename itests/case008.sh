@@ -18,7 +18,7 @@ assert() {
 
 set -e
 
-mixcr analyze generic-amplicon \
+mixcr analyze --verbose generic-amplicon \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \
