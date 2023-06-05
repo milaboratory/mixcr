@@ -18,10 +18,9 @@ align:
   tagPattern: null
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:

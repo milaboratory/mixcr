@@ -228,6 +228,8 @@ properties:
           type: object
         groupsWithNoAssemblingFeature:
           type: integer
+        ignoredAlignments:
+          type: integer
         inputAlignments:
           type: integer
         inputAlignmentsWithAssemblingFeature:
@@ -271,6 +273,10 @@ properties:
   readsInClonesBeforeClustering:
     type: integer
   readsPreClustered:
+    type: integer
+  totalAlignedReadsProcessed:
+    type: integer
+  totalAlignmentsProcessed:
     type: integer
   totalReadsProcessed:
     type: integer

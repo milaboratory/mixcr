@@ -20,10 +20,9 @@ align:
     ^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -203,6 +202,12 @@ refineTagsAndSort:
               round: Down
               accept: High
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+        requiredSequences: []
       - type: filter_groups
         groupingKeys:
         - allTags:Cell
@@ -219,6 +224,17 @@ refineTagsAndSort:
           operator:
             type: group_operator_range
             lower: 3.0
+          expectedSorting:
+          - allTags:Molecule
+          requiredSequences: []
+        expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Cell
+      - allTags:Molecule
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -350,7 +366,16 @@ assemble:
             type: group_operator_cumtop
             share: 0.99
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - clone
+        requiredSequences: []
       aggregateReport: true
+      expectedSorting:
+      - geneLabel:ReliableChain
+      - allTags:Cell
+      - clone
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false

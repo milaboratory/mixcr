@@ -17,10 +17,9 @@ align:
   tagPattern: "^N{19}(R1:*) \\ ^(UMI:N{17})N{10}(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -182,6 +181,11 @@ refineTagsAndSort:
             round: Down
             accept: High
           accept: High
+        expectedSorting: []
+        requiredSequences: []
+      expectedSorting:
+      - UMI
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -292,7 +296,7 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 20
+    badQualityThreshold: 21
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 0

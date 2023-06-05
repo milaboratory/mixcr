@@ -14,6 +14,7 @@ import com.milaboratory.mixcr.basictypes.tag.TechnicalTag
 import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.test.TestUtil
 import com.milaboratory.util.K_YAML_OM
+import io.repseq.core.ReferencePoint
 import org.junit.Assert
 import org.junit.Test
 
@@ -70,5 +71,10 @@ class MixinsTest {
                 )
             )
         }
+    }
+
+    @Test
+    fun mixinSerializationTest1() {
+        TestUtil.assertJson(K_YAML_OM, AlignMixins.LeftAlignmentBoundaryWithPoint(true, ReferencePoint.FR1Begin), true)
     }
 }

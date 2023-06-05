@@ -18,12 +18,16 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.core.Range
+import com.milaboratory.mitool.consensus.ConsensusResult
 import com.milaboratory.mitool.data.MinGroupsPerGroup
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
 import com.milaboratory.mixcr.assembler.CloneAssembler
 import com.milaboratory.mixcr.assembler.CloneAssemblerRunner
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping.DROPPED_WITH_CLONE_MASK
+import com.milaboratory.mixcr.assembler.preclone.PreCloneAssembler
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
+import com.milaboratory.mixcr.assembler.preclone.PreCloneRawConsensusListener
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsWriter
@@ -33,6 +37,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
@@ -40,18 +45,24 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.util.ArraysUtils
+import com.milaboratory.util.HashFunctions
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.use
 import gnu.trove.map.hash.TIntObjectHashMap
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
+import org.apache.commons.math3.random.RandomDataGenerator
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.io.BufferedWriter
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.io.path.bufferedWriter
 import kotlin.io.path.extension
 
 object CommandAssemble {
@@ -172,6 +183,27 @@ object CommandAssemble {
             hidden = true
         )
         var reportBuffers = false
+
+        @Option(
+            description = ["Write consensus alignments"],
+            names = ["--consensus-alignments"],
+            hidden = true,
+        )
+        var consensusAlignments: Path? = null
+
+        @Option(
+            description = ["Write consensus state statistics"],
+            names = ["--consensus-state-stat"],
+            hidden = true,
+        )
+        var consensusStateStats: Path? = null
+
+        @Option(
+            description = ["Write consensus state statistics"],
+            names = ["--downsample-consensus-state-stat"],
+            hidden = true,
+        )
+        var consensusStateStatsDownsampling: Double? = null
 
         @Mixin
         lateinit var resetPreset: ResetPresetOptions
@@ -303,8 +335,26 @@ object CommandAssemble {
                             assemblerRunner.setExtractionListener(reportBuilder)
                             SmartProgressReporter.startProgressReport(assemblerRunner)
 
-                            // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
-                            assemblerRunner.run()
+                            // Optionally writing additional information about consensus assembly process
+                            use(
+                                consensusAlignments?.bufferedWriter(bufferSize = 1048576),
+                                consensusStateStats?.bufferedWriter(bufferSize = 1048576)
+                            ) { cAlignmentsWriter, cStateStatsWriter ->
+
+                                // If any auxiliary output was requested, adding raw consensus listener to pre-clone assembler
+                                if (cAlignmentsWriter != null || cStateStatsWriter != null) {
+                                    val formatter = ConsensusAlignmentDataFormatter(
+                                        cAlignmentsWriter,
+                                        cStateStatsWriter,
+                                        consensusStateStatsDownsampling
+                                    )
+                                    formatter.writeHeaders()
+                                    assemblerRunner.setRawConsensusListener(true, formatter)
+                                }
+
+                                // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
+                                assemblerRunner.run()
+                            }
 
                             // Setting report into a big report object
                             reportBuilder.setPreCloneAssemblerReportBuilder(assemblerRunner.report)
@@ -416,6 +466,100 @@ object CommandAssemble {
                     // Writing report to stout
                     ReportUtil.writeReportToStdout(report)
                     reportOptions.appendToFiles(report)
+                }
+            }
+        }
+    }
+
+    class ConsensusAlignmentDataFormatter(
+        private val cAlignmentsWriter: BufferedWriter?,
+        private val cStateStatsWriter: BufferedWriter?,
+        private val statDownsample: Double?
+    ) : PreCloneRawConsensusListener {
+        fun writeHeaders() {
+            cStateStatsWriter?.appendLine(
+                "TagGroupIdx\tConsensusIdx\tSubConsensusIdx\tReadIdx\tConsensusPosition\t" +
+                        "ConsensusLetter\tConsensusQuality\tReadLetter\tReadQuality"
+            )
+        }
+
+        private val consensusCounterA = AtomicLong()
+        private val consensusCounterS = AtomicLong()
+        private val tagGroupCounter = AtomicLong()
+
+        override fun onRawConsensuses(
+            key: TagTuple,
+            consensuses: MutableList<ConsensusResult>,
+            alignmentInfos: MutableList<PreCloneAssembler.AlignmentInfo>
+        ) {
+            val tagGroupIdx = tagGroupCounter.getAndIncrement()
+            if (cAlignmentsWriter != null) {
+                cAlignmentsWriter.appendLine("=============================")
+                cAlignmentsWriter.appendLine("For tags: $key ($tagGroupIdx)")
+                for (c in consensuses) {
+                    cAlignmentsWriter.appendLine()
+                    cAlignmentsWriter.appendLine("Consensus #${consensusCounterA.getAndIncrement()}")
+                    c.consensuses.forEachIndexed { subRead, sc ->
+                        cAlignmentsWriter.appendLine()
+                        if (c.consensuses.size > 1)
+                            cAlignmentsWriter.appendLine("SubRead #$subRead")
+                        cAlignmentsWriter.appendLine("Consensus:")
+                        cAlignmentsWriter.appendLine(sc.consensus.sequence.toString())
+                        cAlignmentsWriter.appendLine(sc.consensus.quality.toString())
+                        cAlignmentsWriter.appendLine()
+                        cAlignmentsWriter.appendLine("Alignments:")
+                        for (al in sc.alignments) {
+                            if (!c.recordsUsed[al.recordId])
+                                continue
+                            cAlignmentsWriter.appendLine("Read #${alignmentInfos[al.recordId].minReadId}")
+                            cAlignmentsWriter.appendLine(
+                                al.alignment.alignmentHelper.toStringWithSeq2Quality(al.sequenceWithQuality.quality)
+                            )
+                            cAlignmentsWriter.appendLine()
+                        }
+                    }
+                }
+            }
+
+            if (cStateStatsWriter != null) {
+                val random = RandomDataGenerator()
+                random.reSeed(HashFunctions.JenkinWang64shift(tagGroupIdx)) // for reproducible downsampling
+                val downsampling = statDownsample ?: 2.0
+                for (c in consensuses) {
+                    val consensusIdx = consensusCounterS.getAndIncrement()
+                    c.consensuses.forEachIndexed { subRead, sc ->
+                        val consensusSeq = sc.consensus.sequence.toString()
+                        val consensusQual = sc.consensus.quality.toString()
+                        for (al in sc.alignments) {
+                            if (!c.recordsUsed[al.recordId])
+                                continue
+                            for (i in al.alignment.sequence1Range.lower until al.alignment.sequence1Range.upper) {
+                                if (random.nextUniform(0.0, 1.0, true) >= downsampling)
+                                    continue
+                                val s1r = Range.createFromOffsetAndLength(i, 1)
+                                val s2r = al.alignment.convertToSeq2Range(s1r)
+                                // cStateStatsWriter.append(tagTuple.toString()).append('\t')
+                                cStateStatsWriter.append(tagGroupIdx.toString())
+                                    .append('\t')
+                                cStateStatsWriter.append(consensusIdx.toString())
+                                    .append('\t')
+                                cStateStatsWriter.append(subRead.toString()).append('\t')
+                                cStateStatsWriter.append(
+                                    alignmentInfos[al.recordId].minReadId
+                                        .toString()
+                                ).append('\t')
+                                cStateStatsWriter.append(i.toString()).append('\t')
+                                cStateStatsWriter.append(consensusSeq[i]).append('\t')
+                                cStateStatsWriter.append(consensusQual[i]).append('\t')
+                                val readState = al.sequenceWithQuality.getRange(s2r)
+                                cStateStatsWriter.append(readState.sequence.toString())
+                                    .append('\t')
+                                cStateStatsWriter.append(readState.quality.toString())
+                                    .append('\t')
+                                cStateStatsWriter.appendLine()
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -50,6 +50,14 @@ jobs:
       test-integration-cache-key: 'tests-sequences-v1'
       test-integration-python-version: '3.9'
 
+      test-regression: true
+      test-regression-before-tasks: shadowJarAfterObfuscation
+      test-regression-tasks: ''
+      test-regression-cache: true
+      test-regression-cache-paths: |
+        ./src/test/resources/sequences/big/**
+      test-regression-cache-key: 'tests-sequences-v1'
+
       # Lib
       dist-library: ${{ github.event_name != 'schedule' }}
       dist-library-dev-tasks: publishAllPublicationsToMiprivRepository

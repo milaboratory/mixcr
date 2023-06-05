@@ -279,7 +279,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
                 )
             }
             val targetAsMultiAlignment = MultiAlignmentHelper.Builder
-                .formatMultiAlignments(alignments, i, addReads = alignments.originalReads != null)
+                .formatMultiAlignments(alignments, i, addReads = alignments.originalSequences != null)
             val split = targetAsMultiAlignment.split(80)
             for (spl in split) {
                 output.println(spl.format())

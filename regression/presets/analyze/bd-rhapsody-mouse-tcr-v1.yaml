@@ -23,10 +23,9 @@ align:
     ^aatagtaggcttgggagaaaagtctg(R2:*)
   tagUnstranded: false
   tagMaxBudget: 10.0
+  readIdAsCellTag: false
   sampleTable: null
   splitBySample: false
-  inferSampleTable: false
-  readIdAsCellTag: false
   limit: null
   parameters:
     vParameters:
@@ -194,6 +193,12 @@ refineTagsAndSort:
               round: Down
               accept: High
             accept: High
+          expectedSorting: []
+          requiredSequences: []
+        expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+        requiredSequences: []
       - type: filter_groups
         groupingKeys:
         - allTags:Cell
@@ -210,6 +215,17 @@ refineTagsAndSort:
           operator:
             type: group_operator_range
             lower: 3.0
+          expectedSorting:
+          - allTags:Molecule
+          requiredSequences: []
+        expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Cell
+      - allTags:Molecule
+      requiredSequences: []
 assemblePartial: null
 extend: null
 assemble:
@@ -296,7 +312,7 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 20
+    badQualityThreshold: 21
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 0
@@ -319,7 +335,19 @@ assemble:
             type: group_operator_cumtop
             share: 0.95
             accept: High
+          expectedSorting:
+          - allTags:Molecule
+          requiredSequences: []
+        expectedSorting:
+        - clone
+        - allTags:Molecule
+        requiredSequences: []
       aggregateReport: true
+      expectedSorting:
+      - geneLabel:ReliableChain
+      - allTags:Cell
+      - clone
+      - allTags:Molecule
     - type: filter_in_groups
       isolationKeys:
       - allTags:Cell
@@ -337,7 +365,18 @@ assemble:
             type: group_operator_cumtop
             share: 0.99
             accept: High
+          expectedSorting:
+          - allTags:Molecule
+          requiredSequences: []
+        expectedSorting:
+        - clone
+        - allTags:Molecule
+        requiredSequences: []
       aggregateReport: true
+      expectedSorting:
+      - allTags:Cell
+      - clone
+      - allTags:Molecule
     - type: filter_groups
       groupingKeys:
       - allTags:Cell
@@ -351,6 +390,14 @@ assemble:
         operator:
           type: group_operator_range
           lower: 2.0
+        expectedSorting:
+        - allTags:Molecule
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Cell
+      - clone
+      - allTags:Molecule
+      requiredSequences: []
     - type: filter_groups
       groupingKeys:
       - allTags:Cell
@@ -363,6 +410,13 @@ assemble:
         operator:
           type: group_operator_range
           upper: 4.0
+        expectedSorting:
+        - clone
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Cell
+      - clone
+      requiredSequences: []
   inferMinRecordsPerConsensus: false
 assembleContigs: null
 exportAlignments: null

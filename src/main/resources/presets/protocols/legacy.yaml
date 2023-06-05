@@ -173,14 +173,14 @@ irepertoire-human-dna-igh-lr:
 
 milab-human-bcr-multiplex-cdr3:
   deprecation: "The preset is deprecated. Please use milab-human-bcr-multiplex. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: milab-human-bcr-multiplex
+  inheritFrom: milab-human-ig-rna-multiplex
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 milab-human-bcr-multiplex-full-length:
   deprecation: "The preset is deprecated. Please use milab-human-bcr-multiplex."
-  inheritFrom: milab-human-bcr-multiplex
+  inheritFrom: milab-human-ig-rna-multiplex
 
 milab-human-tcr-rna-race-cdr3:
   deprecation: "The preset is deprecated. Please use milab-human-tcr-rna-race. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"

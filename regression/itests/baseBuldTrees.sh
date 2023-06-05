@@ -51,4 +51,4 @@ mixcr findShmTrees \
 
 
 
-mixcr exportReports --yaml trees/result.shmt | grep -v '  version:' | sed -E 's/([0-9]+)\.([0-9]{1,5})[0-9]+/\1.\2/' > ../reports/baseBuldTrees.yaml
+mixcr exportReports --yaml trees/result.shmt | grep -v -E 'version:|rev=|lib=' | sed -E 's/([0-9]+)\.([0-9]{1,5})[0-9]+/\1.\2/' > ../reports/baseBuldTrees.yaml
