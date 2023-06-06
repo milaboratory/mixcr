@@ -107,7 +107,7 @@ $defs:
       codeToWildcard:
         type: array
         items:
-          $ref: '#/$defs/bR'
+          $ref: '#/$defs/bQ'
       countOfBasicLetters:
         type: integer
       empty:
@@ -137,11 +137,11 @@ $defs:
           no_entry_value:
             type: string
       wildcardForAnyLetter:
-        $ref: '#/$defs/bR'
+        $ref: '#/$defs/bQ'
       wildcardsList:
         type: array
         items:
-          $ref: '#/$defs/bR'
+          $ref: '#/$defs/bQ'
   AndKeyedFilter-1:
     type: object
     properties:
@@ -537,7 +537,7 @@ $defs:
           const: group_operator_top
       required:
       - type
-  bR:
+  bQ:
     type: object
     properties:
       a:
@@ -580,7 +580,11 @@ properties:
             allOf:
             - type: object
               properties:
-                specificMutationProbability:
+                backgroundIndelRate:
+                  type: number
+                backgroundSubstitutionRate:
+                  type: number
+                correctionPower:
                   type: number
             - type: object
               properties:
@@ -674,6 +678,7 @@ properties:
         - Sum
         - Average
         - MiniMax
+        - BetaScore
       separateByC:
         type: boolean
       separateByJ:
