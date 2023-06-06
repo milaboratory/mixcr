@@ -92,7 +92,9 @@
           minimalTagSetOverlap: -1
           clusteringFilter:
             type: relativeConcentration
-            specificMutationProbability: 1E-4
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.0005
+            backgroundIndelRate: 0.0002
 
 "assemble-umi-base":
   abstract: true
