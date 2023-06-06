@@ -23,8 +23,8 @@
         clusteringFilter:
           type: relativeConcentration
           correctionPower: 0.001
-          backgroundSubstitutionRate: 0.0025
-          backgroundIndelRate: 0.00025
+          backgroundSubstitutionRate: 0.002
+          backgroundIndelRate: 0.0002
       cloneFactoryParameters:
         vParameters:
           maxAlignmentWidthLinear: 5

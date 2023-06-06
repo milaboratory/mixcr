@@ -98,11 +98,11 @@ public class ClonalSequenceTest {
         for (int t = 0; t < 100; ++t) {
             int k = 1 + random.nextInt(2);
             int deletions, insertions;
-            if (delta > 0) { //c1 > c2
+            if (delta > 0) { // c1 > c2
                 insertions = k;
                 deletions = delta + k;
             } else {
-                //c1 < c2
+                // c1 < c2
                 deletions = k;
                 insertions = -delta + k;
             }
@@ -233,7 +233,7 @@ public class ClonalSequenceTest {
             SequenceQuality q = SequenceQuality.getUniformQuality((byte) 0, s.size());
             data[i] = new NSequenceWithQuality(s, q);
         }
-        return new ClonalSequence(data);
+        return new ClonalSequence(data, null);
     }
 
     private ClonalSequence createRandom(int size, RandomGenerator generator) {
@@ -243,7 +243,7 @@ public class ClonalSequenceTest {
             SequenceQuality q = SequenceQuality.getUniformQuality((byte) 0, s.size());
             data[i] = new NSequenceWithQuality(s, q);
         }
-        return new ClonalSequence(data);
+        return new ClonalSequence(data, null);
     }
 
     private TestData createRandomTestDara(int size, RandomGenerator random) {
@@ -261,7 +261,7 @@ public class ClonalSequenceTest {
             builder.append(muts.move(offset));
             offset += s1.size();
         }
-        return new TestData(new ClonalSequence(c1), new ClonalSequence(c2), builder.createAndDestroy());
+        return new TestData(new ClonalSequence(c1, null), new ClonalSequence(c2, null), builder.createAndDestroy());
     }
 
     private static final class TestData {
