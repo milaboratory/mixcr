@@ -105,5 +105,5 @@ keyOfCDR3=`head -n 1 trees/trees.tsv | sed 's/nSeqCDR3OfMrca/#/' | cut -d# -f1 |
 # biggest tree
 # `tail +2` - skip first line with column names
 # `sort -n -r -k 2` - reverse numeric sort by second column (uniqClonesCount)
-assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfNumberOfCones}'" "14"
+assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfNumberOfCones}'" "13"
 assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfCDR3}'" "TGTGCCAGAGAAGGATCAGATAGTGCCGGGGGTGCTTTTGATGTCTGG"
