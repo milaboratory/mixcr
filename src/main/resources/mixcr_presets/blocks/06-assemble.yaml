@@ -7,9 +7,8 @@
     cloneAssemblerParameters:
       assemblingFeatures:
         - CDR3
-      minimalQuality: 0
       minimalClonalSequenceLength: 12
-      qualityAggregationType: Max
+      qualityAggregationType: BetaScore
       separateByV: false
       separateByJ: false
       separateByC: false
@@ -23,7 +22,9 @@
         minimalTagSetOverlap: -1
         clusteringFilter:
           type: relativeConcentration
-          specificMutationProbability: 0.001
+          correctionPower: 0.001
+          backgroundSubstitutionRate: 0.002
+          backgroundIndelRate: 0.0002
       cloneFactoryParameters:
         vParameters:
           maxAlignmentWidthLinear: 5
@@ -46,7 +47,8 @@
           relativeMinScore:
           scoring: null
       addReadsCountOnClustering: false
-      badQualityThreshold: 21
+      badQualityThreshold: 15
+      minimalQuality: 21
       maxBadPointsPercent: 0.7
       mappingThreshold: 2of5
     inferMinRecordsPerConsensus: false
@@ -90,7 +92,9 @@
           minimalTagSetOverlap: -1
           clusteringFilter:
             type: relativeConcentration
-            specificMutationProbability: 1E-4
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.0005
+            backgroundIndelRate: 0.0002
 
 "assemble-umi-base":
   abstract: true

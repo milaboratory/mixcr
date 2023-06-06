@@ -28,9 +28,9 @@ mixcr analyze --verbose generic-tcr-amplicon \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case8
 
 assert "cat case8.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "237736"
-assert "cat case8.assemble.report.json | head -n 1 | jq -r .readsInClones" "199564"
-assert "cat case8.assemble.report.json | head -n 1 | jq -r .clones" "25614"
+assert "cat case8.assemble.report.json | head -n 1 | jq -r .readsInClones" "199574"
+assert "cat case8.assemble.report.json | head -n 1 | jq -r .clones" "25595"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "277"
-assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "1166"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "1168"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .assemblePrematureTerminationEvents" "3"
-assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25614"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25595"
