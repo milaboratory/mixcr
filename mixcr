@@ -180,7 +180,7 @@ fi
 jar=""
 
 if [[ -z "$altJar" ]]; then
-  for j in "$dir/../jar/${app}.jar" "$dir/${app}.jar" $(ls -d -1 "$dir"/build/libs/* 2>/dev/null | grep "${app}-all.jar"); do
+  for j in "$dir/../jar/${app}.jar" "$dir/${app}.jar" $(ls -d -1 "$dir"/build/libs/* 2>/dev/null | grep "${app}" | grep all.jar); do
     if [[ -e "$j" ]]; then
       jar=$j
       break
