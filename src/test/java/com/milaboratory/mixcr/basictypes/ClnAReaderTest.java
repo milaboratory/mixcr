@@ -90,7 +90,7 @@ public class ClnAReaderTest {
                         CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
                 emptyFooter(),
-                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())
+                new VDJCSProperties.CloneOrdering(VDJCSProperties.CloneCount.INSTANCE)
         );
         writer.writeClones(newCloneSet);
 
@@ -139,7 +139,7 @@ public class ClnAReaderTest {
                         CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
                 emptyFooter(),
-                new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount())));
+                new VDJCSProperties.CloneOrdering(VDJCSProperties.CloneCount.INSTANCE)));
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.setFooter(emptyFooter());
         writer.writeAlignmentsAndIndex();
