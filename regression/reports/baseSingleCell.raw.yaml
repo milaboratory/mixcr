@@ -232,11 +232,11 @@ assembleContigs:
   - baseSingleCell.raw.clna
   outputFiles:
   - baseSingleCell.raw.contigs.clns
-  clonesWithAmbiguousLetters: 4
+  clonesWithAmbiguousLetters: 3
   clonesWithAmbiguousLettersInSplittingRegion: 0
-  readsWithAmbiguousLetters: 12695.0
+  readsWithAmbiguousLetters: 4262.0
   readsWithAmbiguousLettersInSplittingRegion: 0.0
-  totalAmbiguousLetters: 14
+  totalAmbiguousLetters: 13
   totalAmbiguousLettersInSplittingRegion: 0
   initialCloneCount: 6
   canceledAssemblies: 0
