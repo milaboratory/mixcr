@@ -273,6 +273,8 @@ tasks.processResources {
 }
 
 val checkObfuscation by tasks.registering(Test::class) {
+    group = "verification"
+
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
 
