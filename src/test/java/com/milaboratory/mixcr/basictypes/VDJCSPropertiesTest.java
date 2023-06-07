@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -21,11 +21,11 @@ import org.junit.Test;
 public class VDJCSPropertiesTest {
     @Test
     public void serializationTest() {
-        TestUtil.assertJson(new VDJCSProperties.CloneOrdering(new VDJCSProperties.CloneCount()), true);
+        TestUtil.assertJson(new VDJCSProperties.CloneOrdering(VDJCSProperties.CloneCount.INSTANCE), true);
         TestUtil.assertJson(new VDJCSProperties.CloneOrdering(
                 new VDJCSProperties.NSequence(GeneFeature.CDR3),
                 new VDJCSProperties.VDJCSegment(GeneType.Variable),
-                new VDJCSProperties.CloneCount()), true);
+                VDJCSProperties.CloneCount.INSTANCE), true);
     }
 
     @Test
