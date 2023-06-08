@@ -1,10 +1,16 @@
-Usage: mixcr sortClones [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose] [--help]
+Usage: mixcr sortClones [--by-feature <gene_feature>]... [--by-gene <gene_type>]...
+                        [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose] [--help]
                         clones.(clns|clna) clones.sorted.(clns|clna)
 Sort clones by sequence. Clones in the output file will be sorted by clonal sequence, which allows
 to build overlaps between clonesets.
       clones.(clns|clna)
       clones.sorted.(clns|clna)
 
+      --by-feature <gene_feature>
+                           Sort by specified features. By default `assemblingFeatures` will be used
+      --by-gene <gene_type>
+                           Sort by specified genes. This sorting will be applied after sorting by
+                             `--feature`. By default `V` and 'J' will be used
       --use-local-temp     Put temporary files in the same folder as the output files.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
