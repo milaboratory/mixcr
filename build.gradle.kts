@@ -133,7 +133,7 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 val mixcrAlgoVersion = "4.3.0-140-clone-browser"
-val milibVersion = "2.4.0-63-clone-browser"
+val milibVersion = "2.4.0-64-clone-browser"
 val mitoolVersion = "1.7.0-43-clone-browser"
 val repseqioVersion = "1.8.0-64-clone-browser"
 
