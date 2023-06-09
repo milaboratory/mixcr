@@ -421,7 +421,7 @@ public class OverlapCharacteristicTest {
 
         @NotNull
         @Override
-        public Comparator<? super Payload> propertyComparator() {
+        public Comparator<? super Payload> getPropertyComparator() {
             return Comparator.naturalOrder();
         }
     }
@@ -450,7 +450,7 @@ public class OverlapCharacteristicTest {
 
         @NotNull
         @Override
-        public Comparator<? super Payload> propertyComparator() {
+        public Comparator<? super Payload> getPropertyComparator() {
             return Comparator.naturalOrder();
         }
     }
