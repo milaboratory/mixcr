@@ -214,22 +214,6 @@ assemble:
         absoluteMinScore: null
         maxHits: null
         scoring: null
-      vdcParameters:
-        Variable:
-          relativeMinScore: null
-          scoring: null
-          maxAlignmentWidthLinear: 5
-          maxAlignmentWidthAffine: 500
-        Joining:
-          relativeMinScore: null
-          scoring: null
-          maxAlignmentWidthLinear: 5
-          maxAlignmentWidthAffine: 500
-        Constant:
-          relativeMinScore: null
-          scoring: null
-          maxAlignmentWidthLinear: 5
-          maxAlignmentWidthAffine: 500
     separateByV: false
     separateByJ: true
     separateByC: false

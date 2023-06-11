@@ -48,21 +48,21 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
     var report: Path? = null
 
     @Option(
-        names = ["-v"],
+        names = ["-v", "--use-v"],
         description = ["Use V gene in clone comparison (include it as a clone key along with a clone sequence)."],
         order = OptionsOrder.main + 10_100
     )
     var useV = false
 
     @Option(
-        names = ["-j"],
+        names = ["-j", "--use-j"],
         description = ["Use J gene in clone comparison (include it as a clone key along with a clone sequence)."],
         order = OptionsOrder.main + 10_200
     )
     var useJ = false
 
     @Option(
-        names = ["-c"],
+        names = ["-c", "--use-cc"],
         description = ["Use C gene in clone comparison (include it as a clone key along with a clone sequence)."],
         order = OptionsOrder.main + 10_300
     )
