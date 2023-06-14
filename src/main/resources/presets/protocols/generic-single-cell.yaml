@@ -290,9 +290,7 @@ generic-ht-single-cell-amplicon:
                 - clone
               predicates:
                 - metrics:
-                    - type: group_metric_nunique
-                      keys:
-                        - allTags:Molecule
+                    - type: group_metric_sum_weight
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
@@ -459,9 +457,7 @@ generic-ht-single-cell-fragmented:
                 - clone
               predicates:
                 - metrics:
-                    - type: group_metric_nunique
-                      keys:
-                        - allTags:Molecule
+                    - type: group_metric_sum_weight
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
