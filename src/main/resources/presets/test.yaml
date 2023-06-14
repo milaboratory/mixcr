@@ -251,7 +251,7 @@
   assemblePartial:
     inheritFrom: assemblePartial-base
   assemble:
-    inheritFrom: assemble-with-consensus-base
+    inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
