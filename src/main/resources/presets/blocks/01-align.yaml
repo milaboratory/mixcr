@@ -450,7 +450,7 @@ align-single-cell:
           type: kaligner2
           mapperNValue: 9
           mapperKValue: 1
-          floatingLeftBound: true
+          floatingLeftBound: false
           floatingRightBound: true
           mapperAbsoluteMinClusterScore: 250
           mapperExtraClusterScore: -38
@@ -494,7 +494,7 @@ align-single-cell:
           mapperNValue: 8
           mapperKValue: 1
           floatingLeftBound: true
-          floatingRightBound: true
+          floatingRightBound: false
           mapperAbsoluteMinClusterScore: 102
           mapperExtraClusterScore: -38
           mapperMatchScore: 95

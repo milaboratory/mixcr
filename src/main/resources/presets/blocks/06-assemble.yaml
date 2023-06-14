@@ -56,7 +56,6 @@ assemble-with-consensus-base:
   assemble:
     inheritFrom: assemble-base
     overrides:
-      inferMinRecordsPerConsensus: true
       consensusAssemblerParameters:
         assembler:
           aAssemblerParameters:
