@@ -26,7 +26,6 @@ cat single_cell_vdj_t_subset_R1.fastq.gz | gunzip | sed "s/${CELL1_TAG1}${CELL1_
 
 mixcr analyze --verbose -f 10x-vdj-tcr-multi-barcode-test \
   --species hs \
-  -Massemble.inferMinRecordsPerConsensus=false \
   single_cell_vdj_t_subset_R1.modified.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case19.vdjcontigs
@@ -37,18 +36,18 @@ mixcr exportReports --yaml case19.vdjcontigs.contigs.clns
 mixcr exportReports case19.vdjcontigs.contigs.clns
 
 #doesn't split by cell
-assert "mixcr exportClones --no-header --drop-default-fields -cloneId case19.vdjcontigs.contigs.clns | wc -l" "8"
+assert "mixcr exportClones --no-header --drop-default-fields -cloneId case19.vdjcontigs.contigs.clns | wc -l" "7"
 #split by cell (cell tags are exported)
-assert "mixcr exportClones --no-header case19.vdjcontigs.contigs.clns | wc -l" "11"
+assert "mixcr exportClones --no-header case19.vdjcontigs.contigs.clns | wc -l" "10"
 #cellId also split by cell
-assert "mixcr exportClones --no-header --drop-default-fields -cellId -cloneId case19.vdjcontigs.contigs.clns | wc -l" "11"
+assert "mixcr exportClones --no-header --drop-default-fields -cellId -cloneId case19.vdjcontigs.contigs.clns | wc -l" "10"
 #all cells tags found
 assert "mixcr exportClones --no-header --drop-default-fields -cellId case19.vdjcontigs.contigs.clns | grep 'cant_get_tag_need_to_be_split' | wc -l" "0"
 #there are three cells
 assert "mixcr exportClones --no-header --drop-default-fields -cellId case19.vdjcontigs.contigs.clns | sort | uniq | wc -l" "3"
 
 ## `tail +2` - skip first line with column names
-assert "mixcr exportAirr case19.vdjcontigs.contigs.clns | tail +2 | wc -l" "11" #splitted by Cell
+assert "mixcr exportAirr case19.vdjcontigs.contigs.clns | tail +2 | wc -l" "10" #splitted by Cell
 assert "mixcr exportAirr case19.vdjcontigs.contigs.clns | head -n 1 | grep cell_id | wc -l" "1"
 assert "mixcr exportAirr case19.vdjcontigs.contigs.clns | head -n 1 | grep umi_count | wc -l" "1"
 
