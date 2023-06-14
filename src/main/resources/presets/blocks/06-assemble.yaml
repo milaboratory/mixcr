@@ -56,6 +56,7 @@ assemble-with-consensus-base:
   assemble:
     inheritFrom: assemble-base
     overrides:
+      inferMinRecordsPerConsensus: true
       consensusAssemblerParameters:
         assembler:
           aAssemblerParameters:
@@ -95,6 +96,7 @@ assemble-with-consensus-sc-cell-level:
   assemble:
     inheritFrom: assemble-with-consensus-base
     overrides:
+      inferMinRecordsPerConsensus: false
       cellLevel: true
       consensusAssemblerParameters:
         assembler:
