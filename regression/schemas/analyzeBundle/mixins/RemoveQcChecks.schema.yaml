@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+allOf:
+- type: object
+  properties:
+    args:
+      type: array
+      items:
+        type: string
+- type: object
+  properties:
+    type:
+      const: RemoveQcChecks
+  required:
+  - type
