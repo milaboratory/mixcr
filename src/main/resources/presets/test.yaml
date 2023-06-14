@@ -680,8 +680,6 @@
 
 "generic-tcr-amplicon-separate-samples-umi":
   inheritFrom: generic-amplicon-with-umi
-  flags:
-    - sampleTable
   mixins:
     - type: SetSplitBySample
       value: true
