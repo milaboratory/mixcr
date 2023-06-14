@@ -3,7 +3,6 @@ flags:
 - species
 pipeline:
 - align
-- extend
 - assemblePartial
 - assemblePartial
 - assemble
@@ -28,8 +27,9 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 80
+      minSumScore: 60
       relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner
         mapperKValue: 5
@@ -219,6 +219,22 @@ assemble:
         absoluteMinScore: null
         maxHits: null
         scoring: null
+      vdcParameters:
+        Variable:
+          relativeMinScore: null
+          scoring: null
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+        Joining:
+          relativeMinScore: null
+          scoring: null
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+        Constant:
+          relativeMinScore: null
+          scoring: null
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
     separateByV: false
     separateByJ: false
     separateByC: false
@@ -226,7 +242,7 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 21
+    badQualityThreshold: 20
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 0
