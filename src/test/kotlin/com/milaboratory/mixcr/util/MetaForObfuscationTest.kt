@@ -12,7 +12,6 @@ import com.milaboratory.mixcr.postanalysis.WeightFunction
 import com.milaboratory.mixcr.postanalysis.spectratype.SpectratypeKeyFunction
 import com.milaboratory.primitivio.Serializer
 import com.milaboratory.util.DoNotObfuscateFull
-import com.milaboratory.util.sorting.SortingProperty
 import io.kotest.assertions.asClue
 import io.kotest.matchers.shouldBe
 import io.repseq.core.Chains
@@ -242,8 +241,7 @@ class MetaForObfuscationTest {
         val exclusions = setOf(
             SpectratypeKeyFunction::class.java,
             SetPreprocessorFactory::class.java,
-            WeightFunction::class.java,
-            SortingProperty::class.java
+            WeightFunction::class.java
         )
         return if (rawType in exclusions) {
             listOf(rawType as Class<*>)
