@@ -27,7 +27,9 @@ import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
 @Command(
@@ -116,7 +118,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             )
             override var pathOps: Path? = null
                 set(value) {
-                    ValidationException.requireFileType(path, InputFileType.FASTA)
+                    ValidationException.requireFileType(value, InputFileType.FASTA)
                     field = value
                 }
 
@@ -266,6 +268,20 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             field = value
         }
 
+    @set:Option(
+        names = ["--do-not-infer-points"],
+        description = ["Do not infer reference points"],
+        required = false
+    )
+    var doNotInferPoints: Boolean = false
+
+    @set:Option(
+        names = ["--keep-intermediate"],
+        description = ["Keep intermediate files"],
+        required = false
+    )
+    var keepIntermediateFiles: Boolean = false
+
     @Parameters(
         description = ["Output library."],
         paramLabel = "library.json",
@@ -342,9 +358,11 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
         logCmd(ffCmd)
         io.repseq.cli.Main.main(ffCmd.toTypedArray())
 
-        val ipCmd = listOf("inferPoints", "-g", geneFeature, "-f", libName, libName)
-        logCmd(ipCmd)
-        io.repseq.cli.Main.main(ipCmd.toTypedArray())
+        if (!doNotInferPoints) {
+            val ipCmd = listOf("inferPoints", "-g", geneFeature, "-f", libName, libName)
+            logCmd(ipCmd)
+            io.repseq.cli.Main.main(ipCmd.toTypedArray())
+        }
 
         val coCmd = listOf("compile", "--do-not-compress", "-f", libName, libName)
         logCmd(coCmd)
@@ -367,5 +385,10 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             val deCmd = listOf("debug", libName)
             io.repseq.cli.Main.main(deCmd.toTypedArray())
         }
+
+        if (!keepIntermediateFiles)
+            for (gt in GeneType.values()) {
+                Files.deleteIfExists(Paths.get(tmpLibraryName(gt)))
+            }
     }
 }
