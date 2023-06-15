@@ -51,17 +51,18 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      [<from_reference_point> <to_reference_point>]]... [-positionOf
                                      <reference_point>]... [-allPositions [<from_reference_point>
                                      <to_reference_point>]]... [-defaultAnchorPoints] [-fileName]
-                                     [-cloneId] [-readCount] [-readFraction] [-targetSequences]
-                                     [-targetQualities] [-vIdentityPercents] [-dIdentityPercents]
-                                     [-jIdentityPercents] [-cIdentityPercents]
+                                     [-cloneId] [-readCount] [-rankByReads] [-readFraction]
+                                     [-targetSequences] [-targetQualities] [-vIdentityPercents]
+                                     [-dIdentityPercents] [-jIdentityPercents] [-cIdentityPercents]
                                      [-vBestIdentityPercent] [-dBestIdentityPercent]
                                      [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains]
                                      [-topChains] [-geneLabel <label>]... [-tagCounts] [-cellId [<
                                      (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
                                      [-uniqueTagCount <(Molecule|Cell|Sample)>]...
                                      [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-cellGroup]
-                                     [-hasStops <gene_feature>]... [-isOOF <gene_feature>]...
-                                     [-isProductive <gene_feature>]... [--force-overwrite]
+                                     [-rankByTag <(Molecule|Cell|Sample)>]... [-hasStops
+                                     <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
+                                     <gene_feature>]... [--use-local-temp] [--force-overwrite]
                                      [--no-warnings] [--verbose] [--help] [[--filter-in-feature
                                      <gene_feature>] [--pattern-max-errors <n>]
                                      (--filter-aa-pattern <pattern> | --filter-nt-pattern
@@ -85,6 +86,7 @@ Export SHMTree as a table with a row for every node
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
       --not-covered-as-empty Export not covered regions as empty text.
+      --use-local-temp       Put temporary files in the same folder as the output files.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.
@@ -337,6 +339,8 @@ Possible fields to export
       -fileName              Name of clns file with sample
       -cloneId               Unique clone identifier (only for nodes with clones)
       -readCount             Number of reads assigned to the clonotype (only for nodes with clones)
+      -rankByReads           Rank by number of reads assigned to the clonotype, i.e how many clones
+                               have equal or more count (only for nodes with clones)
       -readFraction          Fraction of reads assigned to the clonotype (only for nodes with
                                clones)
       -targetSequences       Export aligned sequences (targets), separated with comma (only for
@@ -370,6 +374,9 @@ Possible fields to export
                              Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
                                collected. (only for nodes with clones)
       -cellGroup             Cell group (only for nodes with clones)
+      -rankByTag <(Molecule|Cell|Sample)>
+                             Rank by count of unique tags, i.e how many clones have equal or more
+                               count (only for nodes with clones)
       -hasStops <gene_feature>
                              Whether gene feature has stop codons inside (only for nodes with
                                clones)

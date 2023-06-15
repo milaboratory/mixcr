@@ -107,7 +107,7 @@ $defs:
       codeToWildcard:
         type: array
         items:
-          $ref: '#/$defs/bO'
+          $ref: '#/$defs/bN'
       countOfBasicLetters:
         type: integer
       empty:
@@ -137,11 +137,11 @@ $defs:
           no_entry_value:
             type: string
       wildcardForAnyLetter:
-        $ref: '#/$defs/bO'
+        $ref: '#/$defs/bN'
       wildcardsList:
         type: array
         items:
-          $ref: '#/$defs/bO'
+          $ref: '#/$defs/bN'
   AndKeyedFilter-1:
     type: object
     properties:
@@ -537,7 +537,7 @@ $defs:
           const: group_operator_top
       required:
       - type
-  bO:
+  bN:
     type: object
     properties:
       a:
