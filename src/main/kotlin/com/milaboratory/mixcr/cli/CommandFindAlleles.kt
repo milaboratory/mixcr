@@ -48,8 +48,7 @@ import com.milaboratory.util.K_OM
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import com.milaboratory.util.XSV.chooseDelimiter
-import com.milaboratory.util.XSV.writeXSV
+import com.milaboratory.util.XSV
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.CRegion
@@ -75,7 +74,6 @@ import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
-import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.collections.set
@@ -496,67 +494,69 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         allelesStatistics: OverallAllelesStatistics,
         allelesMutationsOutput: Path
     ) {
-        PrintStream(allelesMutationsOutput.toFile()).use { output ->
-            val columns = buildMap<String, (allele: AlleleSearchResult) -> Any?> {
-                this["alleleName"] = { it.result.name }
-                this["geneName"] = { it.result.geneName }
-                this["type"] = { it.result.geneType }
-                this["status"] = { it.status }
-                this["enoughInfo"] = { allele ->
-                    allele.enoughInfo
-                }
-                this["reliableRegion"] = { allele ->
-                    allele.reliableRegion?.encode() ?: ""
-                }
-                this["mutations"] = { allele ->
-                    if (allele.status == DE_NOVO) {
-                        allele.result.meta[metaKey.alleleMutations]?.first() ?: ""
-                    } else ""
-                }
-                this["varianceOf"] = { allele ->
-                    if (allele.status == DE_NOVO) {
-                        allele.result.meta[metaKey.alleleVariantOf]?.first() ?: ""
-                    } else ""
-                }
-                this["naivesCount"] = { allele ->
-                    allelesStatistics.stats(allele.result.name).naives(filtered = false)
-                }
-                this["nonProductiveCount"] = { allele ->
-                    allelesStatistics.stats(allele.result.name).nonProductive()
-                }
-                this["lowerDiversityBound"] = { allele ->
-                    allelesStatistics.stats(allele.result.name).diversity()
-                }
-                this["clonesCount"] = { allele ->
-                    allelesStatistics.stats(allele.result.name).count(filtered = false)
-                }
-                this["totalClonesCountForGene"] = { allele ->
-                    allelesStatistics.baseGeneCount(allele.result.geneName)
-                }
-                this["clonesCountWithNegativeScoreChange"] = { allele ->
-                    allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = false)
-                }
-                this["filteredForAlleleSearchNaivesCount"] = { allele ->
-                    allelesStatistics.stats(allele.result.name).naives(filtered = true)
-                }
-                this["filteredForAlleleSearchClonesCount"] = { allele ->
-                    allelesStatistics.stats(allele.result.name).count(filtered = true)
-                }
-                this["filteredForAlleleSearchClonesCountWithNegativeScoreChange"] = { allele ->
-                    allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = true)
-                }
-                this["scoreDelta"] = { allele ->
-                    val summaryStatistics = allelesStatistics.stats(allele.result.name).scoreDelta
-                    if (summaryStatistics.n == 0L) "" else
-                        GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
-                }
+        val columns = buildMap<String, (allele: AlleleSearchResult) -> Any?> {
+            this["alleleName"] = { it.result.name }
+            this["geneName"] = { it.result.geneName }
+            this["type"] = { it.result.geneType }
+            this["status"] = { it.status }
+            this["enoughInfo"] = { allele ->
+                allele.enoughInfo
             }
-            val records = result.sortedWith(
-                Comparator.comparing { allele: AlleleSearchResult -> allele.result.geneType }
-                    .thenComparing { allele: AlleleSearchResult -> allele.result.name }
-            )
-            writeXSV(output, records, columns, chooseDelimiter(allelesMutationsOutput))
+            this["reliableRegion"] = { allele ->
+                allele.reliableRegion?.encode() ?: ""
+            }
+            this["mutations"] = { allele ->
+                if (allele.status == DE_NOVO) {
+                    allele.result.meta[metaKey.alleleMutations]?.first() ?: ""
+                } else ""
+            }
+            this["varianceOf"] = { allele ->
+                if (allele.status == DE_NOVO) {
+                    allele.result.meta[metaKey.alleleVariantOf]?.first() ?: ""
+                } else ""
+            }
+            this["naivesCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).naives(filtered = false)
+            }
+            this["nonProductiveCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).nonProductive()
+            }
+            this["lowerDiversityBound"] = { allele ->
+                allelesStatistics.stats(allele.result.name).diversity()
+            }
+            this["clonesCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).count(filtered = false)
+            }
+            this["totalClonesCountForGene"] = { allele ->
+                allelesStatistics.baseGeneCount(allele.result.geneName)
+            }
+            this["clonesCountWithNegativeScoreChange"] = { allele ->
+                allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = false)
+            }
+            this["filteredForAlleleSearchNaivesCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).naives(filtered = true)
+            }
+            this["filteredForAlleleSearchClonesCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).count(filtered = true)
+            }
+            this["filteredForAlleleSearchClonesCountWithNegativeScoreChange"] = { allele ->
+                allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = true)
+            }
+            this["scoreDelta"] = { allele ->
+                val summaryStatistics = allelesStatistics.stats(allele.result.name).scoreDelta
+                if (summaryStatistics.n == 0L) "" else
+                    GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
+            }
         }
+        val records = result.sortedWith(
+            Comparator.comparing { allele: AlleleSearchResult -> allele.result.geneType }
+                .thenComparing { allele: AlleleSearchResult -> allele.result.name }
+        )
+        XSV.writeXSV(
+            allelesMutationsOutput,
+            records,
+            columns
+        )
     }
 
     private fun File.writeMappedClones(
