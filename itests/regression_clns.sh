@@ -16,9 +16,16 @@ assert() {
 
 set -euxo pipefail
 
+divideBy=$2
+subset=$1
 
-FILES=`ls regression/*.clns`
-for filename in $FILES; do
+i=0
+while IFS= read -r line; do
+  array[i%$divideBy]+="$line "
+  ((++i))
+done < <(ls /regression/*.clns)
+
+for filename in ${array[$subset]}; do
   id=${filename#regression/*}
   id=${id%*.clns}
 
