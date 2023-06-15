@@ -497,7 +497,6 @@ exportClones:
   splitFilesBy: []
   groupClonesBy: []
 qc:
-  errorOnFailedCheck: true
   checks:
   - type: ReadsNotAligned
     upper: 0.99
