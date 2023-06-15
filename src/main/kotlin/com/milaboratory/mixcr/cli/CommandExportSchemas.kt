@@ -34,9 +34,9 @@ import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.CommandFindShmTreesParams
 import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
+import com.milaboratory.util.JsonSchemaType
 import com.milaboratory.util.K_PRETTY_OM
 import com.milaboratory.util.K_YAML_OM
-import io.repseq.core.GeneFeature
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -71,8 +71,9 @@ class CommandExportSchemas : Runnable {
                 }
             }
             .withCustomDefinitionProvider { javaType, context ->
-                if (javaType.isInstanceOf(GeneFeature::class.java)) {
-                    CustomDefinition(context.createDefinitionReference(context.typeContext.resolve(String::class.java)))
+                val schema = javaType.erasedType.getAnnotation(JsonSchemaType::class.java)
+                if (schema != null) {
+                    CustomDefinition(context.createDefinitionReference(context.typeContext.resolve(schema.value.java)))
                 } else null
             }
 
