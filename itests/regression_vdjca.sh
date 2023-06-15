@@ -23,10 +23,10 @@ i=0
 while IFS= read -r line; do
   array[i%$divideBy]+="$line "
   ((++i))
-done < <(ls /regression/*.vdjca)
+done < <(ls ./regression/*.vdjca)
 
 for filename in ${array[$subset]}; do
-  id=${filename#regression/*}
+  id=${filename#./regression/*}
   id=${id%*.vdjca}
 
   mixcr exportPreset --mixcr-file "regression/${id}.vdjca" "${id}_preset.yaml"

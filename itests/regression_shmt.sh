@@ -23,10 +23,10 @@ i=0
 while IFS= read -r line; do
   array[i%$divideBy]+="$line "
   ((++i))
-done < <(ls /regression/*.shmt)
+done < <(ls ./regression/*.shmt)
 
 for filename in ${array[$subset]}; do
-  id=${filename#regression/*}
+  id=${filename#./regression/*}
   id=${id%*.shmt}
 
   mixcr exportShmTrees "regression/${id}.shmt" "${id}.tsv"
