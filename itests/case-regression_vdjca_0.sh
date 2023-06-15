@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-../itests/regression_vdjca.sh 0 5
+../itests/regression_vdjca 0 5

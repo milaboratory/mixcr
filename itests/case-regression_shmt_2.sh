@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-../itests/regression_shmt.sh 2 5
+../itests/regression_shmt 2 5

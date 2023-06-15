@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-../itests/regression_clna.sh 0 5
+../itests/regression_clna 0 5
