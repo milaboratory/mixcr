@@ -400,3 +400,25 @@ oncomine-human-tcr-pan-clonality-cdr3:
   mixins:
     - type: SetContigAssemblingFeatures
       features: [ "VDJRegion" ]
+
+
+# Single cell deprecated presets
+
+smartseq2-vdj-full-length:
+  deprecation: "The preset is deprecated. Please use smartseq2-vdj."
+  inheritFrom: smartseq2-vdj
+
+singleron-2.0.1-vdj-cdr3:
+  deprecation: "The preset is deprecated. Please use singleron-2.0.1-vdj."
+  inheritFrom: singleron-2.0.1-vdj
+
+seqwell-vdj-cdr3:
+  deprecation: "The preset is deprecated. Please use seqwell-vdj."
+  inheritFrom: seqwell-vdj
+
+
+# Long reads (ONT) deprecated presets
+
+ont-rna-seq-vdj-full-length:
+  deprecation: "The preset is deprecated. Please use ont-rna-seq-vdj."
+  inheritFrom: ont-rna-seq-vdj

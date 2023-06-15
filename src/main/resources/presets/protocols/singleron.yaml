@@ -1,0 +1,50 @@
+"singleron-2.0.1-vdj":
+  inheritFrom: generic-ht-single-cell-amplicon-with-umi
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetTagPattern
+      tagPattern: ^(CELL1:N{8})N{16}(CELL2:N{8})N{16}(CELL3:N{8})N(UMI:N{8})N{18}(R1:*)\^(R2:*)
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      whitelists:
+        CELL1: builtin:singleron-whitelist
+        CELL2: builtin:singleron-whitelist
+        CELL3: builtin:singleron-whitelist
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        histTransformers:
+                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                          - type: inflate
+                            fraction: 0.15
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down

@@ -1,0 +1,27 @@
+"ont-rna-seq-vdj":
+  flags:
+    - species
+  pipeline:
+    - align
+    - assemble
+    - assembleContigs
+    - exportClones
+  align:
+    inheritFrom: align-long-read
+  assemble:
+    inheritFrom: assemble-base
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        badQualityThreshold: 0
+        minimalQuality: 15
+        cloneClusteringParameters:
+          clusteringFilter:
+            type: relativeConcentration
+            specificMutationProbability: 0.01
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  exportClones:
+    inheritFrom: exportClones-base
