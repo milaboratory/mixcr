@@ -634,6 +634,8 @@ properties:
                     const: affine
                 required:
                 - type
+      vdcParameters:
+        type: object
   mappingThreshold:
     type: string
   maxBadPointsPercent:
