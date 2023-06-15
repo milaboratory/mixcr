@@ -1,6 +1,6 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 $defs:
-  bO:
+  bN:
     type: object
     properties:
       a:
@@ -53,7 +53,7 @@ properties:
                     codeToWildcard:
                       type: array
                       items:
-                        $ref: '#/$defs/bO'
+                        $ref: '#/$defs/bN'
                     countOfBasicLetters:
                       type: integer
                     empty:
@@ -83,11 +83,11 @@ properties:
                         no_entry_value:
                           type: string
                     wildcardForAnyLetter:
-                      $ref: '#/$defs/bO'
+                      $ref: '#/$defs/bN'
                     wildcardsList:
                       type: array
                       items:
-                        $ref: '#/$defs/bO'
+                        $ref: '#/$defs/bN'
                 gapPenalty:
                   type: integer
                 subsMatrix:
