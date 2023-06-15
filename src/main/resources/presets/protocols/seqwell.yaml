@@ -1,0 +1,12 @@
+"seqwell-vdj-cdr3":
+  inheritFrom: generic-ht-single-cell-amplicon-with-umi
+  flags:
+    - species
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(R1:*)\^(CELL:N{12})(UMI:N{8})
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
