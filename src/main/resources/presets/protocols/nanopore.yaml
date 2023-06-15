@@ -20,7 +20,7 @@
             type: relativeConcentration
             specificMutationProbability: 0.01
   assembleContigs:
-    inheritFrom: assembleContigs-universal
+    inheritFrom: assembleContigs-base
   exportAlignments:
     inheritFrom: exportAlignments-base
   exportClones:

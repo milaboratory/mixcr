@@ -3,13 +3,15 @@
   flags:
     - species
   mixins:
-    - type: SetTagPattern
-      tagPattern: null
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      tagPattern: null
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:
