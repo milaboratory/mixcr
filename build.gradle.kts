@@ -163,6 +163,8 @@ dependencies {
     obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
     obfuscationLibs("com.beust:jcommander:$jcommanderVersion") { exclude("*", "*") }
 
+    implementation("com.beust:jcommander:$jcommanderVersion")
+
     implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion"))
