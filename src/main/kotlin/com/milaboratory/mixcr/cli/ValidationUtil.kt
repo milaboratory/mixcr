@@ -38,12 +38,6 @@ fun ValidationException.Companion.requireKnownSpecies(species: String?, vararg a
     }
 }
 
-fun ValidationException.Companion.requireKnownChains(chains: String?, vararg additional: String?) {
-    for (s in (listOf(chains) + additional)) {
-        require(s != null && Chains.parse(s) != null) { "Unknown chains: $s" }
-    }
-}
-
 fun ValidationException.Companion.requireKnownGeneFeature(gf: String?, vararg additional: String?) {
     for (s in (listOf(gf) + additional)) {
         require(s != null && GeneFeature.parse(s) != null) { "Unknown gene feature: $s" }

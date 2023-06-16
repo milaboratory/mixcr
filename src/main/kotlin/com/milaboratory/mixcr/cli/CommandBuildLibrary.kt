@@ -15,7 +15,6 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import io.repseq.core.Chains
-import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Diversity
@@ -43,9 +42,6 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
         // path to fasta
         val path: Path get() = pathOps!!
-
-        // gene feature
-        val geneFeature: GeneFeature get() = GeneFeature.parse(geneFeatureOps)
     }
 
     interface GenesInput {
@@ -263,15 +259,11 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
         required = true
     )
     var chain: String = ""
-        set(value) {
-            ValidationException.requireKnownChains(value)
-            field = value
-        }
 
     @set:Option(
         names = ["--do-not-infer-points"],
         description = ["Do not infer reference points"],
-        required = false
+        required = false,
     )
     var doNotInferPoints: Boolean = false
 
@@ -372,23 +364,25 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
     }
 
     override fun run1() {
-        val libName = output!!.absolutePathString()
-        val meCmd = mutableListOf("merge", "-f")
-        meCmd += GeneType.values().mapNotNull { mkLibraryForGeneType(it) }
-        meCmd += libName
-        if (output?.endsWith("gz") == true)
-            meCmd += "--compress"
-        logCmd(meCmd)
-        io.repseq.cli.Main.main(meCmd.toTypedArray())
+        try {
+            val libName = output!!.absolutePathString()
+            val meCmd = mutableListOf("merge", "-f")
+            meCmd += GeneType.values().mapNotNull { mkLibraryForGeneType(it) }
+            meCmd += libName
+            if (output?.endsWith("gz") == true)
+                meCmd += "--compress"
+            logCmd(meCmd)
+            io.repseq.cli.Main.main(meCmd.toTypedArray())
 
-        if (logger.verbose) {
-            val deCmd = listOf("debug", libName)
-            io.repseq.cli.Main.main(deCmd.toTypedArray())
-        }
-
-        if (!keepIntermediateFiles)
-            for (gt in GeneType.values()) {
-                Files.deleteIfExists(Paths.get(tmpLibraryName(gt)))
+            if (logger.verbose) {
+                val deCmd = listOf("debug", libName)
+                io.repseq.cli.Main.main(deCmd.toTypedArray())
             }
+        } finally {
+            if (!keepIntermediateFiles)
+                for (gt in GeneType.values()) {
+                    Files.deleteIfExists(Paths.get(tmpLibraryName(gt)))
+                }
+        }
     }
 }
