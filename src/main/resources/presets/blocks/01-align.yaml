@@ -302,7 +302,7 @@ align-long-read:
           type: kaligner2
           mapperNValue: 14
           mapperKValue: 1
-          floatingLeftBound: true
+          floatingLeftBound: false
           floatingRightBound: true
           mapperAbsoluteMinClusterScore: 102
           mapperExtraClusterScore: -38
@@ -346,7 +346,7 @@ align-long-read:
           mapperNValue: 12
           mapperKValue: 1
           floatingLeftBound: true
-          floatingRightBound: true
+          floatingRightBound: false
           mapperAbsoluteMinClusterScore: 102
           mapperExtraClusterScore: -38
           mapperMatchScore: 134
