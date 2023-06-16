@@ -131,12 +131,17 @@ class MetaForObfuscationTest {
     private fun Class<*>.allEnclosingClasses(): List<Class<*>> =
         listOfNotNull(enclosingClass) + (enclosingClass?.allEnclosingClasses() ?: emptyList())
 
-    private fun applicationClasses() = targetPackages.flatMap { targetPackage ->
-        Reflections(targetPackage)
-            .getAll(Scanners.SubTypes)
-            .filter { it.startsWith(targetPackage) }
-    }
+    private fun applicationClasses() = targetPackages
+        .flatMap { targetPackage ->
+            Reflections(targetPackage)
+                .let { it.getAll(Scanners.SubTypes) + it.getAll(Scanners.TypesAnnotated) }
+                .distinct()
+                .filter { it.startsWith(targetPackage) }
+        }
         .map { Class.forName(it) }
+        .filterNot { it.isSynthetic || it.isAnonymousClass }
+        .filterNot { it.name.endsWith("Kt") || it.name.endsWith("\$DefaultImpls") }
+        .filter { !it.isKotlinClass() || !it.kotlin.isCompanion }
 
     private fun Class<*>.hasCustomSerialization() =
         getAnnotation(JsonSerialize::class.java) != null || getAnnotation(JsonDeserialize::class.java) != null

@@ -130,10 +130,10 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-148-new-presets"
-val milibVersion = "2.4.0-45-master"
-val mitoolVersion = "1.7.0-33-main"
-val repseqioVersion = "1.8.0-59-master"
+val mixcrAlgoVersion = "4.3.0-181-new-presets"
+val milibVersion = ""
+val mitoolVersion = ""
+val repseqioVersion = ""
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.1"
@@ -143,15 +143,17 @@ val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
 
 dependencies {
-    api("com.milaboratory:milib:$milibVersion")
-    api("com.milaboratory:mitool:$mitoolVersion")
-    api("io.repseq:repseqio:$repseqioVersion")
-
-    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") {
-        exclude("com.milaboratory", "mitool")
-        exclude("com.milaboratory", "milib")
-        exclude("io.repseq", "repseqio")
+    if (milibVersion.isNotBlank()) {
+        api("com.milaboratory:milib:$milibVersion")
     }
+    if (mitoolVersion.isNotBlank()) {
+        api("com.milaboratory:mitool:$mitoolVersion")
+    }
+    if (repseqioVersion.isNotBlank()) {
+        api("io.repseq:repseqio:$repseqioVersion")
+    }
+
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
 
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milib") { exclude("*", "*") }
@@ -271,6 +273,8 @@ tasks.processResources {
 }
 
 val checkObfuscation by tasks.registering(Test::class) {
+    group = "verification"
+
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
 

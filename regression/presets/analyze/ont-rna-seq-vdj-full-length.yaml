@@ -164,14 +164,16 @@ assemble:
     assemblingFeatures:
     - CDR3
     minimalClonalSequenceLength: 12
-    qualityAggregationType: Max
+    qualityAggregationType: BetaScore
     cloneClusteringParameters:
       searchDepth: 2
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
-        specificMutationProbability: 0.01
+        correctionPower: 0.01
+        backgroundSubstitutionRate: 0.01
+        backgroundIndelRate: 0.01
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null

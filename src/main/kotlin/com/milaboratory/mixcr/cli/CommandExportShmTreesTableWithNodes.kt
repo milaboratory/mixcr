@@ -11,10 +11,17 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.asSequence
+import cc.redberry.pipe.util.filter
+import cc.redberry.pipe.util.flatMap
+import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
+import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -25,9 +32,16 @@ import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wrapper
 import com.milaboratory.mixcr.trees.SHMTreesReader
+import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.util.ComparatorWithHash
+import com.milaboratory.util.TempFileDest
+import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.groupByOnDisk
+import gnu.trove.set.hash.TIntHashSet
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -92,6 +106,16 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     )
     var notCoveredAsEmpty: Boolean = false
 
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
+
+    private val tempDest: TempFileDest by lazy {
+        ValidationException.requireNotNull(out) {
+            "With --use-local-temp explicit output path is required"
+        }
+        TempFileManager.smartTempDestination(out, ".build_trees", !useLocalTemp.value)
+    }
+
     override val outputFiles
         get() = listOfNotNull(out)
 
@@ -125,11 +149,45 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
             val splitByTags = reader.cloneSetInfos
                 .map { it.tagsInfo }
                 .map { tagsInfo ->
-                    when (splitByTagType) {
-                        null -> null
-                        else -> tagsInfo.filter { it.type == splitByTagType }.maxBy { it.index }
+                    when {
+                        splitByTagType == null -> null
+                        !tagsInfo.hasTagsWithType(splitByTagType) -> null
+                        else -> tagsInfo.getDepthFor(splitByTagType)
                     }
                 }
+
+            val datasetsToSplit = TIntHashSet(splitByTags.withIndex().filter { it.value != null }.map { it.index })
+
+            val splitClones = if (!datasetsToSplit.isEmpty) {
+                reader.readTrees()
+                    .flatMap { result ->
+                        result.tree.allNodes()
+                            .flatMap { it.node.content.clones }
+                            .iterator().asOutputPort()
+                    }
+                    .filter { it.datasetId in datasetsToSplit }
+                    .groupByOnDisk(
+                        comparator = ComparatorWithHash.compareBy { it.datasetId },
+                        tempDest,
+                        suffixForTempDest = "sort_for_ranks",
+                        stateBuilder = reader.alignerParameters.constructStateBuilder(reader.usedGenes)
+                    )
+                    .asSequence()
+                    .associate { group ->
+                        val datasetId = group.key
+                        val depth = splitByTags[datasetId]!!
+                        datasetId to CloneSet.divideClonesByTags(
+                            group.map { it.clone }.toList(),
+                            depth,
+                            reader.cloneSetInfos[datasetId],
+                            reader.usedGenes,
+                            VDJCSProperties.CO_BY_COUNT
+                        ).clones.groupBy { it.id }
+                    }
+            } else {
+                emptyMap()
+            }
+
 
             InfoWriter.create(
                 out,
@@ -150,7 +208,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                         shmTreeForPostanalysis.tree.allNodes()
                             .asSequence()
                             .filter { !onlyObserved || it.node.content.clones.isNotEmpty() }
-                            .flatMap { it.node.content.split(splitByTags) }
+                            .flatMap { it.node.content.split(splitClones) }
                             .map { node -> Wrapper(shmTreeForPostanalysis, node) }
                     }
                     .forEach {

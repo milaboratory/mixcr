@@ -92,56 +92,7 @@ $defs:
     required:
     - type
   Alphabet(NucleotideSequence):
-    type: object
-    properties:
-      alphabetId:
-        type: string
-      alphabetName:
-        type: string
-      basicMaskToWildcard:
-        type: object
-      codeToSymbol:
-        type: array
-        items:
-          type: string
-      codeToWildcard:
-        type: array
-        items:
-          $ref: '#/$defs/bR'
-      countOfBasicLetters:
-        type: integer
-      empty:
-        type: object
-        properties:
-          data:
-            type: array
-            items:
-              type: string
-      hashCode:
-        type: integer
-      symbolToCode:
-        type: object
-        properties:
-          _autoCompactRemovesRemaining:
-            type: integer
-          _autoCompactionFactor:
-            type: number
-          _loadFactor:
-            type: number
-          _maxSize:
-            type: integer
-          consumeFreeSlot:
-            type: boolean
-          no_entry_key:
-            type: string
-          no_entry_value:
-            type: string
-      wildcardForAnyLetter:
-        $ref: '#/$defs/bR'
-      wildcardsList:
-        type: array
-        items:
-          $ref: '#/$defs/bR'
+    type: string
   AndKeyedFilter-1:
     type: object
     properties:
@@ -521,23 +472,6 @@ $defs:
           const: group_operator_top
       required:
       - type
-  bR:
-    type: object
-    properties:
-      a:
-        type: string
-      b:
-        type: string
-      c:
-        type: array
-        items:
-          type: string
-      d:
-        type: string
-      e:
-        type: integer
-      f:
-        type: integer
 type: object
 properties:
   addReadsCountOnClustering:
@@ -557,7 +491,11 @@ properties:
         allOf:
         - type: object
           properties:
-            specificMutationProbability:
+            backgroundIndelRate:
+              type: number
+            backgroundSubstitutionRate:
+              type: number
+            correctionPower:
               type: number
         - type: object
           properties:
@@ -663,6 +601,7 @@ properties:
     - Sum
     - Average
     - MiniMax
+    - BetaScore
   separateByC:
     type: boolean
   separateByJ:

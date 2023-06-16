@@ -35,8 +35,8 @@ mixcr slice --ids-file <(mixcr exportClones case15.clna --no-header --drop-defau
 assert "mixcr exportAlignments case15.vdjca --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "27"
 assert "mixcr exportAlignments case15.filtered.vdjca --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "1"
 
-assert "mixcr exportClones --dont-split-files case15.clns --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "14"
+assert "mixcr exportClones --dont-split-files case15.clns --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "15"
 assert "mixcr exportClones --dont-split-files case15.filtered.clns --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "1"
 
-assert "mixcr exportClones --dont-split-files case15.clna --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "14"
+assert "mixcr exportClones --dont-split-files case15.clna --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "15"
 assert "mixcr exportClones --dont-split-files case15.filtered.clna --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "1"
