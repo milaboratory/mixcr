@@ -163,7 +163,6 @@ dependencies {
 
     // proguard require classes that were inherited
     obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
-    obfuscationLibs("com.beust:jcommander:$jcommanderVersion") { exclude("*", "*") }
 
     implementation("com.beust:jcommander:$jcommanderVersion")
 
