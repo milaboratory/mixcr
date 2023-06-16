@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -65,12 +65,12 @@ public class OverlapIntegrationTest {
                 .collect(Collectors.toList());
 
 
-        List<VDJCSProperties.VDJCSProperty<VDJCObject>> byN = VDJCSProperties.orderingByNucleotide(new GeneFeature[]{GeneFeature.CDR3});
-        List<VDJCSProperties.VDJCSProperty<VDJCObject>> byAA = VDJCSProperties.orderingByAminoAcid(new GeneFeature[]{GeneFeature.CDR3});
-        List<VDJCSProperties.VDJCSProperty<VDJCObject>> byAAAndV = VDJCSProperties.orderingByAminoAcid(new GeneFeature[]{GeneFeature.CDR3}, GeneType.Variable);
+        List<VDJCSProperties.VDJCSProperty<VDJCObject, ?>> byN = VDJCSProperties.orderingByNucleotide(new GeneFeature[]{GeneFeature.CDR3});
+        List<VDJCSProperties.VDJCSProperty<VDJCObject, ?>> byAA = VDJCSProperties.orderingByAminoAcid(new GeneFeature[]{GeneFeature.CDR3});
+        List<VDJCSProperties.VDJCSProperty<VDJCObject, ?>> byAAAndV = VDJCSProperties.orderingByAminoAcid(new GeneFeature[]{GeneFeature.CDR3}, GeneType.Variable);
 
         long totalSumExpected = 0;
-        for (List<VDJCSProperties.VDJCSProperty<VDJCObject>> by : Arrays.asList(byN, byAA, byAAAndV)) {
+        for (List<VDJCSProperties.VDJCSProperty<VDJCObject, ?>> by : Arrays.asList(byN, byAA, byAAAndV)) {
             System.out.println("=============");
             Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.overlap(samples, by, readers);
             TIntIntHashMap hist = new TIntIntHashMap();

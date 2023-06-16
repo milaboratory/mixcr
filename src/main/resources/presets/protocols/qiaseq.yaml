@@ -24,7 +24,7 @@
       geneType: C
       value: true
     - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
+      features: [ "{CDR2Begin:FR4End}" ]
     - type: SetTagPattern
       tagPattern: |
         ^N{:4}cagcgacctcgggtgggaaca(R1:*) |

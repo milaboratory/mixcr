@@ -247,10 +247,11 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                 val clnaReader = ClnAReader(input, libraryRegistry, 4)
                 fileInfo = clnaReader
                 extractors = cloneExtractors(fileInfo.header.tagsInfo)
-                var set = clnaReader.readCloneSet()
-                if (fileInfo.header.tagsInfo.hasTagsWithType(TagType.Cell)) {
+                val set = if (fileInfo.header.tagsInfo.hasTagsWithType(TagType.Cell)) {
                     val tagDivisionDepth = fileInfo.header.tagsInfo.getDepthFor(TagType.Cell)
-                    set = set.divideClonesByTags(tagDivisionDepth)
+                    clnaReader.readCloneSet().divideClonesByTags(tagDivisionDepth)
+                } else {
+                    clnaReader.readCloneSet()
                 }
 
                 port = set.asOutputPort().withExpectedSize(set.size().toLong())
@@ -262,10 +263,11 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
                 fileInfo = clnsReader
                 extractors = cloneExtractors(fileInfo.header.tagsInfo)
 
-                var set = clnsReader.readCloneSet()
-                if (fileInfo.header.tagsInfo.hasTagsWithType(TagType.Cell)) {
+                val set = if (fileInfo.header.tagsInfo.hasTagsWithType(TagType.Cell)) {
                     val tagDivisionDepth = fileInfo.header.tagsInfo.getDepthFor(TagType.Cell)
-                    set = set.divideClonesByTags(tagDivisionDepth)
+                    clnsReader.readCloneSet().divideClonesByTags(tagDivisionDepth)
+                } else {
+                    clnsReader.readCloneSet()
                 }
 
                 port = set.asOutputPort().withExpectedSize(set.size().toLong())

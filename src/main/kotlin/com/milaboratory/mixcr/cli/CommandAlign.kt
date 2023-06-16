@@ -1036,7 +1036,8 @@ object CommandAlign {
                 "$numberOfExcludedFGenes functional genes were excluded, " +
                         "re-run with --verbose option to see the list of excluded genes and exclusion reason."
             )
-            if (logger.verbose && numberOfExcludedNFGenes > 0) logger.warn("$numberOfExcludedNFGenes non-functional genes excluded.")
+            if (logger.verbose && numberOfExcludedNFGenes > 0)
+                logger.warn("$numberOfExcludedNFGenes non-functional genes excluded because they are not covering feature to align.")
             if (aligner.vGenesToAlign.isEmpty()) throw ApplicationException(
                 "No V genes to align. Aborting execution. See warnings for more info " +
                         "(turn on verbose warnings by adding --verbose option)."

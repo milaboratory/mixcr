@@ -25,6 +25,7 @@ import com.milaboratory.core.sequence.NucleotideAlphabet.T
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Seq
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneRanks
 import com.milaboratory.mixcr.trees.MutationsUtils.NDNScoring
 import com.milaboratory.mixcr.trees.MutationsUtils.buildSequence
 import com.milaboratory.mixcr.util.RandomizedTest
@@ -626,7 +627,7 @@ class RebaseClonesTest {
             CloneWrapper(
                 listOf(
                     CloneWithDatasetId(
-                        Clone(emptyArray(), EnumMap(GeneType::class.java), null, 0.0, 0, 0),
+                        Clone(emptyArray(), EnumMap(GeneType::class.java), null, 0.0, 0, 0, CloneRanks.empty),
                         0
                     )
                 ),

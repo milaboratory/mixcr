@@ -296,12 +296,14 @@ object Main {
     private fun CommandLine.registerExceptionHandlers(): CommandLine {
         val defaultParameterExceptionHandler = parameterExceptionHandler
         setParameterExceptionHandler { ex, args ->
+            err.println(MiXCRVersionInfo.get().shortestVersionString)
             when (val cause = ex.cause) {
                 is ValidationException -> ex.commandLine.handleValidationException(cause)
                 else -> defaultParameterExceptionHandler.handleParseException(ex, args)
             }
         }
         setExecutionExceptionHandler { ex, commandLine, _ ->
+            err.println(MiXCRVersionInfo.get().shortestVersionString)
             when (ex) {
                 is ValidationException -> commandLine.handleValidationException(ex)
                 is ApplicationException -> {
@@ -317,7 +319,6 @@ object Main {
 
                 else -> {
                     ex.rethrowOOM()
-                    commandLine.err.println(MiXCRVersionInfo.get().shortestVersionString)
                     throw CommandLine.ExecutionException(
                         commandLine,
                         "Error while running command ${commandLine.commandName} $ex", ex

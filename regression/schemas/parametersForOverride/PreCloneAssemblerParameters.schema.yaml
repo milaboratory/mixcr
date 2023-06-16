@@ -1,22 +1,4 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$defs:
-  bR:
-    type: object
-    properties:
-      a:
-        type: string
-      b:
-        type: string
-      c:
-        type: array
-        items:
-          type: string
-      d:
-        type: string
-      e:
-        type: integer
-      f:
-        type: integer
 type: object
 properties:
   assembler:
@@ -38,56 +20,7 @@ properties:
             - type: object
               properties:
                 alphabet:
-                  type: object
-                  properties:
-                    alphabetId:
-                      type: string
-                    alphabetName:
-                      type: string
-                    basicMaskToWildcard:
-                      type: object
-                    codeToSymbol:
-                      type: array
-                      items:
-                        type: string
-                    codeToWildcard:
-                      type: array
-                      items:
-                        $ref: '#/$defs/bR'
-                    countOfBasicLetters:
-                      type: integer
-                    empty:
-                      type: object
-                      properties:
-                        data:
-                          type: array
-                          items:
-                            type: string
-                    hashCode:
-                      type: integer
-                    symbolToCode:
-                      type: object
-                      properties:
-                        _autoCompactRemovesRemaining:
-                          type: integer
-                        _autoCompactionFactor:
-                          type: number
-                        _loadFactor:
-                          type: number
-                        _maxSize:
-                          type: integer
-                        consumeFreeSlot:
-                          type: boolean
-                        no_entry_key:
-                          type: string
-                        no_entry_value:
-                          type: string
-                    wildcardForAnyLetter:
-                      $ref: '#/$defs/bR'
-                    wildcardsList:
-                      type: array
-                      items:
-                        $ref: '#/$defs/bR'
+                  type: string
                 gapPenalty:
                   type: integer
                 subsMatrix:

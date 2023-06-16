@@ -249,14 +249,16 @@ assemble:
     assemblingFeatures:
     - CDR3
     minimalClonalSequenceLength: 12
-    qualityAggregationType: Max
+    qualityAggregationType: BetaScore
     cloneClusteringParameters:
       searchDepth: 2
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
-        specificMutationProbability: 1.0E-4
+        correctionPower: 0.001
+        backgroundSubstitutionRate: 5.0E-4
+        backgroundIndelRate: 2.0E-4
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null
@@ -285,10 +287,10 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 21
+    badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 0
+    minimalQuality: 21
     postFilters: null
   inferMinRecordsPerConsensus: true
 assembleContigs:

@@ -8,9 +8,8 @@ assemble-base:
     cloneAssemblerParameters:
       assemblingFeatures:
         - CDR3
-      minimalQuality: 0
       minimalClonalSequenceLength: 12
-      qualityAggregationType: Max
+      qualityAggregationType: BetaScore
       separateByV: false
       separateByJ: false
       separateByC: false
@@ -24,7 +23,9 @@ assemble-base:
         minimalTagSetOverlap: -1
         clusteringFilter:
           type: relativeConcentration
-          specificMutationProbability: 0.001
+          correctionPower: 0.001
+          backgroundSubstitutionRate: 0.002
+          backgroundIndelRate: 0.0002
       cloneFactoryParameters:
         vParameters:
           maxAlignmentWidthLinear: 5
@@ -47,7 +48,8 @@ assemble-base:
           relativeMinScore:
           scoring: null
       addReadsCountOnClustering: false
-      badQualityThreshold: 20
+      badQualityThreshold: 15
+      minimalQuality: 20
       maxBadPointsPercent: 0.7
       mappingThreshold: 2of5
 
@@ -89,13 +91,16 @@ assemble-with-consensus-base:
           minimalTagSetOverlap: -1
           clusteringFilter:
             type: relativeConcentration
-            specificMutationProbability: 1E-4
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.0005
+            backgroundIndelRate: 0.0002
 
 assemble-with-consensus-sc-cell-level:
   abstract: true
   assemble:
     inheritFrom: assemble-with-consensus-base
     overrides:
+      inferMinRecordsPerConsensus: false
       cellLevel: true
       consensusAssemblerParameters:
         assembler:
