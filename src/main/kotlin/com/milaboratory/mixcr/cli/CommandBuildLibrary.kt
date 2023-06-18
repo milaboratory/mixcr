@@ -101,7 +101,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
         @set:Option(
             names = ["--v-genes-from-species"],
-            description = ["Species to take Variable genes from it (human, mmu, lamaGlama, alpaca, rat, spalax"],
+            description = ["Species to take Variable genes from it (human, mmu, lamaGlama, alpaca, rat, spalax)"],
             paramLabel = "<species>",
             required = true,
             order = 7000
