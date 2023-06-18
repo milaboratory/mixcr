@@ -15,6 +15,7 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import io.repseq.core.Chains
+import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Constant
 import io.repseq.core.GeneType.Diversity
@@ -22,6 +23,7 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCDataUtils.writeToFile
+import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -37,11 +39,8 @@ import kotlin.io.path.absolutePathString
 class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
     interface GenesFasta {
-        var pathOps: Path?
-        var geneFeatureOps: String?
-
-        // path to fasta
-        val path: Path get() = pathOps!!
+        var path: Path
+        var geneFeature: GeneFeature
     }
 
     interface GenesInput {
@@ -70,7 +69,6 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
     )
     var chain: String = ""
 
-
     @ArgGroup(
         exclusive = true,
         multiplicity = "1",
@@ -90,11 +88,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 required = true,
                 order = 5000
             )
-            override var pathOps: Path? = null
-                set(value) {
-                    ValidationException.requireFileType(value, InputFileType.FASTA)
-                    field = value
-                }
+            override lateinit var path: Path
 
             @set:Option(
                 names = ["--v-gene-feature"],
@@ -103,11 +97,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 required = true,
                 order = 6000
             )
-            override var geneFeatureOps: String? = null
-                set(value) {
-                    ValidationException.requireKnownGeneFeature(value)
-                    field = value
-                }
+            override lateinit var geneFeature: GeneFeature
         }
 
         @set:Option(
@@ -118,10 +108,6 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             order = 7000
         )
         override var species: String? = null
-            set(value) {
-                ValidationException.requireKnownSpecies(value)
-                field = value
-            }
     }
 
     @ArgGroup(
@@ -143,11 +129,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 required = true,
                 order = 10000
             )
-            override var pathOps: Path? = null
-                set(value) {
-                    ValidationException.requireFileType(value, InputFileType.FASTA)
-                    field = value
-                }
+            override lateinit var path: Path
 
             @set:Option(
                 names = ["--j-gene-feature"],
@@ -156,11 +138,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 required = false,
                 order = 11000
             )
-            override var geneFeatureOps: String? = "JRegion"
-                set(value) {
-                    ValidationException.requireKnownGeneFeature(value)
-                    field = value
-                }
+            override var geneFeature: GeneFeature = GeneFeature.JRegion
         }
 
         @set:Option(
@@ -171,10 +149,6 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             order = 12000
         )
         override var species: String? = null
-            set(value) {
-                ValidationException.requireKnownSpecies(value)
-                field = value
-            }
     }
 
     @ArgGroup(
@@ -196,11 +170,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 required = true,
                 order = 15000
             )
-            override var pathOps: Path? = null
-                set(value) {
-                    ValidationException.requireFileType(value, InputFileType.FASTA)
-                    field = value
-                }
+            override lateinit var path: Path
 
             @set:Option(
                 names = ["--d-gene-feature"],
@@ -209,11 +179,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 required = false,
                 order = 16000
             )
-            override var geneFeatureOps: String? = "DRegion"
-                set(value) {
-                    ValidationException.requireKnownGeneFeature(value)
-                    field = value
-                }
+            override var geneFeature: GeneFeature = GeneFeature.DRegion
         }
 
         @set:Option(
@@ -224,10 +190,6 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             order = 17000
         )
         override var species: String? = null
-            set(value) {
-                ValidationException.requireKnownSpecies(value)
-                field = value
-            }
     }
 
     @ArgGroup(
@@ -249,11 +211,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 required = true,
                 order = 20000
             )
-            override var pathOps: Path? = null
-                set(value) {
-                    ValidationException.requireFileType(value, InputFileType.FASTA)
-                    field = value
-                }
+            override lateinit var path: Path
 
             @set:Option(
                 names = ["--c-gene-feature"],
@@ -262,11 +220,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 required = false,
                 order = 21000
             )
-            override var geneFeatureOps: String? = "CExon1"
-                set(value) {
-                    ValidationException.requireKnownGeneFeature(value)
-                    field = value
-                }
+            override var geneFeature: GeneFeature = GeneFeature.CExon1
         }
 
         @set:Option(
@@ -277,10 +231,6 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             order = 22000
         )
         override var species: String? = null
-            set(value) {
-                ValidationException.requireKnownSpecies(value)
-                field = value
-            }
     }
 
     @set:Option(
@@ -300,6 +250,15 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
     var doNotInferPoints: Boolean = false
 
     @set:Option(
+        names = ["--xxx"],
+        showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
+        description = ["Do not infer reference points"],
+        required = false,
+        order = 24000
+    )
+    var xxxBol: Boolean = true
+
+    @set:Option(
         names = ["--keep-intermediate"],
         description = ["Keep intermediate files"],
         required = false,
@@ -317,6 +276,26 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             ValidationException.requireFileType(value, InputFileType.JSON, InputFileType.JSON_GZ)
         }
 
+    override fun validate() {
+        super.validate()
+        for (path in listOfNotNull(
+            vGenes.fasta?.path,
+            jGenes.fasta?.path,
+            dGenes?.fasta?.path,
+            cGenes?.fasta?.path,
+        )) {
+            ValidationException.requireFileType(path, InputFileType.FASTA)
+        }
+        for (species in listOfNotNull(
+            vGenes.species,
+            jGenes.species,
+            dGenes?.species,
+            cGenes?.species
+        )) {
+            ValidationException.requireKnownSpecies(species)
+        }
+    }
+
     override val inputFiles: List<Path> get() = emptyList()
     override val outputFiles: List<Path> get() = listOfNotNull(output)
 
@@ -333,7 +312,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             fromKnownSpecies(gt, input.species!!)
         } else {
             val fasta = input.fasta!!
-            fromFasta(gt, fasta.geneFeatureOps!!, fasta.path)
+            fromFasta(gt, GeneFeature.encode(fasta.geneFeature), fasta.path)
         }
     }
 
