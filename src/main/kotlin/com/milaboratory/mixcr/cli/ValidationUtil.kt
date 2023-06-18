@@ -37,9 +37,3 @@ fun ValidationException.Companion.requireKnownSpecies(species: String?, vararg a
         require(known) { "Unknown species: $s" }
     }
 }
-
-fun ValidationException.Companion.requireKnownGeneFeature(gf: String?, vararg additional: String?) {
-    for (s in (listOf(gf) + additional)) {
-        require(s != null && GeneFeature.parse(s) != null) { "Unknown gene feature: $s" }
-    }
-}
