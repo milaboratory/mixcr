@@ -25,7 +25,7 @@ echo "ATCGCTGCACTACGTACTAGCTCA" >> j.fasta
 echo ">read1" > case028-seq.fasta
 echo "ATCGACTGCCTGACATCGACTAGCTAGCATACATGCGACTGTTCGCTGCACTACGTACAAGCTCA" >> case028-seq.fasta
 
-mixcr buildLibrary \
+mixcr buildLibrary --verbose \
   --v-genes-from-fasta v.fasta \
   --v-gene-feature VRegion \
   --j-genes-from-fasta j.fasta \
@@ -34,7 +34,7 @@ mixcr buildLibrary \
   --do-not-infer-points \
   library_xxx.json.gz
 
-mixcr align -p generic-amplicon \
+mixcr align -p generic-amplicon --verbose \
   --species xxx \
   --rna \
   --library library_xxx \

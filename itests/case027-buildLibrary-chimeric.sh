@@ -16,7 +16,7 @@ assert() {
 
 set -e
 
-mixcr buildLibrary \
+mixcr buildLibrary --verbose \
   --v-genes-from-species human \
   --d-genes-from-species mouse \
   --j-genes-from-species spalax \
@@ -25,7 +25,7 @@ mixcr buildLibrary \
   --species kozel \
   library_kozel.IGH.json
 
-mixcr buildLibrary \
+mixcr buildLibrary --verbose \
   --v-genes-from-species human \
   --j-genes-from-species rat \
   --c-genes-from-species rhesus \
@@ -43,7 +43,7 @@ echo "CAGGTCACCTTGAGGGAGTCTGGTCCTGCGCTGGTGAAACCCACACAGACCCTCACACTGACCTGCACCTTCTC
 echo ">TRA" >> case027-seq.fasta
 echo "GCCCAGTCGGTGACCCAGCTTGGCAGCCACGTCTCTGTCTCTGAGGGAGCCCTGGTTCTGCTGAGGTGCAACTACTCATCGTCTGTTCCACCATATCTCTTCTGGTATGTGCAATACCCCAACCAAGGACTCCAGCTTCTCCTGAAGTACACAACAGGGGCCACCCTGGTTAAAGGCATCAACGGTTTTGAGGCTGAATTTAAGAAGAGTGAAACCTCCTTCCACCTGACGAAACCCTCAGCCCATATGAGCGACGCGGCTGAGTACTTCTGTGCTGTGAGTGATGCTATGGATTGCAACTATCAGTTGATCTGGGGCTCTGGGACCAAGCTAATTATAAAGCCAGATATCCAGAACCCTGACCCTGCCGTGTACCAGCTGAGAGGCTCTAAATCCAATGACACC" >> case027-seq.fasta
 
-mixcr align -p generic-amplicon \
+mixcr align -p generic-amplicon --verbose \
             --species kozel \
             --rna \
             --library library_kozel \
