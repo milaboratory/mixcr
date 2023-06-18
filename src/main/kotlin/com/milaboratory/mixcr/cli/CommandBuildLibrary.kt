@@ -142,7 +142,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
         @set:Option(
             names = ["--j-genes-from-species"],
-            description = ["Species to take Joining genes from it (human, mmu, lamaGlama, alpaca, rat, spalax"],
+            description = ["Species to take Joining genes from it (human, mmu, lamaGlama, alpaca, rat, spalax)"],
             paramLabel = "<species>",
             required = true,
             order = 12000
@@ -183,7 +183,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
         @set:Option(
             names = ["--d-genes-from-species"],
-            description = ["Species to take Diversity genes from it (human, mmu, lamaGlama, alpaca, rat, spalax"],
+            description = ["Species to take Diversity genes from it (human, mmu, lamaGlama, alpaca, rat, spalax)"],
             paramLabel = "<species>",
             required = true,
             order = 17000
@@ -224,7 +224,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
         @set:Option(
             names = ["--c-genes-from-species"],
-            description = ["Species to take Constant genes from it (human, mmu, lamaGlama, alpaca, rat, spalax"],
+            description = ["Species to take Constant genes from it (human, mmu, lamaGlama, alpaca, rat, spalax)"],
             paramLabel = "<species>",
             required = true,
             order = 22000
