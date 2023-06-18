@@ -250,15 +250,6 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
     var doNotInferPoints: Boolean = false
 
     @set:Option(
-        names = ["--xxx"],
-        showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
-        description = ["Do not infer reference points"],
-        required = false,
-        order = 24000
-    )
-    var xxxBol: Boolean = true
-
-    @set:Option(
         names = ["--keep-intermediate"],
         description = ["Keep intermediate files"],
         required = false,
