@@ -23,7 +23,6 @@ import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCDataUtils.writeToFile
-import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -262,10 +261,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
         paramLabel = "library.json",
         index = "0",
     )
-    var output: Path? = null
-        set(value) {
-            ValidationException.requireFileType(value, InputFileType.JSON, InputFileType.JSON_GZ)
-        }
+    lateinit var output: Path
 
     override fun validate() {
         super.validate()
@@ -285,6 +281,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
         )) {
             ValidationException.requireKnownSpecies(species)
         }
+
+        ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.JSON_GZ)
     }
 
     override val inputFiles: List<Path> get() = emptyList()
@@ -308,7 +306,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
     }
 
     private fun tmpLibraryName(geneType: GeneType) =
-        output!!.absolutePathString().replace(".json", ".${geneType.letter}.json")
+        output.absolutePathString().replace(".json", ".${geneType.letter}.json")
 
     private fun fromKnownSpecies(geneType: GeneType, species: String) = run {
         val chains = Chains.parse(chain)
@@ -326,6 +324,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
     private fun logCmd(cmd: List<String>) {
         logger.debug { "Running:\nrepseqio ${cmd.joinToString(" ")}" }
+        logger.debug { "Cmd ops: $cmd" }
     }
 
     private fun fromFasta(
@@ -349,6 +348,7 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
         """.trimIndent()
             .replace("\n", " ")
             .split(" ")
+            .map { it.trim() }
             .filter { it.isNotBlank() }
         logCmd(ffCmd)
         io.repseq.cli.Main.main(ffCmd.toTypedArray())
@@ -368,11 +368,11 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
     override fun run1() {
         try {
-            val libName = output!!.absolutePathString()
+            val libName = output.absolutePathString()
             val meCmd = mutableListOf("merge", "-f")
             meCmd += GeneType.values().mapNotNull { mkLibraryForGeneType(it) }
             meCmd += libName
-            if (output?.endsWith("gz") == true)
+            if (output.endsWith("gz"))
                 meCmd += "--compress"
             logCmd(meCmd)
             io.repseq.cli.Main.main(meCmd.toTypedArray())
