@@ -52,11 +52,34 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
         val species: String?
     }
 
-    @ArgGroup(exclusive = true, multiplicity = "1")
+    @set:Option(
+        names = ["--species"],
+        description = ["Species names"],
+        paramLabel = "<species name>",
+        required = true,
+        order = 1000
+    )
+    var species: String = ""
+
+    @set:Option(
+        names = ["--chain"],
+        description = ["Immunological chain"],
+        paramLabel = "<chain>",
+        required = true,
+        order = 2000
+    )
+    var chain: String = ""
+
+
+    @ArgGroup(
+        exclusive = true,
+        multiplicity = "1",
+        order = 3000
+    )
     lateinit var vGenes: VGenesInput
 
     class VGenesInput : GenesInput {
-        @ArgGroup(exclusive = false)
+        @ArgGroup(exclusive = false, order = 4000)
         override var fasta: VGenesFasta? = null
 
         class VGenesFasta : GenesFasta {
@@ -64,7 +87,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 names = ["--v-genes-from-fasta"],
                 description = ["FASTA file with Variable genes"],
                 paramLabel = "<v.fasta>",
-                required = true
+                required = true,
+                order = 5000
             )
             override var pathOps: Path? = null
                 set(value) {
@@ -76,7 +100,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 names = ["--v-gene-feature"],
                 description = ["Gene feature corresponding to Variable gene sequences in FASTA (e.g. VRegion or VGene)"],
                 paramLabel = "<gene_feature>",
-                required = true
+                required = true,
+                order = 6000
             )
             override var geneFeatureOps: String? = null
                 set(value) {
@@ -89,7 +114,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             names = ["--v-genes-from-species"],
             description = ["Species to take Variable genes from it (human, mmu, lamaGlama, alpaca, rat, spalax"],
             paramLabel = "<species>",
-            required = true
+            required = true,
+            order = 7000
         )
         override var species: String? = null
             set(value) {
@@ -98,11 +124,15 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             }
     }
 
-    @ArgGroup(exclusive = true, multiplicity = "1")
+    @ArgGroup(
+        exclusive = true,
+        multiplicity = "1",
+        order = 8000
+    )
     lateinit var jGenes: JGenesInput
 
     class JGenesInput : GenesInput {
-        @ArgGroup(exclusive = false)
+        @ArgGroup(exclusive = false, order = 9000)
         override var fasta: JGenesFasta? = null
 
         class JGenesFasta : GenesFasta {
@@ -110,7 +140,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 names = ["--j-genes-from-fasta"],
                 description = ["FASTA file with Joining genes"],
                 paramLabel = "<j.fasta>",
-                required = true
+                required = true,
+                order = 10000
             )
             override var pathOps: Path? = null
                 set(value) {
@@ -122,7 +153,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 names = ["--j-gene-feature"],
                 description = ["Gene feature corresponding to Joining gene sequences in FASTA (JRegion by default)"],
                 paramLabel = "<gene_feature>",
-                required = false
+                required = false,
+                order = 11000
             )
             override var geneFeatureOps: String? = "JRegion"
                 set(value) {
@@ -135,7 +167,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             names = ["--j-genes-from-species"],
             description = ["Species to take Joining genes from it (human, mmu, lamaGlama, alpaca, rat, spalax"],
             paramLabel = "<species>",
-            required = true
+            required = true,
+            order = 12000
         )
         override var species: String? = null
             set(value) {
@@ -144,11 +177,15 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             }
     }
 
-    @ArgGroup(exclusive = true, multiplicity = "0..1")
+    @ArgGroup(
+        exclusive = true,
+        multiplicity = "0..1",
+        order = 13000
+    )
     var dGenes: DGenesInput? = null
 
     class DGenesInput : GenesInput {
-        @ArgGroup(exclusive = false)
+        @ArgGroup(exclusive = false, order = 14000)
         override var fasta: DGenesFasta? = null
 
         class DGenesFasta : GenesFasta {
@@ -156,7 +193,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 names = ["--d-genes-from-fasta"],
                 description = ["FASTA file with Diversity genes"],
                 paramLabel = "<j.fasta>",
-                required = true
+                required = true,
+                order = 15000
             )
             override var pathOps: Path? = null
                 set(value) {
@@ -168,7 +206,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 names = ["--d-gene-feature"],
                 description = ["Gene feature corresponding to Diversity gene sequences in FASTA (DRegion by default)"],
                 paramLabel = "<gene_feature>",
-                required = false
+                required = false,
+                order = 16000
             )
             override var geneFeatureOps: String? = "DRegion"
                 set(value) {
@@ -181,7 +220,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             names = ["--d-genes-from-species"],
             description = ["Species to take Diversity genes from it (human, mmu, lamaGlama, alpaca, rat, spalax"],
             paramLabel = "<species>",
-            required = true
+            required = true,
+            order = 17000
         )
         override var species: String? = null
             set(value) {
@@ -190,11 +230,15 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             }
     }
 
-    @ArgGroup(exclusive = true, multiplicity = "0..1")
+    @ArgGroup(
+        exclusive = true,
+        multiplicity = "0..1",
+        order = 18000
+    )
     var cGenes: CGenesInput? = null
 
     class CGenesInput : GenesInput {
-        @ArgGroup(exclusive = false)
+        @ArgGroup(exclusive = false, order = 19000)
         override var fasta: CGenesFasta? = null
 
         class CGenesFasta : GenesFasta {
@@ -202,7 +246,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 names = ["--c-genes-from-fasta"],
                 description = ["FASTA file with Constant genes"],
                 paramLabel = "<j.fasta>",
-                required = true
+                required = true,
+                order = 20000
             )
             override var pathOps: Path? = null
                 set(value) {
@@ -214,7 +259,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
                 names = ["--c-gene-feature"],
                 description = ["Gene feature corresponding to Constant gene sequences in FASTA (CExon1 by default)"],
                 paramLabel = "<gene_feature>",
-                required = false
+                required = false,
+                order = 21000
             )
             override var geneFeatureOps: String? = "CExon1"
                 set(value) {
@@ -227,7 +273,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             names = ["--c-genes-from-species"],
             description = ["Species to take Constant genes from it (human, mmu, lamaGlama, alpaca, rat, spalax"],
             paramLabel = "<species>",
-            required = true
+            required = true,
+            order = 22000
         )
         override var species: String? = null
             set(value) {
@@ -237,40 +284,26 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
     }
 
     @set:Option(
-        names = ["--species"],
-        description = ["Species names"],
-        paramLabel = "<species name>",
-        required = true,
-
-        )
-    var species: String = ""
-
-    @set:Option(
         names = ["--taxon-id"],
         description = ["Taxon ID"],
         paramLabel = "<taxon_id>",
+        order = 23000
     )
     var taxonId: String = "0"
-
-    @set:Option(
-        names = ["--chain"],
-        description = ["Immunological chain"],
-        paramLabel = "<chain>",
-        required = true
-    )
-    var chain: String = ""
 
     @set:Option(
         names = ["--do-not-infer-points"],
         description = ["Do not infer reference points"],
         required = false,
+        order = 24000
     )
     var doNotInferPoints: Boolean = false
 
     @set:Option(
         names = ["--keep-intermediate"],
         description = ["Keep intermediate files"],
-        required = false
+        required = false,
+        order = 25000
     )
     var keepIntermediateFiles: Boolean = false
 
