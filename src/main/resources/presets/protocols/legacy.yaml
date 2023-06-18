@@ -402,6 +402,13 @@ seqwell-vdj-cdr3:
   deprecation: "The preset is deprecated. Please use seqwell-vdj."
   inheritFrom: seqwell-vdj
 
+parse-bio-vdj-3gex:
+  deprecation: "The preset is deprecated. Please use parse-bio-3gex-wt-mini."
+  inheritFrom: parse-bio-3gex-wt-mini
+
+split-seq-vdj-3gex:
+  deprecation: "The preset is deprecated. Please use split-seq-3gex."
+  inheritFrom: split-seq-3gex
 
 # Long reads (ONT) deprecated presets
 
