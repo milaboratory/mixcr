@@ -52,8 +52,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
 
     @set:Option(
         names = ["--species"],
-        description = ["Species names"],
-        paramLabel = "<species name>",
+        description = ["Species name"],
+        paramLabel = "<species_name>",
         required = true,
         order = 1000
     )
