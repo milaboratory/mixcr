@@ -164,6 +164,7 @@ dependencies {
     // proguard require classes that were inherited
     obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
 
+    // required for buildLibrary (to call repseqio)
     implementation("com.beust:jcommander:$jcommanderVersion")
 
     implementation("com.milaboratory:milm2-jvm:$milmVersion")
