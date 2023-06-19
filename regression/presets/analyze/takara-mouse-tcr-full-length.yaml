@@ -23,31 +23,37 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 80
+      minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: kaligner
-        mapperKValue: 5
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinScore: 1.5
-        mapperRelativeMinScore: 0.7
-        mapperMatchScore: 1.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 4
-        mapperMaxSeedsDistance: 10
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 55.0
-        relativeMinScore: 0.87
-        maxHits: 7
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 98
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 8
+        mapperMaxClusters: 11
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 103
+        mapperRelativeMinScore: 0.81
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 8
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 2
         scoring:
-          type: linear
+          type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -11)"
-          gapPenalty: -21
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
     dParameters:
       geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
@@ -56,35 +62,41 @@ align:
       scoring:
         type: linear
         alphabet: nucleotide
-        subsMatrix: "simple(match = 5, mismatch = -11)"
-        gapPenalty: -21
+        subsMatrix: "simple(match = 5, mismatch = -9)"
+        gapPenalty: -12
     jParameters:
       geneFeatureToAlign: JRegionWithP
-      minSumScore: 60
+      minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: kaligner
-        mapperKValue: 5
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
         floatingLeftBound: true
         floatingRightBound: false
-        mapperAbsoluteMinScore: 1.5
-        mapperRelativeMinScore: 0.75
-        mapperMatchScore: 1.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 4
-        mapperMaxSeedsDistance: 8
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 50.0
-        relativeMinScore: 0.87
-        maxHits: 7
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
         scoring:
-          type: linear
+          type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -11)"
-          gapPenalty: -21
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
     cParameters:
       geneFeatureToAlign: CExon1
       minSumScore: 40
@@ -110,13 +122,13 @@ align:
         scoring:
           type: linear
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -11)"
-          gapPenalty: -21
+          subsMatrix: "simple(match = 5, mismatch = -9)"
+          gapPenalty: -12
     vjAlignmentOrder: VThenJ
     libraryStructure: Unknown
-    includeDScore: true
-    includeCScore: true
-    minSumScore: 200.0
+    includeDScore: false
+    includeCScore: false
+    minSumScore: 120.0
     maxHits: 5
     relativeMinVFR3CDR3Score: 0.7
     allowPartialAlignments: false
@@ -216,9 +228,9 @@ assemble:
         absoluteMinScore: null
         maxHits: null
         scoring: null
-    separateByV: false
-    separateByJ: false
-    separateByC: false
+    separateByV: true
+    separateByJ: true
+    separateByC: true
     maximalPreClusteringRatio: 1.0
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
@@ -226,7 +238,7 @@ assemble:
     badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 21
+    minimalQuality: 20
     postFilters: null
   inferMinRecordsPerConsensus: false
 assembleContigs:
@@ -294,3 +306,41 @@ exportClones:
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []
+qc:
+  checks:
+  - type: SuccessfullyAlignedReads
+    upper: 0.9
+    middle: 0.7
+    label: Successfully aligned reads
+  - type: OffTargetReads
+    upper: 0.2
+    middle: 0.1
+    label: Off target (non TCR/IG) reads
+  - type: OverlappedReadsMoreBetter
+    upper: 0.95
+    middle: 0.9
+    label: Overlapped paired-end reads
+  - type: OverlappedReadsLessBetter
+    upper: 0.95
+    middle: 0.9
+    label: Overlapped paired-end reads
+  - type: ReadsUsedInClonotypes
+    upper: 0.8
+    middle: 0.7
+    label: Reads used in clonotypes
+  - type: AlignmentsWithNoAssemblingFeature
+    upper: 0.1
+    middle: 0.05
+    label: Alignments without assembling feature
+  - type: AlignmentsDroppedLowQuality
+    upper: 0.1
+    middle: 0.05
+    label: Alignments dropped due to low sequence quality
+  - type: AlignmentsClusteredInAssembler
+    upper: 0.1
+    middle: 0.05
+    label: Alignments clustered in PCR error correction
+  - type: ClonesClusteredInAssembler
+    upper: 0.1
+    middle: 0.05
+    label: Clonotypes clustered in PCR error correction

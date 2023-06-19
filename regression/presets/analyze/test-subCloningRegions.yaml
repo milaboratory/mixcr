@@ -1,8 +1,10 @@
 flags:
 - species
+- materialType
 pipeline:
 - align
 - assemble
+- assembleContigs
 - exportClones
 align:
   species: ""
@@ -24,31 +26,37 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VRegionWithP
-      minSumScore: 50
+      minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: kaligner
-        mapperKValue: 5
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
         floatingLeftBound: true
         floatingRightBound: true
-        mapperAbsoluteMinScore: 1.5
-        mapperRelativeMinScore: 0.7
-        mapperMatchScore: 1.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 4
-        mapperMaxSeedsDistance: 10
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
-        relativeMinScore: 0.87
-        maxHits: 7
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 98
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 8
+        mapperMaxClusters: 11
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 103
+        mapperRelativeMinScore: 0.81
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 8
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 2
         scoring:
-          type: linear
+          type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
     dParameters:
       geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
@@ -61,31 +69,37 @@ align:
         gapPenalty: -12
     jParameters:
       geneFeatureToAlign: JRegionWithP
-      minSumScore: 40
+      minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: kaligner
-        mapperKValue: 5
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
         floatingLeftBound: true
         floatingRightBound: false
-        mapperAbsoluteMinScore: 1.5
-        mapperRelativeMinScore: 0.75
-        mapperMatchScore: 1.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 4
-        mapperMaxSeedsDistance: 10
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
-        relativeMinScore: 0.87
-        maxHits: 7
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
         scoring:
-          type: linear
+          type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
     cParameters:
       geneFeatureToAlign: CExon1
       minSumScore: 40
@@ -227,7 +241,7 @@ assemble:
     badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 21
+    minimalQuality: 20
     postFilters: null
   inferMinRecordsPerConsensus: false
 assembleContigs:
