@@ -39,5 +39,5 @@ then
   for file in $files; do
     aws s3 cp --acl public-read "$temp_dir/$file" "s3://files.milaboratory.com/test-data/regression/$file"
   done
-  aws s3 ls s3://files.milaboratory.com/test-data/regression/ | tr -s ' ' '\t' | cut -f 4 | aws s3 cp --acl public-read - "s3://files.milaboratory.com/test-data/regression/list"
+  aws s3 ls s3://files.milaboratory.com/test-data/regression/ | tr -s ' ' '\t' | cut -f 4 > regression/list
 fi
