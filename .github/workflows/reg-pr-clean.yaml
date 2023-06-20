@@ -1,0 +1,17 @@
+name: "Clean Regression Tests Stale PRs"
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch: {}
+jobs:
+  build:
+    name: Clean Regression Tests PRs
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: milaboratory/github-ci/actions/housekeeping/clean-stale-reg-test-pr@v4
+        with:
+          branch-prefix: 'mixcr-regression-tests'
