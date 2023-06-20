@@ -88,6 +88,8 @@ class MetaForObfuscationTest {
         result shouldBe emptyMap()
     }
 
+    data class ClassWithSource(val source: Class<*>, val clazz: Class<*>)
+
     @Test
     fun `all classes and superclasses with jackson must be preserved alongside with dependencies`() {
         val jacksonAnnotatedClasses = applicationClasses()
@@ -99,14 +101,16 @@ class MetaForObfuscationTest {
         val result = jacksonAnnotatedClasses
             .asSequence()
             .flatMap { clazz ->
-                clazz.allSuperClasses() + clazz.interfaces + clazz + clazz.dependencies { !it.hasCustomSerialization() }
+                (clazz.allSuperClasses() + clazz.interfaces +
+                        clazz + clazz.dependencies { !it.hasCustomSerialization() })
+                    .map { ClassWithSource(clazz, it) }
             }
             .distinct()
-            .filter { it.isFromApplication() }
-            .filterNot { it.classWillBeKept() }
+            .filter { it.clazz.isFromApplication() }
+            .filterNot { it.clazz.classWillBeKept() }
             .toList()
         "Classes that must be marked with @DoNotObfuscateFull or it's package must be excluded".asClue {
-            result.groupBy { it.`package`.name } shouldBe emptyMap()
+            result.groupBy { it.clazz.`package`.name } shouldBe emptyMap()
         }
     }
 
