@@ -1,0 +1,65 @@
+"irepertoire-repseq-human-sr":
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+
+"irepertoire-repseq-human-lr":
+  inheritFrom: irepertoire-repseq-human-sr
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: ["{CDR1Begin:FR4End}"]
+
+"irepertoire-repseq-mouse-sr":
+  inheritFrom: irepertoire-repseq-human-sr
+  mixins:
+    - type: SetSpecies
+      species: mmu
+
+"irepertoire-repseq-mouse-lr":
+  inheritFrom: irepertoire-repseq-human-sr
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetClonotypeAssemblingFeatures
+      features: ["{CDR2Begin:FR4End}"]
+
+"irepertoire-repseq-plus-human":
+  inheritFrom: irepertoire-repseq-human-lr
+
+"irepertoire-repseq-plus-mouse":
+  inheritFrom: irepertoire-repseq-mouse-lr
+
+
+"irepertoire-repseq-human-dna-sr":
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: MaterialTypeDNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: J
+
+"irepertoire-repseq-human-dna-lr":
+  inheritFrom: irepertoire-repseq-human-dna-sr
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: ["{CDR1Begin:CDR3End}"]
+

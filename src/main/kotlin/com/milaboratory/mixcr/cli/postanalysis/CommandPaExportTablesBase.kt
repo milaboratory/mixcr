@@ -59,7 +59,7 @@ abstract class CommandPaExportTablesBase : CommandPaExport() {
     }
 
     @Command(
-        description = ["CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap"]
+        description = ["CDR3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap"]
     )
     class Tables : CommandPaExportTablesBase() {
         override fun run(result: PaResultByGroup) {

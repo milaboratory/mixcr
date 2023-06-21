@@ -23,7 +23,7 @@ import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.cli.exportTypes
-import com.milaboratory.mixcr.qc.Coverage.coveragePlot
+import com.milaboratory.mixcr.qc.plots.Coverage.coveragePlot
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec

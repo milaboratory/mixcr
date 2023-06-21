@@ -16,7 +16,7 @@ Base commands:
 Postanalysis commands:
   postanalysis  Run postanalysis routines. This command has subcommands, use -h to see more
 Export commands:
-  exportTables             CD3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap
+  exportTables             CDR3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap
   exportPreprocTables      Export preprocessing summary tables.
   exportPlots              Export postanalysis plots. This command has subcommands, use -h to see
                              more

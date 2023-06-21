@@ -4,6 +4,9 @@ set -euxo pipefail
 
 mixcr align --preset test-airr-long-ig-base -f \
       --species hs \
+      --rna \
+      --floating-left-alignment-boundary \
+      --rigid-right-alignment-boundary  \
       -OvParameters.geneFeatureToAlign="{FR1Begin:VEnd}" \
       long_ig_R1.fastq \
       long_ig_R2.fastq \
@@ -11,6 +14,9 @@ mixcr align --preset test-airr-long-ig-base -f \
 
 mixcr align --preset test-airr-long-ig-base -f \
       --species hs \
+      --rna \
+      --floating-left-alignment-boundary \
+      --rigid-right-alignment-boundary  \
       -OvParameters.geneFeatureToAlign="{CDR1Begin:VEnd}" \
       long_ig_R1.fastq \
       long_ig_R2.fastq \

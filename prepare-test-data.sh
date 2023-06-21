@@ -45,19 +45,18 @@ FreeBSD)
 esac
 
 if [ "${1}" == "unit" ];then
- cd "$dir/src/test/resources/sequences/big/"
- cd yf_sample_data
-
- parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze generic-bcr-amplicon -f \
-   --species hs \
-   --rna \
-   --floating-left-alignment-boundary \
-   --floating-right-alignment-boundary C \
-   --add-step assembleContigs \
-   --split-clones-by V --split-clones-by J --split-clones-by C \
-   -M assemble.sortBySequence=true \
-   --impute-germline-on-export \
-   "{}_L001_R1.fastq.gz" "{}_L001_R2.fastq.gz" "{}" ::: Ig-2_S2 Ig-3_S3 Ig-4_S4 Ig-5_S5 Ig1_S1 Ig2_S2 Ig3_S3 Ig4_S4 Ig5_S5
+  cd "$dir/src/test/resources/sequences/big/"
+  cd yf_sample_data
+  parallel --tagstring "{/.}" -j5 "${dir}/mixcr" -Xmx500m analyze generic-bcr-amplicon -f \
+    --species hs \
+    --rna \
+    --floating-left-alignment-boundary \
+    --floating-right-alignment-boundary C \
+    --add-step assembleContigs \
+    --split-clones-by V --split-clones-by J --split-clones-by C \
+    -M assemble.sortBySequence=true \
+    --impute-germline-on-export \
+    "{}_L001_R1.fastq.gz" "{}_L001_R2.fastq.gz" "{}" ::: Ig-2_S2 Ig-3_S3 Ig-4_S4 Ig-5_S5 Ig1_S1 Ig2_S2 Ig3_S3 Ig4_S4 Ig5_S5
 else
   echo "Data pre-processing skipped for: ${1}"
   exit 0

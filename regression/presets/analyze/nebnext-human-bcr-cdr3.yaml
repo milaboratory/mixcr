@@ -4,8 +4,11 @@ pipeline:
 - refineTagsAndSort
 - assemble
 - exportClones
+validation:
+- type: TagPatternShouldContainsTagName
+  tagName: UMI
 align:
-  species: hs
+  species: hsa
   libraryName: default
   trimmingQualityThreshold: 10
   trimmingWindowSize: 6
@@ -14,7 +17,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^N{22}(R1:*) \\ ^(UMI:N{17})N{10}(R2:*)"
+  tagPattern: "^(R1:*) \\ ^(UMI:N{17})N{10}(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   readIdAsCellTag: false
@@ -34,21 +37,21 @@ align:
         floatingRightBound: true
         mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 95
+        mapperMatchScore: 98
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 6
-        mapperMaxClusters: 4
+        mapperSlotCount: 8
+        mapperMaxClusters: 11
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 100
-        mapperRelativeMinScore: 0.8
-        mapperMinSeedsDistance: 5
-        mapperMaxSeedsDistance: 5
+        mapperAbsoluteMinScore: 103
+        mapperRelativeMinScore: 0.81
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 8
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 3
+        maxHits: 2
         scoring:
           type: affine
           alphabet: nucleotide
@@ -106,7 +109,7 @@ align:
         type: kaligner
         mapperKValue: 5
         floatingLeftBound: false
-        floatingRightBound: false
+        floatingRightBound: true
         mapperAbsoluteMinScore: 1.5
         mapperRelativeMinScore: 0.75
         mapperMatchScore: 1.0
@@ -165,7 +168,7 @@ refineTagsAndSort:
     postFilter:
       type: filter_groups
       groupingKeys:
-      - UMI
+      - allTags:Molecule
       predicates:
       - metrics:
         - type: group_metric_sum_weight
@@ -196,7 +199,7 @@ refineTagsAndSort:
         expectedSorting: []
         requiredSequences: []
       expectedSorting:
-      - UMI
+      - allTags:Molecule
       requiredSequences: []
 assemblePartial:
   overlappedOnly: false
@@ -287,22 +290,6 @@ assemble:
         absoluteMinScore: null
         maxHits: null
         scoring: null
-      vdcParameters:
-        Variable:
-          relativeMinScore: null
-          scoring: null
-          maxAlignmentWidthLinear: 5
-          maxAlignmentWidthAffine: 500
-        Joining:
-          relativeMinScore: null
-          scoring: null
-          maxAlignmentWidthLinear: 5
-          maxAlignmentWidthAffine: 500
-        Constant:
-          relativeMinScore: null
-          scoring: null
-          maxAlignmentWidthLinear: 5
-          maxAlignmentWidthAffine: 500
     separateByV: true
     separateByJ: true
     separateByC: true
@@ -313,7 +300,7 @@ assemble:
     badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 21
+    minimalQuality: 20
     postFilters: null
   inferMinRecordsPerConsensus: true
 assembleContigs:
@@ -387,3 +374,87 @@ exportClones:
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []
+qc:
+  checks:
+  - type: SuccessfullyAlignedReads
+    upper: 0.9
+    middle: 0.7
+    label: Successfully aligned reads
+  - type: OffTargetReads
+    upper: 0.2
+    middle: 0.1
+    label: Off target (non TCR/IG) reads
+  - type: ReadsWithNoVOrJHits
+    upper: 0.2
+    middle: 0.1
+    label: Reads with no V or J hits
+  - type: ReadsWithNoBarcode
+    upper: 0.2
+    middle: 0.1
+    label: Reads with no barcode
+  - type: OverlappedReadsMoreBetter
+    upper: 0.95
+    middle: 0.9
+    label: Overlapped paired-end reads
+  - type: OverlappedReadsLessBetter
+    upper: 0.95
+    middle: 0.9
+    label: Overlapped paired-end reads
+  - type: ReadsDroppedInTagRefinement
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in tags error correction and filtering
+  - type: TagArtificialDiversityEliminated
+    tag: UMI
+    upper: 0.8
+    middle: 0.5
+    label: UMIs artificial diversity eliminated
+  - type: ReadsDroppedInTagCorrection
+    tag: UMI
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in UMI error correction and whitelist
+  - type: ReadsDroppedInTagFiltering
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in tags filtering
+  - type: TagGroupsWithNoAssemblingFeature
+    upper: 0.2
+    middle: 0.1
+    label: Tag groups with no assembling feature
+  - type: TagGroupsWithMultipleConsensuses
+    upper: 0.1
+    middle: 0.001
+    label: Barcode collisions in clonotype assembly
+  - type: UnassignedAlignments
+    upper: 0.1
+    middle: 0.05
+    label: Unassigned alignments in clonotype assembly
+  - type: ReadsUsedInClonotypes
+    upper: 0.9
+    middle: 0.8
+    label: Reads used in clonotypes
+  - type: AlignmentsWithNoAssemblingFeature
+    upper: 0.1
+    middle: 0.2
+    label: Alignments without assembling feature
+  - type: AlignmentsDroppedLowQuality
+    upper: 0.1
+    middle: 0.05
+    label: Alignments dropped due to low sequence quality
+  - type: AlignmentsClusteredInAssembler
+    upper: 0.1
+    middle: 0.05
+    label: Alignments clustered in PCR error correction
+  - type: ClonesClusteredInAssembler
+    upper: 0.1
+    middle: 0.05
+    label: Clonotypes clustered in PCR error correction
+  - type: ClonesDroppedInPostFiltering
+    upper: 0.1
+    middle: 0.05
+    label: Clones dropped in post-filtering
+  - type: AlignmentsDroppedInPostFiltering
+    upper: 0.1
+    middle: 0.05
+    label: Alignments dropped in clones post-filtering

@@ -35,4 +35,4 @@ mixcr analyze --verbose 10x-vdj-tcr-qc-test \
   single_cell_vdj_t_subset_R2.fastq.gz \
   result
 
-assert "grep 'Aligned less then' result.contigs.clns.qc.txt | wc -l" "1"
+assert "grep 'Off target' result.contigs.qc.txt | wc -l" "1"

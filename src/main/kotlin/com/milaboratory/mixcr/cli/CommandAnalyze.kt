@@ -463,7 +463,7 @@ object CommandAnalyze {
 
                     // Executing the plan
                     for (executionStep in executionPlan) {
-                        println("====================")
+                        println("\n" + Util.surround("mixcr ${executionStep.command}", ">", "<"))
                         println("Running:")
                         println(executionStep)
                         val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
@@ -478,16 +478,18 @@ object CommandAnalyze {
                 executionPlan.clear()
             }
 
+            private fun String.removeExtension() = substring(0, lastIndexOf('.'))
+
             fun addQC() {
                 for (nextInput in nextInputs) {
                     check(nextInput.fileNames.size == 1)
                     executionPlan += ExecutionStep(
                         MiXCRCommandDescriptor.qc.command,
                         qcRounds++,
-                        emptyList(),
+                        listOf("--print-to-stdout"),
                         emptyList(),
                         listOf(nextInput.fileNames.first()),
-                        listOf(nextInput.fileNames.first() + ".qc.txt")
+                        listOf(nextInput.fileNames.first().removeExtension() + ".qc.txt")
                     )
                 }
             }

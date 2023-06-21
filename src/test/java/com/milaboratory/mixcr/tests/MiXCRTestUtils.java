@@ -33,9 +33,9 @@ public class MiXCRTestUtils {
     public static MiXCRHeader dummyHeader() {
         return new MiXCRHeader(
                 "hashA123",
-                new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
-                Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("legacy-4.0-default").getAlign().getParameters(),
-                Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("legacy-4.0-default").getAlign().getParameters().getFeaturesToAlignMap(),
+                new MiXCRParamsSpec("generic-amplicon"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
+                Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("generic-amplicon").getAlign().getParameters(),
+                Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("generic-amplicon").getAlign().getParameters().getFeaturesToAlignMap(),
                 null, null, null);
     }
 

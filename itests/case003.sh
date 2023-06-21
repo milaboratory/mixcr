@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-mixcr analyze --verbose generic-tcr-amplicon --dry-run \
+mixcr analyze --verbose generic-amplicon --dry-run \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \
@@ -10,7 +10,7 @@ mixcr analyze --verbose generic-tcr-amplicon --dry-run \
   --add-step assembleContigs \
   test_R1.fastq test_R2.fastq case3
 
-mixcr analyze --verbose generic-tcr-amplicon \
+mixcr analyze --verbose generic-amplicon \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

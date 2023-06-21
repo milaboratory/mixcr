@@ -270,18 +270,16 @@ object CommandExportClones {
                     SmartProgressReporter.startProgressReport(exportClones, System.err)
                     exportClones.run()
                     if (initialSet.size() > set.size()) {
-                        val initialCount = initialSet.clones.stream().mapToDouble { obj: Clone -> obj.count }
-                            .sum()
-                        val count = set.clones.stream().mapToDouble { obj: Clone -> obj.count }
-                            .sum()
+                        val initialCount = initialSet.clones.sumOf { obj: Clone -> obj.count }
+                        val count = set.clones.sumOf { obj: Clone -> obj.count }
                         val di = initialSet.size() - set.size()
                         val cdi = initialCount - count
                         val percentageDI = ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size())
-                        logger.warn(
+                        logger.warnUnfomatted(
                             "Filtered ${set.size()} of ${initialSet.size()} clones ($percentageDI%)."
                         )
                         val percentageCDI = ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount)
-                        logger.warn(
+                        logger.warnUnfomatted(
                             "Filtered $count of $initialCount reads ($percentageCDI%)."
                         )
                     }
