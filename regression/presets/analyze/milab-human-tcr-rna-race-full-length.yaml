@@ -250,7 +250,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
+        type: advanced
         correctionPower: 0.001
         backgroundSubstitutionRate: 5.0E-4
         backgroundIndelRate: 2.0E-4
