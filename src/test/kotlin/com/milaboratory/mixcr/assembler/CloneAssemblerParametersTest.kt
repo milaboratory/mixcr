@@ -40,7 +40,7 @@ class CloneAssemblerParametersTest {
         val params = CloneAssemblerParameters(
             arrayOf(GeneFeature.FR1, GeneFeature.CDR3), 12,
             QualityAggregationType.Average,
-            CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, RelativeConcentrationFilter(null,1E-3, 1E-3, 1E-4)),
+            CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, AdvancedClusteringFilter(1E-3, 1E-3, 1E-4)),
             factoryParameters, true, true, false,
             0.4, 2.0, 2.0, true, 20.toByte(), .8, "2", 15.toByte(), null
         )
@@ -73,7 +73,7 @@ class CloneAssemblerParametersTest {
         val params = CloneAssemblerParameters(
             arrayOf(GeneFeature.FR1, GeneFeature.CDR3), 12,
             QualityAggregationType.Average,
-            CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, RelativeConcentrationFilter(null,1E-3, 1E-3, 1E-4)),
+            CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, AdvancedClusteringFilter(1E-3, 1E-3, 1E-4)),
             factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, 20.toByte(), .8, "2of6", 15.toByte(), null
         )
         val str = K_PRETTY_OM.writeValueAsString(params)

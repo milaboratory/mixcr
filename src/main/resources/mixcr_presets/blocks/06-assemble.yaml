@@ -21,7 +21,7 @@
         searchParameters: twoMismatchesOrIndels
         minimalTagSetOverlap: -1
         clusteringFilter:
-          type: relativeConcentration
+          type: advanced
           correctionPower: 0.001
           backgroundSubstitutionRate: 0.002
           backgroundIndelRate: 0.0002
@@ -91,7 +91,7 @@
           searchParameters: twoMismatchesOrIndels
           minimalTagSetOverlap: -1
           clusteringFilter:
-            type: relativeConcentration
+            type: advanced
             correctionPower: 0.001
             backgroundSubstitutionRate: 0.0005
             backgroundIndelRate: 0.0002
