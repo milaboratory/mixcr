@@ -1,8 +1,7 @@
 name: "Clean Regression Tests Stale PRs"
 on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch: {}
+  delete
+  workflow_dispatch
 jobs:
   build:
     name: Clean Regression Tests PRs
