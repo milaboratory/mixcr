@@ -1,4 +1,4 @@
-"parse-bio-3gex-wt-mini":
+"parse-bio-3gex":
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
   mixins:
     - type: SetTagPattern
@@ -39,6 +39,174 @@
               to: '11'
             - from: ACTCCTGC
               to: '12'
+            - from: ATTTGGCA
+              to: '13'
+            - from: TTATTCTG
+              to: '14'
+            - from: TCATGCTC
+              to: '15'
+            - from: CATACTTC
+              to: '16'
+            - from: CCGTTCTA
+              to: '17'
+            - from: GCTTCATA
+              to: '18'
+            - from: CTCTGTGC
+              to: '19'
+            - from: CCCTTATA
+              to: '20'
+            - from: ACTGCTCT
+              to: '21'
+            - from: CTCTAATC
+              to: '22'
+            - from: ACCCTTGC
+              to: '23'
+            - from: ATCTTAGG
+              to: '24'
+            - from: CATGTCTC
+              to: '25'
+            - from: TCATTGCA
+              to: '26'
+            - from: ACACCTTT
+              to: '27'
+            - from: AATTTCTC
+              to: '28'
+            - from: ATTCATGG
+              to: '29'
+            - from: ACTTTACC
+              to: '30'
+            - from: CTTCTAAC
+              to: '31'
+            - from: CTATTTCA
+              to: '32'
+            - from: TCTCATGC
+              to: '33'
+            - from: ATCCTTAC
+              to: '34'
+            - from: TAAATATC
+              to: '35'
+            - from: TTACCTGC
+              to: '36'
+            - from: CACTTTCA
+              to: '37'
+            - from: CACCTTTA
+              to: '38'
+            - from: CTGACTTC
+              to: '39'
+            - from: CATTTGGA
+              to: '40'
+            - from: GCTCTACT
+              to: '41'
+            - from: GTTACGTA
+              to: '42'
+            - from: CCTGTTGC
+              to: '43'
+            - from: CTATCATC
+              to: '44'
+            - from: GCTATCAT
+              to: '45'
+            - from: ACATTCAT
+              to: '46'
+            - from: TTCGCTAC
+              to: '47'
+            - from: CATTCTAC
+              to: '48'
+            - from: CACTTATC
+              to: '49'
+            - from: ATAAGCTC
+              to: '50'
+            - from: TCATCCTG
+              to: '51'
+            - from: CCTGGTAT
+              to: '52'
+            - from: TGGTATAC
+              to: '53'
+            - from: TTGGGAGA
+              to: '54'
+            - from: ACTTCATC
+              to: '55'
+            - from: TCTCTAGC
+              to: '56'
+            - from: ATGCCCTT
+              to: '57'
+            - from: CCCAATTT
+              to: '58'
+            - from: ACTATATA
+              to: '59'
+            - from: CTCTATAC
+              to: '60'
+            - from: CTGTCTCA
+              to: '61'
+            - from: GACCTTTC
+              to: '62'
+            - from: GATTTGGC
+              to: '63'
+            - from: CGTCTAGG
+              to: '64'
+            - from: TACTCGAA
+              to: '65'
+            - from: CAGCCTTT
+              to: '66'
+            - from: CCTCATTA
+              to: '67'
+            - from: CTTATACC
+              to: '68'
+            - from: TCTATTAC
+              to: '69'
+            - from: CCTGCATT
+              to: '70'
+            - from: CAATCCTT
+              to: '71'
+            - from: TTGTCTTA
+              to: '72'
+            - from: TCACTTTA
+              to: '73'
+            - from: TGCTTGGG
+              to: '74'
+            - from: CGCTCATT
+              to: '75'
+            - from: GCCTCTAT
+              to: '76'
+            - from: GAGCACAA
+              to: '77'
+            - from: CTCTTAAC
+              to: '78'
+            - from: TCTAGGCT
+              to: '79'
+            - from: AATTCTGC
+              to: '80'
+            - from: CATTCTCA
+              to: '81'
+            - from: ACTTGCCT
+              to: '82'
+            - from: ATCATTGC
+              to: '83'
+            - from: GTTCAACA
+              to: '84'
+            - from: CCATTTGC
+              to: '85'
+            - from: GACTTTGC
+              to: '86'
+            - from: ATTGGCTC
+              to: '87'
+            - from: GTGCTAGC
+              to: '88'
+            - from: CTTTCAAC
+              to: '89'
+            - from: ACTATTGC
+              to: '90'
+            - from: ACTGGCTT
+              to: '91'
+            - from: ATTAGGCT
+              to: '92'
+            - from: GCCTTTCA
+              to: '93'
+            - from: ATTCTAGG
+              to: '94'
+            - from: CCTTACAT
+              to: '95'
+            - from: ACATTTGG
+              to: '96'
             - from: CATCATCC
               to: '01'
             - from: CTGCTTTG
@@ -63,6 +231,175 @@
               to: '11'
             - from: GCTGCTTC
               to: '12'
+            - from: TATGTGTC
+              to: '13'
+            - from: CAATTCTC
+              to: '14'
+            - from: TGGTCTCC
+              to: '15'
+            - from: GCTCTTTA
+              to: '16'
+            - from: GCTGCATG
+              to: '17'
+            - from: ACTCATTT
+              to: '18'
+            - from: AGTCTTGG
+              to: '19'
+            - from: GGTTCTTC
+              to: '20'
+            - from: TCATGTTG
+              to: '21'
+            - from: ATTTTGCC
+              to: '22'
+            - from: CTTCTGTA
+              to: '23'
+            - from: GTCCATCT
+              to: '24'
+            - from: GCTATCTC
+              to: '25'
+            - from: TAGTTTCC
+              to: '26'
+            - from: TCCATTAT
+              to: '27'
+            - from: AGGATTAA
+              to: '28'
+            - from: AATCTTTC
+              to: '29'
+            - from: GTCATATG
+              to: '30'
+            - from: GTGCTTCC
+              to: '31'
+            - from: ATGTGTTG
+              to: '32'
+            - from: CCATCTTG
+              to: '33'
+            - from: TACTGTCT
+              to: '34'
+            - from: TTCATCGC
+              to: '35'
+            - from: ACTGTGGG
+              to: '36'
+            - from: TCTGTGCC
+              to: '37'
+            - from: TCAATCTC
+              to: '38'
+            - from: GTCCTCTG
+              to: '39'
+            - from: TTACATTC
+              to: '40'
+            - from: ATTCTGTC
+              to: '41'
+            - from: TGTGTATG
+              to: '42'
+            - from: TCCATTTG
+              to: '43'
+            - from: TTAGCTTC
+              to: '44'
+            - from: GTGCTTGA
+              to: '45'
+            - from: GTTTGTGA
+              to: '46'
+            - from: GAAATTAG
+              to: '47'
+            - from: GCAAATTC
+              to: '48'
+            - from: GAGGTTGA
+              to: '49'
+            - from: CCTGTCTG
+              to: '50'
+            - from: GTGGGTTC
+              to: '51'
+            - from: TTTGCATC
+              to: '52'
+            - from: AGGTAATA
+              to: '53'
+            - from: GTGCCTTC
+              to: '54'
+            - from: ATGTTTCC
+              to: '55'
+            - from: CTTAATTC
+              to: '56'
+            - from: TCTGGCTC
+              to: '57'
+            - from: CATCATTT
+              to: '58'
+            - from: GTTGTCTC
+              to: '59'
+            - from: ATCTTCTG
+              to: '60'
+            - from: TGTTTGCC
+              to: '61'
+            - from: TTCTGTCA
+              to: '62'
+            - from: ACGGACTC
+              to: '63'
+            - from: TTTGGTCA
+              to: '64'
+            - from: TATCCGGG
+              to: '65'
+            - from: TGTCATTC
+              to: '66'
+            - from: ATTCTCTG
+              to: '67'
+            - from: TGGCTTCC
+              to: '68'
+            - from: TTGTTGCC
+              to: '69'
+            - from: GTCATCTC
+              to: '70'
+            - from: TTGCTCAT
+              to: '71'
+            - from: CTGTCTGC
+              to: '72'
+            - from: TATATTCC
+              to: '73'
+            - from: ATATTGGC
+              to: '74'
+            - from: GTGTCCTC
+              to: '75'
+            - from: ATCTTCAT
+              to: '76'
+            - from: CGTGGTTG
+              to: '77'
+            - from: TTGCATCC
+              to: '78'
+            - from: TCTTAATC
+              to: '79'
+            - from: TGCATTTC
+              to: '80'
+            - from: GATGTTTC
+              to: '81'
+            - from: ATCTTGTC
+              to: '82'
+            - from: TCATATTC
+              to: '83'
+            - from: TGGCCTCT
+              to: '84'
+            - from: CGTTGTCT
+              to: '85'
+            - from: TCTTGTCA
+              to: '86'
+            - from: TATTCCTG
+              to: '87'
+            - from: TCCATGTC
+              to: '88'
+            - from: TTGTCATC
+              to: '89'
+            - from: ATTTCCTG
+              to: '90'
+            - from: GTGTCTCC
+              to: '91'
+            - from: GTGTGTGT
+              to: '92'
+            - from: TATGCTTC
+              to: '93'
+            - from: ATGGTGTT
+              to: '94'
+            - from: GAATAATG
+              to: '95'
+            - from: CCTCTGTG
+              to: '96'
+          reportingLevel: VerboseReport
         - type: mapTags
           name: "Round2"
           matchTags:
@@ -263,6 +600,7 @@
               to: '95'
             - from: GCCAAGAC
               to: '96'
+          reportingLevel: VerboseReport
         - type: mapTags
           name: "Round3"
           matchTags:
@@ -463,6 +801,20 @@
               to: '95'
             - from: GCCAAGAC
               to: '96'
+          reportingLevel: VerboseReport
+        - type: generic
+          name: ""
+          destinationTag: CELL
+          transformation:
+            type: concatenate
+            separator: '_'
+            sources:
+              - type: tag
+                name: CELL1CONVERTED
+              - type: tag
+                name: CELL2CONVERTED
+              - type: tag
+                name: CELL3CONVERTED
 
 "split-seq-3gex":
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
@@ -872,6 +1224,7 @@
               to: '95'
             - from: GCCAAGAC
               to: '96'
+          reportingLevel: VerboseReport
         - type: mapTags
           name: "Round3"
           matchTags:
@@ -1072,11 +1425,17 @@
               to: '95'
             - from: GCCAAGAC
               to: '96'
-        - type: concatenateTags
-          name: "Concatenate"
-          sourceTags:
-            - CELL1CONVERTED
-            - CELL2CONVERTED
-            - CELL3CONVERTED
+          reportingLevel: VerboseReport
+        - type: generic
+          name: ""
           destinationTag: CELL
-          separator: '_'
+          transformation:
+            type: concatenate
+            separator: '_'
+            sources:
+              - type: tag
+                name: CELL1CONVERTED
+              - type: tag
+                name: CELL2CONVERTED
+              - type: tag
+                name: CELL3CONVERTED

@@ -422,7 +422,7 @@ align:
       to: 67
     - from: TTCACGCA
       to: 68
-    reportingLevel: NoReport
+    reportingLevel: VerboseReport
   - type: mapTags
     name: Round3
     matchTags:
@@ -623,15 +623,20 @@ align:
       to: 67
     - from: TTCACGCA
       to: 68
-    reportingLevel: NoReport
-  - type: concatenateTags
-    name: Concatenate
-    sourceTags:
-    - CELL1CONVERTED
-    - CELL2CONVERTED
-    - CELL3CONVERTED
+    reportingLevel: VerboseReport
+  - type: generic
+    name: ""
+    transformation:
+      type: concatenate
+      sources:
+      - type: tag
+        name: CELL1CONVERTED
+      - type: tag
+        name: CELL2CONVERTED
+      - type: tag
+        name: CELL3CONVERTED
+      separator: _
     destinationTag: CELL
-    separator: _
   sampleTable: null
   splitBySample: false
   limit: null
