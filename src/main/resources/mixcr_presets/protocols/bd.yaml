@@ -5,264 +5,38 @@
     - refineTagsAndSort
     - assemble
     - exportClones
-  align:
-    inheritFrom: align-kaligner1-single-cell-v1
+  mixins:
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+  inheritFrom: generic-ht-single-cell-amplicon-with-umi
   refineTagsAndSort:
-    runCorrection: true
-    parameters:
-      correctionPower: 0.001
-      backgroundSubstitutionRate: 0.001
-      backgroundIndelRate: 1.0e-05
-      minQuality: 12
-      maxSubstitutions: 2
-      maxIndels: 2
-      maxTotalErrors: 3
-      postFilter:
-        type: filter_and
-        operands:
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - allTags:Molecule
-            predicates:
-              - metrics:
-                  - type: "group_metric_sum_weight"
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                operator:
-                  type: group_operator_lowest_threshold
-                  operators:
-                    - type: group_operator_advanced_thresholding
-                      algo:
-                        type: otsu
-                      histTransformers:
-                        # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                        - type: inflate
-                          fraction: 0.15
-                      logX: true
-                      minimalSample: 20
-                      fallbackThreshold: 1.0
-                    - type: group_operator_cumtop
-                      share: 0.85
-                      round: Down
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                    keys:
-                      - allTags:Molecule
-                operator:
-                  type: group_operator_range
-                  lower: 3.0
-  assemble:
-    inheritFrom: assemble-base-with-consensus
-    overrides:
-      clnaOutput: true
-      cloneAssemblerParameters:
-        postFilters:
-          - type: filter_in_groups
-            isolationKeys:
-              - geneLabel:ReliableChain
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - clone
-              predicates:
-                - metrics:
-                    - type: group_metric_nunique
-                      keys:
-                        - allTags:Molecule
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.95
-          - type: filter_in_groups
-            isolationKeys:
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - clone
-              predicates:
-                - metrics:
-                    - type: group_metric_nunique
-                      keys:
-                        - allTags:Molecule
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.99
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - clone
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    keys:
-                      - allTags:Molecule
-                operator:
-                  type: group_operator_range
-                  lower: 2.0
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    keys:
-                      - clone
-                operator:
-                  type: group_operator_range
-                  upper: 4.0
-  exportClones:
-    chains: ALL
-    splitFilesBy: [ ]
-    fields:
-      - field: "-cloneId"
-      - field: "-tags"
-        args: [ "Cell" ]
-      - field: "-readCount"
-      - field: "-uniqueTagCount"
-        args: [ "Molecule" ]
-      - field: "-targetSequences"
-      - field: "-targetQualities"
-      - field: "-vHitsWithScore"
-      - field: "-dHitsWithScore"
-      - field: "-jHitsWithScore"
-      - field: "-cHitsWithScore"
-      - field: "-vAlignments"
-      - field: "-dAlignments"
-      - field: "-jAlignments"
-      - field: "-cAlignments"
-      - field: "-nFeature"
-        args: [ "FR1" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR1" ]
-      - field: "-nFeature"
-        args: [ "CDR1" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR1" ]
-      - field: "-nFeature"
-        args: [ "FR2" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR2" ]
-      - field: "-nFeature"
-        args: [ "CDR2" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR2" ]
-      - field: "-nFeature"
-        args: [ "FR3" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR3" ]
-      - field: "-nFeature"
-        args: [ "CDR3" ]
-      - field: "-minFeatureQuality"
-        args: [ "CDR3" ]
-      - field: "-nFeature"
-        args: [ "FR4" ]
-      - field: "-minFeatureQuality"
-        args: [ "FR4" ]
-      - field: "-aaFeature"
-        args: [ "FR1" ]
-      - field: "-aaFeature"
-        args: [ "CDR1" ]
-      - field: "-aaFeature"
-        args: [ "FR2" ]
-      - field: "-aaFeature"
-        args: [ "CDR2" ]
-      - field: "-aaFeature"
-        args: [ "FR3" ]
-      - field: "-aaFeature"
-        args: [ "CDR3" ]
-      - field: "-aaFeature"
-        args: [ "FR4" ]
-      - field: "-defaultAnchorPoints"
+    whitelists:
+      CELL1: builtin:rhapsody-cell1
+      CELL2: builtin:rhapsody-cell2
+      CELL3: builtin:rhapsody-cell3
 
-"bd-rhapsody-v1-base":
+
+# HUMAN
+
+"bd-rhapsody-human-cdr3":
   inheritFrom: bd-rhapsody-base
-  refineTagsAndSort:
-    inheritFrom: bd-rhapsody-base
-    overrides:
-      whitelists:
-        CELL1: builtin:rhapsody-cell1
-        CELL2: builtin:rhapsody-cell2
-        CELL3: builtin:rhapsody-cell3
-
-"bd-rhapsody-v2-base":
-  inheritFrom: bd-rhapsody-base
-  refineTagsAndSort:
-    inheritFrom: bd-rhapsody-base
-    overrides:
-      whitelists:
-        CELL1: builtin:rhapsody-enhanced-beads-cell1
-        CELL2: builtin:rhapsody-enhanced-beads-cell2
-        CELL3: builtin:rhapsody-enhanced-beads-cell3
-
-
-"bd-rhapsody-human-tcr-v1":
-  inheritFrom: bd-rhapsody-v1-base
   mixins:
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
       tagPattern: |
-        ^(CELL1:N{9})N{12}(CELL2:N{9})N{13}(CELL3:N{9})(UMI:N{8})\
-        ^atcaaaatcggtgaataggcagac(R2:*)|
-        ^gatctctgcttctgatggctca(R2:*)|
-        ^atatccttggggtagaattccttc(R2:*)|
-        ^gggaaacatctgcatcaagttg(R2:*)
-
-"bd-rhapsody-human-tcr-v2":
-  inheritFrom: bd-rhapsody-v1-base
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetTagPattern
-      tagPattern: |
+        ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) |
         ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
         ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
         ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
+        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
         ^atcaaaatcggtgaataggcagac(R2:*)|
         ^gatctctgcttctgatggctca(R2:*)|
         ^atatccttggggtagaattccttc(R2:*)|
-        ^gggaaacatctgcatcaagttg(R2:*)
-
-"bd-rhapsody-human-bcr-v1":
-  inheritFrom: bd-rhapsody-v1-base
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})N{12}(CELL2:N{9})N{13}(CELL3:N{9})(UMI:N{8})\
-        ^ctttcgctccaggtcacact(R2:*)|
-        ^tgtctgcaccctgatatgatgg(R2:*)|
-        ^gtcaaggggaagacggatg(R2:*)|
-        ^aagtagtccttgaccaggca(R2:*)|
-        ^acaggagacgagggggaaaa(R2:*)|
-        ^tcagatggcgggaagatgaa(R2:*)|
-        ^accagtgtggccttgttg(R2:*)
-
-"bd-rhapsody-human-bcr-v2":
-  inheritFrom: bd-rhapsody-v1-base
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
+        ^gggaaacatctgcatcaagttg(R2:*)|
         ^ctttcgctccaggtcacact(R2:*)|
         ^tgtctgcaccctgatatgatgg(R2:*)|
         ^gtcaaggggaagacggatg(R2:*)|
@@ -273,68 +47,23 @@
 
 # MOUSE
 
-"bd-rhapsody-mouse-tcr-v1":
-  inheritFrom: bd-rhapsody-v1-base
+"bd-rhapsody-mouse-cdr3":
+  inheritFrom: bd-rhapsody-base
   mixins:
     - type: SetSpecies
       species: mmu
     - type: SetTagPattern
       tagPattern: |
-        ^(CELL1:N{9})N{12}(CELL2:N{9})N{13}(CELL3:N{9})(UMI:N{8})\
+        ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) | \
+        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
         ^aggttctgggttctggatgt(R2:*)|
         ^caatctctgcttttgatggctc(R2:*)|
         ^gtagaaatctttcaccagacaagc(R2:*)|
         ^ttgggggaaatgtctgca(R2:*)|
-        ^aatagtaggcttgggagaaaagtctg(R2:*)
-
-"bd-rhapsody-mouse-tcr-v2":
-  inheritFrom: bd-rhapsody-v1-base
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
-        ^aggttctgggttctggatgt(R2:*)|
-        ^caatctctgcttttgatggctc(R2:*)|
-        ^gtagaaatctttcaccagacaagc(R2:*)|
-        ^ttgggggaaatgtctgca(R2:*)|
-        ^aatagtaggcttgggagaaaagtctg(R2:*)
-
-"bd-rhapsody-mouse-bcr-v1":
-  inheritFrom: bd-rhapsody-v1-base
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})N{12}(CELL2:N{9})N{13}(CELL3:N{9})(UMI:N{8})\
-        ^tgtcagtgggtagatggtgg(R2:*)|
-        ^ctgacttccaattactaaacagcc(R2:*)|
-        ^tagagctgagggttcctgatag(R2:*)|
-        ^cagtggatagacagatgggggt(R2:*)|
-        ^atggggctgttgttttgg(R2:*)|
-        ^gtggatagactgatgggggtgtt(R2:*)|
-        ^agggaagtagcctttgacaag(R2:*)|
-        ^gacatttgggaaggactgactc(R2:*)|
-        ^agatgttaactgctcactggatg(R2:*)|
-        ^gttagtctcgagctcttcaga(R2:*)|
-        ^cagtgtggctttgttttcct(R2:*)
-
-"bd-rhapsody-mouse-bcr-v2":
-  inheritFrom: bd-rhapsody-v1-base
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
+        ^aatagtaggcttgggagaaaagtctg(R2:*)|
         ^tgtcagtgggtagatggtgg(R2:*)|
         ^ctgacttccaattactaaacagcc(R2:*)|
         ^tagagctgagggttcctgatag(R2:*)|
@@ -603,7 +332,7 @@
   exportAlignments:
     inheritFrom: exportAlignments-base
   exportClones:
-    inheritFrom: exportClones-single-cell-full
+    inheritFrom: exportClones-single-cell-with-umi-base
 
 "bd-rhapsody-mouse-tcr-full-length":
   inheritFrom: bd-rhapsody-tcr-full-length-base
