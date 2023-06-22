@@ -16,7 +16,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\\\
+  tagPattern: "^N{0:13}ggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\\\
     ^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
