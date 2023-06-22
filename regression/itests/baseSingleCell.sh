@@ -15,5 +15,5 @@ mixcr analyze -f 10x-vdj-bcr \
   single_cell_vdj_t_subset_R2.fastq.gz \
   baseSingleCell.vdjcontigs
 
-mixcr exportReports --yaml baseSingleCell.raw.contigs.clns | grep -v '  version:' > ../reports/baseSingleCell.raw.yaml
-mixcr exportReports --yaml baseSingleCell.vdjcontigs.contigs.clns | grep -v '  version:' > ../reports/baseSingleCell.vdjcontigs.yaml
+mixcr exportReports --yaml baseSingleCell.raw.contigs.clns | grep -v -E 'version:|rev=|lib=' > ../reports/baseSingleCell.raw.yaml
+mixcr exportReports --yaml baseSingleCell.vdjcontigs.contigs.clns | grep -v -E 'version:|rev=|lib=' > ../reports/baseSingleCell.vdjcontigs.yaml

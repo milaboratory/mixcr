@@ -7,6 +7,80 @@ properties:
       anyOf:
       - type: object
         properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
           middle:
             type: number
           tag:
@@ -15,12 +89,82 @@ properties:
             type: number
       - type: object
         properties:
+          label:
+            type: string
           middle:
             type: number
           upper:
             type: number
       - type: object
         properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          tag:
+            type: string
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
+          middle:
+            type: number
+          upper:
+            type: number
+      - type: object
+        properties:
+          label:
+            type: string
           middle:
             type: number
           upper:

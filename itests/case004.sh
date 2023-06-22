@@ -3,7 +3,7 @@
 set -euxo pipefail
 
 # Checking generic pipeline with relatively big input files
-mixcr analyze generic-tcr-amplicon \
+mixcr analyze --verbose generic-amplicon \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

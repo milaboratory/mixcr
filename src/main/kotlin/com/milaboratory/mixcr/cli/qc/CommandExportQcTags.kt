@@ -22,7 +22,7 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.cli.exportTypes
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.qc.TagRefinementQc
+import com.milaboratory.mixcr.qc.plots.TagRefinementQc
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Model.CommandSpec

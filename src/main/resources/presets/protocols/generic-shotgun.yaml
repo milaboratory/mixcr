@@ -1,0 +1,34 @@
+shotgun-base:
+  inheritFrom: bundle-base
+  abstract: true
+  flags:
+    - species
+    - materialType
+  pipeline:
+    - align
+    - assemblePartial
+    - assemblePartial
+    - extend
+    - assemble
+    - assembleContigs
+    - exportClones
+  align:
+    inheritFrom: align-shotgun
+  assemble:
+    inheritFrom: assemble-base
+    overrides:
+      clnaOutput: true
+
+rna-seq:
+  inheritFrom: shotgun-base
+  flags:
+    - species
+  mixins:
+    - type: MaterialTypeRNA
+
+exome-seq:
+  inheritFrom: shotgun-base
+  flags:
+    - species
+  mixins:
+    - type: MaterialTypeDNA

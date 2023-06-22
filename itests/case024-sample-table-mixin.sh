@@ -38,12 +38,12 @@ echo -e 'S1\t^GGATTACTCATTGCCC(UMI:N{10}) \ ^(R2:*)' >> sample_table_1.tsv
 echo -e 'S2\t^CTGAAGTTCAAGGTAA(UMI:N{10}) \ ^(R2:*)' >> sample_table_1.tsv
 echo -e 'S3\t^AACTCCCAGATCCTGT(UMI:N{10}) \ ^(R2:*)' >> sample_table_1.tsv
 
-mixcr analyze generic-tcr-amplicon-separate-samples-umi \
+mixcr analyze --verbose generic-tcr-amplicon-separate-samples-umi \
   --species hs \
   --rna \
   --rigid-left-alignment-boundary \
   --rigid-right-alignment-boundary C \
-  --sample-table sample_table_1.tsv \
+  --sample-table-strict sample_table_1.tsv \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case024-sample-barcode-split_1
@@ -53,12 +53,12 @@ echo -e 'S1\t^(SPL:N{16})(UMI:N{10}) \ ^(R2:*)\tGGATTACTCATTGCCC' >> sample_tabl
 echo -e 'S2\t^(SPL:N{16})(UMI:N{10}) \ ^(R2:*)\tCTGAAGTTCAAGGTAA' >> sample_table_2.tsv
 echo -e 'S3\t^(SPL:N{16})(UMI:N{10}) \ ^(R2:*)\tAACTCCCAGATCCTGT' >> sample_table_2.tsv
 
-mixcr analyze generic-tcr-amplicon-separate-samples-umi \
+mixcr analyze --verbose generic-tcr-amplicon-separate-samples-umi \
   --species hs \
   --rna \
   --rigid-left-alignment-boundary \
   --rigid-right-alignment-boundary C \
-  --sample-table sample_table_2.tsv \
+  --sample-table-strict sample_table_2.tsv \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case024-sample-barcode-split_2
@@ -68,13 +68,13 @@ echo -e 'S1\t\tGGATTACTCATTGCCC' >> sample_table_3.tsv
 echo -e 'S2\t\tCTGAAGTTCAAGGTAA' >> sample_table_3.tsv
 echo -e 'S3\t\tAACTCCCAGATCCTGT' >> sample_table_3.tsv
 
-mixcr analyze generic-tcr-amplicon-separate-samples-umi \
+mixcr analyze --verbose generic-tcr-amplicon-separate-samples-umi \
   --tag-pattern '^(SPL:N{16})(UMI:N{10}) \ ^(R2:*)' \
   --species hs \
   --rna \
   --rigid-left-alignment-boundary \
   --rigid-right-alignment-boundary C \
-  --sample-table sample_table_3.tsv \
+  --sample-table-strict sample_table_3.tsv \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case024-sample-barcode-split_3

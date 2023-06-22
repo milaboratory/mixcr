@@ -30,8 +30,8 @@ assert() {
 set -euxo pipefail
 
 mixcr bam2fastq -b unsorted.bam -r1 r1.fq -r2 r2.fq -u unp.fq -f
-mixcr align --preset test-generic -s hs unsorted.bam bam.vdjca -f
-mixcr align --preset test-generic -s hs r1.fq r2.fq fq.vdjca
+mixcr align --preset test-generic -s hs --rna --floating-left-alignment-boundary --rigid-right-alignment-boundary C unsorted.bam bam.vdjca -f
+mixcr align --preset test-generic -s hs --rna --floating-left-alignment-boundary --rigid-right-alignment-boundary C r1.fq r2.fq fq.vdjca
 mixcr alignmentsDiff bam.vdjca fq.vdjca > diff
 
 assert "cat diff | grep 'Total number of different reads'" "Total number of different reads: 0"

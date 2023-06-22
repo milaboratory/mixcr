@@ -18,13 +18,13 @@ import cc.redberry.pipe.util.drain
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.app.matches
-import com.milaboratory.core.Range
 import com.milaboratory.core.io.sequence.fasta.FastaRecord
 import com.milaboratory.core.io.sequence.fasta.FastaWriter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.alleles.AlleleSearchResult
-import com.milaboratory.mixcr.alleles.AlleleSearchResult.Status.DE_NOVA
+import com.milaboratory.mixcr.alleles.AlleleSearchResult.Status.DE_NOVO
 import com.milaboratory.mixcr.alleles.AllelesBuilder
 import com.milaboratory.mixcr.alleles.CloneRebuild
 import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
@@ -48,10 +48,19 @@ import com.milaboratory.util.K_OM
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import com.milaboratory.util.XSV.chooseDelimiter
-import com.milaboratory.util.XSV.writeXSV
+import com.milaboratory.util.XSV
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneFeature.CRegion
+import io.repseq.core.GeneFeature.DRegion
+import io.repseq.core.GeneFeature.Exon1
+import io.repseq.core.GeneFeature.JRegion
+import io.repseq.core.GeneFeature.L2
+import io.repseq.core.GeneFeature.V5UTRGermline
+import io.repseq.core.GeneFeature.VRegion
+import io.repseq.core.GeneFeatures
+import io.repseq.core.GeneType.Constant
+import io.repseq.core.GeneType.Diversity
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.VJ_REFERENCE
 import io.repseq.core.GeneType.Variable
@@ -59,18 +68,14 @@ import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData.metaKey
-import io.repseq.dto.VDJCLibraryData
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
-import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.io.path.createDirectories
 import kotlin.io.path.isDirectory
@@ -139,8 +144,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         description = [
             "Paths where to write library with found alleles and other genes that exits in inputs.",
             "For `.json` library will be written in reqpseqio format.",
-            "For `.fasta` library will be written in FASTA format with gene name and reliable range in description. " +
-                    "There will be several records for one gene if clnx were assembled by composite gene feature.",
+            "For `.fasta` library will be written in FASTA format with gene name and feature name in description.",
         ],
         names = ["--export-library"],
         paramLabel = "<path.(json|fasta)>",
@@ -149,7 +153,27 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     var libraryOutputs: List<Path> = mutableListOf()
 
     @set:Option(
-        description = ["Path where to write descriptions and stats for all result alleles, existed and new."],
+        description = [
+            "Path where to write descriptions and stats for all result alleles, existed and new.",
+            "Available columns:",
+            "alleleName - result allele name. If it's de nova, then before `-M` is nearest known variant, M{n} is how many mutations in it and CDR3-{n} is how many mutations in CDR3, at the end uniq hash.",
+            "geneName - gene name, the same for zigotes",
+            "type - gene type (Variable or Joining)",
+            "status - ${AlleleSearchResult.Status.helpDescription}.",
+            "enoughInfo - is there enough clones to search by the main algorithm.",
+            "mutations - list of mutations for de nova alleles.",
+            "varianceOf - name of nearest known gene variant for de nova allele.",
+            "naivesCount - how many naive clones aligned to this allele.",
+            "nonProductiveCount - how many non productive clones aligned to this allele.",
+            "lowerDiversityBound - diversity of CDR3 length and different genes (different J for V allele and J for V allele).",
+            "clonesCount - how many clones aligned to this allele.",
+            "totalClonesCountForGene - how many clones in all alleles of this gene (after realigning).",
+            "clonesCountWithNegativeScoreChange - how many clones get lower score after aligned to this allele.",
+            "filteredForAlleleSearchNaivesCount - how many naive clones aligned to this allele and was used in searching.",
+            "filteredForAlleleSearchClonesCount - how many clones aligned to this allele and was used in searching.",
+            "filteredForAlleleSearchClonesCountWithNegativeScoreChange - how many clones get lower score after aligned to this allele and was used in searching before",
+            "scoreDelta - stats for score change of clones afeter aligning to this allele."
+        ],
         names = ["--export-alleles-mutations"],
         paramLabel = "<path>",
         order = OptionsOrder.main + 10_200
@@ -177,6 +201,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     @Mixin
     lateinit var reportOptions: ReportOptions
 
+    @Suppress("unused")
     @Mixin
     lateinit var debugDir: DebugDirOption
 
@@ -222,15 +247,12 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     override fun validate() {
-        ValidationException.require(inputFiles.isNotEmpty()) { "there is no files to process" }
+        ValidationException.requireNotEmpty(inputFiles) { "there is no files to process" }
         inputFiles.forEach { input ->
             ValidationException.requireFileType(input, InputFileType.CLNX)
         }
         libraryOutputs.forEach { output ->
             ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.FASTA)
-        }
-        ValidationException.require(findAllelesParameters.searchAlleleParameterForSecondRound.minClonesCountForAlleleSearch >= findAllelesParameters.maxCountForPossibleRemoval) {
-            "`searchAlleleParameter.minClonesCountForAlleleSearch` should be greater or equal then `maxCountForPossibleRemoval`"
         }
         if ((listOfNotNull(outputClnsOptions.outputTemplate, allelesMutationsOutput) + libraryOutputs).isEmpty()) {
             throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
@@ -268,23 +290,30 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
-            "Input files must not be processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
+            "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
         }
-        ValidationException.requireDistinct(datasets.map { it.header.allFullyCoveredBy }) {
+        val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"
         }
-        val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
+        logger.debug { "Feature for search alleles: $allFullyCoveredBy" }
+        ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
+            "Assemble feature must cover more than CDR3"
+        }
+        ValidationException.require(allFullyCoveredBy.intersection(GeneFeature(V5UTRGermline, Exon1, L2)) == null) {
+            "Can't build alleles by regions broader then VRegion, got $allFullyCoveredBy"
+        }
 
-        ValidationException.requireDistinct(datasets.flatMap { it.usedGenes }.map { it.id.libraryId }) {
+        ValidationException.requireTheSame(datasets.flatMap { it.usedGenes }.map { it.id.libraryId }) {
             "input files must be aligned on the same library"
         }
         val originalLibrary = datasets.first().usedGenes.first().parentLibrary
+        logger.debug { "Name of the original library: ${originalLibrary.libraryId.libraryName}" }
 
         for (geneType in VJ_REFERENCE) {
             val scores = datasets.map {
                 it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring
             }
-            ValidationException.requireDistinct(scores) {
+            ValidationException.requireTheSame(scores) {
                 "Require the same ${geneType.letter} scoring for all input files"
             }
         }
@@ -293,7 +322,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             J = datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
         )
 
-        ValidationException.requireDistinct(datasets.map { it.header.featuresToAlignMap }) {
+        ValidationException.requireTheSame(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
         }
         val featureToAlign = datasets.first().header.featuresToAlign
@@ -305,22 +334,22 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .mapNotNull { it.data.alleleInfo?.parent }
             .distinct()
         val absentBaseGenes = baseGenes.filter { it !in originalLibrary }
-        ValidationException.require(absentBaseGenes.isEmpty()) {
-            "All base genes must be presented in the library, $absentBaseGenes are absent."
+        ValidationException.requireEmpty(absentBaseGenes) {
+            "All base genes must be presented in the library"
         }
 
         val recursiveAllelesInLibrary = baseGenes
             .map { originalLibrary[it] }
             .filter { it.data.alleleInfo != null }
-        ValidationException.require(recursiveAllelesInLibrary.isEmpty()) {
-            "Recursive allele variants are not supported, $recursiveAllelesInLibrary should not refer to other genes."
+        ValidationException.requireEmpty(recursiveAllelesInLibrary) {
+            "Recursive allele variants are not supported."
         }
 
         val stepsCount = 7
         val allelesBuilder = AllelesBuilder.create(
             "Step 1 of $stepsCount",
             clonesFilter,
-            originalLibrary.allGenes,
+            originalLibrary,
             tempDest,
             datasets,
             scoring,
@@ -342,8 +371,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             null,
             Variable,
             JAllelesFromFirstRound
-                .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
-                .filterValues { it.isNotEmpty() }
         )
         reportBuilder.reportFirstRound((JAllelesFromFirstRound.values + VAllelesFromFirstRound.values).flatten())
         val JAllelesFromSecondRound = allelesBuilder.searchForAlleles(
@@ -352,8 +379,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             findAllelesParameters.searchMutationsInCDR3,
             Joining,
             VAllelesFromFirstRound
-                .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
-                .filterValues { it.isNotEmpty() }
         )
         val VAllelesFromSecondRound = allelesBuilder.searchForAlleles(
             "Step 5 of $stepsCount",
@@ -361,18 +386,27 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             findAllelesParameters.searchMutationsInCDR3,
             Variable,
             JAllelesFromSecondRound
-                .mapValues { (_, value) -> value.filter { it.status.exist }.map { it.gene } }
-                .filterValues { it.isNotEmpty() }
         )
-        val results = allelesBuilder.removeAllelesIfPossible(
+        // cleanup results
+        var allelesAfterRemoval = allelesBuilder.removeAllelesIfPossible(
             "Step 6 of $stepsCount",
-            originalLibrary,
-            VAllelesFromSecondRound + JAllelesFromSecondRound,
-            findAllelesParameters.maxCountForPossibleRemoval
+            VAllelesFromSecondRound + JAllelesFromSecondRound
         )
-        reportBuilder.reportResults(results)
+        allelesAfterRemoval = allelesBuilder.removeDuplicatedDeNovoAlleles(allelesAfterRemoval)
+        // what variants will be used to replace genes in hits (key is base gene of original hit).
+        val allelesMapping = allelesAfterRemoval
+            .filter { it.status.exist }
+            // Duplicates will be grouped by several key
+            .groupBy { it.searchedOn }
+        // There are maybe case of the same allele found on different genes if the actual difference outside of gene feature to search
+        ApplicationException.checkDistinct(allelesAfterRemoval.map { allele -> "${allele.result.name} found on ${allele.searchedOn}" }) {
+            "There are duplicates of found alleles"
+        }
+        // without differentiability of searched on
+        val result = allelesAfterRemoval.distinctBy { it.result.name }
+        reportBuilder.reportResults(result)
 
-        val resultLibrary = buildLibrary(libraryRegistry, originalLibrary, results)
+        val resultLibrary = buildLibrary(libraryRegistry, originalLibrary, result)
         libraryOutputs.forEach { libraryOutput ->
             libraryOutput.toAbsolutePath().parent.createDirectories()
             if (libraryOutput.matches(InputFileType.JSON)) {
@@ -383,9 +417,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 throw ApplicationException("Unsupported file type for export library, $libraryOutput")
             }
         }
-        val allelesMapping = results
-            .filter { it.status.exist }
-            .groupBy({ AllelesBuilder.nameOfBaseGene(it.gene) }, { resultLibrary[it.gene.name].id })
         val writerCloseCallbacks = mutableListOf<(FindAllelesReport) -> Unit>()
         datasets.forEachIndexed { i, cloneReader ->
             val cloneRebuild = CloneRebuild(
@@ -427,7 +458,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             allelesMutationsOutput.toAbsolutePath().parent.createDirectories()
             printAllelesMutationsOutput(
-                results,
+                result,
                 reportBuilder.overallAllelesStatistics,
                 allelesMutationsOutput
             )
@@ -442,100 +473,90 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             primaryGenes
                 .sortedBy { it.name }
                 .forEach { gene ->
-                    val geneFeaturesForFoundAllele =
-                        gene.data.meta[metaKey.alleleMutationsReliableRegion]
-                            ?.map { GeneFeature.parse(it) }
-                            ?.sorted()
-                    when {
-                        geneFeaturesForFoundAllele != null -> {
-                            geneFeaturesForFoundAllele.forEach { geneFeature ->
-                                val range = gene.referencePoints.getRange(geneFeature)
-                                val sequence = gene.getFeature(geneFeature)
-                                writer.write(FastaRecord(id++, "${gene.name} $range $geneFeature", sequence))
-                            }
-                        }
-
-                        else -> {
-                            val range = Range(
-                                gene.referencePoints.firstAvailablePosition,
-                                gene.referencePoints.lastAvailablePosition
-                            )
-                            val sequence = gene.getSequence(range)
-                            writer.write(FastaRecord(id++, "${gene.name} $range", sequence))
-                        }
+                    val feature = when (gene.geneType) {
+                        Variable -> VRegion
+                        Joining -> JRegion
+                        Diversity -> DRegion
+                        Constant -> CRegion
+                    }
+                    val range = gene.referencePoints.getRange(feature)
+                    // allow empty region only for C
+                    if (range != null || gene.geneType != Constant) {
+                        val sequence = gene.getSequence(range)
+                        writer.write(FastaRecord(id++, "${gene.name}|region=${GeneFeature.encode(feature)}", sequence))
                     }
                 }
         }
     }
 
     private fun printAllelesMutationsOutput(
-        result: List<AlleleSearchResult>,
+        result: Collection<AlleleSearchResult>,
         allelesStatistics: OverallAllelesStatistics,
         allelesMutationsOutput: Path
     ) {
-        PrintStream(allelesMutationsOutput.toFile()).use { output ->
-            val columns = buildMap<String, (allele: AlleleSearchResult) -> Any?> {
-                this["alleleName"] = { it.gene.name }
-                this["geneName"] = { it.gene.geneName }
-                this["type"] = { it.gene.geneType }
-                this["status"] = { it.status }
-                this["enoughInfo"] = { allele ->
-                    allele.enoughInfo
-                }
-                this[metaKey.alleleMutationsReliableRegion] = { allele ->
-                    if (allele.status == DE_NOVA) {
-                        allele.gene.meta[metaKey.alleleMutationsReliableRegion]
-                    } else ""
-                }
-                this["mutations"] = { allele ->
-                    if (allele.status == DE_NOVA) {
-                        allele.gene.meta[metaKey.alleleMutations]?.first() ?: ""
-                    } else ""
-                }
-                this["varianceOf"] = { allele ->
-                    if (allele.status == DE_NOVA) {
-                        allele.gene.meta[metaKey.alleleVariantOf]?.first() ?: ""
-                    } else ""
-                }
-                this["naivesCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).naives(filtered = false)
-                }
-                this["nonProductiveCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).nonProductive()
-                }
-                this["lowerDiversityBound"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).diversity()
-                }
-                this["clonesCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).count(filtered = false)
-                }
-                this["totalClonesCountForGene"] = { allele ->
-                    allelesStatistics.baseGeneCount(allele.gene.geneName)
-                }
-                this["clonesCountWithNegativeScoreChange"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).withNegativeScoreChange(filtered = false)
-                }
-                this["filteredForAlleleSearchNaivesCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).naives(filtered = true)
-                }
-                this["filteredForAlleleSearchClonesCount"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).count(filtered = true)
-                }
-                this["filteredForAlleleSearchClonesCountWithNegativeScoreChange"] = { allele ->
-                    allelesStatistics.stats(allele.gene.name).withNegativeScoreChange(filtered = true)
-                }
-                this["scoreDelta"] = { allele ->
-                    val summaryStatistics = allelesStatistics.stats(allele.gene.name).scoreDelta
-                    if (summaryStatistics.n == 0L) "" else
-                        GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
-                }
+        val columns = buildMap<String, (allele: AlleleSearchResult) -> Any?> {
+            this["alleleName"] = { it.result.name }
+            this["geneName"] = { it.result.geneName }
+            this["type"] = { it.result.geneType }
+            this["status"] = { it.status }
+            this["enoughInfo"] = { allele ->
+                allele.enoughInfo
             }
-            val records = result.sortedWith(
-                Comparator.comparing { allele: AlleleSearchResult -> allele.gene.geneType }
-                    .thenComparing { allele: AlleleSearchResult -> allele.gene.name }
-            )
-            writeXSV(output, records, columns, chooseDelimiter(allelesMutationsOutput))
+            this["reliableRegion"] = { allele ->
+                allele.reliableRegion?.encode() ?: ""
+            }
+            this["mutations"] = { allele ->
+                if (allele.status == DE_NOVO) {
+                    allele.result.meta[metaKey.alleleMutations]?.first() ?: ""
+                } else ""
+            }
+            this["varianceOf"] = { allele ->
+                if (allele.status == DE_NOVO) {
+                    allele.result.meta[metaKey.alleleVariantOf]?.first() ?: ""
+                } else ""
+            }
+            this["naivesCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).naives(filtered = false)
+            }
+            this["nonProductiveCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).nonProductive()
+            }
+            this["lowerDiversityBound"] = { allele ->
+                allelesStatistics.stats(allele.result.name).diversity()
+            }
+            this["clonesCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).count(filtered = false)
+            }
+            this["totalClonesCountForGene"] = { allele ->
+                allelesStatistics.baseGeneCount(allele.result.geneName)
+            }
+            this["clonesCountWithNegativeScoreChange"] = { allele ->
+                allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = false)
+            }
+            this["filteredForAlleleSearchNaivesCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).naives(filtered = true)
+            }
+            this["filteredForAlleleSearchClonesCount"] = { allele ->
+                allelesStatistics.stats(allele.result.name).count(filtered = true)
+            }
+            this["filteredForAlleleSearchClonesCountWithNegativeScoreChange"] = { allele ->
+                allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = true)
+            }
+            this["scoreDelta"] = { allele ->
+                val summaryStatistics = allelesStatistics.stats(allele.result.name).scoreDelta
+                if (summaryStatistics.n == 0L) "" else
+                    GlobalObjectMappers.toOneLine(MiXCRCommandReport.StandardStats.from(summaryStatistics))
+            }
         }
+        val records = result.sortedWith(
+            Comparator.comparing { allele: AlleleSearchResult -> allele.result.geneType }
+                .thenComparing { allele: AlleleSearchResult -> allele.result.name }
+        )
+        XSV.writeXSV(
+            allelesMutationsOutput,
+            records,
+            columns
+        )
     }
 
     private fun File.writeMappedClones(
@@ -564,13 +585,13 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private fun buildLibrary(
         libraryRegistry: VDJCLibraryRegistry,
         originalLibrary: VDJCLibrary,
-        usedGenes: Collection<AlleleSearchResult>
+        results: Collection<AlleleSearchResult>
     ): VDJCLibrary {
-        val vAndJ = usedGenes.filter { it.status.exist }.map { it.gene }
+        val vAndJ = results.filter { it.status.exist }.map { it.result }
         val restGenes = originalLibrary.primaryGenes.filter { it.geneType !in VJ_REFERENCE }.map { it.data }
         val genesToAdd = vAndJ + restGenes
         val resultLibrary = VDJCLibrary(
-            VDJCLibraryData(originalLibrary.data, genesToAdd),
+            originalLibrary.data.useAsTemplate(genesToAdd),
             originalLibrary.name + "_with_found_alleles",
             libraryRegistry,
             originalLibrary.context

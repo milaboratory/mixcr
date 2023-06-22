@@ -17,14 +17,22 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      [-dAlignments] [-jAlignments] [-cAlignments] [-nFeature
                                      <gene_feature> [<(germline|mrca|parent)>]]... [-allNFeatures [<
                                      (germline|mrca|parent)>]]... [-qFeature <gene_feature>]...
-                                     [-allQFeatures] [-aaFeature <gene_feature> [<
+                                     [-allQFeatures [<from_reference_point>
+                                     <to_reference_point>]]... [-aaFeature <gene_feature> [<
                                      (germline|mrca|parent)>]]... [-allAAFeatures [<
                                      (germline|mrca|parent)>]]... [-nFeatureImputed
-                                     <gene_feature>]... [-allNFeaturesImputed] [-aaFeatureImputed
-                                     <gene_feature>]... [-allAAFeaturesImputed] [-minFeatureQuality
-                                     <gene_feature>]... [-allMinFeaturesQuality]
+                                     <gene_feature>]... [-allNFeaturesImputed
+                                     [<from_reference_point> <to_reference_point>]]...
+                                     [-aaFeatureImputed <gene_feature>]... [-allAAFeaturesImputed
+                                     [<from_reference_point> <to_reference_point>]]...
+                                     [-minFeatureQuality <gene_feature>]... [-allMinFeaturesQuality
+                                     [<from_reference_point> <to_reference_point>]]...
+                                     [-allNFeaturesWithMinQuality [<from_reference_point>
+                                     <to_reference_point>]]... [-allNFeaturesImputedWithMinQuality
+                                     [<from_reference_point> <to_reference_point>]]...
                                      [-avrgFeatureQuality <gene_feature>]...
-                                     [-allAvrgFeaturesQuality] [-lengthOf <gene_feature> [<
+                                     [-allAvrgFeaturesQuality [<from_reference_point>
+                                     <to_reference_point>]]... [-lengthOf <gene_feature> [<
                                      (germline|mrca|parent)>]]... [-allLengthOf [<
                                      (germline|mrca|parent)>]]... [-nMutations <gene_feature> <
                                      (germline|mrca|parent)>]... [-allNMutations <
@@ -39,9 +47,11 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      (germline|mrca|parent)>]... [-mutationsDetailedRelative
                                      <gene_feature> <relative_to_gene_feature> <
                                      (germline|mrca|parent)>]... [-positionInReferenceOf
-                                     <reference_point>]... [-allPositionsInReference] [-positionOf
-                                     <reference_point>]... [-allPositions] [-defaultAnchorPoints]
-                                     [-fileName] [-cloneId] [-readCount] [-readFraction]
+                                     <reference_point>]... [-allPositionsInReference
+                                     [<from_reference_point> <to_reference_point>]]... [-positionOf
+                                     <reference_point>]... [-allPositions [<from_reference_point>
+                                     <to_reference_point>]]... [-defaultAnchorPoints] [-fileName]
+                                     [-cloneId] [-readCount] [-rankByReads] [-readFraction]
                                      [-targetSequences] [-targetQualities] [-vIdentityPercents]
                                      [-dIdentityPercents] [-jIdentityPercents] [-cIdentityPercents]
                                      [-vBestIdentityPercent] [-dBestIdentityPercent]
@@ -50,9 +60,12 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
                                      [-uniqueTagCount <(Molecule|Cell|Sample)>]...
                                      [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-cellGroup]
-                                     [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                                     [[--filter-in-feature <gene_feature>] [--pattern-max-errors
-                                     <n>] (--filter-aa-pattern <pattern> | --filter-nt-pattern
+                                     [-rankByTag <(Molecule|Cell|Sample)>]... [-hasStops
+                                     <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
+                                     <gene_feature>]... [--use-local-temp] [--force-overwrite]
+                                     [--no-warnings] [--verbose] [--help] [[--filter-in-feature
+                                     <gene_feature>] [--pattern-max-errors <n>]
+                                     (--filter-aa-pattern <pattern> | --filter-nt-pattern
                                      <pattern>)] trees.shmt [trees.tsv]
 Export SHMTree as a table with a row for every node
       trees.shmt             Input file produced by 'findShmTrees' command.
@@ -73,6 +86,7 @@ Export SHMTree as a table with a row for every node
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
       --not-covered-as-empty Export not covered regions as empty text.
+      --use-local-temp       Put temporary files in the same folder as the output files.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.
@@ -167,8 +181,13 @@ Possible fields to export
       -qFeature <gene_feature>
                              Export quality string of specified gene feature (only for nodes with
                                clones)
-      -allQFeatures          Export quality string for all covered gene features (only for nodes
-                               with clones)
+      -allQFeatures [<from_reference_point> <to_reference_point>]
+                             Export quality string for all gene features between specified
+                               reference points (in separate columns).
+                             For example, `-allQFeatures FR3Begin FR4End` will export `-qFeature
+                               FR3`, `-qFeature CDR3`, `-qFeature FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
       -aaFeature <gene_feature> [<(germline|mrca|parent)>]
                              Export amino acid sequence of specified gene feature.
                              If second arg is omitted, then feature will be printed for current
@@ -181,27 +200,67 @@ Possible fields to export
                              Export nucleotide sequence of specified gene feature using letters
                                from germline (marked lowercase) for uncovered regions (only for
                                nodes with clones)
-      -allNFeaturesImputed   Export nucleotide sequence using letters from germline (marked
-                               lowercase) for uncovered regions for all covered features. (only for
-                               nodes with clones)
+      -allNFeaturesImputed [<from_reference_point> <to_reference_point>]
+                             Export nucleotide sequence using letters from germline (marked
+                               lowercase) for uncovered regions for all gene features between
+                               specified reference points (in separate columns).
+                             For example, `-allNFeaturesImputed FR3Begin FR4End` will export
+                               `-nFeatureImputed FR3`, `-nFeatureImputed CDR3`, `-nFeatureImputed
+                               FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
       -aaFeatureImputed <gene_feature>
                              Export amino acid sequence of specified gene feature using letters
                                from germline (marked lowercase) for uncovered regions (only for
                                nodes with clones)
-      -allAAFeaturesImputed  Export amino acid sequence using letters from germline (marked
-                               lowercase) for uncovered regions for all covered features (only for
-                               nodes with clones)
+      -allAAFeaturesImputed [<from_reference_point> <to_reference_point>]
+                             Export amino acid sequence using letters from germline (marked
+                               lowercase) for uncovered regions for all gene features between
+                               specified reference points (in separate columns).
+                             For example, `-allAAFeaturesImputed FR3Begin FR4End` will export
+                               `-aaFeatureImputed FR3`, `-aaFeatureImputed CDR3`,
+                               `-aaFeatureImputed FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
       -minFeatureQuality <gene_feature>
                              Export minimal quality of specified gene feature (only for nodes with
                                clones)
-      -allMinFeaturesQuality Export minimal quality for all covered features. (only for nodes with
-                               clones)
+      -allMinFeaturesQuality [<from_reference_point> <to_reference_point>]
+                             Export minimal quality for all gene features between specified
+                               reference points (in separate columns).
+                             For example, `-allMinFeaturesQuality FR3Begin FR4End` will export
+                               `-minFeatureQuality FR3`, `-minFeatureQuality CDR3`,
+                               `-minFeatureQuality FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
+      -allNFeaturesWithMinQuality [<from_reference_point> <to_reference_point>]
+                             Export nucleotide sequences and minimal quality for all gene features
+                               between specified reference points (in separate columns).
+                             For example, `-allNFeaturesWithMinQuality FR3Begin FR4End` will export
+                               `-nFeature FR3`, `-minFeatureQuality FR3`, `-nFeature CDR3`,
+                               `-minFeatureQuality CDR3`, `-nFeature FR4`, `-minFeatureQuality FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
+      -allNFeaturesImputedWithMinQuality [<from_reference_point> <to_reference_point>]
+                             Export nucleotide sequences and minimal quality for all gene features
+                               between specified reference points (in separate columns).
+                             For example, `-allNFeaturesImputedWithMinQuality FR3Begin FR4End` will
+                               export `-nFeatureImputed FR3`, `-minFeatureQuality FR3`,
+                               `-nFeatureImputed CDR3`, `-minFeatureQuality CDR3`,
+                               `-nFeatureImputed FR4`, `-minFeatureQuality FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
       -avrgFeatureQuality <gene_feature>
                              Export average quality of specified gene feature (only for nodes with
                                clones)
-      -allAvrgFeaturesQuality
-                             Export average quality for all covered feautures (only for nodes with
-                               clones)
+      -allAvrgFeaturesQuality [<from_reference_point> <to_reference_point>]
+                             Export average quality for all gene features between specified
+                               reference points (in separate columns).
+                             For example, `-allAvrgFeaturesQuality FR3Begin FR4End` will export
+                               `-avrgFeatureQuality FR3`, `-avrgFeatureQuality CDR3`,
+                               `-avrgFeatureQuality FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
       -lengthOf <gene_feature> [<(germline|mrca|parent)>]
                              Export length of specified gene feature.
                              If second arg is omitted, then length will be printed for current
@@ -252,26 +311,38 @@ Possible fields to export
                              Export position of specified reference point inside reference
                                sequences (clonal sequence / read sequence). (only for nodes with
                                clones)
-      -allPositionsInReference
+      -allPositionsInReference [<from_reference_point> <to_reference_point>]
                              Export position inside reference sequences (clonal sequence / read
-                               sequence) for all covered reference points. (only for nodes with
-                               clones)
+                               sequence) for all reference points between specified (in separate
+                               columns).
+                             For example, `-allPositionsInReference FR3Begin FR4End` will export
+                               `-positionInReferenceOf FR3Begin`, -positionInReferenceOf
+                               CDR3Begin`, -positionInReferenceOf CDR3End` and
+                               `-positionInReferenceOf FR4End`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
       -positionOf <reference_point>
                              Export position of specified reference point inside target sequences
                                (clonal sequence / read sequence). (only for nodes with clones)
-      -allPositions          Export position inside target sequences (clonal sequence / read
-                               sequence) for all covered reference points (only for nodes with
-                               clones)
+      -allPositions [<from_reference_point> <to_reference_point>]
+                             Export position inside target sequences (clonal sequence / read
+                               sequence) for all reference points between specified (in separate
+                               columns).
+                             For example, `-allPositions FR3Begin FR4End` will export `-positionOf
+                               FR3Begin`, -positionOf CDR3Begin`, -positionOf CDR3End` and
+                               `-positionOf FR4End`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
       -defaultAnchorPoints   Outputs a list of default reference points (like CDR2Begin, FR4End,
                                etc. see documentation for the full list and formatting) (only for
                                nodes with clones)
       -fileName              Name of clns file with sample
-      -cloneId               Unique clone identifier in source sample file (only for nodes with
+      -cloneId               Unique clone identifier (only for nodes with clones)
+      -readCount             Number of reads assigned to the clonotype (only for nodes with clones)
+      -rankByReads           Rank by number of reads assigned to the clonotype, i.e how many clones
+                               have equal or more count (only for nodes with clones)
+      -readFraction          Fraction of reads assigned to the clonotype (only for nodes with
                                clones)
-      -readCount             Number of reads assigned to the clonotype in source sample file (only
-                               for nodes with clones)
-      -readFraction          Fraction of reads assigned to the clonotype in source sample file
-                               (only for nodes with clones)
       -targetSequences       Export aligned sequences (targets), separated with comma (only for
                                nodes with clones)
       -targetQualities       Export aligned sequence (target) qualities, separated with comma (only
@@ -303,3 +374,13 @@ Possible fields to export
                              Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
                                collected. (only for nodes with clones)
       -cellGroup             Cell group (only for nodes with clones)
+      -rankByTag <(Molecule|Cell|Sample)>
+                             Rank by count of unique tags, i.e how many clones have equal or more
+                               count (only for nodes with clones)
+      -hasStops <gene_feature>
+                             Whether gene feature has stop codons inside (only for nodes with
+                               clones)
+      -isOOF <gene_feature>  Whether gene feature is OOF (only for nodes with clones)
+      -isProductive <gene_feature>
+                             Whether specified gene feature is productive (no stops and not OOF)
+                               (only for nodes with clones)

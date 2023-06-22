@@ -1,0 +1,568 @@
+# Low throughput (plates etc) amplicon-based single cell, no UMIs
+generic-lt-single-cell-amplicon:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-amplicon
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+  exportClones:
+    inheritFrom: exportClones-single-cell-no-umi-base
+
+# Low throughput (plates etc) amplicon-based single cell, with UMIs
+generic-lt-single-cell-amplicon-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-amplicon
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        histTransformers:
+                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                          - type: inflate
+                            fraction: 0.15
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+  exportClones:
+    inheritFrom: exportClones-single-cell-with-umi-base
+
+# Low throughput (plates etc) shotgun single cell, no UMIs
+
+generic-lt-single-cell-fragmented:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - extend
+    - assemble
+    - assembleContigs
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-single-cell
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+  exportClones:
+    inheritFrom: exportClones-single-cell-no-umi-base
+
+# Low throughput (plates etc) shotgun single cell, with UMIs
+generic-lt-single-cell-fragmented-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - extend
+    - assemble
+    - assembleContigs
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-single-cell
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        histTransformers:
+                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                          - type: inflate
+                            fraction: 0.15
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+  exportClones:
+    inheritFrom: exportClones-single-cell-with-umi-base
+
+
+
+# High throughput amplicon-based single cell, no UMIs
+generic-ht-single-cell-amplicon:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-amplicon
+  refineTagsAndSort:
+    # run error correction and basic cell filtering
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_groups
+          groupingKeys:
+            - allTags:Cell
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+              operator:
+                type: group_operator_advanced_thresholding
+                algo:
+                  type: otsu
+                histTransformers:
+                  # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                  - type: inflate
+                    fraction: 0.15
+                logX: true
+                minimalSample: 20
+                fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+  exportClones:
+    inheritFrom: exportClones-single-cell-no-umi-base
+
+
+# High throughput (plates etc) amplicon-based single cell, with UMIs
+generic-ht-single-cell-amplicon-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - leftAlignmentMode
+    - rightAlignmentMode
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-amplicon
+  refineTagsAndSort:
+    # run error correction and UMI filtering
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        histTransformers:
+                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                          - type: inflate
+                            fraction: 0.15
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    histTransformers:
+                      # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                      - type: inflate
+                        fraction: 0.15
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+  exportClones:
+    inheritFrom: exportClones-single-cell-with-umi-base
+
+generic-ht-single-cell-fragmented:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - extend
+    - assemble
+    - assembleContigs
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-single-cell
+  refineTagsAndSort:
+    # run only error correction, no any filters
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_groups
+          groupingKeys:
+            - allTags:Cell
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+              operator:
+                type: group_operator_advanced_thresholding
+                algo:
+                  type: otsu
+                histTransformers:
+                  # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                  - type: inflate
+                    fraction: 0.15
+                logX: true
+                minimalSample: 20
+                fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+  exportClones:
+    inheritFrom: exportClones-single-cell-no-umi-base
+
+# High throughput fragmented-based single cell, with UMIs
+generic-ht-single-cell-fragmented-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - extend
+    - assemble
+    - assembleContigs
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-single-cell
+  refineTagsAndSort:
+    # run error correction and UMI filtering
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        histTransformers:
+                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                          - type: inflate
+                            fraction: 0.15
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    histTransformers:
+                      # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                      - type: inflate
+                        fraction: 0.15
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.95
+  exportClones:
+    inheritFrom: exportClones-single-cell-with-umi-base

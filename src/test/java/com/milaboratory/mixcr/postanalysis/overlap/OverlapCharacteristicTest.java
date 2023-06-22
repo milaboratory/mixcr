@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -31,6 +31,7 @@ import com.milaboratory.util.sorting.SortingUtil;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.commons.math3.random.Well512a;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -56,7 +57,7 @@ public class OverlapCharacteristicTest {
                 new ElementOrdering(4, 5)
         );
 
-        MergeStrategy<Element> strategy = MergeStrategy.calculateStrategy(initialSort, targetGroupping);
+        MergeStrategy<Element> strategy = MergeStrategy.Companion.calculateStrategy(initialSort, targetGroupping);
 
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
         OverlapData ovp = new OverlapData(IntStream.range(0, 10)
@@ -112,7 +113,7 @@ public class OverlapCharacteristicTest {
                 new ElementOrdering(4, 5)
         );
 
-        MergeStrategy<Element> strategy = MergeStrategy.calculateStrategy(initialSort, targetGroupping);
+        MergeStrategy<Element> strategy = MergeStrategy.Companion.calculateStrategy(initialSort, targetGroupping);
 
         RandomDataGenerator rng = new RandomDataGenerator(new Well512a());
         int nDatasets = 10;
@@ -382,7 +383,7 @@ public class OverlapCharacteristicTest {
     }
 
 
-    private static final class PayloadSortingProperty implements SortingProperty<Payload> {
+    private static final class PayloadSortingProperty implements SortingProperty<Payload, Payload> {
         public final int from, to;
 
         public PayloadSortingProperty(int from, int to) {
@@ -401,7 +402,7 @@ public class OverlapCharacteristicTest {
         }
 
         @Override
-        public SortingPropertyRelation relationTo(SortingProperty<?> other) {
+        public SortingPropertyRelation relationTo(SortingProperty<?, ?> other) {
             PayloadSortingProperty oth = (PayloadSortingProperty) other;
 
             if (from == oth.from && to == oth.to)
@@ -417,9 +418,15 @@ public class OverlapCharacteristicTest {
 
             return SortingPropertyRelation.None;
         }
+
+        @NotNull
+        @Override
+        public Comparator<? super Payload> getPropertyComparator() {
+            return Comparator.naturalOrder();
+        }
     }
 
-    private static final class ElementOrdering implements SortingProperty<Element> {
+    private static final class ElementOrdering implements SortingProperty<Element, Payload> {
         final PayloadSortingProperty inner;
 
         public ElementOrdering(int from, int to) {
@@ -427,7 +434,7 @@ public class OverlapCharacteristicTest {
         }
 
         @Override
-        public Object get(Element o) {
+        public Payload get(Element o) {
             return inner.get(o.payload);
         }
 
@@ -437,8 +444,14 @@ public class OverlapCharacteristicTest {
         }
 
         @Override
-        public SortingPropertyRelation relationTo(SortingProperty<?> other) {
+        public SortingPropertyRelation relationTo(SortingProperty<?, ?> other) {
             return inner.relationTo(((ElementOrdering) other).inner);
+        }
+
+        @NotNull
+        @Override
+        public Comparator<? super Payload> getPropertyComparator() {
+            return Comparator.naturalOrder();
         }
     }
 

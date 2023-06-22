@@ -24,7 +24,7 @@ CELL2_TAG2=CAAGGTAA
 #make one of the clones to be contained in two cells
 cat single_cell_vdj_t_subset_R1.fastq.gz | gunzip | sed "s/${CELL1_TAG1}${CELL1_TAG2}T/${CELL2_TAG1}${CELL2_TAG2}T/g" | gzip > single_cell_vdj_t_subset_R1.modified.fastq.gz
 
-mixcr analyze -f 10x-vdj-tcr-multi-barcode-test \
+mixcr analyze --verbose -f 10x-vdj-tcr-multi-barcode-test \
   --species hs \
   single_cell_vdj_t_subset_R1.modified.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
@@ -36,18 +36,18 @@ mixcr exportReports --yaml case19.vdjcontigs.contigs.clns
 mixcr exportReports case19.vdjcontigs.contigs.clns
 
 #doesn't split by cell
-assert "mixcr exportClones --no-header --drop-default-fields -cloneId case19.vdjcontigs.contigs.clns | wc -l" "9"
+assert "mixcr exportClones --no-header --drop-default-fields -cloneId case19.vdjcontigs.contigs.clns | wc -l" "7"
 #split by cell (cell tags are exported)
-assert "mixcr exportClones --no-header case19.vdjcontigs.contigs.clns | wc -l" "12"
+assert "mixcr exportClones --no-header case19.vdjcontigs.contigs.clns | wc -l" "10"
 #cellId also split by cell
-assert "mixcr exportClones --no-header --drop-default-fields -cellId -cloneId case19.vdjcontigs.contigs.clns | wc -l" "12"
+assert "mixcr exportClones --no-header --drop-default-fields -cellId -cloneId case19.vdjcontigs.contigs.clns | wc -l" "10"
 #all cells tags found
 assert "mixcr exportClones --no-header --drop-default-fields -cellId case19.vdjcontigs.contigs.clns | grep 'cant_get_tag_need_to_be_split' | wc -l" "0"
 #there are three cells
 assert "mixcr exportClones --no-header --drop-default-fields -cellId case19.vdjcontigs.contigs.clns | sort | uniq | wc -l" "3"
 
 ## `tail +2` - skip first line with column names
-assert "mixcr exportAirr case19.vdjcontigs.contigs.clns | tail +2 | wc -l" "12" #splitted by Cell
+assert "mixcr exportAirr case19.vdjcontigs.contigs.clns | tail +2 | wc -l" "10" #splitted by Cell
 assert "mixcr exportAirr case19.vdjcontigs.contigs.clns | head -n 1 | grep cell_id | wc -l" "1"
 assert "mixcr exportAirr case19.vdjcontigs.contigs.clns | head -n 1 | grep umi_count | wc -l" "1"
 

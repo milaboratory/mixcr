@@ -1,0 +1,18 @@
+"smartseq2-vdj":
+  inheritFrom: generic-lt-single-cell-fragmented
+  flags:
+    - species
+  mixins:
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      tagPattern: null
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      runCorrection: false

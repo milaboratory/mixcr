@@ -48,7 +48,7 @@ mixcr findAlleles \
   $(ls assemble/*.clns)
 
 assert "head -n 1 alleles/report.json | jq -r .statuses.FOUND_KNOWN_VARIANT" "5"
-assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVA" "3"
+assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVO" "3"
 assert "head -n 1 alleles/report.json | jq -r .statuses.ALIGNED_ON_KNOWN_VARIANT" "2"
 assert "head -n 1 alleles/report.json | jq -r .statuses.COULD_NOT_BE_ALIGNED_ON_KNOWN_VARIANT" "1"
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"

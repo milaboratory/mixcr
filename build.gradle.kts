@@ -10,13 +10,12 @@ import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import proguard.gradle.ProGuardTask
 import java.net.InetAddress
-
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.2.1") {
+        classpath("com.guardsquare:proguard-gradle:7.2.2") {
             exclude("com.android.tools.build", "gradle")
         }
     }
@@ -46,6 +45,7 @@ plugins {
 
 val miRepoAccessKeyId: String? by project
 val miRepoSecretAccessKey: String? by project
+val miRepoSessionToken: String? by project
 
 val productionBuild: Boolean? by project
 
@@ -67,13 +67,13 @@ version = if (version != "unspecified") version else ""
 description = "MiXCR"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
     withJavadocJar()
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 application {
@@ -111,17 +111,13 @@ repositories {
 
     mavenCentral()
 
-    // Snapshot versions of redberry-pipe, milib and repseqio distributed via this repo
-    maven {
-        url = uri("https://pub.maven.milaboratory.com")
-    }
-
     maven {
         url = uri("s3://milaboratory-artefacts-private-files.s3.eu-central-1.amazonaws.com/maven")
         authentication {
             credentials(AwsCredentials::class) {
                 accessKey = miRepoAccessKeyId
                 secretKey = miRepoSecretAccessKey
+                sessionToken = miRepoSessionToken
             }
         }
     }
@@ -134,33 +130,35 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-27-develop"
-val milibVersion = "2.4.0-4-master"
-val mitoolVersion = "1.7.0-4-main"
-val repseqioVersion = "1.8.0-11-master"
+
+val mixcrAlgoVersion = "4.3.0-188-develop"
+val milibVersion = ""
+val mitoolVersion = ""
+val repseqioVersion = ""
 
 val picocliVersion = "4.6.3"
-val jacksonBomVersion = "2.14.2"
-val milmVersion = "3.4.0"
+val jacksonBomVersion = "2.15.2"
+val milmVersion = "3.7.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
 
 dependencies {
-    api("com.milaboratory:milib:$milibVersion")
-    api("com.milaboratory:mitool:$mitoolVersion")
-    api("io.repseq:repseqio:$repseqioVersion")
-
-    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") {
-        exclude("com.milaboratory", "mitool")
-        exclude("com.milaboratory", "milib")
-        exclude("io.repseq", "repseqio")
+    if (milibVersion.isNotBlank()) {
+        api("com.milaboratory:milib:$milibVersion")
     }
+    if (mitoolVersion.isNotBlank()) {
+        api("com.milaboratory:mitool:$mitoolVersion")
+    }
+    if (repseqioVersion.isNotBlank()) {
+        api("io.repseq:repseqio:$repseqioVersion")
+    }
+
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
 
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milib") { exclude("*", "*") }
     toObfuscate("com.milaboratory:mitool") { exclude("*", "*") }
-    toObfuscate("com.milaboratory:migex") { exclude("*", "*") }
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
 
@@ -232,17 +230,33 @@ val writeBuildProperties by tasks.registering(WriteProperties::class) {
     property("branch", gitDetails.branchName ?: "no_branch")
     property("host", InetAddress.getLocalHost().hostName)
     property("production", productionBuild == true)
-    property("timestamp", System.currentTimeMillis())
+    property("timestamp", if (isMiCi) System.currentTimeMillis() else 0L)
+}
+
+val unzipOldPresets by tasks.registering(Copy::class) {
+    val outputDir = sourceSets.main.get().output.resourcesDir!!.resolve("presets/old_version")
+    doFirst {
+        outputDir.deleteRecursively()
+        outputDir.mkdirs()
+    }
+
+    val archives = projectDir.resolve("old_presets").listFiles()!!
+
+    archives.forEach { archive ->
+        from(tarTree(archive))
+        into(outputDir)
+    }
 }
 
 val generatePresetFileList by tasks.registering {
     group = "build"
-    val outputFile = file("${sourceSets.main.get().output.resourcesDir}/mixcr_presets/file_list.txt")
+    val outputFile = sourceSets.main.get().output.resourcesDir!!.resolve("presets/file_list.txt")
     doLast {
+        val source = sourceSets.main.get().output.resourcesDir!!.resolve("presets")
         val yamls = layout.files({
-            file("src/main/resources/mixcr_presets").walk()
+            source.walk()
                 .filter { it.extension == "yaml" }
-                .map { it.relativeTo(file("src/main/resources/mixcr_presets")) }
+                .map { it.relativeTo(source) }
                 .toList()
         })
         outputFile.ensureParentDirsCreated()
@@ -254,11 +268,23 @@ val generatePresetFileList by tasks.registering {
 }
 
 tasks.processResources {
+    dependsOn(unzipOldPresets)
     dependsOn(writeBuildProperties)
-    dependsOn(generatePresetFileList)
+    finalizedBy(generatePresetFileList)
+}
+
+val checkObfuscation by tasks.registering(Test::class) {
+    group = "verification"
+
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+
+    include("**/MetaForObfuscationTest*")
+    useJUnit()
 }
 
 val obfuscate by tasks.registering(ProGuardTask::class) {
+    dependsOn(checkObfuscation)
     group = "build"
 
     configuration("mixcr.pro")
@@ -335,14 +361,14 @@ val prepareIMGTDockerContext by tasks.registering(Download::class) {
 }
 
 val commonDockerContents: Dockerfile.() -> Unit = {
-    from("eclipse-temurin:17-jre")
+    from("amazoncorretto:17")
     label(mapOf("maintainer" to "MiLaboratories Inc <support@milaboratories.com>"))
     runCommand("mkdir /work /opt/${project.name}")
+    runCommand("yum install procps -y") // Needed for image compatibility with nextflow
     workingDir("/work")
     environmentVariable("PATH", "/opt/${project.name}:\${PATH}")
     copyFile("LICENSE", "/opt/${project.name}/LICENSE")
     copyFile(project.name, "/opt/${project.name}/${project.name}")
-    entryPoint(project.name)
     copyFile("${project.name}.jar", "/opt/${project.name}/${project.name}.jar")
 }
 
@@ -387,6 +413,7 @@ publishing {
                     credentials(AwsCredentials::class) {
                         accessKey = miRepoAccessKeyId!!
                         secretKey = miRepoSecretAccessKey!!
+                        sessionToken = miRepoSessionToken
                     }
                 }
             }
@@ -415,3 +442,4 @@ tasks.test {
     }
     longTests?.let { systemProperty("longTests", it) }
 }
+

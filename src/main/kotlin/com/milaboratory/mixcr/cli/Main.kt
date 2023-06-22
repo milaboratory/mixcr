@@ -11,9 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
@@ -42,9 +39,9 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
 import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
-import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
+import com.sun.management.OperatingSystemMXBean
 import io.repseq.core.Chains
 import io.repseq.core.GeneFamilyName
 import io.repseq.core.GeneFeature
@@ -64,6 +61,7 @@ import picocli.CommandLine.Model.OptionSpec
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADING
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
+import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.io.path.Path
@@ -92,8 +90,8 @@ object Main {
         val actualArgs = args.toList() - "-h"
         if (actualArgs.isNotEmpty()) MiXCRMain.lm.reportFeature("mixcr.subcommand1", actualArgs[0])
         if (actualArgs.size >= 2) MiXCRMain.lm.reportFeature("mixcr.subcommand2", actualArgs[1])
-        GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
-        GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
+        // GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
+        // GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
         SequenceSetCollection.addSearchPath(Path(System.getProperty("user.home"), ".mixcr", "presets"))
         val commandLine = mkCmd()
         try {
@@ -102,10 +100,11 @@ object Main {
             if (logger.verbose) {
                 e.printStackTrace()
             }
-            System.err.println("Not enough memory for run command, try to increase -Xmx.")
+            val memoryInOSMessage = memoryInOS()?.let { "${it / FileUtils.ONE_MB} Mb" }
+            System.err.println("Not enough memory for run command, try to increase -Xmx. Available memory: ${memoryInOSMessage ?: "unknown"}")
             System.err.println("Example: `mixcr -Xmx40g ${args.joinToString(" ")}`")
-            val gb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_GB
-            System.err.println("This run used approximately ${gb}g of memory")
+            val mb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB
+            System.err.println("This run used approximately ${mb}m of memory")
             exitProcess(2)
         }
     }
@@ -295,12 +294,14 @@ object Main {
     private fun CommandLine.registerExceptionHandlers(): CommandLine {
         val defaultParameterExceptionHandler = parameterExceptionHandler
         setParameterExceptionHandler { ex, args ->
+            err.println(MiXCRVersionInfo.get().shortestVersionString)
             when (val cause = ex.cause) {
                 is ValidationException -> ex.commandLine.handleValidationException(cause)
                 else -> defaultParameterExceptionHandler.handleParseException(ex, args)
             }
         }
         setExecutionExceptionHandler { ex, commandLine, _ ->
+            err.println(MiXCRVersionInfo.get().shortestVersionString)
             when (ex) {
                 is ValidationException -> commandLine.handleValidationException(ex)
                 is ApplicationException -> {
@@ -316,7 +317,6 @@ object Main {
 
                 else -> {
                     ex.rethrowOOM()
-                    commandLine.err.println(MiXCRVersionInfo.get().shortestVersionString)
                     throw CommandLine.ExecutionException(
                         commandLine,
                         "Error while running command ${commandLine.commandName} $ex", ex
@@ -404,14 +404,35 @@ object Main {
 
     private fun CommandLine.registerLogger(): CommandLine {
         setExecutionStrategy { parseResult ->
-            logger.verbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
-            logger.noWarnings = parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            val setVerbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
+            logger.verbose = logger.verbose || setVerbose
+            logger.noWarnings = logger.noWarnings ||
+                    parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            if (setVerbose) {
+                logger.debug {
+                    val memoryInJVMMessage = "${Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB} Mb"
+                    val memoryInOSMessage = memoryInOS()?.let { "${it / FileUtils.ONE_MB} Mb" }
+
+                    val availableProcessors = Runtime.getRuntime().availableProcessors()
+                    val usedCPU = parseResult.subcommands()
+                        .firstNotNullOfOrNull { it.matchedOption("--treads")?.getValue<Int?>() }
+                    "Available CPU: $availableProcessors, used CPU: ${usedCPU ?: "unspecified"}. " +
+                            "Available memory: ${memoryInOSMessage ?: "unknown"}, used memory: $memoryInJVMMessage"
+                }
+            }
             CommandLine.RunLast().execute(parseResult)
         }
 
         registerLoggerOptions(subcommands.values)
         return this
     }
+
+    private fun memoryInOS(): Long? =
+        try {
+            (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalPhysicalMemorySize
+        } catch (e: Throwable) {
+            null
+        }
 
     private fun registerLoggerOptions(commandLines: Collection<CommandLine>) {
         for (commandLine in commandLines) {

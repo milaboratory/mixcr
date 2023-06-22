@@ -1,0 +1,20 @@
+bundle-base:
+  abstract: true
+  flags:
+    - species
+    - materialType
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+  extend:
+    inheritFrom: extend-base
+  assemble:
+    inheritFrom: assemble-base
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+  exportClones:
+    inheritFrom: exportClones-base
+

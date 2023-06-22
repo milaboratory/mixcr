@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-mixcr analyze generic-tcr-amplicon \
+mixcr analyze --verbose generic-amplicon \
   --tag-pattern '^N(R1:*) \ ^N(R2:*)' \
   --species hs \
   --rna \

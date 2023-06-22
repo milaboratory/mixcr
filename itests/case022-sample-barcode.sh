@@ -18,14 +18,20 @@ assert() {
 
 set -euxo pipefail
 
-mixcr analyze single-cell-as-sample-split \
+mixcr analyze --verbose single-cell-as-sample-split \
   --species hs \
+  --rna \
+  --floating-left-alignment-boundary \
+  --floating-right-alignment-boundary C \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   sample-barcode-split
 
-mixcr analyze single-cell-as-sample-no-split \
+mixcr analyze --verbose single-cell-as-sample-no-split \
   --species hs \
+  --rna \
+  --floating-left-alignment-boundary \
+  --floating-right-alignment-boundary C \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   sample-barcode-no-split

@@ -1,6 +1,26 @@
 -optimizationpasses 5
 
+#-ignorewarnings
+
 -dontwarn lombok.**
+-dontwarn java.lang.management.ManagementFactory
+-dontwarn com.sun.management.OperatingSystemMXBean
+
+# The following was added while migrating to 4.3.2
+# migration was canceled because stumbled on:
+# https://github.com/Guardsquare/proguard/issues/309
+# BEGIN
+
+# -dontwarn com.squareup.kotlinpoet.**
+# -dontwarn jetbrains.**
+# -dontwarn kotlinx.datetime.serializers.**
+# -dontwarn org.jetbrains.kotlinx.dataframe.**
+# -dontwarn kotlin.**
+# -dontwarn kotlinx.**
+
+# -dontnote org.jetbrains.**
+
+# END
 
 #-forceprocessing
 #-addconfigurationdebugging

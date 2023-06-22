@@ -1,0 +1,48 @@
+# Tag correction only, no filters (Single-cell LT without UMI)
+refineTagsAndSort-base:
+  abstract: true
+  refineTagsAndSort:
+    runCorrection: true
+    parameters:
+      correctionPower: 1E-3
+      backgroundSubstitutionRate: 1E-3
+      backgroundIndelRate: 1E-5
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+
+# With correction and UMI filtering (no Cell filters) (Amplicon with UMI)
+refineTagsAndSort-amplicon-umi-base:
+  abstract: true
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_groups
+          groupingKeys:
+            - allTags:Molecule
+          predicates:
+            - metrics:
+                - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+              operator:
+                type: group_operator_lowest_threshold
+                operators:
+                  - type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    histTransformers:
+                      # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                      - type: inflate
+                        fraction: 0.15
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+                  - type: group_operator_cumtop
+                    share: 0.85
+                    round: Down

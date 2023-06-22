@@ -30,7 +30,8 @@ for filename in $FILES; do
   R1=${id}_R1.fastq.gz
   R2=${id}_R2.fastq.gz
 
-  mixcr analyze --assemble-clonotypes-by '[{FR1Begin:CDR1End},{CDR2Begin:FR4End}]' mikelov-et-al-2021 trees_samples/$R1 trees_samples/$R2 $id
+  # skip FR1 abd CDR2
+  mixcr analyze --verbose --assemble-clonotypes-by '[{CDR1Begin:CDR2Begin},{FR3Begin:FR4End}]' mikelov-et-al-2021 trees_samples/$R1 trees_samples/$R2 $id
 done
 
 mixcr findAlleles \
@@ -57,19 +58,23 @@ mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
 
 [[ -f trees/plots.pdf ]] || exit 1
 
-assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqFR1" "1"
-assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqFR2" "0"
+assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqCDR1" "1"
+assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqCDR2" "0"
 
-assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVA" "1"
-#assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
+assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVO" "2"
+assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
 
 keyOfRelativeMutations=`head -n 1 alleles/description.tsv | sed 's/mutations/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 assert "grep 'IGHJ6' alleles/description.tsv | cut -f$keyOfRelativeMutations" "SG17TSG18AST19CSC35A"
 
 keyOfNumberOfCones=`head -n 1 trees/trees.tsv | sed 's/numberOfClonesInTree/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 keyOfCDR3=`head -n 1 trees/trees.tsv | sed 's/nSeqCDR3OfMrca/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
+
+expectedBiggestTreeSize=4
+expectedBiggestTreeCDR3="TGTGCTAGAGTGGGCAATGGCTGGGCCCTTGACTTCTGG"
 # biggest tree
 # `tail +2` - skip first line with column names
-# `sort -n -r -k 2` - reverse numeric sort by second column (uniqClonesCount)
-assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfNumberOfCones}'" "11"
-assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfCDR3}'" "TGTGCTGGAGGGCCTAGTRTTGGGAGATACGACTACTGG"
+# `sort -n -r -k $i` - reverse numeric sort by i column (numberOfClonesInTree in this case)
+assert "tail +2 trees/trees.tsv | sort -n -r -k $keyOfNumberOfCones | head -n 1 | awk '{print \$$keyOfNumberOfCones}'" "$expectedBiggestTreeSize"
+
+assert "tail +2 trees/trees.tsv | cut -f $keyOfNumberOfCones,$keyOfCDR3 | grep $expectedBiggestTreeSize | cut -f 2 | grep -c $expectedBiggestTreeCDR3" "1"

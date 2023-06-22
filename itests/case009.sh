@@ -18,7 +18,7 @@ assert() {
 
 set -e
 
-mixcr analyze generic-tcr-amplicon \
+mixcr analyze --verbose generic-amplicon \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \
@@ -26,11 +26,12 @@ mixcr analyze generic-tcr-amplicon \
   --add-step assembleContigs \
   --split-clones-by V --split-clones-by J --split-clones-by C \
   -M assemble.sortBySequence=true \
+  -M align.parameters.readsLayout=Collinear \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case9
 
-assert "cat case9.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "237737"
-assert "cat case9.assemble.report.json | head -n 1 | jq -r .readsInClones" "199564"
-assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "277"
-assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "1166"
-assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .assemblePrematureTerminationEvents" "3"
-assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25614"
+assert "cat case9.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "241381"
+assert "cat case9.assemble.report.json | head -n 1 | jq -r .readsInClones" "200754"
+assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "558"
+assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "4521"
+assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .assemblePrematureTerminationEvents" "4"
+assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25661"

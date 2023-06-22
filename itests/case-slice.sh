@@ -19,6 +19,9 @@ set -e
 mixcr align --preset test-generic \
       -s hs \
       -OvParameters.geneFeatureToAlign=VGeneWithP -OsaveOriginalReads=true \
+      --floating-left-alignment-boundary \
+      --floating-right-alignment-boundary C \
+      --rna \
       test_R1.fastq test_R2.fastq case15.vdjca
 mixcr assemble case15.vdjca case15.clns
 mixcr assemble -a case15.vdjca case15.clna
@@ -29,11 +32,11 @@ mixcr slice --ids-file <(mixcr exportClones case15.clna --no-header --drop-defau
 
 # | xargs - used as trim() (see https://stackoverflow.com/questions/369758/how-to-trim-whitespace-from-a-bash-variable)
 
-assert "mixcr exportAlignments case15.vdjca --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "28"
+assert "mixcr exportAlignments case15.vdjca --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "27"
 assert "mixcr exportAlignments case15.filtered.vdjca --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "1"
 
-assert "mixcr exportClones --dont-split-files case15.clns --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "11"
+assert "mixcr exportClones --dont-split-files case15.clns --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "15"
 assert "mixcr exportClones --dont-split-files case15.filtered.clns --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "1"
 
-assert "mixcr exportClones --dont-split-files case15.clna --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "11"
+assert "mixcr exportClones --dont-split-files case15.clna --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "15"
 assert "mixcr exportClones --dont-split-files case15.filtered.clna --drop-default-fields --no-header -vHit | sort | uniq | wc -l | xargs" "1"

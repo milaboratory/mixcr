@@ -88,6 +88,8 @@ class MetaForObfuscationTest {
         result shouldBe emptyMap()
     }
 
+    data class ClassWithSource(val source: Class<*>, val clazz: Class<*>)
+
     @Test
     fun `all classes and superclasses with jackson must be preserved alongside with dependencies`() {
         val jacksonAnnotatedClasses = applicationClasses()
@@ -99,14 +101,16 @@ class MetaForObfuscationTest {
         val result = jacksonAnnotatedClasses
             .asSequence()
             .flatMap { clazz ->
-                clazz.allSuperClasses() + clazz.interfaces + clazz + clazz.dependencies { !it.hasCustomSerialization() }
+                (clazz.allSuperClasses() + clazz.interfaces +
+                        clazz + clazz.dependencies { !it.hasCustomSerialization() })
+                    .map { ClassWithSource(clazz, it) }
             }
             .distinct()
-            .filter { it.isFromApplication() }
-            .filterNot { it.classWillBeKept() }
+            .filter { it.clazz.isFromApplication() }
+            .filterNot { it.clazz.classWillBeKept() }
             .toList()
         "Classes that must be marked with @DoNotObfuscateFull or it's package must be excluded".asClue {
-            result.groupBy { it.`package`.name } shouldBe emptyMap()
+            result.groupBy { it.clazz.`package`.name } shouldBe emptyMap()
         }
     }
 
@@ -131,12 +135,17 @@ class MetaForObfuscationTest {
     private fun Class<*>.allEnclosingClasses(): List<Class<*>> =
         listOfNotNull(enclosingClass) + (enclosingClass?.allEnclosingClasses() ?: emptyList())
 
-    private fun applicationClasses() = targetPackages.flatMap { targetPackage ->
-        Reflections(targetPackage)
-            .getAll(Scanners.SubTypes)
-            .filter { it.startsWith(targetPackage) }
-    }
+    private fun applicationClasses() = targetPackages
+        .flatMap { targetPackage ->
+            Reflections(targetPackage)
+                .let { it.getAll(Scanners.SubTypes) + it.getAll(Scanners.TypesAnnotated) }
+                .distinct()
+                .filter { it.startsWith(targetPackage) }
+        }
         .map { Class.forName(it) }
+        .filterNot { it.isSynthetic || it.isAnonymousClass }
+        .filterNot { it.name.endsWith("Kt") || it.name.endsWith("\$DefaultImpls") }
+        .filter { !it.isKotlinClass() || !it.kotlin.isCompanion }
 
     private fun Class<*>.hasCustomSerialization() =
         getAnnotation(JsonSerialize::class.java) != null || getAnnotation(JsonDeserialize::class.java) != null
@@ -233,7 +242,7 @@ class MetaForObfuscationTest {
     }
 
     private fun ParameterizedType.allTypes(): List<Class<*>> {
-        val exclusions = arrayOf(
+        val exclusions = setOf(
             SpectratypeKeyFunction::class.java,
             SetPreprocessorFactory::class.java,
             WeightFunction::class.java
@@ -255,9 +264,8 @@ class MetaForObfuscationTest {
                 || name.endsWith("Report") || enclosingClass?.name?.endsWith("Report") == true
                 || isEnum
                 || (`package`?.name?.startsWith("io.repseq.gen.dist") == true && name.endsWith("Model"))
-                || (enclosingClass?.`package`?.name?.startsWith("io.repseq.gen.dist") == true && enclosingClass.name.endsWith(
-            "Model"
-        ))
+                || (enclosingClass?.`package`?.name?.startsWith("io.repseq.gen.dist") == true &&
+                enclosingClass.name.endsWith("Model"))
 
     private fun Class<*>.isJacksonAnnotated() = allAnnotations().any { it.isJackson() }
 

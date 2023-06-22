@@ -1,0 +1,226 @@
+"mikelov-et-al-2021":
+  inheritFrom: generic-amplicon-with-umi
+  mixins:
+    - type: SetSpecies
+      species: hs
+
+    - type: SetTagPattern
+      tagPattern: |
+        ^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*)) |
+        ^(R1F:N{0:2}(C:rggggaagacsgatg)(R1:*)) |
+        ^(R1F:N{0:2}(C:agcgggaagaccttg)(R1:*)) |
+        ^(R1F:N{0:2}(C:tatgatggggaacac)(R1:*)) \
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTACCTGTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTATGCATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCACCATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCAGATTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTCCTGTTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGAAATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNNTTGTTATNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNACGATNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNATTCGNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNCCGTCNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNGATACNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNNTNTACGTNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCACTGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCCATGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNCTAGTNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCAAANNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGCTGCNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNGGATANNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTAACCNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTCGACNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTATGNNTNNNNNN)tct>{2}(R2:*)) |
+        ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
+
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryWithPoint
+      floating: false
+      anchorPoint: CBegin(+15)
+
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+
+"han-et-al-2014":
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  flags:
+    - species
+  mixins:
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: MaterialTypeRNA
+    - type: SetTagPattern
+      tagPattern: |
+        ^NN(CELL3PLATE:N{5})ga(CELL1ROW:N{5})ccagggttttcccagtcacgac(R1:*) \
+        ^NN(CELL2COLUMN:N{5})gtcactggatttagagtctctcag(R2:*) |
+        ^NN(CELL2COLUMN:N{5})gagatctctgcttctgatggctc(R2:*)
+  refineTagsAndSort:
+    whitelists:
+      CELL3PLATE: builtin:han-2014-cell3-plate
+      CELL1ROW: builtin:han-2014-cell1-row
+      CELL2COLUMN: builtin:han-2014-cell2-column
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 0
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_groups
+        groupingKeys:
+          - allTags:Cell
+        predicates:
+          - metrics:
+              - type: group_metric_sum_weight
+                reportHist:
+                  log: true
+                  binNumber: 0
+                  minBinWidth: 0.2
+            operator:
+              type: group_operator_cumtop
+              share: 0.99
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      consensusAssemblerParameters:
+        assembler:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: simple(match = 5, mismatch = -4)
+              gapPenalty: -14
+            minAlignmentScore: 40
+            maxNormalizedAlignmentPenalty: 0.15
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: false
+            maxQuality: 45
+          maxIterations: 6
+          minAltSeedQualityScore: 11
+          minAltSeedNormalizedPenalty: 0.35
+          altSeedPenaltyTolerance: 0.3
+          minRecordSharePerConsensus: 0.05 #!!
+          minRecordsPerConsensus: 0
+          minRecursiveRecordShare: 0.3 #!!
+          minQualityScore: 0
+          maxConsensuses: 5 #!!
+        minTagSuffixShare: 0
+      cloneAssemblerParameters:
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.1
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ ]
+    fields:
+      - field: "-cloneId"
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-readCount"
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-nFeature"
+        args: [ "FR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR1" ]
+      - field: "-nFeature"
+        args: [ "CDR1" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR1" ]
+      - field: "-nFeature"
+        args: [ "FR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR2" ]
+      - field: "-nFeature"
+        args: [ "CDR2" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR2" ]
+      - field: "-nFeature"
+        args: [ "FR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR3" ]
+      - field: "-nFeature"
+        args: [ "CDR3" ]
+      - field: "-minFeatureQuality"
+        args: [ "CDR3" ]
+      - field: "-nFeature"
+        args: [ "FR4" ]
+      - field: "-minFeatureQuality"
+        args: [ "FR4" ]
+      - field: "-aaFeature"
+        args: [ "FR1" ]
+      - field: "-aaFeature"
+        args: [ "CDR1" ]
+      - field: "-aaFeature"
+        args: [ "FR2" ]
+      - field: "-aaFeature"
+        args: [ "CDR2" ]
+      - field: "-aaFeature"
+        args: [ "FR3" ]
+      - field: "-aaFeature"
+        args: [ "CDR3" ]
+      - field: "-aaFeature"
+        args: [ "FR4" ]
+      - field: "-defaultAnchorPoints"
+
+"vergani-et-al-2017-cdr3":
+  inheritFrom: generic-amplicon-with-umi
+  mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: SetTagPattern
+      tagPattern: ^(UMI:N{16})N{10}(R1:*)\^N{19}(R2:*)
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        vParameters:
+          geneFeatureToAlign: VRegionWithP
+
+"vergani-et-al-2017-full-length":
+  inheritFrom: vergani-et-al-2017-cdr3
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{FR1Begin:FR4End}" ]

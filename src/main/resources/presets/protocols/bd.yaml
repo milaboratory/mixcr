@@ -1,0 +1,347 @@
+"bd-rhapsody-base":
+  inheritFrom: generic-ht-single-cell-amplicon-with-umi
+  abstract: true
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+  refineTagsAndSort:
+    whitelists:
+      CELL1: builtin:rhapsody-cell1
+      CELL2: builtin:rhapsody-cell2
+      CELL3: builtin:rhapsody-cell3
+
+
+# HUMAN
+
+"bd-rhapsody-human-cdr3":
+  inheritFrom: bd-rhapsody-base
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: SetTagPattern
+      tagPattern: |
+        ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) |
+        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
+        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
+        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
+        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
+        ^atcaaaatcggtgaataggcagac(R2:*)|
+        ^gatctctgcttctgatggctca(R2:*)|
+        ^atatccttggggtagaattccttc(R2:*)|
+        ^gggaaacatctgcatcaagttg(R2:*)|
+        ^ctttcgctccaggtcacact(R2:*)|
+        ^tgtctgcaccctgatatgatgg(R2:*)|
+        ^gtcaaggggaagacggatg(R2:*)|
+        ^aagtagtccttgaccaggca(R2:*)|
+        ^acaggagacgagggggaaaa(R2:*)|
+        ^tcagatggcgggaagatgaa(R2:*)|
+        ^accagtgtggccttgttg(R2:*)
+
+# MOUSE
+
+"bd-rhapsody-mouse-cdr3":
+  inheritFrom: bd-rhapsody-base
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetTagPattern
+      tagPattern: |
+        ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) | \
+        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
+        ^aggttctgggttctggatgt(R2:*)|
+        ^caatctctgcttttgatggctc(R2:*)|
+        ^gtagaaatctttcaccagacaagc(R2:*)|
+        ^ttgggggaaatgtctgca(R2:*)|
+        ^aatagtaggcttgggagaaaagtctg(R2:*)|
+        ^tgtcagtgggtagatggtgg(R2:*)|
+        ^ctgacttccaattactaaacagcc(R2:*)|
+        ^tagagctgagggttcctgatag(R2:*)|
+        ^cagtggatagacagatgggggt(R2:*)|
+        ^atggggctgttgttttgg(R2:*)|
+        ^gtggatagactgatgggggtgtt(R2:*)|
+        ^agggaagtagcctttgacaag(R2:*)|
+        ^gacatttgggaaggactgactc(R2:*)|
+        ^agatgttaactgctcactggatg(R2:*)|
+        ^gttagtctcgagctcttcaga(R2:*)|
+        ^cagtgtggctttgttttcct(R2:*)
+
+"bd-rhapsody-bcr-full-length-base":
+  abstract: true
+  pipeline:
+    inheritFrom: pipeline-single-cell-shotgun
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      tagPattern: ^N{0:13}ggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+  refineTagsAndSort:
+    whitelists:
+      CELL1: builtin:rhapsody-cell1
+      CELL2: builtin:rhapsody-cell2
+      CELL3: builtin:rhapsody-cell3
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.01
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_and
+        operands:
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+              - allTags:Molecule
+            predicates:
+              - metrics:
+                  - type: "group_metric_sum_weight"
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                operator:
+                  type: group_operator_lowest_threshold
+                  operators:
+                    - type: group_operator_advanced_thresholding
+                      algo:
+                        type: otsu
+                      histTransformers:
+                        # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                        - type: inflate
+                          fraction: 0.15
+                      logX: true
+                      minimalSample: 20
+                      fallbackThreshold: 1.0
+                    - type: group_operator_cumtop
+                      share: 0.85
+                      round: Down
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+            predicates:
+              - metrics:
+                  - type: group_metric_nunique
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                    keys:
+                      - allTags:Molecule
+                operator:
+                  type: group_operator_range
+                  lower: 3.0
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      clnaOutput: true
+      cellLevel: true
+      consensusAssemblerParameters:
+        assembler:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: simple(match = 5, mismatch = -4)
+              gapPenalty: -14
+            minAlignmentScore: 40
+            maxNormalizedAlignmentPenalty: 0.15
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: false
+            maxQuality: 45
+          maxIterations: 6
+          minAltSeedQualityScore: 11
+          minAltSeedNormalizedPenalty: 0.35
+          altSeedPenaltyTolerance: 0.3
+          minRecordSharePerConsensus: 0.01
+          minRecordsPerConsensus: 0
+          minRecursiveRecordShare: 0.1
+          minQualityScore: 0
+          maxConsensuses: 3
+      cloneAssemblerParameters:
+        cloneClusteringParameters:
+          clusteringFilter:
+            type: relativeConcentration
+            specificMutationProbability: 0.01
+        badQualityThreshold: 0
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  exportClones:
+    inheritFrom: exportClones-single-cell-with-umi-base
+
+"bd-rhapsody-mouse-bcr-full-length":
+  inheritFrom: bd-rhapsody-bcr-full-length-base
+  mixins:
+    - type: SetSpecies
+      species: mmu
+
+"bd-rhapsody-human-bcr-full-length":
+  inheritFrom: bd-rhapsody-bcr-full-length-base
+  mixins:
+    - type: SetSpecies
+      species: hsa
+
+"bd-rhapsody-tcr-full-length-base":
+  abstract: true
+  mixins:
+    - type: SetSpecies
+      species: hsa
+  pipeline:
+    inheritFrom: pipeline-single-cell-shotgun
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      tagPattern: ^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+  refineTagsAndSort:
+    whitelists:
+      CELL1: builtin:rhapsody-cell1
+      CELL2: builtin:rhapsody-cell2
+      CELL3: builtin:rhapsody-cell3
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.01
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_and
+        operands:
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+              - allTags:Molecule
+            predicates:
+              - metrics:
+                  - type: "group_metric_sum_weight"
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                operator:
+                  type: group_operator_lowest_threshold
+                  operators:
+                    - type: group_operator_advanced_thresholding
+                      algo:
+                        type: otsu
+                      histTransformers:
+                        # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                        - type: inflate
+                          fraction: 0.15
+                      logX: true
+                      minimalSample: 20
+                      fallbackThreshold: 1.0
+                    - type: group_operator_cumtop
+                      share: 0.85
+                      round: Down
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      clnaOutput: true
+      cellLevel: true
+      consensusAssemblerParameters:
+        assembler:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: simple(match = 5, mismatch = -4)
+              gapPenalty: -14
+            minAlignmentScore: 40
+            maxNormalizedAlignmentPenalty: 0.15
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: false
+            maxQuality: 45
+          maxIterations: 6
+          minAltSeedQualityScore: 11
+          minAltSeedNormalizedPenalty: 0.35
+          altSeedPenaltyTolerance: 0.3
+          minRecordSharePerConsensus: 0.01
+          minRecordsPerConsensus: 0
+          minRecursiveRecordShare: 0.1
+          minQualityScore: 0
+          maxConsensuses: 3
+      cloneAssemblerParameters:
+        cloneClusteringParameters:
+          clusteringFilter:
+            type: relativeConcentration
+            specificMutationProbability: 0.01
+        badQualityThreshold: 0
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+  exportAlignments:
+    inheritFrom: exportAlignments-base
+  exportClones:
+    inheritFrom: exportClones-single-cell-with-umi-base
+
+"bd-rhapsody-mouse-tcr-full-length":
+  inheritFrom: bd-rhapsody-tcr-full-length-base
+  mixins:
+    - type: SetSpecies
+      species: mmu
+
+"bd-rhapsody-human-tcr-full-length":
+  inheritFrom: bd-rhapsody-tcr-full-length-base
+  mixins:
+    - type: SetSpecies
+      species: hsa

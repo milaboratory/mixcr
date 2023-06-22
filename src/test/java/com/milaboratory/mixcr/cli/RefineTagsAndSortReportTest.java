@@ -24,10 +24,10 @@ import java.util.Date;
 import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
 
 public class RefineTagsAndSortReportTest {
-    @Before
-    public void before() {
-        GlobalObjectMappers.addModifier(om -> om.registerModule(kotlinModule(builder -> Unit.INSTANCE)));
-    }
+    // @Before
+    // public void before() {
+    //     GlobalObjectMappers.addModifier(om -> om.registerModule(kotlinModule(builder -> Unit.INSTANCE)));
+    // }
 
     @Test
     @Ignore //fixme: remove after merge from new tags branch
