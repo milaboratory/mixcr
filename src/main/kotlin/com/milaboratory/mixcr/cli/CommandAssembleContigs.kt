@@ -200,7 +200,7 @@ object CommandAssembleContigs {
                     debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it.toFile()))) }
                         .use { debugReport ->
                             footer = reader.footer
-                            ordering = reader.ordering()
+                            ordering = reader.ordering
                             val cloneFactory = CloneFactory(
                                 reader.assemblerParameters.cloneFactoryParameters,
                                 reader.assemblingFeatures,

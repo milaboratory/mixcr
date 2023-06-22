@@ -572,7 +572,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 .copy(foundAlleles = MiXCRHeader.FoundAlleles(resultLibrary.name, resultLibrary.data))
                 .addStepParams(MiXCRCommandDescriptor.findAlleles, findAllelesParameters),
             cloneReader.footer,
-            cloneReader.ordering()
+            cloneReader.ordering
         )
         val clnsWriter = ClnsWriter(this)
         clnsWriter.writeCloneSet(cloneSet)

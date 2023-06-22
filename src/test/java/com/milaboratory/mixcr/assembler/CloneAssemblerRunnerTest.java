@@ -138,7 +138,7 @@ public class CloneAssemblerRunnerTest {
 
     private static void assertCSEquals(CloneSet expected, CloneSet actual) {
         Assert.assertEquals(expected.getClones().size(), actual.getClones().size());
-        Assert.assertEquals(expected.getTotalCount(), actual.getTotalCount(), 0.1);
+        Assert.assertEquals(expected.getCounts().getTotalCount(), actual.getCounts().getTotalCount(), 0.1);
         Assert.assertArrayEquals(expected.getAssemblingFeatures(), actual.getAssemblingFeatures());
 
         for (GeneType geneType : GeneType.values())

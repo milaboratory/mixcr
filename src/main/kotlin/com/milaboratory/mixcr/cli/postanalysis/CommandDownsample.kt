@@ -11,12 +11,11 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import cc.redberry.pipe.util.asOutputPort
-import cc.redberry.pipe.util.drainToAndClose
 import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
@@ -140,14 +139,14 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         for (i in results.indices) {
             ClnsWriter(output(inputFiles[i]).toFile()).use { clnsWriter ->
                 val downsampled = results[i].mkElementsPort().toList()
-                clnsWriter.writeHeader(
-                    datasets[i].header,
-                    datasets[i].ordering(),
+                val cloneSet = CloneSet(
+                    downsampled,
                     datasets[i].usedGenes,
-                    downsampled.size
+                    datasets[i].header,
+                    datasets[i].footer,
+                    datasets[i].ordering,
                 )
-                downsampled.asOutputPort().drainToAndClose(clnsWriter.cloneWriter())
-                clnsWriter.setFooter(datasets[i].footer)
+                clnsWriter.writeCloneSet(cloneSet)
             }
         }
         val summaryStat = preprocessor.stat
