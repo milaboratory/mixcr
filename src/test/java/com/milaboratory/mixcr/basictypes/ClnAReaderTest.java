@@ -80,18 +80,21 @@ public class ClnAReaderTest {
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
 
         List<Clone> newClones = assemble.cloneSet.getClones().stream()
-                .map(Clone::resetTotalCounts)
+                .map(Clone::withTotalCountsReset)
                 .collect(Collectors.toList());
-        CloneSet newCloneSet = CloneSet.Companion.invoke(
+        CloneSet newCloneSet = new CloneSet.Builder(
                 modifyClones.apply(newClones), align.usedGenes,
                 new MiXCRHeader("hashA123", new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters,
                         align.parameters.alignerParameters.getFeaturesToAlignMap(),
                         CloneAssemblerParametersPresets.getByName("default"),
                         null, null),
-                emptyFooter(),
-                new VDJCSProperties.CloneOrdering(VDJCSProperties.CloneCount.INSTANCE)
-        );
+                emptyFooter()
+        )
+                .sort(VDJCSProperties.CO_BY_COUNT)
+                .calculateTotalCounts()
+                .recalculateRanks()
+                .build();
         writer.writeClones(newCloneSet);
 
         OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
@@ -132,14 +135,27 @@ public class ClnAReaderTest {
 
         File file = TempFileManager.newTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
-        writer.writeClones(CloneSet.Companion.invoke(Collections.EMPTY_LIST, align.usedGenes,
-                new MiXCRHeader(null, new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
-                        align.parameters.alignerParameters,
-                        align.parameters.alignerParameters.getFeaturesToAlignMap(),
-                        CloneAssemblerParametersPresets.getByName("default"),
-                        null, null),
-                emptyFooter(),
-                new VDJCSProperties.CloneOrdering(VDJCSProperties.CloneCount.INSTANCE)));
+        writer.writeClones(new CloneSet.Builder(
+                        Collections.emptyList(),
+                        align.usedGenes,
+                        new MiXCRHeader(
+                                null,
+                                new MiXCRParamsSpec("legacy-4.0-default"),
+                                new MiXCRStepParams(),
+                                TagsInfo.NO_TAGS,
+                                align.parameters.alignerParameters,
+                                align.parameters.alignerParameters.getFeaturesToAlignMap(),
+                                CloneAssemblerParametersPresets.getByName("default"),
+                                null,
+                                null
+                        ),
+                        emptyFooter()
+                )
+                        .sort(VDJCSProperties.CO_BY_COUNT)
+                        .calculateTotalCounts()
+                        .recalculateRanks()
+                        .build()
+        );
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.setFooter(emptyFooter());
         writer.writeAlignmentsAndIndex();

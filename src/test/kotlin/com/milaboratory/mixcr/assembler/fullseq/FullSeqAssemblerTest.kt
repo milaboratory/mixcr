@@ -222,7 +222,7 @@ class FullSeqAssemblerTest {
             .sortedWith(Comparator.comparingDouble { obj: Clone -> obj.count }.reversed())
         println("# Clones: " + clns.size)
         clns
-            .mapIndexed { i, clone -> clone.setId(i) }
+            .mapIndexed { i, clone -> clone.withId(i) }
             .forEach { clone ->
                 println(clone.numberOfTargets())
                 println(clone.count)

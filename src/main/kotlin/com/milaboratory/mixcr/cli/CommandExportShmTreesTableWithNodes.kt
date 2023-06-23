@@ -20,7 +20,7 @@ import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
-import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.CloneSet.Companion.divideClonesByTags
 import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
@@ -169,20 +169,21 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                     .groupByOnDisk(
                         comparator = ComparatorWithHash.compareBy { it.datasetId },
                         tempDest,
-                        suffixForTempDest = "sort_for_ranks",
+                        suffixForTempDest = "sort_for_divide_by_tags",
                         stateBuilder = reader.alignerParameters.constructStateBuilder(reader.usedGenes)
                     )
                     .asSequence()
                     .associate { group ->
                         val datasetId = group.key
                         val depth = splitByTags[datasetId]!!
-                        datasetId to CloneSet.divideClonesByTags(
-                            group.map { it.clone }.toList(),
-                            depth,
-                            reader.cloneSetInfos[datasetId],
-                            reader.usedGenes,
-                            VDJCSProperties.CO_BY_COUNT
-                        ).clones.groupBy { it.id }
+                        datasetId to reader.cloneSetInfos[datasetId]
+                            .divideClonesByTags(
+                                group.map { it.clone }.toList(),
+                                depth,
+                                reader.usedGenes,
+                                VDJCSProperties.CO_BY_COUNT
+                            )
+                            .clones.groupBy { it.id }
                     }
             } else {
                 emptyMap()

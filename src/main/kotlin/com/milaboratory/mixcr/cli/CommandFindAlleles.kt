@@ -565,15 +565,17 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         cloneReader: CloneReader
     ): (FindAllelesReport) -> Unit {
         toPath().toAbsolutePath().parent.toFile().mkdirs()
-        val cloneSet = CloneSet(
+        val cloneSet = CloneSet.Builder(
             clones,
             resultLibrary.primaryGenes,
             cloneReader.header
                 .copy(foundAlleles = MiXCRHeader.FoundAlleles(resultLibrary.name, resultLibrary.data))
                 .addStepParams(MiXCRCommandDescriptor.findAlleles, findAllelesParameters),
-            cloneReader.footer,
-            cloneReader.ordering
+            cloneReader.footer
         )
+            .sort(cloneReader.ordering)
+            .withTotalCounts(cloneReader.cloneSetInfo.counts)
+            .build()
         val clnsWriter = ClnsWriter(this)
         clnsWriter.writeCloneSet(cloneSet)
         return { report ->

@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.primitives.Filter
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -20,6 +19,7 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.divideClonesByTags
+import com.milaboratory.mixcr.basictypes.CloneSet.Companion.filter
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.split
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -53,22 +53,24 @@ import kotlin.io.path.Path
 object CommandExportClones {
     const val COMMAND_NAME = MiXCRCommandDescriptor.exportClones.name
 
-    private fun CommandExportClonesParams.mkFilter(assemblingFeatures: Array<GeneFeature>): Filter<Clone> {
-        val chains = Chains.parse(chains)
-        return Filter { clone ->
-            if (filterOutOfFrames)
-                if (clone.isOutOfFrameOrAbsent(CDR3)) return@Filter false
+    private fun CommandExportClonesParams.test(
+        clone: Clone,
+        assemblingFeatures: Array<GeneFeature>,
+        chains: Chains
+    ): Boolean {
+        if (filterOutOfFrames)
+            if (clone.isOutOfFrameOrAbsent(CDR3)) return false
 
-            if (filterStops)
-                for (assemblingFeature in assemblingFeatures)
-                    if (clone.containsStopsOrAbsent(assemblingFeature)) return@Filter false
+        if (filterStops)
+            for (assemblingFeature in assemblingFeatures)
+                if (clone.containsStopsOrAbsent(assemblingFeature)) return false
 
-            for (gt in GeneType.VJC_REFERENCE) {
-                val bestHit = clone.getBestHit(gt)
-                if (bestHit != null && chains.intersects(bestHit.gene.chains)) return@Filter true
-            }
+        if (chains == Chains.ALL)
+            return true
 
-            false
+        return GeneType.VJC_REFERENCE.any {
+            val hit = clone.getBestHit(it)
+            hit != null && chains.intersects(hit.gene.chains)
         }
     }
 
@@ -266,9 +268,9 @@ object CommandExportClones {
                     val dividedSet = set.divideClonesByTags(tagDivisionDepth)
                     // Splitting cloneset into multiple clonesets to calculate fraction characteristics
                     // (like read and tag fractions) relative to the defined clone grouping
-                    val setsByGroup = dividedSet.split { c ->
-                        groupByKeyExtractors.map { it.getLabel(c) }
-                    }.values
+                    val setsByGroup = dividedSet
+                        .split { clone -> groupByKeyExtractors.map { it.getLabel(clone) } }
+                        .values
                     val exportClones = ExportClones(setsByGroup, writer, Long.MAX_VALUE)
                     SmartProgressReporter.startProgressReport(exportClones, System.err)
                     exportClones.run()
@@ -289,26 +291,32 @@ object CommandExportClones {
                 }
             }
 
-            if (outputFile == null)
-                runExport(CloneSet.transform(initialSet, params.mkFilter(assemblingFeatures)), null)
-            else {
+            val chains = Chains.parse(params.chains)
+            if (outputFile == null) {
+                runExport(
+                    initialSet.filter { clone ->
+                        params.test(clone, assemblingFeatures, chains)
+                    },
+                    null
+                )
+            } else {
                 val sFileName = outputFile!!.let { of ->
                     SubstitutionHelper.parseFileName(of.toString(), splitFileKeyExtractors.size)
                 }
 
                 initialSet
-                    .split { c ->
-                        splitFileKeyExtractors.map { it.getLabel(c) }
-                    }
-                    .forEach { (key, set0) ->
-                        val set = CloneSet.transform(set0, params.mkFilter(assemblingFeatures))
+                    .split { clone -> splitFileKeyExtractors.map { it.getLabel(clone) } }
+                    .forEach { (labels, cloneSet) ->
+                        val set = cloneSet.filter { clone ->
+                            params.test(clone, assemblingFeatures, chains)
+                        }
                         val fileNameSV = SubstitutionHelper.SubstitutionValues()
                         var i = 1
-                        for ((keyValue, keyName) in key.zip(splitFileKeys)) {
+                        for ((keyValue, keyName) in labels.zip(splitFileKeys)) {
                             fileNameSV.add(keyValue, "$i", keyName)
                             i++
                         }
-                        val keyString = key.joinToString("_")
+                        val keyString = labels.joinToString("_")
                         System.err.println("Exporting $keyString")
                         runExport(set, Path(sFileName.render(fileNameSV)))
                     }

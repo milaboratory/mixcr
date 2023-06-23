@@ -14,11 +14,16 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.InputPort
-import cc.redberry.pipe.OutputPort
-import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.asSequence
+import cc.redberry.pipe.util.drainToAndClose
+import cc.redberry.pipe.util.flatMap
+import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnsReader
+import com.milaboratory.mixcr.basictypes.CloneRanks
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -42,16 +47,21 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.ScoringSet
 import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
+import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.DebugDir
 import com.milaboratory.mixcr.util.toHexString
+import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.XSV
+import com.milaboratory.util.cached
 import com.milaboratory.util.exhaustive
+import com.milaboratory.util.groupByOnDisk
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
@@ -339,7 +349,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             buildFrom?.let { buildFrom ->
                 val result =
                     shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom), threads.value)
-                writeResults(writer, result, scoringSet, generateGlobalTreeIds = false)
+                writeResults(writer, result, datasets, scoringSet, generateGlobalTreeIds = false)
                 return
             }
             val allDatasetsHasCellTags = datasets.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
@@ -350,8 +360,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                     }
 
                     is CommandFindShmTreesParams.SingleCell.SimpleClustering -> {
-                        shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) {
-                            writeResults(writer, it, scoringSet, generateGlobalTreeIds = true)
+                        shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) { result ->
+                            writeResults(writer, result, datasets, scoringSet, generateGlobalTreeIds = true)
                         }
                         return
                     }
@@ -359,8 +369,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             }
             val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
             SmartProgressReporter.startProgressReport(progressAndStage)
-            shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads.value) {
-                writeResults(writer, it, scoringSet, generateGlobalTreeIds = true)
+            shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads.value) { result ->
+                writeResults(writer, result, datasets, scoringSet, generateGlobalTreeIds = true)
             }
             progressAndStage.finish()
             reportBuilder.setFinishMillis(System.currentTimeMillis())
@@ -395,16 +405,17 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
     private fun writeResults(
         writer: InputPort<SHMTreeResult>,
-        result: OutputPort<TreeWithMetaBuilder>,
+        result: OutputPortWithProgress<TreeWithMetaBuilder>,
+        datasets: List<ClnsReader>,
         scoringSet: ScoringSet,
         generateGlobalTreeIds: Boolean
     ) {
         var treeIdGenerator = 1
         val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters.topologyBuilder, scoringSet)
-
-        result.forEach { tree ->
-            val rebuildFromMRCA = shmTreeBuilder.rebuildFromMRCA(tree)
-            writer.put(
+        val stateBuilder = datasets.first().header.featuresToAlign.constructStateBuilder(datasets.first().usedGenes)
+        result
+            .map { tree ->
+                val rebuildFromMRCA = shmTreeBuilder.rebuildFromMRCA(tree)
                 SHMTreeResult(
                     rebuildFromMRCA.buildResult(),
                     rebuildFromMRCA.rootInfo,
@@ -414,18 +425,60 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                         rebuildFromMRCA.treeId.id
                     }
                 )
-            )
-        }
-        writer.put(null)
+            }
+            .cached(tempDest, stateBuilder, blockSize = 100)
+            .use { cache ->
+                // recalculating ranks for clones that left in trees
+                val recalculatedRanks = cache.createPort()
+                    .reportProgress("Writing results 1/1")
+                    .flatMap { result ->
+                        result.tree.allNodes()
+                            .flatMap { it.node.content.clones }
+                            .iterator().asOutputPort()
+                    }
+                    .groupByOnDisk(
+                        comparator = ComparatorWithHash.compareBy { it.datasetId },
+                        tempDest,
+                        stateBuilder = stateBuilder,
+                        suffixForTempDest = "sort_for_divide_by_tags",
+                    )
+                    .asSequence()
+                    .associate { group ->
+                        val datasetId = group.key
+                        val clones = group.map { it.clone }.toList()
+                        val ranks = CloneRanks.calculate(clones, datasets[datasetId].header)
+                        datasetId to clones.indices.associate { clones[it].id to ranks[it] }
+                    }
+
+                cache.createPort()
+                    .reportProgress("Writing results 1/2")
+                    .map { shmTreeResult ->
+                        val withReplacedClones = shmTreeResult.tree
+                            .map { _, content ->
+                                content.copy(
+                                    clones = content.clones.map { (clone, datasetId) ->
+                                        val newRanks = recalculatedRanks[datasetId]!![clone.id]!!
+                                        CloneWithDatasetId(
+                                            datasetId = datasetId,
+                                            clone = clone.withRanks(newRanks)
+                                        )
+                                    }
+                                )
+                            }
+                        SHMTreeResult(withReplacedClones, shmTreeResult.rootInfo, shmTreeResult.treeId)
+                    }
+                    .drainToAndClose(writer)
+            }
     }
 
     private fun SHMTreesWriter.writeHeader(cloneReaders: List<ClnsReader>, params: CommandFindShmTreesParams) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
-        val headers = cloneReaders.map { it.readCloneSet().cloneSetInfo }
+        val headers = cloneReaders.map { it.cloneSetInfo }
         writeHeader(
-            headers.foldIndexed(MiXCRHeaderMerger()) { index, m, cloneSetInfo ->
-                m.add(inputFiles[index].toString(), cloneSetInfo.header)
-            }
+            headers
+                .foldIndexed(MiXCRHeaderMerger()) { index, m, cloneSetInfo ->
+                    m.add(inputFiles[index].toString(), cloneSetInfo.header)
+                }
                 .build()
                 .addStepParams(MiXCRCommandDescriptor.findShmTrees, params),
             inputFiles.map { it.toString() },

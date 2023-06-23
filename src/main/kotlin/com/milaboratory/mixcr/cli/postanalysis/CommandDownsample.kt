@@ -139,13 +139,16 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         for (i in results.indices) {
             ClnsWriter(output(inputFiles[i]).toFile()).use { clnsWriter ->
                 val downsampled = results[i].mkElementsPort().toList()
-                val cloneSet = CloneSet(
+                val cloneSet = CloneSet.Builder(
                     downsampled,
                     datasets[i].usedGenes,
                     datasets[i].header,
                     datasets[i].footer,
-                    datasets[i].ordering,
                 )
+                    .sort(datasets[i].ordering)
+                    .recalculateRanks()
+                    .calculateTotalCounts()
+                    .build()
                 clnsWriter.writeCloneSet(cloneSet)
             }
         }

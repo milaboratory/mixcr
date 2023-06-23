@@ -218,13 +218,13 @@ object CommandAssembleContigs {
                                 bufferSize = 1024
                             ) { cloneAlignments: CloneAlignments ->
                                 val clone = when {
-                                    cmdParams.ignoreTags -> cloneAlignments.clone
-                                        .setTagCount(
-                                            TagCount(
-                                                TagTuple.NO_TAGS,
-                                                cloneAlignments.clone.tagCount.sum()
-                                            ), false
-                                        )
+                                    cmdParams.ignoreTags -> cloneAlignments.clone.withTagCount(
+                                        TagCount(
+                                            TagTuple.NO_TAGS,
+                                            cloneAlignments.clone.tagCount.sum()
+                                        ),
+                                        false
+                                    )
 
                                     else -> cloneAlignments.clone
                                 }
@@ -355,7 +355,7 @@ object CommandAssembleContigs {
                 IOUtil.registerGeneReferences(tmpIn, genes, header.featuresToAlign)
                 var cloneId = 0
                 PipeDataInputReader(Clone::class.java, tmpIn, totalClonesCount.toLong()).forEach { clone ->
-                    clones += clone.setId(cloneId++)
+                    clones += clone.withId(cloneId++)
                 }
             }
             @Suppress("DEPRECATION")
@@ -376,7 +376,11 @@ object CommandAssembleContigs {
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
                 .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
 
-            val cloneSet = CloneSet(clones, genes, resultHeader, footer, ordering)
+            val cloneSet = CloneSet.Builder(clones, genes, header, footer)
+                .sort(ordering)
+                .recalculateRanks()
+                .calculateTotalCounts()
+                .build()
             ClnsWriter(outputFile).use { writer ->
                 writer.writeCloneSet(cloneSet)
                 reportBuilder.setStartMillis(beginTimestamp)

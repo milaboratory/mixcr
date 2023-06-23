@@ -17,6 +17,7 @@ import cc.redberry.pipe.util.flatten
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.it
 import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.use
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -161,13 +162,16 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                     newNumberOfAlignments += reader.numberOfAlignmentsInClone(cloneId)
                     val clone = cloneSet[cloneId]
                     idMapping.put(clone.id, i)
-                    clones.add(clone.setId(i).resetTotalCounts())
+                    clones.add(clone.withId(i).withTotalCountsReset())
                     allAlignmentsList += reader
                         .readAlignmentsOfClone(cloneId)
                         .map { it.withCloneIndex(i.toLong()) }
                 }
-                val newCloneSet =
-                    CloneSet(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer, cloneSet.ordering)
+                val newCloneSet = CloneSet.Builder(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer)
+                    .sort(cloneSet.ordering)
+                    .recalculateRanks()
+                    .calculateTotalCounts()
+                    .build()
                 val idGen = AtomicLong()
                 val allAlignmentsPort = allAlignmentsList
                     .flatten()
@@ -191,10 +195,13 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                 for ((i, cloneId_) in ids.withIndex()) {
                     val cloneId = cloneId_.toInt()
                     val clone = cloneSet[cloneId]
-                    clones.add(clone.setId(i).resetTotalCounts())
+                    clones.add(clone.withId(i).withTotalCountsReset())
                 }
-                val newCloneSet =
-                    CloneSet(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer, cloneSet.ordering)
+                val newCloneSet = CloneSet.Builder(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer)
+                    .sort(cloneSet.ordering)
+                    .recalculateRanks()
+                    .calculateTotalCounts()
+                    .build()
                 writer.writeCloneSet(newCloneSet)
             }
         }
@@ -205,10 +212,11 @@ class CommandSlice : MiXCRCommandWithOutputs() {
             SHMTreesWriter(out).use { writer ->
                 writer.copyHeaderFrom(reader)
 
-                val treesWriter = writer.treesWriter()
-                reader.readTrees()
-                    .filter { it.treeId.toLong() in ids }
-                    .forEach { treesWriter.put(it) }
+                writer.treesWriter().use { treesWriter ->
+                    reader.readTrees()
+                        .filter { it.treeId.toLong() in ids }
+                        .forEach { treesWriter.put(it) }
+                }
 
                 writer.setFooter(reader.footer)
             }
