@@ -171,9 +171,7 @@ assemble:
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
-        correctionPower: 0.01
-        backgroundSubstitutionRate: 0.01
-        backgroundIndelRate: 0.01
+        specificMutationProbability: 0.01
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null

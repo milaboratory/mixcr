@@ -103,7 +103,7 @@ public class CloneAssemblerRunnerTest {
         CloneAssemblerParameters assemblerParameters = new CloneAssemblerParameters(
                 new GeneFeature[]{GeneFeature.CDR3}, 12,
                 QualityAggregationType.Average,
-                new CloneClusteringParameters(2, 1,  TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(null,1E-3, 1E-3, 1E-4)),
+                new CloneClusteringParameters(2, 1,  TreeSearchParameters.ONE_MISMATCH, new AdvancedClusteringFilter(1E-3, 1E-3, 1E-4)),
                 factoryParameters, true, true, false, 0.4, 2.0, 2.0, true, (byte) 20, .8, "2 of 6", (byte) 15, null);
 
         System.out.println(GlobalObjectMappers.toOneLine(assemblerParameters));

@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 public class ClusteringFilterTest {
     @Test
     public void test1() throws Exception {
-        ClusteringFilter paramentrs = new RelativeConcentrationFilter(null,1E-3, 1E-3, 1E-4);
+        ClusteringFilter paramentrs = new AdvancedClusteringFilter(1E-3, 1E-3, 1E-4);
         String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
         ClusteringFilter deser = GlobalObjectMappers.getPretty().readValue(str, ClusteringFilter.class);
         assertEquals(paramentrs, deser);
