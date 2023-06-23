@@ -8,7 +8,7 @@ pipeline:
 align:
   species: ""
   libraryName: default
-  trimmingQualityThreshold: 0
+  trimmingQualityThreshold: 10
   trimmingWindowSize: 6
   chains: ALL
   replaceWildcards: true
@@ -31,7 +31,7 @@ align:
         type: kaligner2
         mapperNValue: 14
         mapperKValue: 1
-        floatingLeftBound: true
+        floatingLeftBound: false
         floatingRightBound: true
         mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
@@ -75,7 +75,7 @@ align:
         mapperNValue: 12
         mapperKValue: 1
         floatingLeftBound: true
-        floatingRightBound: true
+        floatingRightBound: false
         mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
         mapperMatchScore: 134
@@ -171,9 +171,7 @@ assemble:
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
-        correctionPower: 0.01
-        backgroundSubstitutionRate: 0.01
-        backgroundIndelRate: 0.01
+        specificMutationProbability: 0.01
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null

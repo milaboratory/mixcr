@@ -3,7 +3,6 @@ flags:
 - species
 pipeline:
 - align
-- extend
 - assemblePartial
 - assemblePartial
 - assemble
@@ -28,8 +27,9 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 80
+      minSumScore: 60
       relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner
         mapperKValue: 5
@@ -196,7 +196,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
+        type: advanced
         correctionPower: 0.001
         backgroundSubstitutionRate: 0.002
         backgroundIndelRate: 2.0E-4
@@ -231,7 +231,7 @@ assemble:
     badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 21
+    minimalQuality: 20
     postFilters: null
   inferMinRecordsPerConsensus: false
 assembleContigs:

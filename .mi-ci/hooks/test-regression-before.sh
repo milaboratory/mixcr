@@ -7,7 +7,7 @@ cd "${script_dir}/../.." || exit
 #export MI_LICENSE_DEBUG=MI_LICENSE_DEBUG
 
 # Downloadable test data
-./ensure-test-data.sh
+./ensure-test-data.sh reg
 
 # Builds pre-processed test data
 ./prepare-test-data.sh reg

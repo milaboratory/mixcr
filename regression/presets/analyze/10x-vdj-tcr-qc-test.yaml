@@ -1,8 +1,10 @@
-flags: []
+flags:
+- species
 pipeline:
 - align
 - refineTagsAndSort
 - assemblePartial
+- extend
 - assemble
 - assembleContigs
 - exportClones
@@ -12,7 +14,7 @@ validation:
 align:
   species: ""
   libraryName: default
-  trimmingQualityThreshold: 0
+  trimmingQualityThreshold: 10
   trimmingWindowSize: 6
   chains: ALL
   replaceWildcards: true
@@ -29,31 +31,38 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 50
+      minSumScore: 60
       relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
       parameters:
-        type: kaligner
-        mapperKValue: 8
+        type: kaligner2
+        mapperNValue: 9
+        mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinScore: 59.0
-        mapperRelativeMinScore: 0.91
-        mapperMatchScore: 17.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 10
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
-        relativeMinScore: 0.87
-        maxHits: 9
+        mapperAbsoluteMinClusterScore: 250
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 127
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 15
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 250
+        mapperRelativeMinScore: 0.75
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 6
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
         scoring:
-          type: linear
+          type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
     dParameters:
       geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
@@ -66,53 +75,59 @@ align:
         gapPenalty: -12
     jParameters:
       geneFeatureToAlign: JRegionWithP
-      minSumScore: 40
+      minSumScore: 150
       relativeMinScore: 0.97
       parameters:
-        type: kaligner
-        mapperKValue: 5
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
         floatingLeftBound: true
         floatingRightBound: false
-        mapperAbsoluteMinScore: 37.0
-        mapperRelativeMinScore: 0.76
-        mapperMatchScore: 16.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 7
-        mapperMaxSeedsDistance: 7
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
-        relativeMinScore: 0.87
-        maxHits: 9
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
         scoring:
-          type: linear
+          type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
     cParameters:
       geneFeatureToAlign: CExon1
       minSumScore: 40
       relativeMinScore: 0.97
       parameters:
         type: kaligner
-        mapperKValue: 9
+        mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: false
         mapperAbsoluteMinScore: 95.0
-        mapperRelativeMinScore: 0.61
-        mapperMatchScore: 5.0
+        mapperRelativeMinScore: 0.63
+        mapperMatchScore: 128.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 9
-        mapperMaxSeedsDistance: 19
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 18
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 3
+        maxHits: 4
         scoring:
           type: linear
           alphabet: nucleotide
@@ -228,10 +243,41 @@ refineTagsAndSort:
         - allTags:Cell
         - allTags:Molecule
         requiredSequences: []
+      - type: filter_groups
+        groupingKeys:
+        - allTags:Cell
+        - allTags:Molecule
+        predicates:
+        - metrics:
+          - type: group_metric_kmer_diversity
+            sequences:
+            - targets
+            k: 12
+            minimalQuality: 20
+            topShare: 0.7
+            minSequenceCount: 4
+            reportHist:
+              log: false
+              binNumber: 40
+              minBinWidth: 0.0
+              multiplyWeightByKey: false
+          operator:
+            type: group_operator_range
+            lower: 150.0
+            acceptNaN: true
+          expectedSorting: []
+          requiredSequences:
+          - targets
+        expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+        requiredSequences:
+        - targets
       expectedSorting:
       - allTags:Cell
       - allTags:Molecule
-      requiredSequences: []
+      requiredSequences:
+      - targets
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -253,11 +299,15 @@ assemblePartial:
       identityType: Unweighted
     maxLeftParts: 256000
     maxLeftMatches: 6144
-extend: null
+extend:
+  vAnchor: CDR3Begin
+  jAnchor: FR4Begin
+  minimalVScore: 50
+  minimalJScore: 50
 assemble:
   sortBySequence: false
   clnaOutput: true
-  cellLevel: false
+  cellLevel: true
   consensusAssemblerParameters:
     assembler:
       aAssemblerParameters:
@@ -276,11 +326,11 @@ assemble:
       minAltSeedQualityScore: 11
       minAltSeedNormalizedPenalty: 0.35
       altSeedPenaltyTolerance: 0.3
-      minRecordSharePerConsensus: 0.2
+      minRecordSharePerConsensus: 0.02
       minRecordsPerConsensus: 0
-      minRecursiveRecordShare: 0.4
+      minRecursiveRecordShare: 0.1
       minQualityScore: 0
-      maxConsensuses: 3
+      maxConsensuses: 6
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
@@ -292,7 +342,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
+        type: advanced
         correctionPower: 0.001
         backgroundSubstitutionRate: 5.0E-4
         backgroundIndelRate: 2.0E-4
@@ -327,7 +377,7 @@ assemble:
     badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 21
+    minimalQuality: 20
     postFilters:
     - type: filter_in_groups
       isolationKeys:
@@ -362,6 +412,39 @@ assemble:
       - allTags:Molecule
     - type: filter_in_groups
       isolationKeys:
+      - clone
+      nestedFilter:
+        type: filter_groups
+        groupingKeys:
+        - allTags:Cell
+        predicates:
+        - metrics:
+          - type: group_metric_nunique
+            reportHist:
+              log: true
+              binNumber: 0
+              minBinWidth: 0.1
+              multiplyWeightByKey: false
+            keys:
+            - allTags:Molecule
+          operator:
+            type: group_operator_cumtop
+            share: 0.99
+            accept: High
+          expectedSorting:
+          - allTags:Molecule
+          requiredSequences: []
+        expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+        requiredSequences: []
+      aggregateReport: true
+      expectedSorting:
+      - clone
+      - allTags:Cell
+      - allTags:Molecule
+    - type: filter_in_groups
+      isolationKeys:
       - allTags:Cell
       nestedFilter:
         type: filter_groups
@@ -375,7 +458,7 @@ assemble:
             - allTags:Molecule
           operator:
             type: group_operator_cumtop
-            share: 0.99
+            share: 0.95
             accept: High
           expectedSorting:
           - allTags:Molecule
@@ -389,27 +472,6 @@ assemble:
       - allTags:Cell
       - clone
       - allTags:Molecule
-    - type: filter_groups
-      groupingKeys:
-      - allTags:Cell
-      - clone
-      predicates:
-      - metrics:
-        - type: group_metric_nunique
-          reportHist: null
-          keys:
-          - allTags:Molecule
-        operator:
-          type: group_operator_range
-          lower: 2.0
-        expectedSorting:
-        - allTags:Molecule
-        requiredSequences: []
-      expectedSorting:
-      - allTags:Cell
-      - clone
-      - allTags:Molecule
-      requiredSequences: []
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -482,6 +544,7 @@ exportClones:
   groupClonesBy: []
 qc:
   checks:
-  - type: ReadsNotAligned
+  - type: OffTargetReads
     upper: 0.99
     middle: 0.95
+    label: Off target (non TCR/IG) reads

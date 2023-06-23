@@ -112,6 +112,8 @@ generic-lt-single-cell-amplicon-with-umi:
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
 
+# Low throughput (plates etc) shotgun single cell, no UMIs
+
 generic-lt-single-cell-fragmented:
   inheritFrom: bundle-base
   flags:
@@ -152,7 +154,7 @@ generic-lt-single-cell-fragmented:
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
 
-# Low throughput (plates etc) amplicon-based single cell, with UMIs
+# Low throughput (plates etc) shotgun single cell, with UMIs
 generic-lt-single-cell-fragmented-with-umi:
   inheritFrom: bundle-base
   flags:
@@ -517,6 +519,29 @@ generic-ht-single-cell-fragmented-with-umi:
                       - type: group_operator_cumtop
                         share: 0.85
                         round: Down
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    histTransformers:
+                      # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                      - type: inflate
+                        fraction: 0.15
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
   assemble:
     inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:

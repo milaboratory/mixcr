@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 public class CloneClusteringParametersTest {
     @Test
     public void test1() throws Exception {
-        CloneClusteringParameters paramentrs = new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new RelativeConcentrationFilter(null,1E-3, 1E-3, 1E-4));
+        CloneClusteringParameters paramentrs = new CloneClusteringParameters(2, 1, TreeSearchParameters.ONE_MISMATCH, new AdvancedClusteringFilter(1E-3, 1E-3, 1E-4));
         String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
         CloneClusteringParameters deser = GlobalObjectMappers.getPretty().readValue(str, CloneClusteringParameters.class);
         assertEquals(paramentrs, deser);

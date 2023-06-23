@@ -9,7 +9,7 @@ pipeline:
 align:
   species: mmu
   libraryName: default
-  trimmingQualityThreshold: 0
+  trimmingQualityThreshold: 10
   trimmingWindowSize: 6
   chains: ALL
   replaceWildcards: true
@@ -27,31 +27,32 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 150
+      minSumScore: 60
       relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner2
-        mapperNValue: 10
+        mapperNValue: 9
         mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinClusterScore: 102
+        mapperAbsoluteMinClusterScore: 250
         mapperExtraClusterScore: -38
-        mapperMatchScore: 101
+        mapperMatchScore: 127
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 11
-        mapperMaxClusters: 11
+        mapperSlotCount: 6
+        mapperMaxClusters: 15
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 187
-        mapperRelativeMinScore: 0.97
-        mapperMinSeedsDistance: 10
-        mapperMaxSeedsDistance: 15
+        mapperAbsoluteMinScore: 250
+        mapperRelativeMinScore: 0.75
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 6
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 7
+        maxHits: 3
         scoring:
           type: affine
           alphabet: nucleotide
@@ -74,27 +75,27 @@ align:
       relativeMinScore: 0.97
       parameters:
         type: kaligner2
-        mapperNValue: 10
+        mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: true
         floatingRightBound: false
         mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 139
+        mapperMatchScore: 95
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 13
-        mapperMaxClusters: 9
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 198
-        mapperRelativeMinScore: 0.7
-        mapperMinSeedsDistance: 7
-        mapperMaxSeedsDistance: 10
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 10
+        maxHits: 3
         scoring:
           type: affine
           alphabet: nucleotide
@@ -296,9 +297,7 @@ assemble:
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
-        correctionPower: 0.01
-        backgroundSubstitutionRate: 0.01
-        backgroundIndelRate: 0.01
+        specificMutationProbability: 0.01
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null
@@ -330,7 +329,7 @@ assemble:
     badQualityThreshold: 0
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 21
+    minimalQuality: 20
     postFilters:
     - type: filter_in_groups
       isolationKeys:
@@ -362,7 +361,7 @@ assemble:
       - geneLabel:ReliableChain
       - allTags:Cell
       - clone
-  inferMinRecordsPerConsensus: false
+  inferMinRecordsPerConsensus: true
 assembleContigs:
   ignoreTags: false
   parameters:
