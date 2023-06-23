@@ -304,6 +304,7 @@ object CommandAssembleContigs {
                                     // Performing contig assembly
                                     val fullSeqAssembler = FullSeqAssembler(
                                         cloneFactory, cmdParams.parameters,
+                                        header.assemblerParameters!!.assemblingFeatures,
                                         clone, header.alignerParameters,
                                         bestGenes[Variable], bestGenes[Joining]
                                     )

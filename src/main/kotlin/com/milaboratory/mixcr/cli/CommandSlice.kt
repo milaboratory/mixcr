@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -161,7 +161,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                     newNumberOfAlignments += reader.numberOfAlignmentsInClone(cloneId)
                     val clone = cloneSet[cloneId]
                     idMapping.put(clone.id, i)
-                    clones.add(clone.setId(i).resetParentCloneSet())
+                    clones.add(clone.setId(i).resetTotalCounts())
                     allAlignmentsList += reader
                         .readAlignmentsOfClone(cloneId)
                         .map { it.withCloneIndex(i.toLong()) }
@@ -191,7 +191,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                 for ((i, cloneId_) in ids.withIndex()) {
                     val cloneId = cloneId_.toInt()
                     val clone = cloneSet[cloneId]
-                    clones.add(clone.setId(i).resetParentCloneSet())
+                    clones.add(clone.setId(i).resetTotalCounts())
                 }
                 val newCloneSet =
                     CloneSet(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer, cloneSet.ordering)

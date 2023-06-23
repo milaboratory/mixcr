@@ -22,6 +22,7 @@ import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.divideClonesByTags
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.split
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
@@ -38,6 +39,7 @@ import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
@@ -51,18 +53,18 @@ import kotlin.io.path.Path
 object CommandExportClones {
     const val COMMAND_NAME = MiXCRCommandDescriptor.exportClones.name
 
-    private fun CommandExportClonesParams.mkFilter(): Filter<Clone> {
+    private fun CommandExportClonesParams.mkFilter(assemblingFeatures: Array<GeneFeature>): Filter<Clone> {
         val chains = Chains.parse(chains)
-        return Filter {
+        return Filter { clone ->
             if (filterOutOfFrames)
-                if (it.isOutOfFrameOrAbsent(GeneFeature.CDR3)) return@Filter false
+                if (clone.isOutOfFrameOrAbsent(CDR3)) return@Filter false
 
             if (filterStops)
-                for (assemblingFeature in it.parentCloneSet.assemblingFeatures)
-                    if (it.containsStopsOrAbsent(assemblingFeature)) return@Filter false
+                for (assemblingFeature in assemblingFeatures)
+                    if (clone.containsStopsOrAbsent(assemblingFeature)) return@Filter false
 
             for (gt in GeneType.VJC_REFERENCE) {
-                val bestHit = it.getBestHit(gt)
+                val bestHit = clone.getBestHit(gt)
                 if (bestHit != null && chains.intersects(bestHit.gene.chains)) return@Filter true
             }
 
@@ -210,6 +212,7 @@ object CommandExportClones {
         }
 
         override fun run1() {
+            val assemblingFeatures = IOUtil.extractHeader(inputFile).assemblerParameters!!.assemblingFeatures
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val header = initialSet.header
             val (_, params) = paramsResolver.resolve(
@@ -287,7 +290,7 @@ object CommandExportClones {
             }
 
             if (outputFile == null)
-                runExport(CloneSet.transform(initialSet, params.mkFilter()), null)
+                runExport(CloneSet.transform(initialSet, params.mkFilter(assemblingFeatures)), null)
             else {
                 val sFileName = outputFile!!.let { of ->
                     SubstitutionHelper.parseFileName(of.toString(), splitFileKeyExtractors.size)
@@ -298,7 +301,7 @@ object CommandExportClones {
                         splitFileKeyExtractors.map { it.getLabel(c) }
                     }
                     .forEach { (key, set0) ->
-                        val set = CloneSet.transform(set0, params.mkFilter())
+                        val set = CloneSet.transform(set0, params.mkFilter(assemblingFeatures))
                         val fileNameSV = SubstitutionHelper.SubstitutionValues()
                         var i = 1
                         for ((keyValue, keyName) in key.zip(splitFileKeys)) {
@@ -352,7 +355,7 @@ object CommandExportClones {
 
     private class CloneTagGroupingKey(private val tagIdx: Int) : CloneGroupingKey {
         override fun getLabel(clone: Clone): String =
-            clone.tagFractions.asKeyPrefixOrError(tagIdx + 1).get(tagIdx).toString()
+            clone.tagFractions!!.asKeyPrefixOrError(tagIdx + 1).get(tagIdx).toString()
     }
 
     private fun parseGroupingKey(header: MiXCRHeader, key: String) =

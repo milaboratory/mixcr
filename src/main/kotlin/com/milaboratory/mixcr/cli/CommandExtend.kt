@@ -181,7 +181,7 @@ object CommandExtend {
 
                 val clones = process.output
                     .asSequence()
-                    .map { clone -> clone.resetParentCloneSet() }
+                    .map { clone -> clone.resetTotalCounts() }
                     .sortedBy { it.id }
                     .toList()
                 val newCloneSet =

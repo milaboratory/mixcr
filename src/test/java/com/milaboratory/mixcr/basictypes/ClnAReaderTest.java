@@ -46,7 +46,7 @@ public class ClnAReaderTest {
     public void test1() throws Exception {
         testGeneric(clones -> {
                     Collections.shuffle(clones);
-                    clones = clones.stream().filter(c -> c.id != 2).collect(Collectors.toList());
+            clones = clones.stream().filter(c -> c.getId() != 2).collect(Collectors.toList());
                     return clones;
                 }, als ->
                         CUtils.wrap(als, vdjcAlignments ->
@@ -80,7 +80,7 @@ public class ClnAReaderTest {
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
 
         List<Clone> newClones = assemble.cloneSet.getClones().stream()
-                .map(Clone::resetParentCloneSet)
+                .map(Clone::resetTotalCounts)
                 .collect(Collectors.toList());
         CloneSet newCloneSet = CloneSet.Companion.invoke(
                 modifyClones.apply(newClones), align.usedGenes,
@@ -111,8 +111,8 @@ public class ClnAReaderTest {
         assertEquals(newCloneSet.size(), reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
-            assertEquals("cloneId = " + c.getCloneId(), c.getClone().count, count(c.alignments()), 0.01);
-            assertEquals(c.getCloneId(), c.getClone().id);
+            assertEquals("cloneId = " + c.getCloneId(), c.getClone().getCount(), count(c.alignments()), 0.01);
+            assertEquals(c.getCloneId(), c.getClone().getId());
             CUtils.it(c.alignments()).forEach(a -> {
                 assertEquals(c.getCloneId(), a.getCloneIndex());
                 if (a.getMappingType() == ReadToCloneMapping.MappingType.Core)
@@ -154,8 +154,8 @@ public class ClnAReaderTest {
         assertEquals(0, reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
-            assertEquals("" + c.getCloneId(), c.getClone().count, count(c.alignments()), 0.01);
-            assertEquals(c.getCloneId(), c.getClone().id);
+            assertEquals("" + c.getCloneId(), c.getClone().getCount(), count(c.alignments()), 0.01);
+            assertEquals(c.getCloneId(), c.getClone().getId());
             CUtils.it(c.alignments()).forEach(a -> {
                 assertEquals(c.getCloneId(), a.getCloneIndex());
                 if (a.getMappingType() == ReadToCloneMapping.MappingType.Core)
