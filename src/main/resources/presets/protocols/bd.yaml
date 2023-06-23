@@ -498,8 +498,10 @@
       cloneAssemblerParameters:
         cloneClusteringParameters:
           clusteringFilter:
-            type: relativeConcentration
-            specificMutationProbability: 0.01
+            type: advanced
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.01
+            backgroundIndelRate: 0.002
         badQualityThreshold: 0
         postFilters:
           - type: filter_in_groups

@@ -31,5 +31,7 @@
       cloneAssemblerParameters:
         cloneClusteringParameters:
           clusteringFilter:
-            type: relativeConcentration
-            specificMutationProbability: 1E-4
+            type: advanced
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.001
+            backgroundIndelRate: 0.001
