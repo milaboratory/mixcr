@@ -24,4 +24,12 @@ public class ClusteringFilterTest {
         ClusteringFilter deser = GlobalObjectMappers.getPretty().readValue(str, ClusteringFilter.class);
         assertEquals(paramentrs, deser);
     }
+
+    @Test
+    public void test2() throws Exception {
+        ClusteringFilter paramentrs = new RelativeConcentrationFilter(1E-3);
+        String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
+        ClusteringFilter deser = GlobalObjectMappers.getPretty().readValue(str, ClusteringFilter.class);
+        assertEquals(paramentrs, deser);
+    }
 }
