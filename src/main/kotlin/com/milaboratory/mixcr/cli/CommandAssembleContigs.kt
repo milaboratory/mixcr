@@ -376,7 +376,7 @@ object CommandAssembleContigs {
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
                 .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
 
-            val cloneSet = CloneSet.Builder(clones, genes, header, footer)
+            val cloneSet = CloneSet.Builder(clones, genes, resultHeader, footer)
                 .sort(ordering)
                 .recalculateRanks()
                 .calculateTotalCounts()
