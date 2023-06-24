@@ -167,7 +167,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                         .readAlignmentsOfClone(cloneId)
                         .map { it.withCloneIndex(i.toLong()) }
                 }
-                val newCloneSet = CloneSet.Builder(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer)
+                val newCloneSet = CloneSet.Builder(clones, cloneSet.usedGenes, cloneSet.header)
                     .sort(cloneSet.ordering)
                     .recalculateRanks()
                     .calculateTotalCounts()
@@ -197,12 +197,13 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                     val clone = cloneSet[cloneId]
                     clones.add(clone.withId(i).withTotalCountsReset())
                 }
-                val newCloneSet = CloneSet.Builder(clones, cloneSet.usedGenes, cloneSet.header, cloneSet.footer)
+                val newCloneSet = CloneSet.Builder(clones, cloneSet.usedGenes, cloneSet.header)
                     .sort(cloneSet.ordering)
                     .recalculateRanks()
                     .calculateTotalCounts()
                     .build()
                 writer.writeCloneSet(newCloneSet)
+                writer.setFooter(reader.footer)
             }
         }
     }

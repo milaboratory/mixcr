@@ -214,21 +214,31 @@ object CommandExportClones {
         }
 
         override fun run1() {
-            val assemblingFeatures = IOUtil.extractHeader(inputFile).assemblerParameters!!.assemblingFeatures
+            val fileInfo = IOUtil.extractFileInfo(inputFile)
+            val assemblingFeatures = fileInfo.header.assemblerParameters!!.assemblingFeatures
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
-            val header = initialSet.header
             val (_, params) = paramsResolver.resolve(
-                resetPreset.overridePreset(header.paramsSpec).addMixins(exportMixins.mixins),
+                resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins),
                 printParameters = logger.verbose && outputFile != null
             )
 
             ValidationException.chainsExist(Chains.parse(params.chains), initialSet.usedGenes)
             // Calculating splitting keys
             val splitFileKeys = params.splitFilesBy
-            val splitFileKeyExtractors: List<CloneGroupingKey> = splitFileKeys.map { parseGroupingKey(header, it) }
-            val groupByKeyExtractors: List<CloneGroupingKey> = params.groupClonesBy.map { parseGroupingKey(header, it) }
+            val splitFileKeyExtractors: List<CloneGroupingKey> = splitFileKeys.map {
+                parseGroupingKey(
+                    fileInfo.header,
+                    it
+                )
+            }
+            val groupByKeyExtractors: List<CloneGroupingKey> = params.groupClonesBy.map {
+                parseGroupingKey(
+                    fileInfo.header,
+                    it
+                )
+            }
 
-            val headerForExport = MetaForExport(initialSet)
+            val headerForExport = MetaForExport(fileInfo)
             val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, headerForExport)
 
             fun runExport(set: CloneSet, outFile: Path?) {
@@ -256,10 +266,10 @@ object CommandExportClones {
                     val tagDivisionDepth = when (splitByTagType) {
                         null -> 0
                         else -> {
-                            if (!header.tagsInfo.hasTagsWithType(splitByTagType))
+                            if (!fileInfo.header.tagsInfo.hasTagsWithType(splitByTagType))
                             // best division depth will still be selected for this case
                                 logger.warn("Input has no tags with type $splitByTagType")
-                            header.tagsInfo.getDepthFor(splitByTagType)
+                            fileInfo.header.tagsInfo.getDepthFor(splitByTagType)
                         }
                     }
 

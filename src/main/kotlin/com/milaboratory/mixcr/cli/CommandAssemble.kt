@@ -276,7 +276,7 @@ object CommandAssemble {
                     }
                 }
 
-                validateParams(cmdParam, inputHeader.featuresToAlign)
+                validateParams(cmdParam, inputHeader)
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if ((outputFile.extension == "clna" && !cmdParam.clnaOutput) ||
@@ -393,7 +393,7 @@ object CommandAssemble {
                         )
                         .copy(paramsSpec = dontSavePresetOption.presetToSave(paramSpec))
                     val cloneSet = assemblerRunner
-                        .getCloneSet(resultHeader, inputFooter)
+                        .getCloneSet(resultHeader)
                         .reorder(ordering)
 
                     // Passing final cloneset to assemble last pieces of statistics for report

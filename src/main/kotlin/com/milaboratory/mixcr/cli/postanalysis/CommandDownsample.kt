@@ -142,14 +142,14 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
                 val cloneSet = CloneSet.Builder(
                     downsampled,
                     datasets[i].usedGenes,
-                    datasets[i].header,
-                    datasets[i].footer,
+                    datasets[i].header
                 )
                     .sort(datasets[i].ordering)
                     .recalculateRanks()
                     .calculateTotalCounts()
                     .build()
                 clnsWriter.writeCloneSet(cloneSet)
+                clnsWriter.setFooter(datasets[i].footer)
             }
         }
         val summaryStat = preprocessor.stat

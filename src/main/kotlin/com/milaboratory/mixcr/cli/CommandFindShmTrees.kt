@@ -293,7 +293,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         ValidationException.requireTheSame(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
         }
-        val featureToAlign = datasets.first().header.featuresToAlign
+        val featureToAlign = datasets.first().header
 
         for (geneType in GeneType.VJ_REFERENCE) {
             val scores = datasets
@@ -412,7 +412,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     ) {
         var treeIdGenerator = 1
         val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters.topologyBuilder, scoringSet)
-        val stateBuilder = datasets.first().header.featuresToAlign.constructStateBuilder(datasets.first().usedGenes)
+        val stateBuilder = datasets.first().header.constructStateBuilder(datasets.first().usedGenes)
         result
             .map { tree ->
                 val rebuildFromMRCA = shmTreeBuilder.rebuildFromMRCA(tree)

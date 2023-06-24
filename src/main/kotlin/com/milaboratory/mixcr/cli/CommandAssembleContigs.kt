@@ -177,7 +177,7 @@ object CommandAssembleContigs {
                 cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
                 assemblingRegions = cmdParams.parameters.assemblingRegions
 
-                validateParams(cmdParams, reader.header.featuresToAlign)
+                validateParams(cmdParams, reader.header)
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."
@@ -210,7 +210,7 @@ object CommandAssembleContigs {
                             header = reader.header
                             genes = reader.usedGenes
 
-                            IOUtil.registerGeneReferences(tmpOut, genes, header.featuresToAlign)
+                            IOUtil.registerGeneReferences(tmpOut, genes, header)
                             val cloneAlignmentsPort = reader.clonesAndAlignments()
                             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort)
                             val parallelProcessor = cloneAlignmentsPort.mapInParallelOrdered(
@@ -352,7 +352,7 @@ object CommandAssembleContigs {
             // )
             val clones: MutableList<Clone> = ArrayList(totalClonesCount)
             PrimitivI(BufferedInputStream(FileInputStream(outputFile.toFile()))).use { tmpIn ->
-                IOUtil.registerGeneReferences(tmpIn, genes, header.featuresToAlign)
+                IOUtil.registerGeneReferences(tmpIn, genes, header)
                 var cloneId = 0
                 PipeDataInputReader(Clone::class.java, tmpIn, totalClonesCount.toLong()).forEach { clone ->
                     clones += clone.withId(cloneId++)
@@ -376,7 +376,7 @@ object CommandAssembleContigs {
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
                 .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
 
-            val cloneSet = CloneSet.Builder(clones, genes, resultHeader, footer)
+            val cloneSet = CloneSet.Builder(clones, genes, resultHeader)
                 .sort(ordering)
                 .recalculateRanks()
                 .calculateTotalCounts()

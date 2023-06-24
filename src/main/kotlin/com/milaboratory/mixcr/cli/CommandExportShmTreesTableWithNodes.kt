@@ -170,7 +170,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                         comparator = ComparatorWithHash.compareBy { it.datasetId },
                         tempDest,
                         suffixForTempDest = "sort_for_divide_by_tags",
-                        stateBuilder = reader.alignerParameters.constructStateBuilder(reader.usedGenes)
+                        stateBuilder = reader.header.constructStateBuilder(reader.usedGenes)
                     )
                     .asSequence()
                     .associate { group ->

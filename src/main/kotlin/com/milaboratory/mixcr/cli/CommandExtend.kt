@@ -186,8 +186,7 @@ object CommandExtend {
                     cloneSet.header
                         .addStepParams(MiXCRCommandDescriptor.extend, process.params)
                         .copy(allFullyCoveredBy = null)
-                        .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
-                    cloneSet.footer,
+                        .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
                 )
                     .sort(cloneSet.ordering)
                     .withTotalCounts(cloneSet.counts)
