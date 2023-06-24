@@ -1158,7 +1158,7 @@ object CommandAlign {
                                 var a = VDJCAlignments(
                                     emptyHits,
                                     if (bundle.tags == TagTuple.NO_TAGS)
-                                        TagCount.NO_TAGS_1 else TagCount(bundle.tags),
+                                        TagCount.NO_TAGS else TagCount(bundle.tags),
                                     target.targets,
                                     SequenceHistory.RawSequence.of(bundle.read.id, target),
                                     if (alignerParameters.isSaveOriginalSequence) arrayOf(bundle.sequence) else null

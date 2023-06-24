@@ -115,7 +115,7 @@ public class CloneAssemblerRunnerTest {
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
-        CloneSet cloneSet = assemblerRunner.getCloneSet(dummyHeader(), emptyFooter());
+        CloneSet cloneSet = assemblerRunner.getCloneSet(dummyHeader());
 
         File tmpClnsFile = TempFileManager.newTempFile();
 
@@ -138,12 +138,12 @@ public class CloneAssemblerRunnerTest {
 
     private static void assertCSEquals(CloneSet expected, CloneSet actual) {
         Assert.assertEquals(expected.getClones().size(), actual.getClones().size());
-        Assert.assertEquals(expected.getTotalCount(), actual.getTotalCount(), 0.1);
+        Assert.assertEquals(expected.getCounts().getTotalCount(), actual.getCounts().getTotalCount(), 0.1);
         Assert.assertArrayEquals(expected.getAssemblingFeatures(), actual.getAssemblingFeatures());
 
         for (GeneType geneType : GeneType.values())
-            Assert.assertEquals(expected.getFeatureToAlign(geneType),
-                    actual.getFeatureToAlign(geneType));
+            Assert.assertEquals(expected.getHeader().getFeatureToAlign(geneType),
+                    actual.getHeader().getFeatureToAlign(geneType));
 
         for (int i = 0; i < expected.getClones().size(); ++i)
             Assert.assertEquals(expected.getClones().get(i), actual.getClones().get(i));

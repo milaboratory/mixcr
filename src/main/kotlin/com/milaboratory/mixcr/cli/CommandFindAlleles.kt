@@ -325,7 +325,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         ValidationException.requireTheSame(datasets.map { it.header.featuresToAlignMap }) {
             "Require the same features to align for all input files"
         }
-        val featureToAlign = datasets.first().header.featuresToAlign
+        val featureToAlign = datasets.first().header
         ValidationException.require(featureToAlign.getFeatureToAlign(Variable)!!.contains(FR1Begin)) {
             "Input files must be aligned by V feature containing FR1Begin"
         }
@@ -565,15 +565,16 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         cloneReader: CloneReader
     ): (FindAllelesReport) -> Unit {
         toPath().toAbsolutePath().parent.toFile().mkdirs()
-        val cloneSet = CloneSet(
+        val cloneSet = CloneSet.Builder(
             clones,
             resultLibrary.primaryGenes,
             cloneReader.header
                 .copy(foundAlleles = MiXCRHeader.FoundAlleles(resultLibrary.name, resultLibrary.data))
-                .addStepParams(MiXCRCommandDescriptor.findAlleles, findAllelesParameters),
-            cloneReader.footer,
-            cloneReader.ordering()
+                .addStepParams(MiXCRCommandDescriptor.findAlleles, findAllelesParameters)
         )
+            .sort(cloneReader.ordering)
+            .withTotalCounts(cloneReader.cloneSetInfo.counts)
+            .build()
         val clnsWriter = ClnsWriter(this)
         clnsWriter.writeCloneSet(cloneSet)
         return { report ->

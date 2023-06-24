@@ -53,7 +53,11 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortByHashOnDisk
 import org.apache.commons.io.FileUtils
-import picocli.CommandLine.*
+import picocli.CommandLine.ArgGroup
+import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.util.*
 
@@ -382,7 +386,7 @@ object CommandRefineTagsAndSort {
 
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     val alPioState = PrimitivIOStateBuilder()
-                    IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.header.featuresToAlign)
+                    IOUtil.registerGeneReferences(alPioState, mainReader.usedGenes, mainReader.header)
 
                     // Reusable routine to perform hash-based soring of alignments by tag with specific index
                     var sorterCounter = 0

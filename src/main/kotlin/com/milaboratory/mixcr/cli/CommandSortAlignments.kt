@@ -91,7 +91,7 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
     }
 
     private class VDJCAlignmentsSerializer(reader: VDJCAlignmentsReader) : ObjectSerializer<VDJCAlignments> {
-        private val featuresToAlign: HasFeatureToAlign = reader.header.featuresToAlign
+        private val featuresToAlign: HasFeatureToAlign = reader.header
         private val usedAlleles: List<VDJCGene> = reader.usedGenes
 
         override fun write(data: Collection<VDJCAlignments>, stream: OutputStream) {

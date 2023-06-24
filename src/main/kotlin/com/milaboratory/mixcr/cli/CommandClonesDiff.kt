@@ -123,7 +123,7 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
             )
             report.println(
                 "Reads in unique clones in cloneset 1: $newClones1Reads " +
-                        "(${ReportHelper.PERCENT_FORMAT.format(100.0 * newClones1Reads / cs1.totalCount)}%)"
+                        "(${ReportHelper.PERCENT_FORMAT.format(100.0 * newClones1Reads / cs1.counts.totalCount)}%)"
             )
             report.println(
                 "Unique clones in cloneset 2: $newClones2 " +
@@ -131,7 +131,7 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
             )
             report.println(
                 "Reads in unique clones in cloneset 2: $newClones2Reads " +
-                        "(${ReportHelper.PERCENT_FORMAT.format(100.0 * newClones2Reads / cs2.totalCount)}%)"
+                        "(${ReportHelper.PERCENT_FORMAT.format(100.0 * newClones2Reads / cs2.counts.totalCount)}%)"
             )
         }
     }

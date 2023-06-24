@@ -152,12 +152,10 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
                 assembleContigsMixins + exportMixins + pipelineMixins
         val bundleSpec = when {
-            presetInput.presetName != null -> {
-                ParamsBundleSpecBaseAddress(presetInput.presetName!!)
-            }
+            presetInput.presetName != null -> ParamsBundleSpecBaseAddress(presetInput.presetName!!)
 
             else -> {
-                val inputFile = presetInput.input
+                val inputFile = presetInput.input!!
                 val header = when (IOUtil.extractFileType(inputFile)) {
                     VDJCA -> VDJCAlignmentsReader(inputFile)
                         .use { reader -> reader.header }

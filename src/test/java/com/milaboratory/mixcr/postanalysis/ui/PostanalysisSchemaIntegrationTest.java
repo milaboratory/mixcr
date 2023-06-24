@@ -202,16 +202,11 @@ public class PostanalysisSchemaIntegrationTest {
                 "Ig4_S4.contigs.clns",
                 "Ig5_S5.contigs.clns");
         List<ClnsReader> readers = sampleNames.stream()
-                .map(f -> {
-                    try {
-                        return new ClnsReader(
-                                Paths.get(OverlapIntegrationTest.class.getResource("/sequences/big/yf_sample_data/" + f).getFile()),
-                                VDJCLibraryRegistry.getDefault(),
-                                concurrencyLimiter);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
+                .map(f -> new ClnsReader(
+                        Paths.get(OverlapIntegrationTest.class.getResource("/sequences/big/yf_sample_data/" + f).getFile()),
+                        VDJCLibraryRegistry.getDefault(),
+                        concurrencyLimiter
+                ))
                 .collect(Collectors.toList());
 
 
@@ -221,7 +216,7 @@ public class PostanalysisSchemaIntegrationTest {
 
         for (List<VDJCSProperties.VDJCSProperty<VDJCObject, ?>> by : Arrays.asList(byN, byAA, byAAAndV)) {
             System.out.println("=============");
-            Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.overlap(sampleNames, by, readers);
+            Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.INSTANCE.overlap(sampleNames, by, readers);
 
             DownsamplingPreprocessorByReadsFactory downsamplePreprocessor = new DownsamplingPreprocessorByReadsFactory(
                     new DownsampleValueChooser.Minimal(),

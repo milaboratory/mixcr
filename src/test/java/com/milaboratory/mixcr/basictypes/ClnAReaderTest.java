@@ -46,7 +46,7 @@ public class ClnAReaderTest {
     public void test1() throws Exception {
         testGeneric(clones -> {
                     Collections.shuffle(clones);
-                    clones = clones.stream().filter(c -> c.id != 2).collect(Collectors.toList());
+            clones = clones.stream().filter(c -> c.getId() != 2).collect(Collectors.toList());
                     return clones;
                 }, als ->
                         CUtils.wrap(als, vdjcAlignments ->
@@ -80,18 +80,20 @@ public class ClnAReaderTest {
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
 
         List<Clone> newClones = assemble.cloneSet.getClones().stream()
-                .map(Clone::resetParentCloneSet)
+                .map(Clone::withTotalCountsReset)
                 .collect(Collectors.toList());
-        CloneSet newCloneSet = CloneSet.Companion.invoke(
+        CloneSet newCloneSet = new CloneSet.Builder(
                 modifyClones.apply(newClones), align.usedGenes,
                 new MiXCRHeader("hashA123", new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                         align.parameters.alignerParameters,
                         align.parameters.alignerParameters.getFeaturesToAlignMap(),
                         CloneAssemblerParametersPresets.getByName("default"),
-                        null, null),
-                emptyFooter(),
-                new VDJCSProperties.CloneOrdering(VDJCSProperties.CloneCount.INSTANCE)
-        );
+                        null, null)
+        )
+                .sort(VDJCSProperties.CO_BY_COUNT)
+                .calculateTotalCounts()
+                .recalculateRanks()
+                .build();
         writer.writeClones(newCloneSet);
 
         OutputPort<VDJCAlignments> als = modifyAlignments.apply(merged);
@@ -105,18 +107,18 @@ public class ClnAReaderTest {
                 ThreadLocalRandom.current().nextInt(1, 17));
 
         assertEquals(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile),
-                reader.getVersionInfo());
+                reader.versionInfo);
 
         assertEquals(alsc.getCount(), reader.numberOfAlignments());
         assertEquals(newCloneSet.size(), reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
-            assertEquals("cloneId = " + c.cloneId, c.clone.count, count(c.alignments()), 0.01);
-            assertEquals(c.cloneId, c.clone.id);
+            assertEquals("cloneId = " + c.getCloneId(), c.getClone().getCount(), count(c.alignments()), 0.01);
+            assertEquals(c.getCloneId(), c.getClone().getId());
             CUtils.it(c.alignments()).forEach(a -> {
-                assertEquals(c.cloneId, a.getCloneIndex());
+                assertEquals(c.getCloneId(), a.getCloneIndex());
                 if (a.getMappingType() == ReadToCloneMapping.MappingType.Core)
-                    assertEquals(c.clone.getFeature(GeneFeature.CDR3),
+                    assertEquals(c.getClone().getFeature(GeneFeature.CDR3),
                             a.getFeature(GeneFeature.CDR3));
             });
         }
@@ -132,14 +134,26 @@ public class ClnAReaderTest {
 
         File file = TempFileManager.newTempFile();
         ClnAWriter writer = new ClnAWriter(file, smartTempDestination(file, "", false));
-        writer.writeClones(CloneSet.Companion.invoke(Collections.EMPTY_LIST, align.usedGenes,
-                new MiXCRHeader(null, new MiXCRParamsSpec("legacy-4.0-default"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
-                        align.parameters.alignerParameters,
-                        align.parameters.alignerParameters.getFeaturesToAlignMap(),
-                        CloneAssemblerParametersPresets.getByName("default"),
-                        null, null),
-                emptyFooter(),
-                new VDJCSProperties.CloneOrdering(VDJCSProperties.CloneCount.INSTANCE)));
+        writer.writeClones(new CloneSet.Builder(
+                        Collections.emptyList(),
+                        align.usedGenes,
+                        new MiXCRHeader(
+                                null,
+                                new MiXCRParamsSpec("legacy-4.0-default"),
+                                new MiXCRStepParams(),
+                                TagsInfo.NO_TAGS,
+                                align.parameters.alignerParameters,
+                                align.parameters.alignerParameters.getFeaturesToAlignMap(),
+                                CloneAssemblerParametersPresets.getByName("default"),
+                                null,
+                                null
+                        )
+                )
+                        .sort(VDJCSProperties.CO_BY_COUNT)
+                        .calculateTotalCounts()
+                        .recalculateRanks()
+                        .build()
+        );
         writer.collateAlignments(CUtils.asOutputPort(align.alignments), align.alignments.size());
         writer.setFooter(emptyFooter());
         writer.writeAlignmentsAndIndex();
@@ -148,18 +162,18 @@ public class ClnAReaderTest {
         ClnAReader reader = new ClnAReader(file.toPath(), VDJCLibraryRegistry.getDefault(), 17);
 
         assertEquals(MiXCRVersionInfo.get().getVersionString(AppVersionInfo.OutputType.ToFile),
-                reader.getVersionInfo());
+                reader.versionInfo);
 
         assertEquals(align.alignments.size(), reader.numberOfAlignments());
         assertEquals(0, reader.numberOfClones());
 
         for (ClnAReader.CloneAlignments c : CUtils.it(reader.clonesAndAlignments())) {
-            assertEquals("" + c.cloneId, c.clone.count, count(c.alignments()), 0.01);
-            assertEquals(c.cloneId, c.clone.id);
+            assertEquals("" + c.getCloneId(), c.getClone().getCount(), count(c.alignments()), 0.01);
+            assertEquals(c.getCloneId(), c.getClone().getId());
             CUtils.it(c.alignments()).forEach(a -> {
-                assertEquals(c.cloneId, a.getCloneIndex());
+                assertEquals(c.getCloneId(), a.getCloneIndex());
                 if (a.getMappingType() == ReadToCloneMapping.MappingType.Core)
-                    assertEquals(c.clone.getFeature(GeneFeature.CDR3), a.getFeature(GeneFeature.CDR3));
+                    assertEquals(c.getClone().getFeature(GeneFeature.CDR3), a.getFeature(GeneFeature.CDR3));
             });
         }
     }

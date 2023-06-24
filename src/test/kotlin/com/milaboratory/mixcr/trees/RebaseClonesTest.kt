@@ -627,7 +627,7 @@ class RebaseClonesTest {
             CloneWrapper(
                 listOf(
                     CloneWithDatasetId(
-                        Clone(emptyArray(), EnumMap(GeneType::class.java), null, 0.0, 0, 0, CloneRanks.empty),
+                        Clone(emptyArray(), EnumMap(GeneType::class.java), null, 0.0, 0, 0, CloneRanks.empty, null),
                         0
                     )
                 ),
