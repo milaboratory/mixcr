@@ -133,7 +133,7 @@ val obfuscationLibs: Configuration by configurations.creating
 val mixcrAlgoVersion = "4.3.0-201-precalculate_fraction"
 val milibVersion = ""
 val mitoolVersion = ""
-val repseqioVersion = ""
+val repseqioVersion = "1.8.0-77-master"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
@@ -163,7 +163,9 @@ dependencies {
 
     // proguard require classes that were inherited
     obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
-    obfuscationLibs("com.beust:jcommander:$jcommanderVersion") { exclude("*", "*") }
+
+    // required for buildLibrary (to call repseqio)
+    implementation("com.beust:jcommander:$jcommanderVersion")
 
     implementation("com.milaboratory:milm2-jvm:$milmVersion")
 

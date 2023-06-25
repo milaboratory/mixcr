@@ -30,6 +30,8 @@
 -keep class com.milaboratory.mitool.cli.** { *; }
 -keep class com.milaboratory.mitool.refinement.gfilter.** { *; }
 
+-keep class io.repseq.cli.** { *; }
+
 -keep class com.milaboratory.milm.MiXCRMain { public static void main(); }
 
 -keep class com.milaboratory.mixcr.cli.** { *; }
