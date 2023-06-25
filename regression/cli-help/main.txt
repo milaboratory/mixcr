@@ -51,4 +51,6 @@ Util commands:
   slice                      Slice vdjca|clns|clna|shmt file.
   exportPreset               Export a preset file given the preset name or source file and a set of
                                mix-ins
+  buildLibrary               Build custom reference library
+  mergeLibrary               Merge multiple reference libraries in one file
   listPresets                Show all available presets
