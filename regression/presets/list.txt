@@ -100,7 +100,9 @@ oncomine-human-tcr-pan-clonality
 oncomine-human-tcrb-lr
 oncomine-human-tcrb-sr
 ont-rna-seq-vdj                             --species <name>
-parse-bio-3gex                              --species <name>
+parse-bio-3gex-wt                           --species <name>
+parse-bio-3gex-wt-mega                      --species <name>
+parse-bio-3gex-wt-mini                      --species <name>
 qiaseq-human-tcr-panel
 qiaseq-mouse-tcr-panel
 rna-seq                                     --species <name>
