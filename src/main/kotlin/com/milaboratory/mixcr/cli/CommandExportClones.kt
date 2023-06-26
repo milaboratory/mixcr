@@ -373,7 +373,7 @@ object CommandExportClones {
 
     private class CloneTagGroupingKey(private val tagIdx: Int) : CloneGroupingKey {
         override fun getLabel(clone: Clone): String =
-            clone.tagFractions!!.asKeyPrefixOrError(tagIdx + 1).get(tagIdx).toString()
+            clone.tagCount.asKeyPrefixOrError(tagIdx + 1).get(tagIdx).toString()
     }
 
     private fun parseGroupingKey(header: MiXCRHeader, key: String) =
