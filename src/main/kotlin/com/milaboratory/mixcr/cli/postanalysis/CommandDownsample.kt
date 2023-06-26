@@ -46,10 +46,10 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
     @Option(
         description = ["Specify chains"],
         names = ["-c", "--chains"],
-        required = true,
-        order = OptionsOrder.main + 10_100
+        order = OptionsOrder.main + 10_100,
+        split = ","
     )
-    var chains: Chains? = null
+    var chains: Set<Chains>? = null
 
     @Option(
         description = [CommonDescriptions.ONLY_PRODUCTIVE],
