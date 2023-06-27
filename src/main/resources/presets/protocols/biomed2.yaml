@@ -34,7 +34,7 @@
       geneType: J
     - type: MaterialTypeRNA
 
-"biomed2-human-trb-trd-trg":
+"biomed2-human-tcr":
   inheritFrom: generic-amplicon
   pipeline:
     - align
