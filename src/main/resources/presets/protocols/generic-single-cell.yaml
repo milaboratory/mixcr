@@ -566,3 +566,25 @@ generic-ht-single-cell-fragmented-with-umi:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
+
+# Single cell GEX without UMI
+generic-single-cell-gex:
+  inheritFrom: generic-ht-single-cell-fragmented
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+    overrides:
+      cellLevel: true
+
+# Single cell GEX with UMI
+generic-single-cell-gex-with-umi:
+  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+    overrides:
+      cellLevel: true
+
+

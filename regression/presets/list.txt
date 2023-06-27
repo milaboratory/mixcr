@@ -16,7 +16,9 @@ bd-rhapsody-mouse-bcr-v2
 bd-rhapsody-mouse-tcr-full-length
 bd-rhapsody-mouse-tcr-v1
 bd-rhapsody-mouse-tcr-v2
-biomed2-human-bcr
+biomed2-human-igh
+biomed2-human-igl-igk
+biomed2-human-tcr
 cellecta-air-human
 exome-seq                                   --species <name>
 flairr-seq                                  --species <name>
@@ -64,6 +66,10 @@ generic-lt-single-cell-amplicon-with-umi    (--floating-left-alignment-boundary 
 generic-lt-single-cell-fragmented           --species <name>
                                             --tag-pattern <pattern>
 generic-lt-single-cell-fragmented-with-umi  --species <name>
+                                            --tag-pattern <pattern>
+generic-single-cell-gex                     --species <name>
+                                            --tag-pattern <pattern>
+generic-single-cell-gex-with-umi            --species <name>
                                             --tag-pattern <pattern>
 generic-tcr-amplicon-separate-samples-umi   (--floating-left-alignment-boundary [<anchor_point>]|
                                             --rigid-left-alignment-boundary [<anchor_point>])

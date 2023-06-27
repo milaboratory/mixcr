@@ -1,5 +1,5 @@
 "parse-bio-3gex-wt-mega":
-  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
       tagPattern: ^(R1:*)\^(UMI:N{10})(CELL3:N{8})gtggccgatgN{20}(CELL2:N{8})atccacgtgcN{12}(CELL1:N{8})
@@ -818,7 +818,7 @@
 
 
 "parse-bio-3gex-wt":
-  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
       tagPattern: ^(R1:*)\^(UMI:N{10})(CELL3:N{8})gtggccgatgN{20}(CELL2:N{8})atccacgtgcN{12}(CELL1:N{8})
@@ -1444,7 +1444,7 @@
                 name: CELL3CONVERTED
 
 "parse-bio-3gex-wt-mini":
-  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
       tagPattern: ^(R1:*)\^(UMI:N{10})(CELL3:N{8})gtggccgatgN{20}(CELL2:N{8})atccacgtgcN{12}(CELL1:N{8})
@@ -1926,7 +1926,7 @@
                 name: CELL3CONVERTED
 
 "split-seq-3gex":
-  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
       tagPattern: ^(R1:*)\^(UMI:N{10})(CELL3:N{8})gtggccgatgN{20}(CELL2:N{8})atccacgtgcN{20}(CELL1:N{8})

@@ -112,7 +112,7 @@ align:
         type: kaligner
         mapperKValue: 5
         floatingLeftBound: false
-        floatingRightBound: true
+        floatingRightBound: false
         mapperAbsoluteMinScore: 95.0
         mapperRelativeMinScore: 0.63
         mapperMatchScore: 128.0
@@ -159,7 +159,7 @@ align:
     smartForceEdgeAlignments: true
 refineTagsAndSort:
   whitelists: {}
-  runCorrection: false
+  runCorrection: true
   parameters:
     correctionPower: 0.001
     backgroundSubstitutionRate: 0.001
@@ -233,7 +233,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: advanced
+        type: relativeConcentration
         correctionPower: 0.001
         backgroundSubstitutionRate: 5.0E-4
         backgroundIndelRate: 2.0E-4
