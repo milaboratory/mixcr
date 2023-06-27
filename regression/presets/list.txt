@@ -18,7 +18,7 @@ bd-rhapsody-mouse-tcr-v1
 bd-rhapsody-mouse-tcr-v2
 biomed2-human-igh
 biomed2-human-igl-igk
-biomed2-human-trb-trd-trg
+biomed2-human-tcr
 cellecta-air-human
 exome-seq                                   --species <name>
 flairr-seq                                  --species <name>
