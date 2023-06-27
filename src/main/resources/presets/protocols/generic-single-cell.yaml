@@ -575,6 +575,10 @@ generic-single-cell-gex:
     overrides:
       parameters:
         postFilter: null
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+    overrides:
+      cellLevel: true
 
 # Single cell GEX with UMI
 generic-single-cell-gex-with-umi:
@@ -584,5 +588,9 @@ generic-single-cell-gex-with-umi:
     overrides:
       parameters:
         postFilter: null
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+    overrides:
+      cellLevel: true
 
 
