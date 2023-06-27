@@ -572,9 +572,6 @@ generic-single-cell-gex:
   inheritFrom: generic-ht-single-cell-fragmented
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
-    overrides:
-      parameters:
-        postFilter: null
   assemblePartial:
     inheritFrom: assemblePartial-base
     overrides:
@@ -585,9 +582,6 @@ generic-single-cell-gex-with-umi:
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
-    overrides:
-      parameters:
-        postFilter: null
   assemblePartial:
     inheritFrom: assemblePartial-base
     overrides:
