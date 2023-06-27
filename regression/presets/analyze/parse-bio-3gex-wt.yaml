@@ -31,54 +31,198 @@ align:
     - CELL1CONVERTED
     allowOneMismatch: true
     rules:
+    - from: AATCTTTC
+      to: 29
+    - from: AATTTCTC
+      to: 28
+    - from: ACACCTTT
+      to: 27
+    - from: ACATTCAT
+      to: 46
     - from: ACATTTAC
       to: '04'
+    - from: ACCCTTGC
+      to: 23
+    - from: ACTCATTT
+      to: 18
     - from: ACTCCTGC
       to: 12
     - from: ACTCGTAA
       to: 10
+    - from: ACTGCTCT
+      to: 21
+    - from: ACTGTGGG
+      to: 36
     - from: ACTTAGCT
       to: '05'
+    - from: ACTTTACC
+      to: 30
+    - from: AGGATTAA
+      to: 28
     - from: AGTCTCTT
       to: '08'
+    - from: AGTCTTGG
+      to: 19
+    - from: ATCCTTAC
+      to: 34
+    - from: ATCTTAGG
+      to: 24
     - from: ATGCTGCT
       to: '08'
+    - from: ATGTGTTG
+      to: 32
+    - from: ATTCATGG
+      to: 29
+    - from: ATTCTGTC
+      to: 41
+    - from: ATTTGGCA
+      to: 13
+    - from: ATTTTGCC
+      to: 22
+    - from: CAATTCTC
+      to: 14
     - from: CAATTTCC
       to: '07'
+    - from: CACCTTTA
+      to: 38
+    - from: CACTTTCA
+      to: 37
+    - from: CATACTTC
+      to: 16
     - from: CATCATCC
       to: '01'
+    - from: CATGTCTC
+      to: 25
     - from: CATTCCTA
       to: '01'
+    - from: CATTCTAC
+      to: 48
     - from: CATTTACA
       to: '09'
+    - from: CATTTGGA
+      to: 40
     - from: CCAATTCT
       to: '06'
+    - from: CCATCTTG
+      to: 33
+    - from: CCCTTATA
+      to: 20
+    - from: CCGTTCTA
+      to: 17
     - from: CCTATATC
       to: '03'
+    - from: CCTGTTGC
+      to: 43
     - from: CCTTTGCA
       to: 11
     - from: CTAAGGGA
       to: '03'
+    - from: CTATCATC
+      to: 44
+    - from: CTATTTCA
+      to: 32
+    - from: CTCTAATC
+      to: 22
+    - from: CTCTGTGC
+      to: 19
+    - from: CTGACTTC
+      to: 39
     - from: CTGCTTTG
       to: '02'
     - from: CTTCATCA
       to: '02'
+    - from: CTTCTAAC
+      to: 31
+    - from: CTTCTGTA
+      to: 23
+    - from: GAAATTAG
+      to: 47
+    - from: GCAAATTC
+      to: 48
     - from: GCCTATCT
       to: '07'
+    - from: GCTATCAT
+      to: 45
+    - from: GCTATCTC
+      to: 25
+    - from: GCTCTACT
+      to: 41
+    - from: GCTCTTTA
+      to: 16
+    - from: GCTGCATG
+      to: 17
     - from: GCTGCTTC
       to: 12
     - from: GCTTATAG
       to: '04'
+    - from: GCTTCATA
+      to: 18
+    - from: GGTTCTTC
+      to: 20
     - from: GTATTTCC
       to: 10
+    - from: GTCATATG
+      to: 30
+    - from: GTCCATCT
+      to: 24
+    - from: GTCCTCTG
+      to: 39
+    - from: GTGCTTCC
+      to: 31
+    - from: GTGCTTGA
+      to: 45
+    - from: GTTACGTA
+      to: 42
+    - from: GTTTGTGA
+      to: 46
+    - from: TAAATATC
+      to: 35
+    - from: TACTGTCT
+      to: 34
+    - from: TAGTTTCC
+      to: 26
+    - from: TATGTGTC
+      to: 13
+    - from: TCAATCTC
+      to: 38
+    - from: TCATGCTC
+      to: 15
+    - from: TCATGTTG
+      to: 21
+    - from: TCATTGCA
+      to: 26
+    - from: TCCATTAT
+      to: 27
+    - from: TCCATTTG
+      to: 43
+    - from: TCTCATGC
+      to: 33
     - from: TCTCTTGG
       to: '06'
     - from: TCTGATCC
       to: '05'
+    - from: TCTGTGCC
+      to: 37
     - from: TGCTGCTC
       to: '09'
+    - from: TGGTCTCC
+      to: 15
+    - from: TGTGTATG
+      to: 42
+    - from: TTACATTC
+      to: 40
+    - from: TTACCTGC
+      to: 36
+    - from: TTAGCTTC
+      to: 44
+    - from: TTATTCTG
+      to: 14
+    - from: TTCATCGC
+      to: 35
     - from: TTCCTGTG
       to: 11
+    - from: TTCGCTAC
+      to: 47
     reportingLevel: VerboseReport
   - type: mapTags
     name: Round2
