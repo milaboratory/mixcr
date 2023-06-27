@@ -1,4 +1,4 @@
-"biomed2-human-bcr":
+"biomed2-human-igh":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -15,6 +15,38 @@
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: false
+      geneType: J
+    - type: MaterialTypeRNA
+
+"biomed2-human-igl-igk":
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: J
+    - type: MaterialTypeRNA
+
+"biomed2-human-tcr":
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
       geneType: J
     - type: MaterialTypeRNA
 

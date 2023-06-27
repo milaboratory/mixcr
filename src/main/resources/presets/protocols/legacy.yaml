@@ -101,15 +101,15 @@ abhelix-human-tcr-full-length:
 # Biomed2 deprecated presets
 
 biomed2-human-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use biomed2-human-bcr. Notice that by default clones will be assembled by {CDR1Begin:CDR3End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: biomed2-human-bcr
+  deprecation: "The preset is deprecated. Please use biomed2-human-igh. Notice that by default clones will be assembled by {CDR1Begin:CDR3End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: biomed2-human-igh
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 biomed2-human-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use biomed2-human-bcr."
-  inheritFrom: biomed2-human-bcr
+  deprecation: "The preset is deprecated. Please use biomed2-human-igh."
+  inheritFrom: biomed2-human-igh
 
 # Illumina deprecated presets
 
