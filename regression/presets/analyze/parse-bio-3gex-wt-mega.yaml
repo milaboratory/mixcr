@@ -31,54 +31,390 @@ align:
     - CELL1CONVERTED
     allowOneMismatch: true
     rules:
+    - from: AATCTTTC
+      to: 29
+    - from: AATTCTGC
+      to: 80
+    - from: AATTTCTC
+      to: 28
+    - from: ACACCTTT
+      to: 27
+    - from: ACATTCAT
+      to: 46
     - from: ACATTTAC
       to: '04'
+    - from: ACATTTGG
+      to: 96
+    - from: ACCCTTGC
+      to: 23
+    - from: ACGGACTC
+      to: 63
+    - from: ACTATATA
+      to: 59
+    - from: ACTATTGC
+      to: 90
+    - from: ACTCATTT
+      to: 18
     - from: ACTCCTGC
       to: 12
     - from: ACTCGTAA
       to: 10
+    - from: ACTGCTCT
+      to: 21
+    - from: ACTGGCTT
+      to: 91
+    - from: ACTGTGGG
+      to: 36
     - from: ACTTAGCT
       to: '05'
+    - from: ACTTCATC
+      to: 55
+    - from: ACTTGCCT
+      to: 82
+    - from: ACTTTACC
+      to: 30
+    - from: AGGATTAA
+      to: 28
+    - from: AGGTAATA
+      to: 53
     - from: AGTCTCTT
       to: '08'
+    - from: AGTCTTGG
+      to: 19
+    - from: ATAAGCTC
+      to: 50
+    - from: ATATTGGC
+      to: 74
+    - from: ATCATTGC
+      to: 83
+    - from: ATCCTTAC
+      to: 34
+    - from: ATCTTAGG
+      to: 24
+    - from: ATCTTCAT
+      to: 76
+    - from: ATCTTCTG
+      to: 60
+    - from: ATCTTGTC
+      to: 82
+    - from: ATGCCCTT
+      to: 57
     - from: ATGCTGCT
       to: '08'
+    - from: ATGGTGTT
+      to: 94
+    - from: ATGTGTTG
+      to: 32
+    - from: ATGTTTCC
+      to: 55
+    - from: ATTAGGCT
+      to: 92
+    - from: ATTCATGG
+      to: 29
+    - from: ATTCTAGG
+      to: 94
+    - from: ATTCTCTG
+      to: 67
+    - from: ATTCTGTC
+      to: 41
+    - from: ATTGGCTC
+      to: 87
+    - from: ATTTCCTG
+      to: 90
+    - from: ATTTGGCA
+      to: 13
+    - from: ATTTTGCC
+      to: 22
+    - from: CAATCCTT
+      to: 71
+    - from: CAATTCTC
+      to: 14
     - from: CAATTTCC
       to: '07'
+    - from: CACCTTTA
+      to: 38
+    - from: CACTTATC
+      to: 49
+    - from: CACTTTCA
+      to: 37
+    - from: CAGCCTTT
+      to: 66
+    - from: CATACTTC
+      to: 16
     - from: CATCATCC
       to: '01'
+    - from: CATCATTT
+      to: 58
+    - from: CATGTCTC
+      to: 25
     - from: CATTCCTA
       to: '01'
+    - from: CATTCTAC
+      to: 48
+    - from: CATTCTCA
+      to: 81
     - from: CATTTACA
       to: '09'
+    - from: CATTTGGA
+      to: 40
     - from: CCAATTCT
       to: '06'
+    - from: CCATCTTG
+      to: 33
+    - from: CCATTTGC
+      to: 85
+    - from: CCCAATTT
+      to: 58
+    - from: CCCTTATA
+      to: 20
+    - from: CCGTTCTA
+      to: 17
     - from: CCTATATC
       to: '03'
+    - from: CCTCATTA
+      to: 67
+    - from: CCTCTGTG
+      to: 96
+    - from: CCTGCATT
+      to: 70
+    - from: CCTGGTAT
+      to: 52
+    - from: CCTGTCTG
+      to: 50
+    - from: CCTGTTGC
+      to: 43
+    - from: CCTTACAT
+      to: 95
     - from: CCTTTGCA
       to: 11
+    - from: CGCTCATT
+      to: 75
+    - from: CGTCTAGG
+      to: 64
+    - from: CGTGGTTG
+      to: 77
+    - from: CGTTGTCT
+      to: 85
     - from: CTAAGGGA
       to: '03'
+    - from: CTATCATC
+      to: 44
+    - from: CTATTTCA
+      to: 32
+    - from: CTCTAATC
+      to: 22
+    - from: CTCTATAC
+      to: 60
+    - from: CTCTGTGC
+      to: 19
+    - from: CTCTTAAC
+      to: 78
+    - from: CTGACTTC
+      to: 39
     - from: CTGCTTTG
       to: '02'
+    - from: CTGTCTCA
+      to: 61
+    - from: CTGTCTGC
+      to: 72
+    - from: CTTAATTC
+      to: 56
+    - from: CTTATACC
+      to: 68
     - from: CTTCATCA
       to: '02'
+    - from: CTTCTAAC
+      to: 31
+    - from: CTTCTGTA
+      to: 23
+    - from: CTTTCAAC
+      to: 89
+    - from: GAAATTAG
+      to: 47
+    - from: GAATAATG
+      to: 95
+    - from: GACCTTTC
+      to: 62
+    - from: GACTTTGC
+      to: 86
+    - from: GAGCACAA
+      to: 77
+    - from: GAGGTTGA
+      to: 49
+    - from: GATGTTTC
+      to: 81
+    - from: GATTTGGC
+      to: 63
+    - from: GCAAATTC
+      to: 48
     - from: GCCTATCT
       to: '07'
+    - from: GCCTCTAT
+      to: 76
+    - from: GCCTTTCA
+      to: 93
+    - from: GCTATCAT
+      to: 45
+    - from: GCTATCTC
+      to: 25
+    - from: GCTCTACT
+      to: 41
+    - from: GCTCTTTA
+      to: 16
+    - from: GCTGCATG
+      to: 17
     - from: GCTGCTTC
       to: 12
     - from: GCTTATAG
       to: '04'
+    - from: GCTTCATA
+      to: 18
+    - from: GGTTCTTC
+      to: 20
     - from: GTATTTCC
       to: 10
+    - from: GTCATATG
+      to: 30
+    - from: GTCATCTC
+      to: 70
+    - from: GTCCATCT
+      to: 24
+    - from: GTCCTCTG
+      to: 39
+    - from: GTGCCTTC
+      to: 54
+    - from: GTGCTAGC
+      to: 88
+    - from: GTGCTTCC
+      to: 31
+    - from: GTGCTTGA
+      to: 45
+    - from: GTGGGTTC
+      to: 51
+    - from: GTGTCCTC
+      to: 75
+    - from: GTGTCTCC
+      to: 91
+    - from: GTGTGTGT
+      to: 92
+    - from: GTTACGTA
+      to: 42
+    - from: GTTCAACA
+      to: 84
+    - from: GTTGTCTC
+      to: 59
+    - from: GTTTGTGA
+      to: 46
+    - from: TAAATATC
+      to: 35
+    - from: TACTCGAA
+      to: 65
+    - from: TACTGTCT
+      to: 34
+    - from: TAGTTTCC
+      to: 26
+    - from: TATATTCC
+      to: 73
+    - from: TATCCGGG
+      to: 65
+    - from: TATGCTTC
+      to: 93
+    - from: TATGTGTC
+      to: 13
+    - from: TATTCCTG
+      to: 87
+    - from: TCAATCTC
+      to: 38
+    - from: TCACTTTA
+      to: 73
+    - from: TCATATTC
+      to: 83
+    - from: TCATCCTG
+      to: 51
+    - from: TCATGCTC
+      to: 15
+    - from: TCATGTTG
+      to: 21
+    - from: TCATTGCA
+      to: 26
+    - from: TCCATGTC
+      to: 88
+    - from: TCCATTAT
+      to: 27
+    - from: TCCATTTG
+      to: 43
+    - from: TCTAGGCT
+      to: 79
+    - from: TCTATTAC
+      to: 69
+    - from: TCTCATGC
+      to: 33
+    - from: TCTCTAGC
+      to: 56
     - from: TCTCTTGG
       to: '06'
     - from: TCTGATCC
       to: '05'
+    - from: TCTGGCTC
+      to: 57
+    - from: TCTGTGCC
+      to: 37
+    - from: TCTTAATC
+      to: 79
+    - from: TCTTGTCA
+      to: 86
+    - from: TGCATTTC
+      to: 80
     - from: TGCTGCTC
       to: '09'
+    - from: TGCTTGGG
+      to: 74
+    - from: TGGCCTCT
+      to: 84
+    - from: TGGCTTCC
+      to: 68
+    - from: TGGTATAC
+      to: 53
+    - from: TGGTCTCC
+      to: 15
+    - from: TGTCATTC
+      to: 66
+    - from: TGTGTATG
+      to: 42
+    - from: TGTTTGCC
+      to: 61
+    - from: TTACATTC
+      to: 40
+    - from: TTACCTGC
+      to: 36
+    - from: TTAGCTTC
+      to: 44
+    - from: TTATTCTG
+      to: 14
+    - from: TTCATCGC
+      to: 35
     - from: TTCCTGTG
       to: 11
+    - from: TTCGCTAC
+      to: 47
+    - from: TTCTGTCA
+      to: 62
+    - from: TTGCATCC
+      to: 78
+    - from: TTGCTCAT
+      to: 71
+    - from: TTGGGAGA
+      to: 54
+    - from: TTGTCATC
+      to: 89
+    - from: TTGTCTTA
+      to: 72
+    - from: TTGTTGCC
+      to: 69
+    - from: TTTGCATC
+      to: 52
+    - from: TTTGGTCA
+      to: 64
     reportingLevel: VerboseReport
   - type: mapTags
     name: Round2
