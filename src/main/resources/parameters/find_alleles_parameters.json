@@ -53,7 +53,7 @@
       "diversityRatioToSearchCommonMutationsInAnAllele": 0.95,
       "minNaiveClonesCountForAlleleSearch": 2,
       "minCountOfNaiveClonesToAddAllele": 2,
-      "minCountOfNaiveClonesToAddAlleleOnDirectAligning": 2,
+      "minCountOfNaiveClonesToAddAlleleOnDirectAligning": 1,
       "runOnSplitSubsets": true,
       "searchForMultiZygotes": true
     },
