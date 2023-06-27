@@ -172,7 +172,7 @@ refineTagsAndSort:
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
-  cellLevel: false
+  cellLevel: true
   parameters:
     kValue: 12
     kOffset: -7
