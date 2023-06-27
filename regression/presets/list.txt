@@ -67,6 +67,10 @@ generic-lt-single-cell-fragmented           --species <name>
                                             --tag-pattern <pattern>
 generic-lt-single-cell-fragmented-with-umi  --species <name>
                                             --tag-pattern <pattern>
+generic-single-cell-gex                     --species <name>
+                                            --tag-pattern <pattern>
+generic-single-cell-gex-with-umi            --species <name>
+                                            --tag-pattern <pattern>
 generic-tcr-amplicon-separate-samples-umi   (--floating-left-alignment-boundary [<anchor_point>]|
                                             --rigid-left-alignment-boundary [<anchor_point>])
                                             --species <name>
