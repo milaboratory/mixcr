@@ -10,12 +10,14 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
+import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRStepReports
 import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.test.TestUtil.assertJson
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM
+import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import org.junit.Assert
@@ -86,43 +88,43 @@ class PresetsTest {
     @Test
     fun testExport2() {
         for (presetName in Presets.nonAbstractPresetNames) {
-            val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-            if (bundle.align == null)
-                continue
-            val tagsInfo = TagsInfo(
-                0,
-                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL", 0),
-                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1", 1),
-                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1ROW", 2),
-                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2", 3),
-                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2COLUMN", 4),
-                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3", 5),
-                TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3PLATE", 6),
-                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 7),
-                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI1", 8),
-                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI2", 9),
-                TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI3", 10),
-            )
-            val metaForExport = MetaForExport(
-                listOf(tagsInfo),
-                null,
-                MiXCRStepReports()
-            )
-            bundle.exportAlignments?.let { al ->
-                println(
-                    CloneFieldsExtractorsFactory.createExtractors(
-                        al.fields,
-                        metaForExport
-                    ).size
-                )
-            }
-            bundle.exportClones?.let { al ->
-                println(
-                    CloneFieldsExtractorsFactory.createExtractors(
-                        al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
-                        metaForExport
-                    ).size
-                )
+            presetName.asClue {
+                shouldNotThrowAny {
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    if (bundle.align != null) {
+                        val tagsInfo = TagsInfo(
+                            0,
+                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL", 0),
+                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1", 1),
+                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1ROW", 2),
+                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2", 3),
+                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2COLUMN", 4),
+                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3", 5),
+                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3PLATE", 6),
+                            TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 7),
+                            TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI1", 8),
+                            TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI2", 9),
+                            TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI3", 10),
+                        )
+                        val metaForExport = MetaForExport(
+                            listOf(tagsInfo),
+                            null,
+                            MiXCRStepReports()
+                        )
+                        bundle.exportAlignments?.let { al ->
+                            VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
+                                al.fields,
+                                metaForExport
+                            ).size
+                        }
+                        bundle.exportClones?.let { al ->
+                            CloneFieldsExtractorsFactory.createExtractors(
+                                al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
+                                metaForExport
+                            ).size
+                        }
+                    }
+                }
             }
         }
     }
