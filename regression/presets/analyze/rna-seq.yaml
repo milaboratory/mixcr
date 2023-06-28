@@ -300,3 +300,9 @@ exportClones:
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []
+qc:
+  checks:
+  - type: AlignmentsDroppedLowQuality
+    upper: 0.2
+    middle: 0.1
+    label: Alignments dropped due to low sequence quality

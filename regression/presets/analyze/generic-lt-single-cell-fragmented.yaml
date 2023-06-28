@@ -363,3 +363,17 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
+qc:
+  checks:
+  - type: SuccessfullyAlignedReads
+    upper: 0.8
+    middle: 0.6
+    label: Successfully aligned reads
+  - type: UnassignedAlignments
+    upper: 0.2
+    middle: 0.1
+    label: Unassigned alignments in clonotype assembly
+  - type: AlignmentsDroppedLowQuality
+    upper: 0.2
+    middle: 0.1
+    label: Alignments dropped due to low sequence quality
