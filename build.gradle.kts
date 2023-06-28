@@ -133,7 +133,7 @@ val obfuscationLibs: Configuration by configurations.creating
 val mixcrAlgoVersion = "4.3.0-206-fix-alleles"
 val milibVersion = ""
 val mitoolVersion = ""
-val repseqioVersion = "1.8.0-81-master"
+val repseqioVersion = "1.8.0-82-master"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
