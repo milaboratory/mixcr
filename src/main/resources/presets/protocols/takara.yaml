@@ -27,6 +27,11 @@
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 "takara-human-bcr-profiling":
   inheritFrom: takara-smartseq-human-bcr
@@ -68,6 +73,11 @@
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 "takara-mouse-bcr-profiling":
   inheritFrom: generic-amplicon
@@ -97,6 +107,11 @@
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 "takara-mouse-tcr-profiling":
   inheritFrom: takara-mouse-bcr-profiling

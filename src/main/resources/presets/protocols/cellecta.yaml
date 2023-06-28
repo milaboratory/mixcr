@@ -16,3 +16,8 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9

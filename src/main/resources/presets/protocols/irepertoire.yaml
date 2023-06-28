@@ -13,6 +13,11 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 "irepertoire-repseq-human-lr":
   inheritFrom: irepertoire-repseq-human-sr
@@ -56,6 +61,11 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 "irepertoire-repseq-human-dna-lr":
   inheritFrom: irepertoire-repseq-human-dna-sr

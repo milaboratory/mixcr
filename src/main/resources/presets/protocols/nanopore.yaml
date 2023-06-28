@@ -6,6 +6,11 @@
     - assemble
     - assembleContigs
     - exportClones
+  qc:
+    checks:
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.3
+        upper: 0.5
   align:
     inheritFrom: align-long-read
   assemble:

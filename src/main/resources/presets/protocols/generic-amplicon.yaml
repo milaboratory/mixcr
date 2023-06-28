@@ -24,16 +24,25 @@ generic-amplicon:
         upper: 0.2
       - type: ReadsUsedInClonotypes
         middle: 0.7
-        upper: 0.8
+        upper: 0.9
       - type: AlignmentsWithNoAssemblingFeature
         middle: 0.05
         upper: 0.15
       - type: AlignmentsDroppedLowQuality
-        middle: 0.05
-        upper: 0.2
+        middle: 0.01
+        upper: 0.05
       - type: AlignmentsClusteredInAssembler
-        middle: 0.05
-        upper: 0.15
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
 
 generic-amplicon-with-umi:
   inheritFrom: bundle-base
@@ -70,16 +79,7 @@ generic-amplicon-with-umi:
       - type: ReadsWithNoVOrJHits
         middle: 0.1
         upper: 0.2
-      - type: ReadsUsedInClonotypes
-        middle: 0.7
-        upper: 0.8
       - type: AlignmentsWithNoAssemblingFeature
-        middle: 0.05
-        upper: 0.15
-      - type: AlignmentsDroppedLowQuality
-        middle: 0.05
-        upper: 0.2
-      - type: AlignmentsClusteredInAssembler
         middle: 0.05
         upper: 0.15
       - type: ReadsWithNoBarcode
@@ -103,29 +103,26 @@ generic-amplicon-with-umi:
         middle: 0.1
         upper: 0.2
       - type: TagGroupsWithMultipleConsensuses
-        middle: 0.001
+        middle: 0.01
         upper: 0.1
       - type: UnassignedAlignments
         middle: 0.05
         upper: 0.1
       - type: ReadsUsedInClonotypes
-        middle: 0.8
+        middle: 0.7
         upper: 0.9
-      - type: AlignmentsWithNoAssemblingFeature
-        middle: 0.2
-        upper: 0.1
       - type: AlignmentsDroppedLowQuality
-        middle: 0.05
-        upper: 0.1
+        middle: 0.01
+        upper: 0.05
       - type: AlignmentsClusteredInAssembler
-        middle: 0.05
-        upper: 0.1
+        middle: 0.01
+        upper: 0.05
       - type: ClonesClusteredInAssembler
-        middle: 0.05
-        upper: 0.1
+        middle: 0.01
+        upper: 0.05
       - type: ClonesDroppedInPostFiltering
-        middle: 0.05
-        upper: 0.1
+        middle: 0.01
+        upper: 0.05
       - type: AlignmentsDroppedInPostFiltering
-        middle: 0.05
-        upper: 0.1
+        middle: 0.01
+        upper: 0.05

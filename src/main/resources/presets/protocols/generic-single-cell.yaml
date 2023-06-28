@@ -11,6 +11,38 @@ generic-lt-single-cell-amplicon:
     - refineTagsAndSort
     - assemble
     - exportClones
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.85
+      - type: OffTargetReads
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsWithNoVOrJHits
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsUsedInClonotypes
+        middle: 0.7
+        upper: 0.9
+      - type: AlignmentsWithNoAssemblingFeature
+        middle: 0.05
+        upper: 0.15
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
   mixins:
     - type: MaterialTypeRNA
   align:
@@ -50,6 +82,64 @@ generic-lt-single-cell-amplicon-with-umi:
     - refineTagsAndSort
     - assemble
     - exportClones
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.85
+      - type: OffTargetReads
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsWithNoVOrJHits
+        middle: 0.1
+        upper: 0.2
+      - type: AlignmentsWithNoAssemblingFeature
+        middle: 0.05
+        upper: 0.15
+      - type: ReadsWithNoBarcode
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.05
+        upper: 0.1
+      - type: TagArtificialDiversityEliminated
+        tag: UMI
+        middle: 0.3
+        upper: 0.5
+      - type: ReadsDroppedInTagCorrection
+        tag: UMI
+        middle: 0.05
+        upper: 0.1
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.05
+        upper: 0.1
+      - type: TagGroupsWithNoAssemblingFeature
+        middle: 0.1
+        upper: 0.2
+      - type: TagGroupsWithMultipleConsensuses
+        middle: 0.01
+        upper: 0.1
+      - type: UnassignedAlignments
+        middle: 0.05
+        upper: 0.1
+      - type: ReadsUsedInClonotypes
+        middle: 0.7
+        upper: 0.9
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
   mixins:
     - type: MaterialTypeRNA
   align:
@@ -129,6 +219,17 @@ generic-lt-single-cell-fragmented:
     - exportClones
   mixins:
     - type: MaterialTypeRNA
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.6
+        upper: 0.8
+      - type: UnassignedAlignments
+        middle: 0.1
+        upper: 0.2
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.1
+        upper: 0.2
   align:
     inheritFrom: align-single-cell
   assemble:
@@ -170,6 +271,27 @@ generic-lt-single-cell-fragmented-with-umi:
     - exportClones
   mixins:
     - type: MaterialTypeRNA
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.6
+        upper: 0.8
+      - type: UnassignedAlignments
+        middle: 0.1
+        upper: 0.2
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.15
+        upper: 0.3
+      - type: TagArtificialDiversityEliminated
+        tag: CELL
+        middle: 0.7
+        upper: 0.8
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.1
+        upper: 0.2
   align:
     inheritFrom: align-single-cell
   refineTagsAndSort:
@@ -246,6 +368,38 @@ generic-ht-single-cell-amplicon:
     - refineTagsAndSort
     - assemble
     - exportClones
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.85
+      - type: OffTargetReads
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsWithNoVOrJHits
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsUsedInClonotypes
+        middle: 0.7
+        upper: 0.9
+      - type: AlignmentsWithNoAssemblingFeature
+        middle: 0.05
+        upper: 0.15
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
   mixins:
     - type: MaterialTypeRNA
   align:
@@ -313,6 +467,68 @@ generic-ht-single-cell-amplicon-with-umi:
     - refineTagsAndSort
     - assemble
     - exportClones
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.85
+      - type: OffTargetReads
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsWithNoVOrJHits
+        middle: 0.1
+        upper: 0.2
+      - type: AlignmentsWithNoAssemblingFeature
+        middle: 0.05
+        upper: 0.15
+      - type: ReadsWithNoBarcode
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.05
+        upper: 0.1
+      - type: TagArtificialDiversityEliminated
+        tag: UMI
+        middle: 0.3
+        upper: 0.5
+      - type: TagArtificialDiversityEliminated
+        tag: CELL
+        middle: 0.7
+        upper: 0.8
+      - type: ReadsDroppedInTagCorrection
+        tag: UMI
+        middle: 0.05
+        upper: 0.1
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.05
+        upper: 0.1
+      - type: TagGroupsWithNoAssemblingFeature
+        middle: 0.1
+        upper: 0.2
+      - type: TagGroupsWithMultipleConsensuses
+        middle: 0.01
+        upper: 0.1
+      - type: UnassignedAlignments
+        middle: 0.05
+        upper: 0.1
+      - type: ReadsUsedInClonotypes
+        middle: 0.7
+        upper: 0.9
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesClusteredInAssembler
+        middle: 0.01
+        upper: 0.05
+      - type: ClonesDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
+      - type: AlignmentsDroppedInPostFiltering
+        middle: 0.01
+        upper: 0.05
   mixins:
     - type: MaterialTypeRNA
   align:
@@ -414,6 +630,27 @@ generic-ht-single-cell-fragmented:
     - exportClones
   mixins:
     - type: MaterialTypeRNA
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.6
+        upper: 0.8
+      - type: UnassignedAlignments
+        middle: 0.1
+        upper: 0.2
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.15
+        upper: 0.3
+      - type: TagArtificialDiversityEliminated
+        tag: CELL
+        middle: 0.7
+        upper: 0.8
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.1
+        upper: 0.2
   align:
     inheritFrom: align-single-cell
   refineTagsAndSort:
@@ -482,6 +719,27 @@ generic-ht-single-cell-fragmented-with-umi:
     - exportClones
   mixins:
     - type: MaterialTypeRNA
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.6
+        upper: 0.8
+      - type: UnassignedAlignments
+        middle: 0.1
+        upper: 0.2
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.1
+        upper: 0.2
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.15
+        upper: 0.3
+      - type: TagArtificialDiversityEliminated
+        tag: CELL
+        middle: 0.7
+        upper: 0.8
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.1
+        upper: 0.2
   align:
     inheritFrom: align-single-cell
   refineTagsAndSort:
