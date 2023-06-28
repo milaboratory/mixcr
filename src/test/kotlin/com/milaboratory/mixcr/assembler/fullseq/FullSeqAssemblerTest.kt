@@ -316,20 +316,20 @@ class FullSeqAssemblerTest {
 |                 V  W  V  S  R  I  N  S  D  G  S  S  T  S  Y  A  D  S  V  K  G  R  F  T  I  S  R    
 |    Quality     99999999999999999999999999999999999999999999999999999999999999999999999999999999    
 |    Target0   0 GTGTGGGTCTCACGTATTAATAGTGATGGGAGTAGCACAAGCTACGCGGACTCCGTGAAGGGCCGATTCACCATCTCCAG 79   Score (hit score)
-|IGHV3-74*00 292 gtgtgggtctcacgtattaatagtgatgggagtagcacaagctacgcggactccgtgaagggccgattcaccatctccag 371  450 (825)
+|IGHV3-74*00 212 gtgtgggtctcacgtattaatagtgatgggagtagcacaagctacgcggactccgtgaagggccgattcaccatctccag 291  450 (825)
 |
 |                              
 |                  D  N  A     
 |    Quality     9999999999    
 |    Target0  80 AGACAACGCC 89   Score (hit score)
-|IGHV3-74*00 372 agacaacgcc 381  450 (825)
+|IGHV3-74*00 292 agacaacgcc 301  450 (825)
 |
 |                                                                         DP>                        
 |                                FR3><CDR3   V>             <D            D><DP<J     CDR3><FR4      
 |                _  D  T  A  V  Y  Y  C  A  R  G  P  Q  E  N  S  G  Y  Y  Y  G  F  D  Y  W  G  Q     
 |    Quality     99999999999999999999999999999999999999999999999999999999999999999999999999999999    
 |    Target1   0 AGGACACGGCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAG 79   Score (hit score)
-|IGHV3-74*00 422 aggacacggctgtgtattactgtgcaagag                                                   451  150 (825)
+|IGHV3-74*00 342 aggacacggctgtgtattactgtgcaagag                                                   371  150 (825)
 |IGHD3-22*00  46                                            tagtggttattactacg                     62   85 (85)
 |   IGHJ4*00  25                                                               tttgactactggggccag 42   215 (215)
 |
