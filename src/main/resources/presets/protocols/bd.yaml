@@ -634,7 +634,7 @@
                       - type: constantNumber
                         value: -1
                   - type: constantNumber
-                    value: 9216
+                    value: 147456
               - type: multiply
                 sources:
                   - type: plus
@@ -644,7 +644,7 @@
                       - type: constantNumber
                         value: -1
                   - type: constantNumber
-                    value: 96
+                    value: 384
               - type: tag
                 name: CELL3ID
 
@@ -1279,7 +1279,7 @@
                       - type: constantNumber
                         value: -1
                   - type: constantNumber
-                    value: 9216
+                    value: 147456
               - type: multiply
                 sources:
                   - type: plus
@@ -1289,7 +1289,7 @@
                       - type: constantNumber
                         value: -1
                   - type: constantNumber
-                    value: 96
+                    value: 384
               - type: tag
                 name: CELL3ID
 
