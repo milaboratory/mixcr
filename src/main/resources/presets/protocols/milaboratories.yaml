@@ -27,6 +27,11 @@ milab-human-ig-rna-multiplex:
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 
 milab-human-tcr-rna-race:
@@ -50,6 +55,11 @@ milab-human-tcr-rna-race:
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 
 milab-human-tcr-rna-multiplex:
@@ -71,6 +81,11 @@ milab-human-tcr-rna-multiplex:
     - type: SetSplitClonesBy
       geneType: J
       value: true
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 
 milab-human-tcr-dna-multiplex:
@@ -84,6 +99,11 @@ milab-human-tcr-dna-multiplex:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 
 milab-mouse-tcr-rna-race:

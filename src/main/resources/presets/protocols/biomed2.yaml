@@ -17,6 +17,11 @@
       floating: false
       geneType: J
     - type: MaterialTypeRNA
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 "biomed2-human-igl-igk":
   inheritFrom: generic-amplicon
