@@ -113,7 +113,7 @@ qiaseq-human-tcr-panel
 qiaseq-mouse-tcr-panel
 rna-seq                                     --species <name>
 seqwell-vdj                                 --species <name>
-singleron-2.0.1-vdj
+singleron-gexscope-single-cell-vdj
 smartseq2-vdj                               --species <name>
                                             --tag-pattern <pattern>
 split-seq-3gex                              --species <name>
