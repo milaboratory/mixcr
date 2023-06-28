@@ -395,8 +395,8 @@ smartseq2-vdj-full-length:
   inheritFrom: smartseq2-vdj
 
 singleron-2.0.1-vdj-cdr3:
-  deprecation: "The preset is deprecated. Please use singleron-2.0.1-vdj."
-  inheritFrom: singleron-2.0.1-vdj
+  deprecation: "The preset is deprecated. Please use singleron-gexscope-single-cell-vdj."
+  inheritFrom: singleron-gexscope-single-cell-vdj
 
 seqwell-vdj-cdr3:
   deprecation: "The preset is deprecated. Please use seqwell-vdj."
