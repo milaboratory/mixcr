@@ -782,86 +782,11 @@ refineTagsAndSort:
     maxSubstitutions: 2
     maxIndels: 2
     maxTotalErrors: 3
-    postFilter:
-      type: filter_and
-      operands:
-      - type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        - allTags:Molecule
-        predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-          operator:
-            type: group_operator_lowest_threshold
-            operators:
-            - type: group_operator_advanced_thresholding
-              algo:
-                type: otsu
-              histTransformers:
-              - type: inflate
-                fraction: 0.15
-                value: 1.0
-              logX: true
-              minimalSample: 20
-              fallbackThreshold: 1.0
-              accept: High
-            - type: group_operator_cumtop
-              share: 0.85
-              round: Down
-              accept: High
-            accept: High
-          expectedSorting: []
-          requiredSequences: []
-        expectedSorting:
-        - allTags:Cell
-        - allTags:Molecule
-        requiredSequences: []
-      - type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-            keys:
-            - allTags:Molecule
-          operator:
-            type: group_operator_advanced_thresholding
-            algo:
-              type: otsu
-            histTransformers:
-            - type: inflate
-              fraction: 0.15
-              value: 1.0
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 1.0
-            accept: High
-          expectedSorting:
-          - allTags:Molecule
-          requiredSequences: []
-        expectedSorting:
-        - allTags:Cell
-        - allTags:Molecule
-        requiredSequences: []
-      expectedSorting:
-      - allTags:Cell
-      - allTags:Molecule
-      requiredSequences: []
+    postFilter: null
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
-  cellLevel: false
+  cellLevel: true
   parameters:
     kValue: 12
     kOffset: -7
@@ -922,7 +847,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
+        type: advanced
         correctionPower: 0.001
         backgroundSubstitutionRate: 5.0E-4
         backgroundIndelRate: 2.0E-4

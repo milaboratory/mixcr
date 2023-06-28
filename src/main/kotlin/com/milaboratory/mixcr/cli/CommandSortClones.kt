@@ -18,7 +18,7 @@ import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.CloneSet.Companion.reorder
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
@@ -87,7 +87,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
             CLNS -> ClnsReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
                 ClnsWriter(out).use { writer ->
                     val ordering = chooseOrdering(reader)
-                    writer.writeCloneSet(CloneSet.reorder(reader.readCloneSet(), ordering))
+                    writer.writeCloneSet(reader.readCloneSet().reorder(ordering))
                     writer.setFooter(reader.footer)
                 }
             }
@@ -99,7 +99,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
                 ClnAWriter(out, TempFileManager.smartTempDestination(out, "", !useLocalTemp.value)).use { writer ->
                     SmartProgressReporter.startProgressReport(writer)
                     val ordering = chooseOrdering(reader)
-                    writer.writeClones(CloneSet.reorder(reader.readCloneSet(), ordering))
+                    writer.writeClones(reader.readCloneSet().reorder(ordering))
                     writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments())
                     writer.setFooter(reader.footer)
                     writer.writeAlignmentsAndIndex()

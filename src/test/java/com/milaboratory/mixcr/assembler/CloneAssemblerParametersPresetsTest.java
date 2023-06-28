@@ -22,9 +22,4 @@ public class CloneAssemblerParametersPresetsTest {
         Assert.assertEquals(GeneFeature.CDR3,
                 CloneAssemblerParametersPresets.getByName("default").getAssemblingFeatures()[0]);
     }
-
-    @Test
-    public void test2() throws Exception {
-        IOTestUtil.assertJavaSerialization(CloneAssemblerParametersPresets.getByName("default"));
-    }
 }

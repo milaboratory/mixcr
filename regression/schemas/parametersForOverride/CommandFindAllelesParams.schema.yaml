@@ -31,11 +31,15 @@ $defs:
         type: integer
       minCountOfNaiveClonesToAddAllele:
         type: integer
+      minCountOfNaiveClonesToAddAlleleOnDirectAligning:
+        type: integer
       minNaiveClonesCountForAlleleSearch:
         type: integer
       minRelativePenaltyBetweenAllelesForCloneAlign:
         type: number
       runOnSplitSubsets:
+        type: boolean
+      searchForMultiZygotes:
         type: boolean
       topByScore:
         type: number

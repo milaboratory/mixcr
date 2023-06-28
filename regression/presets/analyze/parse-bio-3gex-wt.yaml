@@ -1,0 +1,989 @@
+flags:
+- species
+pipeline:
+- align
+- refineTagsAndSort
+- assemblePartial
+- extend
+- assemble
+- assembleContigs
+- exportClones
+align:
+  species: ""
+  libraryName: default
+  trimmingQualityThreshold: 10
+  trimmingWindowSize: 6
+  chains: ALL
+  replaceWildcards: true
+  overlapPairedReads: true
+  bamDropNonVDJ: false
+  writeFailedAlignments: false
+  tagPattern: "^(R1:*)\\^(UMI:N{10})(CELL3:N{8})gtggccgatgN{20}(CELL2:N{8})atccacgtgcN{12}(CELL1:N{8})"
+  tagUnstranded: false
+  tagMaxBudget: 10.0
+  readIdAsCellTag: false
+  tagTransformationSteps:
+  - type: mapTags
+    name: Round1
+    matchTags:
+    - CELL1
+    newTags:
+    - CELL1CONVERTED
+    allowOneMismatch: true
+    rules:
+    - from: AATCTTTC
+      to: 29
+    - from: AATTTCTC
+      to: 28
+    - from: ACACCTTT
+      to: 27
+    - from: ACATTCAT
+      to: 46
+    - from: ACATTTAC
+      to: '04'
+    - from: ACCCTTGC
+      to: 23
+    - from: ACTCATTT
+      to: 18
+    - from: ACTCCTGC
+      to: 12
+    - from: ACTCGTAA
+      to: 10
+    - from: ACTGCTCT
+      to: 21
+    - from: ACTGTGGG
+      to: 36
+    - from: ACTTAGCT
+      to: '05'
+    - from: ACTTTACC
+      to: 30
+    - from: AGGATTAA
+      to: 28
+    - from: AGTCTCTT
+      to: '08'
+    - from: AGTCTTGG
+      to: 19
+    - from: ATCCTTAC
+      to: 34
+    - from: ATCTTAGG
+      to: 24
+    - from: ATGCTGCT
+      to: '08'
+    - from: ATGTGTTG
+      to: 32
+    - from: ATTCATGG
+      to: 29
+    - from: ATTCTGTC
+      to: 41
+    - from: ATTTGGCA
+      to: 13
+    - from: ATTTTGCC
+      to: 22
+    - from: CAATTCTC
+      to: 14
+    - from: CAATTTCC
+      to: '07'
+    - from: CACCTTTA
+      to: 38
+    - from: CACTTTCA
+      to: 37
+    - from: CATACTTC
+      to: 16
+    - from: CATCATCC
+      to: '01'
+    - from: CATGTCTC
+      to: 25
+    - from: CATTCCTA
+      to: '01'
+    - from: CATTCTAC
+      to: 48
+    - from: CATTTACA
+      to: '09'
+    - from: CATTTGGA
+      to: 40
+    - from: CCAATTCT
+      to: '06'
+    - from: CCATCTTG
+      to: 33
+    - from: CCCTTATA
+      to: 20
+    - from: CCGTTCTA
+      to: 17
+    - from: CCTATATC
+      to: '03'
+    - from: CCTGTTGC
+      to: 43
+    - from: CCTTTGCA
+      to: 11
+    - from: CTAAGGGA
+      to: '03'
+    - from: CTATCATC
+      to: 44
+    - from: CTATTTCA
+      to: 32
+    - from: CTCTAATC
+      to: 22
+    - from: CTCTGTGC
+      to: 19
+    - from: CTGACTTC
+      to: 39
+    - from: CTGCTTTG
+      to: '02'
+    - from: CTTCATCA
+      to: '02'
+    - from: CTTCTAAC
+      to: 31
+    - from: CTTCTGTA
+      to: 23
+    - from: GAAATTAG
+      to: 47
+    - from: GCAAATTC
+      to: 48
+    - from: GCCTATCT
+      to: '07'
+    - from: GCTATCAT
+      to: 45
+    - from: GCTATCTC
+      to: 25
+    - from: GCTCTACT
+      to: 41
+    - from: GCTCTTTA
+      to: 16
+    - from: GCTGCATG
+      to: 17
+    - from: GCTGCTTC
+      to: 12
+    - from: GCTTATAG
+      to: '04'
+    - from: GCTTCATA
+      to: 18
+    - from: GGTTCTTC
+      to: 20
+    - from: GTATTTCC
+      to: 10
+    - from: GTCATATG
+      to: 30
+    - from: GTCCATCT
+      to: 24
+    - from: GTCCTCTG
+      to: 39
+    - from: GTGCTTCC
+      to: 31
+    - from: GTGCTTGA
+      to: 45
+    - from: GTTACGTA
+      to: 42
+    - from: GTTTGTGA
+      to: 46
+    - from: TAAATATC
+      to: 35
+    - from: TACTGTCT
+      to: 34
+    - from: TAGTTTCC
+      to: 26
+    - from: TATGTGTC
+      to: 13
+    - from: TCAATCTC
+      to: 38
+    - from: TCATGCTC
+      to: 15
+    - from: TCATGTTG
+      to: 21
+    - from: TCATTGCA
+      to: 26
+    - from: TCCATTAT
+      to: 27
+    - from: TCCATTTG
+      to: 43
+    - from: TCTCATGC
+      to: 33
+    - from: TCTCTTGG
+      to: '06'
+    - from: TCTGATCC
+      to: '05'
+    - from: TCTGTGCC
+      to: 37
+    - from: TGCTGCTC
+      to: '09'
+    - from: TGGTCTCC
+      to: 15
+    - from: TGTGTATG
+      to: 42
+    - from: TTACATTC
+      to: 40
+    - from: TTACCTGC
+      to: 36
+    - from: TTAGCTTC
+      to: 44
+    - from: TTATTCTG
+      to: 14
+    - from: TTCATCGC
+      to: 35
+    - from: TTCCTGTG
+      to: 11
+    - from: TTCGCTAC
+      to: 47
+    reportingLevel: VerboseReport
+  - type: mapTags
+    name: Round2
+    matchTags:
+    - CELL2
+    newTags:
+    - CELL2CONVERTED
+    allowOneMismatch: true
+    rules:
+    - from: AAACATCG
+      to: '02'
+    - from: AACAACCA
+      to: 13
+    - from: AACCGAGA
+      to: 14
+    - from: AACGCTTA
+      to: 15
+    - from: AACGTGAT
+      to: '01'
+    - from: AACTCACC
+      to: 69
+    - from: AAGACGGA
+      to: 16
+    - from: AAGAGATC
+      to: 70
+    - from: AAGGACAC
+      to: 71
+    - from: AAGGTACA
+      to: 17
+    - from: AATCCGTC
+      to: 72
+    - from: AATGTTGC
+      to: 73
+    - from: ACAAGCTA
+      to: 10
+    - from: ACACAGAA
+      to: 18
+    - from: ACACGACC
+      to: 74
+    - from: ACAGATTC
+      to: 75
+    - from: ACAGCAGA
+      to: 19
+    - from: ACATTGGC
+      to: '06'
+    - from: ACCACTGT
+      to: '05'
+    - from: ACCTCCAA
+      to: 20
+    - from: ACGCTCGA
+      to: 21
+    - from: ACGTATCA
+      to: 22
+    - from: ACTATGCA
+      to: 23
+    - from: AGAGTCAA
+      to: 24
+    - from: AGATCGCA
+      to: 25
+    - from: AGATGTAC
+      to: 76
+    - from: AGCACCTC
+      to: 77
+    - from: AGCAGGAA
+      to: 26
+    - from: AGCCATGC
+      to: 78
+    - from: AGGCTAAC
+      to: 79
+    - from: AGTACAAG
+      to: 12
+    - from: AGTCACTA
+      to: 27
+    - from: AGTGGTCA
+      to: '04'
+    - from: ATAGCGAC
+      to: 80
+    - from: ATCATTCC
+      to: 81
+    - from: ATCCTGTA
+      to: 28
+    - from: ATGCCTAA
+      to: '03'
+    - from: ATTGAGGA
+      to: 29
+    - from: ATTGGCTC
+      to: 82
+    - from: CAACCACA
+      to: 30
+    - from: CAAGACTA
+      to: 47
+    - from: CAAGGAGC
+      to: 83
+    - from: CAATGGAA
+      to: 32
+    - from: CACCTTAC
+      to: 84
+    - from: CACTTCGA
+      to: 33
+    - from: CAGATCTG
+      to: '07'
+    - from: CAGCGTTA
+      to: 34
+    - from: CATACCAA
+      to: 35
+    - from: CATCAAGT
+      to: '08'
+    - from: CCAGTTCA
+      to: 36
+    - from: CCATCCTC
+      to: 85
+    - from: CCGAAGTA
+      to: 37
+    - from: CCGACAAC
+      to: 86
+    - from: CCGTGAGA
+      to: 38
+    - from: CCTAATCC
+      to: 87
+    - from: CCTCCTGA
+      to: 39
+    - from: CCTCTATC
+      to: 88
+    - from: CGAACTTA
+      to: 40
+    - from: CGACACAC
+      to: 89
+    - from: CGACTGGA
+      to: 41
+    - from: CGCATACA
+      to: 42
+    - from: CGCTGATC
+      to: '09'
+    - from: CGGATTGC
+      to: 90
+    - from: CTAAGGTC
+      to: 91
+    - from: CTCAATGA
+      to: 43
+    - from: CTGAGCCA
+      to: 44
+    - from: CTGGCATA
+      to: 45
+    - from: CTGTAGCC
+      to: 11
+    - from: GAACAGGC
+      to: 92
+    - from: GAATCTGA
+      to: 46
+    - from: GACAGTGC
+      to: 93
+    - from: GACTAGTA
+      to: 31
+    - from: GAGCTGAA
+      to: 48
+    - from: GAGTTAGC
+      to: 94
+    - from: GATAGACA
+      to: 49
+    - from: GATGAATC
+      to: 95
+    - from: GCCAAGAC
+      to: 96
+    - from: GCCACATA
+      to: 50
+    - from: GCGAGTAA
+      to: 51
+    - from: GCTAACGA
+      to: 52
+    - from: GCTCGGTA
+      to: 53
+    - from: GGAGAACA
+      to: 54
+    - from: GGTGCGAA
+      to: 55
+    - from: GTACGCAA
+      to: 56
+    - from: GTCGTAGA
+      to: 57
+    - from: GTCTGTCA
+      to: 58
+    - from: GTGTTCTA
+      to: 59
+    - from: TAGGATGA
+      to: 60
+    - from: TATCAGCA
+      to: 61
+    - from: TCCGTCTA
+      to: 62
+    - from: TCTTCACA
+      to: 63
+    - from: TGAAGAGA
+      to: 64
+    - from: TGGAACAA
+      to: 65
+    - from: TGGCTTCA
+      to: 66
+    - from: TGGTGGTA
+      to: 67
+    - from: TTCACGCA
+      to: 68
+    reportingLevel: VerboseReport
+  - type: mapTags
+    name: Round3
+    matchTags:
+    - CELL3
+    newTags:
+    - CELL3CONVERTED
+    allowOneMismatch: true
+    rules:
+    - from: AAACATCG
+      to: '02'
+    - from: AACAACCA
+      to: 13
+    - from: AACCGAGA
+      to: 14
+    - from: AACGCTTA
+      to: 15
+    - from: AACGTGAT
+      to: '01'
+    - from: AACTCACC
+      to: 69
+    - from: AAGACGGA
+      to: 16
+    - from: AAGAGATC
+      to: 70
+    - from: AAGGACAC
+      to: 71
+    - from: AAGGTACA
+      to: 17
+    - from: AATCCGTC
+      to: 72
+    - from: AATGTTGC
+      to: 73
+    - from: ACAAGCTA
+      to: 10
+    - from: ACACAGAA
+      to: 18
+    - from: ACACGACC
+      to: 74
+    - from: ACAGATTC
+      to: 75
+    - from: ACAGCAGA
+      to: 19
+    - from: ACATTGGC
+      to: '06'
+    - from: ACCACTGT
+      to: '05'
+    - from: ACCTCCAA
+      to: 20
+    - from: ACGCTCGA
+      to: 21
+    - from: ACGTATCA
+      to: 22
+    - from: ACTATGCA
+      to: 23
+    - from: AGAGTCAA
+      to: 24
+    - from: AGATCGCA
+      to: 25
+    - from: AGATGTAC
+      to: 76
+    - from: AGCACCTC
+      to: 77
+    - from: AGCAGGAA
+      to: 26
+    - from: AGCCATGC
+      to: 78
+    - from: AGGCTAAC
+      to: 79
+    - from: AGTACAAG
+      to: 12
+    - from: AGTCACTA
+      to: 27
+    - from: AGTGGTCA
+      to: '04'
+    - from: ATAGCGAC
+      to: 80
+    - from: ATCATTCC
+      to: 81
+    - from: ATCCTGTA
+      to: 28
+    - from: ATGCCTAA
+      to: '03'
+    - from: ATTGAGGA
+      to: 29
+    - from: ATTGGCTC
+      to: 82
+    - from: CAACCACA
+      to: 30
+    - from: CAAGACTA
+      to: 47
+    - from: CAAGGAGC
+      to: 83
+    - from: CAATGGAA
+      to: 32
+    - from: CACCTTAC
+      to: 84
+    - from: CACTTCGA
+      to: 33
+    - from: CAGATCTG
+      to: '07'
+    - from: CAGCGTTA
+      to: 34
+    - from: CATACCAA
+      to: 35
+    - from: CATCAAGT
+      to: '08'
+    - from: CCAGTTCA
+      to: 36
+    - from: CCATCCTC
+      to: 85
+    - from: CCGAAGTA
+      to: 37
+    - from: CCGACAAC
+      to: 86
+    - from: CCGTGAGA
+      to: 38
+    - from: CCTAATCC
+      to: 87
+    - from: CCTCCTGA
+      to: 39
+    - from: CCTCTATC
+      to: 88
+    - from: CGAACTTA
+      to: 40
+    - from: CGACACAC
+      to: 89
+    - from: CGACTGGA
+      to: 41
+    - from: CGCATACA
+      to: 42
+    - from: CGCTGATC
+      to: '09'
+    - from: CGGATTGC
+      to: 90
+    - from: CTAAGGTC
+      to: 91
+    - from: CTCAATGA
+      to: 43
+    - from: CTGAGCCA
+      to: 44
+    - from: CTGGCATA
+      to: 45
+    - from: CTGTAGCC
+      to: 11
+    - from: GAACAGGC
+      to: 92
+    - from: GAATCTGA
+      to: 46
+    - from: GACAGTGC
+      to: 93
+    - from: GACTAGTA
+      to: 31
+    - from: GAGCTGAA
+      to: 48
+    - from: GAGTTAGC
+      to: 94
+    - from: GATAGACA
+      to: 49
+    - from: GATGAATC
+      to: 95
+    - from: GCCAAGAC
+      to: 96
+    - from: GCCACATA
+      to: 50
+    - from: GCGAGTAA
+      to: 51
+    - from: GCTAACGA
+      to: 52
+    - from: GCTCGGTA
+      to: 53
+    - from: GGAGAACA
+      to: 54
+    - from: GGTGCGAA
+      to: 55
+    - from: GTACGCAA
+      to: 56
+    - from: GTCGTAGA
+      to: 57
+    - from: GTCTGTCA
+      to: 58
+    - from: GTGTTCTA
+      to: 59
+    - from: TAGGATGA
+      to: 60
+    - from: TATCAGCA
+      to: 61
+    - from: TCCGTCTA
+      to: 62
+    - from: TCTTCACA
+      to: 63
+    - from: TGAAGAGA
+      to: 64
+    - from: TGGAACAA
+      to: 65
+    - from: TGGCTTCA
+      to: 66
+    - from: TGGTGGTA
+      to: 67
+    - from: TTCACGCA
+      to: 68
+    reportingLevel: VerboseReport
+  - type: generic
+    name: ""
+    transformation:
+      type: concatenate
+      sources:
+      - type: tag
+        name: CELL1CONVERTED
+      - type: tag
+        name: CELL2CONVERTED
+      - type: tag
+        name: CELL3CONVERTED
+      separator: _
+    destinationTag: CELL
+  sampleTable: null
+  splitBySample: false
+  limit: null
+  parameters:
+    vParameters:
+      geneFeatureToAlign: VTranscriptWithP
+      minSumScore: 60
+      relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
+      parameters:
+        type: kaligner2
+        mapperNValue: 9
+        mapperKValue: 1
+        floatingLeftBound: false
+        floatingRightBound: true
+        mapperAbsoluteMinClusterScore: 250
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 127
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 15
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 250
+        mapperRelativeMinScore: 0.75
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 6
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
+        scoring:
+          type: affine
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
+    dParameters:
+      geneFeatureToAlign: DRegionWithP
+      relativeMinScore: 0.85
+      absoluteMinScore: 25.0
+      maxHits: 3
+      scoring:
+        type: linear
+        alphabet: nucleotide
+        subsMatrix: "simple(match = 5, mismatch = -9)"
+        gapPenalty: -12
+    jParameters:
+      geneFeatureToAlign: JRegionWithP
+      minSumScore: 150
+      relativeMinScore: 0.97
+      parameters:
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
+        floatingLeftBound: true
+        floatingRightBound: false
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
+        scoring:
+          type: affine
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
+    cParameters:
+      geneFeatureToAlign: CExon1
+      minSumScore: 40
+      relativeMinScore: 0.97
+      parameters:
+        type: kaligner
+        mapperKValue: 5
+        floatingLeftBound: false
+        floatingRightBound: false
+        mapperAbsoluteMinScore: 95.0
+        mapperRelativeMinScore: 0.63
+        mapperMatchScore: 128.0
+        mapperMismatchPenalty: -0.1
+        mapperOffsetShiftPenalty: -0.3
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 18
+        minAlignmentLength: 15
+        maxAdjacentIndels: 2
+        alignmentStopPenalty: -1000
+        absoluteMinScore: 40.0
+        relativeMinScore: 0.87
+        maxHits: 4
+        scoring:
+          type: linear
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 5, mismatch = -9)"
+          gapPenalty: -12
+    vjAlignmentOrder: VThenJ
+    libraryStructure: Unknown
+    includeDScore: false
+    includeCScore: false
+    minSumScore: 120.0
+    maxHits: 5
+    relativeMinVFR3CDR3Score: 0.7
+    allowPartialAlignments: true
+    allowNoCDR3PartAlignments: true
+    allowChimeras: false
+    readsLayout: Opposite
+    mergerParameters:
+      qualityMergingAlgorithm: MaxSubtraction
+      partsLayout: null
+      minimalOverlap: 13
+      minimalMatchQualitySum: 364
+      maxQuality: 50
+      minimalIdentity: 0.7
+      identityType: MinimalQualityWeighted
+    fixSeed: true
+    alignmentBoundaryTolerance: 5
+    minChimeraDetectionScore: 120
+    vjOverlapWindow: 3
+    saveOriginalSequence: false
+    saveOriginalReads: false
+    smartForceEdgeAlignments: true
+refineTagsAndSort:
+  whitelists: {}
+  runCorrection: true
+  parameters:
+    correctionPower: 0.001
+    backgroundSubstitutionRate: 0.001
+    backgroundIndelRate: 1.0E-5
+    minQuality: 12
+    maxSubstitutions: 2
+    maxIndels: 2
+    maxTotalErrors: 3
+    postFilter: null
+assemblePartial:
+  overlappedOnly: false
+  dropPartial: false
+  cellLevel: true
+  parameters:
+    kValue: 12
+    kOffset: -7
+    minimalAssembleOverlap: 12
+    minimalNOverlap: 7
+    minimalNOverlapShare: 0.65
+    minimalAlignmentMergeIdentity: 0.85
+    mergerParameters:
+      qualityMergingAlgorithm: SumSubtraction
+      partsLayout: CollinearDirect
+      minimalOverlap: 20
+      minimalMatchQualitySum: 0
+      maxQuality: 45
+      minimalIdentity: 0.95
+      identityType: Unweighted
+    maxLeftParts: 256000
+    maxLeftMatches: 6144
+extend:
+  vAnchor: CDR3Begin
+  jAnchor: FR4Begin
+  minimalVScore: 50
+  minimalJScore: 50
+assemble:
+  sortBySequence: false
+  clnaOutput: true
+  cellLevel: true
+  consensusAssemblerParameters:
+    assembler:
+      aAssemblerParameters:
+        bandWidth: 4
+        scoring:
+          type: linear
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 5, mismatch = -4)"
+          gapPenalty: -14
+        minAlignmentScore: 40
+        maxNormalizedAlignmentPenalty: 0.15
+        trimMinimalSumQuality: 0
+        trimReferenceRegion: false
+        maxQuality: 45
+      maxIterations: 6
+      minAltSeedQualityScore: 11
+      minAltSeedNormalizedPenalty: 0.35
+      altSeedPenaltyTolerance: 0.3
+      minRecordSharePerConsensus: 0.02
+      minRecordsPerConsensus: 0
+      minRecursiveRecordShare: 0.1
+      minQualityScore: 0
+      maxConsensuses: 6
+    minTagSuffixShare: 0.0
+  cloneAssemblerParameters:
+    assemblingFeatures:
+    - CDR3
+    minimalClonalSequenceLength: 12
+    qualityAggregationType: BetaScore
+    cloneClusteringParameters:
+      searchDepth: 2
+      allowedMutationsInNRegions: 1
+      searchParameters: twoMismatchesOrIndels
+      clusteringFilter:
+        type: advanced
+        correctionPower: 0.001
+        backgroundSubstitutionRate: 5.0E-4
+        backgroundIndelRate: 2.0E-4
+    cloneFactoryParameters:
+      vParameters:
+        relativeMinScore: null
+        scoring: null
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      jParameters:
+        relativeMinScore: null
+        scoring: null
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      cParameters:
+        relativeMinScore: null
+        scoring: null
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      dParameters:
+        relativeMinScore: null
+        absoluteMinScore: null
+        maxHits: null
+        scoring: null
+    separateByV: false
+    separateByJ: false
+    separateByC: false
+    maximalPreClusteringRatio: 1.0
+    preClusteringScoreFilteringRatio: 2.0
+    preClusteringCountFilteringRatio: 2.0
+    addReadsCountOnClustering: false
+    badQualityThreshold: 15
+    maxBadPointsPercent: 0.7
+    mappingThreshold: 2of5
+    minimalQuality: 20
+    postFilters:
+    - type: filter_in_groups
+      isolationKeys:
+      - geneLabel:ReliableChain
+      - allTags:Cell
+      nestedFilter:
+        type: filter_groups
+        groupingKeys:
+        - clone
+        predicates:
+        - metrics:
+          - type: group_metric_nunique
+            reportHist: null
+            keys:
+            - allTags:Molecule
+          operator:
+            type: group_operator_cumtop
+            share: 0.95
+            accept: High
+          expectedSorting:
+          - allTags:Molecule
+          requiredSequences: []
+        expectedSorting:
+        - clone
+        - allTags:Molecule
+        requiredSequences: []
+      aggregateReport: true
+      expectedSorting:
+      - geneLabel:ReliableChain
+      - allTags:Cell
+      - clone
+      - allTags:Molecule
+  inferMinRecordsPerConsensus: false
+assembleContigs:
+  ignoreTags: false
+  parameters:
+    branchingMinimalQualityShare: 0.1
+    branchingMinimalSumQuality: 60
+    decisiveBranchingSumQualityThreshold: 120
+    alignedSequenceEdgeDelta: 3
+    alignmentEdgeRegionSize: 7
+    minimalNonEdgePointsFraction: 0.25
+    minimalMeanNormalizedQuality: 5.0
+    outputMinimalQualityShare: 0.75
+    outputMinimalSumQuality: 0
+    subCloningRegions: null
+    assemblingRegions: null
+    postFiltering:
+      type: NoFiltering
+    trimmingParameters:
+      averageQualityThreshold: 10.0
+      windowSize: 8
+    minimalContigLength: 20
+    alignedRegionsOnly: false
+    discardAmbiguousNucleotideCalls: false
+exportAlignments:
+  chains: ALL
+  noHeader: false
+  fields:
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
+exportClones:
+  splitByTagType: null
+  filterOutOfFrames: false
+  filterStops: false
+  chains: ALL
+  noHeader: false
+  fields:
+  - field: -cloneId
+  - field: -tags
+    args:
+    - Cell
+  - field: -readCount
+  - field: -uniqueTagCount
+    args:
+    - Molecule
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
+  splitFilesBy: []
+  groupClonesBy: []

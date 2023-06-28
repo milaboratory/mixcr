@@ -11,12 +11,11 @@
  */
 package com.milaboratory.mixcr.cli.postanalysis
 
-import cc.redberry.pipe.util.asOutputPort
-import cc.redberry.pipe.util.drainToAndClose
 import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnsWriter
+import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.cli.CommonDescriptions
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.postanalysis.SetPreprocessor
@@ -47,10 +46,10 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
     @Option(
         description = ["Specify chains"],
         names = ["-c", "--chains"],
-        required = true,
-        order = OptionsOrder.main + 10_100
+        order = OptionsOrder.main + 10_100,
+        split = ","
     )
-    var chains: Chains? = null
+    var chains: Set<Chains>? = null
 
     @Option(
         description = [CommonDescriptions.ONLY_PRODUCTIVE],
@@ -140,13 +139,16 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         for (i in results.indices) {
             ClnsWriter(output(inputFiles[i]).toFile()).use { clnsWriter ->
                 val downsampled = results[i].mkElementsPort().toList()
-                clnsWriter.writeHeader(
-                    datasets[i].header,
-                    datasets[i].ordering(),
+                val cloneSet = CloneSet.Builder(
+                    downsampled,
                     datasets[i].usedGenes,
-                    downsampled.size
+                    datasets[i].header
                 )
-                downsampled.asOutputPort().drainToAndClose(clnsWriter.cloneWriter())
+                    .sort(datasets[i].ordering)
+                    .recalculateRanks()
+                    .calculateTotalCounts()
+                    .build()
+                clnsWriter.writeCloneSet(cloneSet)
                 clnsWriter.setFooter(datasets[i].footer)
             }
         }

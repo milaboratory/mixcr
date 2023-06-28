@@ -488,21 +488,33 @@ properties:
       allowedMutationsInNRegions:
         type: integer
       clusteringFilter:
-        allOf:
-        - type: object
-          properties:
-            backgroundIndelRate:
-              type: number
-            backgroundSubstitutionRate:
-              type: number
-            correctionPower:
-              type: number
-        - type: object
-          properties:
-            type:
-              const: relativeConcentration
-          required:
-          - type
+        anyOf:
+        - allOf:
+          - type: object
+            properties:
+              specificMutationProbability:
+                type: number
+          - type: object
+            properties:
+              type:
+                const: relativeConcentration
+            required:
+            - type
+        - allOf:
+          - type: object
+            properties:
+              backgroundIndelRate:
+                type: number
+              backgroundSubstitutionRate:
+                type: number
+              correctionPower:
+                type: number
+          - type: object
+            properties:
+              type:
+                const: advanced
+            required:
+            - type
       searchDepth:
         type: integer
       searchParameters:

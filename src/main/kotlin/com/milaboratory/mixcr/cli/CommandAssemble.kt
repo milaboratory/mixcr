@@ -31,7 +31,7 @@ import com.milaboratory.mixcr.assembler.preclone.PreCloneRawConsensusListener
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.CloneSet.Companion.reorder
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
@@ -276,7 +276,7 @@ object CommandAssemble {
                     }
                 }
 
-                validateParams(cmdParam, inputHeader.featuresToAlign)
+                validateParams(cmdParam, inputHeader)
 
                 // Checking consistency between actionParameters.doWriteClnA() value and file extension
                 if ((outputFile.extension == "clna" && !cmdParam.clnaOutput) ||
@@ -385,19 +385,16 @@ object CommandAssemble {
                     assemblerRunner.run()
 
                     // Getting results
-                    val cloneSet = CloneSet.reorder(
-                        assemblerRunner.getCloneSet(
-                            inputHeader
-                                .withAssemblerParameters(cloneAssemblerParameters)
-                                .addStepParams(
-                                    MiXCRCommandDescriptor.assemble,
-                                    paramsResolver.resolve(paramSpec, printParameters = logger.verbose).second
-                                )
-                                .copy(paramsSpec = dontSavePresetOption.presetToSave(paramSpec)),
-                            inputFooter
-                        ),
-                        ordering
-                    )
+                    val resultHeader = inputHeader
+                        .withAssemblerParameters(cloneAssemblerParameters)
+                        .addStepParams(
+                            MiXCRCommandDescriptor.assemble,
+                            paramsResolver.resolve(paramSpec, printParameters = logger.verbose).second
+                        )
+                        .copy(paramsSpec = dontSavePresetOption.presetToSave(paramSpec))
+                    val cloneSet = assemblerRunner
+                        .getCloneSet(resultHeader)
+                        .reorder(ordering)
 
                     // Passing final cloneset to assemble last pieces of statistics for report
                     reportBuilder.onClonesetFinished(cloneSet)

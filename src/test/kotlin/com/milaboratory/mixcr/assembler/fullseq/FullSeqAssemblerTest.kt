@@ -93,11 +93,11 @@ class FullSeqAssemblerTest {
     @Test
     fun testRandom1() {
         val clones = arrayOf(
-            CloneFraction(750, masterSeq1WT),  //V: S346:G->T
-            CloneFraction(1000, masterSeq1VSub1),  //V: D373:G
-            //J: D55:A
-            CloneFraction(1000, masterSeq1VDel1JDel1),  //V: S319:G->T,S357:A->T,D391:C
-            //J: D62:C
+            CloneFraction(750, masterSeq1WT),  // V: S346:G->T
+            CloneFraction(1000, masterSeq1VSub1),  // V: D373:G
+            // J: D55:A
+            CloneFraction(1000, masterSeq1VDel1JDel1),  // V: S319:G->T,S357:A->T,D391:C
+            // J: D62:C
             CloneFraction(500, masterSeq1VDel1JDelVSub2)
         )
         val rand = Well19937c()
@@ -203,8 +203,13 @@ class FullSeqAssemblerTest {
             align.parameters.cloneAssemblerParameters.assemblingFeatures,
             align.usedGenes, align.parameters.alignerParameters.featuresToAlignMap
         )
-        val agg =
-            FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, assemble.cloneSet[0], align.parameters.alignerParameters)
+        val agg = FullSeqAssembler(
+            cloneFactory,
+            DEFAULT_PARAMETERS,
+            align.parameters.cloneAssemblerParameters.assemblingFeatures,
+            assemble.cloneSet[0],
+            align.parameters.alignerParameters
+        )
         val prep = agg.calculateRawData {
             CUtils.asOutputPort(
                 align.alignments.stream().filter { a: VDJCAlignments -> a.getFeature(GeneFeature.CDR3) != null }
@@ -217,7 +222,7 @@ class FullSeqAssemblerTest {
             .sortedWith(Comparator.comparingDouble { obj: Clone -> obj.count }.reversed())
         println("# Clones: " + clns.size)
         clns
-            .mapIndexed { i, clone -> clone.setId(i) }
+            .mapIndexed { i, clone -> clone.withId(i) }
             .forEach { clone ->
                 println(clone.numberOfTargets())
                 println(clone.count)
@@ -272,8 +277,13 @@ class FullSeqAssemblerTest {
             align.parameters.cloneAssemblerParameters.assemblingFeatures,
             align.usedGenes, align.parameters.alignerParameters.featuresToAlignMap
         )
-        val agg =
-            FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, assemble.cloneSet[0], align.parameters.alignerParameters)
+        val agg = FullSeqAssembler(
+            cloneFactory,
+            DEFAULT_PARAMETERS,
+            align.parameters.cloneAssemblerParameters.assemblingFeatures,
+            assemble.cloneSet[0],
+            align.parameters.alignerParameters
+        )
         val r2s = agg.toPointSequences(align.alignments[1])
         val p2 = TIntHashSet(Arrays.stream(r2s).mapToInt { s: PointSequence -> s.point }
             .toArray())
@@ -382,7 +392,7 @@ class FullSeqAssemblerTest {
             outputCompact(System.out, clone, TagsInfo.NO_TAGS)
         }
 
-        //Assert.assertEquals(1, assemble.cloneSet.size());
+        // Assert.assertEquals(1, assemble.cloneSet.size());
         val initialClone = assemble.cloneSet[0]
         val cdr3 = initialClone.getFeature(GeneFeature.CDR3)
         val alignments = align.alignments.stream()
@@ -411,7 +421,13 @@ class FullSeqAssemblerTest {
             align.parameters.cloneAssemblerParameters.assemblingFeatures,
             align.usedGenes, align.parameters.alignerParameters.featuresToAlignMap
         )
-        val agg = FullSeqAssembler(cloneFactory, DEFAULT_PARAMETERS, initialClone, align.parameters.alignerParameters)
+        val agg = FullSeqAssembler(
+            cloneFactory,
+            DEFAULT_PARAMETERS,
+            align.parameters.cloneAssemblerParameters.assemblingFeatures,
+            initialClone,
+            align.parameters.alignerParameters
+        )
         val prep = agg.calculateRawData { CUtils.asOutputPort(alignments) }
         val clones = listOf(*agg.callVariants(prep))
             .sortedWith(Comparator.comparingDouble { obj: Clone -> obj.count }

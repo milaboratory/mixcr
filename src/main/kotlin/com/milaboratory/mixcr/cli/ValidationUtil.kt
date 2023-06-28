@@ -13,7 +13,9 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
 import io.repseq.core.Chains
+import io.repseq.core.GeneFeature
 import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCLibraryRegistry
 
 fun ValidationException.Companion.chainsExist(chains: Chains?, usedGenes: Collection<VDJCGene>) {
     if (chains != null && !chains.isEmpty) {
@@ -21,5 +23,17 @@ fun ValidationException.Companion.chainsExist(chains: Chains?, usedGenes: Collec
         require(!chains.intersection(possibleChains).isEmpty) {
             "Chain `$chains` is not presented in input file. Possible values: $possibleChains"
         }
+    }
+}
+
+fun ValidationException.Companion.requireKnownSpecies(species: String?, vararg additional: String?) {
+    for (s in (listOf(species) + additional)) {
+        val known = try {
+            VDJCLibraryRegistry.getDefaultLibrary(s)
+            true
+        } catch (ignore: Throwable) {
+            false
+        }
+        require(known) { "Unknown species: $s" }
     }
 }

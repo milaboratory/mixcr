@@ -267,10 +267,10 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
-        correctionPower: 0.01
-        backgroundSubstitutionRate: 1.0E-4
-        backgroundIndelRate: 1.0E-4
+        type: advanced
+        correctionPower: 0.001
+        backgroundSubstitutionRate: 0.001
+        backgroundIndelRate: 0.001
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null

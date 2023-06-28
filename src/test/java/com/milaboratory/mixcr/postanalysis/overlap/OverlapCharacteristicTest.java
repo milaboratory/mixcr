@@ -142,7 +142,7 @@ public class OverlapCharacteristicTest {
         runner.addCharacteristics(chGroup);
         List<String> datasetIds = Arrays.stream(ovp.datasets).map(d -> d.id).collect(Collectors.toList());
 
-        PostanalysisResult paResult = runner.run(new OverlapDataset<Element>(datasetIds) {
+        PostanalysisResult paResult = runner.run(new OverlapDataset<>(datasetIds) {
             @Override
             public OutputPortWithProgress<OverlapGroup<Element>> mkElementsPort() {
                 OutputPort<OverlapGroup<Element>> inner = new SimpleProcessorWrapper<>(strategy
@@ -150,7 +150,7 @@ public class OverlapCharacteristicTest {
                                 .map(TestDataset::mkElementsPort)
                                 .collect(Collectors.toList())), OverlapGroup::new);
 
-                return new OutputPortWithProgress<OverlapGroup<Element>>() {
+                return new OutputPortWithProgress<>() {
                     @Override
                     public void close() {
                         inner.close();

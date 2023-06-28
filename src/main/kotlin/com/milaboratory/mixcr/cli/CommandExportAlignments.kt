@@ -171,7 +171,7 @@ object CommandExportAlignments {
         val port: OutputPort<VDJCAlignments>,
         val closeable: AutoCloseable,
         val info: MiXCRFileInfo,
-        val usedGenes: MutableList<VDJCGene>
+        val usedGenes: List<VDJCGene>
     ) : AutoCloseable by closeable
 
     @JvmStatic
