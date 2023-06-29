@@ -105,6 +105,9 @@ milab-human-tcr-dna-multiplex:
           middle: 0.8
           upper: 0.9
 
+milab-human-7genes-dna-multiplex:
+  inheritFrom: milab-human-tcr-dna-multiplex
+
 
 milab-mouse-tcr-rna-race:
   inheritFrom: milab-human-tcr-rna-race
