@@ -226,16 +226,10 @@ object CommandExportClones {
             // Calculating splitting keys
             val splitFileKeys = params.splitFilesBy
             val splitFileKeyExtractors: List<CloneGroupingKey> = splitFileKeys.map {
-                parseGroupingKey(
-                    fileInfo.header,
-                    it
-                )
+                parseGroupingKey(fileInfo.header, it)
             }
             val groupByKeyExtractors: List<CloneGroupingKey> = params.groupClonesBy.map {
-                parseGroupingKey(
-                    fileInfo.header,
-                    it
-                )
+                parseGroupingKey(fileInfo.header, it)
             }
 
             val headerForExport = MetaForExport(fileInfo)
@@ -330,6 +324,15 @@ object CommandExportClones {
                         System.err.println("Exporting $keyString")
                         runExport(set, Path(sFileName.render(fileNameSV)))
                     }
+
+                // in case of empty set, can't split, so can't calculate file names.
+                if (initialSet.size() == 0) {
+                    // write empty file with headers (if headers are requested)
+                    val writer = InfoWriter.create(outputFile, fieldExtractors, !params.noHeader) {
+                        RowMetaForExport(initialSet.tagsInfo, headerForExport, exportDefaults.notCoveredAsEmpty)
+                    }
+                    writer.close()
+                }
             }
         }
 
