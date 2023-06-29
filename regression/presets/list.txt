@@ -88,6 +88,7 @@ irepertoire-repseq-mouse-sr
 irepertoire-repseq-plus-human
 irepertoire-repseq-plus-mouse
 mikelov-et-al-2021
+milab-human-7genes-dna-multiplex
 milab-human-ig-rna-multiplex
 milab-human-tcr-dna-multiplex
 milab-human-tcr-rna-multiplex
