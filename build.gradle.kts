@@ -130,14 +130,14 @@ val toObfuscate: Configuration by configurations.creating {
 
 val obfuscationLibs: Configuration by configurations.creating
 
-val mixcrAlgoVersion = "4.3.0-206-fix-alleles"
+val mixcrAlgoVersion = "4.3.0-208-develop"
 val milibVersion = ""
 val mitoolVersion = ""
-val repseqioVersion = "1.8.0-82-master"
+val repseqioVersion = ""
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
-val milmVersion = "3.7.0"
+val milmVersion = "3.8.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
