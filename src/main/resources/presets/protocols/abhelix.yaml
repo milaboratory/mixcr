@@ -15,3 +15,8 @@
       geneType: C
     - type: SetClonotypeAssemblingFeatures
       features: [ "{FR1Begin:FR4End}" ]
+    - type: AddQcChecks
+      args:
+      - type: OverlappedReadsMoreBetter
+        middle: 0.8
+        upper: 0.9

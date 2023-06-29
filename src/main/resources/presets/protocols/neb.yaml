@@ -27,6 +27,11 @@ nebnext-human-immune-sequencing:
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 
 nebnext-mouse-immune-sequencing:

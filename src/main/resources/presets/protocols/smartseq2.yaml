@@ -1,5 +1,5 @@
 "smartseq2-vdj":
-  inheritFrom: generic-lt-single-cell-fragmented
+  inheritFrom: generic-single-cell-gex
   flags:
     - species
   mixins:

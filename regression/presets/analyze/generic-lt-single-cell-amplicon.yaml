@@ -362,3 +362,45 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
+qc:
+  checks:
+  - type: SuccessfullyAlignedReads
+    upper: 0.85
+    middle: 0.7
+    label: Successfully aligned reads
+  - type: OffTargetReads
+    upper: 0.2
+    middle: 0.1
+    label: Off target (non TCR/IG) reads
+  - type: ReadsWithNoVOrJHits
+    upper: 0.2
+    middle: 0.1
+    label: Reads with no V or J hits
+  - type: ReadsUsedInClonotypes
+    upper: 0.9
+    middle: 0.7
+    label: Reads used in clonotypes
+  - type: AlignmentsWithNoAssemblingFeature
+    upper: 0.15
+    middle: 0.05
+    label: Alignments without assembling feature
+  - type: AlignmentsDroppedLowQuality
+    upper: 0.05
+    middle: 0.01
+    label: Alignments dropped due to low sequence quality
+  - type: AlignmentsClusteredInAssembler
+    upper: 0.05
+    middle: 0.01
+    label: Alignments clustered in PCR error correction
+  - type: ClonesClusteredInAssembler
+    upper: 0.05
+    middle: 0.01
+    label: Clonotypes clustered in PCR error correction
+  - type: ClonesDroppedInPostFiltering
+    upper: 0.05
+    middle: 0.01
+    label: Clones dropped in post-filtering
+  - type: AlignmentsDroppedInPostFiltering
+    upper: 0.05
+    middle: 0.01
+    label: Alignments dropped in clones post-filtering

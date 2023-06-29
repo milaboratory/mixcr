@@ -25,6 +25,11 @@
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR2Begin:FR4End}" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsLessBetter
+          middle: 0.05
+          upper: 0.1
     - type: SetTagPattern
       tagPattern: |
         ^N{:4}cagcgacctcgggtgggaaca(R1:*) |

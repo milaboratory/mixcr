@@ -148,7 +148,10 @@
                     share: 0.95
 
 "10x-5gex":
-  inheritFrom: 10x-vdj
+  inheritFrom: generic-single-cell-gex-with-umi
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
   refineTagsAndSort:
     whitelists:
       CELL: builtin:737K-august-2016
