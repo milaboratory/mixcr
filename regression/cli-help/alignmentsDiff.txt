@@ -1,8 +1,8 @@
 Usage: mixcr alignmentsDiff [--only-in-first <path.vdjca>] [--only-in-second <path.vdjca>]
                             [--diff-from-first <path.vdjca>] [--diff-from-second <path.vdjca>]
                             [--gene-feature <gene_feature>] [--top-hits-level <n>]
-                            [--force-overwrite] [--no-warnings] [--verbose] [--help] input_file1.
-                            vdjca input_file2.vdjca [report.txt]
+                            [--different-feature-only] [--force-overwrite] [--no-warnings]
+                            [--verbose] [--help] input_file1.vdjca input_file2.vdjca [report.txt]
 Calculates the difference between two .vdjca files.
       input_file1.vdjca
       input_file2.vdjca
@@ -21,6 +21,9 @@ Calculates the difference between two .vdjca files.
                              Specifies a gene feature to compare.
                                Default: CDR3
   -l, --top-hits-level <n>   Number of top hits to search for a match
+  -k, --different-feature-only
+                             Output only those alignments that are different in terms of target
+                               gene feature.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.
