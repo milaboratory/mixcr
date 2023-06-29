@@ -121,6 +121,13 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
     )
     var hitsCompareLevel = 1
 
+    @Option(
+        names = ["-k", "--different-feature-only"],
+        description = ["Output only those alignments that are different in terms of target gene feature."],
+        order = OptionsOrder.main + 10_700
+    )
+    var onlyDifferentFeature = false
+
     override val inputFiles
         get() = listOf(in1, in2)
 
@@ -178,25 +185,28 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
             geneFeatureToMatch, hitsCompareLevel
         )
         for (diff in CUtils.it(diffReader)) {
-            @Suppress("IMPLICIT_CAST_TO_ANY")
             when (diff.status!!) {
                 AlignmentsAreSame -> ++same
                 AlignmentPresentOnlyInFirst -> {
                     ++onlyIn1
                     input1.only.write(diff.first)
                 }
+
                 AlignmentPresentOnlyInSecond -> {
                     ++onlyIn2
                     input2.only.write(diff.second)
                 }
+
                 AlignmentsAreDifferent -> {
                     ++justDiff
-                    input1.diff.write(diff.first)
-                    input2.diff.write(diff.second)
                     if (diff.reason.diffGeneFeature) ++diffFeature
                     for ((key, value) in diff.reason.diffHits) if (value) ++diffHits[key.ordinal]
+                    if (!onlyDifferentFeature || diff.reason.diffGeneFeature) {
+                        input1.diff.write(diff.first)
+                        input2.diff.write(diff.second)
+                    }
                 }
-            }.exhaustive
+            }
         }
         input1.only.setNumberOfProcessedReads(onlyIn1)
         input2.only.setNumberOfProcessedReads(onlyIn2)
