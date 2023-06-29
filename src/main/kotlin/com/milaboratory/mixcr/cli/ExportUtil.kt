@@ -45,10 +45,11 @@ fun <T : Any> FieldExtractorsFactory<T>.addOptionsToSpec(
                     if (argsCountToAdd > args.size) {
                         throw ValidationException("Not enough parameters for ${field.cmdArgName}")
                     }
-                    val actualArgs: MutableList<String> = mutableListOf()
+                    val actualArgs = mutableListOf<String>()
                     repeat(argsCountToAdd) {
                         actualArgs.add(args.pop())
                     }
+                    field.tryParseArgs(actualArgs)
                     fieldsCollector += ExportFieldDescription(field.cmdArgName, actualArgs)
                 }
                 .arity(field.arity.toString())

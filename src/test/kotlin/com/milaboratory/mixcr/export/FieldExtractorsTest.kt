@@ -48,7 +48,7 @@ class FieldExtractorsTest {
         val extractor = VDJCAlignmentsFieldsExtractorsFactory.fields
             .filter { it.cmdArgName == "-defaultAnchorPoints" }
             .flatMap {
-                it.createFields(MetaForExport(emptyList(), null, MiXCRStepReports()), emptyArray())
+                it.createFields(MetaForExport(emptyList(), null, MiXCRStepReports()), emptyList())
             }
             .first()
         val goAssert: F6 = object : F6 {
