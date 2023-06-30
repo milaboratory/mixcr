@@ -652,7 +652,7 @@ align:
           - type: constantNumber
             value: -1
         - type: constantNumber
-          value: 9216
+          value: 147456
       - type: multiply
         sources:
         - type: plus
@@ -662,7 +662,7 @@ align:
           - type: constantNumber
             value: -1
         - type: constantNumber
-          value: 96
+          value: 384
       - type: tag
         name: CELL3ID
     destinationTag: CELLID
@@ -672,32 +672,31 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 60
+      minSumScore: 150
       relativeMinScore: 0.97
-      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner2
-        mapperNValue: 9
+        mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinClusterScore: 250
+        mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 127
+        mapperMatchScore: 98
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 6
-        mapperMaxClusters: 15
+        mapperSlotCount: 8
+        mapperMaxClusters: 11
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 250
-        mapperRelativeMinScore: 0.75
-        mapperMinSeedsDistance: 6
-        mapperMaxSeedsDistance: 6
+        mapperAbsoluteMinScore: 103
+        mapperRelativeMinScore: 0.81
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 8
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 3
+        maxHits: 2
         scoring:
           type: affine
           alphabet: nucleotide
@@ -756,19 +755,19 @@ align:
         mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: false
-        mapperAbsoluteMinScore: 95.0
-        mapperRelativeMinScore: 0.63
-        mapperMatchScore: 128.0
+        mapperAbsoluteMinScore: 1.5
+        mapperRelativeMinScore: 0.75
+        mapperMatchScore: 1.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 18
+        mapperMinSeedsDistance: 4
+        mapperMaxSeedsDistance: 10
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 4
+        maxHits: 7
         scoring:
           type: linear
           alphabet: nucleotide
@@ -781,8 +780,8 @@ align:
     minSumScore: 120.0
     maxHits: 5
     relativeMinVFR3CDR3Score: 0.7
-    allowPartialAlignments: true
-    allowNoCDR3PartAlignments: true
+    allowPartialAlignments: false
+    allowNoCDR3PartAlignments: false
     allowChimeras: false
     readsLayout: Opposite
     mergerParameters:
