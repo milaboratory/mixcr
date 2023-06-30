@@ -425,6 +425,14 @@ bd-rhapsody-human-tcr-full-length:
   deprecation: "The preset is deprecated. Please use bd-rhapsody-human-tcr-bcr-multiomic-assay."
   inheritFrom: bd-rhapsody-human-tcr-bcr-multiomic-assay
 
+bd-rhapsody-mouse-bcr-full-length:
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-mouse-tcr-bcr-multiomic-assay."
+  inheritFrom: bd-rhapsody-mouse-tcr-bcr-multiomic-assay
+
+bd-rhapsody-human-bcr-full-length:
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-human-tcr-bcr-multiomic-assay."
+  inheritFrom: bd-rhapsody-human-tcr-bcr-multiomic-assay
+
 "bd-rhapsody-human-tcr-v1":
   deprecation: "The preset is deprecated. Please use bd-rhapsody-human-vdj-cdr3."
   inheritFrom:   bd-rhapsody-human-vdj-cdr3
