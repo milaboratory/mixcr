@@ -423,7 +423,24 @@ assemble:
       requiredSequences: []
   inferMinRecordsPerConsensus: true
 assembleContigs: null
-exportAlignments: null
+exportAlignments:
+  chains: ALL
+  noHeader: false
+  fields:
+  - field: -readIds
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
