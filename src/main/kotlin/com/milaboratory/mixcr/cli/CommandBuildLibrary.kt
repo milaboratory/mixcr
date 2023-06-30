@@ -256,9 +256,17 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
     )
     var keepIntermediateFiles: Boolean = false
 
+    @set:Option(
+        names = ["--debug"],
+        description = ["Print library debugging information"],
+        required = false,
+        order = 26000
+    )
+    var debug: Boolean = false
+
     @Parameters(
         description = ["Output library."],
-        paramLabel = "library.json",
+        paramLabel = "library.json[.gz]",
         index = "0",
     )
     lateinit var output: Path
@@ -377,8 +385,8 @@ class CommandBuildLibrary : MiXCRCommandWithOutputs() {
             logCmd(meCmd)
             io.repseq.cli.Main.main(meCmd.toTypedArray())
 
-            if (logger.verbose) {
-                val deCmd = listOf("debug", libName)
+            if (debug || logger.verbose) {
+                val deCmd = listOf("debug", "--problems", "--all", libName)
                 io.repseq.cli.Main.main(deCmd.toTypedArray())
             }
         } finally {
