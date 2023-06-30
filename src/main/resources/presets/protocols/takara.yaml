@@ -33,7 +33,7 @@
           middle: 0.8
           upper: 0.9
 
-"takara-human-bcr-profiling":
+"takara-smarter-human-bcr":
   inheritFrom: takara-smartseq-human-bcr
 
 "takara-smartseq-human-tcr":
@@ -42,10 +42,10 @@
     - type: SetTagPattern
       tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
 
-"takara-human-tcr-v2-profiling":
+"takara-smarter-human-tcr-v2":
   inheritFrom: takara-smartseq-human-tcr
 
-"takara-human-tcr-profiling":
+"takara-smarter-human-tcr":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -79,7 +79,7 @@
           middle: 0.8
           upper: 0.9
 
-"takara-mouse-bcr-profiling":
+"takara-smarter-mouse-bcr":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -113,5 +113,5 @@
           middle: 0.8
           upper: 0.9
 
-"takara-mouse-tcr-profiling":
-  inheritFrom: takara-mouse-bcr-profiling
+"takara-smarter-mouse-tcr":
+  inheritFrom: takara-smarter-mouse-bcr

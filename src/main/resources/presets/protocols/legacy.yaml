@@ -20,59 +20,59 @@ generic-bcr-amplicon-umi:
 # Takara Depricated presets
 
 takara-human-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-human-bcr-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-human-bcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-smartseq-human-bcr. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-smartseq-human-bcr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-human-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use takara-human-bcr-profiling."
-  inheritFrom: takara-human-bcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-smartseq-human-bcr."
+  inheritFrom: takara-smartseq-human-bcr
 
 takara-human-tcr-V2-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-human-tcr-v2-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-human-tcr-v2-profiling
+  deprecation: "The preset is deprecated. Please use takara-smarter-human-tcr-v2. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-smarter-human-tcr-v2
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-human-tcr-V2-full-length:
-  deprecation: "The preset is deprecated. Please use takara-human-tcr-v2-profiling."
-  inheritFrom: takara-human-tcr-v2-profiling
+  deprecation: "The preset is deprecated. Please use takara-smarter-human-tcr-v2."
+  inheritFrom: takara-smarter-human-tcr-v2
 
 takara-human-tcr-V1-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-human-tcr-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-human-tcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-smarter-human-tcr. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-smarter-human-tcr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-human-tcr-V1-full-length:
-  deprecation: "The preset is deprecated. Please use takara-human-tcr-profiling."
-  inheritFrom: takara-human-tcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-smarter-human-tcr."
+  inheritFrom: takara-smarter-human-tcr
 
 takara-mouse-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-mouse-bcr-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-mouse-bcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-smarter-mouse-bcr. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-smarter-mouse-bcr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-mouse-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use takara-mouse-bcr-profiling."
-  inheritFrom: takara-mouse-bcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-smarter-mouse-bcr."
+  inheritFrom: takara-smarter-mouse-bcr
 
 takara-mouse-tcr-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-mouse-tcr-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-mouse-tcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-smarter-mouse-tcr. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-smarter-mouse-tcr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-mouse-tcr-full-length:
-  deprecation: "The preset is deprecated. Please use takara-mouse-tcr-profiling."
-  inheritFrom: takara-mouse-tcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-smarter-mouse-tcr."
+  inheritFrom: takara-smarter-mouse-tcr
 
 # ABhelix deprecated presets
 
