@@ -118,11 +118,11 @@ singleron-gexscope-single-cell-vdj
 smartseq2-vdj                               --species <name>
                                             --tag-pattern <pattern>
 split-seq-3gex                              --species <name>
-takara-human-bcr-profiling
-takara-human-tcr-profiling
-takara-human-tcr-v2-profiling
-takara-mouse-bcr-profiling
-takara-mouse-tcr-profiling
+takara-smarter-human-bcr
+takara-smarter-human-tcr
+takara-smarter-human-tcr-v2
+takara-smarter-mouse-bcr
+takara-smarter-mouse-tcr
 takara-smartseq-human-bcr
 takara-smartseq-human-tcr
 test-gf-intersection                        (--dna|--rna)
