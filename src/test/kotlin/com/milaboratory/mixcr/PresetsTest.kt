@@ -11,6 +11,7 @@ import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRStepReports
 import com.milaboratory.mixcr.presets.Presets
@@ -20,6 +21,7 @@ import com.milaboratory.util.K_YAML_OM
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 import org.junit.Assert
 import org.junit.Test
 import java.nio.file.Paths
@@ -91,38 +93,36 @@ class PresetsTest {
             presetName.asClue {
                 shouldNotThrowAny {
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                    if (bundle.align != null) {
-                        val tagsInfo = TagsInfo(
-                            0,
-                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL", 0),
-                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1", 1),
-                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1ROW", 2),
-                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2", 3),
-                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2COLUMN", 4),
-                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3", 5),
-                            TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3PLATE", 6),
-                            TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 7),
-                            TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI1", 8),
-                            TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI2", 9),
-                            TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI3", 10),
-                        )
-                        val metaForExport = MetaForExport(
-                            listOf(tagsInfo),
-                            null,
-                            MiXCRStepReports()
-                        )
-                        bundle.exportAlignments?.let { al ->
-                            VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
-                                al.fields,
-                                metaForExport
-                            ).size
-                        }
-                        bundle.exportClones?.let { al ->
-                            CloneFieldsExtractorsFactory.createExtractors(
-                                al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
-                                metaForExport
-                            ).size
-                        }
+                    val tagsInfo = TagsInfo(
+                        0,
+                        TagInfo(TagType.Cell, TagValueType.Sequence, "CELL", 0),
+                        TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1", 1),
+                        TagInfo(TagType.Cell, TagValueType.Sequence, "CELL1ROW", 2),
+                        TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2", 3),
+                        TagInfo(TagType.Cell, TagValueType.Sequence, "CELL2COLUMN", 4),
+                        TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3", 5),
+                        TagInfo(TagType.Cell, TagValueType.Sequence, "CELL3PLATE", 6),
+                        TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI", 7),
+                        TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI1", 8),
+                        TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI2", 9),
+                        TagInfo(TagType.Molecule, TagValueType.Sequence, "UMI3", 10),
+                    )
+                    val metaForExport = MetaForExport(
+                        listOf(tagsInfo),
+                        null,
+                        MiXCRStepReports()
+                    )
+                    bundle.exportAlignments?.let { al ->
+                        VDJCAlignmentsFieldsExtractorsFactory.createExtractors(
+                            al.fields,
+                            metaForExport
+                        ).size
+                    }
+                    bundle.exportClones?.let { al ->
+                        CloneFieldsExtractorsFactory.createExtractors(
+                            al.fields, // .filter { !it.field.contains("tag", ignoreCase = true) }
+                            metaForExport
+                        ).size
                     }
                 }
             }
@@ -141,5 +141,23 @@ class PresetsTest {
                     }
                 }
             }
+    }
+
+    @Test
+    fun `all presets should have exportClones step`() {
+        Presets.nonAbstractPresetNames.filter { presetName ->
+            val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+            MiXCRCommandDescriptor.exportClones !in bundle.pipeline!!.steps
+        } shouldBe emptyList()
+    }
+
+    @Test
+    fun `all presets should have settings for exportAlignments`() {
+        Presets.nonAbstractPresetNames
+            .filter { !it.contains("-legacy-v") }
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                bundle.exportAlignments == null
+            } shouldBe emptyList()
     }
 }
