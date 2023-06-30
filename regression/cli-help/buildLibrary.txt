@@ -1,14 +1,15 @@
 Usage: mixcr buildLibrary --species <species_name> --chain <chain> [--taxon-id <taxon_id>]
-                          [--do-not-infer-points] [--keep-intermediate] [--force-overwrite]
-                          [--no-warnings] [--verbose] [--help] (--v-genes-from-species <species> |
-                          [--v-genes-from-fasta <v.fasta> --v-gene-feature <gene_feature>])
-                          (--j-genes-from-species <species> | [--j-genes-from-fasta <j.fasta>
-                          [--j-gene-feature <gene_feature>]]) [--d-genes-from-species <species> |
-                          [--d-genes-from-fasta <j.fasta> [--d-gene-feature <gene_feature>]]]
-                          [--c-genes-from-species <species> | [--c-genes-from-fasta <j.fasta>
-                          [--c-gene-feature <gene_feature>]]] library.json
+                          [--do-not-infer-points] [--keep-intermediate] [--debug]
+                          [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                          (--v-genes-from-species <species> | [--v-genes-from-fasta <v.fasta>
+                          --v-gene-feature <gene_feature>]) (--j-genes-from-species <species> |
+                          [--j-genes-from-fasta <j.fasta> [--j-gene-feature <gene_feature>]])
+                          [--d-genes-from-species <species> | [--d-genes-from-fasta <j.fasta>
+                          [--d-gene-feature <gene_feature>]]] [--c-genes-from-species <species> |
+                          [--c-genes-from-fasta <j.fasta> [--c-gene-feature <gene_feature>]]]
+                          library.json[.gz]
 Build custom reference library
-      library.json          Output library.
+      library.json[.gz]     Output library.
       --species <species_name>
                             Species name
       --chain <chain>       Immunological chain
@@ -47,6 +48,7 @@ Build custom reference library
       --taxon-id <taxon_id> Taxon ID
       --do-not-infer-points Do not infer reference points
       --keep-intermediate   Keep intermediate files
+      --debug               Print library debugging information
   -f, --force-overwrite     Force overwrite of output file(s).
       -nw, --no-warnings    Suppress all warning messages.
       --verbose             Verbose messages.
