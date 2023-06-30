@@ -8,8 +8,6 @@ bd-rhapsody-human-tcr-bcr-multiomic-assay
 bd-rhapsody-human-vdj-cdr3
 bd-rhapsody-mouse-tcr-bcr-multiomic-assay
 bd-rhapsody-mouse-vdj-cdr3
-bd-rhapsody-mouse-tcr-v1
-bd-rhapsody-mouse-tcr-v2
 biomed2-human-igh
 biomed2-human-igl-igk
 biomed2-human-tcr
