@@ -648,7 +648,7 @@
               - type: tag
                 name: CELL3ID
 
-"bd-rhapsody-full-length-single-cell-A96":
+"bd-rhapsody-full-length-single-cell-A96-base":
   abstract: true
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
   mixins:
@@ -6067,6 +6067,12 @@
         ^tcagatggcgggaagatgaa(R2:*)|
         ^accagtgtggccttgttg(R2:*)
 
+"bd-rhapsody-human-tcr-bcr-multiomic-assay":
+  inheritFrom: bd-rhapsody-full-length-single-cell-A96-base
+  mixins:
+    - type: SetSpecies
+      species: hsa
+
 # MOUSE
 
 "bd-rhapsody-mouse-vdj-cdr3":
@@ -6099,13 +6105,10 @@
         ^cagtgtggctttgttttcct(R2:*)
 
 "bd-rhapsody-mouse-tcr-bcr-multiomic-assay":
-  inheritFrom: bd-rhapsody-full-length-single-cell-A96
+  inheritFrom: bd-rhapsody-full-length-single-cell-A96-base
   mixins:
     - type: SetSpecies
       species: mmu
 
-"bd-rhapsody-human-tcr-bcr-multiomic-assay":
-  inheritFrom: bd-rhapsody-full-length-single-cell-A96
-  mixins:
-    - type: SetSpecies
-      species: hsa
+
+

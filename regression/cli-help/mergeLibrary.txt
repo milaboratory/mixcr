@@ -1,0 +1,9 @@
+Usage: mixcr mergeLibrary [--force-overwrite] [--no-warnings] [--verbose] [--help] input.json[.
+                          gz]... output.json[.gz] input.json[.gz]... output.json[.gz]...
+Merge multiple reference libraries in one file
+      input.json[.gz]... output.json[.gz] input.json[.gz]... output.json[.gz]...
+
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

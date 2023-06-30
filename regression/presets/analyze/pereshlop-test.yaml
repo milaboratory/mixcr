@@ -197,7 +197,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
+        type: advanced
         correctionPower: 0.001
         backgroundSubstitutionRate: 0.002
         backgroundIndelRate: 2.0E-4
@@ -261,6 +261,7 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
+  - field: -readIds
   - field: -targetSequences
   - field: -targetQualities
   - field: -vHitsWithScore

@@ -101,15 +101,15 @@ abhelix-human-tcr-full-length:
 # Biomed2 deprecated presets
 
 biomed2-human-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use biomed2-human-bcr. Notice that by default clones will be assembled by {CDR1Begin:CDR3End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: biomed2-human-bcr
+  deprecation: "The preset is deprecated. Please use biomed2-human-igh. Notice that by default clones will be assembled by {CDR1Begin:CDR3End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: biomed2-human-igh
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 biomed2-human-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use biomed2-human-bcr."
-  inheritFrom: biomed2-human-bcr
+  deprecation: "The preset is deprecated. Please use biomed2-human-igh."
+  inheritFrom: biomed2-human-igh
 
 # Illumina deprecated presets
 
@@ -395,16 +395,16 @@ smartseq2-vdj-full-length:
   inheritFrom: smartseq2-vdj
 
 singleron-2.0.1-vdj-cdr3:
-  deprecation: "The preset is deprecated. Please use singleron-2.0.1-vdj."
-  inheritFrom: singleron-2.0.1-vdj
+  deprecation: "The preset is deprecated. Please use singleron-gexscope-single-cell-vdj."
+  inheritFrom: singleron-gexscope-single-cell-vdj
 
 seqwell-vdj-cdr3:
   deprecation: "The preset is deprecated. Please use seqwell-vdj."
   inheritFrom: seqwell-vdj
 
 parse-bio-vdj-3gex:
-  deprecation: "The preset is deprecated. Please use parse-bio-3gex."
-  inheritFrom: parse-bio-3gex
+  deprecation: "The preset is deprecated. Please use one of the dedicated presets: parse-bio-3gex-wt, parse-bio-3gex-wt-mini, parse-bio-3gex-wt-mega."
+  inheritFrom: parse-bio-3gex-wt-mega
 
 split-seq-vdj-3gex:
   deprecation: "The preset is deprecated. Please use split-seq-3gex."
@@ -415,3 +415,45 @@ split-seq-vdj-3gex:
 ont-rna-seq-vdj-full-length:
   deprecation: "The preset is deprecated. Please use ont-rna-seq-vdj."
   inheritFrom: ont-rna-seq-vdj
+
+# BD Rhapsody presets
+bd-rhapsody-mouse-tcr-full-length:
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-mouse-tcr-bcr-multiomic-assay."
+  inheritFrom: bd-rhapsody-mouse-tcr-bcr-multiomic-assay
+
+bd-rhapsody-human-tcr-full-length:
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-human-tcr-bcr-multiomic-assay."
+  inheritFrom: bd-rhapsody-human-tcr-bcr-multiomic-assay
+
+"bd-rhapsody-human-tcr-v1":
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-human-vdj-cdr3."
+  inheritFrom:   bd-rhapsody-human-vdj-cdr3
+
+"bd-rhapsody-human-bcr-v1":
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-human-vdj-cdr3."
+  inheritFrom:   bd-rhapsody-human-vdj-cdr3
+
+"bd-rhapsody-mouse-tcr-v1":
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-mouse-vdj-cdr3."
+  inheritFrom:   bd-rhapsody-mouse-vdj-cdr3
+
+"bd-rhapsody-mouse-bcr-v1":
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-mouse-vdj-cdr3."
+  inheritFrom:   bd-rhapsody-mouse-vdj-cdr3
+
+"bd-rhapsody-human-tcr-v2":
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-human-vdj-cdr3."
+  inheritFrom:   bd-rhapsody-human-vdj-cdr3
+
+"bd-rhapsody-human-bcr-v2":
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-human-vdj-cdr3."
+  inheritFrom:   bd-rhapsody-human-vdj-cdr3
+
+"bd-rhapsody-mouse-tcr-v2":
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-mouse-vdj-cdr3."
+  inheritFrom:   bd-rhapsody-mouse-vdj-cdr3
+
+"bd-rhapsody-mouse-bcr-v2":
+  deprecation: "The preset is deprecated. Please use bd-rhapsody-mouse-vdj-cdr3."
+  inheritFrom:   bd-rhapsody-mouse-vdj-cdr3
+

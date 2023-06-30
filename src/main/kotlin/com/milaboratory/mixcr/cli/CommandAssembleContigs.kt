@@ -177,7 +177,7 @@ object CommandAssembleContigs {
                 cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
                 assemblingRegions = cmdParams.parameters.assemblingRegions
 
-                validateParams(cmdParams, reader.header.featuresToAlign)
+                validateParams(cmdParams, reader.header)
 
                 require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."
@@ -200,7 +200,7 @@ object CommandAssembleContigs {
                     debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it.toFile()))) }
                         .use { debugReport ->
                             footer = reader.footer
-                            ordering = reader.ordering()
+                            ordering = reader.ordering
                             val cloneFactory = CloneFactory(
                                 reader.assemblerParameters.cloneFactoryParameters,
                                 reader.assemblingFeatures,
@@ -210,7 +210,7 @@ object CommandAssembleContigs {
                             header = reader.header
                             genes = reader.usedGenes
 
-                            IOUtil.registerGeneReferences(tmpOut, genes, header.featuresToAlign)
+                            IOUtil.registerGeneReferences(tmpOut, genes, header)
                             val cloneAlignmentsPort = reader.clonesAndAlignments()
                             SmartProgressReporter.startProgressReport("Assembling contigs", cloneAlignmentsPort)
                             val parallelProcessor = cloneAlignmentsPort.mapInParallelOrdered(
@@ -218,13 +218,13 @@ object CommandAssembleContigs {
                                 bufferSize = 1024
                             ) { cloneAlignments: CloneAlignments ->
                                 val clone = when {
-                                    cmdParams.ignoreTags -> cloneAlignments.clone
-                                        .setTagCount(
-                                            TagCount(
-                                                TagTuple.NO_TAGS,
-                                                cloneAlignments.clone.tagCount.sum()
-                                            ), false
-                                        )
+                                    cmdParams.ignoreTags -> cloneAlignments.clone.withTagCount(
+                                        TagCount(
+                                            TagTuple.NO_TAGS,
+                                            cloneAlignments.clone.tagCount.sum()
+                                        ),
+                                        false
+                                    )
 
                                     else -> cloneAlignments.clone
                                 }
@@ -304,6 +304,7 @@ object CommandAssembleContigs {
                                     // Performing contig assembly
                                     val fullSeqAssembler = FullSeqAssembler(
                                         cloneFactory, cmdParams.parameters,
+                                        header.assemblerParameters!!.assemblingFeatures,
                                         clone, header.alignerParameters,
                                         bestGenes[Variable], bestGenes[Joining]
                                     )
@@ -351,10 +352,10 @@ object CommandAssembleContigs {
             // )
             val clones: MutableList<Clone> = ArrayList(totalClonesCount)
             PrimitivI(BufferedInputStream(FileInputStream(outputFile.toFile()))).use { tmpIn ->
-                IOUtil.registerGeneReferences(tmpIn, genes, header.featuresToAlign)
+                IOUtil.registerGeneReferences(tmpIn, genes, header)
                 var cloneId = 0
                 PipeDataInputReader(Clone::class.java, tmpIn, totalClonesCount.toLong()).forEach { clone ->
-                    clones += clone.setId(cloneId++)
+                    clones += clone.withId(cloneId++)
                 }
             }
             @Suppress("DEPRECATION")
@@ -375,7 +376,11 @@ object CommandAssembleContigs {
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
                 .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
 
-            val cloneSet = CloneSet(clones, genes, resultHeader, footer, ordering)
+            val cloneSet = CloneSet.Builder(clones, genes, resultHeader)
+                .sort(ordering)
+                .recalculateRanks()
+                .calculateTotalCounts()
+                .build()
             ClnsWriter(outputFile).use { writer ->
                 writer.writeCloneSet(cloneSet)
                 reportBuilder.setStartMillis(beginTimestamp)

@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.mixcr.export.GeneFeaturesExportUtil.checkAAComparable
 import com.milaboratory.mixcr.postanalysis.plots.SeqPattern
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.TreeFilter
@@ -134,10 +135,12 @@ abstract class CommandExportShmTreesAbstract : MiXCRCommandWithOutputs() {
 
     private val pattern by lazy {
         patternOptions?.let { options ->
-            if (options.pattern.seqNt != null)
+            if (options.pattern.seqNt != null) {
                 SeqPattern(options.pattern.seqNt!!, false, options.inFeature, options.maxErrors)
-            else
+            } else {
+                checkAAComparable(options.inFeature)
                 SeqPattern(options.pattern.seqAa!!, true, options.inFeature, options.maxErrors)
+            }
         }
     }
 

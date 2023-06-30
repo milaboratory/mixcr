@@ -215,6 +215,8 @@ object Main {
                     .addSubcommand("versionInfo", CommandVersionInfo::class.java)
                     .addSubcommand("slice", CommandSlice::class.java)
                     .addSubcommand("exportPreset", CommandExportPreset::class.java)
+                    .addSubcommand("buildLibrary", CommandBuildLibrary::class.java)
+                    .addSubcommand("mergeLibrary", CommandMergeLibrary::class.java)
                     .addSubcommand(Presets.LIST_PRESETS_COMMAND_NAME, CommandListPresets::class.java)
             )
 

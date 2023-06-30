@@ -3,6 +3,7 @@ exportAlignments-base:
   exportAlignments:
     chains: ALL
     fields:
+      - field: "-readIds"
       - field: "-targetSequences"
       - field: "-targetQualities"
       - field: "-vHitsWithScore"

@@ -284,7 +284,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
+        type: advanced
         correctionPower: 0.001
         backgroundSubstitutionRate: 5.0E-4
         backgroundIndelRate: 2.0E-4
@@ -423,7 +423,24 @@ assemble:
       requiredSequences: []
   inferMinRecordsPerConsensus: true
 assembleContigs: null
-exportAlignments: null
+exportAlignments:
+  chains: ALL
+  noHeader: false
+  fields:
+  - field: -readIds
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false

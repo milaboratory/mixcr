@@ -15,6 +15,7 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.miplots.writePDF
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.export.GeneFeaturesExportUtil.checkAAComparable
 import com.milaboratory.mixcr.postanalysis.plots.AlignmentOption
 import com.milaboratory.mixcr.postanalysis.plots.DefaultMeta
 import com.milaboratory.mixcr.postanalysis.plots.ShmTreePlotter
@@ -135,12 +136,14 @@ class CommandExportShmTreesPlots : CommandExportShmTreesAbstract() {
     }
 
     val alignment by lazy {
-        if (alignmentGeneFeatureAa == null && alignmentGeneFeatureNt == null)
+        if (alignmentGeneFeatureAa == null && alignmentGeneFeatureNt == null) {
             null
-        else if (alignmentGeneFeatureAa != null)
+        } else if (alignmentGeneFeatureAa != null) {
+            checkAAComparable(alignmentGeneFeatureAa!!)
             AlignmentOption(alignmentGeneFeatureAa!!, true, !noAlignmentFill)
-        else
+        } else {
             AlignmentOption(alignmentGeneFeatureNt!!, false, !noAlignmentFill)
+        }
     }
 
     override fun run1() {

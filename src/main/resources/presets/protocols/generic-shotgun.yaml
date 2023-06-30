@@ -12,6 +12,11 @@ shotgun-base:
     - assemble
     - assembleContigs
     - exportClones
+  qc:
+    checks:
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.1
+        upper: 0.2
   align:
     inheritFrom: align-shotgun
   assemble:

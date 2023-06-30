@@ -15,6 +15,7 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
 import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.asSequence
+import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
@@ -179,22 +180,17 @@ object CommandExtend {
                 val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
                 val process = processWrapper(outputPort, paramsSpec, cloneSet.header.alignerParameters!!)
 
-                val clones = process.output
-                    .asSequence()
-                    .map { clone -> clone.resetParentCloneSet() }
-                    .sortedBy { it.id }
-                    .toList()
-                val newCloneSet =
-                    CloneSet(
-                        clones,
-                        cloneSet.usedGenes,
-                        cloneSet.header
-                            .addStepParams(MiXCRCommandDescriptor.extend, process.params)
-                            .copy(allFullyCoveredBy = null)
-                            .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
-                        cloneSet.footer,
-                        cloneSet.ordering
-                    )
+                val newCloneSet = CloneSet.Builder(
+                    process.output.toList(),
+                    cloneSet.usedGenes,
+                    cloneSet.header
+                        .addStepParams(MiXCRCommandDescriptor.extend, process.params)
+                        .copy(allFullyCoveredBy = null)
+                        .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
+                )
+                    .sort(cloneSet.ordering)
+                    .withTotalCounts(cloneSet.counts)
+                    .build()
                 ClnsWriter(outputFile).use { writer ->
                     writer.writeCloneSet(newCloneSet)
                     val report = process.finish()

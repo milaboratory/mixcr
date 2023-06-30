@@ -1,6 +1,7 @@
-Usage: mixcr downsample --downsampling <type> --chains <chains> [--only-productive] [--summary
-                        <path>] [--suffix <s>] [--out <path_prefix>] [--force-overwrite]
-                        [--no-warnings] [--verbose] [--help] cloneset.(clns|clna)...
+Usage: mixcr downsample --downsampling <type> [--chains <chains>[,<chains>...]]...
+                        [--only-productive] [--summary <path>] [--suffix <s>] [--out <path_prefix>]
+                        [--force-overwrite] [--no-warnings] [--verbose] [--help] cloneset.
+                        (clns|clna)...
 Downsample clonesets.
       cloneset.(clns|clna)...
                             Paths to input files.
@@ -9,7 +10,8 @@ Downsample clonesets.
                             count-[reads|TAG]-[auto|min|fixed][-<number>]
                              top-[reads|TAG]-[<number>]
                              cumtop-[reads|TAG]-[percent]
-  -c, --chains <chains>     Specify chains
+  -c, --chains <chains>[,<chains>...]
+                            Specify chains
       --only-productive     Filter out-of-frame sequences and sequences with stop-codons.
       --summary <path>      Write downsampling summary tsv/csv table.
       --suffix <s>          Suffix to add to output clns file.

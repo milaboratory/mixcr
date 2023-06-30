@@ -273,10 +273,10 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
-        correctionPower: 0.01
+        type: advanced
+        correctionPower: 0.001
         backgroundSubstitutionRate: 0.01
-        backgroundIndelRate: 0.01
+        backgroundIndelRate: 0.002
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null
@@ -367,6 +367,7 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
+  - field: -readIds
   - field: -targetSequences
   - field: -targetQualities
   - field: -vHitsWithScore

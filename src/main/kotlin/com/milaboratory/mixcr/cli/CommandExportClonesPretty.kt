@@ -189,7 +189,7 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
             if (tagsInfo != TagsInfo.NO_TAGS) {
                 println(">>> Tags:")
                 tagsInfo.forEach { tag ->
-                    output.println(">>> ${tag.name}: ${clone.tagCount.getTagDiversity(tag.index + 1)}")
+                    output.println(">>> ${tag.name}: ${clone.getTagDiversity(tag)}")
                 }
             }
             output.println()

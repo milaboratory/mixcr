@@ -6,6 +6,11 @@
     - assemble
     - assembleContigs
     - exportClones
+  qc:
+    checks:
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.3
+        upper: 0.5
   align:
     inheritFrom: align-long-read
   assemble:
@@ -17,8 +22,10 @@
         minimalQuality: 15
         cloneClusteringParameters:
           clusteringFilter:
-            type: relativeConcentration
-            specificMutationProbability: 0.01
+            type: advanced
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.01
+            backgroundIndelRate: 0.01
   assembleContigs:
     inheritFrom: assembleContigs-base
   exportAlignments:

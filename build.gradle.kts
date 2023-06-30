@@ -131,14 +131,14 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.3.0-188-develop"
+val mixcrAlgoVersion = "4.3.0-215-tiny-things"
 val milibVersion = ""
 val mitoolVersion = ""
 val repseqioVersion = ""
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
-val milmVersion = "3.7.0"
+val milmVersion = "3.8.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
@@ -164,7 +164,9 @@ dependencies {
 
     // proguard require classes that were inherited
     obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
-    obfuscationLibs("com.beust:jcommander:$jcommanderVersion") { exclude("*", "*") }
+
+    // required for buildLibrary (to call repseqio)
+    implementation("com.beust:jcommander:$jcommanderVersion")
 
     implementation("com.milaboratory:milm2-jvm:$milmVersion")
 
@@ -181,6 +183,7 @@ dependencies {
     implementation("net.sf.trove4j:trove4j:3.0.3")
     implementation("com.github.victools:jsonschema-generator:4.27.0")
     implementation("com.github.victools:jsonschema-module-jackson:4.27.0")
+    implementation("org.lz4:lz4-java:1.8.0")
 
     shadow("org.apache.logging.log4j:log4j-core:2.20.0")
     testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")
@@ -195,8 +198,6 @@ dependencies {
     testImplementation("com.beust:jcommander:$jcommanderVersion")
 
     testImplementation("org.reflections:reflections:0.10.2")
-
-    testImplementation("org.lz4:lz4-java:1.8.0")
 }
 
 val obfuscateRuntime: Configuration by configurations.creating {

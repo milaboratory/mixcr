@@ -172,7 +172,7 @@ refineTagsAndSort:
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
-  cellLevel: false
+  cellLevel: true
   parameters:
     kValue: 12
     kOffset: -7
@@ -233,7 +233,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
+        type: advanced
         correctionPower: 0.001
         backgroundSubstitutionRate: 5.0E-4
         backgroundIndelRate: 2.0E-4
@@ -301,68 +301,6 @@ assemble:
       - allTags:Cell
       - clone
       - allTags:Molecule
-    - type: filter_in_groups
-      isolationKeys:
-      - clone
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.1
-              multiplyWeightByKey: false
-            keys:
-            - allTags:Molecule
-          operator:
-            type: group_operator_cumtop
-            share: 0.99
-            accept: High
-          expectedSorting:
-          - allTags:Molecule
-          requiredSequences: []
-        expectedSorting:
-        - allTags:Cell
-        - allTags:Molecule
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - clone
-      - allTags:Cell
-      - allTags:Molecule
-    - type: filter_in_groups
-      isolationKeys:
-      - allTags:Cell
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist: null
-            keys:
-            - allTags:Molecule
-          operator:
-            type: group_operator_cumtop
-            share: 0.95
-            accept: High
-          expectedSorting:
-          - allTags:Molecule
-          requiredSequences: []
-        expectedSorting:
-        - clone
-        - allTags:Molecule
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - allTags:Cell
-      - clone
-      - allTags:Molecule
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -390,6 +328,7 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
+  - field: -readIds
   - field: -targetSequences
   - field: -targetQualities
   - field: -vHitsWithScore
@@ -433,3 +372,30 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
+qc:
+  checks:
+  - type: SuccessfullyAlignedReads
+    upper: 0.8
+    middle: 0.6
+    label: Successfully aligned reads
+  - type: UnassignedAlignments
+    upper: 0.2
+    middle: 0.1
+    label: Unassigned alignments in clonotype assembly
+  - type: AlignmentsDroppedLowQuality
+    upper: 0.2
+    middle: 0.1
+    label: Alignments dropped due to low sequence quality
+  - type: ReadsDroppedInTagRefinement
+    upper: 0.3
+    middle: 0.15
+    label: Reads dropped in tags error correction and filtering
+  - type: TagArtificialDiversityEliminated
+    tag: CELL
+    upper: 0.8
+    middle: 0.7
+    label: CELLs artificial diversity eliminated
+  - type: ReadsDroppedInTagFiltering
+    upper: 0.2
+    middle: 0.1
+    label: Reads dropped in tags filtering

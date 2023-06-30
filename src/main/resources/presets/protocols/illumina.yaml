@@ -13,6 +13,11 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
 
 "ampliseq-tcrb-plus":
   inheritFrom: ampliseq-tcrb-sr

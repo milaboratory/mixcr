@@ -52,16 +52,11 @@ public class OverlapIntegrationTest {
                 "Ig4_S4.contigs.clns",
                 "Ig5_S5.contigs.clns");
         List<ClnsReader> readers = samples.stream()
-                .map(f -> {
-                    try {
-                        return new ClnsReader(
-                                Paths.get(OverlapIntegrationTest.class.getResource("/sequences/big/yf_sample_data/" + f).getFile()),
-                                VDJCLibraryRegistry.getDefault(),
-                                concurrencyLimiter);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
+                .map(f -> new ClnsReader(
+                        Paths.get(OverlapIntegrationTest.class.getResource("/sequences/big/yf_sample_data/" + f).getFile()),
+                        VDJCLibraryRegistry.getDefault(),
+                        concurrencyLimiter
+                ))
                 .collect(Collectors.toList());
 
 
@@ -72,7 +67,7 @@ public class OverlapIntegrationTest {
         long totalSumExpected = 0;
         for (List<VDJCSProperties.VDJCSProperty<VDJCObject, ?>> by : Arrays.asList(byN, byAA, byAAAndV)) {
             System.out.println("=============");
-            Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.overlap(samples, by, readers);
+            Dataset<OverlapGroup<Clone>> overlap = OverlapUtil.INSTANCE.overlap(samples, by, readers);
             TIntIntHashMap hist = new TIntIntHashMap();
             long totalSum = 0;
             try (final OutputPort<OverlapGroup<Clone>> port = overlap.mkElementsPort()) {

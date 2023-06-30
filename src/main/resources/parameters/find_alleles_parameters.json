@@ -28,7 +28,9 @@
       "diversityRatioToSearchCommonMutationsInAnAllele": 0.95,
       "minNaiveClonesCountForAlleleSearch": 0,
       "minCountOfNaiveClonesToAddAllele": 0,
-      "runOnSplitSubsets": false
+      "minCountOfNaiveClonesToAddAlleleOnDirectAligning": 0,
+      "runOnSplitSubsets": false,
+      "searchForMultiZygotes": false
     },
     "searchAlleleParameterForSecondRound": {
       "clonesToSearchCap": {
@@ -51,7 +53,9 @@
       "diversityRatioToSearchCommonMutationsInAnAllele": 0.95,
       "minNaiveClonesCountForAlleleSearch": 2,
       "minCountOfNaiveClonesToAddAllele": 2,
-      "runOnSplitSubsets": true
+      "minCountOfNaiveClonesToAddAlleleOnDirectAligning": 1,
+      "runOnSplitSubsets": true,
+      "searchForMultiZygotes": true
     },
     "searchMutationsInCDR3": {
       "minClonesCount": 5,

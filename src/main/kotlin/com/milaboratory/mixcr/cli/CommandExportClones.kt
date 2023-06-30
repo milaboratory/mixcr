@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.primitives.Filter
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -20,8 +19,10 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.divideClonesByTags
+import com.milaboratory.mixcr.basictypes.CloneSet.Companion.filter
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.split
 import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
@@ -38,6 +39,7 @@ import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneType
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
@@ -51,22 +53,24 @@ import kotlin.io.path.Path
 object CommandExportClones {
     const val COMMAND_NAME = MiXCRCommandDescriptor.exportClones.name
 
-    private fun CommandExportClonesParams.mkFilter(): Filter<Clone> {
-        val chains = Chains.parse(chains)
-        return Filter {
-            if (filterOutOfFrames)
-                if (it.isOutOfFrameOrAbsent(GeneFeature.CDR3)) return@Filter false
+    private fun CommandExportClonesParams.test(
+        clone: Clone,
+        assemblingFeatures: Array<GeneFeature>,
+        chains: Chains
+    ): Boolean {
+        if (filterOutOfFrames)
+            if (clone.isOutOfFrameOrAbsent(CDR3)) return false
 
-            if (filterStops)
-                for (assemblingFeature in it.parentCloneSet.assemblingFeatures)
-                    if (it.containsStopsOrAbsent(assemblingFeature)) return@Filter false
+        if (filterStops)
+            for (assemblingFeature in assemblingFeatures)
+                if (clone.containsStopsOrAbsent(assemblingFeature)) return false
 
-            for (gt in GeneType.VJC_REFERENCE) {
-                val bestHit = it.getBestHit(gt)
-                if (bestHit != null && chains.intersects(bestHit.gene.chains)) return@Filter true
-            }
+        if (chains == Chains.ALL)
+            return true
 
-            false
+        return GeneType.VJC_REFERENCE.any {
+            val hit = clone.getBestHit(it)
+            hit != null && chains.intersects(hit.gene.chains)
         }
     }
 
@@ -210,20 +214,25 @@ object CommandExportClones {
         }
 
         override fun run1() {
+            val fileInfo = IOUtil.extractFileInfo(inputFile)
+            val assemblingFeatures = fileInfo.header.assemblerParameters!!.assemblingFeatures
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
-            val header = initialSet.header
             val (_, params) = paramsResolver.resolve(
-                resetPreset.overridePreset(header.paramsSpec).addMixins(exportMixins.mixins),
+                resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins),
                 printParameters = logger.verbose && outputFile != null
             )
 
             ValidationException.chainsExist(Chains.parse(params.chains), initialSet.usedGenes)
             // Calculating splitting keys
             val splitFileKeys = params.splitFilesBy
-            val splitFileKeyExtractors: List<CloneGroupingKey> = splitFileKeys.map { parseGroupingKey(header, it) }
-            val groupByKeyExtractors: List<CloneGroupingKey> = params.groupClonesBy.map { parseGroupingKey(header, it) }
+            val splitFileKeyExtractors: List<CloneGroupingKey> = splitFileKeys.map {
+                parseGroupingKey(fileInfo.header, it)
+            }
+            val groupByKeyExtractors: List<CloneGroupingKey> = params.groupClonesBy.map {
+                parseGroupingKey(fileInfo.header, it)
+            }
 
-            val headerForExport = MetaForExport(initialSet)
+            val headerForExport = MetaForExport(fileInfo)
             val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, headerForExport)
 
             fun runExport(set: CloneSet, outFile: Path?) {
@@ -251,10 +260,10 @@ object CommandExportClones {
                     val tagDivisionDepth = when (splitByTagType) {
                         null -> 0
                         else -> {
-                            if (!header.tagsInfo.hasTagsWithType(splitByTagType))
+                            if (!fileInfo.header.tagsInfo.hasTagsWithType(splitByTagType))
                             // best division depth will still be selected for this case
                                 logger.warn("Input has no tags with type $splitByTagType")
-                            header.tagsInfo.getDepthFor(splitByTagType)
+                            fileInfo.header.tagsInfo.getDepthFor(splitByTagType)
                         }
                     }
 
@@ -263,9 +272,9 @@ object CommandExportClones {
                     val dividedSet = set.divideClonesByTags(tagDivisionDepth)
                     // Splitting cloneset into multiple clonesets to calculate fraction characteristics
                     // (like read and tag fractions) relative to the defined clone grouping
-                    val setsByGroup = dividedSet.split { c ->
-                        groupByKeyExtractors.map { it.getLabel(c) }
-                    }.values
+                    val setsByGroup = dividedSet
+                        .split { clone -> groupByKeyExtractors.map { it.getLabel(clone) } }
+                        .values
                     val exportClones = ExportClones(setsByGroup, writer, Long.MAX_VALUE)
                     SmartProgressReporter.startProgressReport(exportClones, System.err)
                     exportClones.run()
@@ -286,29 +295,44 @@ object CommandExportClones {
                 }
             }
 
-            if (outputFile == null)
-                runExport(CloneSet.transform(initialSet, params.mkFilter()), null)
-            else {
+            val chains = Chains.parse(params.chains)
+            if (outputFile == null) {
+                runExport(
+                    initialSet.filter { clone ->
+                        params.test(clone, assemblingFeatures, chains)
+                    },
+                    null
+                )
+            } else {
                 val sFileName = outputFile!!.let { of ->
                     SubstitutionHelper.parseFileName(of.toString(), splitFileKeyExtractors.size)
                 }
 
                 initialSet
-                    .split { c ->
-                        splitFileKeyExtractors.map { it.getLabel(c) }
-                    }
-                    .forEach { (key, set0) ->
-                        val set = CloneSet.transform(set0, params.mkFilter())
+                    .split { clone -> splitFileKeyExtractors.map { it.getLabel(clone) } }
+                    .forEach { (labels, cloneSet) ->
+                        val set = cloneSet.filter { clone ->
+                            params.test(clone, assemblingFeatures, chains)
+                        }
                         val fileNameSV = SubstitutionHelper.SubstitutionValues()
                         var i = 1
-                        for ((keyValue, keyName) in key.zip(splitFileKeys)) {
+                        for ((keyValue, keyName) in labels.zip(splitFileKeys)) {
                             fileNameSV.add(keyValue, "$i", keyName)
                             i++
                         }
-                        val keyString = key.joinToString("_")
+                        val keyString = labels.joinToString("_")
                         System.err.println("Exporting $keyString")
                         runExport(set, Path(sFileName.render(fileNameSV)))
                     }
+
+                // in case of empty set, can't split, so can't calculate file names.
+                if (initialSet.size() == 0) {
+                    // write empty file with headers (if headers are requested)
+                    val writer = InfoWriter.create(outputFile, fieldExtractors, !params.noHeader) {
+                        RowMetaForExport(initialSet.tagsInfo, headerForExport, exportDefaults.notCoveredAsEmpty)
+                    }
+                    writer.close()
+                }
             }
         }
 
@@ -352,7 +376,7 @@ object CommandExportClones {
 
     private class CloneTagGroupingKey(private val tagIdx: Int) : CloneGroupingKey {
         override fun getLabel(clone: Clone): String =
-            clone.tagFractions.asKeyPrefixOrError(tagIdx + 1).get(tagIdx).toString()
+            clone.tagCount.asKeyPrefixOrError(tagIdx + 1).get(tagIdx).toString()
     }
 
     private fun parseGroupingKey(header: MiXCRHeader, key: String) =

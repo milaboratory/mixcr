@@ -206,9 +206,7 @@ assemble:
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
         type: relativeConcentration
-        correctionPower: 0.01
-        backgroundSubstitutionRate: 0.001
-        backgroundIndelRate: 0.001
+        specificMutationProbability: 0.001
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null
@@ -269,6 +267,7 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
+  - field: -readIds
   - field: -targetSequences
   - field: -targetQualities
   - field: -vHitsWithScore
