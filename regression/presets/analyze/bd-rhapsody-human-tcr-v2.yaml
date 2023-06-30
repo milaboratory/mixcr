@@ -15,49 +15,688 @@ align:
   bamDropNonVDJ: false
   writeFailedAlignments: false
   tagPattern: |
+    ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) |
     ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
     ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
     ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-    ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
+    ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
     ^atcaaaatcggtgaataggcagac(R2:*)|
     ^gatctctgcttctgatggctca(R2:*)|
     ^atatccttggggtagaattccttc(R2:*)|
-    ^gggaaacatctgcatcaagttg(R2:*)
+    ^gggaaacatctgcatcaagttg(R2:*)|
+    ^ctttcgctccaggtcacact(R2:*)|
+    ^tgtctgcaccctgatatgatgg(R2:*)|
+    ^gtcaaggggaagacggatg(R2:*)|
+    ^aagtagtccttgaccaggca(R2:*)|
+    ^acaggagacgagggggaaaa(R2:*)|
+    ^tcagatggcgggaagatgaa(R2:*)|
+    ^accagtgtggccttgttg(R2:*)
   tagUnstranded: false
   tagMaxBudget: 10.0
   readIdAsCellTag: false
+  tagTransformationSteps:
+  - type: mapTags
+    name: CLS1
+    matchTags:
+    - CELL1
+    newTags:
+    - CELL1ID
+    allowOneMismatch: true
+    rules:
+    - from: AAATCCTGT
+      to: 32
+    - from: AACCGCCTC
+      to: 87
+    - from: AACGAGAAG
+      to: 65
+    - from: AACTGTATT
+      to: 15
+    - from: AACTTCTCC
+      to: 42
+    - from: AAGACATGC
+      to: 9
+    - from: AAGCTCAAC
+      to: 62
+    - from: AAGGCGATC
+      to: 10
+    - from: AAGTAACCC
+      to: 31
+    - from: AATATTGGG
+      to: 59
+    - from: AATCGAATG
+      to: 6
+    - from: ACAAGGATC
+      to: 74
+    - from: ACACACAAA
+      to: 70
+    - from: ACACGAGAT
+      to: 86
+    - from: ACACGCCGG
+      to: 4
+    - from: ACAGTTCCG
+      to: 50
+    - from: ACATAAGCG
+      to: 14
+    - from: ACCAAGGAC
+      to: 27
+    - from: ACCCTGACC
+      to: 73
+    - from: ACCGGATAG
+      to: 20
+    - from: ACCTTGCGG
+      to: 16
+    - from: ACGAAAGGT
+      to: 84
+    - from: ACGCAATCA
+      to: 37
+    - from: ACGGATATT
+      to: 24
+    - from: AGAACTTCC
+      to: 60
+    - from: AGAAGCACT
+      to: 55
+    - from: AGAGAAGTT
+      to: 22
+    - from: AGAGCTATG
+      to: 67
+    - from: AGCACACAG
+      to: 49
+    - from: AGCCATCAC
+      to: 64
+    - from: AGCCCAATC
+      to: 81
+    - from: AGGAGATTA
+      to: 18
+    - from: AGTAAAGCC
+      to: 51
+    - from: AGTATCTGT
+      to: 28
+    - from: ATACTTAGG
+      to: 35
+    - from: ATAGACGAG
+      to: 80
+    - from: ATCAGAGCT
+      to: 78
+    - from: ATCCCGGAG
+      to: 75
+    - from: ATCTCCACA
+      to: 83
+    - from: ATGGATCCA
+      to: 13
+    - from: ATGTAATGG
+      to: 93
+    - from: ATTAAGTGC
+      to: 30
+    - from: ATTATTACC
+      to: 44
+    - from: ATTGGCTAA
+      to: 8
+    - from: ATTTAGATG
+      to: 88
+    - from: CAAACCGCC
+      to: 57
+    - from: CAAAGGCAC
+      to: 61
+    - from: CAAAGTGTG
+      to: 90
+    - from: CAACATATT
+      to: 41
+    - from: CAAGCAAGC
+      to: 89
+    - from: CACACACTA
+      to: 29
+    - from: CACATTGCA
+      to: 33
+    - from: CAGAATCGT
+      to: 82
+    - from: CAGCAAGAT
+      to: 56
+    - from: CAGCTGACA
+      to: 40
+    - from: CAGGTGTAG
+      to: 17
+    - from: CAGTTTCAC
+      to: 52
+    - from: CCACTTGGA
+      to: 21
+    - from: CCTAGTATA
+      to: 7
+    - from: CCTGAGCAA
+      to: 94
+    - from: CGGTCCAGG
+      to: 5
+    - from: CGTTACTAA
+      to: 53
+    - from: CTAACTCGC
+      to: 58
+    - from: CTACAGAAC
+      to: 66
+    - from: CTATGAAAT
+      to: 43
+    - from: CTTCACATA
+      to: 3
+    - from: CTTGTACTA
+      to: 2
+    - from: GAATCTGTA
+      to: 26
+    - from: GACGGATTA
+      to: 39
+    - from: GAGCCAATA
+      to: 92
+    - from: GAGGATGGA
+      to: 68
+    - from: GAGGTGCTA
+      to: 72
+    - from: GAGTACATT
+      to: 95
+    - from: GAGTATTAG
+      to: 38
+    - from: GCAATCCGA
+      to: 36
+    - from: GCACTGTCA
+      to: 34
+    - from: GCCTTACAA
+      to: 48
+    - from: GCGATTACA
+      to: 19
+    - from: GCTGCCAAT
+      to: 77
+    - from: GGATTAGGA
+      to: 12
+    - from: GGCAAGCAA
+      to: 91
+    - from: GTCGCTATA
+      to: 1
+    - from: GTGTCCTTA
+      to: 11
+    - from: TAAGCGTTA
+      to: 47
+    - from: TAAGTTCGA
+      to: 23
+    - from: TACCGAGCA
+      to: 45
+    - from: TAGCTTGTA
+      to: 85
+    - from: TATGTGGCA
+      to: 76
+    - from: TCAGGAGGA
+      to: 71
+    - from: TCCAGTCGA
+      to: 63
+    - from: TCGAAGTGA
+      to: 79
+    - from: TCTCTTCAA
+      to: 46
+    - from: TGCGATCTA
+      to: 96
+    - from: TGGCTCAGA
+      to: 25
+    - from: TGTACCTTA
+      to: 69
+    - from: TTGTTCCAA
+      to: 54
+    reportingLevel: VerboseReport
+  - type: mapTags
+    name: CLS2
+    matchTags:
+    - CELL2
+    newTags:
+    - CELL2ID
+    allowOneMismatch: true
+    rules:
+    - from: AAACGTACC
+      to: 49
+    - from: AAACTGCGC
+      to: 69
+    - from: AAATAAATA
+      to: 41
+    - from: AACCAAAGT
+      to: 91
+    - from: AACCCTCGG
+      to: 89
+    - from: AACTCATTG
+      to: 72
+    - from: AAGAGTAGA
+      to: 44
+    - from: AAGCTACTT
+      to: 12
+    - from: AAGGACTAT
+      to: 76
+    - from: AATCAGTTT
+      to: 35
+    - from: AATCCTGAA
+      to: 21
+    - from: AATTATAAC
+      to: 94
+    - from: ACAATATGG
+      to: 85
+    - from: ACACATGTC
+      to: 52
+    - from: ACAGTGGTA
+      to: 9
+    - from: ACCAAAATG
+      to: 16
+    - from: ACCAGGTGT
+      to: 81
+    - from: ACCTGAGTC
+      to: 74
+    - from: ACGACCACC
+      to: 23
+    - from: ACGATGAAT
+      to: 36
+    - from: ACGCGAAGC
+      to: 14
+    - from: ACTATCCTC
+      to: 50
+    - from: ACTGTTAGA
+      to: 26
+    - from: ACTTCGAGC
+      to: 28
+    - from: ACTTGATGA
+      to: 61
+    - from: ACTTTAACT
+      to: 62
+    - from: AGAATGGAG
+      to: 56
+    - from: AGAGGACCA
+      to: 84
+    - from: AGATAGTTC
+      to: 78
+    - from: AGCGACACC
+      to: 11
+    - from: AGCTGCCGT
+      to: 82
+    - from: AGGAGGCGC
+      to: 32
+    - from: AGGATTCAA
+      to: 55
+    - from: AGGCAGCTA
+      to: 90
+    - from: AGGGCTGGT
+      to: 19
+    - from: AGGTTCGCT
+      to: 75
+    - from: AGTGAAAGG
+      to: 88
+    - from: AGTGTTGTC
+      to: 17
+    - from: ATCAACCGA
+      to: 59
+    - from: ATCCAACCG
+      to: 65
+    - from: ATCCTAGGA
+      to: 22
+    - from: ATGAGTTAC
+      to: 60
+    - from: ATTACCAAG
+      to: 70
+    - from: ATTAGGCAT
+      to: 38
+    - from: ATTCATCGT
+      to: 27
+    - from: CAACAACGG
+      to: 96
+    - from: CAAGACCTA
+      to: 47
+    - from: CAATTGATC
+      to: 79
+    - from: CACAAAGGC
+      to: 6
+    - from: CACCAGGTA
+      to: 2
+    - from: CACCCAAAG
+      to: 5
+    - from: CACCTACCC
+      to: 43
+    - from: CACTCGAGA
+      to: 71
+    - from: CACTTATGT
+      to: 87
+    - from: CAGAAATCG
+      to: 15
+    - from: CAGCACTTC
+      to: 86
+    - from: CAGTGCCCG
+      to: 30
+    - from: CCATGCACA
+      to: 67
+    - from: CCGACAAGA
+      to: 42
+    - from: CCGTATCTA
+      to: 51
+    - from: CGCTAAGCA
+      to: 93
+    - from: CGTTCGGTA
+      to: 77
+    - from: CTAGGTCCT
+      to: 8
+    - from: CTCTCTCAA
+      to: 57
+    - from: CTTGCTTCA
+      to: 73
+    - from: GACACTTAA
+      to: 31
+    - from: GACCTTAGA
+      to: 46
+    - from: GAGTGCGAA
+      to: 92
+    - from: GATGAACTG
+      to: 66
+    - from: GATTCATCA
+      to: 4
+    - from: GCATGGCTA
+      to: 80
+    - from: GCCAATGTA
+      to: 64
+    - from: GCCTGTTCA
+      to: 33
+    - from: GCTAACTCA
+      to: 58
+    - from: GGAATGATA
+      to: 48
+    - from: GGAGTCTAA
+      to: 39
+    - from: GTACATCTA
+      to: 34
+    - from: GTGCAGTAA
+      to: 54
+    - from: GTGTGTCGA
+      to: 7
+    - from: TACAGGATA
+      to: 1
+    - from: TACTAGTCA
+      to: 95
+    - from: TAGAACACA
+      to: 40
+    - from: TAGGGATAC
+      to: 18
+    - from: TAGTCTTGA
+      to: 25
+    - from: TAGTGACTA
+      to: 68
+    - from: TATAGCCCT
+      to: 83
+    - from: TCATCCTAA
+      to: 20
+    - from: TCATTGAGA
+      to: 45
+    - from: TCGTTAGCA
+      to: 10
+    - from: TGACAGACA
+      to: 37
+    - from: TGTGAAGAA
+      to: 3
+    - from: TGTTCTCCA
+      to: 13
+    - from: TTCCATTGA
+      to: 24
+    - from: TTGCGTACA
+      to: 29
+    - from: TTGGAGGTA
+      to: 63
+    - from: TTGGTATGA
+      to: 53
+    reportingLevel: VerboseReport
+  - type: mapTags
+    name: CLS3
+    matchTags:
+    - CELL3
+    newTags:
+    - CELL3ID
+    allowOneMismatch: true
+    rules:
+    - from: AAAGAGGCC
+      to: 57
+    - from: AAAGTCATT
+      to: 28
+    - from: AAATGGAGG
+      to: 68
+    - from: AAATTACAG
+      to: 7
+    - from: AACAACGCG
+      to: 12
+    - from: AACAGAAAC
+      to: 77
+    - from: AACATCCAT
+      to: 47
+    - from: AACGTGTGA
+      to: 71
+    - from: AAGCCTTCT
+      to: 1
+    - from: AAGGCCGCA
+      to: 81
+    - from: AAGGGAACT
+      to: 42
+    - from: AAGGGTCAG
+      to: 73
+    - from: AAGTTTACG
+      to: 24
+    - from: AATAAACAA
+      to: 64
+    - from: AATGTATCG
+      to: 9
+    - from: AATTACCGG
+      to: 90
+    - from: AATTCGGCG
+      to: 84
+    - from: ACAAACTTT
+      to: 91
+    - from: ACAACTAGT
+      to: 88
+    - from: ACAAGTGCA
+      to: 61
+    - from: ACACCTTAG
+      to: 4
+    - from: ACAGGCTCC
+      to: 87
+    - from: ACAGTAAAC
+      to: 70
+    - from: ACATTCGGC
+      to: 31
+    - from: ACGAACCAG
+      to: 45
+    - from: ACGCTGTTG
+      to: 22
+    - from: ACGTGGGAG
+      to: 51
+    - from: ACTACATAT
+      to: 43
+    - from: ACTAGACCG
+      to: 93
+    - from: ACTCATACG
+      to: 94
+    - from: ACTCCAGGG
+      to: 60
+    - from: ACTGAATTC
+      to: 72
+    - from: ACTTACGAT
+      to: 17
+    - from: AGCCGCAAG
+      to: 69
+    - from: AGCCTGGTT
+      to: 48
+    - from: AGCTATGTG
+      to: 67
+    - from: AGTAATTAG
+      to: 32
+    - from: AGTCTGTAC
+      to: 6
+    - from: AGTTGCATC
+      to: 41
+    - from: AGTTGTTCT
+      to: 89
+    - from: ATATTGTAA
+      to: 23
+    - from: ATCATTCTG
+      to: 2
+    - from: ATCGAGTCT
+      to: 95
+    - from: ATGGGACTC
+      to: 36
+    - from: ATGGTCCGT
+      to: 54
+    - from: CAAACGTGG
+      to: 27
+    - from: CAACCTCCA
+      to: 85
+    - from: CAACGATCT
+      to: 39
+    - from: CAAGTAGAA
+      to: 10
+    - from: CAAGTTTCC
+      to: 49
+    - from: CAATACAAG
+      to: 56
+    - from: CAATAGGGT
+      to: 86
+    - from: CACAAGTAT
+      to: 3
+    - from: CACGATCCG
+      to: 76
+    - from: CAGCCTGGC
+      to: 25
+    - from: CAGGCATTT
+      to: 50
+    - from: CAGGGAGGG
+      to: 14
+    - from: CATAACGTT
+      to: 35
+    - from: CATAGGTCA
+      to: 96
+    - from: CATGAATGA
+      to: 78
+    - from: CGTACTACG
+      to: 79
+    - from: CGTCTAGGT
+      to: 83
+    - from: CTAAGCTTC
+      to: 44
+    - from: CTACATGCG
+      to: 38
+    - from: CTAGATAGA
+      to: 66
+    - from: CTATCATGA
+      to: 55
+    - from: CTATTAGCC
+      to: 26
+    - from: CTCAAGACA
+      to: 21
+    - from: CTGTACGGA
+      to: 65
+    - from: GAACGACAA
+      to: 5
+    - from: GATAGAGGA
+      to: 37
+    - from: GATCAGCGA
+      to: 30
+    - from: GATCTCTTA
+      to: 11
+    - from: GATGGTCCA
+      to: 62
+    - from: GCAACATTA
+      to: 53
+    - from: GCTATGGAA
+      to: 59
+    - from: GCTCCTTGA
+      to: 19
+    - from: GGCACAACA
+      to: 20
+    - from: GGCTACAGA
+      to: 8
+    - from: GGTGAGTTA
+      to: 13
+    - from: GGTTGGACA
+      to: 82
+    - from: GTAGAAGCA
+      to: 58
+    - from: GTCTTGGCA
+      to: 29
+    - from: GTTAGCCTA
+      to: 40
+    - from: TACTTCGGA
+      to: 46
+    - from: TCAGATTCA
+      to: 75
+    - from: TCCGTCTTA
+      to: 15
+    - from: TCCTCAATA
+      to: 63
+    - from: TCTACGACA
+      to: 34
+    - from: TCTCACGGA
+      to: 52
+    - from: TCTCGGTTA
+      to: 92
+    - from: TGAAGCCAA
+      to: 33
+    - from: TGCATAGTA
+      to: 16
+    - from: TGTATGCGA
+      to: 18
+    - from: TGTCTATCA
+      to: 74
+    - from: TTCAGCTCA
+      to: 80
+    reportingLevel: VerboseReport
+  - type: generic
+    name: ""
+    transformation:
+      type: plus
+      sources:
+      - type: multiply
+        sources:
+        - type: plus
+          sources:
+          - type: tag
+            name: CELL1ID
+          - type: constantNumber
+            value: -1
+        - type: constantNumber
+          value: 147456
+      - type: multiply
+        sources:
+        - type: plus
+          sources:
+          - type: tag
+            name: CELL2ID
+          - type: constantNumber
+            value: -1
+        - type: constantNumber
+          value: 384
+      - type: tag
+        name: CELL3ID
+    destinationTag: CELLID
   sampleTable: null
   splitBySample: false
   limit: null
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 60
+      minSumScore: 150
       relativeMinScore: 0.97
-      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner2
-        mapperNValue: 9
+        mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinClusterScore: 250
+        mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 127
+        mapperMatchScore: 98
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 6
-        mapperMaxClusters: 15
+        mapperSlotCount: 8
+        mapperMaxClusters: 11
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 250
-        mapperRelativeMinScore: 0.75
-        mapperMinSeedsDistance: 6
-        mapperMaxSeedsDistance: 6
+        mapperAbsoluteMinScore: 103
+        mapperRelativeMinScore: 0.81
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 8
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 3
+        maxHits: 2
         scoring:
           type: affine
           alphabet: nucleotide
@@ -116,19 +755,19 @@ align:
         mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: false
-        mapperAbsoluteMinScore: 95.0
-        mapperRelativeMinScore: 0.63
-        mapperMatchScore: 128.0
+        mapperAbsoluteMinScore: 1.5
+        mapperRelativeMinScore: 0.75
+        mapperMatchScore: 1.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 18
+        mapperMinSeedsDistance: 4
+        mapperMaxSeedsDistance: 10
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 4
+        maxHits: 7
         scoring:
           type: linear
           alphabet: nucleotide
@@ -141,8 +780,8 @@ align:
     minSumScore: 120.0
     maxHits: 5
     relativeMinVFR3CDR3Score: 0.7
-    allowPartialAlignments: true
-    allowNoCDR3PartAlignments: true
+    allowPartialAlignments: false
+    allowNoCDR3PartAlignments: false
     allowChimeras: false
     readsLayout: Opposite
     mergerParameters:
@@ -161,10 +800,7 @@ align:
     saveOriginalReads: false
     smartForceEdgeAlignments: true
 refineTagsAndSort:
-  whitelists:
-    CELL1: builtin:rhapsody-cell1
-    CELL2: builtin:rhapsody-cell2
-    CELL3: builtin:rhapsody-cell3
+  whitelists: {}
   runCorrection: true
   parameters:
     correctionPower: 0.001
@@ -228,8 +864,17 @@ refineTagsAndSort:
             keys:
             - allTags:Molecule
           operator:
-            type: group_operator_range
-            lower: 3.0
+            type: group_operator_advanced_thresholding
+            algo:
+              type: otsu
+            histTransformers:
+            - type: inflate
+              fraction: 0.15
+              value: 1.0
+            logX: true
+            minimalSample: 20
+            fallbackThreshold: 1.0
+            accept: High
           expectedSorting:
           - allTags:Molecule
           requiredSequences: []
@@ -241,12 +886,36 @@ refineTagsAndSort:
       - allTags:Cell
       - allTags:Molecule
       requiredSequences: []
-assemblePartial: null
-extend: null
+assemblePartial:
+  overlappedOnly: false
+  dropPartial: false
+  cellLevel: false
+  parameters:
+    kValue: 12
+    kOffset: -7
+    minimalAssembleOverlap: 12
+    minimalNOverlap: 7
+    minimalNOverlapShare: 0.65
+    minimalAlignmentMergeIdentity: 0.85
+    mergerParameters:
+      qualityMergingAlgorithm: SumSubtraction
+      partsLayout: CollinearDirect
+      minimalOverlap: 20
+      minimalMatchQualitySum: 0
+      maxQuality: 45
+      minimalIdentity: 0.95
+      identityType: Unweighted
+    maxLeftParts: 256000
+    maxLeftMatches: 6144
+extend:
+  vAnchor: CDR3Begin
+  jAnchor: FR4Begin
+  minimalVScore: 50
+  minimalJScore: 50
 assemble:
   sortBySequence: false
-  clnaOutput: true
-  cellLevel: false
+  clnaOutput: false
+  cellLevel: true
   consensusAssemblerParameters:
     assembler:
       aAssemblerParameters:
@@ -265,11 +934,11 @@ assemble:
       minAltSeedQualityScore: 11
       minAltSeedNormalizedPenalty: 0.35
       altSeedPenaltyTolerance: 0.3
-      minRecordSharePerConsensus: 0.2
+      minRecordSharePerConsensus: 0.02
       minRecordsPerConsensus: 0
-      minRecursiveRecordShare: 0.4
+      minRecursiveRecordShare: 0.1
       minQualityScore: 0
-      maxConsensuses: 3
+      maxConsensuses: 6
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
@@ -349,77 +1018,29 @@ assemble:
       - allTags:Cell
       - clone
       - allTags:Molecule
-    - type: filter_in_groups
-      isolationKeys:
-      - allTags:Cell
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist: null
-            keys:
-            - allTags:Molecule
-          operator:
-            type: group_operator_cumtop
-            share: 0.99
-            accept: High
-          expectedSorting:
-          - allTags:Molecule
-          requiredSequences: []
-        expectedSorting:
-        - clone
-        - allTags:Molecule
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - allTags:Cell
-      - clone
-      - allTags:Molecule
-    - type: filter_groups
-      groupingKeys:
-      - allTags:Cell
-      - clone
-      predicates:
-      - metrics:
-        - type: group_metric_nunique
-          reportHist: null
-          keys:
-          - allTags:Molecule
-        operator:
-          type: group_operator_range
-          lower: 2.0
-        expectedSorting:
-        - allTags:Molecule
-        requiredSequences: []
-      expectedSorting:
-      - allTags:Cell
-      - clone
-      - allTags:Molecule
-      requiredSequences: []
-    - type: filter_groups
-      groupingKeys:
-      - allTags:Cell
-      predicates:
-      - metrics:
-        - type: group_metric_nunique
-          reportHist: null
-          keys:
-          - clone
-        operator:
-          type: group_operator_range
-          upper: 4.0
-        expectedSorting:
-        - clone
-        requiredSequences: []
-      expectedSorting:
-      - allTags:Cell
-      - clone
-      requiredSequences: []
-  inferMinRecordsPerConsensus: true
-assembleContigs: null
+  inferMinRecordsPerConsensus: false
+assembleContigs:
+  ignoreTags: false
+  parameters:
+    branchingMinimalQualityShare: 0.1
+    branchingMinimalSumQuality: 60
+    decisiveBranchingSumQualityThreshold: 120
+    alignedSequenceEdgeDelta: 3
+    alignmentEdgeRegionSize: 7
+    minimalNonEdgePointsFraction: 0.25
+    minimalMeanNormalizedQuality: 5.0
+    outputMinimalQualityShare: 0.75
+    outputMinimalSumQuality: 0
+    subCloningRegions: null
+    assemblingRegions: null
+    postFiltering:
+      type: NoFiltering
+    trimmingParameters:
+      averageQualityThreshold: 10.0
+      windowSize: 8
+    minimalContigLength: 20
+    alignedRegionsOnly: false
+    discardAmbiguousNucleotideCalls: false
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -468,3 +1089,84 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
+qc:
+  checks:
+  - type: SuccessfullyAlignedReads
+    upper: 0.85
+    middle: 0.7
+    label: Successfully aligned reads
+  - type: OffTargetReads
+    upper: 0.2
+    middle: 0.1
+    label: Off target (non TCR/IG) reads
+  - type: ReadsWithNoVOrJHits
+    upper: 0.2
+    middle: 0.1
+    label: Reads with no V or J hits
+  - type: AlignmentsWithNoAssemblingFeature
+    upper: 0.15
+    middle: 0.05
+    label: Alignments without assembling feature
+  - type: ReadsWithNoBarcode
+    upper: 0.2
+    middle: 0.1
+    label: Reads with no barcode
+  - type: ReadsDroppedInTagRefinement
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in tags error correction and filtering
+  - type: TagArtificialDiversityEliminated
+    tag: UMI
+    upper: 0.5
+    middle: 0.3
+    label: UMIs artificial diversity eliminated
+  - type: TagArtificialDiversityEliminated
+    tag: CELL
+    upper: 0.8
+    middle: 0.7
+    label: CELLs artificial diversity eliminated
+  - type: ReadsDroppedInTagCorrection
+    tag: UMI
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in UMI error correction and whitelist
+  - type: ReadsDroppedInTagFiltering
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in tags filtering
+  - type: TagGroupsWithNoAssemblingFeature
+    upper: 0.2
+    middle: 0.1
+    label: Tag groups with no assembling feature
+  - type: TagGroupsWithMultipleConsensuses
+    upper: 0.1
+    middle: 0.01
+    label: Barcode collisions in clonotype assembly
+  - type: UnassignedAlignments
+    upper: 0.1
+    middle: 0.05
+    label: Unassigned alignments in clonotype assembly
+  - type: ReadsUsedInClonotypes
+    upper: 0.9
+    middle: 0.7
+    label: Reads used in clonotypes
+  - type: AlignmentsDroppedLowQuality
+    upper: 0.05
+    middle: 0.01
+    label: Alignments dropped due to low sequence quality
+  - type: AlignmentsClusteredInAssembler
+    upper: 0.05
+    middle: 0.01
+    label: Alignments clustered in PCR error correction
+  - type: ClonesClusteredInAssembler
+    upper: 0.05
+    middle: 0.01
+    label: Clonotypes clustered in PCR error correction
+  - type: ClonesDroppedInPostFiltering
+    upper: 0.05
+    middle: 0.01
+    label: Clones dropped in post-filtering
+  - type: AlignmentsDroppedInPostFiltering
+    upper: 0.05
+    middle: 0.01
+    label: Alignments dropped in clones post-filtering
