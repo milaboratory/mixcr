@@ -7,6 +7,8 @@
     - exportClones
   align:
     inheritFrom: align-single-cell
+  exportAlignments:
+    inheritFrom: exportAlignments-base
   refineTagsAndSort:
     whitelists:
       CELL1: builtin:rhapsody-cell1

@@ -34,11 +34,10 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Visibility.ALWAYS
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.io.BufferedOutputStream
-import java.io.FileOutputStream
 import java.io.PrintStream
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.outputStream
 
 @Command(
     description = ["Export verbose information about alignments."]
@@ -225,8 +224,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         CommandExportAlignments.openAlignmentsPort(input).use { readerAndHeader ->
             ValidationException.chainsExist(chains, readerAndHeader.usedGenes)
 
-            (out?.let { PrintStream(BufferedOutputStream(FileOutputStream(it.toFile()), 32768)) }
-                ?: System.out).use { output ->
+            (out?.let { PrintStream(it.outputStream().buffered(32768)) } ?: System.out).use { output ->
                 readerAndHeader.port.use { reader ->
                     val countBefore = limitBefore ?: Int.MAX_VALUE
                     val countAfter = limitAfter ?: Int.MAX_VALUE
@@ -356,8 +354,8 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
             println()
             println(">>> Tags:")
             tagsInfo.forEach { tag ->
-                val tagValue = alignments.tagCount.singleOrNull(tag.index).extractKey()
-                val toPrint = tagValue.extractSequence() ?: tagValue.toString()
+                val tagValue = alignments.tagCount.singleOrNull(tag)?.extractKey()
+                val toPrint = tagValue?.extractSequence() ?: tagValue.toString()
                 println(">>> ${tag.name}: $toPrint")
             }
         }
