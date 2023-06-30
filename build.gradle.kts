@@ -6,10 +6,12 @@ import com.palantir.gradle.gitversion.VersionDetails
 import de.undercouch.gradle.tasks.download.Download
 import groovy.lang.Closure
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+import org.jetbrains.kotlin.daemon.common.trimQuotes
 import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import proguard.gradle.ProGuardTask
 import java.net.InetAddress
+
 buildscript {
     repositories {
         mavenCentral()
@@ -256,14 +258,41 @@ val generatePresetFileList by tasks.registering {
         val yamls = layout.files({
             source.walk()
                 .filter { it.extension == "yaml" }
-                .map { it.relativeTo(source) }
                 .toList()
         })
         outputFile.ensureParentDirsCreated()
-        outputFile.writeText(yamls
-            .map { relativePath(it) }
-            .sorted()
-            .joinToString("\n"))
+        outputFile.writeText(
+            yamls
+                .flatMap { file ->
+                    val presetNames = mutableListOf<String>()
+                    val deprecatedPresets = mutableSetOf<String>()
+                    val abstractPresets = mutableSetOf<String>()
+                    file.useLines { lines ->
+                        for (line in lines) {
+                            if (!line.startsWith("  ") && line.isNotBlank() && !line.startsWith("#")) {
+                                presetNames += line.removeSuffix(":").trimQuotes()
+                            }
+                            if (line.startsWith("  deprecation:") || line.startsWith("  \"deprecation\":")) {
+                                deprecatedPresets += presetNames.last()
+                            }
+                            if (line == "  abstract: true" || line == "  \"abstract\": true") {
+                                abstractPresets += presetNames.last()
+                            }
+                        }
+                    }
+                    presetNames.map { name ->
+                        val pathToSave = relativePath(file.relativeTo(source))
+                        listOf(
+                            name,
+                            (name in deprecatedPresets).toString(),
+                            (name in abstractPresets).toString(),
+                            pathToSave
+                        )
+                    }
+                }
+                .sortedBy { (name) -> name }
+                .joinToString("\n") { line -> line.joinToString("\t") }
+        )
     }
 }
 
