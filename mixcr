@@ -159,8 +159,20 @@ if [[ ${needXmxXms} == true ]]; then
       targetXmx=$maxMb
     fi
 
-    echo "IMPORTANT: MiXCR will use at most ${targetXmx}MB of RAM," >&2
-    echo "           use -Xmx to change automatically set heap size (i.e. -Xmx50g to set heap size to 50 Gb)" >&2
+    memoryConsumingCommands=("analyze" "refineTagsAndSort" "assemblePartial" "assemble" "findShmTrees")
+    needWarn=false
+    for mcmd in "${memoryConsumingCommands[@]}"; do
+      if [[ " ${appArgs[*]} " =~ ${mcmd} ]]; then
+        needWarn=true
+        break
+      fi
+    done
+
+    if [[ ${needWarn} == true ]]; then
+      echo "IMPORTANT: MiXCR will use at most ${targetXmx}MB of RAM," >&2
+      echo "           use -Xmx to change automatically set heap size (i.e. -Xmx50g to set heap size to 50 Gb)" >&2
+    fi
+
     javaArgs+=("-Xmx${targetXmx}m")
 
     targetXms=$((targetXmx * 2 / 3))
