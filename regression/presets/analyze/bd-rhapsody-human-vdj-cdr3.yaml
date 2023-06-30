@@ -652,7 +652,7 @@ align:
           - type: constantNumber
             value: -1
         - type: constantNumber
-          value: 9216
+          value: 147456
       - type: multiply
         sources:
         - type: plus
@@ -662,7 +662,7 @@ align:
           - type: constantNumber
             value: -1
         - type: constantNumber
-          value: 96
+          value: 384
       - type: tag
         name: CELL3ID
     destinationTag: CELLID
@@ -672,32 +672,31 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 60
+      minSumScore: 150
       relativeMinScore: 0.97
-      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner2
-        mapperNValue: 9
+        mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinClusterScore: 250
+        mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 127
+        mapperMatchScore: 98
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 6
-        mapperMaxClusters: 15
+        mapperSlotCount: 8
+        mapperMaxClusters: 11
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 250
-        mapperRelativeMinScore: 0.75
-        mapperMinSeedsDistance: 6
-        mapperMaxSeedsDistance: 6
+        mapperAbsoluteMinScore: 103
+        mapperRelativeMinScore: 0.81
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 8
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 3
+        maxHits: 2
         scoring:
           type: affine
           alphabet: nucleotide
@@ -756,19 +755,19 @@ align:
         mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: false
-        mapperAbsoluteMinScore: 95.0
-        mapperRelativeMinScore: 0.63
-        mapperMatchScore: 128.0
+        mapperAbsoluteMinScore: 1.5
+        mapperRelativeMinScore: 0.75
+        mapperMatchScore: 1.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 18
+        mapperMinSeedsDistance: 4
+        mapperMaxSeedsDistance: 10
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 4
+        maxHits: 7
         scoring:
           type: linear
           alphabet: nucleotide
@@ -781,8 +780,8 @@ align:
     minSumScore: 120.0
     maxHits: 5
     relativeMinVFR3CDR3Score: 0.7
-    allowPartialAlignments: true
-    allowNoCDR3PartAlignments: true
+    allowPartialAlignments: false
+    allowNoCDR3PartAlignments: false
     allowChimeras: false
     readsLayout: Opposite
     mergerParameters:
@@ -951,7 +950,7 @@ assemble:
       allowedMutationsInNRegions: 1
       searchParameters: twoMismatchesOrIndels
       clusteringFilter:
-        type: relativeConcentration
+        type: advanced
         correctionPower: 0.001
         backgroundSubstitutionRate: 5.0E-4
         backgroundIndelRate: 2.0E-4
@@ -1046,6 +1045,7 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
+  - field: -readIds
   - field: -targetSequences
   - field: -targetQualities
   - field: -vHitsWithScore
@@ -1089,3 +1089,84 @@ exportClones:
   - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []
+qc:
+  checks:
+  - type: SuccessfullyAlignedReads
+    upper: 0.85
+    middle: 0.7
+    label: Successfully aligned reads
+  - type: OffTargetReads
+    upper: 0.2
+    middle: 0.1
+    label: Off target (non TCR/IG) reads
+  - type: ReadsWithNoVOrJHits
+    upper: 0.2
+    middle: 0.1
+    label: Reads with no V or J hits
+  - type: AlignmentsWithNoAssemblingFeature
+    upper: 0.15
+    middle: 0.05
+    label: Alignments without assembling feature
+  - type: ReadsWithNoBarcode
+    upper: 0.2
+    middle: 0.1
+    label: Reads with no barcode
+  - type: ReadsDroppedInTagRefinement
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in tags error correction and filtering
+  - type: TagArtificialDiversityEliminated
+    tag: UMI
+    upper: 0.5
+    middle: 0.3
+    label: UMIs artificial diversity eliminated
+  - type: TagArtificialDiversityEliminated
+    tag: CELL
+    upper: 0.8
+    middle: 0.7
+    label: CELLs artificial diversity eliminated
+  - type: ReadsDroppedInTagCorrection
+    tag: UMI
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in UMI error correction and whitelist
+  - type: ReadsDroppedInTagFiltering
+    upper: 0.1
+    middle: 0.05
+    label: Reads dropped in tags filtering
+  - type: TagGroupsWithNoAssemblingFeature
+    upper: 0.2
+    middle: 0.1
+    label: Tag groups with no assembling feature
+  - type: TagGroupsWithMultipleConsensuses
+    upper: 0.1
+    middle: 0.01
+    label: Barcode collisions in clonotype assembly
+  - type: UnassignedAlignments
+    upper: 0.1
+    middle: 0.05
+    label: Unassigned alignments in clonotype assembly
+  - type: ReadsUsedInClonotypes
+    upper: 0.9
+    middle: 0.7
+    label: Reads used in clonotypes
+  - type: AlignmentsDroppedLowQuality
+    upper: 0.05
+    middle: 0.01
+    label: Alignments dropped due to low sequence quality
+  - type: AlignmentsClusteredInAssembler
+    upper: 0.05
+    middle: 0.01
+    label: Alignments clustered in PCR error correction
+  - type: ClonesClusteredInAssembler
+    upper: 0.05
+    middle: 0.01
+    label: Clonotypes clustered in PCR error correction
+  - type: ClonesDroppedInPostFiltering
+    upper: 0.05
+    middle: 0.01
+    label: Clones dropped in post-filtering
+  - type: AlignmentsDroppedInPostFiltering
+    upper: 0.05
+    middle: 0.01
+    label: Alignments dropped in clones post-filtering
