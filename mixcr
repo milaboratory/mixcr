@@ -159,7 +159,7 @@ if [[ ${needXmxXms} == true ]]; then
       targetXmx=$maxMb
     fi
 
-    memoryConsumingCommands=("analyze" "refineTagsAndSort" "assemblePartial" "assemble" "findShmTrees")
+    memoryConsumingCommands=("analyze" "refineTagsAndSort" "assemblePartial" "assemble" "findShmTrees" "postanalysis" "downsampling")
     needWarn=false
     for mcmd in "${memoryConsumingCommands[@]}"; do
       if [[ " ${appArgs[*]} " =~ ${mcmd} ]]; then
