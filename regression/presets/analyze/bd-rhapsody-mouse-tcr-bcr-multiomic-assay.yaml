@@ -2,7 +2,10 @@ flags: []
 pipeline:
 - align
 - refineTagsAndSort
+- assemblePartial
+- extend
 - assemble
+- assembleContigs
 - exportClones
 align:
   species: mmu
@@ -14,28 +17,8 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: |
-    ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) | \
-    ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
-    ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
-    ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
-    ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
-    ^aggttctgggttctggatgt(R2:*)|
-    ^caatctctgcttttgatggctc(R2:*)|
-    ^gtagaaatctttcaccagacaagc(R2:*)|
-    ^ttgggggaaatgtctgca(R2:*)|
-    ^aatagtaggcttgggagaaaagtctg(R2:*)|
-    ^tgtcagtgggtagatggtgg(R2:*)|
-    ^ctgacttccaattactaaacagcc(R2:*)|
-    ^tagagctgagggttcctgatag(R2:*)|
-    ^cagtggatagacagatgggggt(R2:*)|
-    ^atggggctgttgttttgg(R2:*)|
-    ^gtggatagactgatgggggtgtt(R2:*)|
-    ^agggaagtagcctttgacaag(R2:*)|
-    ^gacatttgggaaggactgactc(R2:*)|
-    ^agatgttaactgctcactggatg(R2:*)|
-    ^gttagtctcgagctcttcaga(R2:*)|
-    ^cagtgtggctttgttttcct(R2:*)
+  tagPattern: "^<<acagN{16}(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\\\
+    ^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   readIdAsCellTag: false
@@ -46,6 +29,8 @@ align:
     - CELL1
     newTags:
     - CELL1ID
+    preserveMatchedTags:
+    - CELL1
     allowOneMismatch: true
     rules:
     - from: AAATCCTGT
@@ -247,6 +232,8 @@ align:
     - CELL2
     newTags:
     - CELL2ID
+    preserveMatchedTags:
+    - CELL2
     allowOneMismatch: true
     rules:
     - from: AAACGTACC
@@ -448,6 +435,8 @@ align:
     - CELL3
     newTags:
     - CELL3ID
+    preserveMatchedTags:
+    - CELL3
     allowOneMismatch: true
     rules:
     - from: AAAGAGGCC
@@ -677,31 +666,32 @@ align:
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 150
+      minSumScore: 60
       relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner2
-        mapperNValue: 8
+        mapperNValue: 9
         mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinClusterScore: 102
+        mapperAbsoluteMinClusterScore: 250
         mapperExtraClusterScore: -38
-        mapperMatchScore: 98
+        mapperMatchScore: 127
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 8
-        mapperMaxClusters: 11
+        mapperSlotCount: 6
+        mapperMaxClusters: 15
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 103
-        mapperRelativeMinScore: 0.81
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 8
+        mapperAbsoluteMinScore: 250
+        mapperRelativeMinScore: 0.75
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 6
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 2
+        maxHits: 3
         scoring:
           type: affine
           alphabet: nucleotide
@@ -760,19 +750,19 @@ align:
         mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: false
-        mapperAbsoluteMinScore: 1.5
-        mapperRelativeMinScore: 0.75
-        mapperMatchScore: 1.0
+        mapperAbsoluteMinScore: 95.0
+        mapperRelativeMinScore: 0.63
+        mapperMatchScore: 128.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 4
-        mapperMaxSeedsDistance: 10
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 18
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 7
+        maxHits: 4
         scoring:
           type: linear
           alphabet: nucleotide
@@ -785,8 +775,8 @@ align:
     minSumScore: 120.0
     maxHits: 5
     relativeMinVFR3CDR3Score: 0.7
-    allowPartialAlignments: false
-    allowNoCDR3PartAlignments: false
+    allowPartialAlignments: true
+    allowNoCDR3PartAlignments: true
     allowChimeras: false
     readsLayout: Opposite
     mergerParameters:
@@ -919,7 +909,7 @@ extend:
   minimalJScore: 50
 assemble:
   sortBySequence: false
-  clnaOutput: false
+  clnaOutput: true
   cellLevel: true
   consensusAssemblerParameters:
     assembler:

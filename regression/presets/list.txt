@@ -4,11 +4,9 @@ PresetName                                  Required mix-ins
 abhelix-human
 ampliseq-tcrb-plus
 ampliseq-tcrb-sr
-bd-rhapsody-human-bcr-full-length
-bd-rhapsody-human-tcr-full-length
+bd-rhapsody-human-tcr-bcr-multiomic-assay
 bd-rhapsody-human-vdj-cdr3
-bd-rhapsody-mouse-bcr-full-length
-bd-rhapsody-mouse-tcr-full-length
+bd-rhapsody-mouse-tcr-bcr-multiomic-assay
 bd-rhapsody-mouse-vdj-cdr3
 bd-rhapsody-mouse-tcr-v1
 bd-rhapsody-mouse-tcr-v2
