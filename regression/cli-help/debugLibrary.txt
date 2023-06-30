@@ -1,0 +1,9 @@
+Usage: mixcr debugLibrary [--all] [--force-overwrite] [--no-warnings] [--verbose] [--help] library.
+                          json[.gz]
+Debug reference library file
+      library.json[.gz]    Input library.
+      --all                Show all genes (not only problematic ones)
+  -f, --force-overwrite    Force overwrite of output file(s).
+      -nw, --no-warnings   Suppress all warning messages.
+      --verbose            Verbose messages.
+  -h, --help               Show this help message and exit.

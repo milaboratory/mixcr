@@ -53,4 +53,5 @@ Util commands:
                                mix-ins
   buildLibrary               Build custom reference library
   mergeLibrary               Merge multiple reference libraries in one file
+  debugLibrary               Debug reference library file
   listPresets                Show all available presets
