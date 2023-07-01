@@ -108,7 +108,8 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
             inputFiles.forEach { input ->
                 val footer = IOUtil.extractFooter(input)
                 if (withUpstreams) {
-                    footer.reports.collection.upstreamReportsWithSources()
+                    footer.reports.collection
+                        .upstreamReportsWithSources()
                         .forEach { output.put(it) }
                 }
                 output.put(ReportsWithSource(input.toString(), footer.reports.collection.allReportsRecursive()))
