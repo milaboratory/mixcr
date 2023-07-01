@@ -5,7 +5,6 @@ generic-lt-single-cell-amplicon:
     - species
     - leftAlignmentMode
     - rightAlignmentMode
-    - tagPattern
   pipeline:
     - align
     - refineTagsAndSort
@@ -76,7 +75,6 @@ generic-lt-single-cell-amplicon-with-umi:
     - species
     - leftAlignmentMode
     - rightAlignmentMode
-    - tagPattern
   pipeline:
     - align
     - refineTagsAndSort
@@ -208,7 +206,6 @@ generic-lt-single-cell-fragmented:
   inheritFrom: bundle-base
   flags:
     - species
-    - tagPattern
   pipeline:
     - align
     - refineTagsAndSort
@@ -260,7 +257,6 @@ generic-lt-single-cell-fragmented-with-umi:
   inheritFrom: bundle-base
   flags:
     - species
-    - tagPattern
   pipeline:
     - align
     - refineTagsAndSort
@@ -827,7 +823,7 @@ generic-ht-single-cell-fragmented-with-umi:
 
 # Single cell GEX without UMI
 generic-single-cell-gex:
-  inheritFrom: generic-ht-single-cell-fragmented
+  inheritFrom: generic-lt-single-cell-fragmented
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
   assemblePartial:
@@ -837,7 +833,7 @@ generic-single-cell-gex:
 
 # Single cell GEX with UMI
 generic-single-cell-gex-with-umi:
-  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  inheritFrom: generic-lt-single-cell-fragmented-with-umi
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
   assemblePartial:
