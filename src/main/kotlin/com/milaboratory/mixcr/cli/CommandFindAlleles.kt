@@ -36,8 +36,6 @@ import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
-import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AssembleContigsMixins
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -169,9 +167,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "clonesCount - how many clones aligned to this allele.",
             "totalClonesCountForGene - how many clones in all alleles of this gene (after realigning).",
             "clonesCountWithNegativeScoreChange - how many clones get lower score after aligned to this allele.",
-            "filteredForAlleleSearchNaivesCount - how many naive clones aligned to this allele and was used in searching.",
-            "filteredForAlleleSearchClonesCount - how many clones aligned to this allele and was used in searching.",
-            "filteredForAlleleSearchClonesCountWithNegativeScoreChange - how many clones get lower score after aligned to this allele and was used in searching before",
             "scoreDelta - stats for score change of clones afeter aligning to this allele."
         ],
         names = ["--export-alleles-mutations"],
@@ -264,24 +259,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     }
 
     override fun run1() {
-        val clonesFilter: AllelesBuilder.ClonesFilter = object : AllelesBuilder.ClonesFilter {
-            override fun match(clone: Clone, tagsInfo: TagsInfo): Boolean {
-                if (findAllelesParameters.productiveOnly) {
-                    if (clone.containsStopsOrAbsent(CDR3) || clone.isOutOfFrameOrAbsent(CDR3)) {
-                        return false
-                    }
-                }
-                val hasUmi = tagsInfo.any { it.type == TagType.Molecule }
-                val useClonesWithCountGreaterThen = when {
-                    hasUmi -> findAllelesParameters.filterForDataWithUmi.useClonesWithCountGreaterThen
-                    else -> findAllelesParameters.filterForDataWithoutUmi.useClonesWithCountGreaterThen
-                }
-                return clone.count > useClonesWithCountGreaterThen
-            }
-        }
-
         val reportBuilder = FindAllelesReport.Builder(
-            OverallAllelesStatistics(clonesFilter)
+            OverallAllelesStatistics()
         )
             .setCommandLine(commandLineArguments)
             .setInputFiles(inputFiles)
@@ -348,7 +327,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val stepsCount = 7
         val allelesBuilder = AllelesBuilder.create(
             "Step 1 of $stepsCount",
-            clonesFilter,
             originalLibrary,
             tempDest,
             datasets,
@@ -360,6 +338,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
         val JAllelesFromFirstRound = allelesBuilder.searchForAlleles(
             "Step 2 of $stepsCount",
+            findAllelesParameters.filter,
             findAllelesParameters.searchAlleleParameterForFirstRound,
             null,
             Joining,
@@ -367,6 +346,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         )
         val VAllelesFromFirstRound = allelesBuilder.searchForAlleles(
             "Step 3 of $stepsCount",
+            findAllelesParameters.filter,
             findAllelesParameters.searchAlleleParameterForFirstRound,
             null,
             Variable,
@@ -375,6 +355,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         reportBuilder.reportFirstRound((JAllelesFromFirstRound.values + VAllelesFromFirstRound.values).flatten())
         val JAllelesFromSecondRound = allelesBuilder.searchForAlleles(
             "Step 4 of $stepsCount",
+            findAllelesParameters.filter,
             findAllelesParameters.searchAlleleParameterForSecondRound,
             findAllelesParameters.searchMutationsInCDR3,
             Joining,
@@ -382,6 +363,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         )
         val VAllelesFromSecondRound = allelesBuilder.searchForAlleles(
             "Step 5 of $stepsCount",
+            findAllelesParameters.filter,
             findAllelesParameters.searchAlleleParameterForSecondRound,
             findAllelesParameters.searchMutationsInCDR3,
             Variable,
@@ -435,7 +417,6 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 }
                 val withRecalculatedScores = cloneRebuild.recalculateScores(
                     port.reportProgress(message),
-                    cloneReader.tagsInfo,
                     reportBuilder
                 )
                 if (outputClnsOptions.outputTemplate != null) {
@@ -516,7 +497,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 } else ""
             }
             this["naivesCount"] = { allele ->
-                allelesStatistics.stats(allele.result.name).naives(filtered = false)
+                allelesStatistics.stats(allele.result.name).naives()
             }
             this["nonProductiveCount"] = { allele ->
                 allelesStatistics.stats(allele.result.name).nonProductive()
@@ -525,22 +506,13 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 allelesStatistics.stats(allele.result.name).diversity()
             }
             this["clonesCount"] = { allele ->
-                allelesStatistics.stats(allele.result.name).count(filtered = false)
+                allelesStatistics.stats(allele.result.name).count()
             }
             this["totalClonesCountForGene"] = { allele ->
                 allelesStatistics.baseGeneCount(allele.result.geneName)
             }
             this["clonesCountWithNegativeScoreChange"] = { allele ->
-                allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = false)
-            }
-            this["filteredForAlleleSearchNaivesCount"] = { allele ->
-                allelesStatistics.stats(allele.result.name).naives(filtered = true)
-            }
-            this["filteredForAlleleSearchClonesCount"] = { allele ->
-                allelesStatistics.stats(allele.result.name).count(filtered = true)
-            }
-            this["filteredForAlleleSearchClonesCountWithNegativeScoreChange"] = { allele ->
-                allelesStatistics.stats(allele.result.name).withNegativeScoreChange(filtered = true)
+                allelesStatistics.stats(allele.result.name).withNegativeScoreChange()
             }
             this["scoreDelta"] = { allele ->
                 val summaryStatistics = allelesStatistics.stats(allele.result.name).scoreDelta

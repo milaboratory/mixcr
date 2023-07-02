@@ -1,21 +1,26 @@
 {
   "default": {
-    "productiveOnly": true,
-    "filterForDataWithUmi": {
-      "useClonesWithCountGreaterThen": 0
-    },
-    "filterForDataWithoutUmi": {
-      "useClonesWithCountGreaterThen": 2
+    "filter": {
+      "productiveOnly": true,
+      "withUmi": {
+        "thresholds": {
+          "1..": 1
+        }
+      },
+      "withoutUmi": {
+        "thresholds": {
+          "1..200": 1,
+          "201..500": 2,
+          "501..": 3
+        }
+      },
+      "limitClones": 2000,
+      "preferIsotypes": [
+        "IGHM",
+        "IGHD"
+      ]
     },
     "searchAlleleParameterForFirstRound": {
-      "clonesToSearchCap": {
-        "limitClones": 10000,
-        "preferIsotypes": [
-          "IGHM",
-          "IGHD"
-        ],
-        "seedForShuffle": 0
-      },
       "minClonesCountForAlleleSearch": 20,
       "topByScore": 0.3,
       "coefficientForNaiveClonesInScore": 2.0,
@@ -33,14 +38,6 @@
       "searchForMultiZygotes": false
     },
     "searchAlleleParameterForSecondRound": {
-      "clonesToSearchCap": {
-        "limitClones": 10000,
-        "preferIsotypes": [
-          "IGHM",
-          "IGHD"
-        ],
-        "seedForShuffle": 0
-      },
       "minClonesCountForAlleleSearch": 10,
       "topByScore": 0.65,
       "coefficientForNaiveClonesInScore": 2.0,
