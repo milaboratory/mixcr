@@ -1,4 +1,4 @@
-"ont-rna-seq-vdj":
+"ont-rna-seq":
   flags:
     - species
   pipeline:

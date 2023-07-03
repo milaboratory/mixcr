@@ -1,4 +1,4 @@
-"parse-bio-3gex-wt-mega":
+"parsebio-sc-3gex-evercode-wt-mega":
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
@@ -816,8 +816,7 @@
               - type: tag
                 name: CELL3CONVERTED
 
-
-"parse-bio-3gex-wt":
+"parsebio-sc-3gex-evercode-wt":
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
@@ -1443,7 +1442,7 @@
               - type: tag
                 name: CELL3CONVERTED
 
-"parse-bio-3gex-wt-mini":
+"parsebio-sc-3gex-evercode-wt-mini":
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern

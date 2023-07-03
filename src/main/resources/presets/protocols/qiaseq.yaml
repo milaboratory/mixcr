@@ -1,4 +1,4 @@
-"qiaseq-human-tcr-panel":
+"qiagen-human-rna-tcr-umi-qiaseq":
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -48,8 +48,8 @@
         ^N{:4}cttctggagttttgtttcagcaatcgaaggaag(R1:*) |
         ^N{:4}ttccatttttcatgacaaaaacggatggtttggt(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
 
-"qiaseq-mouse-tcr-panel":
-  inheritFrom: qiaseq-human-tcr-panel
+"qiagen-mouse-rna-tcr-umi-qiaseq":
+  inheritFrom: qiagen-human-rna-tcr-umi-qiaseq
   mixins:
     - type: SetSpecies
       species: mmu
