@@ -1,17 +1,5 @@
 "smartseq2-vdj":
   inheritFrom: generic-single-cell-gex
-  flags:
-    - species
-  mixins:
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: false
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
-  align:
-    inheritFrom: align-single-cell
-    overrides:
-      tagPattern: null
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:
