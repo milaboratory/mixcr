@@ -180,14 +180,14 @@ irepertoire-human-dna-igh-lr:
 
 # MiLaboratories deprecated presets
 
-milab-human-ig-rna-multiplex-cdr3:
+milab-human-bcr-multiplex-cdr3:
   deprecation: "The preset is deprecated. Please use milab-human-rna-ig-umi-multiplex. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
   inheritFrom: milab-human-rna-ig-umi-multiplex
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
-milab-human-ig-rna-multiplex-full-length:
+milab-human-bcr-multiplex-full-length:
   deprecation: "The preset is deprecated. Please use milab-human-rna-ig-umi-multiplex."
   inheritFrom: milab-human-rna-ig-umi-multiplex
 
