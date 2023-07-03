@@ -640,6 +640,7 @@ align:
       separator: _
     destinationTag: CELL
   sampleTable: null
+  tagsValidations: []
   splitBySample: false
   limit: null
   parameters:
