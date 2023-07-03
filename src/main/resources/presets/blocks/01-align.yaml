@@ -165,6 +165,13 @@ align-shotgun:
     tagUnstranded: false
     tagMaxBudget: 10
     splitBySample: false
+    tagsValidations:
+      # Note: the following validation is applicable to all built-in presets in all cases.
+      # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
+      # to true, these tags are used within the alignment step and don't appear in the output files. Therefore,
+      # the validation remains relevant and valid.
+      - type: MustNotContainTagType
+        tagType: Sample
     parameters:
       fixSeed: true
       libraryStructure: Unknown
@@ -298,7 +305,13 @@ align-long-read:
     tagMaxBudget: 10.0
     sampleTable: null
     splitBySample: false
-    readIdAsCellTag: false
+    tagsValidations:
+      # Note: the following validation is applicable to all built-in presets in all cases.
+      # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
+      # to true, these tags are used within the alignment step and don't appear in the output files. Therefore,
+      # the validation remains relevant and valid.
+      - type: MustNotContainTagType
+        tagType: Sample
     limit: null
     parameters:
       vParameters:
@@ -447,6 +460,15 @@ align-single-cell:
     tagUnstranded: false
     tagMaxBudget: 10.0
     splitBySample: false
+    tagsValidations:
+      # Note: the following validation is applicable to all built-in presets in all cases.
+      # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
+      # to true, these tags are used within the alignment step and don't appear in the output files. Therefore,
+      # the validation remains relevant and valid.
+      - type: MustNotContainTagType
+        tagType: Sample
+      - type: MustContainTagType
+        tagType: Cell
     parameters:
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
