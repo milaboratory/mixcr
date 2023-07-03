@@ -1,6 +1,5 @@
 flags:
 - species
-- tagPattern
 pipeline:
 - align
 - refineTagsAndSort
@@ -24,7 +23,11 @@ align:
   tagMaxBudget: 10.0
   readIdAsCellTag: false
   sampleTable: null
-  tagsValidations: []
+  tagsValidations:
+  - type: MustContainTagType
+    tagType: Cell
+  - type: MustNotContainTagType
+    tagType: Molecule
   splitBySample: false
   limit: null
   parameters:
@@ -113,7 +116,7 @@ align:
         type: kaligner
         mapperKValue: 5
         floatingLeftBound: false
-        floatingRightBound: true
+        floatingRightBound: false
         mapperAbsoluteMinScore: 95.0
         mapperRelativeMinScore: 0.63
         mapperMatchScore: 128.0
@@ -270,33 +273,7 @@ assemble:
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 20
-    postFilters:
-    - type: filter_in_groups
-      isolationKeys:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist: null
-          operator:
-            type: group_operator_cumtop
-            share: 0.95
-            accept: High
-          expectedSorting: []
-          requiredSequences: []
-        expectedSorting:
-        - clone
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      - clone
+    postFilters: null
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -367,28 +344,7 @@ exportClones:
   groupClonesBy: []
 qc:
   checks:
-  - type: SuccessfullyAlignedReads
-    upper: 0.8
-    middle: 0.6
-    label: Successfully aligned reads
-  - type: UnassignedAlignments
-    upper: 0.2
-    middle: 0.1
-    label: Unassigned alignments in clonotype assembly
   - type: AlignmentsDroppedLowQuality
     upper: 0.2
     middle: 0.1
     label: Alignments dropped due to low sequence quality
-  - type: ReadsDroppedInTagRefinement
-    upper: 0.3
-    middle: 0.15
-    label: Reads dropped in tags error correction and filtering
-  - type: TagArtificialDiversityEliminated
-    tag: CELL
-    upper: 0.8
-    middle: 0.7
-    label: CELLs artificial diversity eliminated
-  - type: ReadsDroppedInTagFiltering
-    upper: 0.2
-    middle: 0.1
-    label: Reads dropped in tags filtering
