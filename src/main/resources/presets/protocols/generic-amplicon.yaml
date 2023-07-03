@@ -45,6 +45,11 @@ generic-amplicon:
         upper: 0.05
 
 generic-amplicon-with-umi:
+  mixins:
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
   inheritFrom: bundle-base
   flags:
     - species
@@ -57,9 +62,6 @@ generic-amplicon-with-umi:
     - refineTagsAndSort
     - assemble
     - exportClones
-  validation:
-    - type: TagPatternShouldContainsTagName
-      tagName: UMI
   align:
     inheritFrom: align-amplicon
   refineTagsAndSort:
