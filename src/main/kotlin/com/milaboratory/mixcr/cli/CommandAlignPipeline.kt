@@ -183,24 +183,6 @@ object CommandAlignPipeline {
         )
     }
 
-    // fun inferSampleTable(fileGroups: CommandAlign.InputFileGroups): CommandAlignParams.SampleTable {
-    //     val sampleTagNames = fileGroups.tags.filter { TagType.detectByTagName(it) == TagType.Sample }
-    //     return CommandAlignParams.SampleTable(
-    //         sampleTagNames,
-    //         fileGroups.fileGroups
-    //             .map { fg -> sampleTagNames.map { fg.getTag(it) } }
-    //             .toSortedSet(listComparator())
-    //             .map { sample ->
-    //                 CommandAlignParams.SampleTable.Row(
-    //                     matchTags = sampleTagNames
-    //                         .mapIndexed { i, tn -> tn to sample[i] }
-    //                         .toMap(TreeMap()),
-    //                     sample = sample
-    //                 )
-    //             }
-    //     )
-    // }
-
     sealed interface TagExtractor {
         fun extract(
             originalReadId: Long,
