@@ -1,4 +1,4 @@
-"ampliseq-tcrb-sr":
+"illumina-human-rna-trb-ampliseq-sr":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -19,8 +19,8 @@
           middle: 0.8
           upper: 0.9
 
-"ampliseq-tcrb-plus":
-  inheritFrom: ampliseq-tcrb-sr
+"illumina-human-rna-trb-ampliseq-plus":
+  inheritFrom: illumina-human-rna-trb-ampliseq-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]

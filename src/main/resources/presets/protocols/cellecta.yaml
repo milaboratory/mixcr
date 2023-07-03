@@ -1,4 +1,4 @@
-"cellecta-air-human":
+"cellecta-human-rna-xcr-umi-drivermap-air":
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
