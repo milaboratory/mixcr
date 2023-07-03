@@ -13,7 +13,6 @@ package com.milaboratory.mixcr.export
 
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner
-import com.milaboratory.mixcr.presets.MiXCRStepReports
 import com.milaboratory.mixcr.tests.MiXCRTestUtils
 import com.milaboratory.mixcr.tests.TargetBuilder
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets
@@ -48,7 +47,7 @@ class FieldExtractorsTest {
         val extractor = VDJCAlignmentsFieldsExtractorsFactory.fields
             .filter { it.cmdArgName == "-defaultAnchorPoints" }
             .flatMap {
-                it.createFields(MetaForExport(emptyList(), null, MiXCRStepReports()), emptyList())
+                it.createFields(MetaForExport(emptyList(), null, emptyList()), emptyList())
             }
             .first()
         val goAssert: F6 = object : F6 {
@@ -86,7 +85,7 @@ class FieldExtractorsTest {
                 val `val` = extractor.extractValue(
                     RowMetaForExport(
                         TagsInfo.NO_TAGS,
-                        MetaForExport(emptyList(), null, MiXCRStepReports()),
+                        MetaForExport(emptyList(), null, emptyList()),
                         false
                     ), al
                 )

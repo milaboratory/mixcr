@@ -38,7 +38,5 @@ assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdj
 assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "59"
 assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "59"
 
-# shellcheck disable=SC2016
-awkcmd='{s+=$1} END {printf "%.0f", s}'
-assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -readFraction base_single_cell.vdjcontigs.contigs.clns | awk '${awkcmd}'" "3"
-assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -uniqueTagFraction Molecule base_single_cell.vdjcontigs.contigs.clns | awk '${awkcmd}'" "3"
+assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -readFraction base_single_cell.vdjcontigs.contigs.clns | jq -s add" "3"
+assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -uniqueTagFraction Molecule base_single_cell.vdjcontigs.contigs.clns | jq -s add" "3"

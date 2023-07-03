@@ -125,7 +125,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
             val headerForExport = MetaForExport(
                 reader.cloneSetInfos.map { it.tagsInfo },
                 reader.header.allFullyCoveredBy,
-                reader.footer.reports
+                reader.footer
             )
 
             val splitByTagType = if (splitByTagType != null) {
