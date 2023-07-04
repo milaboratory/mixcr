@@ -822,10 +822,6 @@ refineTagsAndSort:
             - type: group_operator_advanced_thresholding
               algo:
                 type: otsu
-              histTransformers:
-              - type: inflate
-                fraction: 0.15
-                value: 1.0
               logX: true
               minimalSample: 20
               fallbackThreshold: 1.0
@@ -860,10 +856,6 @@ refineTagsAndSort:
             - type: group_operator_advanced_thresholding
               algo:
                 type: otsu
-              histTransformers:
-              - type: inflate
-                fraction: 0.15
-                value: 1.0
               logX: true
               minimalSample: 20
               fallbackThreshold: 1.0
