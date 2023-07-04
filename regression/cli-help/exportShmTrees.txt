@@ -18,8 +18,7 @@ Export SHMTree as a table with a row for every table
       --ids <id>[,<id>...]   Filter specific trees by id
       --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
                                or IGH).
-  -p, --preset <preset>      Specify preset of export fields. Possible values: full, min. By
-                               default `full`
+  -p, --preset <preset>      Specify preset of export fields. Possible values: full, min.
       -pf, --preset-file <presetFile>
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
