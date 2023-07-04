@@ -24,8 +24,10 @@ align:
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:
-  - type: MustNotContainTagType
-    tagType: Sample
+  - type: MustContainTagType
+    tagType: Molecule
+  - type: MustContainTagType
+    tagType: Cell
   splitBySample: false
   limit: null
   parameters:

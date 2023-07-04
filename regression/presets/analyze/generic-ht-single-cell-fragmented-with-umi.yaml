@@ -24,7 +24,11 @@ align:
   tagMaxBudget: 10.0
   readIdAsCellTag: false
   sampleTable: null
-  tagsValidations: []
+  tagsValidations:
+  - type: MustContainTagType
+    tagType: Cell
+  - type: MustContainTagType
+    tagType: Molecule
   splitBySample: false
   limit: null
   parameters:

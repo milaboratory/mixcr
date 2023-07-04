@@ -26,6 +26,10 @@ align:
   tagsValidations:
   - type: MustContainTagType
     tagType: Cell
+  - type: MustContainTagType
+    tagType: Molecule
+  - type: MustContainTagType
+    tagType: Cell
   splitBySample: false
   limit: null
   parameters:

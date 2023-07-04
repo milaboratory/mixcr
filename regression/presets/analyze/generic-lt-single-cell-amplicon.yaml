@@ -2,7 +2,6 @@ flags:
 - leftAlignmentMode
 - species
 - rightAlignmentMode
-- tagPattern
 pipeline:
 - align
 - refineTagsAndSort
@@ -25,7 +24,9 @@ align:
   sampleTable: null
   tagsValidations:
   - type: MustNotContainTagType
-    tagType: Sample
+    tagType: Molecule
+  - type: MustContainTagType
+    tagType: Cell
   splitBySample: false
   limit: null
   parameters:

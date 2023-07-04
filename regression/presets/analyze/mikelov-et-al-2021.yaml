@@ -46,8 +46,6 @@ align:
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:
-  - type: MustNotContainTagType
-    tagType: Sample
   - type: MustContainTagType
     tagType: Molecule
   splitBySample: false
