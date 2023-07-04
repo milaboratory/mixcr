@@ -1,4 +1,4 @@
-"irepertoire-repseq-human-sr":
+"irepertoire-human-rna-xcr-repseq-sr":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -19,34 +19,34 @@
           middle: 0.8
           upper: 0.9
 
-"irepertoire-repseq-human-lr":
-  inheritFrom: irepertoire-repseq-human-sr
+"irepertoire-human-rna-xcr-repseq-lr":
+  inheritFrom: irepertoire-human-rna-xcr-repseq-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:FR4End}"]
 
-"irepertoire-repseq-mouse-sr":
-  inheritFrom: irepertoire-repseq-human-sr
+"irepertoire-mouse-rna-xcr-repseq-sr":
+  inheritFrom: irepertoire-human-rna-xcr-repseq-sr
   mixins:
     - type: SetSpecies
       species: mmu
 
-"irepertoire-repseq-mouse-lr":
-  inheritFrom: irepertoire-repseq-human-sr
+"irepertoire-mouse-rna-xcr-repseq-lr":
+  inheritFrom: irepertoire-human-rna-xcr-repseq-sr
   mixins:
     - type: SetSpecies
       species: mmu
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR2Begin:FR4End}"]
 
-"irepertoire-repseq-plus-human":
-  inheritFrom: irepertoire-repseq-human-lr
+"irepertoire-human-rna-xcr-repseq-plus":
+  inheritFrom: irepertoire-human-rna-xcr-repseq-lr
 
-"irepertoire-repseq-plus-mouse":
-  inheritFrom: irepertoire-repseq-mouse-lr
+"irepertoire-mouse-rna-xcr-repseq-plus":
+  inheritFrom: irepertoire-mouse-rna-xcr-repseq-lr
 
 
-"irepertoire-repseq-human-dna-sr":
+"irepertoire-human-dna-xcr-repseq-sr":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -67,8 +67,8 @@
           middle: 0.8
           upper: 0.9
 
-"irepertoire-repseq-human-dna-lr":
-  inheritFrom: irepertoire-repseq-human-dna-sr
+"irepertoire-human-dna-xcr-repseq-lr":
+  inheritFrom: irepertoire-human-dna-xcr-repseq-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:CDR3End}"]

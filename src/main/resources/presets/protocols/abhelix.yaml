@@ -1,4 +1,4 @@
-"abhelix-human":
+"abhelix-human-rna-xcr":
   inheritFrom: generic-amplicon
   pipeline:
     - align

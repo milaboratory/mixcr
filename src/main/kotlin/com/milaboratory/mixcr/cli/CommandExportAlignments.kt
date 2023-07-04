@@ -143,7 +143,7 @@ object CommandExportAlignments {
                     allTagsInfo = listOf(header.tagsInfo),
                     // in case of input clna file, allFullyCoveredBy has nothing to do with alignments
                     allFullyCoveredBy = null,
-                    data.info.footer.reports
+                    data.info.footer
                 )
                 val rowMetaForExport = RowMetaForExport(
                     header.tagsInfo,

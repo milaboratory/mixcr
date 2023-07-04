@@ -1,0 +1,64 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  TagType:
+    type: string
+    enum:
+    - Sample
+    - Cell
+    - Molecule
+    - Technical
+allOf:
+- type: object
+  properties:
+    validation:
+      anyOf:
+      - allOf:
+        - type: object
+          properties:
+            tagName:
+              type: string
+        - type: object
+          properties:
+            type:
+              const: MustContainTagName
+          required:
+          - type
+      - allOf:
+        - type: object
+          properties:
+            tagType:
+              $ref: '#/$defs/TagType'
+        - type: object
+          properties:
+            type:
+              const: MustContainTagType
+          required:
+          - type
+      - allOf:
+        - type: object
+          properties:
+            tagName:
+              type: string
+        - type: object
+          properties:
+            type:
+              const: MustNotContainTagName
+          required:
+          - type
+      - allOf:
+        - type: object
+          properties:
+            tagType:
+              $ref: '#/$defs/TagType'
+        - type: object
+          properties:
+            type:
+              const: MustNotContainTagType
+          required:
+          - type
+- type: object
+  properties:
+    type:
+      const: RemoveTagsValidation
+  required:
+  - type

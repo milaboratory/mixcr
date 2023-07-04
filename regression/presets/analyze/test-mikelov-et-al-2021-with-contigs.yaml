@@ -5,9 +5,6 @@ pipeline:
 - assemble
 - assembleContigs
 - exportClones
-validation:
-- type: TagPatternShouldContainsTagName
-  tagName: UMI
 align:
   species: hs
   libraryName: default
@@ -49,6 +46,11 @@ align:
   tagMaxBudget: 10.0
   readIdAsCellTag: false
   sampleTable: null
+  tagsValidations:
+  - type: MustNotContainTagType
+    tagType: Sample
+  - type: MustContainTagType
+    tagType: Molecule
   splitBySample: false
   limit: null
   parameters:

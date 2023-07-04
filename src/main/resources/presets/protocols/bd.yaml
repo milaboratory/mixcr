@@ -6291,7 +6291,7 @@
 
 # HUMAN
 
-"bd-rhapsody-human-vdj-cdr3":
+"bd-human-sc-xcr-rhapsody-cdr3":
   inheritFrom: bd-rhapsody-cdr3-amplicon-A96-base
   mixins:
     - type: SetSpecies
@@ -6317,7 +6317,7 @@
 
 # MOUSE
 
-"bd-rhapsody-mouse-vdj-cdr3":
+"bd-mouse-sc-xcr-rhapsody-cdr3":
   inheritFrom: bd-rhapsody-cdr3-amplicon-A96-base
   mixins:
     - type: SetSpecies
@@ -6346,8 +6346,9 @@
         ^gttagtctcgagctcttcaga(R2:*)|
         ^cagtgtggctttgttttcct(R2:*)
 
-"bd-xcr-vdj-multiomic-assay":
+"bd-sc-xcr-rhapsody-full-length":
   inheritFrom: bd-rhapsody-full-length-single-cell-A96-base
+
 
 
 

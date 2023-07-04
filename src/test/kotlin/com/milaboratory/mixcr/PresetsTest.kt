@@ -13,7 +13,6 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
-import com.milaboratory.mixcr.presets.MiXCRStepReports
 import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.test.TestUtil.assertJson
 import com.milaboratory.util.K_OM
@@ -110,7 +109,7 @@ class PresetsTest {
                     val metaForExport = MetaForExport(
                         listOf(tagsInfo),
                         null,
-                        MiXCRStepReports()
+                        emptyList()
                     )
                     bundle.exportAlignments?.let { al ->
                         VDJCAlignmentsFieldsExtractorsFactory.createExtractors(

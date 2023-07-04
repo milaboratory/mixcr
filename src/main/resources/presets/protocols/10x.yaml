@@ -1,4 +1,4 @@
-"10x-vdj":
+"10x-sc-xcr-vdj":
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
   mixins:
     - type: SetTagPattern
@@ -147,7 +147,7 @@
                     type: group_operator_cumtop
                     share: 0.95
 
-"10x-5gex":
+"10x-sc-5gex":
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern

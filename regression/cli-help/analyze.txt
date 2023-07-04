@@ -1,6 +1,6 @@
 Usage: mixcr analyze [--add-step <step>] [--remove-step <step>] [-s <species>] [-b <library>]
-                     [--split-by-sample] [--dont-split-by-sample] [--sample-table sample_table.tsv]
-                     [--sample-table-strict sample_table.tsv] [--dna] [--rna]
+                     [--split-by-sample] [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
+                     [--sample-sheet-strict sample_sheet.tsv] [--dna] [--rna]
                      [--floating-left-alignment-boundary [<anchor_point>]]
                      [--rigid-left-alignment-boundary [<anchor_point>]]
                      [--floating-right-alignment-boundary (<gene_type>|<anchor_point>)]
@@ -61,10 +61,10 @@ Params for align command:
                                library is used. One can also use external libraries
       --split-by-sample      Split output alignments files by sample.
       --dont-split-by-sample Don't split output alignments files by sample.
-      --sample-table sample_table.tsv
+      --sample-sheet sample_sheet.tsv
                              Loads sample table from a tab separated file (one substitution will be
                                allowed during matching)
-      --sample-table-strict sample_table.tsv
+      --sample-sheet-strict sample_sheet.tsv
                              Loads sample table from a tab separated file (strict matching will be
                                used).
       --dna                  For DNA starting material. Setups V gene feature to align to

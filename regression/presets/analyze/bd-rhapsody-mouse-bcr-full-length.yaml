@@ -661,6 +661,7 @@ align:
         name: CELL3ID
     destinationTag: CELLID
   sampleTable: null
+  tagsValidations: []
   splitBySample: false
   limit: null
   parameters:

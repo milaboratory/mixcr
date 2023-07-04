@@ -183,23 +183,51 @@ class AlignMiXCRMixins : MiXCRMixinCollector() {
 
     @Option(
         description = ["Loads sample table from a tab separated file (one substitution will be allowed during matching)"],
-        names = [AlignMixins.SetSampleTable.CMD_OPTION_FUZZY],
+        names = [AlignMixins.SetSampleSheet.OLD_CMD_OPTION_FUZZY],
         arity = "1",
         paramLabel = "sample_table.tsv",
-        order = OptionsOrder.mixins.align + 330
+        hidden = true
     )
-    fun sampleTableFuzzy(arg: String) =
-        mixIn(AlignMixins.SetSampleTable(arg, null, true))
+    fun sampleTableFuzzy(arg: String) {
+        println(
+            "Option ${AlignMixins.SetSampleSheet.OLD_CMD_OPTION_FUZZY}is deprecated. Use ${AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY} instead."
+        )
+        mixIn(AlignMixins.SetSampleSheet(arg, null, true))
+    }
+
+    @Option(
+        description = ["Loads sample table from a tab separated file (one substitution will be allowed during matching)"],
+        names = [AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY],
+        arity = "1",
+        paramLabel = "sample_sheet.tsv",
+        order = OptionsOrder.mixins.align + 330,
+    )
+    fun sampleSheetFuzzy(arg: String) =
+        mixIn(AlignMixins.SetSampleSheet(arg, null, true))
 
     @Option(
         description = ["Loads sample table from a tab separated file (strict matching will be used)."],
-        names = [AlignMixins.SetSampleTable.CMD_OPTION_STRICT],
+        names = [AlignMixins.SetSampleSheet.OLD_CMD_OPTION_STRICT],
         arity = "1",
         paramLabel = "sample_table.tsv",
-        order = OptionsOrder.mixins.align + 331
+        hidden = true
     )
-    fun sampleTableStrict(arg: String) =
-        mixIn(AlignMixins.SetSampleTable(arg, null, false))
+    fun sampleTableStrict(arg: String) {
+        println(
+            "Option ${AlignMixins.SetSampleSheet.OLD_CMD_OPTION_STRICT}is deprecated. Use ${AlignMixins.SetSampleSheet.CMD_OPTION_STRICT} instead."
+        )
+        mixIn(AlignMixins.SetSampleSheet(arg, null, false))
+    }
+
+    @Option(
+        description = ["Loads sample table from a tab separated file (strict matching will be used)."],
+        names = [AlignMixins.SetSampleSheet.CMD_OPTION_STRICT],
+        arity = "1",
+        paramLabel = "sample_sheet.tsv",
+        order = OptionsOrder.mixins.align + 335
+    )
+    fun sampleSheetStrict(arg: String) =
+        mixIn(AlignMixins.SetSampleSheet(arg, null, false))
 
     //
     // Material type

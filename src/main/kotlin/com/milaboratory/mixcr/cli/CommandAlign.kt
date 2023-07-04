@@ -998,6 +998,10 @@ object CommandAlign {
             // Tags
             val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups)
 
+            // Validating output tags if required
+            for (tagsValidation in cmdParams.tagsValidations)
+                tagsValidation.validate(tagsExtractor.tagsInfo)
+
             // true if final NSQTuple will have two reads, false otherwise
             val pairedPayload = tagsExtractor.pairedPatternPayload
                 ?: inputFileGroups.inputType.pairedRecords

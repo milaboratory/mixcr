@@ -26,7 +26,7 @@ class MixinsTest {
                 "S2\t^attagaca \\ ^attacaca(CELL1:NNNN)\tACCC\n" +
                 "S3\t^attagaca \\ ^gacatata(CELL1:NNNN)\tATTG\n" +
                 "S4\t^attagaca \\ ^gacatata(CELL1:NNNN)\tACCC\n"
-        val slMixin = AlignMixins.SetSampleTable(null, sampleList)
+        val slMixin = AlignMixins.SetSampleSheet(null, sampleList)
         Assert.assertTrue(slMixin.packed)
         TestUtil.assertJson(K_YAML_OM, slMixin, false)
         val parsed = slMixin.parse()

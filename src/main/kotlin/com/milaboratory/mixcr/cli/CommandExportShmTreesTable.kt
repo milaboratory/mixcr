@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -74,7 +74,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
             val headerForExport = MetaForExport(
                 reader.cloneSetInfos.map { it.tagsInfo },
                 reader.header.allFullyCoveredBy,
-                reader.footer.reports
+                reader.footer
             )
             val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport, notCoveredAsEmpty)
             InfoWriter.create(

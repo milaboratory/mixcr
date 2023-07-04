@@ -217,6 +217,7 @@ object Main {
                     .addSubcommand("exportPreset", CommandExportPreset::class.java)
                     .addSubcommand("buildLibrary", CommandBuildLibrary::class.java)
                     .addSubcommand("mergeLibrary", CommandMergeLibrary::class.java)
+                    .addSubcommand("debugLibrary", CommandDebugLibrary::class.java)
                     .addSubcommand(Presets.LIST_PRESETS_COMMAND_NAME, CommandListPresets::class.java)
             )
 
