@@ -66,7 +66,7 @@ fun <T : Any> FieldExtractorsFactory<T>.addOptionsToSpec(
         spec.addOption(
             OptionSpec
                 .builder("-p", "--preset")
-                .description("Specify preset of export fields. Possible values: \${COMPLETION-CANDIDATES}. By default `$defaultPreset`")
+                .description("Specify preset of export fields. Possible values: \${COMPLETION-CANDIDATES}.")
                 .order(50_000 - 300)
                 .required(false)
                 .type(String::class.java)
