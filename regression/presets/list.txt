@@ -2,18 +2,9 @@ PresetName                                         Required mix-ins
 10x-sc-5gex                                        --species <name>
 10x-sc-xcr-vdj                                     --species <name>
 abhelix-human-rna-xcr
-bd-rhapsody-human-bcr-full-length
-bd-rhapsody-human-bcr-v1
-bd-rhapsody-human-bcr-v2
-bd-rhapsody-human-tcr-full-length
-bd-rhapsody-human-tcr-v1
-bd-rhapsody-human-tcr-v2
-bd-rhapsody-mouse-bcr-full-length
-bd-rhapsody-mouse-bcr-v1
-bd-rhapsody-mouse-bcr-v2
-bd-rhapsody-mouse-tcr-full-length
-bd-rhapsody-mouse-tcr-v1
-bd-rhapsody-mouse-tcr-v2
+bd-human-sc-xcr-rhapsody-cdr3
+bd-mouse-sc-xcr-rhapsody-cdr3
+bd-sc-xcr-rhapsody-full-length                     --species <name>
 biomed2-human-rna-igh
 biomed2-human-rna-igkl
 biomed2-human-rna-trbdg

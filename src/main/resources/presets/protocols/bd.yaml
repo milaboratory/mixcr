@@ -1,192 +1,6277 @@
-"bd-rhapsody-base":
+"bd-rhapsody-cdr3-amplicon-A96-base":
+  inheritFrom: generic-ht-single-cell-amplicon-with-umi
   abstract: true
   pipeline:
     - align
     - refineTagsAndSort
     - assemble
     - exportClones
+  mixins:
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+  align:
+    inheritFrom: align-amplicon
+    overrides:
+      tagTransformationSteps:
+        - type: mapTags
+          name: "CELL1 to BD CLS1 index"
+          matchTags:
+            - CELL1
+          newTags:
+            - CELL1ID
+          allowOneMismatch: true
+          rules:
+            - from: GTCGCTATA
+              to: '1'
+            - from: CTTGTACTA
+              to: '2'
+            - from: CTTCACATA
+              to: '3'
+            - from: ACACGCCGG
+              to: '4'
+            - from: CGGTCCAGG
+              to: '5'
+            - from: AATCGAATG
+              to: '6'
+            - from: CCTAGTATA
+              to: '7'
+            - from: ATTGGCTAA
+              to: '8'
+            - from: AAGACATGC
+              to: '9'
+            - from: AAGGCGATC
+              to: '10'
+            - from: GTGTCCTTA
+              to: '11'
+            - from: GGATTAGGA
+              to: '12'
+            - from: ATGGATCCA
+              to: '13'
+            - from: ACATAAGCG
+              to: '14'
+            - from: AACTGTATT
+              to: '15'
+            - from: ACCTTGCGG
+              to: '16'
+            - from: CAGGTGTAG
+              to: '17'
+            - from: AGGAGATTA
+              to: '18'
+            - from: GCGATTACA
+              to: '19'
+            - from: ACCGGATAG
+              to: '20'
+            - from: CCACTTGGA
+              to: '21'
+            - from: AGAGAAGTT
+              to: '22'
+            - from: TAAGTTCGA
+              to: '23'
+            - from: ACGGATATT
+              to: '24'
+            - from: TGGCTCAGA
+              to: '25'
+            - from: GAATCTGTA
+              to: '26'
+            - from: ACCAAGGAC
+              to: '27'
+            - from: AGTATCTGT
+              to: '28'
+            - from: CACACACTA
+              to: '29'
+            - from: ATTAAGTGC
+              to: '30'
+            - from: AAGTAACCC
+              to: '31'
+            - from: AAATCCTGT
+              to: '32'
+            - from: CACATTGCA
+              to: '33'
+            - from: GCACTGTCA
+              to: '34'
+            - from: ATACTTAGG
+              to: '35'
+            - from: GCAATCCGA
+              to: '36'
+            - from: ACGCAATCA
+              to: '37'
+            - from: GAGTATTAG
+              to: '38'
+            - from: GACGGATTA
+              to: '39'
+            - from: CAGCTGACA
+              to: '40'
+            - from: CAACATATT
+              to: '41'
+            - from: AACTTCTCC
+              to: '42'
+            - from: CTATGAAAT
+              to: '43'
+            - from: ATTATTACC
+              to: '44'
+            - from: TACCGAGCA
+              to: '45'
+            - from: TCTCTTCAA
+              to: '46'
+            - from: TAAGCGTTA
+              to: '47'
+            - from: GCCTTACAA
+              to: '48'
+            - from: AGCACACAG
+              to: '49'
+            - from: ACAGTTCCG
+              to: '50'
+            - from: AGTAAAGCC
+              to: '51'
+            - from: CAGTTTCAC
+              to: '52'
+            - from: CGTTACTAA
+              to: '53'
+            - from: TTGTTCCAA
+              to: '54'
+            - from: AGAAGCACT
+              to: '55'
+            - from: CAGCAAGAT
+              to: '56'
+            - from: CAAACCGCC
+              to: '57'
+            - from: CTAACTCGC
+              to: '58'
+            - from: AATATTGGG
+              to: '59'
+            - from: AGAACTTCC
+              to: '60'
+            - from: CAAAGGCAC
+              to: '61'
+            - from: AAGCTCAAC
+              to: '62'
+            - from: TCCAGTCGA
+              to: '63'
+            - from: AGCCATCAC
+              to: '64'
+            - from: AACGAGAAG
+              to: '65'
+            - from: CTACAGAAC
+              to: '66'
+            - from: AGAGCTATG
+              to: '67'
+            - from: GAGGATGGA
+              to: '68'
+            - from: TGTACCTTA
+              to: '69'
+            - from: ACACACAAA
+              to: '70'
+            - from: TCAGGAGGA
+              to: '71'
+            - from: GAGGTGCTA
+              to: '72'
+            - from: ACCCTGACC
+              to: '73'
+            - from: ACAAGGATC
+              to: '74'
+            - from: ATCCCGGAG
+              to: '75'
+            - from: TATGTGGCA
+              to: '76'
+            - from: GCTGCCAAT
+              to: '77'
+            - from: ATCAGAGCT
+              to: '78'
+            - from: TCGAAGTGA
+              to: '79'
+            - from: ATAGACGAG
+              to: '80'
+            - from: AGCCCAATC
+              to: '81'
+            - from: CAGAATCGT
+              to: '82'
+            - from: ATCTCCACA
+              to: '83'
+            - from: ACGAAAGGT
+              to: '84'
+            - from: TAGCTTGTA
+              to: '85'
+            - from: ACACGAGAT
+              to: '86'
+            - from: AACCGCCTC
+              to: '87'
+            - from: ATTTAGATG
+              to: '88'
+            - from: CAAGCAAGC
+              to: '89'
+            - from: CAAAGTGTG
+              to: '90'
+            - from: GGCAAGCAA
+              to: '91'
+            - from: GAGCCAATA
+              to: '92'
+            - from: ATGTAATGG
+              to: '93'
+            - from: CCTGAGCAA
+              to: '94'
+            - from: GAGTACATT
+              to: '95'
+            - from: TGCGATCTA
+              to: '96'
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "CELL2 to BD CLS2 index"
+          matchTags:
+            - CELL2
+          newTags:
+            - CELL2ID
+          allowOneMismatch: true
+          rules:
+            - from: TACAGGATA
+              to: '1'
+            - from: CACCAGGTA
+              to: '2'
+            - from: TGTGAAGAA
+              to: '3'
+            - from: GATTCATCA
+              to: '4'
+            - from: CACCCAAAG
+              to: '5'
+            - from: CACAAAGGC
+              to: '6'
+            - from: GTGTGTCGA
+              to: '7'
+            - from: CTAGGTCCT
+              to: '8'
+            - from: ACAGTGGTA
+              to: '9'
+            - from: TCGTTAGCA
+              to: '10'
+            - from: AGCGACACC
+              to: '11'
+            - from: AAGCTACTT
+              to: '12'
+            - from: TGTTCTCCA
+              to: '13'
+            - from: ACGCGAAGC
+              to: '14'
+            - from: CAGAAATCG
+              to: '15'
+            - from: ACCAAAATG
+              to: '16'
+            - from: AGTGTTGTC
+              to: '17'
+            - from: TAGGGATAC
+              to: '18'
+            - from: AGGGCTGGT
+              to: '19'
+            - from: TCATCCTAA
+              to: '20'
+            - from: AATCCTGAA
+              to: '21'
+            - from: ATCCTAGGA
+              to: '22'
+            - from: ACGACCACC
+              to: '23'
+            - from: TTCCATTGA
+              to: '24'
+            - from: TAGTCTTGA
+              to: '25'
+            - from: ACTGTTAGA
+              to: '26'
+            - from: ATTCATCGT
+              to: '27'
+            - from: ACTTCGAGC
+              to: '28'
+            - from: TTGCGTACA
+              to: '29'
+            - from: CAGTGCCCG
+              to: '30'
+            - from: GACACTTAA
+              to: '31'
+            - from: AGGAGGCGC
+              to: '32'
+            - from: GCCTGTTCA
+              to: '33'
+            - from: GTACATCTA
+              to: '34'
+            - from: AATCAGTTT
+              to: '35'
+            - from: ACGATGAAT
+              to: '36'
+            - from: TGACAGACA
+              to: '37'
+            - from: ATTAGGCAT
+              to: '38'
+            - from: GGAGTCTAA
+              to: '39'
+            - from: TAGAACACA
+              to: '40'
+            - from: AAATAAATA
+              to: '41'
+            - from: CCGACAAGA
+              to: '42'
+            - from: CACCTACCC
+              to: '43'
+            - from: AAGAGTAGA
+              to: '44'
+            - from: TCATTGAGA
+              to: '45'
+            - from: GACCTTAGA
+              to: '46'
+            - from: CAAGACCTA
+              to: '47'
+            - from: GGAATGATA
+              to: '48'
+            - from: AAACGTACC
+              to: '49'
+            - from: ACTATCCTC
+              to: '50'
+            - from: CCGTATCTA
+              to: '51'
+            - from: ACACATGTC
+              to: '52'
+            - from: TTGGTATGA
+              to: '53'
+            - from: GTGCAGTAA
+              to: '54'
+            - from: AGGATTCAA
+              to: '55'
+            - from: AGAATGGAG
+              to: '56'
+            - from: CTCTCTCAA
+              to: '57'
+            - from: GCTAACTCA
+              to: '58'
+            - from: ATCAACCGA
+              to: '59'
+            - from: ATGAGTTAC
+              to: '60'
+            - from: ACTTGATGA
+              to: '61'
+            - from: ACTTTAACT
+              to: '62'
+            - from: TTGGAGGTA
+              to: '63'
+            - from: GCCAATGTA
+              to: '64'
+            - from: ATCCAACCG
+              to: '65'
+            - from: GATGAACTG
+              to: '66'
+            - from: CCATGCACA
+              to: '67'
+            - from: TAGTGACTA
+              to: '68'
+            - from: AAACTGCGC
+              to: '69'
+            - from: ATTACCAAG
+              to: '70'
+            - from: CACTCGAGA
+              to: '71'
+            - from: AACTCATTG
+              to: '72'
+            - from: CTTGCTTCA
+              to: '73'
+            - from: ACCTGAGTC
+              to: '74'
+            - from: AGGTTCGCT
+              to: '75'
+            - from: AAGGACTAT
+              to: '76'
+            - from: CGTTCGGTA
+              to: '77'
+            - from: AGATAGTTC
+              to: '78'
+            - from: CAATTGATC
+              to: '79'
+            - from: GCATGGCTA
+              to: '80'
+            - from: ACCAGGTGT
+              to: '81'
+            - from: AGCTGCCGT
+              to: '82'
+            - from: TATAGCCCT
+              to: '83'
+            - from: AGAGGACCA
+              to: '84'
+            - from: ACAATATGG
+              to: '85'
+            - from: CAGCACTTC
+              to: '86'
+            - from: CACTTATGT
+              to: '87'
+            - from: AGTGAAAGG
+              to: '88'
+            - from: AACCCTCGG
+              to: '89'
+            - from: AGGCAGCTA
+              to: '90'
+            - from: AACCAAAGT
+              to: '91'
+            - from: GAGTGCGAA
+              to: '92'
+            - from: CGCTAAGCA
+              to: '93'
+            - from: AATTATAAC
+              to: '94'
+            - from: TACTAGTCA
+              to: '95'
+            - from: CAACAACGG
+              to: '96'
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "ELL3 to BD CLS3 index"
+          matchTags:
+            - CELL3
+          newTags:
+            - CELL3ID
+          allowOneMismatch: true
+          rules:
+            - from: AAGCCTTCT
+              to: '1'
+            - from: ATCATTCTG
+              to: '2'
+            - from: CACAAGTAT
+              to: '3'
+            - from: ACACCTTAG
+              to: '4'
+            - from: GAACGACAA
+              to: '5'
+            - from: AGTCTGTAC
+              to: '6'
+            - from: AAATTACAG
+              to: '7'
+            - from: GGCTACAGA
+              to: '8'
+            - from: AATGTATCG
+              to: '9'
+            - from: CAAGTAGAA
+              to: '10'
+            - from: GATCTCTTA
+              to: '11'
+            - from: AACAACGCG
+              to: '12'
+            - from: GGTGAGTTA
+              to: '13'
+            - from: CAGGGAGGG
+              to: '14'
+            - from: TCCGTCTTA
+              to: '15'
+            - from: TGCATAGTA
+              to: '16'
+            - from: ACTTACGAT
+              to: '17'
+            - from: TGTATGCGA
+              to: '18'
+            - from: GCTCCTTGA
+              to: '19'
+            - from: GGCACAACA
+              to: '20'
+            - from: CTCAAGACA
+              to: '21'
+            - from: ACGCTGTTG
+              to: '22'
+            - from: ATATTGTAA
+              to: '23'
+            - from: AAGTTTACG
+              to: '24'
+            - from: CAGCCTGGC
+              to: '25'
+            - from: CTATTAGCC
+              to: '26'
+            - from: CAAACGTGG
+              to: '27'
+            - from: AAAGTCATT
+              to: '28'
+            - from: GTCTTGGCA
+              to: '29'
+            - from: GATCAGCGA
+              to: '30'
+            - from: ACATTCGGC
+              to: '31'
+            - from: AGTAATTAG
+              to: '32'
+            - from: TGAAGCCAA
+              to: '33'
+            - from: TCTACGACA
+              to: '34'
+            - from: CATAACGTT
+              to: '35'
+            - from: ATGGGACTC
+              to: '36'
+            - from: GATAGAGGA
+              to: '37'
+            - from: CTACATGCG
+              to: '38'
+            - from: CAACGATCT
+              to: '39'
+            - from: GTTAGCCTA
+              to: '40'
+            - from: AGTTGCATC
+              to: '41'
+            - from: AAGGGAACT
+              to: '42'
+            - from: ACTACATAT
+              to: '43'
+            - from: CTAAGCTTC
+              to: '44'
+            - from: ACGAACCAG
+              to: '45'
+            - from: TACTTCGGA
+              to: '46'
+            - from: AACATCCAT
+              to: '47'
+            - from: AGCCTGGTT
+              to: '48'
+            - from: CAAGTTTCC
+              to: '49'
+            - from: CAGGCATTT
+              to: '50'
+            - from: ACGTGGGAG
+              to: '51'
+            - from: TCTCACGGA
+              to: '52'
+            - from: GCAACATTA
+              to: '53'
+            - from: ATGGTCCGT
+              to: '54'
+            - from: CTATCATGA
+              to: '55'
+            - from: CAATACAAG
+              to: '56'
+            - from: AAAGAGGCC
+              to: '57'
+            - from: GTAGAAGCA
+              to: '58'
+            - from: GCTATGGAA
+              to: '59'
+            - from: ACTCCAGGG
+              to: '60'
+            - from: ACAAGTGCA
+              to: '61'
+            - from: GATGGTCCA
+              to: '62'
+            - from: TCCTCAATA
+              to: '63'
+            - from: AATAAACAA
+              to: '64'
+            - from: CTGTACGGA
+              to: '65'
+            - from: CTAGATAGA
+              to: '66'
+            - from: AGCTATGTG
+              to: '67'
+            - from: AAATGGAGG
+              to: '68'
+            - from: AGCCGCAAG
+              to: '69'
+            - from: ACAGTAAAC
+              to: '70'
+            - from: AACGTGTGA
+              to: '71'
+            - from: ACTGAATTC
+              to: '72'
+            - from: AAGGGTCAG
+              to: '73'
+            - from: TGTCTATCA
+              to: '74'
+            - from: TCAGATTCA
+              to: '75'
+            - from: CACGATCCG
+              to: '76'
+            - from: AACAGAAAC
+              to: '77'
+            - from: CATGAATGA
+              to: '78'
+            - from: CGTACTACG
+              to: '79'
+            - from: TTCAGCTCA
+              to: '80'
+            - from: AAGGCCGCA
+              to: '81'
+            - from: GGTTGGACA
+              to: '82'
+            - from: CGTCTAGGT
+              to: '83'
+            - from: AATTCGGCG
+              to: '84'
+            - from: CAACCTCCA
+              to: '85'
+            - from: CAATAGGGT
+              to: '86'
+            - from: ACAGGCTCC
+              to: '87'
+            - from: ACAACTAGT
+              to: '88'
+            - from: AGTTGTTCT
+              to: '89'
+            - from: AATTACCGG
+              to: '90'
+            - from: ACAAACTTT
+              to: '91'
+            - from: TCTCGGTTA
+              to: '92'
+            - from: ACTAGACCG
+              to: '93'
+            - from: ACTCATACG
+              to: '94'
+            - from: ATCGAGTCT
+              to: '95'
+            - from: CATAGGTCA
+              to: '96'
+          reportingLevel: VerboseReport
+        - type: generic
+          name: "BD CLS1-CLS2-CLS3 indices to BD cell index"
+          destinationTag: CELLID
+          transformation:
+            type: plus
+            sources:
+              - type: multiply
+                sources:
+                  - type: plus
+                    sources:
+                      - type: tag
+                        name: CELL1ID
+                      - type: constantNumber
+                        value: -1
+                  - type: constantNumber
+                    value: 147456
+              - type: multiply
+                sources:
+                  - type: plus
+                    sources:
+                      - type: tag
+                        name: CELL2ID
+                      - type: constantNumber
+                        value: -1
+                  - type: constantNumber
+                    value: 384
+              - type: tag
+                name: CELL3ID
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+
+"bd-rhapsody-full-length-single-cell-A96-base":
+  abstract: true
+  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^<<acagN{16}(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
   align:
     inheritFrom: align-single-cell
-  exportAlignments:
-    inheritFrom: exportAlignments-base
-  refineTagsAndSort:
-    whitelists:
-      CELL1: builtin:rhapsody-cell1
-      CELL2: builtin:rhapsody-cell2
-      CELL3: builtin:rhapsody-cell3
-    runCorrection: true
-    parameters:
-      correctionPower: 0.001
-      backgroundSubstitutionRate: 0.001
-      backgroundIndelRate: 1.0e-05
-      minQuality: 12
-      maxSubstitutions: 2
-      maxIndels: 2
-      maxTotalErrors: 3
-      postFilter:
-        type: filter_and
-        operands:
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - allTags:Molecule
-            predicates:
-              - metrics:
-                  - type: "group_metric_sum_weight"
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                operator:
-                  type: group_operator_lowest_threshold
-                  operators:
-                    - type: group_operator_advanced_thresholding
-                      algo:
-                        type: otsu
-                      histTransformers:
-                        # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                        - type: inflate
-                          fraction: 0.15
-                      logX: true
-                      minimalSample: 20
-                      fallbackThreshold: 1.0
-                    - type: group_operator_cumtop
-                      share: 0.85
-                      round: Down
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                    keys:
-                      - allTags:Molecule
-                operator:
-                  type: group_operator_range
-                  lower: 3.0
-  assemble:
-    inheritFrom: assemble-with-consensus-base
     overrides:
-      clnaOutput: true
-      cloneAssemblerParameters:
-        postFilters:
-          - type: filter_in_groups
-            isolationKeys:
-              - geneLabel:ReliableChain
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
+      tagTransformationSteps:
+        - type: mapTags
+          name: "CELL1 to BD CLS1 index"
+          matchTags:
+            - CELL1
+          newTags:
+            - CELL1ID
+          allowOneMismatch: true
+          rules:
+            - from: GTCGCTATA
+              to: '1'
+            - from: CTTGTACTA
+              to: '2'
+            - from: CTTCACATA
+              to: '3'
+            - from: ACACGCCGG
+              to: '4'
+            - from: CGGTCCAGG
+              to: '5'
+            - from: AATCGAATG
+              to: '6'
+            - from: CCTAGTATA
+              to: '7'
+            - from: ATTGGCTAA
+              to: '8'
+            - from: AAGACATGC
+              to: '9'
+            - from: AAGGCGATC
+              to: '10'
+            - from: GTGTCCTTA
+              to: '11'
+            - from: GGATTAGGA
+              to: '12'
+            - from: ATGGATCCA
+              to: '13'
+            - from: ACATAAGCG
+              to: '14'
+            - from: AACTGTATT
+              to: '15'
+            - from: ACCTTGCGG
+              to: '16'
+            - from: CAGGTGTAG
+              to: '17'
+            - from: AGGAGATTA
+              to: '18'
+            - from: GCGATTACA
+              to: '19'
+            - from: ACCGGATAG
+              to: '20'
+            - from: CCACTTGGA
+              to: '21'
+            - from: AGAGAAGTT
+              to: '22'
+            - from: TAAGTTCGA
+              to: '23'
+            - from: ACGGATATT
+              to: '24'
+            - from: TGGCTCAGA
+              to: '25'
+            - from: GAATCTGTA
+              to: '26'
+            - from: ACCAAGGAC
+              to: '27'
+            - from: AGTATCTGT
+              to: '28'
+            - from: CACACACTA
+              to: '29'
+            - from: ATTAAGTGC
+              to: '30'
+            - from: AAGTAACCC
+              to: '31'
+            - from: AAATCCTGT
+              to: '32'
+            - from: CACATTGCA
+              to: '33'
+            - from: GCACTGTCA
+              to: '34'
+            - from: ATACTTAGG
+              to: '35'
+            - from: GCAATCCGA
+              to: '36'
+            - from: ACGCAATCA
+              to: '37'
+            - from: GAGTATTAG
+              to: '38'
+            - from: GACGGATTA
+              to: '39'
+            - from: CAGCTGACA
+              to: '40'
+            - from: CAACATATT
+              to: '41'
+            - from: AACTTCTCC
+              to: '42'
+            - from: CTATGAAAT
+              to: '43'
+            - from: ATTATTACC
+              to: '44'
+            - from: TACCGAGCA
+              to: '45'
+            - from: TCTCTTCAA
+              to: '46'
+            - from: TAAGCGTTA
+              to: '47'
+            - from: GCCTTACAA
+              to: '48'
+            - from: AGCACACAG
+              to: '49'
+            - from: ACAGTTCCG
+              to: '50'
+            - from: AGTAAAGCC
+              to: '51'
+            - from: CAGTTTCAC
+              to: '52'
+            - from: CGTTACTAA
+              to: '53'
+            - from: TTGTTCCAA
+              to: '54'
+            - from: AGAAGCACT
+              to: '55'
+            - from: CAGCAAGAT
+              to: '56'
+            - from: CAAACCGCC
+              to: '57'
+            - from: CTAACTCGC
+              to: '58'
+            - from: AATATTGGG
+              to: '59'
+            - from: AGAACTTCC
+              to: '60'
+            - from: CAAAGGCAC
+              to: '61'
+            - from: AAGCTCAAC
+              to: '62'
+            - from: TCCAGTCGA
+              to: '63'
+            - from: AGCCATCAC
+              to: '64'
+            - from: AACGAGAAG
+              to: '65'
+            - from: CTACAGAAC
+              to: '66'
+            - from: AGAGCTATG
+              to: '67'
+            - from: GAGGATGGA
+              to: '68'
+            - from: TGTACCTTA
+              to: '69'
+            - from: ACACACAAA
+              to: '70'
+            - from: TCAGGAGGA
+              to: '71'
+            - from: GAGGTGCTA
+              to: '72'
+            - from: ACCCTGACC
+              to: '73'
+            - from: ACAAGGATC
+              to: '74'
+            - from: ATCCCGGAG
+              to: '75'
+            - from: TATGTGGCA
+              to: '76'
+            - from: GCTGCCAAT
+              to: '77'
+            - from: ATCAGAGCT
+              to: '78'
+            - from: TCGAAGTGA
+              to: '79'
+            - from: ATAGACGAG
+              to: '80'
+            - from: AGCCCAATC
+              to: '81'
+            - from: CAGAATCGT
+              to: '82'
+            - from: ATCTCCACA
+              to: '83'
+            - from: ACGAAAGGT
+              to: '84'
+            - from: TAGCTTGTA
+              to: '85'
+            - from: ACACGAGAT
+              to: '86'
+            - from: AACCGCCTC
+              to: '87'
+            - from: ATTTAGATG
+              to: '88'
+            - from: CAAGCAAGC
+              to: '89'
+            - from: CAAAGTGTG
+              to: '90'
+            - from: GGCAAGCAA
+              to: '91'
+            - from: GAGCCAATA
+              to: '92'
+            - from: ATGTAATGG
+              to: '93'
+            - from: CCTGAGCAA
+              to: '94'
+            - from: GAGTACATT
+              to: '95'
+            - from: TGCGATCTA
+              to: '96'
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "CELL2 to BD CLS2 index"
+          matchTags:
+            - CELL2
+          newTags:
+            - CELL2ID
+          allowOneMismatch: true
+          rules:
+            - from: TACAGGATA
+              to: '1'
+            - from: CACCAGGTA
+              to: '2'
+            - from: TGTGAAGAA
+              to: '3'
+            - from: GATTCATCA
+              to: '4'
+            - from: CACCCAAAG
+              to: '5'
+            - from: CACAAAGGC
+              to: '6'
+            - from: GTGTGTCGA
+              to: '7'
+            - from: CTAGGTCCT
+              to: '8'
+            - from: ACAGTGGTA
+              to: '9'
+            - from: TCGTTAGCA
+              to: '10'
+            - from: AGCGACACC
+              to: '11'
+            - from: AAGCTACTT
+              to: '12'
+            - from: TGTTCTCCA
+              to: '13'
+            - from: ACGCGAAGC
+              to: '14'
+            - from: CAGAAATCG
+              to: '15'
+            - from: ACCAAAATG
+              to: '16'
+            - from: AGTGTTGTC
+              to: '17'
+            - from: TAGGGATAC
+              to: '18'
+            - from: AGGGCTGGT
+              to: '19'
+            - from: TCATCCTAA
+              to: '20'
+            - from: AATCCTGAA
+              to: '21'
+            - from: ATCCTAGGA
+              to: '22'
+            - from: ACGACCACC
+              to: '23'
+            - from: TTCCATTGA
+              to: '24'
+            - from: TAGTCTTGA
+              to: '25'
+            - from: ACTGTTAGA
+              to: '26'
+            - from: ATTCATCGT
+              to: '27'
+            - from: ACTTCGAGC
+              to: '28'
+            - from: TTGCGTACA
+              to: '29'
+            - from: CAGTGCCCG
+              to: '30'
+            - from: GACACTTAA
+              to: '31'
+            - from: AGGAGGCGC
+              to: '32'
+            - from: GCCTGTTCA
+              to: '33'
+            - from: GTACATCTA
+              to: '34'
+            - from: AATCAGTTT
+              to: '35'
+            - from: ACGATGAAT
+              to: '36'
+            - from: TGACAGACA
+              to: '37'
+            - from: ATTAGGCAT
+              to: '38'
+            - from: GGAGTCTAA
+              to: '39'
+            - from: TAGAACACA
+              to: '40'
+            - from: AAATAAATA
+              to: '41'
+            - from: CCGACAAGA
+              to: '42'
+            - from: CACCTACCC
+              to: '43'
+            - from: AAGAGTAGA
+              to: '44'
+            - from: TCATTGAGA
+              to: '45'
+            - from: GACCTTAGA
+              to: '46'
+            - from: CAAGACCTA
+              to: '47'
+            - from: GGAATGATA
+              to: '48'
+            - from: AAACGTACC
+              to: '49'
+            - from: ACTATCCTC
+              to: '50'
+            - from: CCGTATCTA
+              to: '51'
+            - from: ACACATGTC
+              to: '52'
+            - from: TTGGTATGA
+              to: '53'
+            - from: GTGCAGTAA
+              to: '54'
+            - from: AGGATTCAA
+              to: '55'
+            - from: AGAATGGAG
+              to: '56'
+            - from: CTCTCTCAA
+              to: '57'
+            - from: GCTAACTCA
+              to: '58'
+            - from: ATCAACCGA
+              to: '59'
+            - from: ATGAGTTAC
+              to: '60'
+            - from: ACTTGATGA
+              to: '61'
+            - from: ACTTTAACT
+              to: '62'
+            - from: TTGGAGGTA
+              to: '63'
+            - from: GCCAATGTA
+              to: '64'
+            - from: ATCCAACCG
+              to: '65'
+            - from: GATGAACTG
+              to: '66'
+            - from: CCATGCACA
+              to: '67'
+            - from: TAGTGACTA
+              to: '68'
+            - from: AAACTGCGC
+              to: '69'
+            - from: ATTACCAAG
+              to: '70'
+            - from: CACTCGAGA
+              to: '71'
+            - from: AACTCATTG
+              to: '72'
+            - from: CTTGCTTCA
+              to: '73'
+            - from: ACCTGAGTC
+              to: '74'
+            - from: AGGTTCGCT
+              to: '75'
+            - from: AAGGACTAT
+              to: '76'
+            - from: CGTTCGGTA
+              to: '77'
+            - from: AGATAGTTC
+              to: '78'
+            - from: CAATTGATC
+              to: '79'
+            - from: GCATGGCTA
+              to: '80'
+            - from: ACCAGGTGT
+              to: '81'
+            - from: AGCTGCCGT
+              to: '82'
+            - from: TATAGCCCT
+              to: '83'
+            - from: AGAGGACCA
+              to: '84'
+            - from: ACAATATGG
+              to: '85'
+            - from: CAGCACTTC
+              to: '86'
+            - from: CACTTATGT
+              to: '87'
+            - from: AGTGAAAGG
+              to: '88'
+            - from: AACCCTCGG
+              to: '89'
+            - from: AGGCAGCTA
+              to: '90'
+            - from: AACCAAAGT
+              to: '91'
+            - from: GAGTGCGAA
+              to: '92'
+            - from: CGCTAAGCA
+              to: '93'
+            - from: AATTATAAC
+              to: '94'
+            - from: TACTAGTCA
+              to: '95'
+            - from: CAACAACGG
+              to: '96'
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "CELL3 to BD CLS3 index"
+          matchTags:
+            - CELL3
+          newTags:
+            - CELL3ID
+          allowOneMismatch: true
+          rules:
+            - from: AAGCCTTCT
+              to: '1'
+            - from: ATCATTCTG
+              to: '2'
+            - from: CACAAGTAT
+              to: '3'
+            - from: ACACCTTAG
+              to: '4'
+            - from: GAACGACAA
+              to: '5'
+            - from: AGTCTGTAC
+              to: '6'
+            - from: AAATTACAG
+              to: '7'
+            - from: GGCTACAGA
+              to: '8'
+            - from: AATGTATCG
+              to: '9'
+            - from: CAAGTAGAA
+              to: '10'
+            - from: GATCTCTTA
+              to: '11'
+            - from: AACAACGCG
+              to: '12'
+            - from: GGTGAGTTA
+              to: '13'
+            - from: CAGGGAGGG
+              to: '14'
+            - from: TCCGTCTTA
+              to: '15'
+            - from: TGCATAGTA
+              to: '16'
+            - from: ACTTACGAT
+              to: '17'
+            - from: TGTATGCGA
+              to: '18'
+            - from: GCTCCTTGA
+              to: '19'
+            - from: GGCACAACA
+              to: '20'
+            - from: CTCAAGACA
+              to: '21'
+            - from: ACGCTGTTG
+              to: '22'
+            - from: ATATTGTAA
+              to: '23'
+            - from: AAGTTTACG
+              to: '24'
+            - from: CAGCCTGGC
+              to: '25'
+            - from: CTATTAGCC
+              to: '26'
+            - from: CAAACGTGG
+              to: '27'
+            - from: AAAGTCATT
+              to: '28'
+            - from: GTCTTGGCA
+              to: '29'
+            - from: GATCAGCGA
+              to: '30'
+            - from: ACATTCGGC
+              to: '31'
+            - from: AGTAATTAG
+              to: '32'
+            - from: TGAAGCCAA
+              to: '33'
+            - from: TCTACGACA
+              to: '34'
+            - from: CATAACGTT
+              to: '35'
+            - from: ATGGGACTC
+              to: '36'
+            - from: GATAGAGGA
+              to: '37'
+            - from: CTACATGCG
+              to: '38'
+            - from: CAACGATCT
+              to: '39'
+            - from: GTTAGCCTA
+              to: '40'
+            - from: AGTTGCATC
+              to: '41'
+            - from: AAGGGAACT
+              to: '42'
+            - from: ACTACATAT
+              to: '43'
+            - from: CTAAGCTTC
+              to: '44'
+            - from: ACGAACCAG
+              to: '45'
+            - from: TACTTCGGA
+              to: '46'
+            - from: AACATCCAT
+              to: '47'
+            - from: AGCCTGGTT
+              to: '48'
+            - from: CAAGTTTCC
+              to: '49'
+            - from: CAGGCATTT
+              to: '50'
+            - from: ACGTGGGAG
+              to: '51'
+            - from: TCTCACGGA
+              to: '52'
+            - from: GCAACATTA
+              to: '53'
+            - from: ATGGTCCGT
+              to: '54'
+            - from: CTATCATGA
+              to: '55'
+            - from: CAATACAAG
+              to: '56'
+            - from: AAAGAGGCC
+              to: '57'
+            - from: GTAGAAGCA
+              to: '58'
+            - from: GCTATGGAA
+              to: '59'
+            - from: ACTCCAGGG
+              to: '60'
+            - from: ACAAGTGCA
+              to: '61'
+            - from: GATGGTCCA
+              to: '62'
+            - from: TCCTCAATA
+              to: '63'
+            - from: AATAAACAA
+              to: '64'
+            - from: CTGTACGGA
+              to: '65'
+            - from: CTAGATAGA
+              to: '66'
+            - from: AGCTATGTG
+              to: '67'
+            - from: AAATGGAGG
+              to: '68'
+            - from: AGCCGCAAG
+              to: '69'
+            - from: ACAGTAAAC
+              to: '70'
+            - from: AACGTGTGA
+              to: '71'
+            - from: ACTGAATTC
+              to: '72'
+            - from: AAGGGTCAG
+              to: '73'
+            - from: TGTCTATCA
+              to: '74'
+            - from: TCAGATTCA
+              to: '75'
+            - from: CACGATCCG
+              to: '76'
+            - from: AACAGAAAC
+              to: '77'
+            - from: CATGAATGA
+              to: '78'
+            - from: CGTACTACG
+              to: '79'
+            - from: TTCAGCTCA
+              to: '80'
+            - from: AAGGCCGCA
+              to: '81'
+            - from: GGTTGGACA
+              to: '82'
+            - from: CGTCTAGGT
+              to: '83'
+            - from: AATTCGGCG
+              to: '84'
+            - from: CAACCTCCA
+              to: '85'
+            - from: CAATAGGGT
+              to: '86'
+            - from: ACAGGCTCC
+              to: '87'
+            - from: ACAACTAGT
+              to: '88'
+            - from: AGTTGTTCT
+              to: '89'
+            - from: AATTACCGG
+              to: '90'
+            - from: ACAAACTTT
+              to: '91'
+            - from: TCTCGGTTA
+              to: '92'
+            - from: ACTAGACCG
+              to: '93'
+            - from: ACTCATACG
+              to: '94'
+            - from: ATCGAGTCT
+              to: '95'
+            - from: CATAGGTCA
+              to: '96'
+          reportingLevel: VerboseReport
+        - type: generic
+          name: "BD CLS1-CLS2-CLS3 indices to BD cell index"
+          destinationTag: CELLID
+          transformation:
+            type: plus
+            sources:
+              - type: multiply
+                sources:
+                  - type: plus
+                    sources:
+                      - type: tag
+                        name: CELL1ID
+                      - type: constantNumber
+                        value: -1
+                  - type: constantNumber
+                    value: 147456
+              - type: multiply
+                sources:
+                  - type: plus
+                    sources:
+                      - type: tag
+                        name: CELL2ID
+                      - type: constantNumber
+                        value: -1
+                  - type: constantNumber
+                    value: 384
+              - type: tag
+                name: CELL3ID
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
               groupingKeys:
-                - clone
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
               predicates:
                 - metrics:
                     - type: group_metric_nunique
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
                       keys:
                         - allTags:Molecule
                   operator:
-                    type: group_operator_cumtop
-                    share: 0.95
-          - type: filter_in_groups
-            isolationKeys:
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+
+"bd-rhapsody-cdr3-amplicon-B384-base":
+  inheritFrom: generic-ht-single-cell-amplicon-with-umi
+  abstract: true
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+  align:
+    inheritFrom: align-amplicon
+    overrides:
+      tagTransformationSteps:
+        - type: mapTags
+          name: "CELL1 to BD CLS1 index"
+          matchTags:
+            - CELL1
+          newTags:
+            - CELL1ID
+          allowOneMismatch: true
+          rules:
+            - from: TGTGTTCGC
+              to: '1'
+            - from: TGTGGCGCC
+              to: '2'
+            - from: TGTCTAGCG
+              to: '3'
+            - from: TGGTTGTCC
+              to: '4'
+            - from: TGGTTCCTC
+              to: '5'
+            - from: TGGTGTGCT
+              to: '6'
+            - from: TGGCGACCG
+              to: '7'
+            - from: TGCTGTGGC
+              to: '8'
+            - from: TGCTGGCAC
+              to: '9'
+            - from: TGCTCTTCC
+              to: '10'
+            - from: TGCCTCACC
+              to: '11'
+            - from: TGCCATTAT
+              to: '12'
+            - from: TGATGTCTC
+              to: '13'
+            - from: TGATGGCCT
+              to: '14'
+            - from: TGATGCTTG
+              to: '15'
+            - from: TGAAGGACC
+              to: '16'
+            - from: TCTGTCTCC
+              to: '17'
+            - from: TCTGATTAT
+              to: '18'
+            - from: TCTGAGGTT
+              to: '19'
+            - from: TCTCGTTCT
+              to: '20'
+            - from: TCTCATCCG
+              to: '21'
+            - from: TCCTGGATT
+              to: '22'
+            - from: TCAGCATTC
+              to: '23'
+            - from: TCACGCCTT
+              to: '24'
+            - from: TATGTGCAC
+              to: '25'
+            - from: TATGCGGCC
+              to: '26'
+            - from: TATGACGAG
+              to: '27'
+            - from: TATCTCGTG
+              to: '28'
+            - from: TATATGACC
+              to: '29'
+            - from: TAGGCTGTG
+              to: '30'
+            - from: TACTGCGTT
+              to: '31'
+            - from: TACGTGTCC
+              to: '32'
+            - from: TAATCACAT
+              to: '33'
+            - from: GTTGTGTTG
+              to: '34'
+            - from: GTTGTGGCT
+              to: '35'
+            - from: GTTGTCTGT
+              to: '36'
+            - from: GTTGTCGAG
+              to: '37'
+            - from: GTTGTCCTC
+              to: '38'
+            - from: GTTGTATCC
+              to: '39'
+            - from: GTTGGTTCT
+              to: '40'
+            - from: GTTGGCGTT
+              to: '41'
+            - from: GTTGGAGCG
+              to: '42'
+            - from: GTTGCTGCC
+              to: '43'
+            - from: GTTGCGCAT
+              to: '44'
+            - from: GTTGCAGGT
+              to: '45'
+            - from: GTTGCACTG
+              to: '46'
+            - from: GTTGATGAT
+              to: '47'
+            - from: GTTGATACG
+              to: '48'
+            - from: GTTGAAGTC
+              to: '49'
+            - from: GTTCTGTGC
+              to: '50'
+            - from: GTTCTCTCG
+              to: '51'
+            - from: GTTCTATAT
+              to: '52'
+            - from: GTTCGTATG
+              to: '53'
+            - from: GTTCGGCCT
+              to: '54'
+            - from: GTTCGCGGC
+              to: '55'
+            - from: GTTCGATTC
+              to: '56'
+            - from: GTTCCGGTT
+              to: '57'
+            - from: GTTCCGACG
+              to: '58'
+            - from: GTTCACGCT
+              to: '59'
+            - from: GTTATCACC
+              to: '60'
+            - from: GTTAGTCCG
+              to: '61'
+            - from: GTTAGGTGT
+              to: '62'
+            - from: GTTAGAGAC
+              to: '63'
+            - from: GTTAGACTT
+              to: '64'
+            - from: GTTACCTCT
+              to: '65'
+            - from: GTTAATTCC
+              to: '66'
+            - from: GTTAAGCGC
+              to: '67'
+            - from: GTGTTGCTT
+              to: '68'
+            - from: GTGTTCGGT
+              to: '69'
+            - from: GTGTTCCAG
+              to: '70'
+            - from: GTGTTCATC
+              to: '71'
+            - from: GTGTCACAC
+              to: '72'
+            - from: GTGTCAAGT
+              to: '73'
+            - from: GTGTACTGC
+              to: '74'
+            - from: GTGGTTAGT
+              to: '75'
+            - from: GTGGTACCG
+              to: '76'
+            - from: GTGGCGATC
+              to: '77'
+            - from: GTGCTTCTG
+              to: '78'
+            - from: GTGCGTTCC
+              to: '79'
+            - from: GTGCGGTAT
+              to: '80'
+            - from: GTGCGCCTT
+              to: '81'
+            - from: GTGCGAACT
+              to: '82'
+            - from: GTGCAGCCG
+              to: '83'
+            - from: GTGCAATTG
+              to: '84'
+            - from: GTGCAAGGC
+              to: '85'
+            - from: GTCTTGCGC
+              to: '86'
+            - from: GTCTGGCCG
+              to: '87'
+            - from: GTCTGAGGC
+              to: '88'
+            - from: GTCTCAGAT
+              to: '89'
+            - from: GTCTCAACC
+              to: '90'
+            - from: GTCTATCGT
+              to: '91'
+            - from: GTCGGTGTG
+              to: '92'
+            - from: GTCGGAATC
+              to: '93'
+            - from: GTCGCTCCG
+              to: '94'
+            - from: GTCCTCGCC
+              to: '95'
+            - from: GTCCTACCT
+              to: '96'
+            - from: GTCCGCTTG
+              to: '97'
+            - from: GTCCATTCT
+              to: '98'
+            - from: GTCCAATAC
+              to: '99'
+            - from: GTCATGTAT
+              to: '100'
+            - from: GTCAGTGGT
+              to: '101'
+            - from: GTCAGATAG
+              to: '102'
+            - from: GTATTAACT
+              to: '103'
+            - from: GTATCAGTC
+              to: '104'
+            - from: GTATAGCCT
+              to: '105'
+            - from: GTATACTTG
+              to: '106'
+            - from: GTATAAGGT
+              to: '107'
+            - from: GTAGCATCG
+              to: '108'
+            - from: GTACCGTCC
+              to: '109'
+            - from: GTACACCTC
+              to: '110'
+            - from: GTAAGTGCC
+              to: '111'
+            - from: GTAACAGAG
+              to: '112'
+            - from: GGTTGTGTC
+              to: '113'
+            - from: GGTTGGCTG
+              to: '114'
+            - from: GGTTGACGC
+              to: '115'
+            - from: GGTTCGTCG
+              to: '116'
+            - from: GGTTCAGTT
+              to: '117'
+            - from: GGTTATATT
+              to: '118'
+            - from: GGTTAATAC
+              to: '119'
+            - from: GGTGTACGT
+              to: '120'
+            - from: GGTGCCGCT
+              to: '121'
+            - from: GGTGCATGC
+              to: '122'
+            - from: GGTCGTTGC
+              to: '123'
+            - from: GGTCGAGGT
+              to: '124'
+            - from: GGTAGGCAC
+              to: '125'
+            - from: GGTAGCTTG
+              to: '126'
+            - from: GGTACATAG
+              to: '127'
+            - from: GGTAATCTG
+              to: '128'
+            - from: GGCTTGGCC
+              to: '129'
+            - from: GGCTTCACG
+              to: '130'
+            - from: GGCTTATGT
+              to: '131'
+            - from: GGCTTACTC
+              to: '132'
+            - from: GGCTGTCTT
+              to: '133'
+            - from: GGCTCTGTG
+              to: '134'
+            - from: GGCTCCGGT
+              to: '135'
+            - from: GGCTCACCT
+              to: '136'
+            - from: GGCGTTGAG
+              to: '137'
+            - from: GGCGTGTAC
+              to: '138'
+            - from: GGCGTGCTG
+              to: '139'
+            - from: GGCGTATCG
+              to: '140'
+            - from: GGCGCTCGT
+              to: '141'
+            - from: GGCGCTACC
+              to: '142'
+            - from: GGCGAGCCT
+              to: '143'
+            - from: GGCGAGATC
+              to: '144'
+            - from: GGCGACTTG
+              to: '145'
+            - from: GGCCTCTTC
+              to: '146'
+            - from: GGCCTACAG
+              to: '147'
+            - from: GGCCAGCGC
+              to: '148'
+            - from: GGCCAACTT
+              to: '149'
+            - from: GGCATTCCT
+              to: '150'
+            - from: GGCATCCGC
+              to: '151'
+            - from: GGCATAACC
+              to: '152'
+            - from: GGCAACGAT
+              to: '153'
+            - from: GGATGTCCG
+              to: '154'
+            - from: GGATGAGAG
+              to: '155'
+            - from: GGATCTGGC
+              to: '156'
+            - from: GGATCCATG
+              to: '157'
+            - from: GGATAGGTT
+              to: '158'
+            - from: GGAGTCGTG
+              to: '159'
+            - from: GGAGAAGGC
+              to: '160'
+            - from: GGACTCCTT
+              to: '161'
+            - from: GGACTAGTC
+              to: '162'
+            - from: GGACCGTTG
+              to: '163'
+            - from: GGAATTAGT
+              to: '164'
+            - from: GGAATCTCT
+              to: '165'
+            - from: GGAATCGAC
+              to: '166'
+            - from: GGAAGCCTC
+              to: '167'
+            - from: GCTTGTAGC
+              to: '168'
+            - from: GCTTGACCG
+              to: '169'
+            - from: GCTTCGGAC
+              to: '170'
+            - from: GCTTCACAT
+              to: '171'
+            - from: GCTTAGTCT
+              to: '172'
+            - from: GCTGGATAT
+              to: '173'
+            - from: GCTGGAACC
+              to: '174'
+            - from: GCTGCGATG
+              to: '175'
+            - from: GCTGATCAG
+              to: '176'
+            - from: GCTGAGCGT
+              to: '177'
+            - from: GCTCTTGTC
+              to: '178'
+            - from: GCTCTCCTG
+              to: '179'
+            - from: GCTCGGTCC
+              to: '180'
+            - from: GCTCCAATT
+              to: '181'
+            - from: GCTATTCGC
+              to: '182'
+            - from: GCTATGAGT
+              to: '183'
+            - from: GCTAGTGTT
+              to: '184'
+            - from: GCTAGGATC
+              to: '185'
+            - from: GCTAGCACT
+              to: '186'
+            - from: GCTACGTAT
+              to: '187'
+            - from: GCTAACCTT
+              to: '188'
+            - from: GCGTTCCGC
+              to: '189'
+            - from: GCGTGTGCC
+              to: '190'
+            - from: GCGTGCATT
+              to: '191'
+            - from: GCGTCGGTT
+              to: '192'
+            - from: GCGTATGTG
+              to: '193'
+            - from: GCGTATACT
+              to: '194'
+            - from: GCGGTTCAC
+              to: '195'
+            - from: GCGGTCTTG
+              to: '196'
+            - from: GCGGCGTCG
+              to: '197'
+            - from: GCGGCACCT
+              to: '198'
+            - from: GCGCTGGAC
+              to: '199'
+            - from: GCGCTCTCC
+              to: '200'
+            - from: GCGCGGCAG
+              to: '201'
+            - from: GCGCGATAC
+              to: '202'
+            - from: GCGCCGACC
+              to: '203'
+            - from: GCGAGCGAG
+              to: '204'
+            - from: GCGAGAGGT
+              to: '205'
+            - from: GCGAATTAC
+              to: '206'
+            - from: GCCTTGCAT
+              to: '207'
+            - from: GCCTGCGCT
+              to: '208'
+            - from: GCCTAACTG
+              to: '209'
+            - from: GCCGTCCGT
+              to: '210'
+            - from: GCCGCTGTC
+              to: '211'
+            - from: GCCATGCCG
+              to: '212'
+            - from: GCCAGCTAT
+              to: '213'
+            - from: GCCAACCAG
+              to: '214'
+            - from: GCATGGTTG
+              to: '215'
+            - from: GCATCGACG
+              to: '216'
+            - from: GCAGGCTAG
+              to: '217'
+            - from: GCAGGACGC
+              to: '218'
+            - from: GCAGCCATC
+              to: '219'
+            - from: GCAGATACC
+              to: '220'
+            - from: GCAGACGTT
+              to: '221'
+            - from: GCACTATGT
+              to: '222'
+            - from: GCACACGAG
+              to: '223'
+            - from: GATTGTCAT
+              to: '224'
+            - from: GATTGGTAG
+              to: '225'
+            - from: GATTGCACC
+              to: '226'
+            - from: GATTCTACT
+              to: '227'
+            - from: GATTCGCTT
+              to: '228'
+            - from: GATTAGGCC
+              to: '229'
+            - from: GATTACGGT
+              to: '230'
+            - from: GATGTTGGC
+              to: '231'
+            - from: GATGTTATG
+              to: '232'
+            - from: GATGGCCAG
+              to: '233'
+            - from: GATCGTTCG
+              to: '234'
+            - from: GATCGGAGC
+              to: '235'
+            - from: GATCGCCTC
+              to: '236'
+            - from: GATCCTCTG
+              to: '237'
+            - from: GATCCAGCG
+              to: '238'
+            - from: GATACACGC
+              to: '239'
+            - from: GAGTTACCT
+              to: '240'
+            - from: GAGTCGTAT
+              to: '241'
+            - from: GAGTCGCCG
+              to: '242'
+            - from: GAGGTGTAG
+              to: '243'
+            - from: GAGGCATTG
+              to: '244'
+            - from: GAGCGGACG
+              to: '245'
+            - from: GAGCCTGAG
+              to: '246'
+            - from: GAGATCTGT
+              to: '247'
+            - from: GAGATAATT
+              to: '248'
+            - from: GAGACGGCT
+              to: '249'
+            - from: GACTTCGTG
+              to: '250'
+            - from: GACTGTTCT
+              to: '251'
+            - from: GACTCTTAG
+              to: '252'
+            - from: GACCGCATT
+              to: '253'
+            - from: GAATTGAGC
+              to: '254'
+            - from: GAATATTGC
+              to: '255'
+            - from: GAAGGCTCT
+              to: '256'
+            - from: GAAGAGACT
+              to: '257'
+            - from: GAACTGCCG
+              to: '258'
+            - from: GAACGCGTG
+              to: '259'
+            - from: CTTGTGTAT
+              to: '260'
+            - from: CTTGTGCGC
+              to: '261'
+            - from: CTTGTCATG
+              to: '262'
+            - from: CTTGGTCTT
+              to: '263'
+            - from: CTTGGTACC
+              to: '264'
+            - from: CTTGGATGT
+              to: '265'
+            - from: CTTGCTCAC
+              to: '266'
+            - from: CTTGCAATC
+              to: '267'
+            - from: CTTGAGGCC
+              to: '268'
+            - from: CTTGACGGT
+              to: '269'
+            - from: CTTCTGATC
+              to: '270'
+            - from: CTTCTCGTT
+              to: '271'
+            - from: CTTCTAGGC
+              to: '272'
+            - from: CTTCGTTAG
+              to: '273'
+            - from: CTTATGTCC
+              to: '274'
+            - from: CTTATGCTT
+              to: '275'
+            - from: CTTATATAG
+              to: '276'
+            - from: CTTAGGTTG
+              to: '277'
+            - from: CTTAGGAGC
+              to: '278'
+            - from: CTTACTTAT
+              to: '279'
+            - from: CTGTTCTCG
+              to: '280'
+            - from: CTGTGCCTC
+              to: '281'
+            - from: CTGTCGCAT
+              to: '282'
+            - from: CTGTCGAGC
+              to: '283'
+            - from: CTGTAGCTG
+              to: '284'
+            - from: CTGTACGTT
+              to: '285'
+            - from: CTGCTTGCC
+              to: '286'
+            - from: CTGCGTAGT
+              to: '287'
+            - from: CTGCACACC
+              to: '288'
+            - from: CTGATGGAT
+              to: '289'
+            - from: CTGAGTCAT
+              to: '290'
+            - from: CTGACGCCG
+              to: '291'
+            - from: CTGAACGAG
+              to: '292'
+            - from: CTCTTGTAG
+              to: '293'
+            - from: CTCTTAGTT
+              to: '294'
+            - from: CTCTTACCG
+              to: '295'
+            - from: CTCTGCACC
+              to: '296'
+            - from: CTCTCGTCC
+              to: '297'
+            - from: CTCGTATTG
+              to: '298'
+            - from: CTCGACTAT
+              to: '299'
+            - from: CTCCTGACG
+              to: '300'
+            - from: CTCACTAGC
+              to: '301'
+            - from: CTATACGGC
+              to: '302'
+            - from: CGTTCGCTC
+              to: '303'
+            - from: CGTTCACCG
+              to: '304'
+            - from: CGTATAGTT
+              to: '305'
+            - from: CGGTGTTCC
+              to: '306'
+            - from: CGGTGTCAG
+              to: '307'
+            - from: CGGTCCTGC
+              to: '308'
+            - from: CGGCGACTC
+              to: '309'
+            - from: CGGCACGGT
+              to: '310'
+            - from: CGGATAGCC
+              to: '311'
+            - from: CGGAGAGAT
+              to: '312'
+            - from: CGCTAATAG
+              to: '313'
+            - from: CGCGTTGGC
+              to: '314'
+            - from: CGCGCAGAG
+              to: '315'
+            - from: CGCACTGCC
+              to: '316'
+            - from: CCTTGTCTC
+              to: '317'
+            - from: CCTTGGCGT
+              to: '318'
+            - from: CCTTCTGAG
+              to: '319'
+            - from: CCTTCTCCT
+              to: '320'
+            - from: CCTTCGACC
+              to: '321'
+            - from: CCTTACTTG
+              to: '322'
+            - from: CCTGTTCGT
+              to: '323'
+            - from: CCTGTATGC
+              to: '324'
+            - from: CCTCGGCCG
+              to: '325'
+            - from: CCGTTAATT
+              to: '326'
+            - from: CCATGTGCG
+              to: '327'
+            - from: CCAGTGGTT
+              to: '328'
+            - from: CCAGGCATT
+              to: '329'
+            - from: CCAGGATCC
+              to: '330'
+            - from: CCAGCGTTG
+              to: '331'
+            - from: CATTCCGAT
+              to: '332'
+            - from: CATTATACC
+              to: '333'
+            - from: CATGTTGAG
+              to: '334'
+            - from: ATTGCGTGT
+              to: '335'
+            - from: ATTGCGGAC
+              to: '336'
+            - from: ATTGCGCCG
+              to: '337'
+            - from: ATTGACTTG
+              to: '338'
+            - from: ATTCGGCTG
+              to: '339'
+            - from: ATTCGCGAG
+              to: '340'
+            - from: ATTCCAAGT
+              to: '341'
+            - from: ATTATCTTC
+              to: '342'
+            - from: ATTACTGTT
+              to: '343'
+            - from: ATTACACTC
+              to: '344'
+            - from: ATGTTCTAT
+              to: '345'
+            - from: ATGTTACGC
+              to: '346'
+            - from: ATGTGTATC
+              to: '347'
+            - from: ATGTGGCAG
+              to: '348'
+            - from: ATGTCTGTG
+              to: '349'
+            - from: ATGGTGCAT
+              to: '350'
+            - from: ATGCTTACT
+              to: '351'
+            - from: ATGCTGTCC
+              to: '352'
+            - from: ATGCTCGGC
+              to: '353'
+            - from: ATGAGGTTC
+              to: '354'
+            - from: ATGAGAGTG
+              to: '355'
+            - from: ATCTTGGCT
+              to: '356'
+            - from: ATCTGTGCG
+              to: '357'
+            - from: ATCGGTTCC
+              to: '358'
+            - from: ATCATGCTC
+              to: '359'
+            - from: ATCATCACT
+              to: '360'
+            - from: ATATCTTAT
+              to: '361'
+            - from: ATAGGCGCC
+              to: '362'
+            - from: AGTTGGTAT
+              to: '363'
+            - from: AGTTGAGCC
+              to: '364'
+            - from: AGTGCGACC
+              to: '365'
+            - from: AGGTGCTAC
+              to: '366'
+            - from: AGGCTTGCG
+              to: '367'
+            - from: AGGCCTTCC
+              to: '368'
+            - from: AGGCACCTT
+              to: '369'
+            - from: AGGAATATG
+              to: '370'
+            - from: AGCGGCCAG
+              to: '371'
+            - from: AGCCTGGTC
+              to: '372'
+            - from: AGCCTGACT
+              to: '373'
+            - from: AGCAATCCG
+              to: '374'
+            - from: AGAGATGTT
+              to: '375'
+            - from: AGAGAATTC
+              to: '376'
+            - from: ACTCGCTTG
+              to: '377'
+            - from: ACTCGACCT
+              to: '378'
+            - from: ACGTACACC
+              to: '379'
+            - from: ACGGATGGT
+              to: '380'
+            - from: ACCAGTCTG
+              to: '381'
+            - from: ACATTCGGC
+              to: '382'
+            - from: ACATGAGGT
+              to: '383'
+            - from: ACACTAATT
+              to: '384'
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "CELL2 to BD CLS2 index"
+          matchTags:
+            - CELL2
+          newTags:
+            - CELL2ID
+          allowOneMismatch: true
+          rules:
+            - from: TTGTGTTGT
+              to: '1'
+            - from: TTGTGGTAG
+              to: '2'
+            - from: TTGTGCGGA
+              to: '3'
+            - from: TTGTCTGTT
+              to: '4'
+            - from: TTGTCTAAG
+              to: '5'
+            - from: TTGTCATAT
+              to: '6'
+            - from: TTGTCACGA
+              to: '7'
+            - from: TTGTATGAA
+              to: '8'
+            - from: TTGTACAGT
+              to: '9'
+            - from: TTGGTTAAT
+              to: '10'
+            - from: TTGGTGCAA
+              to: '11'
+            - from: TTGGTCGAG
+              to: '12'
+            - from: TTGGTATTA
+              to: '13'
+            - from: TTGGCACAG
+              to: '14'
+            - from: TTGGATACA
+              to: '15'
+            - from: TTGGAAGTG
+              to: '16'
+            - from: TTGCGGTTA
+              to: '17'
+            - from: TTGCCATTG
+              to: '18'
+            - from: TTGCACGCG
+              to: '19'
+            - from: TTGCAAGGT
+              to: '20'
+            - from: TTGATGTAT
+              to: '21'
+            - from: TTGATAATT
+              to: '22'
+            - from: TTGAGACGT
+              to: '23'
+            - from: TTGACTACT
+              to: '24'
+            - from: TTGACCGAA
+              to: '25'
+            - from: TTCTGGTCT
+              to: '26'
+            - from: TTCTGCACA
+              to: '27'
+            - from: TTCTCCTTA
+              to: '28'
+            - from: TTCTCCGCT
+              to: '29'
+            - from: TTCTAGGTA
+              to: '30'
+            - from: TTCTAATCG
+              to: '31'
+            - from: TTCGTCGTA
+              to: '32'
+            - from: TTCGTAGAT
+              to: '33'
+            - from: TTCGGCTTG
+              to: '34'
+            - from: TTCGGAATA
+              to: '35'
+            - from: TTCGCCAGA
+              to: '36'
+            - from: TTCGATTGT
+              to: '37'
+            - from: TTCGATCAG
+              to: '38'
+            - from: TTCCTCGGT
+              to: '39'
+            - from: TTCCGGCAG
+              to: '40'
+            - from: TTCCGCATT
+              to: '41'
+            - from: TTCCAATTA
+              to: '42'
+            - from: TTCATTGAA
+              to: '43'
+            - from: TTCATGCTG
+              to: '44'
+            - from: TTCAGGAGT
+              to: '45'
+            - from: TTCACTATA
+              to: '46'
+            - from: TTCAACTCT
+              to: '47'
+            - from: TTCAACGTG
+              to: '48'
+            - from: TTATGCGTT
+              to: '49'
+            - from: TTATGATTG
+              to: '50'
+            - from: TTATCCTGT
+              to: '51'
+            - from: TTATCCGAG
+              to: '52'
+            - from: TTATATTAT
+              to: '53'
+            - from: TTAGGCGCG
+              to: '54'
+            - from: TTACTGGAA
+              to: '55'
+            - from: TTACTAGTT
+              to: '56'
+            - from: TTACGTGGT
+              to: '57'
+            - from: TTACGATAT
+              to: '58'
+            - from: TTACCTAGA
+              to: '59'
+            - from: TTACATGAG
+              to: '60'
+            - from: TTACAGCGT
+              to: '61'
+            - from: TTACACGGA
+              to: '62'
+            - from: TTACACACT
+              to: '63'
+            - from: TTAATCAGT
+              to: '64'
+            - from: TTAATAGGA
+              to: '65'
+            - from: TTAAGTGTG
+              to: '66'
+            - from: TTAACCTTG
+              to: '67'
+            - from: TTAACACAA
+              to: '68'
+            - from: TGTTCACTT
+              to: '69'
+            - from: TGTTCAAGA
+              to: '70'
+            - from: TGTTAAGTG
+              to: '71'
+            - from: TGTGTTATG
+              to: '72'
+            - from: TGTGTCCAA
+              to: '73'
+            - from: TGTGGAGCG
+              to: '74'
+            - from: TGTCAGTTA
+              to: '75'
+            - from: TGTCAGAAG
+              to: '76'
+            - from: TGGTTAGTT
+              to: '77'
+            - from: TGGTTACAA
+              to: '78'
+            - from: TGGCGTTAT
+              to: '79'
+            - from: TGGCGCCAA
+              to: '80'
+            - from: TGGAGTCTT
+              to: '81'
+            - from: TGCGTATTG
+              to: '82'
+            - from: TGATAGAGA
+              to: '83'
+            - from: TGAGGTATT
+              to: '84'
+            - from: TGAGAATCT
+              to: '85'
+            - from: TCTTGGTAA
+              to: '86'
+            - from: TCTTCATAG
+              to: '87'
+            - from: TCTGTCCTT
+              to: '88'
+            - from: TCTGGAATT
+              to: '89'
+            - from: TCTACCGCG
+              to: '90'
+            - from: TCGTTCGAA
+              to: '91'
+            - from: TCGTCAGTG
+              to: '92'
+            - from: TCGACGAGA
+              to: '93'
+            - from: TCATGGCTT
+              to: '94'
+            - from: TCACACTTA
+              to: '95'
+            - from: TATTCCGAA
+              to: '96'
+            - from: TATTATGGT
+              to: '97'
+            - from: TATGCTATT
+              to: '98'
+            - from: TATCAAGGA
+              to: '99'
+            - from: TAGTTCAAT
+              to: '100'
+            - from: TAGCTGCTT
+              to: '101'
+            - from: TAGAGGAAG
+              to: '102'
+            - from: TACCTGTTA
+              to: '103'
+            - from: TACACCTGT
+              to: '104'
+            - from: GTTGTGCGT
+              to: '105'
+            - from: GTTGGCTAT
+              to: '106'
+            - from: GTTGCCAAG
+              to: '107'
+            - from: GTTGACCTT
+              to: '108'
+            - from: GTTCTGCTA
+              to: '109'
+            - from: GTTCTGAAT
+              to: '110'
+            - from: GTTCTATCA
+              to: '111'
+            - from: GTTCGCGTG
+              to: '112'
+            - from: GTTCCTTAT
+              to: '113'
+            - from: GTTAGCAGT
+              to: '114'
+            - from: GTTACTGTG
+              to: '115'
+            - from: GTTACTCAA
+              to: '116'
+            - from: GTTAAGAGA
+              to: '117'
+            - from: GTTAACTTA
+              to: '118'
+            - from: GTGTCGGCA
+              to: '119'
+            - from: GTGTCCATT
+              to: '120'
+            - from: GTGCTTGAG
+              to: '121'
+            - from: GTGCTCGTT
+              to: '122'
+            - from: GTGCTCACA
+              to: '123'
+            - from: GTGCCTGGA
+              to: '124'
+            - from: GTCTTGTCG
+              to: '125'
+            - from: GTCTTGATT
+              to: '126'
+            - from: GTCTTCCGT
+              to: '127'
+            - from: GTCTTAAGA
+              to: '128'
+            - from: GTCTCATCT
+              to: '129'
+            - from: GTCTACGAG
+              to: '130'
+            - from: GTCGTTGCT
+              to: '131'
+            - from: GTCGTGTTA
+              to: '132'
+            - from: GTCGGTAAT
+              to: '133'
+            - from: GTCGGATGT
+              to: '134'
+            - from: GTCGAGCTG
+              to: '135'
+            - from: GTCCGGACT
+              to: '136'
+            - from: GTCCAACAT
+              to: '137'
+            - from: GTCAGACGA
+              to: '138'
+            - from: GTCAGAATT
+              to: '139'
+            - from: GTCACTCTT
+              to: '140'
+            - from: GTCAAGGAA
+              to: '141'
+            - from: GTATGTCTT
+              to: '142'
+            - from: GTATGTACA
+              to: '143'
+            - from: GTATCGGTT
+              to: '144'
+            - from: GTATATGTA
+              to: '145'
+            - from: GTATACAAT
+              to: '146'
+            - from: GTAGTTAAG
+              to: '147'
+            - from: GTAGTCGAT
+              to: '148'
+            - from: GTAGCCTTA
+              to: '149'
+            - from: GTAGATACT
+              to: '150'
+            - from: GTACGATTA
+              to: '151'
+            - from: GTACAGTCT
+              to: '152'
+            - from: GTAATTCGT
+              to: '153'
+            - from: GCTTGGCAG
+              to: '154'
+            - from: GCTTGCTTG
+              to: '155'
+            - from: GCTTGAGGA
+              to: '156'
+            - from: GCTTCATTA
+              to: '157'
+            - from: GCTTATGCG
+              to: '158'
+            - from: GCTGTGTAG
+              to: '159'
+            - from: GCTGTCATG
+              to: '160'
+            - from: GCTGGTTGT
+              to: '161'
+            - from: GCTGGACTG
+              to: '162'
+            - from: GCTGCCTAA
+              to: '163'
+            - from: GCTGATATT
+              to: '164'
+            - from: GCTCTTAGT
+              to: '165'
+            - from: GCTCTATTG
+              to: '166'
+            - from: GCTCGCCGT
+              to: '167'
+            - from: GCTCCGCTG
+              to: '168'
+            - from: GCTATTCTG
+              to: '169'
+            - from: GCTATACGA
+              to: '170'
+            - from: GCTACTAAG
+              to: '171'
+            - from: GCTACATGT
+              to: '172'
+            - from: GCTAACTCT
+              to: '173'
+            - from: GCGTTGTAA
+              to: '174'
+            - from: GCGTTCTCT
+              to: '175'
+            - from: GCGTGCGTA
+              to: '176'
+            - from: GCGTCTTGA
+              to: '177'
+            - from: GCGTCCGAT
+              to: '178'
+            - from: GCGTAAGAG
+              to: '179'
+            - from: GCGCTTACG
+              to: '180'
+            - from: GCGCGGATT
+              to: '181'
+            - from: GCGCCATAT
+              to: '182'
+            - from: GCGCATGAA
+              to: '183'
+            - from: GCGATCAAT
+              to: '184'
+            - from: GCGAGCCTT
+              to: '185'
+            - from: GCGAGATTG
+              to: '186'
+            - from: GCGAGAACA
+              to: '187'
+            - from: GCCTTGGTA
+              to: '188'
+            - from: GCCTTCTAG
+              to: '189'
+            - from: GCCTTCACA
+              to: '190'
+            - from: GCCTGAGTG
+              to: '191'
+            - from: GCCTCACGT
+              to: '192'
+            - from: GCCGGCGAA
+              to: '193'
+            - from: GCCGCACAA
+              to: '194'
+            - from: GCCATGCTT
+              to: '195'
+            - from: GCCATATAT
+              to: '196'
+            - from: GCCAATTCG
+              to: '197'
+            - from: GCATTCGTT
+              to: '198'
+            - from: GCATGATGT
+              to: '199'
+            - from: GCAGTTGGA
+              to: '200'
+            - from: GCAGTGTCT
+              to: '201'
+            - from: GCACTTGTG
+              to: '202'
+            - from: GCAATCTGT
+              to: '203'
+            - from: GCAACACTT
+              to: '204'
+            - from: GATTGTATT
+              to: '205'
+            - from: GATTGCGAG
+              to: '206'
+            - from: GATTCCAGT
+              to: '207'
+            - from: GATTCATAT
+              to: '208'
+            - from: GATTATCAG
+              to: '209'
+            - from: GATTAGGTT
+              to: '210'
+            - from: GATGTTGCG
+              to: '211'
+            - from: GATGGATCT
+              to: '212'
+            - from: GATGCTGAT
+              to: '213'
+            - from: GATGCCTTG
+              to: '214'
+            - from: GATCTCCTT
+              to: '215'
+            - from: GATCGCTTA
+              to: '216'
+            - from: GATATTGAA
+              to: '217'
+            - from: GATATTACT
+              to: '218'
+            - from: GAGTGTTAT
+              to: '219'
+            - from: GAGCTCAGT
+              to: '220'
+            - from: GAGCGTGCT
+              to: '221'
+            - from: GAGCGTCGA
+              to: '222'
+            - from: GAGCGGTTG
+              to: '223'
+            - from: GAGCGACTT
+              to: '224'
+            - from: GAGCCGAAT
+              to: '225'
+            - from: GAGATAGAT
+              to: '226'
+            - from: GAGACCTAT
+              to: '227'
+            - from: GACGGTCGT
+              to: '228'
+            - from: GACGCAGGT
+              to: '229'
+            - from: GACGATATG
+              to: '230'
+            - from: GACCTATCT
+              to: '231'
+            - from: GAATTAGGA
+              to: '232'
+            - from: GAATCAGCT
+              to: '233'
+            - from: GAAGTTCAT
+              to: '234'
+            - from: GAAGTGGTT
+              to: '235'
+            - from: GAAGTATTG
+              to: '236'
+            - from: GAAGGCATT
+              to: '237'
+            - from: GAACGCTGT
+              to: '238'
+            - from: CTTGTCCAG
+              to: '239'
+            - from: CTTGGATTG
+              to: '240'
+            - from: CTTGCTGAA
+              to: '241'
+            - from: CTTGCCGTG
+              to: '242'
+            - from: CTTGATTCT
+              to: '243'
+            - from: CTTCTGTCG
+              to: '244'
+            - from: CTTCGGCGT
+              to: '245'
+            - from: CTTATGAGT
+              to: '246'
+            - from: CTTACCGAT
+              to: '247'
+            - from: CTGTTAGGT
+              to: '248'
+            - from: CTGTCGTCT
+              to: '249'
+            - from: CTGTATAAT
+              to: '250'
+            - from: CTGGCTCAT
+              to: '251'
+            - from: CTGGATGCG
+              to: '252'
+            - from: CTGCGTGTG
+              to: '253'
+            - from: CTGCGCGGT
+              to: '254'
+            - from: CTGCCGATT
+              to: '255'
+            - from: CTGCATTGT
+              to: '256'
+            - from: CTGATTAAG
+              to: '257'
+            - from: CTGAGATAT
+              to: '258'
+            - from: CTGACCTGT
+              to: '259'
+            - from: CTCGTATCT
+              to: '260'
+            - from: CTCGGCAAG
+              to: '261'
+            - from: CTCGCAATT
+              to: '262'
+            - from: CTCCTGCTT
+              to: '263'
+            - from: CTCCTAAGT
+              to: '264'
+            - from: CTCCGGATG
+              to: '265'
+            - from: CTCCGAGCG
+              to: '266'
+            - from: CTCACAGGT
+              to: '267'
+            - from: CTATTCTAT
+              to: '268'
+            - from: CTATTAGTG
+              to: '269'
+            - from: CTATGAATT
+              to: '270'
+            - from: CTACATATT
+              to: '271'
+            - from: CGTGGCATT
+              to: '272'
+            - from: CGTCTTAAT
+              to: '273'
+            - from: CGTCTGGTT
+              to: '274'
+            - from: CGTCACTGT
+              to: '275'
+            - from: CGTAGGTCT
+              to: '276'
+            - from: CGGTTCGAG
+              to: '277'
+            - from: CGGTTCATT
+              to: '278'
+            - from: CGGTGCTCT
+              to: '279'
+            - from: CGGTAATTG
+              to: '280'
+            - from: CGGCCTGAT
+              to: '281'
+            - from: CGGATATAG
+              to: '282'
+            - from: CGGAATATT
+              to: '283'
+            - from: CGCTCCAAT
+              to: '284'
+            - from: CGCGTTCGT
+              to: '285'
+            - from: CGCAGGTTG
+              to: '286'
+            - from: CGAGGATGT
+              to: '287'
+            - from: CGAGCTGTT
+              to: '288'
+            - from: CGACGGCTT
+              to: '289'
+            - from: CCTTGTGTG
+              to: '290'
+            - from: CCTGTCTCA
+              to: '291'
+            - from: CCTGACTAT
+              to: '292'
+            - from: CCTACCTTG
+              to: '293'
+            - from: CCGTAGATT
+              to: '294'
+            - from: CCGGCTGGT
+              to: '295'
+            - from: CATCGGACG
+              to: '296'
+            - from: CATCGATAA
+              to: '297'
+            - from: CATCCTTCT
+              to: '298'
+            - from: CAGTTCTGT
+              to: '299'
+            - from: CAGTGCCAG
+              to: '300'
+            - from: CAGGCACTG
+              to: '301'
+            - from: CAGCCTCTT
+              to: '302'
+            - from: CACTTATAT
+              to: '303'
+            - from: CACTGGTCG
+              to: '304'
+            - from: CACTGCATG
+              to: '305'
+            - from: CACGCGTTG
+              to: '306'
+            - from: CACGATGTT
+              to: '307'
+            - from: CACCATCTG
+              to: '308'
+            - from: CACAGGCGT
+              to: '309'
+            - from: ATTGTACAA
+              to: '310'
+            - from: ATTGGTATG
+              to: '311'
+            - from: ATTGCTAAT
+              to: '312'
+            - from: ATTGCATAG
+              to: '313'
+            - from: ATTGCAGTT
+              to: '314'
+            - from: ATTCTGCAG
+              to: '315'
+            - from: ATTCTACGT
+              to: '316'
+            - from: ATTCGGATT
+              to: '317'
+            - from: ATTCCGTTG
+              to: '318'
+            - from: ATTCATCAA
+              to: '319'
+            - from: ATTCAAGAG
+              to: '320'
+            - from: ATTAGCCTT
+              to: '321'
+            - from: ATTAATATT
+              to: '322'
+            - from: ATGTTAGAG
+              to: '323'
+            - from: ATGTTAACT
+              to: '324'
+            - from: ATGTAGTCG
+              to: '325'
+            - from: ATGGTGTAG
+              to: '326'
+            - from: ATGGATTAT
+              to: '327'
+            - from: ATCTTGAAG
+              to: '328'
+            - from: ATCTGATAT
+              to: '329'
+            - from: ATCTCAGAA
+              to: '330'
+            - from: ATCGCTCAA
+              to: '331'
+            - from: ATCGCGTCG
+              to: '332'
+            - from: ATCCATGGT
+              to: '333'
+            - from: ATCATGAGA
+              to: '334'
+            - from: ATCATAGTT
+              to: '335'
+            - from: ATCAGCGAG
+              to: '336'
+            - from: ATCACCATT
+              to: '337'
+            - from: ATAGTAATT
+              to: '338'
+            - from: ATAGCTGTG
+              to: '339'
+            - from: ATACTCTCG
+              to: '340'
+            - from: ATACCTCAT
+              to: '341'
+            - from: AGTTGCGCG
+              to: '342'
+            - from: AGTTGAATT
+              to: '343'
+            - from: AGTTATGAT
+              to: '344'
+            - from: AGTGTCCGT
+              to: '345'
+            - from: AGTGGCTTG
+              to: '346'
+            - from: AGTGCTTCT
+              to: '347'
+            - from: AGTATCATT
+              to: '348'
+            - from: AGTACACAA
+              to: '349'
+            - from: AGGTATGCG
+              to: '350'
+            - from: AGGTATAGT
+              to: '351'
+            - from: AGGCTACTT
+              to: '352'
+            - from: AGGCCAGGT
+              to: '353'
+            - from: AGGAGCGAT
+              to: '354'
+            - from: AGCTTATAG
+              to: '355'
+            - from: AGCTCTAGA
+              to: '356'
+            - from: AGCGTGTAT
+              to: '357'
+            - from: AGCGTCACA
+              to: '358'
+            - from: AGCCTTCAT
+              to: '359'
+            - from: AGCCTGTCG
+              to: '360'
+            - from: AGCCTCGAG
+              to: '361'
+            - from: AGCACTGAA
+              to: '362'
+            - from: AGATGTACG
+              to: '363'
+            - from: AGAGTTAAT
+              to: '364'
+            - from: AGACCTCTG
+              to: '365'
+            - from: ACTTCTATA
+              to: '366'
+            - from: ACTGTCGAG
+              to: '367'
+            - from: ACTGTATGT
+              to: '368'
+            - from: ACTCTGTAA
+              to: '369'
+            - from: ACTCGCGAA
+              to: '370'
+            - from: ACTAGATCT
+              to: '371'
+            - from: ACTAACGTT
+              to: '372'
+            - from: ACGTTACTG
+              to: '373'
+            - from: ACGTGGAAT
+              to: '374'
+            - from: ACGGACTCT
+              to: '375'
+            - from: ACGCCTAAT
+              to: '376'
+            - from: ACGCCGTTA
+              to: '377'
+            - from: ACGACGTGT
+              to: '378'
+            - from: ACCTCGCAT
+              to: '379'
+            - from: ACCATCATA
+              to: '380'
+            - from: ACATATATT
+              to: '381'
+            - from: ACAGGCACA
+              to: '382'
+            - from: ACACCTGAG
+              to: '383'
+            - from: ACACATTCT
+              to: '384'
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "CELL3 to BD CLS3 index"
+          matchTags:
+            - CELL3
+          newTags:
+            - CELL3ID
+          allowOneMismatch: true
+          rules:
+            - from: TTGTGGCTG
+              to: '1'
+            - from: TTGTGGAGT
+              to: '2'
+            - from: TTGTGCGAC
+              to: '3'
+            - from: TTGTCTTCA
+              to: '4'
+            - from: TTGTAAGAT
+              to: '5'
+            - from: TTGGTTCTG
+              to: '6'
+            - from: TTGGTGCGT
+              to: '7'
+            - from: TTGGTCTAC
+              to: '8'
+            - from: TTGGTAACT
+              to: '9'
+            - from: TTGGCGTGC
+              to: '10'
+            - from: TTGGATTAG
+              to: '11'
+            - from: TTGGAGACG
+              to: '12'
+            - from: TTGGAATCA
+              to: '13'
+            - from: TTGCGGCGA
+              to: '14'
+            - from: TTGCGCTCG
+              to: '15'
+            - from: TTGCCTTAC
+              to: '16'
+            - from: TTGCCGGAT
+              to: '17'
+            - from: TTGCATGCT
+              to: '18'
+            - from: TTGCACGTC
+              to: '19'
+            - from: TTGCACCAT
+              to: '20'
+            - from: TTGAACCTG
+              to: '21'
+            - from: TTCTCGCGT
+              to: '22'
+            - from: TTCTCAACT
+              to: '23'
+            - from: TTCTACTCA
+              to: '24'
+            - from: TTCGTCCAT
+              to: '25'
+            - from: TTCGGATAC
+              to: '26'
+            - from: TTCGGACGT
+              to: '27'
+            - from: TTCGCAATC
+              to: '28'
+            - from: TTCCGGTGC
+              to: '29'
+            - from: TTCCGACTG
+              to: '30'
+            - from: TTCATTATG
+              to: '31'
+            - from: TTCATGGAT
+              to: '32'
+            - from: TTCAGCGCA
+              to: '33'
+            - from: TTCACCTCG
+              to: '34'
+            - from: TTCAAGCAG
+              to: '35'
+            - from: TTCAACTAC
+              to: '36'
+            - from: TTATGCCAG
+              to: '37'
+            - from: TTATGCATC
+              to: '38'
+            - from: TTATCGTAC
+              to: '39'
+            - from: TTATACCTA
+              to: '40'
+            - from: TTATAATAG
+              to: '41'
+            - from: TTATAAGTC
+              to: '42'
+            - from: TTAGTTAGC
+              to: '43'
+            - from: TTAGCTCAT
+              to: '44'
+            - from: TTAGCACTA
+              to: '45'
+            - from: TTAGATATG
+              to: '46'
+            - from: TTACTACGA
+              to: '47'
+            - from: TTACCGTCA
+              to: '48'
+            - from: TTACAGAGC
+              to: '49'
+            - from: TTAATTGCA
+              to: '50'
+            - from: TTAACAGAT
+              to: '51'
+            - from: TGTTGGCTA
+              to: '52'
+            - from: TGTTGATGA
+              to: '53'
+            - from: TGTTAAGCT
+              to: '54'
+            - from: TGTGGCCGA
+              to: '55'
+            - from: TGTGCTAGC
+              to: '56'
+            - from: TGTGCGTCA
+              to: '57'
+            - from: TGTCGCAGT
+              to: '58'
+            - from: TGTCGAGCA
+              to: '59'
+            - from: TGTACAACG
+              to: '60'
+            - from: TGGTTCCGA
+              to: '61'
+            - from: TGGTTCACT
+              to: '62'
+            - from: TGGTCAAGT
+              to: '63'
+            - from: TGGCTTGTA
+              to: '64'
+            - from: TGGCTGTCG
+              to: '65'
+            - from: TGGCGTATG
+              to: '66'
+            - from: TGGCGCGCT
+              to: '67'
+            - from: TGGATGTAC
+              to: '68'
+            - from: TGGACTTGC
+              to: '69'
+            - from: TGGAATACT
+              to: '70'
+            - from: TGCTAGCGA
+              to: '71'
+            - from: TGCGTTGCT
+              to: '72'
+            - from: TGCGGTCTG
+              to: '73'
+            - from: TGCGCTTAG
+              to: '74'
+            - from: TGCGCGACG
+              to: '75'
+            - from: TGCCTGCAT
+              to: '76'
+            - from: TGCCTAGAC
+              to: '77'
+            - from: TGCACGAGT
+              to: '78'
+            - from: TGAGTGTGC
+              to: '79'
+            - from: TGAGGCTCG
+              to: '80'
+            - from: TCTTCCGTC
+              to: '81'
+            - from: TCTTATAGT
+              to: '82'
+            - from: TCTTACCAT
+              to: '83'
+            - from: TCTGTTGTC
+              to: '84'
+            - from: TCTGTTACT
+              to: '85'
+            - from: TCTGGCTAG
+              to: '86'
+            - from: TCTCAGATC
+              to: '87'
+            - from: TCTAGTTGA
+              to: '88'
+            - from: TCTAGTACG
+              to: '89'
+            - from: TCGTACTAC
+              to: '90'
+            - from: TCGGTGTAG
+              to: '91'
+            - from: TCGGCTGCT
+              to: '92'
+            - from: TCGCTACTG
+              to: '93'
+            - from: TCGATCACG
+              to: '94'
+            - from: TCGAGGCAT
+              to: '95'
+            - from: TCCGGCGTC
+              to: '96'
+            - from: TCCGGAGCT
+              to: '97'
+            - from: TCCGCTCGT
+              to: '98'
+            - from: TCCGAGTAC
+              to: '99'
+            - from: TCCATTCAT
+              to: '100'
+            - from: TCCATGGTC
+              to: '101'
+            - from: TCCAAGTCG
+              to: '102'
+            - from: TCATTACGT
+              to: '103'
+            - from: TCATGCACT
+              to: '104'
+            - from: TCAGGTTGC
+              to: '105'
+            - from: TCAGACCGT
+              to: '106'
+            - from: TCACTCAGT
+              to: '107'
+            - from: TCAAGCTCA
+              to: '108'
+            - from: TATTGCGCA
+              to: '109'
+            - from: TATTCGGCT
+              to: '110'
+            - from: TATTCCAGC
+              to: '111'
+            - from: TATTCATCA
+              to: '112'
+            - from: TATGTTCAG
+              to: '113'
+            - from: TATGGTATG
+              to: '114'
+            - from: TATGCAAGT
+              to: '115'
+            - from: TATCTGGTC
+              to: '116'
+            - from: TATCTGACT
+              to: '117'
+            - from: TATCCAGAT
+              to: '118'
+            - from: TATCAGTCG
+              to: '119'
+            - from: TATCACGCT
+              to: '120'
+            - from: TAGGCGCGA
+              to: '121'
+            - from: TAGGCACAT
+              to: '122'
+            - from: TAGGATCGT
+              to: '123'
+            - from: TAGCATTGC
+              to: '124'
+            - from: TAGAGTTAC
+              to: '125'
+            - from: TAGACTGAT
+              to: '126'
+            - from: TACTTGTCG
+              to: '127'
+            - from: TACGTCCGA
+              to: '128'
+            - from: TACCGTACT
+              to: '129'
+            - from: TACCGCGAT
+              to: '130'
+            - from: TACCAGGAC
+              to: '131'
+            - from: TACAGAAGT
+              to: '132'
+            - from: TAAGTGCAT
+              to: '133'
+            - from: TAAGCTACT
+              to: '134'
+            - from: GTTGACCGA
+              to: '135'
+            - from: GTTCTCGAC
+              to: '136'
+            - from: GTTCCTGCT
+              to: '137'
+            - from: GTTATGATG
+              to: '138'
+            - from: GTGCTTGCA
+              to: '139'
+            - from: GTGCCGCGT
+              to: '140'
+            - from: GTATTGCTG
+              to: '141'
+            - from: GTATTCCGA
+              to: '142'
+            - from: GTATTAAGC
+              to: '143'
+            - from: GTATGACGT
+              to: '144'
+            - from: GTAGTTGTC
+              to: '145'
+            - from: GTAGTACAT
+              to: '146'
+            - from: GTAGCTCGA
+              to: '147'
+            - from: GGTTGCTCA
+              to: '148'
+            - from: GGTTGAGTA
+              to: '149'
+            - from: GGTTAACGT
+              to: '150'
+            - from: GGTGTGGCA
+              to: '151'
+            - from: GGTCTTCAG
+              to: '152'
+            - from: GGTCGTCTA
+              to: '153'
+            - from: GGTCGGCGT
+              to: '154'
+            - from: GGTCCGACT
+              to: '155'
+            - from: GGTCATGTC
+              to: '156'
+            - from: GGTCACATG
+              to: '157'
+            - from: GGTAGTGCT
+              to: '158'
+            - from: GGTAGCGTC
+              to: '159'
+            - from: GGTACCAGT
+              to: '160'
+            - from: GGTAAGGAT
+              to: '161'
+            - from: GGCTTGTGC
+              to: '162'
+            - from: GGCTTGACT
+              to: '163'
+            - from: GGCTTACGA
+              to: '164'
+            - from: GGCTGTAGT
+              to: '165'
+            - from: GGCTGGCAG
+              to: '166'
+            - from: GGCTCCATC
+              to: '167'
+            - from: GGCGTGGAT
+              to: '168'
+            - from: GGCGTAATC
+              to: '169'
+            - from: GGCGCAAGT
+              to: '170'
+            - from: GGCGAGTAG
+              to: '171'
+            - from: GGCGACCGT
+              to: '172'
+            - from: GGCCTGTCA
+              to: '173'
+            - from: GGCCATTGC
+              to: '174'
+            - from: GGCACTCTG
+              to: '175'
+            - from: GGATGTCAT
+              to: '176'
+            - from: GGAGTAACT
+              to: '177'
+            - from: GGAGAACGA
+              to: '178'
+            - from: GGACTGGCT
+              to: '179'
+            - from: GGACGTTCA
+              to: '180'
+            - from: GGAACGTGC
+              to: '181'
+            - from: GCTGTCCAT
+              to: '182'
+            - from: GCTGGTTCA
+              to: '183'
+            - from: GCTGCAACT
+              to: '184'
+            - from: GCTCGTTAC
+              to: '185'
+            - from: GCTATAGAT
+              to: '186'
+            - from: GCTAGTCGT
+              to: '187'
+            - from: GCTACCATG
+              to: '188'
+            - from: GCGTTCTGA
+              to: '189'
+            - from: GCGTGTTAG
+              to: '190'
+            - from: GCGGTATCG
+              to: '191'
+            - from: GCGGAGCAT
+              to: '192'
+            - from: GCGCGGTGC
+              to: '193'
+            - from: GCGCCTAGT
+              to: '194'
+            - from: GCGCCGGCT
+              to: '195'
+            - from: GCCTTCATG
+              to: '196'
+            - from: GCCATACTG
+              to: '197'
+            - from: GCATGTTGA
+              to: '198'
+            - from: GCATGCTAC
+              to: '199'
+            - from: GCAGTATAC
+              to: '200'
+            - from: GCAGGTACT
+              to: '201'
+            - from: GCAGCGCGT
+              to: '202'
+            - from: GCACCTCAT
+              to: '203'
+            - from: GCAATTCGA
+              to: '204'
+            - from: GATTGCCGT
+              to: '205'
+            - from: GATGAACAT
+              to: '206'
+            - from: GATCTTCGA
+              to: '207'
+            - from: GATCTGCAT
+              to: '208'
+            - from: GAGTGGCAT
+              to: '209'
+            - from: GAGTCGGAC
+              to: '210'
+            - from: GAGTATGAT
+              to: '211'
+            - from: GAGGCGAGT
+              to: '212'
+            - from: GAGGCAACG
+              to: '213'
+            - from: GAGCGCACT
+              to: '214'
+            - from: GAATAGGCT
+              to: '215'
+            - from: ATTGTCACT
+              to: '216'
+            - from: ATTGTATCA
+              to: '217'
+            - from: ATTGGTCAG
+              to: '218'
+            - from: ATTGGCGAT
+              to: '219'
+            - from: ATTGATCGT
+              to: '220'
+            - from: ATTCGTAGT
+              to: '221'
+            - from: ATTCATACG
+              to: '222'
+            - from: ATTCAGGAC
+              to: '223'
+            - from: ATTACTTCA
+              to: '224'
+            - from: ATTAATTAG
+              to: '225'
+            - from: ATTAAGCAT
+              to: '226'
+            - from: ATGTCTCTA
+              to: '227'
+            - from: ATGTAGCGT
+              to: '228'
+            - from: ATGGCATAC
+              to: '229'
+            - from: ATGGAGATC
+              to: '230'
+            - from: ATGGACTCG
+              to: '231'
+            - from: ATGGAACGA
+              to: '232'
+            - from: ATGCTTCAT
+              to: '233'
+            - from: ATGCTCGCT
+              to: '234'
+            - from: ATGCGACGT
+              to: '235'
+            - from: ATGCCGTAG
+              to: '236'
+            - from: ATGAGTTCG
+              to: '237'
+            - from: ATGACTATC
+              to: '238'
+            - from: ATGACCGAC
+              to: '239'
+            - from: ATCTTATGC
+              to: '240'
+            - from: ATCTTACTA
+              to: '241'
+            - from: ATCTATCAG
+              to: '242'
+            - from: ATCGTGTAC
+              to: '243'
+            - from: ATCGTCTGA
+              to: '244'
+            - from: ATCGGCATG
+              to: '245'
+            - from: ATCGCGAGC
+              to: '246'
+            - from: ATCGCAACG
+              to: '247'
+            - from: ATCGATGCT
+              to: '248'
+            - from: ATCGAATAG
+              to: '249'
+            - from: ATCCTTCTG
+              to: '250'
+            - from: ATCCTGCGT
+              to: '251'
+            - from: ATCCGCACT
+              to: '252'
+            - from: ATCCATTAC
+              to: '253'
+            - from: ATCCAAGCA
+              to: '254'
+            - from: ATCAGATCA
+              to: '255'
+            - from: ATCACACAT
+              to: '256'
+            - from: ATCAACGTC
+              to: '257'
+            - from: ATCAACCGA
+              to: '258'
+            - from: ATATTGAGT
+              to: '259'
+            - from: ATATTCGTC
+              to: '260'
+            - from: ATATTACAG
+              to: '261'
+            - from: ATATCTTGA
+              to: '262'
+            - from: ATATCGCAT
+              to: '263'
+            - from: ATATCAATC
+              to: '264'
+            - from: ATAGTCCTG
+              to: '265'
+            - from: ATAGGTCTA
+              to: '266'
+            - from: ATAGCTGAC
+              to: '267'
+            - from: ATAGCGGTA
+              to: '268'
+            - from: AGTTCGCTG
+              to: '269'
+            - from: AGTTACAGC
+              to: '270'
+            - from: AGTTAACTA
+              to: '271'
+            - from: AGTGCAATC
+              to: '272'
+            - from: AGTCTGGTA
+              to: '273'
+            - from: AGTCTGAGC
+              to: '274'
+            - from: AGTCTACAT
+              to: '275'
+            - from: AGTCGAACT
+              to: '276'
+            - from: AGTCCATCG
+              to: '277'
+            - from: AGTCATTCA
+              to: '278'
+            - from: AGTATCCAG
+              to: '279'
+            - from: AGTAGACTG
+              to: '280'
+            - from: AGTAATCGA
+              to: '281'
+            - from: AGTAAGTGC
+              to: '282'
+            - from: AGGTTGGCT
+              to: '283'
+            - from: AGGTTCTAG
+              to: '284'
+            - from: AGGTGTTCA
+              to: '285'
+            - from: AGGTGCCAT
+              to: '286'
+            - from: AGGTCTGAT
+              to: '287'
+            - from: AGGTCGTAC
+              to: '288'
+            - from: AGGTCAGCA
+              to: '289'
+            - from: AGGCTTATC
+              to: '290'
+            - from: AGGCTATGA
+              to: '291'
+            - from: AGGCCGACG
+              to: '292'
+            - from: AGGCCAAGC
+              to: '293'
+            - from: AGGCAGGTC
+              to: '294'
+            - from: AGGCAAGAT
+              to: '295'
+            - from: AGGAGCAGT
+              to: '296'
+            - from: AGGACCGCT
+              to: '297'
+            - from: AGGAATTAC
+              to: '298'
+            - from: AGCTTGGAC
+              to: '299'
+            - from: AGCTTAAGT
+              to: '300'
+            - from: AGCTACACG
+              to: '301'
+            - from: AGCGTTACG
+              to: '302'
+            - from: AGCGGTGCA
+              to: '303'
+            - from: AGCGGAGTC
+              to: '304'
+            - from: AGCGGACGA
+              to: '305'
+            - from: AGCGCGCTA
+              to: '306'
+            - from: AGCGATAGC
+              to: '307'
+            - from: AGCGACTCA
+              to: '308'
+            - from: AGCCTCTAC
+              to: '309'
+            - from: AGCCGTCGT
+              to: '310'
+            - from: AGCATGATC
+              to: '311'
+            - from: AGCACTTCG
+              to: '312'
+            - from: AGCACGGCA
+              to: '313'
+            - from: AGATTCTGA
+              to: '314'
+            - from: AGATTAGAT
+              to: '315'
+            - from: AGATGATAG
+              to: '316'
+            - from: AGATATGTA
+              to: '317'
+            - from: AGATACCGT
+              to: '318'
+            - from: AGAGTGCGT
+              to: '319'
+            - from: AGAGCCGAT
+              to: '320'
+            - from: AGACTCACT
+              to: '321'
+            - from: ACTTGCCTA
+              to: '322'
+            - from: ACTTGAGCA
+              to: '323'
+            - from: ACTTCTAGC
+              to: '324'
+            - from: ACTTCGACT
+              to: '325'
+            - from: ACTTAGTAC
+              to: '326'
+            - from: ACTGTTGAT
+              to: '327'
+            - from: ACTGTAACG
+              to: '328'
+            - from: ACTGGTATC
+              to: '329'
+            - from: ACTGACGTC
+              to: '330'
+            - from: ACTGAAGCT
+              to: '331'
+            - from: ACTCTGATG
+              to: '332'
+            - from: ACTCCTGAC
+              to: '333'
+            - from: ACTCCGCTA
+              to: '334'
+            - from: ACTCAACTG
+              to: '335'
+            - from: ACTATTGCA
+              to: '336'
+            - from: ACTAGGCAG
+              to: '337'
+            - from: ACTACGCGT
+              to: '338'
+            - from: ACTAATACT
+              to: '339'
+            - from: ACGTTCGTA
+              to: '340'
+            - from: ACGTGTGCT
+              to: '341'
+            - from: ACGTGTATG
+              to: '342'
+            - from: ACGTGGAGC
+              to: '343'
+            - from: ACGTCTTCG
+              to: '344'
+            - from: ACGTCAGTC
+              to: '345'
+            - from: ACGGTCTCA
+              to: '346'
+            - from: ACGGTCCGT
+              to: '347'
+            - from: ACGGTACAG
+              to: '348'
+            - from: ACGGCGCTG
+              to: '349'
+            - from: ACGCTGCGA
+              to: '350'
+            - from: ACGCGTGTA
+              to: '351'
+            - from: ACGCGCCAG
+              to: '352'
+            - from: ACGATGTCG
+              to: '353'
+            - from: ACGATGGAT
+              to: '354'
+            - from: ACGATCTAC
+              to: '355'
+            - from: ACGAGCTGA
+              to: '356'
+            - from: ACGAGCATC
+              to: '357'
+            - from: ACGAATCGT
+              to: '358'
+            - from: ACGAACGCA
+              to: '359'
+            - from: ACCTTGTAG
+              to: '360'
+            - from: ACCTGTTGC
+              to: '361'
+            - from: ACCTGTCAT
+              to: '362'
+            - from: ACCTCGATC
+              to: '363'
+            - from: ACCTAGGTA
+              to: '364'
+            - from: ACCTACTGA
+              to: '365'
+            - from: ACCTAATCG
+              to: '366'
+            - from: ACCGTAGCA
+              to: '367'
+            - from: ACCGGTAGT
+              to: '368'
+            - from: ACCGGCTAC
+              to: '369'
+            - from: ACCGCTTCA
+              to: '370'
+            - from: ACATTGTGC
+              to: '371'
+            - from: ACATTCTCG
+              to: '372'
+            - from: ACATGGCTG
+              to: '373'
+            - from: ACATGACGA
+              to: '374'
+            - from: ACATATGAT
+              to: '375'
+            - from: ACATATACG
+              to: '376'
+            - from: ACAGCGTAC
+              to: '377'
+            - from: ACACTTGCT
+              to: '378'
+            - from: ACACTATCA
+              to: '379'
+            - from: ACACGCATG
+              to: '380'
+            - from: ACACCAGTA
+              to: '381'
+            - from: ACACCAACT
+              to: '382'
+            - from: ACACATAGT
+              to: '383'
+            - from: ACACACCTA
+              to: '384'
+          reportingLevel: VerboseReport
+        - type: generic
+          name: "BD CLS1-CLS2-CLS3 indices to BD cell index"
+          destinationTag: CELLID
+          transformation:
+            type: plus
+            sources:
+              - type: multiply
+                sources:
+                  - type: plus
+                    sources:
+                      - type: tag
+                        name: CELL1ID
+                      - type: constantNumber
+                        value: -1
+                  - type: constantNumber
+                    value: 147456
+              - type: multiply
+                sources:
+                  - type: plus
+                    sources:
+                      - type: tag
+                        name: CELL2ID
+                      - type: constantNumber
+                        value: -1
+                  - type: constantNumber
+                    value: 384
+              - type: tag
+                name: CELL3ID
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
               groupingKeys:
-                - clone
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
               predicates:
                 - metrics:
                     - type: group_metric_nunique
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
                       keys:
                         - allTags:Molecule
                   operator:
-                    type: group_operator_cumtop
-                    share: 0.99
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - clone
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    keys:
-                      - allTags:Molecule
-                operator:
-                  type: group_operator_range
-                  lower: 2.0
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    keys:
-                      - clone
-                operator:
-                  type: group_operator_range
-                  upper: 4.0
-  exportClones:
-    inheritFrom: exportClones-single-cell-with-umi-base
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
 
-"bd-rhapsody-human-tcr-v1":
-  inheritFrom: bd-rhapsody-base
+"bd-rhapsody-full-length-single-cell-B384":
+  abstract: true
+  inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      tagTransformationSteps:
+        - type: mapTags
+          name: "CELL1 to BD CLS1 inde"
+          matchTags:
+            - CELL1
+          newTags:
+            - CELL1ID
+          allowOneMismatch: true
+          rules:
+            - from: TGTGTTCGC
+              to: '1'
+            - from: TGTGGCGCC
+              to: '2'
+            - from: TGTCTAGCG
+              to: '3'
+            - from: TGGTTGTCC
+              to: '4'
+            - from: TGGTTCCTC
+              to: '5'
+            - from: TGGTGTGCT
+              to: '6'
+            - from: TGGCGACCG
+              to: '7'
+            - from: TGCTGTGGC
+              to: '8'
+            - from: TGCTGGCAC
+              to: '9'
+            - from: TGCTCTTCC
+              to: '10'
+            - from: TGCCTCACC
+              to: '11'
+            - from: TGCCATTAT
+              to: '12'
+            - from: TGATGTCTC
+              to: '13'
+            - from: TGATGGCCT
+              to: '14'
+            - from: TGATGCTTG
+              to: '15'
+            - from: TGAAGGACC
+              to: '16'
+            - from: TCTGTCTCC
+              to: '17'
+            - from: TCTGATTAT
+              to: '18'
+            - from: TCTGAGGTT
+              to: '19'
+            - from: TCTCGTTCT
+              to: '20'
+            - from: TCTCATCCG
+              to: '21'
+            - from: TCCTGGATT
+              to: '22'
+            - from: TCAGCATTC
+              to: '23'
+            - from: TCACGCCTT
+              to: '24'
+            - from: TATGTGCAC
+              to: '25'
+            - from: TATGCGGCC
+              to: '26'
+            - from: TATGACGAG
+              to: '27'
+            - from: TATCTCGTG
+              to: '28'
+            - from: TATATGACC
+              to: '29'
+            - from: TAGGCTGTG
+              to: '30'
+            - from: TACTGCGTT
+              to: '31'
+            - from: TACGTGTCC
+              to: '32'
+            - from: TAATCACAT
+              to: '33'
+            - from: GTTGTGTTG
+              to: '34'
+            - from: GTTGTGGCT
+              to: '35'
+            - from: GTTGTCTGT
+              to: '36'
+            - from: GTTGTCGAG
+              to: '37'
+            - from: GTTGTCCTC
+              to: '38'
+            - from: GTTGTATCC
+              to: '39'
+            - from: GTTGGTTCT
+              to: '40'
+            - from: GTTGGCGTT
+              to: '41'
+            - from: GTTGGAGCG
+              to: '42'
+            - from: GTTGCTGCC
+              to: '43'
+            - from: GTTGCGCAT
+              to: '44'
+            - from: GTTGCAGGT
+              to: '45'
+            - from: GTTGCACTG
+              to: '46'
+            - from: GTTGATGAT
+              to: '47'
+            - from: GTTGATACG
+              to: '48'
+            - from: GTTGAAGTC
+              to: '49'
+            - from: GTTCTGTGC
+              to: '50'
+            - from: GTTCTCTCG
+              to: '51'
+            - from: GTTCTATAT
+              to: '52'
+            - from: GTTCGTATG
+              to: '53'
+            - from: GTTCGGCCT
+              to: '54'
+            - from: GTTCGCGGC
+              to: '55'
+            - from: GTTCGATTC
+              to: '56'
+            - from: GTTCCGGTT
+              to: '57'
+            - from: GTTCCGACG
+              to: '58'
+            - from: GTTCACGCT
+              to: '59'
+            - from: GTTATCACC
+              to: '60'
+            - from: GTTAGTCCG
+              to: '61'
+            - from: GTTAGGTGT
+              to: '62'
+            - from: GTTAGAGAC
+              to: '63'
+            - from: GTTAGACTT
+              to: '64'
+            - from: GTTACCTCT
+              to: '65'
+            - from: GTTAATTCC
+              to: '66'
+            - from: GTTAAGCGC
+              to: '67'
+            - from: GTGTTGCTT
+              to: '68'
+            - from: GTGTTCGGT
+              to: '69'
+            - from: GTGTTCCAG
+              to: '70'
+            - from: GTGTTCATC
+              to: '71'
+            - from: GTGTCACAC
+              to: '72'
+            - from: GTGTCAAGT
+              to: '73'
+            - from: GTGTACTGC
+              to: '74'
+            - from: GTGGTTAGT
+              to: '75'
+            - from: GTGGTACCG
+              to: '76'
+            - from: GTGGCGATC
+              to: '77'
+            - from: GTGCTTCTG
+              to: '78'
+            - from: GTGCGTTCC
+              to: '79'
+            - from: GTGCGGTAT
+              to: '80'
+            - from: GTGCGCCTT
+              to: '81'
+            - from: GTGCGAACT
+              to: '82'
+            - from: GTGCAGCCG
+              to: '83'
+            - from: GTGCAATTG
+              to: '84'
+            - from: GTGCAAGGC
+              to: '85'
+            - from: GTCTTGCGC
+              to: '86'
+            - from: GTCTGGCCG
+              to: '87'
+            - from: GTCTGAGGC
+              to: '88'
+            - from: GTCTCAGAT
+              to: '89'
+            - from: GTCTCAACC
+              to: '90'
+            - from: GTCTATCGT
+              to: '91'
+            - from: GTCGGTGTG
+              to: '92'
+            - from: GTCGGAATC
+              to: '93'
+            - from: GTCGCTCCG
+              to: '94'
+            - from: GTCCTCGCC
+              to: '95'
+            - from: GTCCTACCT
+              to: '96'
+            - from: GTCCGCTTG
+              to: '97'
+            - from: GTCCATTCT
+              to: '98'
+            - from: GTCCAATAC
+              to: '99'
+            - from: GTCATGTAT
+              to: '100'
+            - from: GTCAGTGGT
+              to: '101'
+            - from: GTCAGATAG
+              to: '102'
+            - from: GTATTAACT
+              to: '103'
+            - from: GTATCAGTC
+              to: '104'
+            - from: GTATAGCCT
+              to: '105'
+            - from: GTATACTTG
+              to: '106'
+            - from: GTATAAGGT
+              to: '107'
+            - from: GTAGCATCG
+              to: '108'
+            - from: GTACCGTCC
+              to: '109'
+            - from: GTACACCTC
+              to: '110'
+            - from: GTAAGTGCC
+              to: '111'
+            - from: GTAACAGAG
+              to: '112'
+            - from: GGTTGTGTC
+              to: '113'
+            - from: GGTTGGCTG
+              to: '114'
+            - from: GGTTGACGC
+              to: '115'
+            - from: GGTTCGTCG
+              to: '116'
+            - from: GGTTCAGTT
+              to: '117'
+            - from: GGTTATATT
+              to: '118'
+            - from: GGTTAATAC
+              to: '119'
+            - from: GGTGTACGT
+              to: '120'
+            - from: GGTGCCGCT
+              to: '121'
+            - from: GGTGCATGC
+              to: '122'
+            - from: GGTCGTTGC
+              to: '123'
+            - from: GGTCGAGGT
+              to: '124'
+            - from: GGTAGGCAC
+              to: '125'
+            - from: GGTAGCTTG
+              to: '126'
+            - from: GGTACATAG
+              to: '127'
+            - from: GGTAATCTG
+              to: '128'
+            - from: GGCTTGGCC
+              to: '129'
+            - from: GGCTTCACG
+              to: '130'
+            - from: GGCTTATGT
+              to: '131'
+            - from: GGCTTACTC
+              to: '132'
+            - from: GGCTGTCTT
+              to: '133'
+            - from: GGCTCTGTG
+              to: '134'
+            - from: GGCTCCGGT
+              to: '135'
+            - from: GGCTCACCT
+              to: '136'
+            - from: GGCGTTGAG
+              to: '137'
+            - from: GGCGTGTAC
+              to: '138'
+            - from: GGCGTGCTG
+              to: '139'
+            - from: GGCGTATCG
+              to: '140'
+            - from: GGCGCTCGT
+              to: '141'
+            - from: GGCGCTACC
+              to: '142'
+            - from: GGCGAGCCT
+              to: '143'
+            - from: GGCGAGATC
+              to: '144'
+            - from: GGCGACTTG
+              to: '145'
+            - from: GGCCTCTTC
+              to: '146'
+            - from: GGCCTACAG
+              to: '147'
+            - from: GGCCAGCGC
+              to: '148'
+            - from: GGCCAACTT
+              to: '149'
+            - from: GGCATTCCT
+              to: '150'
+            - from: GGCATCCGC
+              to: '151'
+            - from: GGCATAACC
+              to: '152'
+            - from: GGCAACGAT
+              to: '153'
+            - from: GGATGTCCG
+              to: '154'
+            - from: GGATGAGAG
+              to: '155'
+            - from: GGATCTGGC
+              to: '156'
+            - from: GGATCCATG
+              to: '157'
+            - from: GGATAGGTT
+              to: '158'
+            - from: GGAGTCGTG
+              to: '159'
+            - from: GGAGAAGGC
+              to: '160'
+            - from: GGACTCCTT
+              to: '161'
+            - from: GGACTAGTC
+              to: '162'
+            - from: GGACCGTTG
+              to: '163'
+            - from: GGAATTAGT
+              to: '164'
+            - from: GGAATCTCT
+              to: '165'
+            - from: GGAATCGAC
+              to: '166'
+            - from: GGAAGCCTC
+              to: '167'
+            - from: GCTTGTAGC
+              to: '168'
+            - from: GCTTGACCG
+              to: '169'
+            - from: GCTTCGGAC
+              to: '170'
+            - from: GCTTCACAT
+              to: '171'
+            - from: GCTTAGTCT
+              to: '172'
+            - from: GCTGGATAT
+              to: '173'
+            - from: GCTGGAACC
+              to: '174'
+            - from: GCTGCGATG
+              to: '175'
+            - from: GCTGATCAG
+              to: '176'
+            - from: GCTGAGCGT
+              to: '177'
+            - from: GCTCTTGTC
+              to: '178'
+            - from: GCTCTCCTG
+              to: '179'
+            - from: GCTCGGTCC
+              to: '180'
+            - from: GCTCCAATT
+              to: '181'
+            - from: GCTATTCGC
+              to: '182'
+            - from: GCTATGAGT
+              to: '183'
+            - from: GCTAGTGTT
+              to: '184'
+            - from: GCTAGGATC
+              to: '185'
+            - from: GCTAGCACT
+              to: '186'
+            - from: GCTACGTAT
+              to: '187'
+            - from: GCTAACCTT
+              to: '188'
+            - from: GCGTTCCGC
+              to: '189'
+            - from: GCGTGTGCC
+              to: '190'
+            - from: GCGTGCATT
+              to: '191'
+            - from: GCGTCGGTT
+              to: '192'
+            - from: GCGTATGTG
+              to: '193'
+            - from: GCGTATACT
+              to: '194'
+            - from: GCGGTTCAC
+              to: '195'
+            - from: GCGGTCTTG
+              to: '196'
+            - from: GCGGCGTCG
+              to: '197'
+            - from: GCGGCACCT
+              to: '198'
+            - from: GCGCTGGAC
+              to: '199'
+            - from: GCGCTCTCC
+              to: '200'
+            - from: GCGCGGCAG
+              to: '201'
+            - from: GCGCGATAC
+              to: '202'
+            - from: GCGCCGACC
+              to: '203'
+            - from: GCGAGCGAG
+              to: '204'
+            - from: GCGAGAGGT
+              to: '205'
+            - from: GCGAATTAC
+              to: '206'
+            - from: GCCTTGCAT
+              to: '207'
+            - from: GCCTGCGCT
+              to: '208'
+            - from: GCCTAACTG
+              to: '209'
+            - from: GCCGTCCGT
+              to: '210'
+            - from: GCCGCTGTC
+              to: '211'
+            - from: GCCATGCCG
+              to: '212'
+            - from: GCCAGCTAT
+              to: '213'
+            - from: GCCAACCAG
+              to: '214'
+            - from: GCATGGTTG
+              to: '215'
+            - from: GCATCGACG
+              to: '216'
+            - from: GCAGGCTAG
+              to: '217'
+            - from: GCAGGACGC
+              to: '218'
+            - from: GCAGCCATC
+              to: '219'
+            - from: GCAGATACC
+              to: '220'
+            - from: GCAGACGTT
+              to: '221'
+            - from: GCACTATGT
+              to: '222'
+            - from: GCACACGAG
+              to: '223'
+            - from: GATTGTCAT
+              to: '224'
+            - from: GATTGGTAG
+              to: '225'
+            - from: GATTGCACC
+              to: '226'
+            - from: GATTCTACT
+              to: '227'
+            - from: GATTCGCTT
+              to: '228'
+            - from: GATTAGGCC
+              to: '229'
+            - from: GATTACGGT
+              to: '230'
+            - from: GATGTTGGC
+              to: '231'
+            - from: GATGTTATG
+              to: '232'
+            - from: GATGGCCAG
+              to: '233'
+            - from: GATCGTTCG
+              to: '234'
+            - from: GATCGGAGC
+              to: '235'
+            - from: GATCGCCTC
+              to: '236'
+            - from: GATCCTCTG
+              to: '237'
+            - from: GATCCAGCG
+              to: '238'
+            - from: GATACACGC
+              to: '239'
+            - from: GAGTTACCT
+              to: '240'
+            - from: GAGTCGTAT
+              to: '241'
+            - from: GAGTCGCCG
+              to: '242'
+            - from: GAGGTGTAG
+              to: '243'
+            - from: GAGGCATTG
+              to: '244'
+            - from: GAGCGGACG
+              to: '245'
+            - from: GAGCCTGAG
+              to: '246'
+            - from: GAGATCTGT
+              to: '247'
+            - from: GAGATAATT
+              to: '248'
+            - from: GAGACGGCT
+              to: '249'
+            - from: GACTTCGTG
+              to: '250'
+            - from: GACTGTTCT
+              to: '251'
+            - from: GACTCTTAG
+              to: '252'
+            - from: GACCGCATT
+              to: '253'
+            - from: GAATTGAGC
+              to: '254'
+            - from: GAATATTGC
+              to: '255'
+            - from: GAAGGCTCT
+              to: '256'
+            - from: GAAGAGACT
+              to: '257'
+            - from: GAACTGCCG
+              to: '258'
+            - from: GAACGCGTG
+              to: '259'
+            - from: CTTGTGTAT
+              to: '260'
+            - from: CTTGTGCGC
+              to: '261'
+            - from: CTTGTCATG
+              to: '262'
+            - from: CTTGGTCTT
+              to: '263'
+            - from: CTTGGTACC
+              to: '264'
+            - from: CTTGGATGT
+              to: '265'
+            - from: CTTGCTCAC
+              to: '266'
+            - from: CTTGCAATC
+              to: '267'
+            - from: CTTGAGGCC
+              to: '268'
+            - from: CTTGACGGT
+              to: '269'
+            - from: CTTCTGATC
+              to: '270'
+            - from: CTTCTCGTT
+              to: '271'
+            - from: CTTCTAGGC
+              to: '272'
+            - from: CTTCGTTAG
+              to: '273'
+            - from: CTTATGTCC
+              to: '274'
+            - from: CTTATGCTT
+              to: '275'
+            - from: CTTATATAG
+              to: '276'
+            - from: CTTAGGTTG
+              to: '277'
+            - from: CTTAGGAGC
+              to: '278'
+            - from: CTTACTTAT
+              to: '279'
+            - from: CTGTTCTCG
+              to: '280'
+            - from: CTGTGCCTC
+              to: '281'
+            - from: CTGTCGCAT
+              to: '282'
+            - from: CTGTCGAGC
+              to: '283'
+            - from: CTGTAGCTG
+              to: '284'
+            - from: CTGTACGTT
+              to: '285'
+            - from: CTGCTTGCC
+              to: '286'
+            - from: CTGCGTAGT
+              to: '287'
+            - from: CTGCACACC
+              to: '288'
+            - from: CTGATGGAT
+              to: '289'
+            - from: CTGAGTCAT
+              to: '290'
+            - from: CTGACGCCG
+              to: '291'
+            - from: CTGAACGAG
+              to: '292'
+            - from: CTCTTGTAG
+              to: '293'
+            - from: CTCTTAGTT
+              to: '294'
+            - from: CTCTTACCG
+              to: '295'
+            - from: CTCTGCACC
+              to: '296'
+            - from: CTCTCGTCC
+              to: '297'
+            - from: CTCGTATTG
+              to: '298'
+            - from: CTCGACTAT
+              to: '299'
+            - from: CTCCTGACG
+              to: '300'
+            - from: CTCACTAGC
+              to: '301'
+            - from: CTATACGGC
+              to: '302'
+            - from: CGTTCGCTC
+              to: '303'
+            - from: CGTTCACCG
+              to: '304'
+            - from: CGTATAGTT
+              to: '305'
+            - from: CGGTGTTCC
+              to: '306'
+            - from: CGGTGTCAG
+              to: '307'
+            - from: CGGTCCTGC
+              to: '308'
+            - from: CGGCGACTC
+              to: '309'
+            - from: CGGCACGGT
+              to: '310'
+            - from: CGGATAGCC
+              to: '311'
+            - from: CGGAGAGAT
+              to: '312'
+            - from: CGCTAATAG
+              to: '313'
+            - from: CGCGTTGGC
+              to: '314'
+            - from: CGCGCAGAG
+              to: '315'
+            - from: CGCACTGCC
+              to: '316'
+            - from: CCTTGTCTC
+              to: '317'
+            - from: CCTTGGCGT
+              to: '318'
+            - from: CCTTCTGAG
+              to: '319'
+            - from: CCTTCTCCT
+              to: '320'
+            - from: CCTTCGACC
+              to: '321'
+            - from: CCTTACTTG
+              to: '322'
+            - from: CCTGTTCGT
+              to: '323'
+            - from: CCTGTATGC
+              to: '324'
+            - from: CCTCGGCCG
+              to: '325'
+            - from: CCGTTAATT
+              to: '326'
+            - from: CCATGTGCG
+              to: '327'
+            - from: CCAGTGGTT
+              to: '328'
+            - from: CCAGGCATT
+              to: '329'
+            - from: CCAGGATCC
+              to: '330'
+            - from: CCAGCGTTG
+              to: '331'
+            - from: CATTCCGAT
+              to: '332'
+            - from: CATTATACC
+              to: '333'
+            - from: CATGTTGAG
+              to: '334'
+            - from: ATTGCGTGT
+              to: '335'
+            - from: ATTGCGGAC
+              to: '336'
+            - from: ATTGCGCCG
+              to: '337'
+            - from: ATTGACTTG
+              to: '338'
+            - from: ATTCGGCTG
+              to: '339'
+            - from: ATTCGCGAG
+              to: '340'
+            - from: ATTCCAAGT
+              to: '341'
+            - from: ATTATCTTC
+              to: '342'
+            - from: ATTACTGTT
+              to: '343'
+            - from: ATTACACTC
+              to: '344'
+            - from: ATGTTCTAT
+              to: '345'
+            - from: ATGTTACGC
+              to: '346'
+            - from: ATGTGTATC
+              to: '347'
+            - from: ATGTGGCAG
+              to: '348'
+            - from: ATGTCTGTG
+              to: '349'
+            - from: ATGGTGCAT
+              to: '350'
+            - from: ATGCTTACT
+              to: '351'
+            - from: ATGCTGTCC
+              to: '352'
+            - from: ATGCTCGGC
+              to: '353'
+            - from: ATGAGGTTC
+              to: '354'
+            - from: ATGAGAGTG
+              to: '355'
+            - from: ATCTTGGCT
+              to: '356'
+            - from: ATCTGTGCG
+              to: '357'
+            - from: ATCGGTTCC
+              to: '358'
+            - from: ATCATGCTC
+              to: '359'
+            - from: ATCATCACT
+              to: '360'
+            - from: ATATCTTAT
+              to: '361'
+            - from: ATAGGCGCC
+              to: '362'
+            - from: AGTTGGTAT
+              to: '363'
+            - from: AGTTGAGCC
+              to: '364'
+            - from: AGTGCGACC
+              to: '365'
+            - from: AGGTGCTAC
+              to: '366'
+            - from: AGGCTTGCG
+              to: '367'
+            - from: AGGCCTTCC
+              to: '368'
+            - from: AGGCACCTT
+              to: '369'
+            - from: AGGAATATG
+              to: '370'
+            - from: AGCGGCCAG
+              to: '371'
+            - from: AGCCTGGTC
+              to: '372'
+            - from: AGCCTGACT
+              to: '373'
+            - from: AGCAATCCG
+              to: '374'
+            - from: AGAGATGTT
+              to: '375'
+            - from: AGAGAATTC
+              to: '376'
+            - from: ACTCGCTTG
+              to: '377'
+            - from: ACTCGACCT
+              to: '378'
+            - from: ACGTACACC
+              to: '379'
+            - from: ACGGATGGT
+              to: '380'
+            - from: ACCAGTCTG
+              to: '381'
+            - from: ACATTCGGC
+              to: '382'
+            - from: ACATGAGGT
+              to: '383'
+            - from: ACACTAATT
+              to: '384'
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "CELL2 to BD CLS2 index"
+          matchTags:
+            - CELL2
+          newTags:
+            - CELL2ID
+          allowOneMismatch: true
+          rules:
+            - from: TTGTGTTGT
+              to: '1'
+            - from: TTGTGGTAG
+              to: '2'
+            - from: TTGTGCGGA
+              to: '3'
+            - from: TTGTCTGTT
+              to: '4'
+            - from: TTGTCTAAG
+              to: '5'
+            - from: TTGTCATAT
+              to: '6'
+            - from: TTGTCACGA
+              to: '7'
+            - from: TTGTATGAA
+              to: '8'
+            - from: TTGTACAGT
+              to: '9'
+            - from: TTGGTTAAT
+              to: '10'
+            - from: TTGGTGCAA
+              to: '11'
+            - from: TTGGTCGAG
+              to: '12'
+            - from: TTGGTATTA
+              to: '13'
+            - from: TTGGCACAG
+              to: '14'
+            - from: TTGGATACA
+              to: '15'
+            - from: TTGGAAGTG
+              to: '16'
+            - from: TTGCGGTTA
+              to: '17'
+            - from: TTGCCATTG
+              to: '18'
+            - from: TTGCACGCG
+              to: '19'
+            - from: TTGCAAGGT
+              to: '20'
+            - from: TTGATGTAT
+              to: '21'
+            - from: TTGATAATT
+              to: '22'
+            - from: TTGAGACGT
+              to: '23'
+            - from: TTGACTACT
+              to: '24'
+            - from: TTGACCGAA
+              to: '25'
+            - from: TTCTGGTCT
+              to: '26'
+            - from: TTCTGCACA
+              to: '27'
+            - from: TTCTCCTTA
+              to: '28'
+            - from: TTCTCCGCT
+              to: '29'
+            - from: TTCTAGGTA
+              to: '30'
+            - from: TTCTAATCG
+              to: '31'
+            - from: TTCGTCGTA
+              to: '32'
+            - from: TTCGTAGAT
+              to: '33'
+            - from: TTCGGCTTG
+              to: '34'
+            - from: TTCGGAATA
+              to: '35'
+            - from: TTCGCCAGA
+              to: '36'
+            - from: TTCGATTGT
+              to: '37'
+            - from: TTCGATCAG
+              to: '38'
+            - from: TTCCTCGGT
+              to: '39'
+            - from: TTCCGGCAG
+              to: '40'
+            - from: TTCCGCATT
+              to: '41'
+            - from: TTCCAATTA
+              to: '42'
+            - from: TTCATTGAA
+              to: '43'
+            - from: TTCATGCTG
+              to: '44'
+            - from: TTCAGGAGT
+              to: '45'
+            - from: TTCACTATA
+              to: '46'
+            - from: TTCAACTCT
+              to: '47'
+            - from: TTCAACGTG
+              to: '48'
+            - from: TTATGCGTT
+              to: '49'
+            - from: TTATGATTG
+              to: '50'
+            - from: TTATCCTGT
+              to: '51'
+            - from: TTATCCGAG
+              to: '52'
+            - from: TTATATTAT
+              to: '53'
+            - from: TTAGGCGCG
+              to: '54'
+            - from: TTACTGGAA
+              to: '55'
+            - from: TTACTAGTT
+              to: '56'
+            - from: TTACGTGGT
+              to: '57'
+            - from: TTACGATAT
+              to: '58'
+            - from: TTACCTAGA
+              to: '59'
+            - from: TTACATGAG
+              to: '60'
+            - from: TTACAGCGT
+              to: '61'
+            - from: TTACACGGA
+              to: '62'
+            - from: TTACACACT
+              to: '63'
+            - from: TTAATCAGT
+              to: '64'
+            - from: TTAATAGGA
+              to: '65'
+            - from: TTAAGTGTG
+              to: '66'
+            - from: TTAACCTTG
+              to: '67'
+            - from: TTAACACAA
+              to: '68'
+            - from: TGTTCACTT
+              to: '69'
+            - from: TGTTCAAGA
+              to: '70'
+            - from: TGTTAAGTG
+              to: '71'
+            - from: TGTGTTATG
+              to: '72'
+            - from: TGTGTCCAA
+              to: '73'
+            - from: TGTGGAGCG
+              to: '74'
+            - from: TGTCAGTTA
+              to: '75'
+            - from: TGTCAGAAG
+              to: '76'
+            - from: TGGTTAGTT
+              to: '77'
+            - from: TGGTTACAA
+              to: '78'
+            - from: TGGCGTTAT
+              to: '79'
+            - from: TGGCGCCAA
+              to: '80'
+            - from: TGGAGTCTT
+              to: '81'
+            - from: TGCGTATTG
+              to: '82'
+            - from: TGATAGAGA
+              to: '83'
+            - from: TGAGGTATT
+              to: '84'
+            - from: TGAGAATCT
+              to: '85'
+            - from: TCTTGGTAA
+              to: '86'
+            - from: TCTTCATAG
+              to: '87'
+            - from: TCTGTCCTT
+              to: '88'
+            - from: TCTGGAATT
+              to: '89'
+            - from: TCTACCGCG
+              to: '90'
+            - from: TCGTTCGAA
+              to: '91'
+            - from: TCGTCAGTG
+              to: '92'
+            - from: TCGACGAGA
+              to: '93'
+            - from: TCATGGCTT
+              to: '94'
+            - from: TCACACTTA
+              to: '95'
+            - from: TATTCCGAA
+              to: '96'
+            - from: TATTATGGT
+              to: '97'
+            - from: TATGCTATT
+              to: '98'
+            - from: TATCAAGGA
+              to: '99'
+            - from: TAGTTCAAT
+              to: '100'
+            - from: TAGCTGCTT
+              to: '101'
+            - from: TAGAGGAAG
+              to: '102'
+            - from: TACCTGTTA
+              to: '103'
+            - from: TACACCTGT
+              to: '104'
+            - from: GTTGTGCGT
+              to: '105'
+            - from: GTTGGCTAT
+              to: '106'
+            - from: GTTGCCAAG
+              to: '107'
+            - from: GTTGACCTT
+              to: '108'
+            - from: GTTCTGCTA
+              to: '109'
+            - from: GTTCTGAAT
+              to: '110'
+            - from: GTTCTATCA
+              to: '111'
+            - from: GTTCGCGTG
+              to: '112'
+            - from: GTTCCTTAT
+              to: '113'
+            - from: GTTAGCAGT
+              to: '114'
+            - from: GTTACTGTG
+              to: '115'
+            - from: GTTACTCAA
+              to: '116'
+            - from: GTTAAGAGA
+              to: '117'
+            - from: GTTAACTTA
+              to: '118'
+            - from: GTGTCGGCA
+              to: '119'
+            - from: GTGTCCATT
+              to: '120'
+            - from: GTGCTTGAG
+              to: '121'
+            - from: GTGCTCGTT
+              to: '122'
+            - from: GTGCTCACA
+              to: '123'
+            - from: GTGCCTGGA
+              to: '124'
+            - from: GTCTTGTCG
+              to: '125'
+            - from: GTCTTGATT
+              to: '126'
+            - from: GTCTTCCGT
+              to: '127'
+            - from: GTCTTAAGA
+              to: '128'
+            - from: GTCTCATCT
+              to: '129'
+            - from: GTCTACGAG
+              to: '130'
+            - from: GTCGTTGCT
+              to: '131'
+            - from: GTCGTGTTA
+              to: '132'
+            - from: GTCGGTAAT
+              to: '133'
+            - from: GTCGGATGT
+              to: '134'
+            - from: GTCGAGCTG
+              to: '135'
+            - from: GTCCGGACT
+              to: '136'
+            - from: GTCCAACAT
+              to: '137'
+            - from: GTCAGACGA
+              to: '138'
+            - from: GTCAGAATT
+              to: '139'
+            - from: GTCACTCTT
+              to: '140'
+            - from: GTCAAGGAA
+              to: '141'
+            - from: GTATGTCTT
+              to: '142'
+            - from: GTATGTACA
+              to: '143'
+            - from: GTATCGGTT
+              to: '144'
+            - from: GTATATGTA
+              to: '145'
+            - from: GTATACAAT
+              to: '146'
+            - from: GTAGTTAAG
+              to: '147'
+            - from: GTAGTCGAT
+              to: '148'
+            - from: GTAGCCTTA
+              to: '149'
+            - from: GTAGATACT
+              to: '150'
+            - from: GTACGATTA
+              to: '151'
+            - from: GTACAGTCT
+              to: '152'
+            - from: GTAATTCGT
+              to: '153'
+            - from: GCTTGGCAG
+              to: '154'
+            - from: GCTTGCTTG
+              to: '155'
+            - from: GCTTGAGGA
+              to: '156'
+            - from: GCTTCATTA
+              to: '157'
+            - from: GCTTATGCG
+              to: '158'
+            - from: GCTGTGTAG
+              to: '159'
+            - from: GCTGTCATG
+              to: '160'
+            - from: GCTGGTTGT
+              to: '161'
+            - from: GCTGGACTG
+              to: '162'
+            - from: GCTGCCTAA
+              to: '163'
+            - from: GCTGATATT
+              to: '164'
+            - from: GCTCTTAGT
+              to: '165'
+            - from: GCTCTATTG
+              to: '166'
+            - from: GCTCGCCGT
+              to: '167'
+            - from: GCTCCGCTG
+              to: '168'
+            - from: GCTATTCTG
+              to: '169'
+            - from: GCTATACGA
+              to: '170'
+            - from: GCTACTAAG
+              to: '171'
+            - from: GCTACATGT
+              to: '172'
+            - from: GCTAACTCT
+              to: '173'
+            - from: GCGTTGTAA
+              to: '174'
+            - from: GCGTTCTCT
+              to: '175'
+            - from: GCGTGCGTA
+              to: '176'
+            - from: GCGTCTTGA
+              to: '177'
+            - from: GCGTCCGAT
+              to: '178'
+            - from: GCGTAAGAG
+              to: '179'
+            - from: GCGCTTACG
+              to: '180'
+            - from: GCGCGGATT
+              to: '181'
+            - from: GCGCCATAT
+              to: '182'
+            - from: GCGCATGAA
+              to: '183'
+            - from: GCGATCAAT
+              to: '184'
+            - from: GCGAGCCTT
+              to: '185'
+            - from: GCGAGATTG
+              to: '186'
+            - from: GCGAGAACA
+              to: '187'
+            - from: GCCTTGGTA
+              to: '188'
+            - from: GCCTTCTAG
+              to: '189'
+            - from: GCCTTCACA
+              to: '190'
+            - from: GCCTGAGTG
+              to: '191'
+            - from: GCCTCACGT
+              to: '192'
+            - from: GCCGGCGAA
+              to: '193'
+            - from: GCCGCACAA
+              to: '194'
+            - from: GCCATGCTT
+              to: '195'
+            - from: GCCATATAT
+              to: '196'
+            - from: GCCAATTCG
+              to: '197'
+            - from: GCATTCGTT
+              to: '198'
+            - from: GCATGATGT
+              to: '199'
+            - from: GCAGTTGGA
+              to: '200'
+            - from: GCAGTGTCT
+              to: '201'
+            - from: GCACTTGTG
+              to: '202'
+            - from: GCAATCTGT
+              to: '203'
+            - from: GCAACACTT
+              to: '204'
+            - from: GATTGTATT
+              to: '205'
+            - from: GATTGCGAG
+              to: '206'
+            - from: GATTCCAGT
+              to: '207'
+            - from: GATTCATAT
+              to: '208'
+            - from: GATTATCAG
+              to: '209'
+            - from: GATTAGGTT
+              to: '210'
+            - from: GATGTTGCG
+              to: '211'
+            - from: GATGGATCT
+              to: '212'
+            - from: GATGCTGAT
+              to: '213'
+            - from: GATGCCTTG
+              to: '214'
+            - from: GATCTCCTT
+              to: '215'
+            - from: GATCGCTTA
+              to: '216'
+            - from: GATATTGAA
+              to: '217'
+            - from: GATATTACT
+              to: '218'
+            - from: GAGTGTTAT
+              to: '219'
+            - from: GAGCTCAGT
+              to: '220'
+            - from: GAGCGTGCT
+              to: '221'
+            - from: GAGCGTCGA
+              to: '222'
+            - from: GAGCGGTTG
+              to: '223'
+            - from: GAGCGACTT
+              to: '224'
+            - from: GAGCCGAAT
+              to: '225'
+            - from: GAGATAGAT
+              to: '226'
+            - from: GAGACCTAT
+              to: '227'
+            - from: GACGGTCGT
+              to: '228'
+            - from: GACGCAGGT
+              to: '229'
+            - from: GACGATATG
+              to: '230'
+            - from: GACCTATCT
+              to: '231'
+            - from: GAATTAGGA
+              to: '232'
+            - from: GAATCAGCT
+              to: '233'
+            - from: GAAGTTCAT
+              to: '234'
+            - from: GAAGTGGTT
+              to: '235'
+            - from: GAAGTATTG
+              to: '236'
+            - from: GAAGGCATT
+              to: '237'
+            - from: GAACGCTGT
+              to: '238'
+            - from: CTTGTCCAG
+              to: '239'
+            - from: CTTGGATTG
+              to: '240'
+            - from: CTTGCTGAA
+              to: '241'
+            - from: CTTGCCGTG
+              to: '242'
+            - from: CTTGATTCT
+              to: '243'
+            - from: CTTCTGTCG
+              to: '244'
+            - from: CTTCGGCGT
+              to: '245'
+            - from: CTTATGAGT
+              to: '246'
+            - from: CTTACCGAT
+              to: '247'
+            - from: CTGTTAGGT
+              to: '248'
+            - from: CTGTCGTCT
+              to: '249'
+            - from: CTGTATAAT
+              to: '250'
+            - from: CTGGCTCAT
+              to: '251'
+            - from: CTGGATGCG
+              to: '252'
+            - from: CTGCGTGTG
+              to: '253'
+            - from: CTGCGCGGT
+              to: '254'
+            - from: CTGCCGATT
+              to: '255'
+            - from: CTGCATTGT
+              to: '256'
+            - from: CTGATTAAG
+              to: '257'
+            - from: CTGAGATAT
+              to: '258'
+            - from: CTGACCTGT
+              to: '259'
+            - from: CTCGTATCT
+              to: '260'
+            - from: CTCGGCAAG
+              to: '261'
+            - from: CTCGCAATT
+              to: '262'
+            - from: CTCCTGCTT
+              to: '263'
+            - from: CTCCTAAGT
+              to: '264'
+            - from: CTCCGGATG
+              to: '265'
+            - from: CTCCGAGCG
+              to: '266'
+            - from: CTCACAGGT
+              to: '267'
+            - from: CTATTCTAT
+              to: '268'
+            - from: CTATTAGTG
+              to: '269'
+            - from: CTATGAATT
+              to: '270'
+            - from: CTACATATT
+              to: '271'
+            - from: CGTGGCATT
+              to: '272'
+            - from: CGTCTTAAT
+              to: '273'
+            - from: CGTCTGGTT
+              to: '274'
+            - from: CGTCACTGT
+              to: '275'
+            - from: CGTAGGTCT
+              to: '276'
+            - from: CGGTTCGAG
+              to: '277'
+            - from: CGGTTCATT
+              to: '278'
+            - from: CGGTGCTCT
+              to: '279'
+            - from: CGGTAATTG
+              to: '280'
+            - from: CGGCCTGAT
+              to: '281'
+            - from: CGGATATAG
+              to: '282'
+            - from: CGGAATATT
+              to: '283'
+            - from: CGCTCCAAT
+              to: '284'
+            - from: CGCGTTCGT
+              to: '285'
+            - from: CGCAGGTTG
+              to: '286'
+            - from: CGAGGATGT
+              to: '287'
+            - from: CGAGCTGTT
+              to: '288'
+            - from: CGACGGCTT
+              to: '289'
+            - from: CCTTGTGTG
+              to: '290'
+            - from: CCTGTCTCA
+              to: '291'
+            - from: CCTGACTAT
+              to: '292'
+            - from: CCTACCTTG
+              to: '293'
+            - from: CCGTAGATT
+              to: '294'
+            - from: CCGGCTGGT
+              to: '295'
+            - from: CATCGGACG
+              to: '296'
+            - from: CATCGATAA
+              to: '297'
+            - from: CATCCTTCT
+              to: '298'
+            - from: CAGTTCTGT
+              to: '299'
+            - from: CAGTGCCAG
+              to: '300'
+            - from: CAGGCACTG
+              to: '301'
+            - from: CAGCCTCTT
+              to: '302'
+            - from: CACTTATAT
+              to: '303'
+            - from: CACTGGTCG
+              to: '304'
+            - from: CACTGCATG
+              to: '305'
+            - from: CACGCGTTG
+              to: '306'
+            - from: CACGATGTT
+              to: '307'
+            - from: CACCATCTG
+              to: '308'
+            - from: CACAGGCGT
+              to: '309'
+            - from: ATTGTACAA
+              to: '310'
+            - from: ATTGGTATG
+              to: '311'
+            - from: ATTGCTAAT
+              to: '312'
+            - from: ATTGCATAG
+              to: '313'
+            - from: ATTGCAGTT
+              to: '314'
+            - from: ATTCTGCAG
+              to: '315'
+            - from: ATTCTACGT
+              to: '316'
+            - from: ATTCGGATT
+              to: '317'
+            - from: ATTCCGTTG
+              to: '318'
+            - from: ATTCATCAA
+              to: '319'
+            - from: ATTCAAGAG
+              to: '320'
+            - from: ATTAGCCTT
+              to: '321'
+            - from: ATTAATATT
+              to: '322'
+            - from: ATGTTAGAG
+              to: '323'
+            - from: ATGTTAACT
+              to: '324'
+            - from: ATGTAGTCG
+              to: '325'
+            - from: ATGGTGTAG
+              to: '326'
+            - from: ATGGATTAT
+              to: '327'
+            - from: ATCTTGAAG
+              to: '328'
+            - from: ATCTGATAT
+              to: '329'
+            - from: ATCTCAGAA
+              to: '330'
+            - from: ATCGCTCAA
+              to: '331'
+            - from: ATCGCGTCG
+              to: '332'
+            - from: ATCCATGGT
+              to: '333'
+            - from: ATCATGAGA
+              to: '334'
+            - from: ATCATAGTT
+              to: '335'
+            - from: ATCAGCGAG
+              to: '336'
+            - from: ATCACCATT
+              to: '337'
+            - from: ATAGTAATT
+              to: '338'
+            - from: ATAGCTGTG
+              to: '339'
+            - from: ATACTCTCG
+              to: '340'
+            - from: ATACCTCAT
+              to: '341'
+            - from: AGTTGCGCG
+              to: '342'
+            - from: AGTTGAATT
+              to: '343'
+            - from: AGTTATGAT
+              to: '344'
+            - from: AGTGTCCGT
+              to: '345'
+            - from: AGTGGCTTG
+              to: '346'
+            - from: AGTGCTTCT
+              to: '347'
+            - from: AGTATCATT
+              to: '348'
+            - from: AGTACACAA
+              to: '349'
+            - from: AGGTATGCG
+              to: '350'
+            - from: AGGTATAGT
+              to: '351'
+            - from: AGGCTACTT
+              to: '352'
+            - from: AGGCCAGGT
+              to: '353'
+            - from: AGGAGCGAT
+              to: '354'
+            - from: AGCTTATAG
+              to: '355'
+            - from: AGCTCTAGA
+              to: '356'
+            - from: AGCGTGTAT
+              to: '357'
+            - from: AGCGTCACA
+              to: '358'
+            - from: AGCCTTCAT
+              to: '359'
+            - from: AGCCTGTCG
+              to: '360'
+            - from: AGCCTCGAG
+              to: '361'
+            - from: AGCACTGAA
+              to: '362'
+            - from: AGATGTACG
+              to: '363'
+            - from: AGAGTTAAT
+              to: '364'
+            - from: AGACCTCTG
+              to: '365'
+            - from: ACTTCTATA
+              to: '366'
+            - from: ACTGTCGAG
+              to: '367'
+            - from: ACTGTATGT
+              to: '368'
+            - from: ACTCTGTAA
+              to: '369'
+            - from: ACTCGCGAA
+              to: '370'
+            - from: ACTAGATCT
+              to: '371'
+            - from: ACTAACGTT
+              to: '372'
+            - from: ACGTTACTG
+              to: '373'
+            - from: ACGTGGAAT
+              to: '374'
+            - from: ACGGACTCT
+              to: '375'
+            - from: ACGCCTAAT
+              to: '376'
+            - from: ACGCCGTTA
+              to: '377'
+            - from: ACGACGTGT
+              to: '378'
+            - from: ACCTCGCAT
+              to: '379'
+            - from: ACCATCATA
+              to: '380'
+            - from: ACATATATT
+              to: '381'
+            - from: ACAGGCACA
+              to: '382'
+            - from: ACACCTGAG
+              to: '383'
+            - from: ACACATTCT
+              to: '384'
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "CELL3 to BD CLS3 index"
+          matchTags:
+            - CELL3
+          newTags:
+            - CELL3ID
+          allowOneMismatch: true
+          rules:
+            - from: TTGTGGCTG
+              to: '1'
+            - from: TTGTGGAGT
+              to: '2'
+            - from: TTGTGCGAC
+              to: '3'
+            - from: TTGTCTTCA
+              to: '4'
+            - from: TTGTAAGAT
+              to: '5'
+            - from: TTGGTTCTG
+              to: '6'
+            - from: TTGGTGCGT
+              to: '7'
+            - from: TTGGTCTAC
+              to: '8'
+            - from: TTGGTAACT
+              to: '9'
+            - from: TTGGCGTGC
+              to: '10'
+            - from: TTGGATTAG
+              to: '11'
+            - from: TTGGAGACG
+              to: '12'
+            - from: TTGGAATCA
+              to: '13'
+            - from: TTGCGGCGA
+              to: '14'
+            - from: TTGCGCTCG
+              to: '15'
+            - from: TTGCCTTAC
+              to: '16'
+            - from: TTGCCGGAT
+              to: '17'
+            - from: TTGCATGCT
+              to: '18'
+            - from: TTGCACGTC
+              to: '19'
+            - from: TTGCACCAT
+              to: '20'
+            - from: TTGAACCTG
+              to: '21'
+            - from: TTCTCGCGT
+              to: '22'
+            - from: TTCTCAACT
+              to: '23'
+            - from: TTCTACTCA
+              to: '24'
+            - from: TTCGTCCAT
+              to: '25'
+            - from: TTCGGATAC
+              to: '26'
+            - from: TTCGGACGT
+              to: '27'
+            - from: TTCGCAATC
+              to: '28'
+            - from: TTCCGGTGC
+              to: '29'
+            - from: TTCCGACTG
+              to: '30'
+            - from: TTCATTATG
+              to: '31'
+            - from: TTCATGGAT
+              to: '32'
+            - from: TTCAGCGCA
+              to: '33'
+            - from: TTCACCTCG
+              to: '34'
+            - from: TTCAAGCAG
+              to: '35'
+            - from: TTCAACTAC
+              to: '36'
+            - from: TTATGCCAG
+              to: '37'
+            - from: TTATGCATC
+              to: '38'
+            - from: TTATCGTAC
+              to: '39'
+            - from: TTATACCTA
+              to: '40'
+            - from: TTATAATAG
+              to: '41'
+            - from: TTATAAGTC
+              to: '42'
+            - from: TTAGTTAGC
+              to: '43'
+            - from: TTAGCTCAT
+              to: '44'
+            - from: TTAGCACTA
+              to: '45'
+            - from: TTAGATATG
+              to: '46'
+            - from: TTACTACGA
+              to: '47'
+            - from: TTACCGTCA
+              to: '48'
+            - from: TTACAGAGC
+              to: '49'
+            - from: TTAATTGCA
+              to: '50'
+            - from: TTAACAGAT
+              to: '51'
+            - from: TGTTGGCTA
+              to: '52'
+            - from: TGTTGATGA
+              to: '53'
+            - from: TGTTAAGCT
+              to: '54'
+            - from: TGTGGCCGA
+              to: '55'
+            - from: TGTGCTAGC
+              to: '56'
+            - from: TGTGCGTCA
+              to: '57'
+            - from: TGTCGCAGT
+              to: '58'
+            - from: TGTCGAGCA
+              to: '59'
+            - from: TGTACAACG
+              to: '60'
+            - from: TGGTTCCGA
+              to: '61'
+            - from: TGGTTCACT
+              to: '62'
+            - from: TGGTCAAGT
+              to: '63'
+            - from: TGGCTTGTA
+              to: '64'
+            - from: TGGCTGTCG
+              to: '65'
+            - from: TGGCGTATG
+              to: '66'
+            - from: TGGCGCGCT
+              to: '67'
+            - from: TGGATGTAC
+              to: '68'
+            - from: TGGACTTGC
+              to: '69'
+            - from: TGGAATACT
+              to: '70'
+            - from: TGCTAGCGA
+              to: '71'
+            - from: TGCGTTGCT
+              to: '72'
+            - from: TGCGGTCTG
+              to: '73'
+            - from: TGCGCTTAG
+              to: '74'
+            - from: TGCGCGACG
+              to: '75'
+            - from: TGCCTGCAT
+              to: '76'
+            - from: TGCCTAGAC
+              to: '77'
+            - from: TGCACGAGT
+              to: '78'
+            - from: TGAGTGTGC
+              to: '79'
+            - from: TGAGGCTCG
+              to: '80'
+            - from: TCTTCCGTC
+              to: '81'
+            - from: TCTTATAGT
+              to: '82'
+            - from: TCTTACCAT
+              to: '83'
+            - from: TCTGTTGTC
+              to: '84'
+            - from: TCTGTTACT
+              to: '85'
+            - from: TCTGGCTAG
+              to: '86'
+            - from: TCTCAGATC
+              to: '87'
+            - from: TCTAGTTGA
+              to: '88'
+            - from: TCTAGTACG
+              to: '89'
+            - from: TCGTACTAC
+              to: '90'
+            - from: TCGGTGTAG
+              to: '91'
+            - from: TCGGCTGCT
+              to: '92'
+            - from: TCGCTACTG
+              to: '93'
+            - from: TCGATCACG
+              to: '94'
+            - from: TCGAGGCAT
+              to: '95'
+            - from: TCCGGCGTC
+              to: '96'
+            - from: TCCGGAGCT
+              to: '97'
+            - from: TCCGCTCGT
+              to: '98'
+            - from: TCCGAGTAC
+              to: '99'
+            - from: TCCATTCAT
+              to: '100'
+            - from: TCCATGGTC
+              to: '101'
+            - from: TCCAAGTCG
+              to: '102'
+            - from: TCATTACGT
+              to: '103'
+            - from: TCATGCACT
+              to: '104'
+            - from: TCAGGTTGC
+              to: '105'
+            - from: TCAGACCGT
+              to: '106'
+            - from: TCACTCAGT
+              to: '107'
+            - from: TCAAGCTCA
+              to: '108'
+            - from: TATTGCGCA
+              to: '109'
+            - from: TATTCGGCT
+              to: '110'
+            - from: TATTCCAGC
+              to: '111'
+            - from: TATTCATCA
+              to: '112'
+            - from: TATGTTCAG
+              to: '113'
+            - from: TATGGTATG
+              to: '114'
+            - from: TATGCAAGT
+              to: '115'
+            - from: TATCTGGTC
+              to: '116'
+            - from: TATCTGACT
+              to: '117'
+            - from: TATCCAGAT
+              to: '118'
+            - from: TATCAGTCG
+              to: '119'
+            - from: TATCACGCT
+              to: '120'
+            - from: TAGGCGCGA
+              to: '121'
+            - from: TAGGCACAT
+              to: '122'
+            - from: TAGGATCGT
+              to: '123'
+            - from: TAGCATTGC
+              to: '124'
+            - from: TAGAGTTAC
+              to: '125'
+            - from: TAGACTGAT
+              to: '126'
+            - from: TACTTGTCG
+              to: '127'
+            - from: TACGTCCGA
+              to: '128'
+            - from: TACCGTACT
+              to: '129'
+            - from: TACCGCGAT
+              to: '130'
+            - from: TACCAGGAC
+              to: '131'
+            - from: TACAGAAGT
+              to: '132'
+            - from: TAAGTGCAT
+              to: '133'
+            - from: TAAGCTACT
+              to: '134'
+            - from: GTTGACCGA
+              to: '135'
+            - from: GTTCTCGAC
+              to: '136'
+            - from: GTTCCTGCT
+              to: '137'
+            - from: GTTATGATG
+              to: '138'
+            - from: GTGCTTGCA
+              to: '139'
+            - from: GTGCCGCGT
+              to: '140'
+            - from: GTATTGCTG
+              to: '141'
+            - from: GTATTCCGA
+              to: '142'
+            - from: GTATTAAGC
+              to: '143'
+            - from: GTATGACGT
+              to: '144'
+            - from: GTAGTTGTC
+              to: '145'
+            - from: GTAGTACAT
+              to: '146'
+            - from: GTAGCTCGA
+              to: '147'
+            - from: GGTTGCTCA
+              to: '148'
+            - from: GGTTGAGTA
+              to: '149'
+            - from: GGTTAACGT
+              to: '150'
+            - from: GGTGTGGCA
+              to: '151'
+            - from: GGTCTTCAG
+              to: '152'
+            - from: GGTCGTCTA
+              to: '153'
+            - from: GGTCGGCGT
+              to: '154'
+            - from: GGTCCGACT
+              to: '155'
+            - from: GGTCATGTC
+              to: '156'
+            - from: GGTCACATG
+              to: '157'
+            - from: GGTAGTGCT
+              to: '158'
+            - from: GGTAGCGTC
+              to: '159'
+            - from: GGTACCAGT
+              to: '160'
+            - from: GGTAAGGAT
+              to: '161'
+            - from: GGCTTGTGC
+              to: '162'
+            - from: GGCTTGACT
+              to: '163'
+            - from: GGCTTACGA
+              to: '164'
+            - from: GGCTGTAGT
+              to: '165'
+            - from: GGCTGGCAG
+              to: '166'
+            - from: GGCTCCATC
+              to: '167'
+            - from: GGCGTGGAT
+              to: '168'
+            - from: GGCGTAATC
+              to: '169'
+            - from: GGCGCAAGT
+              to: '170'
+            - from: GGCGAGTAG
+              to: '171'
+            - from: GGCGACCGT
+              to: '172'
+            - from: GGCCTGTCA
+              to: '173'
+            - from: GGCCATTGC
+              to: '174'
+            - from: GGCACTCTG
+              to: '175'
+            - from: GGATGTCAT
+              to: '176'
+            - from: GGAGTAACT
+              to: '177'
+            - from: GGAGAACGA
+              to: '178'
+            - from: GGACTGGCT
+              to: '179'
+            - from: GGACGTTCA
+              to: '180'
+            - from: GGAACGTGC
+              to: '181'
+            - from: GCTGTCCAT
+              to: '182'
+            - from: GCTGGTTCA
+              to: '183'
+            - from: GCTGCAACT
+              to: '184'
+            - from: GCTCGTTAC
+              to: '185'
+            - from: GCTATAGAT
+              to: '186'
+            - from: GCTAGTCGT
+              to: '187'
+            - from: GCTACCATG
+              to: '188'
+            - from: GCGTTCTGA
+              to: '189'
+            - from: GCGTGTTAG
+              to: '190'
+            - from: GCGGTATCG
+              to: '191'
+            - from: GCGGAGCAT
+              to: '192'
+            - from: GCGCGGTGC
+              to: '193'
+            - from: GCGCCTAGT
+              to: '194'
+            - from: GCGCCGGCT
+              to: '195'
+            - from: GCCTTCATG
+              to: '196'
+            - from: GCCATACTG
+              to: '197'
+            - from: GCATGTTGA
+              to: '198'
+            - from: GCATGCTAC
+              to: '199'
+            - from: GCAGTATAC
+              to: '200'
+            - from: GCAGGTACT
+              to: '201'
+            - from: GCAGCGCGT
+              to: '202'
+            - from: GCACCTCAT
+              to: '203'
+            - from: GCAATTCGA
+              to: '204'
+            - from: GATTGCCGT
+              to: '205'
+            - from: GATGAACAT
+              to: '206'
+            - from: GATCTTCGA
+              to: '207'
+            - from: GATCTGCAT
+              to: '208'
+            - from: GAGTGGCAT
+              to: '209'
+            - from: GAGTCGGAC
+              to: '210'
+            - from: GAGTATGAT
+              to: '211'
+            - from: GAGGCGAGT
+              to: '212'
+            - from: GAGGCAACG
+              to: '213'
+            - from: GAGCGCACT
+              to: '214'
+            - from: GAATAGGCT
+              to: '215'
+            - from: ATTGTCACT
+              to: '216'
+            - from: ATTGTATCA
+              to: '217'
+            - from: ATTGGTCAG
+              to: '218'
+            - from: ATTGGCGAT
+              to: '219'
+            - from: ATTGATCGT
+              to: '220'
+            - from: ATTCGTAGT
+              to: '221'
+            - from: ATTCATACG
+              to: '222'
+            - from: ATTCAGGAC
+              to: '223'
+            - from: ATTACTTCA
+              to: '224'
+            - from: ATTAATTAG
+              to: '225'
+            - from: ATTAAGCAT
+              to: '226'
+            - from: ATGTCTCTA
+              to: '227'
+            - from: ATGTAGCGT
+              to: '228'
+            - from: ATGGCATAC
+              to: '229'
+            - from: ATGGAGATC
+              to: '230'
+            - from: ATGGACTCG
+              to: '231'
+            - from: ATGGAACGA
+              to: '232'
+            - from: ATGCTTCAT
+              to: '233'
+            - from: ATGCTCGCT
+              to: '234'
+            - from: ATGCGACGT
+              to: '235'
+            - from: ATGCCGTAG
+              to: '236'
+            - from: ATGAGTTCG
+              to: '237'
+            - from: ATGACTATC
+              to: '238'
+            - from: ATGACCGAC
+              to: '239'
+            - from: ATCTTATGC
+              to: '240'
+            - from: ATCTTACTA
+              to: '241'
+            - from: ATCTATCAG
+              to: '242'
+            - from: ATCGTGTAC
+              to: '243'
+            - from: ATCGTCTGA
+              to: '244'
+            - from: ATCGGCATG
+              to: '245'
+            - from: ATCGCGAGC
+              to: '246'
+            - from: ATCGCAACG
+              to: '247'
+            - from: ATCGATGCT
+              to: '248'
+            - from: ATCGAATAG
+              to: '249'
+            - from: ATCCTTCTG
+              to: '250'
+            - from: ATCCTGCGT
+              to: '251'
+            - from: ATCCGCACT
+              to: '252'
+            - from: ATCCATTAC
+              to: '253'
+            - from: ATCCAAGCA
+              to: '254'
+            - from: ATCAGATCA
+              to: '255'
+            - from: ATCACACAT
+              to: '256'
+            - from: ATCAACGTC
+              to: '257'
+            - from: ATCAACCGA
+              to: '258'
+            - from: ATATTGAGT
+              to: '259'
+            - from: ATATTCGTC
+              to: '260'
+            - from: ATATTACAG
+              to: '261'
+            - from: ATATCTTGA
+              to: '262'
+            - from: ATATCGCAT
+              to: '263'
+            - from: ATATCAATC
+              to: '264'
+            - from: ATAGTCCTG
+              to: '265'
+            - from: ATAGGTCTA
+              to: '266'
+            - from: ATAGCTGAC
+              to: '267'
+            - from: ATAGCGGTA
+              to: '268'
+            - from: AGTTCGCTG
+              to: '269'
+            - from: AGTTACAGC
+              to: '270'
+            - from: AGTTAACTA
+              to: '271'
+            - from: AGTGCAATC
+              to: '272'
+            - from: AGTCTGGTA
+              to: '273'
+            - from: AGTCTGAGC
+              to: '274'
+            - from: AGTCTACAT
+              to: '275'
+            - from: AGTCGAACT
+              to: '276'
+            - from: AGTCCATCG
+              to: '277'
+            - from: AGTCATTCA
+              to: '278'
+            - from: AGTATCCAG
+              to: '279'
+            - from: AGTAGACTG
+              to: '280'
+            - from: AGTAATCGA
+              to: '281'
+            - from: AGTAAGTGC
+              to: '282'
+            - from: AGGTTGGCT
+              to: '283'
+            - from: AGGTTCTAG
+              to: '284'
+            - from: AGGTGTTCA
+              to: '285'
+            - from: AGGTGCCAT
+              to: '286'
+            - from: AGGTCTGAT
+              to: '287'
+            - from: AGGTCGTAC
+              to: '288'
+            - from: AGGTCAGCA
+              to: '289'
+            - from: AGGCTTATC
+              to: '290'
+            - from: AGGCTATGA
+              to: '291'
+            - from: AGGCCGACG
+              to: '292'
+            - from: AGGCCAAGC
+              to: '293'
+            - from: AGGCAGGTC
+              to: '294'
+            - from: AGGCAAGAT
+              to: '295'
+            - from: AGGAGCAGT
+              to: '296'
+            - from: AGGACCGCT
+              to: '297'
+            - from: AGGAATTAC
+              to: '298'
+            - from: AGCTTGGAC
+              to: '299'
+            - from: AGCTTAAGT
+              to: '300'
+            - from: AGCTACACG
+              to: '301'
+            - from: AGCGTTACG
+              to: '302'
+            - from: AGCGGTGCA
+              to: '303'
+            - from: AGCGGAGTC
+              to: '304'
+            - from: AGCGGACGA
+              to: '305'
+            - from: AGCGCGCTA
+              to: '306'
+            - from: AGCGATAGC
+              to: '307'
+            - from: AGCGACTCA
+              to: '308'
+            - from: AGCCTCTAC
+              to: '309'
+            - from: AGCCGTCGT
+              to: '310'
+            - from: AGCATGATC
+              to: '311'
+            - from: AGCACTTCG
+              to: '312'
+            - from: AGCACGGCA
+              to: '313'
+            - from: AGATTCTGA
+              to: '314'
+            - from: AGATTAGAT
+              to: '315'
+            - from: AGATGATAG
+              to: '316'
+            - from: AGATATGTA
+              to: '317'
+            - from: AGATACCGT
+              to: '318'
+            - from: AGAGTGCGT
+              to: '319'
+            - from: AGAGCCGAT
+              to: '320'
+            - from: AGACTCACT
+              to: '321'
+            - from: ACTTGCCTA
+              to: '322'
+            - from: ACTTGAGCA
+              to: '323'
+            - from: ACTTCTAGC
+              to: '324'
+            - from: ACTTCGACT
+              to: '325'
+            - from: ACTTAGTAC
+              to: '326'
+            - from: ACTGTTGAT
+              to: '327'
+            - from: ACTGTAACG
+              to: '328'
+            - from: ACTGGTATC
+              to: '329'
+            - from: ACTGACGTC
+              to: '330'
+            - from: ACTGAAGCT
+              to: '331'
+            - from: ACTCTGATG
+              to: '332'
+            - from: ACTCCTGAC
+              to: '333'
+            - from: ACTCCGCTA
+              to: '334'
+            - from: ACTCAACTG
+              to: '335'
+            - from: ACTATTGCA
+              to: '336'
+            - from: ACTAGGCAG
+              to: '337'
+            - from: ACTACGCGT
+              to: '338'
+            - from: ACTAATACT
+              to: '339'
+            - from: ACGTTCGTA
+              to: '340'
+            - from: ACGTGTGCT
+              to: '341'
+            - from: ACGTGTATG
+              to: '342'
+            - from: ACGTGGAGC
+              to: '343'
+            - from: ACGTCTTCG
+              to: '344'
+            - from: ACGTCAGTC
+              to: '345'
+            - from: ACGGTCTCA
+              to: '346'
+            - from: ACGGTCCGT
+              to: '347'
+            - from: ACGGTACAG
+              to: '348'
+            - from: ACGGCGCTG
+              to: '349'
+            - from: ACGCTGCGA
+              to: '350'
+            - from: ACGCGTGTA
+              to: '351'
+            - from: ACGCGCCAG
+              to: '352'
+            - from: ACGATGTCG
+              to: '353'
+            - from: ACGATGGAT
+              to: '354'
+            - from: ACGATCTAC
+              to: '355'
+            - from: ACGAGCTGA
+              to: '356'
+            - from: ACGAGCATC
+              to: '357'
+            - from: ACGAATCGT
+              to: '358'
+            - from: ACGAACGCA
+              to: '359'
+            - from: ACCTTGTAG
+              to: '360'
+            - from: ACCTGTTGC
+              to: '361'
+            - from: ACCTGTCAT
+              to: '362'
+            - from: ACCTCGATC
+              to: '363'
+            - from: ACCTAGGTA
+              to: '364'
+            - from: ACCTACTGA
+              to: '365'
+            - from: ACCTAATCG
+              to: '366'
+            - from: ACCGTAGCA
+              to: '367'
+            - from: ACCGGTAGT
+              to: '368'
+            - from: ACCGGCTAC
+              to: '369'
+            - from: ACCGCTTCA
+              to: '370'
+            - from: ACATTGTGC
+              to: '371'
+            - from: ACATTCTCG
+              to: '372'
+            - from: ACATGGCTG
+              to: '373'
+            - from: ACATGACGA
+              to: '374'
+            - from: ACATATGAT
+              to: '375'
+            - from: ACATATACG
+              to: '376'
+            - from: ACAGCGTAC
+              to: '377'
+            - from: ACACTTGCT
+              to: '378'
+            - from: ACACTATCA
+              to: '379'
+            - from: ACACGCATG
+              to: '380'
+            - from: ACACCAGTA
+              to: '381'
+            - from: ACACCAACT
+              to: '382'
+            - from: ACACATAGT
+              to: '383'
+            - from: ACACACCTA
+              to: '384'
+          reportingLevel: VerboseReport
+        - type: generic
+          name: "BD CLS1-CLS2-CLS3 indices to BD cell index"
+          destinationTag: CELLID
+          transformation:
+            type: plus
+            sources:
+              - type: multiply
+                sources:
+                  - type: plus
+                    sources:
+                      - type: tag
+                        name: CELL1ID
+                      - type: constantNumber
+                        value: -1
+                  - type: constantNumber
+                    value: 147456
+              - type: multiply
+                sources:
+                  - type: plus
+                    sources:
+                      - type: tag
+                        name: CELL2ID
+                      - type: constantNumber
+                        value: -1
+                  - type: constantNumber
+                    value: 384
+              - type: tag
+                name: CELL3ID
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+                - allTags:Molecule
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+            - type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_nunique
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                      keys:
+                        - allTags:Molecule
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+
+# HUMAN
+
+"bd-human-sc-xcr-rhapsody-cdr3":
+  inheritFrom: bd-rhapsody-cdr3-amplicon-A96-base
   mixins:
     - type: SetSpecies
       species: hs
     - type: SetTagPattern
       tagPattern: |
-        ^(CELL1:N{9})N{12}(CELL2:N{9})N{13}(CELL3:N{9})(UMI:N{8})\
-        ^atcaaaatcggtgaataggcagac(R2:*)|
-        ^gatctctgcttctgatggctca(R2:*)|
-        ^atatccttggggtagaattccttc(R2:*)|
-        ^gggaaacatctgcatcaagttg(R2:*)
-
-"bd-rhapsody-human-tcr-v2":
-  inheritFrom: bd-rhapsody-base
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetTagPattern
-      tagPattern: |
+        ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) |
         ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
         ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
         ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
+        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
         ^atcaaaatcggtgaataggcagac(R2:*)|
         ^gatctctgcttctgatggctca(R2:*)|
         ^atatccttggggtagaattccttc(R2:*)|
-        ^gggaaacatctgcatcaagttg(R2:*)
-
-"bd-rhapsody-human-bcr-v1":
-  inheritFrom: bd-rhapsody-base
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})N{12}(CELL2:N{9})N{13}(CELL3:N{9})(UMI:N{8})\
-        ^ctttcgctccaggtcacact(R2:*)|
-        ^tgtctgcaccctgatatgatgg(R2:*)|
-        ^gtcaaggggaagacggatg(R2:*)|
-        ^aagtagtccttgaccaggca(R2:*)|
-        ^acaggagacgagggggaaaa(R2:*)|
-        ^tcagatggcgggaagatgaa(R2:*)|
-        ^accagtgtggccttgttg(R2:*)
-
-"bd-rhapsody-human-bcr-v2":
-  inheritFrom: bd-rhapsody-base
-  mixins:
-    - type: SetSpecies
-      species: hs
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
+        ^gggaaacatctgcatcaagttg(R2:*)|
         ^ctttcgctccaggtcacact(R2:*)|
         ^tgtctgcaccctgatatgatgg(R2:*)|
         ^gtcaaggggaagacggatg(R2:*)|
@@ -197,45 +6282,23 @@
 
 # MOUSE
 
-"bd-rhapsody-mouse-tcr-v1":
-  inheritFrom: bd-rhapsody-base
+"bd-mouse-sc-xcr-rhapsody-cdr3":
+  inheritFrom: bd-rhapsody-cdr3-amplicon-A96-base
   mixins:
     - type: SetSpecies
       species: mmu
     - type: SetTagPattern
       tagPattern: |
-        ^(CELL1:N{9})N{12}(CELL2:N{9})N{13}(CELL3:N{9})(UMI:N{8})\
+        ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) | \
+        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
         ^aggttctgggttctggatgt(R2:*)|
         ^caatctctgcttttgatggctc(R2:*)|
         ^gtagaaatctttcaccagacaagc(R2:*)|
         ^ttgggggaaatgtctgca(R2:*)|
-        ^aatagtaggcttgggagaaaagtctg(R2:*)
-
-"bd-rhapsody-mouse-tcr-v2":
-  inheritFrom: bd-rhapsody-base
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
-        ^aggttctgggttctggatgt(R2:*)|
-        ^caatctctgcttttgatggctc(R2:*)|
-        ^gtagaaatctttcaccagacaagc(R2:*)|
-        ^ttgggggaaatgtctgca(R2:*)|
-        ^aatagtaggcttgggagaaaagtctg(R2:*)
-
-"bd-rhapsody-mouse-bcr-v1":
-  inheritFrom: bd-rhapsody-base
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})N{12}(CELL2:N{9})N{13}(CELL3:N{9})(UMI:N{8})\
+        ^aatagtaggcttgggagaaaagtctg(R2:*)|
         ^tgtcagtgggtagatggtgg(R2:*)|
         ^ctgacttccaattactaaacagcc(R2:*)|
         ^tagagctgagggttcctgatag(R2:*)|
@@ -248,297 +6311,11 @@
         ^gttagtctcgagctcttcaga(R2:*)|
         ^cagtgtggctttgttttcct(R2:*)
 
-"bd-rhapsody-mouse-bcr-v2":
-  inheritFrom: bd-rhapsody-base
-  mixins:
-    - type: SetSpecies
-      species: mmu
-    - type: SetTagPattern
-      tagPattern: |
-        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
-        ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})\
-        ^tgtcagtgggtagatggtgg(R2:*)|
-        ^ctgacttccaattactaaacagcc(R2:*)|
-        ^tagagctgagggttcctgatag(R2:*)|
-        ^cagtggatagacagatgggggt(R2:*)|
-        ^atggggctgttgttttgg(R2:*)|
-        ^gtggatagactgatgggggtgtt(R2:*)|
-        ^agggaagtagcctttgacaag(R2:*)|
-        ^gacatttgggaaggactgactc(R2:*)|
-        ^agatgttaactgctcactggatg(R2:*)|
-        ^gttagtctcgagctcttcaga(R2:*)|
-        ^cagtgtggctttgttttcct(R2:*)
+"bd-sc-xcr-rhapsody-full-length":
+  inheritFrom: bd-rhapsody-full-length-single-cell-A96-base
+  flags:
+    - species
 
-"bd-rhapsody-bcr-full-length-base":
-  abstract: true
-  pipeline:
-    inheritFrom: pipeline-single-cell-shotgun
-  align:
-    inheritFrom: align-single-cell
-    overrides:
-      tagPattern: ^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
-  refineTagsAndSort:
-    whitelists:
-      CELL1: builtin:rhapsody-cell1
-      CELL2: builtin:rhapsody-cell2
-      CELL3: builtin:rhapsody-cell3
-    runCorrection: true
-    parameters:
-      correctionPower: 0.001
-      backgroundSubstitutionRate: 0.01
-      backgroundIndelRate: 1.0e-05
-      minQuality: 12
-      maxSubstitutions: 2
-      maxIndels: 2
-      maxTotalErrors: 3
-      postFilter:
-        type: filter_and
-        operands:
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - allTags:Molecule
-            predicates:
-              - metrics:
-                  - type: "group_metric_sum_weight"
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                operator:
-                  type: group_operator_lowest_threshold
-                  operators:
-                    - type: group_operator_advanced_thresholding
-                      algo:
-                        type: otsu
-                      histTransformers:
-                        # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                        - type: inflate
-                          fraction: 0.15
-                      logX: true
-                      minimalSample: 20
-                      fallbackThreshold: 1.0
-                    - type: group_operator_cumtop
-                      share: 0.85
-                      round: Down
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-            predicates:
-              - metrics:
-                  - type: group_metric_nunique
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                    keys:
-                      - allTags:Molecule
-                operator:
-                  type: group_operator_range
-                  lower: 3.0
-  assemblePartial:
-    inheritFrom: assemblePartial-base
-  assemble:
-    inheritFrom: assemble-with-consensus-base
-    overrides:
-      clnaOutput: true
-      cellLevel: true
-      consensusAssemblerParameters:
-        assembler:
-          aAssemblerParameters:
-            bandWidth: 4
-            scoring:
-              type: linear
-              alphabet: nucleotide
-              subsMatrix: simple(match = 5, mismatch = -4)
-              gapPenalty: -14
-            minAlignmentScore: 40
-            maxNormalizedAlignmentPenalty: 0.15
-            trimMinimalSumQuality: 0
-            trimReferenceRegion: false
-            maxQuality: 45
-          maxIterations: 6
-          minAltSeedQualityScore: 11
-          minAltSeedNormalizedPenalty: 0.35
-          altSeedPenaltyTolerance: 0.3
-          minRecordSharePerConsensus: 0.01
-          minRecordsPerConsensus: 0
-          minRecursiveRecordShare: 0.1
-          minQualityScore: 0
-          maxConsensuses: 3
-      cloneAssemblerParameters:
-        cloneClusteringParameters:
-          clusteringFilter:
-            type: relativeConcentration
-            specificMutationProbability: 0.01
-        badQualityThreshold: 0
-        postFilters:
-          - type: filter_in_groups
-            isolationKeys:
-              - geneLabel:ReliableChain
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - clone
-              predicates:
-                - metrics:
-                    - type: group_metric_sum_weight
-                      reportHist:
-                        log: true
-                        binNumber: 0
-                        minBinWidth: 0.2
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.99
-  assembleContigs:
-    inheritFrom: assembleContigs-base
-  exportAlignments:
-    inheritFrom: exportAlignments-base
-  exportClones:
-    inheritFrom: exportClones-single-cell-with-umi-base
 
-"bd-rhapsody-mouse-bcr-full-length":
-  inheritFrom: bd-rhapsody-bcr-full-length-base
-  mixins:
-    - type: SetSpecies
-      species: mmu
 
-"bd-rhapsody-human-bcr-full-length":
-  inheritFrom: bd-rhapsody-bcr-full-length-base
-  mixins:
-    - type: SetSpecies
-      species: hsa
 
-"bd-rhapsody-tcr-full-length-base":
-  abstract: true
-  mixins:
-    - type: SetSpecies
-      species: hsa
-  pipeline:
-    inheritFrom: pipeline-single-cell-shotgun
-  align:
-    inheritFrom: align-single-cell
-    overrides:
-      tagPattern: ^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
-  refineTagsAndSort:
-    whitelists:
-      CELL1: builtin:rhapsody-cell1
-      CELL2: builtin:rhapsody-cell2
-      CELL3: builtin:rhapsody-cell3
-    runCorrection: true
-    parameters:
-      correctionPower: 0.001
-      backgroundSubstitutionRate: 0.01
-      backgroundIndelRate: 1.0e-05
-      minQuality: 12
-      maxSubstitutions: 2
-      maxIndels: 2
-      maxTotalErrors: 3
-      postFilter:
-        type: filter_and
-        operands:
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - allTags:Molecule
-            predicates:
-              - metrics:
-                  - type: "group_metric_sum_weight"
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                operator:
-                  type: group_operator_lowest_threshold
-                  operators:
-                    - type: group_operator_advanced_thresholding
-                      algo:
-                        type: otsu
-                      histTransformers:
-                        # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                        - type: inflate
-                          fraction: 0.15
-                      logX: true
-                      minimalSample: 20
-                      fallbackThreshold: 1.0
-                    - type: group_operator_cumtop
-                      share: 0.85
-                      round: Down
-  assemblePartial:
-    inheritFrom: assemblePartial-base
-  assemble:
-    inheritFrom: assemble-with-consensus-base
-    overrides:
-      clnaOutput: true
-      cellLevel: true
-      consensusAssemblerParameters:
-        assembler:
-          aAssemblerParameters:
-            bandWidth: 4
-            scoring:
-              type: linear
-              alphabet: nucleotide
-              subsMatrix: simple(match = 5, mismatch = -4)
-              gapPenalty: -14
-            minAlignmentScore: 40
-            maxNormalizedAlignmentPenalty: 0.15
-            trimMinimalSumQuality: 0
-            trimReferenceRegion: false
-            maxQuality: 45
-          maxIterations: 6
-          minAltSeedQualityScore: 11
-          minAltSeedNormalizedPenalty: 0.35
-          altSeedPenaltyTolerance: 0.3
-          minRecordSharePerConsensus: 0.01
-          minRecordsPerConsensus: 0
-          minRecursiveRecordShare: 0.1
-          minQualityScore: 0
-          maxConsensuses: 3
-      cloneAssemblerParameters:
-        cloneClusteringParameters:
-          clusteringFilter:
-            type: advanced
-            correctionPower: 0.001
-            backgroundSubstitutionRate: 0.01
-            backgroundIndelRate: 0.002
-        badQualityThreshold: 0
-        postFilters:
-          - type: filter_in_groups
-            isolationKeys:
-              - geneLabel:ReliableChain
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - clone
-              predicates:
-                - metrics:
-                    - type: group_metric_sum_weight
-                      reportHist:
-                        log: true
-                        binNumber: 0
-                        minBinWidth: 0.2
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.99
-  assembleContigs:
-    inheritFrom: assembleContigs-base
-  exportAlignments:
-    inheritFrom: exportAlignments-base
-  exportClones:
-    inheritFrom: exportClones-single-cell-with-umi-base
-
-"bd-rhapsody-mouse-tcr-full-length":
-  inheritFrom: bd-rhapsody-tcr-full-length-base
-  mixins:
-    - type: SetSpecies
-      species: mmu
-
-"bd-rhapsody-human-tcr-full-length":
-  inheritFrom: bd-rhapsody-tcr-full-length-base
-  mixins:
-    - type: SetSpecies
-      species: hsa

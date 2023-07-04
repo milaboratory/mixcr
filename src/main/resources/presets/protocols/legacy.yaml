@@ -431,3 +431,52 @@ split-seq-vdj-3gex:
 ont-rna-seq-vdj-full-length:
   deprecation: "The preset is deprecated. Please use ont-rna-seq."
   inheritFrom: ont-rna-seq
+
+# BD Rhapsody presets
+bd-rhapsody-mouse-tcr-full-length:
+  deprecation: "The preset is deprecated. Please use bd-sc-xcr-rhapsody-full-length."
+  inheritFrom: bd-sc-xcr-rhapsody-full-length
+
+bd-rhapsody-human-tcr-full-length:
+  deprecation: "The preset is deprecated. Please use bd-sc-xcr-rhapsody-full-length."
+  inheritFrom: bd-sc-xcr-rhapsody-full-length
+
+bd-rhapsody-mouse-bcr-full-length:
+  deprecation: "The preset is deprecated. Please use bd-sc-xcr-rhapsody-full-length."
+  inheritFrom: bd-sc-xcr-rhapsody-full-length
+
+bd-rhapsody-human-bcr-full-length:
+  deprecation: "The preset is deprecated. Please use bd-sc-xcr-rhapsody-full-length."
+  inheritFrom: bd-sc-xcr-rhapsody-full-length
+
+"bd-rhapsody-human-tcr-v1":
+  deprecation: "The preset is deprecated. Please use bd-human-sc-xcr-rhapsody-cdr3."
+  inheritFrom:   bd-human-sc-xcr-rhapsody-cdr3
+
+"bd-rhapsody-human-bcr-v1":
+  deprecation: "The preset is deprecated. Please use bd-human-sc-xcr-rhapsody-cdr3."
+  inheritFrom:   bd-human-sc-xcr-rhapsody-cdr3
+
+"bd-rhapsody-mouse-tcr-v1":
+  deprecation: "The preset is deprecated. Please use bd-mouse-sc-xcr-rhapsody-cdr3."
+  inheritFrom:   bd-mouse-sc-xcr-rhapsody-cdr3
+
+"bd-rhapsody-mouse-bcr-v1":
+  deprecation: "The preset is deprecated. Please use bd-mouse-sc-xcr-rhapsody-cdr3."
+  inheritFrom:   bd-mouse-sc-xcr-rhapsody-cdr3
+
+"bd-rhapsody-human-tcr-v2":
+  deprecation: "The preset is deprecated. Please use bd-human-sc-xcr-rhapsody-cdr3."
+  inheritFrom:   bd-human-sc-xcr-rhapsody-cdr3
+
+"bd-rhapsody-human-bcr-v2":
+  deprecation: "The preset is deprecated. Please use bd-human-sc-xcr-rhapsody-cdr3."
+  inheritFrom:   bd-human-sc-xcr-rhapsody-cdr3
+
+"bd-rhapsody-mouse-tcr-v2":
+  deprecation: "The preset is deprecated. Please use bd-mouse-sc-xcr-rhapsody-cdr3."
+  inheritFrom:   bd-mouse-sc-xcr-rhapsody-cdr3
+
+"bd-rhapsody-mouse-bcr-v2":
+  deprecation: "The preset is deprecated. Please use bd-mouse-sc-xcr-rhapsody-cdr3."
+  inheritFrom:   bd-mouse-sc-xcr-rhapsody-cdr3

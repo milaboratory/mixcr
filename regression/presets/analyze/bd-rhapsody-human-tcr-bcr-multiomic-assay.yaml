@@ -2,10 +2,13 @@ flags: []
 pipeline:
 - align
 - refineTagsAndSort
+- assemblePartial
+- extend
 - assemble
+- assembleContigs
 - exportClones
 align:
-  species: mmu
+  species: hsa
   libraryName: default
   trimmingQualityThreshold: 10
   trimmingWindowSize: 6
@@ -14,38 +17,20 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: |
-    ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) | \
-    ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
-    ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
-    ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
-    ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
-    ^aggttctgggttctggatgt(R2:*)|
-    ^caatctctgcttttgatggctc(R2:*)|
-    ^gtagaaatctttcaccagacaagc(R2:*)|
-    ^ttgggggaaatgtctgca(R2:*)|
-    ^aatagtaggcttgggagaaaagtctg(R2:*)|
-    ^tgtcagtgggtagatggtgg(R2:*)|
-    ^ctgacttccaattactaaacagcc(R2:*)|
-    ^tagagctgagggttcctgatag(R2:*)|
-    ^cagtggatagacagatgggggt(R2:*)|
-    ^atggggctgttgttttgg(R2:*)|
-    ^gtggatagactgatgggggtgtt(R2:*)|
-    ^agggaagtagcctttgacaag(R2:*)|
-    ^gacatttgggaaggactgactc(R2:*)|
-    ^agatgttaactgctcactggatg(R2:*)|
-    ^gttagtctcgagctcttcaga(R2:*)|
-    ^cagtgtggctttgttttcct(R2:*)
+  tagPattern: "^<<acagN{16}(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\\\
+    ^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   readIdAsCellTag: false
   tagTransformationSteps:
   - type: mapTags
-    name: CELL1 to BD CLS1 index
+    name: CLS1
     matchTags:
     - CELL1
     newTags:
     - CELL1ID
+    preserveMatchedTags:
+    - CELL1
     allowOneMismatch: true
     rules:
     - from: AAATCCTGT
@@ -242,11 +227,13 @@ align:
       to: 54
     reportingLevel: VerboseReport
   - type: mapTags
-    name: CELL2 to BD CLS2 index
+    name: CLS2
     matchTags:
     - CELL2
     newTags:
     - CELL2ID
+    preserveMatchedTags:
+    - CELL2
     allowOneMismatch: true
     rules:
     - from: AAACGTACC
@@ -443,11 +430,13 @@ align:
       to: 53
     reportingLevel: VerboseReport
   - type: mapTags
-    name: ELL3 to BD CLS3 index
+    name: CLS3
     matchTags:
     - CELL3
     newTags:
     - CELL3ID
+    preserveMatchedTags:
+    - CELL3
     allowOneMismatch: true
     rules:
     - from: AAAGAGGCC
@@ -644,7 +633,7 @@ align:
       to: 80
     reportingLevel: VerboseReport
   - type: generic
-    name: BD CLS1-CLS2-CLS3 indices to BD cell index
+    name: ""
     transformation:
       type: plus
       sources:
@@ -672,39 +661,37 @@ align:
         name: CELL3ID
     destinationTag: CELLID
   sampleTable: null
-  tagsValidations:
-  - type: MustNotContainTagType
-    tagType: Sample
   splitBySample: false
   limit: null
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 150
+      minSumScore: 60
       relativeMinScore: 0.97
+      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner2
-        mapperNValue: 8
+        mapperNValue: 9
         mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
-        mapperAbsoluteMinClusterScore: 102
+        mapperAbsoluteMinClusterScore: 250
         mapperExtraClusterScore: -38
-        mapperMatchScore: 98
+        mapperMatchScore: 127
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 8
-        mapperMaxClusters: 11
+        mapperSlotCount: 6
+        mapperMaxClusters: 15
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 103
-        mapperRelativeMinScore: 0.81
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 8
+        mapperAbsoluteMinScore: 250
+        mapperRelativeMinScore: 0.75
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 6
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 2
+        maxHits: 3
         scoring:
           type: affine
           alphabet: nucleotide
@@ -763,19 +750,19 @@ align:
         mapperKValue: 5
         floatingLeftBound: false
         floatingRightBound: false
-        mapperAbsoluteMinScore: 1.5
-        mapperRelativeMinScore: 0.75
-        mapperMatchScore: 1.0
+        mapperAbsoluteMinScore: 95.0
+        mapperRelativeMinScore: 0.63
+        mapperMatchScore: 128.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 4
-        mapperMaxSeedsDistance: 10
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 18
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 7
+        maxHits: 4
         scoring:
           type: linear
           alphabet: nucleotide
@@ -788,8 +775,8 @@ align:
     minSumScore: 120.0
     maxHits: 5
     relativeMinVFR3CDR3Score: 0.7
-    allowPartialAlignments: false
-    allowNoCDR3PartAlignments: false
+    allowPartialAlignments: true
+    allowNoCDR3PartAlignments: true
     allowChimeras: false
     readsLayout: Opposite
     mergerParameters:
@@ -839,6 +826,10 @@ refineTagsAndSort:
             - type: group_operator_advanced_thresholding
               algo:
                 type: otsu
+              histTransformers:
+              - type: inflate
+                fraction: 0.15
+                value: 1.0
               logX: true
               minimalSample: 20
               fallbackThreshold: 1.0
@@ -868,19 +859,16 @@ refineTagsAndSort:
             keys:
             - allTags:Molecule
           operator:
-            type: group_operator_lowest_threshold
-            operators:
-            - type: group_operator_advanced_thresholding
-              algo:
-                type: otsu
-              logX: true
-              minimalSample: 20
-              fallbackThreshold: 1.0
-              accept: High
-            - type: group_operator_cumtop
-              share: 0.85
-              round: Down
-              accept: High
+            type: group_operator_advanced_thresholding
+            algo:
+              type: otsu
+            histTransformers:
+            - type: inflate
+              fraction: 0.15
+              value: 1.0
+            logX: true
+            minimalSample: 20
+            fallbackThreshold: 1.0
             accept: High
           expectedSorting:
           - allTags:Molecule
@@ -921,7 +909,7 @@ extend:
   minimalJScore: 50
 assemble:
   sortBySequence: false
-  clnaOutput: false
+  clnaOutput: true
   cellLevel: true
   consensusAssemblerParameters:
     assembler:
@@ -1099,81 +1087,27 @@ exportClones:
 qc:
   checks:
   - type: SuccessfullyAlignedReads
-    upper: 0.85
-    middle: 0.7
+    upper: 0.8
+    middle: 0.6
     label: Successfully aligned reads
-  - type: OffTargetReads
+  - type: UnassignedAlignments
     upper: 0.2
     middle: 0.1
-    label: Off target (non TCR/IG) reads
-  - type: ReadsWithNoVOrJHits
+    label: Unassigned alignments in clonotype assembly
+  - type: AlignmentsDroppedLowQuality
     upper: 0.2
     middle: 0.1
-    label: Reads with no V or J hits
-  - type: AlignmentsWithNoAssemblingFeature
-    upper: 0.15
-    middle: 0.05
-    label: Alignments without assembling feature
-  - type: ReadsWithNoBarcode
-    upper: 0.2
-    middle: 0.1
-    label: Reads with no barcode
+    label: Alignments dropped due to low sequence quality
   - type: ReadsDroppedInTagRefinement
-    upper: 0.1
-    middle: 0.05
+    upper: 0.3
+    middle: 0.15
     label: Reads dropped in tags error correction and filtering
-  - type: TagArtificialDiversityEliminated
-    tag: UMI
-    upper: 0.5
-    middle: 0.3
-    label: UMIs artificial diversity eliminated
   - type: TagArtificialDiversityEliminated
     tag: CELL
     upper: 0.8
     middle: 0.7
     label: CELLs artificial diversity eliminated
-  - type: ReadsDroppedInTagCorrection
-    tag: UMI
-    upper: 0.1
-    middle: 0.05
-    label: Reads dropped in UMI error correction and whitelist
   - type: ReadsDroppedInTagFiltering
-    upper: 0.1
-    middle: 0.05
-    label: Reads dropped in tags filtering
-  - type: TagGroupsWithNoAssemblingFeature
     upper: 0.2
     middle: 0.1
-    label: Tag groups with no assembling feature
-  - type: TagGroupsWithMultipleConsensuses
-    upper: 0.1
-    middle: 0.01
-    label: Barcode collisions in clonotype assembly
-  - type: UnassignedAlignments
-    upper: 0.1
-    middle: 0.05
-    label: Unassigned alignments in clonotype assembly
-  - type: ReadsUsedInClonotypes
-    upper: 0.9
-    middle: 0.7
-    label: Reads used in clonotypes
-  - type: AlignmentsDroppedLowQuality
-    upper: 0.05
-    middle: 0.01
-    label: Alignments dropped due to low sequence quality
-  - type: AlignmentsClusteredInAssembler
-    upper: 0.05
-    middle: 0.01
-    label: Alignments clustered in PCR error correction
-  - type: ClonesClusteredInAssembler
-    upper: 0.05
-    middle: 0.01
-    label: Clonotypes clustered in PCR error correction
-  - type: ClonesDroppedInPostFiltering
-    upper: 0.05
-    middle: 0.01
-    label: Clones dropped in post-filtering
-  - type: AlignmentsDroppedInPostFiltering
-    upper: 0.05
-    middle: 0.01
-    label: Alignments dropped in clones post-filtering
+    label: Reads dropped in tags filtering
