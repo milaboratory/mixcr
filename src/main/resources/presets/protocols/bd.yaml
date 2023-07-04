@@ -17,7 +17,7 @@
     overrides:
       tagTransformationSteps:
         - type: mapTags
-          name: "CLS1"
+          name: "CELL1 to BD CLS1 index"
           matchTags:
             - CELL1
           newTags:
@@ -218,7 +218,7 @@
               to: '96'
           reportingLevel: VerboseReport
         - type: mapTags
-          name: "CLS2"
+          name: "CELL2 to BD CLS2 index"
           matchTags:
             - CELL2
           newTags:
@@ -419,7 +419,7 @@
               to: '96'
           reportingLevel: VerboseReport
         - type: mapTags
-          name: "CLS3"
+          name: "ELL3 to BD CLS3 index"
           matchTags:
             - CELL3
           newTags:
@@ -620,7 +620,7 @@
               to: '96'
           reportingLevel: VerboseReport
         - type: generic
-          name: ""
+          name: "BD CLS1-CLS2-CLS3 indices to BD cell index"
           destinationTag: CELLID
           transformation:
             type: plus
@@ -721,13 +721,12 @@
     overrides:
       tagTransformationSteps:
         - type: mapTags
-          name: "CLS1"
+          name: "CELL1 to BD CLS1 index"
           matchTags:
             - CELL1
           newTags:
             - CELL1ID
           allowOneMismatch: true
-          preserveMatchedTags: [ "CELL1" ]
           rules:
             - from: GTCGCTATA
               to: '1'
@@ -923,13 +922,12 @@
               to: '96'
           reportingLevel: VerboseReport
         - type: mapTags
-          name: "CLS2"
+          name: "CELL2 to BD CLS2 index"
           matchTags:
             - CELL2
           newTags:
             - CELL2ID
           allowOneMismatch: true
-          preserveMatchedTags: [ "CELL2" ]
           rules:
             - from: TACAGGATA
               to: '1'
@@ -1125,13 +1123,12 @@
               to: '96'
           reportingLevel: VerboseReport
         - type: mapTags
-          name: "CLS3"
+          name: "CELL3 to BD CLS3 index"
           matchTags:
             - CELL3
           newTags:
             - CELL3ID
           allowOneMismatch: true
-          preserveMatchedTags: [ "CELL3" ]
           rules:
             - from: AAGCCTTCT
               to: '1'
@@ -1327,7 +1324,7 @@
               to: '96'
           reportingLevel: VerboseReport
         - type: generic
-          name: ""
+          name: "BD CLS1-CLS2-CLS3 indices to BD cell index"
           destinationTag: CELLID
           transformation:
             type: plus
@@ -1436,7 +1433,7 @@
     overrides:
       tagTransformationSteps:
         - type: mapTags
-          name: "CLS1"
+          name: "CELL1 to BD CLS1 index"
           matchTags:
             - CELL1
           newTags:
@@ -2213,7 +2210,7 @@
               to: '384'
           reportingLevel: VerboseReport
         - type: mapTags
-          name: "CLS2"
+          name: "CELL2 to BD CLS2 index"
           matchTags:
             - CELL2
           newTags:
@@ -2990,7 +2987,7 @@
               to: '384'
           reportingLevel: VerboseReport
         - type: mapTags
-          name: "CLS3"
+          name: "CELL3 to BD CLS3 index"
           matchTags:
             - CELL3
           newTags:
@@ -3767,7 +3764,7 @@
               to: '384'
           reportingLevel: VerboseReport
         - type: generic
-          name: ""
+          name: "BD CLS1-CLS2-CLS3 indices to BD cell index"
           destinationTag: CELLID
           transformation:
             type: plus
@@ -3868,7 +3865,7 @@
     overrides:
       tagTransformationSteps:
         - type: mapTags
-          name: "CLS1"
+          name: "CELL1 to BD CLS1 inde"
           matchTags:
             - CELL1
           newTags:
@@ -4645,7 +4642,7 @@
               to: '384'
           reportingLevel: VerboseReport
         - type: mapTags
-          name: "CLS2"
+          name: "CELL2 to BD CLS2 index"
           matchTags:
             - CELL2
           newTags:
@@ -5422,7 +5419,7 @@
               to: '384'
           reportingLevel: VerboseReport
         - type: mapTags
-          name: "CLS3"
+          name: "CELL3 to BD CLS3 index"
           matchTags:
             - CELL3
           newTags:
@@ -6199,7 +6196,7 @@
               to: '384'
           reportingLevel: VerboseReport
         - type: generic
-          name: ""
+          name: "BD CLS1-CLS2-CLS3 indices to BD cell index"
           destinationTag: CELLID
           transformation:
             type: plus
@@ -6348,6 +6345,8 @@
 
 "bd-sc-xcr-rhapsody-full-length":
   inheritFrom: bd-rhapsody-full-length-single-cell-A96-base
+  flags:
+    - species
 
 
 
