@@ -78,15 +78,14 @@ for filename in $FILES; do
   mixcr align -p mikelov-et-al-2021 -b alleles_library.json trees_samples/$R1 trees_samples/$R2 align_by_alleles/$id.vdjca
 done
 
-assert "mixcr exportReportsTable --no-header base_build_trees.shmt | wc -l" "3"
-assert "mixcr exportReportsTable --without-upstreams --no-header base_build_trees.shmt | wc -l" "1"
-
-assert "mixcr exportReportsTable --without-upstreams --no-header -foundAllelesCount base_build_trees.shmt" "2"
-assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -c '2'" "3"
-
 assert "head -n 1 alleles/report.json | jq -r .statuses.FOUND_KNOWN_VARIANT" "1"
 assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVO" "1"
 assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
+
+assert "mixcr exportReportsTable --no-header base_build_trees.shmt | wc -l" "3"
+assert "mixcr exportReportsTable --without-upstreams --no-header base_build_trees.shmt | wc -l" "1"
+
+assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -c '2'" "2"
 
 # 3 found alleles of IGHV2-70 or IGHV2-70D
 assert "grep -c 'IGHV2-70' alleles/description.tsv" "3"
