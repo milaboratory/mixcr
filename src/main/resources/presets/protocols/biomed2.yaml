@@ -1,4 +1,4 @@
-"biomed2-human-igh":
+"biomed2-human-rna-igh":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -23,7 +23,7 @@
           middle: 0.8
           upper: 0.9
 
-"biomed2-human-igl-igk":
+"biomed2-human-rna-igkl":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -39,7 +39,7 @@
       geneType: J
     - type: MaterialTypeRNA
 
-"biomed2-human-tcr":
+"biomed2-human-rna-trbdg":
   inheritFrom: generic-amplicon
   pipeline:
     - align

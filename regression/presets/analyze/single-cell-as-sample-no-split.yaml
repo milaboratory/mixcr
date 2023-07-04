@@ -39,6 +39,7 @@ align:
       matchVariantId: null
       sample:
       - sample2
+  tagsValidations: []
   splitBySample: false
   limit: null
   parameters:

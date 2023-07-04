@@ -1,4 +1,4 @@
-"flairr-seq":
+"flairr-seq-bcr":
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align

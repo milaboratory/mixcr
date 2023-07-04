@@ -9,15 +9,15 @@ align:
   outputFiles:
   - baseSingleCell.raw.vdjca
   totalReadsProcessed: 46879
-  aligned: 40605
-  notAligned: 6274
+  aligned: 40606
+  notAligned: 6273
   notAlignedReasons:
-    NoHits: 5595
+    NoHits: 5597
     NoCDR3Parts: 0
     NoVHits: 0
     NoJHits: 0
     VAndJOnDifferentTargets: 0
-    LowTotalScore: 679
+    LowTotalScore: 676
     NoBarcode: 0
     SampleNotMatched: 0
   overlapped: 0
@@ -25,7 +25,7 @@ align:
   overlappedNotAligned: 0
   alignmentAidedOverlaps: 0
   noCDR3PartsAlignments: 17783
-  partialAlignments: 22024
+  partialAlignments: 22026
   chimeras: 0
   vChimeras: 0
   jChimeras: 0
@@ -36,7 +36,7 @@ align:
   chainUsage:
     type: chainUsage
     chimeras: 0
-    total: 40605
+    total: 40606
     chains:
       IGH:
         total: 23
@@ -54,7 +54,7 @@ align:
         isOOF: 0
         hasStops: 0
       TRA:
-        total: 2614
+        total: 2615
         nonFunctional: 27
         isOOF: 27
         hasStops: 0
@@ -134,7 +134,7 @@ align:
     FR2_TO_FR4: 0
     CDR2_TO_FR4: 0
     FR3_TO_FR4: 0
-    CDR3: 798
+    CDR3: 797
 assemble:
   type: assemblerReport
   commandLine: assemble --report baseSingleCell.raw.assemble.report.txt --json-report
@@ -147,8 +147,8 @@ assemble:
     type: preCloneAssemblerReport
     inputGroups: 3
     groupsWithNoAssemblingFeature: 0
-    inputAlignments: 28077
-    inputAlignmentsWithAssemblingFeature: 937
+    inputAlignments: 28078
+    inputAlignmentsWithAssemblingFeature: 936
     corePreClonesDroppedByTagSuffix: 0
     coreAlignmentsDroppedByTagSuffix: 0
     preClones: 7
@@ -156,26 +156,26 @@ assemble:
       "2": 2
       "3": 1
     assemblingFeatureSequencesInZeroPreClones: 0
-    coreAlignments: 856
+    coreAlignments: 855
     tagConflicts: 0
     geneAndTagConflicts: 0
     geneConflicts: {}
     discardedCoreAlignments: 81
-    empiricallyAssignedAlignments: 13143
+    empiricallyAssignedAlignments: 13145
     vjEmpiricallyAssignedAlignments: 8
     tagEmpiricallyAssignedAlignments: 0
-    geneAndTagEmpiricallyAssignedAlignments: 13135
+    geneAndTagEmpiricallyAssignedAlignments: 13137
     empiricalAssignmentConflicts: 0
     ignoredAlignments: 0
     unassignedAlignments: 14078
   totalReadsProcessed: 46737
   totalAlignmentsProcessed: 7
-  totalAlignedReadsProcessed: 14141
+  totalAlignedReadsProcessed: 14142
   initialClonesCreated: 7
-  readsDroppedNoTargetSequence: 27140
+  readsDroppedNoTargetSequence: 27142
   readsDroppedTooShortClonalSequence: 0
   readsDroppedLowQuality: 0
-  coreReads: 14141
+  coreReads: 14142
   readsDroppedFailedMapping: 0
   lowQualityRescued: 0
   clonesClustered: 0
@@ -184,8 +184,8 @@ assemble:
   clonesDroppedAsLowQuality: 0
   clonesPreClustered: 0
   readsPreClustered: 0
-  readsInClones: 14141
-  readsInClonesBeforeClustering: 14141
+  readsInClones: 14142
+  readsInClonesBeforeClustering: 14142
   readsDroppedWithLowQualityClones: 0
   clonalChainUsage:
     type: chainUsage
@@ -213,8 +213,8 @@ assemble:
       - clone
       numberOfGroups: 7
       numberOfGroupsAccepted: 7
-      totalWeight: 14141.0
-      totalWeightAccepted: 14141.0
+      totalWeight: 14142.0
+      totalWeightAccepted: 14142.0
       operatorReports:
       - operatorReport:
           type: generic_hist_report
@@ -230,8 +230,8 @@ assemble:
       - allTags:Cell
       numberOfGroups: 7
       numberOfGroupsAccepted: 7
-      totalWeight: 14141.0
-      totalWeightAccepted: 14141.0
+      totalWeight: 14142.0
+      totalWeightAccepted: 14142.0
       operatorReports:
       - operatorReport:
           type: generic_hist_report
@@ -247,8 +247,8 @@ assemble:
       - clone
       numberOfGroups: 7
       numberOfGroupsAccepted: 7
-      totalWeight: 14141.0
-      totalWeightAccepted: 14141.0
+      totalWeight: 14142.0
+      totalWeightAccepted: 14142.0
       operatorReports:
       - operatorReport:
           type: generic_hist_report
@@ -275,7 +275,7 @@ assembleContigs:
   initialCloneCount: 7
   canceledAssemblies: 0
   finalCloneCount: 7
-  totalReadsProcessed: 14141.0
+  totalReadsProcessed: 14142.0
   clonesClustered: 0
   readsClustered: 0.0
   longestContigLength: 542
@@ -291,9 +291,9 @@ assemblePartial:
   outputFiles:
   - baseSingleCell.rawpassembled.1.vdjca
   independentRuns: 62
-  totalProcessed: 28219
-  outputAlignments: 28077
-  withCDR3: 795
+  totalProcessed: 28220
+  outputAlignments: 28078
+  withCDR3: 794
   overlapped: 142
   leftTooShortNRegion: 536
   kMerDiversity: 2124
@@ -301,10 +301,10 @@ assemblePartial:
   droppedSmallOverlapNRegion: 139
   droppedNoNRegion: 0
   leftParts: 396
-  rightParts: 9080
+  rightParts: 9082
   complexOverlaps: 0
   overOverlaps: 0
-  partialAlignmentsAsIs: 27140
+  partialAlignmentsAsIs: 27142
 extend:
   type: extenderReport
   commandLine: extend --report baseSingleCell.raw.extend.report.txt --json-report
@@ -313,7 +313,7 @@ extend:
   - baseSingleCell.rawpassembled.1.vdjca
   outputFiles:
   - baseSingleCell.raw.extended.vdjca
-  totalProcessed: 28077
+  totalProcessed: 28078
   totalExtended: 24
   vExtended: 6
   vExtendedMerged: 0
@@ -331,37 +331,37 @@ refineTagsAndSort:
   outputFiles:
   - baseSingleCell.raw.refined.vdjca
   correctionReport:
-    inputRecords: 40605
-    outputRecords: 28219
+    inputRecords: 40606
+    outputRecords: 28220
     steps:
     - tagName: CELL
       inputGroups: 1
-      inputDiversity: 164
-      inputCount: 40605
+      inputDiversity: 163
+      inputCount: 40606
       coreDiversity: 83
-      coreCount: 40521
-      directlyCorrectedDiversity: 161
-      directlyCorrectedCount: 794
+      coreCount: 40524
+      directlyCorrectedDiversity: 160
+      directlyCorrectedCount: 791
       filteredDiversity: 0
       filteredCount: 0
-      recursivelyCorrected: 97
+      recursivelyCorrected: 93
       diversityFilteredByWhitelist: 0
       outputDiversity: 3
-      outputCount: 40605
+      outputCount: 40606
     - tagName: UMI
       inputGroups: 3
-      inputDiversity: 439
-      inputCount: 40605
+      inputDiversity: 438
+      inputCount: 40606
       coreDiversity: 213
-      coreCount: 40378
-      directlyCorrectedDiversity: 318
-      directlyCorrectedCount: 374
+      coreCount: 40381
+      directlyCorrectedDiversity: 317
+      directlyCorrectedCount: 372
       filteredDiversity: 2
       filteredCount: 2
       recursivelyCorrected: 16
       diversityFilteredByWhitelist: 0
       outputDiversity: 119
-      outputCount: 40603
+      outputCount: 40604
     filterReport:
       type: and_report
       nestedReports:
@@ -371,8 +371,8 @@ refineTagsAndSort:
         - allTags:Molecule
         numberOfGroups: 119
         numberOfGroupsAccepted: 89
-        totalWeight: 40603.0
-        totalWeightAccepted: 40531.0
+        totalWeight: 40604.0
+        totalWeightAccepted: 40532.0
         operatorReports:
         - operatorReport:
             type: multi_operator_hist_report
@@ -437,8 +437,8 @@ refineTagsAndSort:
         - allTags:Cell
         numberOfGroups: 3
         numberOfGroupsAccepted: 3
-        totalWeight: 40531.0
-        totalWeightAccepted: 40531.0
+        totalWeight: 40532.0
+        totalWeightAccepted: 40532.0
         operatorReports:
         - operatorReport:
             type: generic_hist_report
@@ -471,8 +471,8 @@ refineTagsAndSort:
         - allTags:Molecule
         numberOfGroups: 89
         numberOfGroupsAccepted: 62
-        totalWeight: 40531.0
-        totalWeightAccepted: 28219.0
+        totalWeight: 40532.0
+        totalWeightAccepted: 28220.0
         operatorReports:
         - operatorReport:
             type: dummy_report

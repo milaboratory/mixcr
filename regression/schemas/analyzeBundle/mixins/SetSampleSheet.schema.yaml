@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+allOf:
+- type: object
+  properties:
+    allowOneMismatch:
+      type: boolean
+    body:
+      type: string
+    file:
+      type: string
+- type: object
+  properties:
+    type:
+      const: SetSampleSheet
+  required:
+  - type

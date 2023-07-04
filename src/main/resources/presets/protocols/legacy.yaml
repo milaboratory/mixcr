@@ -20,369 +20,385 @@ generic-bcr-amplicon-umi:
 # Takara Depricated presets
 
 takara-human-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-human-bcr-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-human-bcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-human-rna-bcr-umi-smartseq. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-human-rna-bcr-umi-smartseq
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-human-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use takara-human-bcr-profiling."
-  inheritFrom: takara-human-bcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-human-rna-bcr-umi-smartseq."
+  inheritFrom: takara-human-rna-bcr-umi-smartseq
 
 takara-human-tcr-V2-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-human-tcr-v2-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-human-tcr-v2-profiling
+  deprecation: "The preset is deprecated. Please use takara-human-rna-tcr-umi-smarter-v2. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-human-rna-tcr-umi-smarter-v2
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-human-tcr-V2-full-length:
-  deprecation: "The preset is deprecated. Please use takara-human-tcr-v2-profiling."
-  inheritFrom: takara-human-tcr-v2-profiling
+  deprecation: "The preset is deprecated. Please use takara-human-rna-tcr-umi-smarter-v2."
+  inheritFrom: takara-human-rna-tcr-umi-smarter-v2
 
 takara-human-tcr-V1-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-human-tcr-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-human-tcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-human-rna-tcr-smarter. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-human-rna-tcr-smarter
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-human-tcr-V1-full-length:
-  deprecation: "The preset is deprecated. Please use takara-human-tcr-profiling."
-  inheritFrom: takara-human-tcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-human-rna-tcr-smarter."
+  inheritFrom: takara-human-rna-tcr-smarter
 
 takara-mouse-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-mouse-bcr-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-mouse-bcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-mouse-rna-bcr-smarter. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-mouse-rna-bcr-smarter
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-mouse-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use takara-mouse-bcr-profiling."
-  inheritFrom: takara-mouse-bcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-mouse-rna-bcr-smarter."
+  inheritFrom: takara-mouse-rna-bcr-smarter
 
 takara-mouse-tcr-cdr3:
-  deprecation: "The preset is deprecated. Please use takara-mouse-tcr-profiling. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: takara-mouse-tcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-mouse-rna-tcr-smarter. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: takara-mouse-rna-tcr-smarter
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 takara-mouse-tcr-full-length:
-  deprecation: "The preset is deprecated. Please use takara-mouse-tcr-profiling."
-  inheritFrom: takara-mouse-tcr-profiling
+  deprecation: "The preset is deprecated. Please use takara-mouse-rna-tcr-smarter."
+  inheritFrom: takara-mouse-rna-tcr-smarter
 
 # ABhelix deprecated presets
 
 abhelix-human-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use abhelix-human. Notice that by default clones will be assembled by {FR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: abhelix-human
+  deprecation: "The preset is deprecated. Please use abhelix-human-rna-xcr. Notice that by default clones will be assembled by {FR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: abhelix-human-rna-xcr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 abhelix-human-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use abhelix-human."
-  inheritFrom: abhelix-human
+  deprecation: "The preset is deprecated. Please use abhelix-human-rna-xcr."
+  inheritFrom: abhelix-human-rna-xcr
 
 abhelix-human-tcr-cdr3:
-  deprecation: "The preset is deprecated. Please use abhelix-human. Notice that by default clones will be assembled by {FR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: abhelix-human
+  deprecation: "The preset is deprecated. Please use abhelix-human-rna-xcr. Notice that by default clones will be assembled by {FR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: abhelix-human-rna-xcr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 abhelix-human-tcr-full-length:
-  deprecation: "The preset is deprecated. Please use abhelix-human."
-  inheritFrom: abhelix-human
+  deprecation: "The preset is deprecated. Please use abhelix-human-rna-xcr."
+  inheritFrom: abhelix-human-rna-xcr
 
 # Biomed2 deprecated presets
 
 biomed2-human-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use biomed2-human-igh. Notice that by default clones will be assembled by {CDR1Begin:CDR3End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: biomed2-human-igh
+  deprecation: "The preset is deprecated. Please use biomed2-human-rna-igh. Notice that by default clones will be assembled by {CDR1Begin:CDR3End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: biomed2-human-rna-igh
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 biomed2-human-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use biomed2-human-igh."
-  inheritFrom: biomed2-human-igh
+  deprecation: "The preset is deprecated. Please use biomed2-human-rna-igh."
+  inheritFrom: biomed2-human-rna-igh
 
 # Illumina deprecated presets
 
 ampliseq-tcrb-sr-cdr3:
-  deprecation: "The preset is deprecated. Please use ampliseq-tcrb-sr."
-  inheritFrom: ampliseq-tcrb-sr
+  deprecation: "The preset is deprecated. Please use illumina-human-rna-trb-ampliseq-sr."
+  inheritFrom: illumina-human-rna-trb-ampliseq-sr
 
 ampliseq-tcrb-plus-full-length:
-  deprecation: "The preset is deprecated. Please use ampliseq-tcrb-plus. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: ampliseq-tcrb-plus
+  deprecation: "The preset is deprecated. Please use illumina-human-rna-trb-ampliseq-plus. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: illumina-human-rna-trb-ampliseq-plus
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 ampliseq-tcrb-plus-cdr3:
-  deprecation: "The preset is deprecated. Please use ampliseq-tcrb-plus."
-  inheritFrom: ampliseq-tcrb-plus
+  deprecation: "The preset is deprecated. Please use illumina-human-rna-trb-ampliseq-plus."
+  inheritFrom: illumina-human-rna-trb-ampliseq-plus
 
 # iRepertoire deprecated presets
 
 irepertoire-human-rna-tcr-sr:
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-human-sr."
-  inheritFrom: irepertoire-repseq-human-sr
+  deprecation: "The preset is deprecated. Please use irepertoire-human-rna-xcr-repseq-sr."
+  inheritFrom: irepertoire-human-rna-xcr-repseq-sr
 
 irepertoire-human-rna-tcr-lr:
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-human-lr."
-  inheritFrom: irepertoire-repseq-human-lr
+  deprecation: "The preset is deprecated. Please use irepertoire-human-rna-xcr-repseq-lr."
+  inheritFrom: irepertoire-human-rna-xcr-repseq-lr
 
 irepertoire-human-rna-bcr-sr:
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-human-sr."
-  inheritFrom: irepertoire-repseq-human-sr
+  deprecation: "The preset is deprecated. Please use irepertoire-human-rna-xcr-repseq-sr."
+  inheritFrom: irepertoire-human-rna-xcr-repseq-sr
 
 irepertoire-human-rna-bcr-lr:
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-human-lr."
-  inheritFrom: irepertoire-repseq-human-lr
+  deprecation: "The preset is deprecated. Please use irepertoire-human-rna-xcr-repseq-lr."
+  inheritFrom: irepertoire-human-rna-xcr-repseq-lr
 
 "irepertoire-mouse-rna-tcr-sr":
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-mouse-sr."
-  inheritFrom: irepertoire-repseq-mouse-sr
+  deprecation: "The preset is deprecated. Please use irepertoire-mouse-rna-xcr-repseq-sr."
+  inheritFrom: irepertoire-mouse-rna-xcr-repseq-sr
 
 "irepertoire-mouse-rna-tcr-lr":
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-mouse-lr."
-  inheritFrom: irepertoire-repseq-mouse-lr
+  deprecation: "The preset is deprecated. Please use irepertoire-mouse-rna-xcr-repseq-lr."
+  inheritFrom: irepertoire-mouse-rna-xcr-repseq-lr
 
 "irepertoire-mouse-rna-bcr-sr":
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-mouse-sr."
-  inheritFrom: irepertoire-repseq-mouse-sr
+  deprecation: "The preset is deprecated. Please use irepertoire-mouse-rna-xcr-repseq-sr."
+  inheritFrom: irepertoire-mouse-rna-xcr-repseq-sr
 
 "irepertoire-mouse-rna-bcr-lr":
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-mouse-lr."
-  inheritFrom: irepertoire-repseq-mouse-lr
+  deprecation: "The preset is deprecated. Please use irepertoire-mouse-rna-xcr-repseq-lr."
+  inheritFrom: irepertoire-mouse-rna-xcr-repseq-lr
 
 irepertoire-human-dna-trb-sr:
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-human-dna-sr."
-  inheritFrom: irepertoire-repseq-human-dna-sr
+  deprecation: "The preset is deprecated. Please use irepertoire-human-dna-xcr-repseq-sr ."
+  inheritFrom: irepertoire-human-dna-xcr-repseq-sr 
 
 irepertoire-human-dna-trb-lr:
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-human-dna-lr."
-  inheritFrom: irepertoire-repseq-human-dna-lr
+  deprecation: "The preset is deprecated. Please use irepertoire-human-dna-xcr-repseq-lr ."
+  inheritFrom: irepertoire-human-dna-xcr-repseq-lr 
 
 irepertoire-human-dna-igh-sr:
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-human-dna-sr."
-  inheritFrom: irepertoire-repseq-human-dna-sr
+  deprecation: "The preset is deprecated. Please use irepertoire-human-dna-xcr-repseq-sr ."
+  inheritFrom: irepertoire-human-dna-xcr-repseq-sr 
 
 irepertoire-human-dna-igh-lr:
-  deprecation: "The preset is deprecated. Please use irepertoire-repseq-human-dna-lr."
-  inheritFrom: irepertoire-repseq-human-dna-lr
+  deprecation: "The preset is deprecated. Please use irepertoire-human-dna-xcr-repseq-lr ."
+  inheritFrom: irepertoire-human-dna-xcr-repseq-lr 
 
 # MiLaboratories deprecated presets
 
 milab-human-bcr-multiplex-cdr3:
-  deprecation: "The preset is deprecated. Please use milab-human-bcr-multiplex. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: milab-human-ig-rna-multiplex
+  deprecation: "The preset is deprecated. Please use milab-human-rna-ig-umi-multiplex. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: milab-human-rna-ig-umi-multiplex
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 milab-human-bcr-multiplex-full-length:
-  deprecation: "The preset is deprecated. Please use milab-human-bcr-multiplex."
-  inheritFrom: milab-human-ig-rna-multiplex
+  deprecation: "The preset is deprecated. Please use milab-human-rna-ig-umi-multiplex."
+  inheritFrom: milab-human-rna-ig-umi-multiplex
 
 milab-human-tcr-rna-race-cdr3:
-  deprecation: "The preset is deprecated. Please use milab-human-tcr-rna-race. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: milab-human-tcr-rna-race
+  deprecation: "The preset is deprecated. Please use milab-human-rna-tcr-umi-race. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: milab-human-rna-tcr-umi-race
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 milab-human-tcr-rna-race-full-length:
-  deprecation: "The preset is deprecated. Please use milab-human-tcr-rna-race."
-  inheritFrom: milab-human-tcr-rna-race
+  deprecation: "The preset is deprecated. Please use milab-human-rna-tcr-umi-race."
+  inheritFrom: milab-human-rna-tcr-umi-race
 
 milab-human-tcr-rna-multiplex-cdr3:
-  deprecation: "The preset is deprecated. Please use milab-human-tcr-rna-multiplex."
-  inheritFrom: milab-human-tcr-rna-multiplex
+  deprecation: "The preset is deprecated. Please use milab-human-rna-tcr-umi-multiplex."
+  inheritFrom: milab-human-rna-tcr-umi-multiplex
 
 milab-human-tcr-dna-multiplex-cdr3:
-  deprecation: "The preset is deprecated. Please use milab-human-tcr-dna-multiplex."
-  inheritFrom: milab-human-tcr-dna-multiplex
+  deprecation: "The preset is deprecated. Please use milab-human-dna-tcr-multiplex."
+  inheritFrom: milab-human-dna-tcr-multiplex
 
 milab-mouse-tcr-rna-race-cdr3:
-  deprecation: "The preset is deprecated. Please use milab-mouse-tcr-rna-race. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: milab-mouse-tcr-rna-race
+  deprecation: "The preset is deprecated. Please use milab-mouse-rna-tcr-umi-race. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: milab-mouse-rna-tcr-umi-race
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 milab-mouse-tcr-rna-race-full-length:
-  deprecation: "The preset is deprecated. Please use milab-mouse-tcr-rna-race."
-  inheritFrom: milab-mouse-tcr-rna-race
+  deprecation: "The preset is deprecated. Please use milab-mouse-rna-tcr-umi-race."
+  inheritFrom: milab-mouse-rna-tcr-umi-race
 
 # NEB deprecated presets
 
 nebnext-human-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use nebnext-human-immune-sequencing. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: nebnext-human-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-human-rna-xcr-umi-nebnext. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: neb-human-rna-xcr-umi-nebnext
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 nebnext-human-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use nebnext-human-immune-sequencing."
-  inheritFrom: nebnext-human-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-human-rna-xcr-umi-nebnext."
+  inheritFrom: neb-human-rna-xcr-umi-nebnext
 
 nebnext-human-tcr-cdr3:
-  deprecation: "The preset is deprecated. Please use nebnext-human-immune-sequencing. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: nebnext-human-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-human-rna-xcr-umi-nebnext. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: neb-human-rna-xcr-umi-nebnext
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 nebnext-human-tcr-full-length:
-  deprecation: "The preset is deprecated. Please use nebnext-human-immune-sequencing."
-  inheritFrom: nebnext-human-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-human-rna-xcr-umi-nebnext."
+  inheritFrom: neb-human-rna-xcr-umi-nebnext
 
 nebnext-mouse-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use nebnext-mouse-immune-sequencing. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: nebnext-mouse-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-mouse-rna-xcr-umi-nebnext. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: neb-mouse-rna-xcr-umi-nebnext
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 nebnext-mouse-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use nebnext-mouse-immune-sequencing."
-  inheritFrom: nebnext-mouse-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-mouse-rna-xcr-umi-nebnext."
+  inheritFrom: neb-mouse-rna-xcr-umi-nebnext
 
 nebnext-mouse-tcr-cdr3:
-  deprecation: "The preset is deprecated. Please use nebnext-mouse-immune-sequencing. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: nebnext-mouse-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-mouse-rna-xcr-umi-nebnext. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: neb-mouse-rna-xcr-umi-nebnext
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 nebnext-mouse-tcr-full-length:
-  deprecation: "The preset is deprecated. Please use nebnext-mouse-immune-sequencing."
-  inheritFrom: nebnext-mouse-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-mouse-rna-xcr-umi-nebnext."
+  inheritFrom: neb-mouse-rna-xcr-umi-nebnext
 
 nebnext-human-tcr-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use nebnext-human-immune-sequencing. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: nebnext-human-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-human-rna-xcr-umi-nebnext. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: neb-human-rna-xcr-umi-nebnext
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 nebnext-human-tcr-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use nebnext-human-immune-sequencing."
-  inheritFrom: nebnext-human-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-human-rna-xcr-umi-nebnext."
+  inheritFrom: neb-human-rna-xcr-umi-nebnext
 
 nebnext-mouse-tcr-bcr-cdr3:
-  deprecation: "The preset is deprecated. Please use nebnext-mouse-immune-sequencing. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: nebnext-mouse-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-mouse-rna-xcr-umi-nebnext. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: neb-mouse-rna-xcr-umi-nebnext
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 nebnext-mouse-tcr-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use nebnext-mouse-immune-sequencing."
-  inheritFrom: nebnext-mouse-immune-sequencing
+  deprecation: "The preset is deprecated. Please use neb-mouse-rna-xcr-umi-nebnext."
+  inheritFrom: neb-mouse-rna-xcr-umi-nebnext
 
 
 # qiaseq deprecated presets
 
 qiaseq-human-tcr-cdr3:
-  deprecation: "The preset is deprecated. Please use qiaseq-human-tcr-panel. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: qiaseq-human-tcr-panel
+  deprecation: "The preset is deprecated. Please use qiagen-human-rna-tcr-umi-qiaseq. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: qiagen-human-rna-tcr-umi-qiaseq
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 qiaseq-human-tcr-full-length:
-  deprecation: "The preset is deprecated. Please use qiaseq-human-tcr-panel."
-  inheritFrom: qiaseq-human-tcr-panel
+  deprecation: "The preset is deprecated. Please use qiagen-human-rna-tcr-umi-qiaseq."
+  inheritFrom: qiagen-human-rna-tcr-umi-qiaseq
 
 qiaseq-mouse-tcr-cdr3:
-  deprecation: "The preset is deprecated. Please use qiaseq-mouse-tcr-panel. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: qiaseq-mouse-tcr-panel
+  deprecation: "The preset is deprecated. Please use qiagen-mouse-rna-tcr-umi-qiaseq. Notice that by default clones will be assembled by VDJRegion, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: qiagen-mouse-rna-tcr-umi-qiaseq
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 qiaseq-mouse-tcr-full-length:
-  deprecation: "The preset is deprecated. Please use qiaseq-mouse-tcr-panel."
-  inheritFrom: qiaseq-mouse-tcr-panel
+  deprecation: "The preset is deprecated. Please use qiagen-mouse-rna-tcr-umi-qiaseq."
+  inheritFrom: qiagen-mouse-rna-tcr-umi-qiaseq
 
 
-# thermofisher deprecated presets
+# Thermo Fisher deprecated presets
 
 oncomine-human-tcrb-lr-cdr3:
-  deprecation: "The preset is deprecated. Please use oncomine-human-tcrb-lr. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: oncomine-human-tcrb-lr
+  deprecation: "The preset is deprecated. Please use thermofisher-human-rna-trb-oncomine-lr. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: thermofisher-human-rna-trb-oncomine-lr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 oncomine-human-tcrb-lr-full-length:
-  deprecation: "The preset is deprecated. Please use oncomine-human-tcrb-lr."
-  inheritFrom: oncomine-human-tcrb-lr
+  deprecation: "The preset is deprecated. Please use thermofisher-human-rna-trb-oncomine-lr."
+  inheritFrom: thermofisher-human-rna-trb-oncomine-lr
 
 oncomine-human-tcrb-sr-cdr3:
-  deprecation: "The preset is deprecated. Please use oncomine-human-tcrb-sr."
-  inheritFrom: oncomine-human-tcrb-sr
+  deprecation: "The preset is deprecated. Please use thermofisher-human-rna-trb-oncomine-sr."
+  inheritFrom: thermofisher-human-rna-trb-oncomine-sr
 
 oncomine-human-bcr-ihg-lr-cdr3:
-  deprecation: "The preset is deprecated. Please use oncomine-human-igh-lr. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
-  inheritFrom: oncomine-human-igh-lr
+  deprecation: "The preset is deprecated. Please use thermofisher-human-rna-igh-oncomine-lr. Notice that by default clones will be assembled by {CDR1Begin:FR4End}, to mimic the behavior of the current deprecated preset add --assemble-contigs-by CDR3"
+  inheritFrom: thermofisher-human-rna-igh-oncomine-lr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
 
 oncomine-human-bcr-ihg-lr-full-length:
-  deprecation: "The preset is deprecated. Please use oncomine-human-igh-lr."
-  inheritFrom: oncomine-human-igh-lr
+  deprecation: "The preset is deprecated. Please use thermofisher-human-rna-igh-oncomine-lr."
+  inheritFrom: thermofisher-human-rna-igh-oncomine-lr
 
 oncomine-human-bcr-pan-clonality-cdr3:
-  deprecation: "The preset is deprecated. Please use oncomine-human-bcr-pan-clonality."
-  inheritFrom: oncomine-human-bcr-pan-clonality
+  deprecation: "The preset is deprecated. Please use thermofisher-human-dna-bcr-oncomine-pan-clonality."
+  inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
 
 oncomine-human-tcr-pan-clonality-cdr3:
   deprecation: "The preset is deprecated. Please use oncomine-human-tcr-pan-clonality."
-  inheritFrom: oncomine-human-tcr-pan-clonality
+  inheritFrom: thermofisher-human-dna-tcr-oncomine-pan-clonality
+
+oncomine-human-igh-fr3-j:
+  deprecation: "The preset is deprecated. Please use thermofisher-human-dna-igh-oncomine-fr3-j."
+  inheritFrom: thermofisher-human-dna-igh-oncomine-fr3-j
+
+oncomine-human-igh-fr2-j:
+  deprecation: "The preset is deprecated. Please use thermofisher-human-dna-igh-oncomine-fr2-j."
+  inheritFrom: thermofisher-human-dna-igh-oncomine-fr2-j
+
+oncomine-human-igh-fr1-j:
+  deprecation: "The preset is deprecated. Please use thermofisher-human-dna-igh-oncomine-fr1-j."
+  inheritFrom: thermofisher-human-dna-igh-oncomine-fr1-j
+
+oncomine-human-igh-leader-j:
+  deprecation: "The preset is deprecated. Please use thermofisher-human-dna-igh-oncomine-v-leader-j."
+  inheritFrom: thermofisher-human-dna-igh-oncomine-v-leader-j
 
 
 # 10x deprecated presets
 
 10x-vdj-tcr:
-  deprecation: "The preset is deprecated. Please use 10x-vdj."
-  inheritFrom: 10x-vdj
+  deprecation: "The preset is deprecated. Please use 10x-sc-xcr-vdj."
+  inheritFrom: 10x-sc-xcr-vdj
 
 10x-vdj-tcr-full-length:
-  deprecation: "The preset is deprecated. Please use 10x-vdj."
-  inheritFrom: 10x-vdj
+  deprecation: "The preset is deprecated. Please use 10x-sc-xcr-vdj."
+  inheritFrom: 10x-sc-xcr-vdj
   mixins:
     - type: SetContigAssemblingFeatures
       features: [ "VDJRegion" ]
 
 10x-vdj-bcr:
-  deprecation: "The preset is deprecated. Please use 10x-vdj."
-  inheritFrom: 10x-vdj
+  deprecation: "The preset is deprecated. Please use 10x-sc-xcr-vdj."
+  inheritFrom: 10x-sc-xcr-vdj
 
 10x-vdj-bcr-full-length:
-  deprecation: "The preset is deprecated. Please use 10x-vdj."
-  inheritFrom: 10x-vdj
+  deprecation: "The preset is deprecated. Please use 10x-sc-xcr-vdj."
+  inheritFrom: 10x-sc-xcr-vdj
   mixins:
     - type: SetContigAssemblingFeatures
       features: [ "VDJRegion" ]
 
 10x-5gex-cdr3:
-  deprecation: "The preset is deprecated. Please use 10x-5gex."
-  inheritFrom: 10x-5gex
+  deprecation: "The preset is deprecated. Please use 10x-sc-5gex."
+  inheritFrom: 10x-sc-5gex
 
 10x-5gex-full-length:
-  deprecation: "The preset is deprecated. Please use 10x-5gex."
-  inheritFrom: 10x-5gex
+  deprecation: "The preset is deprecated. Please use 10x-sc-5gex."
+  inheritFrom: 10x-sc-5gex
   mixins:
     - type: SetContigAssemblingFeatures
       features: [ "VDJRegion" ]
@@ -391,20 +407,20 @@ oncomine-human-tcr-pan-clonality-cdr3:
 # Single cell deprecated presets
 
 smartseq2-vdj-full-length:
-  deprecation: "The preset is deprecated. Please use smartseq2-vdj."
-  inheritFrom: smartseq2-vdj
+  deprecation: "The preset is deprecated. Please use smart-seq2-vdj."
+  inheritFrom: smart-seq2-vdj
 
 singleron-2.0.1-vdj-cdr3:
-  deprecation: "The preset is deprecated. Please use singleron-gexscope-single-cell-vdj."
-  inheritFrom: singleron-gexscope-single-cell-vdj
+  deprecation: "The preset is deprecated. Please use singleron-human-sc-xcr-gexscope-vdj."
+  inheritFrom: singleron-human-sc-xcr-gexscope-vdj
 
 seqwell-vdj-cdr3:
-  deprecation: "The preset is deprecated. Please use seqwell-vdj."
-  inheritFrom: seqwell-vdj
+  deprecation: "The preset is deprecated. Please use seq-well-vdj."
+  inheritFrom: seq-well-vdj
 
 parse-bio-vdj-3gex:
-  deprecation: "The preset is deprecated. Please use one of the dedicated presets: parse-bio-3gex-wt, parse-bio-3gex-wt-mini, parse-bio-3gex-wt-mega."
-  inheritFrom: parse-bio-3gex-wt-mega
+  deprecation: "The preset is deprecated. Please use one of the dedicated presets: parsebio-sc-3gex-evercode-wt, parsebio-sc-3gex-evercode-wt-mini, parsebio-sc-3gex-evercode-wt-mega. Currently running parsebio-sc-3gex-evercode-wt-mega."
+  inheritFrom: parsebio-sc-3gex-evercode-wt-mega
 
 split-seq-vdj-3gex:
   deprecation: "The preset is deprecated. Please use split-seq-3gex."
@@ -413,5 +429,5 @@ split-seq-vdj-3gex:
 # Long reads (ONT) deprecated presets
 
 ont-rna-seq-vdj-full-length:
-  deprecation: "The preset is deprecated. Please use ont-rna-seq-vdj."
-  inheritFrom: ont-rna-seq-vdj
+  deprecation: "The preset is deprecated. Please use ont-rna-seq."
+  inheritFrom: ont-rna-seq

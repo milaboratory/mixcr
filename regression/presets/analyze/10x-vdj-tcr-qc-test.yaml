@@ -8,9 +8,6 @@ pipeline:
 - assemble
 - assembleContigs
 - exportClones
-validation:
-- type: TagPatternShouldContainsTagType
-  tagType: Cell
 align:
   species: ""
   libraryName: default
@@ -26,6 +23,9 @@ align:
   tagMaxBudget: 10.0
   readIdAsCellTag: false
   sampleTable: null
+  tagsValidations:
+  - type: MustContainTagType
+    tagType: Cell
   splitBySample: false
   limit: null
   parameters:
