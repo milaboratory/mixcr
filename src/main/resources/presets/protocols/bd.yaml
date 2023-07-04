@@ -671,10 +671,6 @@
                       - type: group_operator_advanced_thresholding
                         algo:
                           type: otsu
-                        histTransformers:
-                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                          - type: inflate
-                            fraction: 0.15
                         logX: true
                         minimalSample: 20
                         fallbackThreshold: 1.0
@@ -699,10 +695,6 @@
                       - type: group_operator_advanced_thresholding
                         algo:
                           type: otsu
-                        histTransformers:
-                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                          - type: inflate
-                            fraction: 0.15
                         logX: true
                         minimalSample: 20
                         fallbackThreshold: 1.0
@@ -1375,10 +1367,6 @@
                       - type: group_operator_advanced_thresholding
                         algo:
                           type: otsu
-                        histTransformers:
-                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                          - type: inflate
-                            fraction: 0.15
                         logX: true
                         minimalSample: 20
                         fallbackThreshold: 1.0
@@ -1403,10 +1391,6 @@
                       - type: group_operator_advanced_thresholding
                         algo:
                           type: otsu
-                        histTransformers:
-                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                          - type: inflate
-                            fraction: 0.15
                         logX: true
                         minimalSample: 20
                         fallbackThreshold: 1.0
@@ -3815,10 +3799,6 @@
                       - type: group_operator_advanced_thresholding
                         algo:
                           type: otsu
-                        histTransformers:
-                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                          - type: inflate
-                            fraction: 0.15
                         logX: true
                         minimalSample: 20
                         fallbackThreshold: 1.0
@@ -3843,10 +3823,6 @@
                       - type: group_operator_advanced_thresholding
                         algo:
                           type: otsu
-                        histTransformers:
-                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                          - type: inflate
-                            fraction: 0.15
                         logX: true
                         minimalSample: 20
                         fallbackThreshold: 1.0
@@ -6247,10 +6223,6 @@
                       - type: group_operator_advanced_thresholding
                         algo:
                           type: otsu
-                        histTransformers:
-                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                          - type: inflate
-                            fraction: 0.15
                         logX: true
                         minimalSample: 20
                         fallbackThreshold: 1.0
@@ -6275,10 +6247,6 @@
                       - type: group_operator_advanced_thresholding
                         algo:
                           type: otsu
-                        histTransformers:
-                          # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                          - type: inflate
-                            fraction: 0.15
                         logX: true
                         minimalSample: 20
                         fallbackThreshold: 1.0
