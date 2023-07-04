@@ -1,11 +1,10 @@
-PresetName                                  Required mix-ins
+PresetName                                         Required mix-ins
 10x-sc-5gex                                        --species <name>
 10x-sc-xcr-vdj                                     --species <name>
 abhelix-human-rna-xcr
-bd-rhapsody-human-tcr-bcr-multiomic-assay
-bd-rhapsody-human-vdj-cdr3
-bd-rhapsody-mouse-tcr-bcr-multiomic-assay
-bd-rhapsody-mouse-vdj-cdr3
+bd-human-sc-xcr-rhapsody-cdr3
+bd-mouse-sc-xcr-rhapsody-cdr3
+bd-sc-xcr-rhapsody-full-length                     --species <name>
 biomed2-human-rna-igh
 biomed2-human-rna-igkl
 biomed2-human-rna-trbdg

@@ -36,7 +36,7 @@ align:
   readIdAsCellTag: false
   tagTransformationSteps:
   - type: mapTags
-    name: CLS1
+    name: CELL1 to BD CLS1 index
     matchTags:
     - CELL1
     newTags:
@@ -237,7 +237,7 @@ align:
       to: 54
     reportingLevel: VerboseReport
   - type: mapTags
-    name: CLS2
+    name: CELL2 to BD CLS2 index
     matchTags:
     - CELL2
     newTags:
@@ -438,7 +438,7 @@ align:
       to: 53
     reportingLevel: VerboseReport
   - type: mapTags
-    name: CLS3
+    name: ELL3 to BD CLS3 index
     matchTags:
     - CELL3
     newTags:
@@ -639,7 +639,7 @@ align:
       to: 80
     reportingLevel: VerboseReport
   - type: generic
-    name: ""
+    name: BD CLS1-CLS2-CLS3 indices to BD cell index
     transformation:
       type: plus
       sources:
@@ -667,7 +667,9 @@ align:
         name: CELL3ID
     destinationTag: CELLID
   sampleTable: null
-  tagsValidations: []
+  tagsValidations:
+  - type: MustNotContainTagType
+    tagType: Sample
   splitBySample: false
   limit: null
   parameters:
@@ -865,16 +867,23 @@ refineTagsAndSort:
             keys:
             - allTags:Molecule
           operator:
-            type: group_operator_advanced_thresholding
-            algo:
-              type: otsu
-            histTransformers:
-            - type: inflate
-              fraction: 0.15
-              value: 1.0
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 1.0
+            type: group_operator_lowest_threshold
+            operators:
+            - type: group_operator_advanced_thresholding
+              algo:
+                type: otsu
+              histTransformers:
+              - type: inflate
+                fraction: 0.15
+                value: 1.0
+              logX: true
+              minimalSample: 20
+              fallbackThreshold: 1.0
+              accept: High
+            - type: group_operator_cumtop
+              share: 0.85
+              round: Down
+              accept: High
             accept: High
           expectedSorting:
           - allTags:Molecule
