@@ -1,4 +1,5 @@
-flags: []
+flags:
+- species
 pipeline:
 - align
 - refineTagsAndSort
@@ -8,7 +9,7 @@ pipeline:
 - assembleContigs
 - exportClones
 align:
-  species: mmu
+  species: ""
   libraryName: default
   trimmingQualityThreshold: 10
   trimmingWindowSize: 6
@@ -24,13 +25,11 @@ align:
   readIdAsCellTag: false
   tagTransformationSteps:
   - type: mapTags
-    name: CLS1
+    name: CELL1 to BD CLS1 index
     matchTags:
     - CELL1
     newTags:
     - CELL1ID
-    preserveMatchedTags:
-    - CELL1
     allowOneMismatch: true
     rules:
     - from: AAATCCTGT
@@ -227,13 +226,11 @@ align:
       to: 54
     reportingLevel: VerboseReport
   - type: mapTags
-    name: CLS2
+    name: CELL2 to BD CLS2 index
     matchTags:
     - CELL2
     newTags:
     - CELL2ID
-    preserveMatchedTags:
-    - CELL2
     allowOneMismatch: true
     rules:
     - from: AAACGTACC
@@ -430,13 +427,11 @@ align:
       to: 53
     reportingLevel: VerboseReport
   - type: mapTags
-    name: CLS3
+    name: CELL3 to BD CLS3 index
     matchTags:
     - CELL3
     newTags:
     - CELL3ID
-    preserveMatchedTags:
-    - CELL3
     allowOneMismatch: true
     rules:
     - from: AAAGAGGCC
@@ -633,7 +628,7 @@ align:
       to: 80
     reportingLevel: VerboseReport
   - type: generic
-    name: ""
+    name: BD CLS1-CLS2-CLS3 indices to BD cell index
     transformation:
       type: plus
       sources:
@@ -860,16 +855,23 @@ refineTagsAndSort:
             keys:
             - allTags:Molecule
           operator:
-            type: group_operator_advanced_thresholding
-            algo:
-              type: otsu
-            histTransformers:
-            - type: inflate
-              fraction: 0.15
-              value: 1.0
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 1.0
+            type: group_operator_lowest_threshold
+            operators:
+            - type: group_operator_advanced_thresholding
+              algo:
+                type: otsu
+              histTransformers:
+              - type: inflate
+                fraction: 0.15
+                value: 1.0
+              logX: true
+              minimalSample: 20
+              fallbackThreshold: 1.0
+              accept: High
+            - type: group_operator_cumtop
+              share: 0.85
+              round: Down
+              accept: High
             accept: High
           expectedSorting:
           - allTags:Molecule
