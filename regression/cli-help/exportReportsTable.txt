@@ -1,24 +1,32 @@
-Usage: mixcr exportReportsTable [--with-upstreams] [--preset <preset>] [--preset-file <presetFile>]
-                                [--no-header] [-fileName] [-MiXCRVersion] [-inputFilesAlign]
-                                [-totalReads] [-patternMatchedReads] [-overlapped]
-                                [-overlappedAndAligned] [-alignmentsFailed] [-successAligned]
-                                [-readsWithChain] [-inputFileAssemble]
-                                [-readsClusteredInCorrection] [-droppedNoClonalSeq]
-                                [-droppedShortSeq] [-droppedLowQual] [-droppedFailedMapping]
-                                [-inputFileAssembleContigs] [-totalClonotypes]
-                                [-readsUsedInClonotypes] [-clonesWithChain] [-foundAllelesCount]
-                                [-foundDeNovaAllelesCount] [-foundTreesCount] [-cloneInTreesCount]
-                                [--force-overwrite] [--no-warnings] [--verbose] [--help] (data.
-                                (vdjca|clns|clna|shmt)|directory)... [report.tsv]
+Usage: mixcr exportReportsTable [--without-upstreams] [--preset <preset>] [--preset-file
+                                <presetFile>] [--no-header] [-fileName] [-MiXCRVersion]
+                                [-totalReads] [-totalClonotypes] [-clonesWithChain]
+                                [-readsUsedInClonotypes] [-align.inputFiles] [-align.
+                                patternMatchedReads] [-align.overlapped] [-align.
+                                overlappedAndAligned] [-align.alignmentsFailed] [-align.
+                                successAligned] [-align.readsWithChain] [-align.readsCoverage]
+                                [-refineTags.outputDiversity] [-refineTags.outputReadsCount]
+                                [-refineTags.numberOfGroupsAccepted] [-refineTags.
+                                totalWeightAccepted] [-refineTags.effectiveThreshold] [-assemble.
+                                inputFile] [-assemble.readsClusteredInCorrection] [-assemble.
+                                droppedReads] [-assemble.coreReads] [-assemble.preCloneAssembler.
+                                inputGroups] [-assemble.preCloneAssembler.preClones] [-assemble.
+                                preCloneAssembler.assemblingFeatureSequencesInZeroPreClones]
+                                [-assemble.preCloneAssembler.unassignedAlignments]
+                                [-assembleContigs.inputFiles] [-findAlleles.inputFiles]
+                                [-findAlleles.found] [-findAlleles.deNova] [-findAlleles.
+                                notEnoughInformation] [-findTrees.inputFiles] [-findTrees.
+                                treesCount] [-findTrees.cloneInTrees] [--force-overwrite]
+                                [--no-warnings] [--verbose] [--help] (data.(vdjca|clns|clna|shmt)
+                                |directory)... [report.tsv]
 Export reports from files in tabular format.
       (data.(vdjca|clns|clna|shmt)|directory)...
                              Path to input files or directories.
                              In case of directory no filter by file type will be applied.
       [report.tsv]           Path where to write reports. Print in stdout if omitted.
-      --with-upstreams       Export upstream reports for sources of steps with several inputs, like
-                               `findShmTrees`.
-  -p, --preset <preset>      Specify preset of export fields. Possible values: min, full. By
-                               default `full`
+      --without-upstreams    Don't export upstream reports for sources of steps with several
+                               inputs, like `findShmTrees`.
+  -p, --preset <preset>      Specify preset of export fields. Possible values: min, full.
       -pf, --preset-file <presetFile>
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
@@ -29,33 +37,78 @@ Export reports from files in tabular format.
 Possible fields to export
       -fileName              File name as it was specified in command `exportReportsTable`.
       -MiXCRVersion          Version of MiXCR.
-      -inputFilesAlign       Input files on `align` command.
       -totalReads            Count of reads in original data.
-      -patternMatchedReads   Percentage of reads that match pattern.
-      -overlapped            Percentage of overlapped reads.
-      -overlappedAndAligned  Percentage of overlapped and aligned reads.
-      -alignmentsFailed      Percentage of reads that not aligned because of different reasons
-                               (columns for each reason).
-      -successAligned        Percentage of aligned reads.
-      -readsWithChain        Percentage of reads aligned on specific chain. Will be exported all
-                               found chains.
-      -inputFileAssemble     Input files on `assemble` command.
-      -readsClusteredInCorrection
-                             Reads pre-clustered due to the similar VJC-lists, percent of used.
-      -droppedNoClonalSeq    Reads dropped due to the lack of a clone sequence, percent of total.
-      -droppedShortSeq       Reads dropped due to a too short clonal sequence, percent of total.
-      -droppedLowQual        Reads dropped due to low quality, percent of total.
-      -droppedFailedMapping  Reads dropped due to failed mapping, percent of total
-      -inputFileAssembleContigs
-                             Input files on `assembleContigs` command.
       -totalClonotypes       Total clonotypes after `assembleContigs` command if it was run,
                                `assemble` otherwise.
+      -clonesWithChain       Percentage of clones aligned on specific chain (`assemble` command).
+                               Will be exported for all found chains.
       -readsUsedInClonotypes Reads used in clonotypes after `assembleContigs` command if it was
                                run, `assemble` otherwise.
-      -clonesWithChain       Percentage of clones aligned on specific chain (`assemble` command).
-                               Will be exported all found chains.
-      -foundAllelesCount     Count of found alleles.
-      -foundDeNovaAllelesCount
-                             Count of de nova found alleles.
-      -foundTreesCount       Count of found trees.
-      -cloneInTreesCount     Count of uniq clones that was included in trees.
+      -align.inputFiles      Input files on `align` command.
+      -align.patternMatchedReads
+                             Percentage and absolute of reads that match pattern.
+      -align.overlapped      Percentage and absolute of overlapped paired-end reads.
+      -align.overlappedAndAligned
+                             Percentage and absolute of overlapped and aligned reads (in any order).
+      -align.alignmentsFailed
+                             Percentage and absolute of reads that not aligned because of different
+                               reasons (columns for each reason).
+      -align.successAligned  Percentage and absolute of aligned reads.
+      -align.readsWithChain  Percentage and absolute of reads aligned on specific chain. Will be
+                               exported for all found chains.
+      -align.readsCoverage   Percentage of reads that fully cover feature. Will be exported for all
+                               calculated features.
+      -refineTags.outputDiversity
+                             Output diversity of tag as absolute and percentage from input
+                               diversity. Will be exported for all tags.
+      -refineTags.outputReadsCount
+                             Output reads for refine tag as absolute and percentage from input
+                               reads. Will be exported for all tags.
+      -refineTags.numberOfGroupsAccepted
+                             Number of unique groups of tags after filtering as absolute and
+                               percentage from initial number of unique groups of tags after
+                               correction.
+      -refineTags.totalWeightAccepted
+                             Total number of groups of tags after filtering as absolute and
+                               percentage from initial number of total number of input groups after
+                               correction.
+      -refineTags.effectiveThreshold
+                             Reads per group threshold used for filtering. Will be exported for
+                               every step that used it.
+      -assemble.inputFile    Input files on `assemble` command.
+      -assemble.readsClusteredInCorrection
+                             Reads pre-clustered due to the similar VJC-lists as absolute and
+                               percentage of used reads.
+      -assemble.droppedReads Reads dropped as absolute and percentage of total input reads.
+                             noClonalSeq - due to the lack of a clone sequence.
+                             shortSeq - due to a too short clonal sequence.
+                             lowQual - due to low quality.
+                             failedMapping - due to failed mapping.
+
+      -assemble.coreReads    Number of reads used as a core for clustering as absolute and
+                               percentage of reads used for clustering.
+      -assemble.preCloneAssembler.inputGroups
+                             Pre-clone assembler: number of groups defined by unique barcodes
+                               combination. In case of single-cell UMI-barcoded library equals to
+                               unique CellId+UMI groups.
+      -assemble.preCloneAssembler.preClones
+                             Number of pre-clonotypes per group and total.
+      -assemble.preCloneAssembler.assemblingFeatureSequencesInZeroPreClones
+                             Number of assembling feature sequences in groups with zero
+                               pre-clonotypes.
+      -assemble.preCloneAssembler.unassignedAlignments
+                             Unassigned alignments as absolute and percentage of input alignments
+      -assembleContigs.inputFiles
+                             Input files on `assembleContigs` command.
+      -findAlleles.inputFiles
+                             Input files on `findAlleles` command.
+      -findAlleles.found     Count of found alleles.
+      -findAlleles.deNova    Count of de nova found alleles.
+      -findAlleles.notEnoughInformation
+                             Count of genes that had not enough information to reliably determinate
+                               allele variant.
+      -findTrees.inputFiles  Input files on `findAlleles` command.
+      -findTrees.treesCount  Count of found trees.
+      -findTrees.cloneInTrees
+                             Count of uniq clones that was included in trees as absolute and
+                               percentage from input clones.
