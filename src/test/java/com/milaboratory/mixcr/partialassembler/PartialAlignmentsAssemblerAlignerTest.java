@@ -50,7 +50,7 @@ public class PartialAlignmentsAssemblerAlignerTest {
         int len = 70;
         NucleotideSequence seq1 = baseSeq.getRange(0, len);
         NucleotideSequence seq2 = baseSeq.getRange(245, 245 + len);
-        NucleotideSequence seq3 = baseSeq.getRange(320, 320 + len);
+        NucleotideSequence seq3 = baseSeq.getRange(319, 319 + len);
 
         VDJCMultiRead read = MiXCRTestUtils.createMultiRead(seq1, seq2, seq3);
         VDJCAlignments al = aligner.process(read.toTuple(), read);
@@ -64,6 +64,12 @@ public class PartialAlignmentsAssemblerAlignerTest {
         VDJCHit bestD = al.getBestHit(GeneType.Diversity);
         VDJCHit bestJ = al.getBestHit(GeneType.Joining);
         VDJCHit bestC = al.getBestHit(GeneType.Constant);
+
+        System.out.println(bestV.getGene().getName());
+        System.out.println(bestD.getGene().getName());
+        System.out.println(bestJ.getGene().getName());
+        System.out.println(bestC.getGene().getName());
+
         Assert.assertNotNull(bestV.getAlignment(0));
         Assert.assertNotNull(bestV.getAlignment(1));
         Assert.assertNull(bestV.getAlignment(2));
