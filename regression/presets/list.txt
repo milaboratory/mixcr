@@ -1,127 +1,3 @@
-<<<<<<< HEAD
-PresetName                                  Required mix-ins
-10x-5gex                                    --species <name>
-10x-vdj                                     --species <name>
-abhelix-human
-ampliseq-tcrb-plus
-ampliseq-tcrb-sr
-bd-rhapsody-human-bcr-full-length
-bd-rhapsody-human-bcr-v1
-bd-rhapsody-human-bcr-v2
-bd-rhapsody-human-tcr-full-length
-bd-rhapsody-human-tcr-v1
-bd-rhapsody-human-tcr-v2
-bd-rhapsody-mouse-bcr-full-length
-bd-rhapsody-mouse-bcr-v1
-bd-rhapsody-mouse-bcr-v2
-bd-rhapsody-mouse-tcr-full-length
-bd-rhapsody-mouse-tcr-v1
-bd-rhapsody-mouse-tcr-v2
-biomed2-human-igh
-biomed2-human-igl-igk
-biomed2-human-tcr
-cellecta-air-human
-exome-seq                                   --species <name>
-flairr-seq                                  --species <name>
-generic-amplicon                            (--floating-left-alignment-boundary [<anchor_point>]|
-                                            --rigid-left-alignment-boundary [<anchor_point>])
-                                            --species <name>
-                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                            (--dna|--rna)
-generic-amplicon-with-umi                   (--floating-left-alignment-boundary [<anchor_point>]|
-                                            --rigid-left-alignment-boundary [<anchor_point>])
-                                            --species <name>
-                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                            (--dna|--rna)
-                                            --tag-pattern <pattern>
-generic-ht-single-cell-amplicon             (--floating-left-alignment-boundary [<anchor_point>]|
-                                            --rigid-left-alignment-boundary [<anchor_point>])
-                                            --species <name>
-                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                            --tag-pattern <pattern>
-generic-ht-single-cell-amplicon-with-umi    (--floating-left-alignment-boundary [<anchor_point>]|
-                                            --rigid-left-alignment-boundary [<anchor_point>])
-                                            --species <name>
-                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                            --tag-pattern <pattern>
-generic-ht-single-cell-fragmented           --species <name>
-                                            --tag-pattern <pattern>
-generic-ht-single-cell-fragmented-with-umi  --species <name>
-                                            --tag-pattern <pattern>
-generic-lt-single-cell-amplicon             (--floating-left-alignment-boundary [<anchor_point>]|
-                                            --rigid-left-alignment-boundary [<anchor_point>])
-                                            --species <name>
-                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-generic-lt-single-cell-amplicon-with-umi    (--floating-left-alignment-boundary [<anchor_point>]|
-                                            --rigid-left-alignment-boundary [<anchor_point>])
-                                            --species <name>
-                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-generic-lt-single-cell-fragmented           --species <name>
-generic-lt-single-cell-fragmented-with-umi  --species <name>
-generic-single-cell-gex                     --species <name>
-generic-single-cell-gex-with-umi            --species <name>
-                                            --tag-pattern <pattern>
-generic-tcr-amplicon-separate-samples-umi   (--floating-left-alignment-boundary [<anchor_point>]|
-                                            --rigid-left-alignment-boundary [<anchor_point>])
-                                            --species <name>
-                                            (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                            --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                            (--dna|--rna)
-                                            --tag-pattern <pattern>
-han-et-al-2014                              --species <name>
-irepertoire-repseq-human-dna-lr
-irepertoire-repseq-human-dna-sr
-irepertoire-repseq-human-lr
-irepertoire-repseq-human-sr
-irepertoire-repseq-mouse-lr
-irepertoire-repseq-mouse-sr
-irepertoire-repseq-plus-human
-irepertoire-repseq-plus-mouse
-mikelov-et-al-2021
-milab-human-7genes-dna-multiplex
-milab-human-ig-rna-multiplex
-milab-human-tcr-dna-multiplex
-milab-human-tcr-rna-multiplex
-milab-human-tcr-rna-race
-milab-mouse-tcr-rna-race
-nebnext-human-immune-sequencing
-nebnext-mouse-immune-sequencing
-oncomine-human-bcr-pan-clonality
-oncomine-human-igh-fr1-j
-oncomine-human-igh-fr2-j
-oncomine-human-igh-fr3-j
-oncomine-human-igh-leader-j
-oncomine-human-igh-lr
-oncomine-human-igh-sr
-oncomine-human-tcr-pan-clonality
-oncomine-human-tcrb-lr
-oncomine-human-tcrb-sr
-ont-rna-seq-vdj                             --species <name>
-parse-bio-3gex-wt                           --species <name>
-parse-bio-3gex-wt-mega                      --species <name>
-parse-bio-3gex-wt-mini                      --species <name>
-qiaseq-human-tcr-panel
-qiaseq-mouse-tcr-panel
-rna-seq                                     --species <name>
-seqwell-vdj                                 --species <name>
-singleron-gexscope-single-cell-vdj
-smartseq2-vdj                               --species <name>
-split-seq-3gex                              --species <name>
-takara-human-bcr-profiling
-takara-human-tcr-profiling
-takara-human-tcr-v2-profiling
-takara-mouse-bcr-profiling
-takara-mouse-tcr-profiling
-takara-smartseq-human-bcr
-takara-smartseq-human-tcr
-test-gf-intersection                        (--dna|--rna)
-=======
 PresetName                                         Required mix-ins
 10x-sc-5gex                                        --species <name>
 10x-sc-xcr-vdj                                     --species <name>
@@ -169,19 +45,14 @@ generic-lt-single-cell-amplicon                    (--floating-left-alignment-bo
                                                    --species <name>
                                                    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
                                                    --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   --tag-pattern <pattern>
 generic-lt-single-cell-amplicon-with-umi           (--floating-left-alignment-boundary [<anchor_point>]|
                                                    --rigid-left-alignment-boundary [<anchor_point>])
                                                    --species <name>
                                                    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
                                                    --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   --tag-pattern <pattern>
 generic-lt-single-cell-fragmented                  --species <name>
-                                                   --tag-pattern <pattern>
 generic-lt-single-cell-fragmented-with-umi         --species <name>
-                                                   --tag-pattern <pattern>
 generic-single-cell-gex                            --species <name>
-                                                   --tag-pattern <pattern>
 generic-single-cell-gex-with-umi                   --species <name>
                                                    --tag-pattern <pattern>
 generic-tcr-amplicon-separate-samples-umi          (--floating-left-alignment-boundary [<anchor_point>]|
@@ -221,7 +92,6 @@ rna-seq                                            --species <name>
 seq-well-vdj                                       --species <name>
 singleron-human-sc-xcr-gexscope-vdj
 smart-seq2-vdj                                     --species <name>
-                                                   --tag-pattern <pattern>
 split-seq-3gex                                     --species <name>
 takara-human-rna-bcr-umi-smarter
 takara-human-rna-bcr-umi-smartseq
@@ -243,7 +113,6 @@ thermofisher-human-rna-igh-oncomine-lr
 thermofisher-human-rna-igh-oncomine-sr
 thermofisher-human-rna-trb-oncomine-lr
 thermofisher-human-rna-trb-oncomine-sr
->>>>>>> develop
 vergani-et-al-2017-cdr3
 vergani-et-al-2017-full-length
 
