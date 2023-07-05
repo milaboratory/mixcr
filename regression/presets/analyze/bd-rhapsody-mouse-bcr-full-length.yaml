@@ -656,7 +656,11 @@ align:
         name: CELL3ID
     destinationTag: CELLID
   sampleTable: null
-  tagsValidations: []
+  tagsValidations:
+  - type: MustContainTagType
+    tagType: Cell
+  - type: MustContainTagType
+    tagType: Molecule
   splitBySample: false
   limit: null
   parameters:

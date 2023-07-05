@@ -5,7 +5,6 @@ generic-lt-single-cell-amplicon:
     - species
     - leftAlignmentMode
     - rightAlignmentMode
-    - tagPattern
   pipeline:
     - align
     - refineTagsAndSort
@@ -45,6 +44,14 @@ generic-lt-single-cell-amplicon:
         upper: 0.05
   mixins:
     - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustNotContainTagType
+        tagType: Molecule
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Cell
   align:
     inheritFrom: align-amplicon
   assemble:
@@ -76,7 +83,6 @@ generic-lt-single-cell-amplicon-with-umi:
     - species
     - leftAlignmentMode
     - rightAlignmentMode
-    - tagPattern
   pipeline:
     - align
     - refineTagsAndSort
@@ -142,6 +148,14 @@ generic-lt-single-cell-amplicon-with-umi:
         upper: 0.05
   mixins:
     - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Cell
   align:
     inheritFrom: align-amplicon
   refineTagsAndSort:
@@ -203,12 +217,10 @@ generic-lt-single-cell-amplicon-with-umi:
     inheritFrom: exportClones-single-cell-with-umi-base
 
 # Low throughput (plates etc) shotgun single cell, no UMIs
-
 generic-lt-single-cell-fragmented:
   inheritFrom: bundle-base
   flags:
     - species
-    - tagPattern
   pipeline:
     - align
     - refineTagsAndSort
@@ -217,8 +229,6 @@ generic-lt-single-cell-fragmented:
     - assemble
     - assembleContigs
     - exportClones
-  mixins:
-    - type: MaterialTypeRNA
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -230,6 +240,13 @@ generic-lt-single-cell-fragmented:
       - type: AlignmentsDroppedLowQuality
         middle: 0.1
         upper: 0.2
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustNotContainTagType
+        tagType: Molecule
+    # check for Cell barcodes comes from align-single-cell
   align:
     inheritFrom: align-single-cell
   assemble:
@@ -260,7 +277,6 @@ generic-lt-single-cell-fragmented-with-umi:
   inheritFrom: bundle-base
   flags:
     - species
-    - tagPattern
   pipeline:
     - align
     - refineTagsAndSort
@@ -269,8 +285,6 @@ generic-lt-single-cell-fragmented-with-umi:
     - assemble
     - assembleContigs
     - exportClones
-  mixins:
-    - type: MaterialTypeRNA
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -292,6 +306,13 @@ generic-lt-single-cell-fragmented-with-umi:
       - type: ReadsDroppedInTagFiltering
         middle: 0.1
         upper: 0.2
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+    # check for Cell barcodes comes from align-single-cell
   align:
     inheritFrom: align-single-cell
   refineTagsAndSort:
@@ -354,7 +375,6 @@ generic-lt-single-cell-fragmented-with-umi:
     inheritFrom: exportClones-single-cell-with-umi-base
 
 
-
 # High throughput amplicon-based single cell, no UMIs
 generic-ht-single-cell-amplicon:
   inheritFrom: bundle-base
@@ -402,6 +422,14 @@ generic-ht-single-cell-amplicon:
         upper: 0.05
   mixins:
     - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustNotContainTagType
+        tagType: Molecule
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Cell
   align:
     inheritFrom: align-amplicon
   refineTagsAndSort:
@@ -453,8 +481,7 @@ generic-ht-single-cell-amplicon:
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
 
-
-# High throughput (plates etc) amplicon-based single cell, with UMIs
+# High throughput amplicon-based single cell, with UMIs
 generic-ht-single-cell-amplicon-with-umi:
   inheritFrom: bundle-base
   flags:
@@ -531,6 +558,14 @@ generic-ht-single-cell-amplicon-with-umi:
         upper: 0.05
   mixins:
     - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Cell
   align:
     inheritFrom: align-amplicon
   refineTagsAndSort:
@@ -615,6 +650,7 @@ generic-ht-single-cell-amplicon-with-umi:
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
 
+# High throughput fragmented-based single cell, no UMIs
 generic-ht-single-cell-fragmented:
   inheritFrom: bundle-base
   flags:
@@ -628,8 +664,6 @@ generic-ht-single-cell-fragmented:
     - assemble
     - assembleContigs
     - exportClones
-  mixins:
-    - type: MaterialTypeRNA
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -651,6 +685,13 @@ generic-ht-single-cell-fragmented:
       - type: ReadsDroppedInTagFiltering
         middle: 0.1
         upper: 0.2
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustNotContainTagType
+        tagType: Molecule
+    # check for Cell barcodes comes from align-single-cell
   align:
     inheritFrom: align-single-cell
   refineTagsAndSort:
@@ -717,8 +758,6 @@ generic-ht-single-cell-fragmented-with-umi:
     - assemble
     - assembleContigs
     - exportClones
-  mixins:
-    - type: MaterialTypeRNA
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -740,6 +779,13 @@ generic-ht-single-cell-fragmented-with-umi:
       - type: ReadsDroppedInTagFiltering
         middle: 0.1
         upper: 0.2
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+    # check for Cell barcodes comes from align-single-cell
   align:
     inheritFrom: align-single-cell
   refineTagsAndSort:
@@ -825,24 +871,61 @@ generic-ht-single-cell-fragmented-with-umi:
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
 
-# Single cell GEX without UMI
-generic-single-cell-gex:
-  inheritFrom: generic-ht-single-cell-fragmented
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort-base
+generic-single-cell-gex-base:
+  inheritFrom: bundle-base
+  abstract: true
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - extend
+    - assemble
+    - assembleContigs
+    - exportClones
+  qc:
+    checks:
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.1
+        upper: 0.2
+  align:
+    inheritFrom: align-single-cell
   assemblePartial:
     inheritFrom: assemblePartial-base
     overrides:
       cellLevel: true
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      clnaOutput: true
+
+# Single cell GEX without UMI
+generic-single-cell-gex:
+  inheritFrom: generic-single-cell-gex-base
+  flags:
+    - species
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustNotContainTagType
+        tagType: Molecule
+  exportClones:
+    inheritFrom: exportClones-single-cell-no-umi-base
+
 
 # Single cell GEX with UMI
 generic-single-cell-gex-with-umi:
-  inheritFrom: generic-ht-single-cell-fragmented-with-umi
-  refineTagsAndSort:
-    inheritFrom: refineTagsAndSort-base
-  assemblePartial:
-    inheritFrom: assemblePartial-base
-    overrides:
-      cellLevel: true
+  inheritFrom: generic-single-cell-gex-base
+  flags:
+    - species
+    - tagPattern
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+  exportClones:
+    inheritFrom: exportClones-single-cell-with-umi-base
 
 

@@ -418,6 +418,11 @@
     - refineTagsAndSort
     - assemble
     - exportClones
+  mixins:
+    - type: RemoveTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Cell
   align:
     inheritFrom: align-single-cell
     overrides:
@@ -497,6 +502,11 @@
     - refineTagsAndSort
     - assemble
     - exportClones
+  mixins:
+    - type: RemoveTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Cell
   align:
     inheritFrom: align-single-cell
     overrides:
@@ -574,7 +584,7 @@
     - assembleContigs
     - exportClones
   align:
-    inheritFrom: align-single-cell
+    inheritFrom: align-shotgun
     overrides:
       tagPattern: ^(UMI:N{26})\^(R2:*)
   refineTagsAndSort:

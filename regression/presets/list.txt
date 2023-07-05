@@ -45,19 +45,14 @@ generic-lt-single-cell-amplicon                    (--floating-left-alignment-bo
                                                    --species <name>
                                                    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
                                                    --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   --tag-pattern <pattern>
 generic-lt-single-cell-amplicon-with-umi           (--floating-left-alignment-boundary [<anchor_point>]|
                                                    --rigid-left-alignment-boundary [<anchor_point>])
                                                    --species <name>
                                                    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
                                                    --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   --tag-pattern <pattern>
 generic-lt-single-cell-fragmented                  --species <name>
-                                                   --tag-pattern <pattern>
 generic-lt-single-cell-fragmented-with-umi         --species <name>
-                                                   --tag-pattern <pattern>
 generic-single-cell-gex                            --species <name>
-                                                   --tag-pattern <pattern>
 generic-single-cell-gex-with-umi                   --species <name>
                                                    --tag-pattern <pattern>
 generic-tcr-amplicon-separate-samples-umi          (--floating-left-alignment-boundary [<anchor_point>]|
@@ -97,7 +92,6 @@ rna-seq                                            --species <name>
 seq-well-vdj                                       --species <name>
 singleron-human-sc-xcr-gexscope-vdj
 smart-seq2-vdj                                     --species <name>
-                                                   --tag-pattern <pattern>
 split-seq-3gex                                     --species <name>
 takara-human-rna-bcr-umi-smarter
 takara-human-rna-bcr-umi-smartseq
