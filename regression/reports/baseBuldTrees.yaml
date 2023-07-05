@@ -241,8 +241,8 @@ upstreams:
       outputFiles:
       - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       totalReadsProcessed: 49700
-      aligned: 49574
-      notAligned: 126
+      aligned: 49579
+      notAligned: 121
       notAlignedReasons:
         NoHits: 0
         NoCDR3Parts: 0
@@ -250,28 +250,28 @@ upstreams:
         NoJHits: 34
         VAndJOnDifferentTargets: 9
         LowTotalScore: 0
-        NoBarcode: 80
+        NoBarcode: 75
         SampleNotMatched: 0
-      overlapped: 47622
-      overlappedAligned: 47588
+      overlapped: 47627
+      overlappedAligned: 47593
       overlappedNotAligned: 34
-      alignmentAidedOverlaps: 325
+      alignmentAidedOverlaps: 324
       noCDR3PartsAlignments: 3
       partialAlignments: 232
       chimeras: 0
       vChimeras: 92
       jChimeras: 0
       pairedEndAlignmentConflicts: 1246
-      realignedWithForcedNonFloatingBound: 4646
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 1555
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 1555
+      realignedWithForcedNonFloatingBound: 4644
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1549
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1549
       chainUsage:
         type: chainUsage
         chimeras: 0
-        total: 49574
+        total: 49579
         chains:
           IGH:
-            total: 49574
+            total: 49579
             nonFunctional: 1055
             isOOF: 722
             hasStops: 333
@@ -288,10 +288,10 @@ upstreams:
         r2RightTrimmedNucleotides: 2744
       tagParsingReport:
         total: 49700
-        matched: 49620
-        totalBitCost: 38905.73649
+        matched: 49625
+        totalBitCost: 38892.47652
         projections:
-          "1,2": 49620
+          "1,2": 49625
         detailedReport:
         - nested:
             "1,2":
@@ -300,139 +300,139 @@ upstreams:
               - - positionDistributions:
                     C:Left:
                       "0": 70
-                      "1": 26766
+                      "1": 26771
                       "2": 180
                     C:Right:
                       "15": 70
-                      "16": 26766
+                      "16": 26771
                       "17": 180
                     R1:Left:
                       "15": 70
-                      "16": 26766
+                      "16": 26771
                       "17": 180
                     R1:Right:
-                      "310": 27016
+                      "310": 27021
                     R1F:Left:
-                      "0": 27016
+                      "0": 27021
                     R1F:Right:
-                      "310": 27016
+                      "310": 27021
                   lengthDistributions:
                     C:
-                      "15": 27016
+                      "15": 27021
                     R1:
                       "293": 180
-                      "294": 26766
+                      "294": 26771
                       "295": 70
                     R1F:
-                      "310": 27016
+                      "310": 27021
                   costDistributions:
-                    "0": 25901
-                    "5": 931
+                    "0": 25907
+                    "5": 930
                     "9": 184
                   variantDistribution:
-                    "0": 27016
+                    "0": 27021
                 - positionDistributions:
                     C:Left:
                       "0": 26
-                      "1": 4984
+                      "1": 4983
                       "2": 360
                     C:Right:
                       "15": 26
-                      "16": 4984
+                      "16": 4983
                       "17": 360
                     R1:Left:
                       "15": 26
-                      "16": 4984
+                      "16": 4983
                       "17": 360
                     R1:Right:
-                      "310": 5370
+                      "310": 5369
                     R1F:Left:
-                      "0": 5370
+                      "0": 5369
                     R1F:Right:
-                      "310": 5370
+                      "310": 5369
                   lengthDistributions:
                     C:
-                      "15": 5370
+                      "15": 5369
                     R1:
                       "293": 360
-                      "294": 4984
+                      "294": 4983
                       "295": 26
                     R1F:
-                      "310": 5370
+                      "310": 5369
                   costDistributions:
-                    "0": 4911
+                    "0": 4910
                     "5": 436
                     "9": 23
                   variantDistribution:
-                    "1": 5370
+                    "1": 5369
                 - positionDistributions:
                     C:Left:
-                      "0": 1463
-                      "1": 13720
+                      "0": 1464
+                      "1": 13718
                       "2": 23
                     C:Right:
-                      "15": 1463
-                      "16": 13720
+                      "15": 1464
+                      "16": 13718
                       "17": 23
                     R1:Left:
-                      "15": 1463
-                      "16": 13720
+                      "15": 1464
+                      "16": 13718
                       "17": 23
                     R1:Right:
-                      "310": 15206
+                      "310": 15205
                     R1F:Left:
-                      "0": 15206
+                      "0": 15205
                     R1F:Right:
-                      "310": 15206
+                      "310": 15205
                   lengthDistributions:
                     C:
-                      "15": 15206
+                      "15": 15205
                     R1:
                       "293": 23
-                      "294": 13720
-                      "295": 1463
+                      "294": 13718
+                      "295": 1464
                     R1F:
-                      "310": 15206
+                      "310": 15205
                   costDistributions:
-                    "0": 13543
-                    "5": 872
-                    "9": 791
+                    "0": 13540
+                    "5": 873
+                    "9": 792
                   variantDistribution:
-                    "2": 15206
+                    "2": 15205
                 - positionDistributions:
                     C:Left:
                       "0": 2
-                      "1": 2024
+                      "1": 2026
                       "2": 2
                     C:Right:
                       "15": 2
-                      "16": 2024
+                      "16": 2026
                       "17": 2
                     R1:Left:
                       "15": 2
-                      "16": 2024
+                      "16": 2026
                       "17": 2
                     R1:Right:
-                      "310": 2028
+                      "310": 2030
                     R1F:Left:
-                      "0": 2028
+                      "0": 2030
                     R1F:Right:
-                      "310": 2028
+                      "310": 2030
                   lengthDistributions:
                     C:
-                      "15": 2028
+                      "15": 2030
                     R1:
                       "293": 2
-                      "294": 2024
+                      "294": 2026
                       "295": 2
                     R1F:
-                      "310": 2028
+                      "310": 2030
                   costDistributions:
-                    "0": 1929
+                    "0": 1931
                     "5": 78
                     "9": 21
                   variantDistribution:
-                    "3": 2028
+                    "3": 2030
               - - positionDistributions:
                     R2:Left:
                       "41": 1
@@ -753,34 +753,34 @@ upstreams:
                     R2:Left:
                       "41": 456
                       "42": 130
-                      "43": 48982
+                      "43": 48987
                     R2:Right:
-                      "310": 49568
+                      "310": 49573
                     R2F:Left:
-                      "0": 49568
+                      "0": 49573
                     R2F:Right:
-                      "310": 49568
+                      "310": 49573
                     UMI:Left:
-                      "19": 49568
+                      "19": 49573
                     UMI:Right:
-                      "40": 49568
+                      "40": 49573
                   lengthDistributions:
                     R2:
-                      "267": 48982
+                      "267": 48987
                       "268": 130
                       "269": 456
                     R2F:
-                      "310": 49568
+                      "310": 49573
                     UMI:
-                      "21": 49568
+                      "21": 49573
                   costDistributions:
-                    "0": 46401
+                    "0": 46409
                     "3": 164
-                    "5": 2074
-                    "8": 756
-                    "10": 173
+                    "5": 2073
+                    "8": 755
+                    "10": 172
                   variantDistribution:
-                    "16": 49568
+                    "16": 49573
                 - positionDistributions:
                     R2:Left:
                       "43": 1
@@ -896,13 +896,13 @@ upstreams:
                   variantDistribution:
                     "21": 12
               costDistributions:
-                "0": 43343
+                "0": 43350
                 "3": 151
-                "5": 4083
+                "5": 4082
                 "7": 9
-                "8": 719
-                "9": 937
-                "10": 253
+                "8": 718
+                "9": 938
+                "10": 252
                 "12": 37
                 "14": 59
                 "15": 10
@@ -910,12 +910,12 @@ upstreams:
                 "19": 12
       transformerReports: []
       coverage:
-        VDJRegion: 46268
-        CDR1_TO_FR4: 47317
-        FR2_TO_FR4: 49090
-        CDR2_TO_FR4: 49560
-        FR3_TO_FR4: 49556
-        CDR3: 49339
+        VDJRegion: 46274
+        CDR1_TO_FR4: 47323
+        FR2_TO_FR4: 49094
+        CDR2_TO_FR4: 49565
+        FR3_TO_FR4: 49561
+        CDR3: 49344
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
@@ -926,36 +926,36 @@ upstreams:
       - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
       preCloneAssemblerReport:
         type: preCloneAssemblerReport
-        inputGroups: 3038
-        groupsWithNoAssemblingFeature: 96
-        inputAlignments: 47703
-        inputAlignmentsWithAssemblingFeature: 45382
+        inputGroups: 3037
+        groupsWithNoAssemblingFeature: 95
+        inputAlignments: 47706
+        inputAlignmentsWithAssemblingFeature: 45387
         corePreClonesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
         preClones: 2942
         preClonesPerGroup:
           "1": 2942
         assemblingFeatureSequencesInZeroPreClones: 0
-        coreAlignments: 45357
+        coreAlignments: 45362
         tagConflicts: 0
         geneAndTagConflicts: 0
         geneConflicts: {}
         discardedCoreAlignments: 25
-        empiricallyAssignedAlignments: 1332
+        empiricallyAssignedAlignments: 1333
         vjEmpiricallyAssignedAlignments: 0
         tagEmpiricallyAssignedAlignments: 0
-        geneAndTagEmpiricallyAssignedAlignments: 1332
+        geneAndTagEmpiricallyAssignedAlignments: 1333
         empiricalAssignmentConflicts: 0
         ignoredAlignments: 0
         unassignedAlignments: 30
       totalReadsProcessed: 49700
       totalAlignmentsProcessed: 2942
-      totalAlignedReadsProcessed: 46689
+      totalAlignedReadsProcessed: 46695
       initialClonesCreated: 1312
-      readsDroppedNoTargetSequence: 2321
+      readsDroppedNoTargetSequence: 2319
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 46514
+      coreReads: 46520
       readsDroppedFailedMapping: 148
       lowQualityRescued: 17
       clonesClustered: 23
@@ -964,8 +964,8 @@ upstreams:
       clonesDroppedAsLowQuality: 2
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 46167
-      readsInClonesBeforeClustering: 46531
+      readsInClones: 46173
+      readsInClonesBeforeClustering: 46537
       readsDroppedWithLowQualityClones: 10
       clonalChainUsage:
         type: chainUsage
@@ -999,7 +999,7 @@ upstreams:
       clonesCountWithNegativeScoreChange: 10
       clonesScoreDeltaStats:
         size: 282
-        sum: 11827.09997
+        sum: 11827.10000
         min: -58.0
         max: 145.00003
         avg: 41.94007
@@ -1047,31 +1047,31 @@ upstreams:
       outputFiles:
       - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       correctionReport:
-        inputRecords: 49574
-        outputRecords: 47703
+        inputRecords: 49579
+        outputRecords: 47706
         steps:
         - tagName: UMI
           inputGroups: 1
-          inputDiversity: 5631
-          inputCount: 49574
+          inputDiversity: 5630
+          inputCount: 49579
           coreDiversity: 5629
-          coreCount: 49572
+          coreCount: 49578
           directlyCorrectedDiversity: 1224
           directlyCorrectedCount: 1245
-          filteredDiversity: 1
-          filteredCount: 1
+          filteredDiversity: 0
+          filteredCount: 0
           recursivelyCorrected: 30
           diversityFilteredByWhitelist: 0
           outputDiversity: 4406
-          outputCount: 49573
+          outputCount: 49579
         filterReport:
           type: filter_groups_report
           groupingKeys:
           - allTags:Molecule
           numberOfGroups: 4406
-          numberOfGroupsAccepted: 3038
-          totalWeight: 49573.0
-          totalWeightAccepted: 47703.0
+          numberOfGroupsAccepted: 3037
+          totalWeight: 49579.0
+          totalWeightAccepted: 47706.0
           operatorReports:
           - operatorReport:
               type: multi_operator_hist_report
@@ -1089,19 +1089,19 @@ upstreams:
                 weight: 234.0
               - from: 2.51188
                 to: 3.98107
-                weight: 134.0
+                weight: 135.0
               - from: 3.98107
                 to: 6.30957
-                weight: 385.0
+                weight: 383.0
               - from: 6.30957
                 to: 10.0
                 weight: 487.0
               - from: 10.0
                 to: 15.84893
-                weight: 821.0
+                weight: 819.0
               - from: 15.84893
                 to: 25.11886
-                weight: 895.0
+                weight: 898.0
               - from: 25.11886
                 to: 39.81071
                 weight: 428.0
@@ -1124,20 +1124,20 @@ upstreams:
       outputFiles:
       - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       totalReadsProcessed: 29871
-      aligned: 29264
-      notAligned: 607
+      aligned: 29266
+      notAligned: 605
       notAlignedReasons:
         NoHits: 0
         NoCDR3Parts: 0
         NoVHits: 0
-        NoJHits: 544
+        NoJHits: 543
         VAndJOnDifferentTargets: 13
         LowTotalScore: 0
-        NoBarcode: 50
+        NoBarcode: 49
         SampleNotMatched: 0
-      overlapped: 27882
-      overlappedAligned: 27339
-      overlappedNotAligned: 543
+      overlapped: 27884
+      overlappedAligned: 27342
+      overlappedNotAligned: 542
       alignmentAidedOverlaps: 242
       noCDR3PartsAlignments: 0
       partialAlignments: 73
@@ -1145,16 +1145,16 @@ upstreams:
       vChimeras: 94
       jChimeras: 1
       pairedEndAlignmentConflicts: 1287
-      realignedWithForcedNonFloatingBound: 4362
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 1340
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 1340
+      realignedWithForcedNonFloatingBound: 4360
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1339
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1339
       chainUsage:
         type: chainUsage
         chimeras: 0
-        total: 29264
+        total: 29266
         chains:
           IGH:
-            total: 29264
+            total: 29266
             nonFunctional: 587
             isOOF: 367
             hasStops: 220
@@ -1163,18 +1163,18 @@ upstreams:
         total: 29871
         r1LeftTrimmedEvents: 0
         r1RightTrimmedEvents: 0
-        r2LeftTrimmedEvents: 12
+        r2LeftTrimmedEvents: 13
         r2RightTrimmedEvents: 12
         r1LeftTrimmedNucleotides: 0
         r1RightTrimmedNucleotides: 0
-        r2LeftTrimmedNucleotides: 414
+        r2LeftTrimmedNucleotides: 420
         r2RightTrimmedNucleotides: 1858
       tagParsingReport:
         total: 29871
-        matched: 29821
-        totalBitCost: 18292.99560
+        matched: 29822
+        totalBitCost: 18304.71429
         projections:
-          "1,2": 29821
+          "1,2": 29822
         detailedReport:
         - nested:
             "1,2":
@@ -1183,37 +1183,37 @@ upstreams:
               - - positionDistributions:
                     C:Left:
                       "0": 78
-                      "1": 24914
+                      "1": 24916
                       "2": 154
                     C:Right:
                       "15": 78
-                      "16": 24914
+                      "16": 24916
                       "17": 154
                     R1:Left:
                       "15": 78
-                      "16": 24914
+                      "16": 24916
                       "17": 154
                     R1:Right:
-                      "310": 25146
+                      "310": 25148
                     R1F:Left:
-                      "0": 25146
+                      "0": 25148
                     R1F:Right:
-                      "310": 25146
+                      "310": 25148
                   lengthDistributions:
                     C:
-                      "15": 25146
+                      "15": 25148
                     R1:
                       "293": 154
-                      "294": 24914
+                      "294": 24916
                       "295": 78
                     R1F:
-                      "310": 25146
+                      "310": 25148
                   costDistributions:
-                    "0": 24069
-                    "5": 890
+                    "0": 24070
+                    "5": 891
                     "9": 187
                   variantDistribution:
-                    "0": 25146
+                    "0": 25148
                 - positionDistributions:
                     C:Left:
                       "0": 2
@@ -1251,33 +1251,33 @@ upstreams:
                 - positionDistributions:
                     C:Left:
                       "0": 290
-                      "1": 2564
+                      "1": 2563
                     C:Right:
                       "15": 290
-                      "16": 2564
+                      "16": 2563
                     R1:Left:
                       "15": 290
-                      "16": 2564
+                      "16": 2563
                     R1:Right:
-                      "310": 2854
+                      "310": 2853
                     R1F:Left:
-                      "0": 2854
+                      "0": 2853
                     R1F:Right:
-                      "310": 2854
+                      "310": 2853
                   lengthDistributions:
                     C:
-                      "15": 2854
+                      "15": 2853
                     R1:
-                      "294": 2564
+                      "294": 2563
                       "295": 290
                     R1F:
-                      "310": 2854
+                      "310": 2853
                   costDistributions:
-                    "0": 2518
-                    "5": 179
+                    "0": 2516
+                    "5": 180
                     "9": 157
                   variantDistribution:
-                    "2": 2854
+                    "2": 2853
                 - positionDistributions:
                     C:Left:
                       "1": 1262
@@ -1655,34 +1655,34 @@ upstreams:
                     R2:Left:
                       "41": 23
                       "42": 63
-                      "43": 29594
+                      "43": 29595
                     R2:Right:
-                      "310": 29680
+                      "310": 29681
                     R2F:Left:
-                      "0": 29680
+                      "0": 29681
                     R2F:Right:
-                      "310": 29680
+                      "310": 29681
                     UMI:Left:
-                      "19": 29680
+                      "19": 29681
                     UMI:Right:
-                      "40": 29680
+                      "40": 29681
                   lengthDistributions:
                     R2:
-                      "267": 29594
+                      "267": 29595
                       "268": 63
                       "269": 23
                     R2F:
-                      "310": 29680
+                      "310": 29681
                     UMI:
-                      "21": 29680
+                      "21": 29681
                   costDistributions:
                     "0": 28172
                     "3": 50
-                    "5": 833
-                    "8": 589
+                    "5": 835
+                    "8": 588
                     "10": 36
                   variantDistribution:
-                    "16": 29680
+                    "16": 29681
                 - positionDistributions:
                     R2:Left:
                       "43": 3
@@ -1799,24 +1799,24 @@ upstreams:
               costDistributions:
                 "0": 26851
                 "3": 49
-                "5": 1900
+                "5": 1901
                 "7": 2
-                "8": 554
+                "8": 552
                 "9": 332
-                "10": 70
-                "12": 28
+                "10": 71
+                "12": 29
                 "14": 15
                 "15": 5
                 "17": 11
                 "19": 4
       transformerReports: []
       coverage:
-        VDJRegion: 26470
-        CDR1_TO_FR4: 27003
-        FR2_TO_FR4: 28961
-        CDR2_TO_FR4: 29263
-        FR3_TO_FR4: 29263
-        CDR3: 29191
+        VDJRegion: 26473
+        CDR1_TO_FR4: 27006
+        FR2_TO_FR4: 28963
+        CDR2_TO_FR4: 29265
+        FR3_TO_FR4: 29265
+        CDR3: 29193
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
@@ -1829,34 +1829,34 @@ upstreams:
         type: preCloneAssemblerReport
         inputGroups: 77
         groupsWithNoAssemblingFeature: 8
-        inputAlignments: 28803
-        inputAlignmentsWithAssemblingFeature: 26511
+        inputAlignments: 28804
+        inputAlignmentsWithAssemblingFeature: 26513
         corePreClonesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
         preClones: 69
         preClonesPerGroup:
           "1": 69
         assemblingFeatureSequencesInZeroPreClones: 0
-        coreAlignments: 26491
+        coreAlignments: 26493
         tagConflicts: 0
         geneAndTagConflicts: 0
         geneConflicts: {}
         discardedCoreAlignments: 20
-        empiricallyAssignedAlignments: 988
+        empiricallyAssignedAlignments: 987
         vjEmpiricallyAssignedAlignments: 0
         tagEmpiricallyAssignedAlignments: 0
-        geneAndTagEmpiricallyAssignedAlignments: 988
+        geneAndTagEmpiricallyAssignedAlignments: 987
         empiricalAssignmentConflicts: 0
         ignoredAlignments: 0
         unassignedAlignments: 248
       totalReadsProcessed: 29871
       totalAlignmentsProcessed: 69
-      totalAlignedReadsProcessed: 27479
+      totalAlignedReadsProcessed: 27480
       initialClonesCreated: 47
-      readsDroppedNoTargetSequence: 2292
+      readsDroppedNoTargetSequence: 2291
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 27479
+      coreReads: 27480
       readsDroppedFailedMapping: 0
       lowQualityRescued: 0
       clonesClustered: 0
@@ -1865,8 +1865,8 @@ upstreams:
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 27479
-      readsInClonesBeforeClustering: 27479
+      readsInClones: 27480
+      readsInClonesBeforeClustering: 27480
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: chainUsage
@@ -1900,7 +1900,7 @@ upstreams:
       clonesCountWithNegativeScoreChange: 10
       clonesScoreDeltaStats:
         size: 282
-        sum: 11827.09997
+        sum: 11827.10000
         min: -58.0
         max: 145.00003
         avg: 41.94007
@@ -1948,31 +1948,31 @@ upstreams:
       outputFiles:
       - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       correctionReport:
-        inputRecords: 29264
-        outputRecords: 28803
+        inputRecords: 29266
+        outputRecords: 28804
         steps:
         - tagName: UMI
           inputGroups: 1
-          inputDiversity: 1365
-          inputCount: 29264
+          inputDiversity: 1366
+          inputCount: 29266
           coreDiversity: 1365
-          coreCount: 29264
+          coreCount: 29265
           directlyCorrectedDiversity: 896
           directlyCorrectedCount: 1100
-          filteredDiversity: 0
-          filteredCount: 0
+          filteredDiversity: 1
+          filteredCount: 1
           recursivelyCorrected: 235
           diversityFilteredByWhitelist: 0
           outputDiversity: 469
-          outputCount: 29264
+          outputCount: 29265
         filterReport:
           type: filter_groups_report
           groupingKeys:
           - allTags:Molecule
           numberOfGroups: 469
           numberOfGroupsAccepted: 77
-          totalWeight: 29264.0
-          totalWeightAccepted: 28803.0
+          totalWeight: 29265.0
+          totalWeightAccepted: 28804.0
           operatorReports:
           - operatorReport:
               type: multi_operator_hist_report
