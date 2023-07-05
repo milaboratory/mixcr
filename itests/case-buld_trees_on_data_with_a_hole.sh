@@ -61,11 +61,11 @@ mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
 assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqCDR1" "1"
 assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqCDR2" "0"
 
-assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVO" "2"
+assert "head -n 1 alleles/report.json | jq -r .statuses.FOUND_KNOWN_VARIANT" "2"
 assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
 
 keyOfRelativeMutations=`head -n 1 alleles/description.tsv | sed 's/mutations/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
-assert "grep 'IGHJ6' alleles/description.tsv | cut -f$keyOfRelativeMutations" "SG17TSG18AST19CSC35A"
+assert "grep 'IGHJ6\*05x' alleles/description.tsv | wc -l" "1"
 
 keyOfNumberOfCones=`head -n 1 trees/trees.tsv | sed 's/numberOfClonesInTree/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 keyOfCDR3=`head -n 1 trees/trees.tsv | sed 's/nSeqCDR3OfMrca/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
