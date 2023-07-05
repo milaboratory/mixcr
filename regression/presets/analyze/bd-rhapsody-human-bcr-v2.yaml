@@ -668,13 +668,10 @@ align:
     destinationTag: CELLID
   sampleTable: null
   tagsValidations:
-<<<<<<< HEAD
+  - type: MustContainTagType
+    tagType: Molecule
   - type: MustContainTagType
     tagType: Cell
-=======
-  - type: MustNotContainTagType
-    tagType: Sample
->>>>>>> develop
   splitBySample: false
   limit: null
   parameters:

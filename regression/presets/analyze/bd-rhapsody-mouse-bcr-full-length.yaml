@@ -659,6 +659,8 @@ align:
   tagsValidations:
   - type: MustContainTagType
     tagType: Cell
+  - type: MustContainTagType
+    tagType: Molecule
   splitBySample: false
   limit: null
   parameters:
