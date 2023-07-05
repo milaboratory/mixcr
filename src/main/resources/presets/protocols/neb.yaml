@@ -1,4 +1,4 @@
-nebnext-human-immune-sequencing:
+neb-human-rna-xcr-umi-nebnext:
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -34,8 +34,8 @@ nebnext-human-immune-sequencing:
           upper: 0.9
 
 
-nebnext-mouse-immune-sequencing:
-  inheritFrom: nebnext-human-immune-sequencing
+neb-mouse-rna-xcr-umi-nebnext:
+  inheritFrom: neb-human-rna-xcr-umi-nebnext
   mixins:
     - type: SetSpecies
       species: mmu

@@ -1,4 +1,4 @@
-"smartseq2-vdj":
+"smart-seq2-vdj":
   inheritFrom: generic-single-cell-gex
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base

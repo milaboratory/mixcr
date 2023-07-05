@@ -1,4 +1,4 @@
-milab-human-ig-rna-multiplex:
+milab-human-rna-ig-umi-multiplex:
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -34,7 +34,7 @@ milab-human-ig-rna-multiplex:
           upper: 0.9
 
 
-milab-human-tcr-rna-race:
+milab-human-rna-tcr-umi-race:
   inheritFrom: generic-amplicon-with-umi
   mixins:
     - type: SetSpecies
@@ -62,7 +62,7 @@ milab-human-tcr-rna-race:
           upper: 0.9
 
 
-milab-human-tcr-rna-multiplex:
+milab-human-rna-tcr-umi-multiplex:
   inheritFrom: generic-amplicon-with-umi
   mixins:
     - type: SetSpecies
@@ -88,7 +88,7 @@ milab-human-tcr-rna-multiplex:
           upper: 0.9
 
 
-milab-human-tcr-dna-multiplex:
+milab-human-dna-tcr-multiplex:
   inheritFrom: generic-amplicon
   mixins:
     - type: SetSpecies
@@ -105,12 +105,12 @@ milab-human-tcr-dna-multiplex:
           middle: 0.8
           upper: 0.9
 
-milab-human-7genes-dna-multiplex:
-  inheritFrom: milab-human-tcr-dna-multiplex
+milab-human-dna-xcr-7genes-multiplex:
+  inheritFrom: milab-human-dna-tcr-multiplex
 
 
-milab-mouse-tcr-rna-race:
-  inheritFrom: milab-human-tcr-rna-race
+milab-mouse-rna-tcr-umi-race:
+  inheritFrom: milab-human-rna-tcr-umi-race
   mixins:
     - type: SetSpecies
       species: mmu

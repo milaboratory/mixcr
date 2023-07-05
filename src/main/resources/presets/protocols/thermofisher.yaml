@@ -1,4 +1,4 @@
-"oncomine-human-base":
+"thermofisher-human-oncomine-base":
   abstract: true
   inheritFrom: generic-amplicon
   pipeline:
@@ -12,8 +12,8 @@
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
 
-"oncomine-human-tcrb-lr":
-  inheritFrom: oncomine-human-base
+"thermofisher-human-rna-trb-oncomine-lr":
+  inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
@@ -21,15 +21,18 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
 
-"oncomine-human-tcrb-sr":
-  inheritFrom: oncomine-human-base
+"thermofisher-human-rna-trb-oncomine-sr":
+  inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
 
-"oncomine-human-igh-lr":
-  inheritFrom: oncomine-human-base
+"thermofisher-human-dna-trb-oncomine-sr":
+  inheritFrom: thermofisher-human-rna-trb-oncomine-sr
+
+"thermofisher-human-rna-igh-oncomine-lr":
+  inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
@@ -37,41 +40,45 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
 
-"oncomine-human-igh-sr":
-  inheritFrom: oncomine-human-base
+"thermofisher-human-rna-igh-oncomine-sr":
+  inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
 
-"oncomine-human-bcr-pan-clonality":
-  inheritFrom: oncomine-human-base
+"thermofisher-human-dna-igh-oncomine-sr":
+  inheritFrom: thermofisher-human-rna-igh-oncomine-sr
+
+
+"thermofisher-human-dna-bcr-oncomine-pan-clonality":
+  inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: MaterialTypeDNA
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
 
-"oncomine-human-igh-fr3-j":
-  inheritFrom: oncomine-human-bcr-pan-clonality
+"thermofisher-human-dna-igh-oncomine-fr3-j":
+  inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
 
-"oncomine-human-igh-fr2-j":
-  inheritFrom: oncomine-human-bcr-pan-clonality
+"thermofisher-human-dna-igh-oncomine-fr2-j":
+  inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR2Begin:CDR3End}" ]
 
-"oncomine-human-igh-fr1-j":
-  inheritFrom: oncomine-human-bcr-pan-clonality
+"thermofisher-human-dna-igh-oncomine-fr1-j":
+  inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:CDR3End}" ]
 
-"oncomine-human-igh-leader-j":
-  inheritFrom: oncomine-human-bcr-pan-clonality
+"thermofisher-human-dna-igh-oncomine-v-leader-j":
+  inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{FR1Begin:CDR3End}" ]
 
-"oncomine-human-tcr-pan-clonality":
-  inheritFrom: oncomine-human-bcr-pan-clonality
+"thermofisher-human-dna-tcr-oncomine-pan-clonality":
+  inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality

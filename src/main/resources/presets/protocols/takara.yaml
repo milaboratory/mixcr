@@ -1,4 +1,4 @@
-"takara-smartseq-human-bcr":
+"takara-human-rna-bcr-umi-smartseq":
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -33,19 +33,19 @@
           middle: 0.8
           upper: 0.9
 
-"takara-human-bcr-profiling":
-  inheritFrom: takara-smartseq-human-bcr
+"takara-human-rna-bcr-umi-smarter":
+  inheritFrom: takara-human-rna-bcr-umi-smartseq
 
-"takara-smartseq-human-tcr":
-  inheritFrom: takara-smartseq-human-bcr
+"takara-human-rna-tcr-umi-smartseq":
+  inheritFrom: takara-human-rna-bcr-umi-smartseq
   mixins:
     - type: SetTagPattern
       tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
 
-"takara-human-tcr-v2-profiling":
-  inheritFrom: takara-smartseq-human-tcr
+"takara-human-rna-tcr-umi-smarter-v2":
+  inheritFrom: takara-human-rna-tcr-umi-smartseq
 
-"takara-human-tcr-profiling":
+"takara-human-rna-tcr-smarter":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -79,7 +79,7 @@
           middle: 0.8
           upper: 0.9
 
-"takara-mouse-bcr-profiling":
+"takara-mouse-rna-bcr-smarter":
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -113,5 +113,5 @@
           middle: 0.8
           upper: 0.9
 
-"takara-mouse-tcr-profiling":
-  inheritFrom: takara-mouse-bcr-profiling
+"takara-mouse-rna-tcr-smarter":
+  inheritFrom: takara-mouse-rna-bcr-smarter
