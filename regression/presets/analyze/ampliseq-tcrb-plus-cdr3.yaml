@@ -18,9 +18,7 @@ align:
   tagMaxBudget: 10.0
   readIdAsCellTag: false
   sampleTable: null
-  tagsValidations:
-  - type: MustNotContainTagType
-    tagType: Sample
+  tagsValidations: []
   splitBySample: false
   limit: null
   parameters:

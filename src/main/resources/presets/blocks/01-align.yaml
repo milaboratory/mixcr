@@ -6,24 +6,17 @@ align-amplicon:
     - leftAlignmentMode
     - rightAlignmentMode
   align:
-    species: ""
     trimmingQualityThreshold: 10
     trimmingWindowSize: 6
-    chains: ALL
-    overlapPairedReads: true
-    bamDropNonVDJ: false
-    writeFailedAlignments: false
-    tagPattern: null
-    tagUnstranded: false
     tagMaxBudget: 10
     splitBySample: false
-    tagsValidations:
-      # Note: the following validation is applicable to all built-in presets in all cases.
-      # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
-      # to true, these tags are used within the alignment step and don't appear in the output files. Therefore,
-      # the validation remains relevant and valid.
-      - type: MustNotContainTagType
-        tagType: Sample
+    # tagsValidations:
+    #   # Note: the following validation is applicable to all built-in presets in all cases.
+    #   # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
+    #   # to true, these tags are used within the alignment step and don't appear in the output files. Therefore,
+    #   # the validation remains relevant and valid.
+    #   - type: MustNotContainTagType
+    #     tagType: Sample
     parameters:
       fixSeed: true
       libraryStructure: Unknown
@@ -154,17 +147,17 @@ align-shotgun:
     - species
     - materialType
   align:
-    species: ""
     trimmingQualityThreshold: 10
     trimmingWindowSize: 6
-    chains: ALL
-    overlapPairedReads: true
-    bamDropNonVDJ: false
-    writeFailedAlignments: false
-    tagPattern: null
-    tagUnstranded: false
     tagMaxBudget: 10
     splitBySample: false
+    # tagsValidations:
+    #   # Note: the following validation is applicable to all built-in presets in all cases.
+    #   # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
+    #   # to true, these tags are used within the alignment step and don't appear in the output files. Therefore,
+    #   # the validation remains relevant and valid.
+    #   - type: MustNotContainTagType
+    #     tagType: Sample
     parameters:
       fixSeed: true
       libraryStructure: Unknown
@@ -284,22 +277,17 @@ align-long-read:
     - species
     - materialType
   align:
-    species: ''
-    libraryName: default
     trimmingQualityThreshold: 10
     trimmingWindowSize: 6
-    chains: ALL
-    replaceWildcards: true
-    overlapPairedReads: true
-    bamDropNonVDJ: false
-    writeFailedAlignments: false
-    tagPattern: null
-    tagUnstranded: false
     tagMaxBudget: 10.0
-    sampleTable: null
     splitBySample: false
-    readIdAsCellTag: false
-    limit: null
+    # tagsValidations:
+    #   # Note: the following validation is applicable to all built-in presets in all cases.
+    #   # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
+    #   # to true, these tags are used within the alignment step and don't appear in the output files. Therefore,
+    #   # the validation remains relevant and valid.
+    #   - type: MustNotContainTagType
+    #     tagType: Sample
     parameters:
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
@@ -436,17 +424,19 @@ align-single-cell:
     - species
     - materialType
   align:
-    species: ''
-    libraryName: default
     trimmingQualityThreshold: 10
     trimmingWindowSize: 6
-    chains: ALL
-    overlapPairedReads: true
-    bamDropNonVDJ: false
-    writeFailedAlignments: false
-    tagUnstranded: false
-    tagMaxBudget: 10.0
+    tagMaxBudget: 10
     splitBySample: false
+    tagsValidations:
+      # # Note: the following validation is applicable to all built-in presets in all cases.
+      # # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
+      # # to true, these tags are used within the alignment step and don't appear in the output files. Therefore,
+      # # the validation remains relevant and valid.
+      # - type: MustNotContainTagType
+      #   tagType: Sample
+      - type: MustContainTagType
+        tagType: Cell
     parameters:
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
