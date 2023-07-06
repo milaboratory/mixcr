@@ -33,6 +33,7 @@ align:
     ^accagtgtggccttgttg(R2:*)
   tagUnstranded: false
   tagMaxBudget: 10.0
+  headerExtractors: []
   readIdAsCellTag: false
   tagTransformationSteps:
   - type: mapTags

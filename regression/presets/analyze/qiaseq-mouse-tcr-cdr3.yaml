@@ -32,6 +32,7 @@ align:
     ^N{:4}cacctctttagggtagaaatctttcaccagacaag(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
   tagUnstranded: false
   tagMaxBudget: 10.0
+  headerExtractors: []
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:

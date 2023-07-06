@@ -19,6 +19,7 @@ align:
   tagPattern: null
   tagUnstranded: false
   tagMaxBudget: 10.0
+  headerExtractors: []
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations: []

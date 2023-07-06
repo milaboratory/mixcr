@@ -101,6 +101,7 @@ takara-human-rna-tcr-umi-smartseq
 takara-mouse-rna-bcr-smarter
 takara-mouse-rna-tcr-smarter
 test-gf-intersection                               (--dna|--rna)
+test-tag-from-header
 thermofisher-human-dna-bcr-oncomine-pan-clonality
 thermofisher-human-dna-igh-oncomine-fr1-j
 thermofisher-human-dna-igh-oncomine-fr2-j

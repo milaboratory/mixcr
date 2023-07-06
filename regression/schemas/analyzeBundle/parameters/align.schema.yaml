@@ -167,6 +167,28 @@ properties:
     type: boolean
   chains:
     type: string
+  headerExtractors:
+    type: array
+    items:
+      type: object
+      properties:
+        mappings:
+          type: array
+          items:
+            type: object
+            properties:
+              groupIndex:
+                type: integer
+              groupName:
+                type: string
+              tagName:
+                type: string
+        patter:
+          type: string
+        readIndices:
+          type: array
+          items:
+            type: integer
   library:
     type: string
   limit:
