@@ -19,6 +19,7 @@ align:
   tagPattern: "^(CELL1:N{8})(CELL2:N{8})(UMI1:N{5})(UMI2:N{5})\\^(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  headerExtractors: []
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:

@@ -21,6 +21,7 @@ align:
   tagPattern: "^(R1:*)\\^(UMI:N{10})(CELL3:N{8})gtggccgatgN{20}(CELL2:N{8})atccacgtgcN{12}(CELL1:N{8})"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  headerExtractors: []
   readIdAsCellTag: false
   tagTransformationSteps:
   - type: mapTags

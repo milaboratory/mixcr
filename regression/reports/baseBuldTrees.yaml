@@ -908,6 +908,7 @@ upstreams:
                 "15": 10
                 "17": 7
                 "19": 12
+      notMatchedByHeader: 0
       transformerReports: []
       coverage:
         VDJRegion: 46268
@@ -1809,6 +1810,7 @@ upstreams:
                 "15": 5
                 "17": 11
                 "19": 4
+      notMatchedByHeader: 0
       transformerReports: []
       coverage:
         VDJRegion: 26470

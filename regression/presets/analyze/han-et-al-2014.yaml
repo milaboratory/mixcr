@@ -21,6 +21,7 @@ align:
     ^NN(CELL2COLUMN:N{5})gagatctctgcttctgatggctc(R2:*)
   tagUnstranded: false
   tagMaxBudget: 10.0
+  headerExtractors: []
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations: []
