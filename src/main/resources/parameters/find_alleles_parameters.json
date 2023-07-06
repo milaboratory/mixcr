@@ -9,12 +9,11 @@
       },
       "withoutUmi": {
         "thresholds": {
-          "1-200": 1,
-          "201-500": 2,
-          "501-": 3
+          "1-": 2
         }
       },
-      "limitClones": 2000,
+      "limitClones": 10000,
+      "shuffleSeed": 42,
       "preferIsotypes": [
         "IGHM",
         "IGHD"
