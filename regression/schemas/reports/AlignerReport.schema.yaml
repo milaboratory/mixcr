@@ -43,6 +43,8 @@ properties:
     type: integer
   notAlignedReasons:
     type: object
+  notMatchedByHeader:
+    type: integer
   outputFiles:
     type: array
     items:

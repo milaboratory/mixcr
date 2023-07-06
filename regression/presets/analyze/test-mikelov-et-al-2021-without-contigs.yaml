@@ -43,6 +43,7 @@ align:
     ^(R2F:tggtatcaacgcagagtac(UMI:NNNNTNNTTGCGNNTNNNNNN)tct>{2}(R2:*))
   tagUnstranded: false
   tagMaxBudget: 10.0
+  headerExtractors: []
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:

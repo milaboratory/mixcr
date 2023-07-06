@@ -17,6 +17,7 @@ align:
   tagPattern: "^N{5}(R1:*) \\ ^(UMI:N{12})N{10}(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
+  headerExtractors: []
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:
