@@ -695,3 +695,23 @@
   mixins:
     - type: SetSplitBySample
       value: true
+
+"test-tag-from-header":
+  inheritFrom: generic-amplicon
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      splitBySample: true
+      headerExtractors:
+        - patter: "1:N:0:(TAGCTT|GAGCTT)"
+          mappings:
+            - groupIndex: 1
+              tagName: Sample

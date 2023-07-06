@@ -51,6 +51,14 @@ object CommandAlignPipeline {
 
     private val readGroupPattern = Regex("R\\d+")
 
+    /** Returns tag info with index == 0 intended to be changed after sorting */
+    private fun String.toTagInfo(valueType: TagValueType) =
+        TagInfo(
+            // Uncategorized groups are added as Technical, to be available for potential transformations below the pipeline
+            TagType.detectByTagName(this) ?: TagType.Technical,
+            valueType, this, 0
+        )
+
     fun getTagsExtractor(
         cmdParams: CommandAlignParams,
         fileGroups: CommandAlign.InputFileGroups
@@ -71,13 +79,11 @@ object CommandAlignPipeline {
             for (tagName in plan.allTags)
                 if (tagName.matches(readGroupPattern))
                     readTags += tagName
-                else {
-                    val type = TagType.detectByTagName(tagName) ?: continue
+                else
                     tagExtractors += TagExtractorWithInfo(
                         PatternTag(plan.tagShortcut(tagName)),
-                        TagInfo(type, TagValueType.SequenceAndQuality, tagName, 0 /* will be changed below */)
+                        tagName.toTagInfo(TagValueType.SequenceAndQuality)
                     )
-                }
 
             tagExtractors += TagExtractorWithInfo(
                 PatternVariantIdTag,
@@ -117,13 +123,24 @@ object CommandAlignPipeline {
                 // Adding only those groups for which user specified a name
                 if (tagName.startsWith(UNNAMED_GROUP_NAME_PREFIX))
                     return@forEach
-                // Uncategorized groups are added as Technical, to be available for potential transformation below the pipeline
-                val type = TagType.detectByTagName(tagName) ?: TagType.Technical
                 tagExtractors += TagExtractorWithInfo(
                     FileTag(tagName),
-                    TagInfo(type, TagValueType.NonSequence, tagName, 0 /* will be changed below */)
+                    tagName.toTagInfo(TagValueType.NonSequence)
                 )
             }
+
+        // Adding header extractors
+        val headerPatterns = mutableListOf<HeaderPattern>()
+        cmdParams.headerExtractors.forEachIndexed { patternIdx, headerExtractor ->
+            // Compile the pattern
+            val pattern = Pattern.compile(headerExtractor.patter)
+            headerPatterns += HeaderPattern(pattern, headerExtractor.readIndices)
+            for (mapping in headerExtractor.mappings)
+                tagExtractors += TagExtractorWithInfo(
+                    HeaderTag(patternIdx, mapping.groupName, mapping.groupIndex),
+                    mapping.tagName.toTagInfo(TagValueType.NonSequence)
+                )
+        }
 
         // Sorting according to natural tag ordering
         tagExtractors = tagExtractors
@@ -139,8 +156,6 @@ object CommandAlignPipeline {
                 println("  Payload tags: " + readTags.joinToString(", "))
             tagExtractors
                 .groupBy { it.tagInfo.type }
-                // Technical tags are printed only if transformation will take place
-                .filter { willHaveTransformers || it.key != TagType.Technical }
                 .forEach { (tagType: TagType, extractors: List<TagExtractorWithInfo>) ->
                     println("  $tagType tags: " + extractors.joinToString(", ") { "${it.tagInfo.name}(${it.tagInfo.valueType.shortString})" })
                 }
@@ -175,7 +190,7 @@ object CommandAlignPipeline {
 
         return TagsExtractor(
             plan, readTagShortcuts,
-            emptyList(),
+            headerPatterns,
             tagExtractors.map { it.tagExtractor },
             transformers,
             cmdParams.splitBySample,
@@ -219,13 +234,27 @@ object CommandAlignPipeline {
         ) = StringTagValue(fileTags.find { it.first == tagName }!!.second)
     }
 
-    private data class HeaderTag(val patternIdx: Int, val groupName: String) : TagExtractor {
+    private data class HeaderTag(
+        val patternIdx: Int,
+        val groupName: String? = null,
+        val groupIndex: Int? = null
+    ) : TagExtractor {
+        init {
+            require((groupIndex == null) != (groupName == null)) {
+                "Exactly one of 'groupName' and 'groupIndex' must be set"
+            }
+        }
+
         override fun extract(
             originalReadId: Long,
             fileTags: List<Pair<String, String>>,
             headerMatches: List<Matcher>,
             patternMatch: MicRecord?
-        ) = StringTagValue(headerMatches[patternIdx].group(groupName))
+        ) =
+            if (groupName != null)
+                StringTagValue(headerMatches[patternIdx].group(groupName))
+            else
+                StringTagValue(headerMatches[patternIdx].group(groupIndex!!))
     }
 
     private object ReadIndex : TagExtractor {
@@ -357,7 +386,7 @@ object CommandAlignPipeline {
         val pairedPatternPayload = readShortcuts?.size?.let { it == 2 }
 
         val inputReads = AtomicLong()
-        private val matchedHeaders = AtomicLong()
+        val notMatchedByHeader = AtomicLong()
         val reportAgg = plan?.let { ParseReportAggregator(it) }
 
         val sampleStats = ConcurrentHashMap<List<String>, SampleStat>()
@@ -366,9 +395,12 @@ object CommandAlignPipeline {
             inputReads.incrementAndGet()
 
             val headerMatches = headerPatterns.mapNotNull { it.parse(bundle.read) }
-            if (headerMatches.size != headerPatterns.size)
+            // If any of the patterns can't be matched, read is discarded as not parsed
+            if (headerMatches.size != headerPatterns.size) {
+                notMatchedByHeader.incrementAndGet()
                 return bundle.copy(status = ProcessingBundleStatus.NotParsed)
-            matchedHeaders.incrementAndGet()
+            }
+
 
             val (newSeq, patternMatch) =
                 if (plan != null) {

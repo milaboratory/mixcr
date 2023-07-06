@@ -1211,6 +1211,7 @@ object CommandAlign {
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
 
                 if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
+                reportBuilder.setNotMatchedByHeader(tagsExtractor.notMatchedByHeader.get())
                 reportBuilder.setTransformerReports(tagsExtractor.transformerReports)
 
                 val report = reportBuilder.buildReport()
