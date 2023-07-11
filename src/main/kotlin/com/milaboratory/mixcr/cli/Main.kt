@@ -282,13 +282,9 @@ object Main {
                     .addPathResolverWithPartialSearch(searchPath)
             }
             if (System.getProperty("library.path") != null) VDJCLibraryRegistry.getDefault()
-                .addPathResolverWithPartialSearch(
-                    System.getProperty("library.path")
-                )
+                .addPathResolverWithPartialSearch(System.getProperty("library.path"))
             if (System.getenv("MIXCR_LIBRARY_PATH") != null) VDJCLibraryRegistry.getDefault()
-                .addPathResolverWithPartialSearch(
-                    System.getenv("MIXCR_LIBRARY_PATH")
-                )
+                .addPathResolverWithPartialSearch(System.getenv("MIXCR_LIBRARY_PATH"))
             if (Files.exists(libraries)) VDJCLibraryRegistry.getDefault().addPathResolverWithPartialSearch(libraries)
             initialized = true
         }
