@@ -134,7 +134,7 @@ val obfuscationLibs: Configuration by configurations.creating
 
 
 val mixcrAlgoVersion = "4.4.0-6-header-extractors"
-val milibVersion = ""
+val milibVersion = "3.1.0-1-master"
 val mitoolVersion = ""
 val repseqioVersion = ""
 
