@@ -113,7 +113,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         ValidationException.requireNotNull(out) {
             "With --use-local-temp explicit output path is required"
         }
-        TempFileManager.smartTempDestination(out, ".build_trees", !useLocalTemp.value)
+        TempFileManager.smartTempDestination(out!!, ".build_trees", !useLocalTemp.value)
     }
 
     override val outputFiles
