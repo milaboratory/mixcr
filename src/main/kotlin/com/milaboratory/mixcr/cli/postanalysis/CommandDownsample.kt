@@ -103,7 +103,12 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         val fileNameWithoutExtension = input.fileName.toString()
             .replace(".clna", "")
             .replace(".clns", "")
-        val outName = "$fileNameWithoutExtension.$chains.$suffix.clns"
+        val suffix = when {
+            chains == null || chains!!.isEmpty() -> ""
+            chains!!.size == 1 -> "${chains!!.first()}."
+            else -> "$chains."
+        }
+        val outName = "$fileNameWithoutExtension.$suffix$suffix.clns"
         return (outPath?.resolve(outName) ?: Paths.get(outName)).toAbsolutePath()
     }
 
