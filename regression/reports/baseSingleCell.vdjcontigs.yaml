@@ -10,23 +10,23 @@ align:
   outputFiles:
   - baseSingleCell.vdjcontigs.vdjca
   totalReadsProcessed: 46879
-  aligned: 40606
-  notAligned: 6273
+  aligned: 40525
+  notAligned: 6354
   notAlignedReasons:
-    NoHits: 5597
+    NoHits: 5777
     NoCDR3Parts: 0
     NoVHits: 0
     NoJHits: 0
     VAndJOnDifferentTargets: 0
-    LowTotalScore: 676
+    LowTotalScore: 577
     NoBarcode: 0
     SampleNotMatched: 0
   overlapped: 0
   overlappedAligned: 0
   overlappedNotAligned: 0
   alignmentAidedOverlaps: 0
-  noCDR3PartsAlignments: 17783
-  partialAlignments: 22026
+  noCDR3PartsAlignments: 17724
+  partialAlignments: 22009
   chimeras: 0
   vChimeras: 0
   jChimeras: 0
@@ -37,40 +37,40 @@ align:
   chainUsage:
     type: chainUsage
     chimeras: 0
-    total: 40606
+    total: 40525
     chains:
       IGH:
-        total: 23
+        total: 21
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
       IGK:
-        total: 16
+        total: 17
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
       IGL:
-        total: 27
+        total: 15
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
       TRA:
-        total: 2615
+        total: 2589
         nonFunctional: 27
         isOOF: 27
         hasStops: 0
       TRAD:
-        total: 2984
+        total: 2980
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
       TRB:
-        total: 34936
-        nonFunctional: 4
+        total: 34901
+        nonFunctional: 3
         isOOF: 1
-        hasStops: 3
+        hasStops: 2
       TRG:
-        total: 5
+        total: 2
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
@@ -136,7 +136,7 @@ align:
     FR2_TO_FR4: 0
     CDR2_TO_FR4: 0
     FR3_TO_FR4: 0
-    CDR3: 797
+    CDR3: 792
 assemble:
   type: assemblerReport
   commandLine: assemble --report baseSingleCell.vdjcontigs.assemble.report.txt --json-report
@@ -150,7 +150,7 @@ assemble:
     type: preCloneAssemblerReport
     inputGroups: 3
     groupsWithNoAssemblingFeature: 0
-    inputAlignments: 28078
+    inputAlignments: 28024
     inputAlignmentsWithAssemblingFeature: 936
     corePreClonesDroppedByTagSuffix: 0
     coreAlignmentsDroppedByTagSuffix: 0
@@ -159,26 +159,26 @@ assemble:
       "2": 2
       "3": 1
     assemblingFeatureSequencesInZeroPreClones: 0
-    coreAlignments: 855
+    coreAlignments: 856
     tagConflicts: 0
     geneAndTagConflicts: 0
     geneConflicts: {}
-    discardedCoreAlignments: 81
-    empiricallyAssignedAlignments: 13145
+    discardedCoreAlignments: 80
+    empiricallyAssignedAlignments: 13109
     vjEmpiricallyAssignedAlignments: 8
     tagEmpiricallyAssignedAlignments: 0
-    geneAndTagEmpiricallyAssignedAlignments: 13137
+    geneAndTagEmpiricallyAssignedAlignments: 13101
     empiricalAssignmentConflicts: 0
     ignoredAlignments: 0
-    unassignedAlignments: 14078
+    unassignedAlignments: 14059
   totalReadsProcessed: 46737
   totalAlignmentsProcessed: 7
-  totalAlignedReadsProcessed: 14142
+  totalAlignedReadsProcessed: 14107
   initialClonesCreated: 7
-  readsDroppedNoTargetSequence: 27142
+  readsDroppedNoTargetSequence: 27088
   readsDroppedTooShortClonalSequence: 0
   readsDroppedLowQuality: 0
-  coreReads: 14142
+  coreReads: 14107
   readsDroppedFailedMapping: 0
   lowQualityRescued: 0
   clonesClustered: 0
@@ -187,8 +187,8 @@ assemble:
   clonesDroppedAsLowQuality: 0
   clonesPreClustered: 0
   readsPreClustered: 0
-  readsInClones: 14142
-  readsInClonesBeforeClustering: 14142
+  readsInClones: 14107
+  readsInClonesBeforeClustering: 14107
   readsDroppedWithLowQualityClones: 0
   clonalChainUsage:
     type: chainUsage
@@ -216,8 +216,8 @@ assemble:
       - clone
       numberOfGroups: 7
       numberOfGroupsAccepted: 7
-      totalWeight: 14142.0
-      totalWeightAccepted: 14142.0
+      totalWeight: 14107.0
+      totalWeightAccepted: 14107.0
       operatorReports:
       - operatorReport:
           type: generic_hist_report
@@ -233,8 +233,8 @@ assemble:
       - allTags:Cell
       numberOfGroups: 7
       numberOfGroupsAccepted: 7
-      totalWeight: 14142.0
-      totalWeightAccepted: 14142.0
+      totalWeight: 14107.0
+      totalWeightAccepted: 14107.0
       operatorReports:
       - operatorReport:
           type: generic_hist_report
@@ -250,8 +250,8 @@ assemble:
       - clone
       numberOfGroups: 7
       numberOfGroupsAccepted: 7
-      totalWeight: 14142.0
-      totalWeightAccepted: 14142.0
+      totalWeight: 14107.0
+      totalWeightAccepted: 14107.0
       operatorReports:
       - operatorReport:
           type: generic_hist_report
@@ -278,7 +278,7 @@ assembleContigs:
   initialCloneCount: 7
   canceledAssemblies: 0
   finalCloneCount: 6
-  totalReadsProcessed: 14142.0
+  totalReadsProcessed: 14107.0
   clonesClustered: 0
   readsClustered: 0.0
   longestContigLength: 349
@@ -294,20 +294,20 @@ assemblePartial:
   outputFiles:
   - baseSingleCell.vdjcontigspassembled.1.vdjca
   independentRuns: 62
-  totalProcessed: 28220
-  outputAlignments: 28078
+  totalProcessed: 28166
+  outputAlignments: 28024
   withCDR3: 794
   overlapped: 142
-  leftTooShortNRegion: 536
-  kMerDiversity: 2124
+  leftTooShortNRegion: 538
+  kMerDiversity: 2270
   droppedWildcardsInKMer: 0
-  droppedSmallOverlapNRegion: 139
+  droppedSmallOverlapNRegion: 125
   droppedNoNRegion: 0
-  leftParts: 396
-  rightParts: 9082
+  leftParts: 399
+  rightParts: 9043
   complexOverlaps: 0
   overOverlaps: 0
-  partialAlignmentsAsIs: 27142
+  partialAlignmentsAsIs: 27088
 extend:
   type: extenderReport
   commandLine: extend --report baseSingleCell.vdjcontigs.extend.report.txt --json-report
@@ -317,9 +317,9 @@ extend:
   - baseSingleCell.vdjcontigspassembled.1.vdjca
   outputFiles:
   - baseSingleCell.vdjcontigs.extended.vdjca
-  totalProcessed: 28078
-  totalExtended: 24
-  vExtended: 6
+  totalProcessed: 28024
+  totalExtended: 26
+  vExtended: 8
   vExtendedMerged: 0
   jExtended: 18
   jExtendedMerged: 0
@@ -336,37 +336,37 @@ refineTagsAndSort:
   outputFiles:
   - baseSingleCell.vdjcontigs.refined.vdjca
   correctionReport:
-    inputRecords: 40606
-    outputRecords: 28220
+    inputRecords: 40525
+    outputRecords: 28166
     steps:
     - tagName: CELL
       inputGroups: 1
-      inputDiversity: 163
-      inputCount: 40606
-      coreDiversity: 83
-      coreCount: 40524
-      directlyCorrectedDiversity: 160
-      directlyCorrectedCount: 791
+      inputDiversity: 164
+      inputCount: 40525
+      coreDiversity: 84
+      coreCount: 40443
+      directlyCorrectedDiversity: 161
+      directlyCorrectedCount: 795
       filteredDiversity: 0
       filteredCount: 0
-      recursivelyCorrected: 93
+      recursivelyCorrected: 98
       diversityFilteredByWhitelist: 0
       outputDiversity: 3
-      outputCount: 40606
+      outputCount: 40525
     - tagName: UMI
       inputGroups: 3
-      inputDiversity: 438
-      inputCount: 40606
-      coreDiversity: 213
-      coreCount: 40381
-      directlyCorrectedDiversity: 317
-      directlyCorrectedCount: 372
-      filteredDiversity: 2
-      filteredCount: 2
-      recursivelyCorrected: 16
+      inputDiversity: 424
+      inputCount: 40525
+      coreDiversity: 202
+      coreCount: 40303
+      directlyCorrectedDiversity: 315
+      directlyCorrectedCount: 371
+      filteredDiversity: 1
+      filteredCount: 1
+      recursivelyCorrected: 15
       diversityFilteredByWhitelist: 0
-      outputDiversity: 119
-      outputCount: 40604
+      outputDiversity: 108
+      outputCount: 40524
     filterReport:
       type: and_report
       nestedReports:
@@ -374,10 +374,10 @@ refineTagsAndSort:
         groupingKeys:
         - allTags:Cell
         - allTags:Molecule
-        numberOfGroups: 119
+        numberOfGroups: 108
         numberOfGroupsAccepted: 89
-        totalWeight: 40604.0
-        totalWeightAccepted: 40532.0
+        totalWeight: 40524.0
+        totalWeightAccepted: 40465.0
         operatorReports:
         - operatorReport:
             type: multi_operator_hist_report
@@ -389,13 +389,13 @@ refineTagsAndSort:
           - bins:
             - from: 1.0
               to: 1.5848931924611136
-              weight: 22.0
+              weight: 12.0
             - from: 1.5848931924611136
               to: 2.51188643150958
-              weight: 3.0
+              weight: 1.0
             - from: 2.51188643150958
               to: 3.981071705534973
-              weight: 0.0
+              weight: 1.0
             - from: 3.981071705534973
               to: 6.309573444801933
               weight: 2.0
@@ -442,8 +442,8 @@ refineTagsAndSort:
         - allTags:Cell
         numberOfGroups: 3
         numberOfGroupsAccepted: 3
-        totalWeight: 40532.0
-        totalWeightAccepted: 40532.0
+        totalWeight: 40465.0
+        totalWeightAccepted: 40465.0
         operatorReports:
         - operatorReport:
             type: generic_hist_report
@@ -476,8 +476,8 @@ refineTagsAndSort:
         - allTags:Molecule
         numberOfGroups: 89
         numberOfGroupsAccepted: 62
-        totalWeight: 40532.0
-        totalWeightAccepted: 28220.0
+        totalWeight: 40465.0
+        totalWeightAccepted: 28166.0
         operatorReports:
         - operatorReport:
             type: dummy_report
@@ -545,10 +545,10 @@ refineTagsAndSort:
               weight: 0.0
             - from: 174.5
               to: 180.425
-              weight: 0.0
+              weight: 1.0
             - from: 180.425
               to: 186.35
-              weight: 1.0
+              weight: 0.0
             - from: 186.35
               to: 192.275
               weight: 0.0
@@ -569,28 +569,28 @@ refineTagsAndSort:
               weight: 1.0
             - from: 221.9
               to: 227.825
-              weight: 1.0
+              weight: 2.0
             - from: 227.825
               to: 233.75
-              weight: 8.0
+              weight: 6.0
             - from: 233.75
               to: 239.67499999999998
-              weight: 9.0
+              weight: 10.0
             - from: 239.67499999999998
               to: 245.6
-              weight: 6.0
+              weight: 7.0
             - from: 245.6
               to: 251.525
-              weight: 11.0
+              weight: 10.0
             - from: 251.525
               to: 257.45
               weight: 13.0
             - from: 257.45
               to: 263.375
-              weight: 5.0
+              weight: 6.0
             - from: 263.375
               to: 269.29999999999995
-              weight: 2.0
+              weight: 1.0
             - from: 269.29999999999995
               to: 275.225
               weight: 0.0
