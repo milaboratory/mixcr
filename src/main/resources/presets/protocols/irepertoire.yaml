@@ -18,6 +18,11 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 "irepertoire-human-rna-xcr-repseq-lr":
   inheritFrom: irepertoire-human-rna-xcr-repseq-sr
@@ -66,6 +71,11 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 "irepertoire-human-dna-xcr-repseq-lr":
   inheritFrom: irepertoire-human-dna-xcr-repseq-sr

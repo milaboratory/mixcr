@@ -22,6 +22,11 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: DirectOnly
 
 "biomed2-human-rna-igkl":
   inheritFrom: generic-amplicon
@@ -38,6 +43,11 @@
       floating: true
       geneType: J
     - type: MaterialTypeRNA
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: DirectOnly
 
 "biomed2-human-rna-trbdg":
   inheritFrom: generic-amplicon
@@ -54,5 +64,10 @@
       floating: true
       geneType: J
     - type: MaterialTypeRNA
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: DirectOnly
 
 

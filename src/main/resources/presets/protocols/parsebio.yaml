@@ -2547,3 +2547,5 @@
                 name: CELL2CONVERTED
               - type: tag
                 name: CELL3CONVERTED
+      parameters:
+        readsLayout: DirectOnly
