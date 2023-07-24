@@ -341,7 +341,7 @@ object CommandRefineTagsAndSort {
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
                             )
-                            val tagTuple = als.tagCount.tuples().iterator().next()
+                            val tagTuple = als.tagCount.singletonTuple
                             Array(tagNames.size) { tIdx -> // <- local index for the procedure
                                 val tagValue = tagTuple[tIdx]
                                 if (correctionEnabled[tIdx]) (tagValue as SequenceAndQualityTagValue).data
