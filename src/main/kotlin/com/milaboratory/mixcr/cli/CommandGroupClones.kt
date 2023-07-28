@@ -17,7 +17,7 @@ import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.cellgrouping.CloneGroupingReportBuilder
+import com.milaboratory.mixcr.clonegrouping.CloneGroupingParams.Companion.mkGrouper
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.util.ReportUtil
@@ -93,9 +93,10 @@ object CommandGroupClones {
                 reportBuilder.setOutputFiles(outputFiles)
                 reportBuilder.commandLine = commandLineArguments
 
-                val grouper = cmdParams.parameters.mkGrouper()
+                val grouper = cmdParams.parameters.mkGrouper(input.tagsInfo)
                 SmartProgressReporter.startProgressReport(grouper)
-                val result = grouper.groupClones(input, reportBuilder)
+                val result = grouper.groupClones(input)
+                reportBuilder.grouperReport = grouper.getReport()
 
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
                 val report = reportBuilder.buildReport()
