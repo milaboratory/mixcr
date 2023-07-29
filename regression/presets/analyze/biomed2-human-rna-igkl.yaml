@@ -109,7 +109,7 @@ align:
     allowPartialAlignments: false
     allowNoCDR3PartAlignments: false
     allowChimeras: false
-    readsLayout: DirectOnly
+    readsLayout: Opposite
     mergerParameters:
       qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
