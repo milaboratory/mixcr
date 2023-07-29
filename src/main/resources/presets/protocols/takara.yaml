@@ -32,6 +32,11 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 "takara-human-rna-bcr-umi-smarter":
   inheritFrom: takara-human-rna-bcr-umi-smartseq
@@ -78,6 +83,11 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 "takara-mouse-rna-bcr-smarter":
   inheritFrom: generic-amplicon
@@ -112,6 +122,11 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 "takara-mouse-rna-tcr-smarter":
   inheritFrom: takara-mouse-rna-bcr-smarter

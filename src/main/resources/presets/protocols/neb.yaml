@@ -32,7 +32,11 @@ neb-human-rna-xcr-umi-nebnext:
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
-
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 neb-mouse-rna-xcr-umi-nebnext:
   inheritFrom: neb-human-rna-xcr-umi-nebnext

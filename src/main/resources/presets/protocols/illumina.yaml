@@ -18,6 +18,11 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: DirectOnly
 
 "illumina-human-rna-trb-ampliseq-plus":
   inheritFrom: illumina-human-rna-trb-ampliseq-sr

@@ -146,7 +146,7 @@ align:
     allowPartialAlignments: true
     allowNoCDR3PartAlignments: true
     allowChimeras: false
-    readsLayout: Opposite
+    readsLayout: ReverseOnly
     mergerParameters:
       qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
