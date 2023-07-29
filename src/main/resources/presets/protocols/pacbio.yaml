@@ -10,6 +10,16 @@ generic-pacbio:
     - type: MaterialTypeRNA
   align:
     inheritFrom: align-long-read
+  assemble:
+    inheritFrom: assemble-base
+    overrides:
+      cloneAssemblerParameters:
+        cloneClusteringParameters:
+          clusteringFilter:
+            type: advanced
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.001
+            backgroundIndelRate: 0.001
   qc:
     checks:
       - type: SuccessfullyAlignedReads

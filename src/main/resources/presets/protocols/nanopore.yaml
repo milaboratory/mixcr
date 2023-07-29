@@ -66,7 +66,7 @@
           clusteringFilter:
             type: advanced
             correctionPower: 0.001
-            backgroundSubstitutionRate: 0.01
+            backgroundSubstitutionRate: 0.001
             backgroundIndelRate: 0.01
   assembleContigs:
     inheritFrom: assembleContigs-base
