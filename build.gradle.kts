@@ -133,7 +133,7 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.4.0-17-kmapper2-for-long-read-data-"
+val mixcrAlgoVersion = "4.4.0-18-kmapper2-for-long-read-data-"
 val milibVersion = ""
 val mitoolVersion = ""
 val repseqioVersion = ""
