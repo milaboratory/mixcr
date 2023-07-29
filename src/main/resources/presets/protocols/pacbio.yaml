@@ -1,0 +1,47 @@
+generic-pacbio:
+  inheritFrom: bundle-base
+  flags:
+    - species
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-long-read
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.85
+
+generic-pacbio-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+  align:
+    inheritFrom: align-long-read
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-amplicon-umi-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+  exportClones:
+    inheritFrom: exportClones-umi-base
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.85

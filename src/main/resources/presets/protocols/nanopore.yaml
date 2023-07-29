@@ -1,4 +1,5 @@
-"ont-rna-seq":
+"generic-ont":
+  inheritFrom: bundle-base
   flags:
     - species
   pipeline:
@@ -6,11 +7,8 @@
     - assemble
     - assembleContigs
     - exportClones
-  qc:
-    checks:
-      - type: AlignmentsDroppedLowQuality
-        middle: 0.3
-        upper: 0.5
+  mixins:
+    - type: MaterialTypeRNA
   align:
     inheritFrom: align-long-read
   assemble:
@@ -28,7 +26,54 @@
             backgroundIndelRate: 0.01
   assembleContigs:
     inheritFrom: assembleContigs-base
-  exportAlignments:
-    inheritFrom: exportAlignments-base
   exportClones:
     inheritFrom: exportClones-base
+  qc:
+    checks:
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.3
+        upper: 0.5
+
+"generic-ont-with-umi":
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - assembleContigs
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+  align:
+    inheritFrom: align-long-read
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-amplicon-umi-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        badQualityThreshold: 0
+        minimalQuality: 15
+        cloneClusteringParameters:
+          clusteringFilter:
+            type: advanced
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.01
+            backgroundIndelRate: 0.01
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+  exportClones:
+    inheritFrom: exportClones-umi-base
+  qc:
+    checks:
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.3
+        upper: 0.5
