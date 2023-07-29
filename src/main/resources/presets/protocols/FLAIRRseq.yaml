@@ -21,7 +21,7 @@
       value: true
     - type: MaterialTypeRNA
   align:
-    inheritFrom: align-amplicon
+    inheritFrom: align-long-read
     overrides:
       tagUnstranded: true
       splitBySample: true
