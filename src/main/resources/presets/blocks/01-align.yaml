@@ -277,7 +277,7 @@ align-long-read:
     - species
     - materialType
   align:
-    trimmingQualityThreshold: 10
+    trimmingQualityThreshold: 0
     trimmingWindowSize: 6
     tagMaxBudget: 10.0
     splitBySample: false
