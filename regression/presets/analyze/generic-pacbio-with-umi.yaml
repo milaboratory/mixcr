@@ -1,9 +1,10 @@
 flags:
 - species
+- tagPattern
 pipeline:
 - align
+- refineTagsAndSort
 - assemble
-- assembleContigs
 - exportClones
 align:
   species: ""
@@ -21,7 +22,9 @@ align:
   headerExtractors: []
   readIdAsCellTag: false
   sampleTable: null
-  tagsValidations: []
+  tagsValidations:
+  - type: MustContainTagType
+    tagType: Molecule
   splitBySample: false
   limit: null
   parameters:
@@ -165,7 +168,42 @@ refineTagsAndSort:
     maxSubstitutions: 2
     maxIndels: 2
     maxTotalErrors: 3
-    postFilter: null
+    postFilter:
+      type: filter_groups
+      groupingKeys:
+      - allTags:Molecule
+      predicates:
+      - metrics:
+        - type: group_metric_sum_weight
+          reportHist:
+            log: true
+            binNumber: 0
+            minBinWidth: 0.2
+            multiplyWeightByKey: false
+        operator:
+          type: group_operator_lowest_threshold
+          operators:
+          - type: group_operator_advanced_thresholding
+            algo:
+              type: otsu
+            histTransformers:
+            - type: inflate
+              fraction: 0.15
+              value: 1.0
+            logX: true
+            minimalSample: 20
+            fallbackThreshold: 1.0
+            accept: High
+          - type: group_operator_cumtop
+            share: 0.85
+            round: Down
+            accept: High
+          accept: High
+        expectedSorting: []
+        requiredSequences: []
+      expectedSorting:
+      - allTags:Molecule
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -194,9 +232,32 @@ extend:
   minimalJScore: 50
 assemble:
   sortBySequence: false
-  clnaOutput: true
+  clnaOutput: false
   cellLevel: false
-  consensusAssemblerParameters: null
+  consensusAssemblerParameters:
+    assembler:
+      aAssemblerParameters:
+        bandWidth: 4
+        scoring:
+          type: linear
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 5, mismatch = -4)"
+          gapPenalty: -14
+        minAlignmentScore: 40
+        maxNormalizedAlignmentPenalty: 0.15
+        trimMinimalSumQuality: 0
+        trimReferenceRegion: false
+        maxQuality: 45
+      maxIterations: 6
+      minAltSeedQualityScore: 11
+      minAltSeedNormalizedPenalty: 0.35
+      altSeedPenaltyTolerance: 0.3
+      minRecordSharePerConsensus: 0.2
+      minRecordsPerConsensus: 0
+      minRecursiveRecordShare: 0.4
+      minQualityScore: 0
+      maxConsensuses: 3
+    minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
     - CDR3
@@ -209,8 +270,8 @@ assemble:
       clusteringFilter:
         type: advanced
         correctionPower: 0.001
-        backgroundSubstitutionRate: 0.01
-        backgroundIndelRate: 0.01
+        backgroundSubstitutionRate: 5.0E-4
+        backgroundIndelRate: 2.0E-4
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null
@@ -239,12 +300,12 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 0
+    badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 15
+    minimalQuality: 20
     postFilters: null
-  inferMinRecordsPerConsensus: false
+  inferMinRecordsPerConsensus: true
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -295,6 +356,12 @@ exportClones:
   - field: -cloneId
   - field: -readCount
   - field: -readFraction
+  - field: -uniqueTagCount
+    args:
+    - Molecule
+  - field: -uniqueTagFraction
+    args:
+    - Molecule
   - field: -targetSequences
   - field: -targetQualities
   - field: -vHitsWithScore
@@ -313,7 +380,7 @@ exportClones:
   groupClonesBy: []
 qc:
   checks:
-  - type: AlignmentsDroppedLowQuality
-    upper: 0.5
-    middle: 0.3
-    label: Alignments dropped due to low sequence quality
+  - type: SuccessfullyAlignedReads
+    upper: 0.85
+    middle: 0.7
+    label: Successfully aligned reads

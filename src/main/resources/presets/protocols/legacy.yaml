@@ -480,3 +480,8 @@ bd-rhapsody-human-bcr-full-length:
 "bd-rhapsody-mouse-bcr-v2":
   deprecation: "The preset is deprecated. Please use bd-mouse-sc-xcr-rhapsody-cdr3."
   inheritFrom:   bd-mouse-sc-xcr-rhapsody-cdr3
+
+# ONT deprecated preset
+"ont-rna-seq":
+  deprecation: "The preset is deprecated. Please use generic-ont."
+  inheritFrom: generic-ont
