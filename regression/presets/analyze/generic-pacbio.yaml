@@ -3,7 +3,6 @@ flags:
 pipeline:
 - align
 - assemble
-- assembleContigs
 - exportClones
 align:
   species: ""
@@ -194,7 +193,7 @@ extend:
   minimalJScore: 50
 assemble:
   sortBySequence: false
-  clnaOutput: true
+  clnaOutput: false
   cellLevel: false
   consensusAssemblerParameters: null
   cloneAssemblerParameters:
@@ -209,8 +208,8 @@ assemble:
       clusteringFilter:
         type: advanced
         correctionPower: 0.001
-        backgroundSubstitutionRate: 0.01
-        backgroundIndelRate: 0.01
+        backgroundSubstitutionRate: 0.001
+        backgroundIndelRate: 0.001
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null
@@ -239,10 +238,10 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 0
+    badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 15
+    minimalQuality: 20
     postFilters: null
   inferMinRecordsPerConsensus: false
 assembleContigs:
@@ -313,7 +312,7 @@ exportClones:
   groupClonesBy: []
 qc:
   checks:
-  - type: AlignmentsDroppedLowQuality
-    upper: 0.5
-    middle: 0.3
-    label: Alignments dropped due to low sequence quality
+  - type: SuccessfullyAlignedReads
+    upper: 0.85
+    middle: 0.7
+    label: Successfully aligned reads
