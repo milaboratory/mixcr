@@ -463,14 +463,6 @@ qc:
     upper: 0.05
     middle: 0.01
     label: Alignments dropped due to low sequence quality
-  - type: AlignmentsClusteredInAssembler
-    upper: 0.05
-    middle: 0.01
-    label: Alignments clustered in PCR error correction
-  - type: ClonesClusteredInAssembler
-    upper: 0.05
-    middle: 0.01
-    label: Clonotypes clustered in PCR error correction
   - type: ClonesDroppedInPostFiltering
     upper: 0.05
     middle: 0.01

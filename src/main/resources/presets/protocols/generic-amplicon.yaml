@@ -31,12 +31,6 @@ generic-amplicon:
       - type: AlignmentsDroppedLowQuality
         middle: 0.01
         upper: 0.05
-      - type: AlignmentsClusteredInAssembler
-        middle: 0.01
-        upper: 0.05
-      - type: ClonesClusteredInAssembler
-        middle: 0.01
-        upper: 0.05
       - type: ClonesDroppedInPostFiltering
         middle: 0.01
         upper: 0.05
@@ -114,12 +108,6 @@ generic-amplicon-with-umi:
         middle: 0.7
         upper: 0.9
       - type: AlignmentsDroppedLowQuality
-        middle: 0.01
-        upper: 0.05
-      - type: AlignmentsClusteredInAssembler
-        middle: 0.01
-        upper: 0.05
-      - type: ClonesClusteredInAssembler
         middle: 0.01
         upper: 0.05
       - type: ClonesDroppedInPostFiltering
