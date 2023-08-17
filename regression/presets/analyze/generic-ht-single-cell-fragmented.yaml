@@ -30,7 +30,7 @@ align:
     tagType: Cell
   - type: MustNotContainTagType
     tagType: Molecule
-  splitBySample: false
+  splitBySample: true
   limit: null
   parameters:
     vParameters:
