@@ -673,7 +673,7 @@ align:
     tagType: Molecule
   - type: MustContainTagType
     tagType: Cell
-  splitBySample: false
+  splitBySample: true
   limit: null
   parameters:
     vParameters:

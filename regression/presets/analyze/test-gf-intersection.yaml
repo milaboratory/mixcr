@@ -24,7 +24,7 @@ align:
   tagsValidations:
   - type: MustContainTagType
     tagType: Molecule
-  splitBySample: false
+  splitBySample: true
   limit: null
   parameters:
     vParameters:
