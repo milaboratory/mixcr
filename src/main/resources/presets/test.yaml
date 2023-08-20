@@ -427,6 +427,7 @@
     inheritFrom: align-single-cell
     overrides:
       tagPattern: ^(SMPL:N{16})(UMI:N{10})\^(R2:*)
+      splitBySample: false
       sampleTable:
         sampleTagName: SAMPLE
         samples:
