@@ -9,7 +9,7 @@ align-amplicon:
     trimmingQualityThreshold: 10
     trimmingWindowSize: 6
     tagMaxBudget: 10
-    splitBySample: false
+    splitBySample: true
     # tagsValidations:
     #   # Note: the following validation is applicable to all built-in presets in all cases.
     #   # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
@@ -150,7 +150,7 @@ align-shotgun:
     trimmingQualityThreshold: 10
     trimmingWindowSize: 6
     tagMaxBudget: 10
-    splitBySample: false
+    splitBySample: true
     # tagsValidations:
     #   # Note: the following validation is applicable to all built-in presets in all cases.
     #   # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
@@ -280,7 +280,7 @@ align-long-read:
     trimmingQualityThreshold: 0
     trimmingWindowSize: 6
     tagMaxBudget: 10.0
-    splitBySample: false
+    splitBySample: true
     # tagsValidations:
     #   # Note: the following validation is applicable to all built-in presets in all cases.
     #   # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
@@ -427,7 +427,7 @@ align-single-cell:
     trimmingQualityThreshold: 10
     trimmingWindowSize: 6
     tagMaxBudget: 10
-    splitBySample: false
+    splitBySample: true
     tagsValidations:
       # # Note: the following validation is applicable to all built-in presets in all cases.
       # # Validation is performed on the set of output tags. When sample tags are employed and splitBySample is set
