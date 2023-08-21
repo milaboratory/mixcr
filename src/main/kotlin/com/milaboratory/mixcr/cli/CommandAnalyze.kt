@@ -489,7 +489,10 @@ object CommandAnalyze {
                         listOf("--print-to-stdout"),
                         emptyList(),
                         listOf(nextInput.fileNames.first()),
-                        listOf(nextInput.fileNames.first().removeExtension() + ".qc.txt")
+                        listOf(
+                            nextInput.fileNames.first().removeExtension() + ".qc.txt",
+                            nextInput.fileNames.first().removeExtension() + ".qc.json"
+                        )
                     )
                 }
             }
