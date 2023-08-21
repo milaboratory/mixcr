@@ -48,7 +48,6 @@ object CommandQcChecks {
     }
 
     @Command(
-        hidden = true,
         description = ["Perform quality control checks on results."]
     )
     class Cmd : CmdBase() {
