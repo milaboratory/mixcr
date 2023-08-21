@@ -69,18 +69,21 @@ object CommandQcChecks {
         @Option(
             description = ["Export in json format. Used if output printed in stdout"],
             names = ["--json"],
+            order = OptionsOrder.main + 100
         )
         private var json = false
 
         @Option(
             description = ["Print to stdout."],
             names = ["--print-to-stdout"],
+            order = OptionsOrder.main + 200
         )
         private var printToStdout = false
 
         @Option(
             description = ["Print warning if some checks not passed to stderr."],
             names = ["--print-warn"],
+            order = OptionsOrder.main + 300
         )
         private var printWarn = false
 
