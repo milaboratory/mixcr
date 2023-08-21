@@ -41,7 +41,7 @@ align:
       sample:
       - sample2
   tagsValidations: []
-  splitBySample: true
+  splitBySample: false
   limit: null
   parameters:
     vParameters:
