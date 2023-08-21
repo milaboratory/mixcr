@@ -13,6 +13,7 @@ Base commands:
   findAlleles        Find allele variants in clnx.
   findShmTrees       Builds SHM trees.
   downsample         Downsample clonesets.
+  qc                 Perform quality control checks on results.
 Postanalysis commands:
   postanalysis  Run postanalysis routines. This command has subcommands, use -h to see more
 Export commands:
