@@ -89,7 +89,7 @@ object CommandGroupClones {
                 val (_, cmdParams) = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose)
 
 
-                val reportBuilder = CloneGroupingReportBuilder()
+                val reportBuilder = CloneGroupingReport.Builder()
                 reportBuilder.setStartMillis(System.currentTimeMillis())
                 reportBuilder.setInputFiles(inputFiles)
                 reportBuilder.setOutputFiles(outputFiles)
@@ -100,20 +100,23 @@ object CommandGroupClones {
                 val grouppedClones = grouper.groupClones(input.clones)
                 reportBuilder.grouperReport = grouper.getReport()
 
-                val result = CloneSet.Builder(grouppedClones, input.usedGenes, input.header)
+                val result = CloneSet.Builder(
+                    grouppedClones,
+                    input.usedGenes,
+                    input.header.addStepParams(MiXCRCommandDescriptor.groupClones, cmdParams)
+                )
                     .sort(input.ordering)
-                    // tag ranks are totally different
+                    // some clones split, need to recalculate
                     .recalculateRanks()
                     // total sums are not changed
                     .withTotalCounts(input.counts)
                     .build()
 
-                reportBuilder.setFinishMillis(System.currentTimeMillis())
-                val report = reportBuilder.buildReport()
-
-
+                val report: CloneGroupingReport
                 ClnsWriter(outputFile).use { writer ->
                     writer.writeCloneSet(result)
+                    reportBuilder.setFinishMillis(System.currentTimeMillis())
+                    report = reportBuilder.buildReport()
                     writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.groupClones, report))
                 }
 

@@ -218,12 +218,11 @@ object CommandAssembleContigs {
                                 bufferSize = 1024
                             ) { cloneAlignments: CloneAlignments ->
                                 val clone = when {
-                                    cmdParams.ignoreTags -> cloneAlignments.clone.withTagCount(
+                                    cmdParams.ignoreTags -> cloneAlignments.clone.withTagCountUnsafe(
                                         TagCount(
                                             TagTuple.NO_TAGS,
                                             cloneAlignments.clone.tagCount.sum()
-                                        ),
-                                        false
+                                        )
                                     )
 
                                     else -> cloneAlignments.clone
