@@ -48,7 +48,6 @@ object CommandQcChecks {
     }
 
     @Command(
-        hidden = true,
         description = ["Perform quality control checks on results."]
     )
     class Cmd : CmdBase() {
@@ -60,40 +59,42 @@ object CommandQcChecks {
         lateinit var input: Path
 
         @Parameters(
-            description = ["Path where to write reports. Print in stdout if omitted."],
+            description = ["Paths where to write reports. Print in stdout if omitted."],
             paramLabel = "output.(txt|json)",
             index = "1",
-            arity = "0..1"
+            arity = "0..2"
         )
-        var output: Path? = null
+        override val outputFiles: List<Path> = mutableListOf()
 
         @Option(
-            description = ["Export in json format."],
+            description = ["Export in json format. Used if output printed in stdout"],
             names = ["--json"],
+            order = OptionsOrder.main + 100
         )
         private var json = false
 
         @Option(
             description = ["Print to stdout."],
             names = ["--print-to-stdout"],
+            order = OptionsOrder.main + 200
         )
         private var printToStdout = false
 
         @Option(
             description = ["Print warning if some checks not passed to stderr."],
             names = ["--print-warn"],
+            order = OptionsOrder.main + 300
         )
         private var printWarn = false
 
         override val inputFiles
             get() = listOf(input)
 
-        override val outputFiles
-            get() = listOfNotNull(output)
-
         override fun validate() {
             ValidationException.requireFileType(input, InputFileType.VDJCA, InputFileType.CLNX)
-            ValidationException.requireFileType(output, InputFileType.TXT, InputFileType.JSON)
+            outputFiles.forEach { output ->
+                ValidationException.requireFileType(output, InputFileType.TXT, InputFileType.JSON)
+            }
         }
 
         override fun run1() {
@@ -101,40 +102,37 @@ object CommandQcChecks {
 
             val (_, params) = paramsResolver.resolve(
                 resetPreset.overridePreset(fileInfo.header.paramsSpec),
-                printParameters = logger.verbose && output != null
+                printParameters = logger.verbose && outputFiles.isNotEmpty()
             )
 
             val results = params.checks
                 .map { it.checker() }
                 .filter { it.supports(fileInfo) }
                 .flatMap { it.check(fileInfo) }
-            val output = output
 
-            if (output != null && printToStdout)
+            if (outputFiles.isNotEmpty() && printToStdout)
                 results.print(System.out, Ansi.AUTO)
 
-            if (output == null) {
-                if (json)
-                    K_PRETTY_OM.writeValue(System.out, results)
-                else
-                    results.print(System.out, Ansi.AUTO)
+            if (outputFiles.isEmpty()) {
+                when {
+                    json -> K_PRETTY_OM.writeValue(System.out, results)
+                    else -> results.print(System.out, Ansi.AUTO)
+                }
+            }
+            outputFiles.forEach { output ->
+                when {
+                    InputFileType.JSON.matches(output) -> {
+                        K_PRETTY_OM.writeValue(output.toFile(), results)
+                    }
+
+                    InputFileType.TXT.matches(output) -> {
+                        results.print(PrintStream(output.toFile()), Ansi.OFF)
+                    }
+
+                    else -> throw IllegalArgumentException()
+                }
             }
 
-            when {
-                output == null -> {
-                    // already printed
-                }
-
-                json || InputFileType.JSON.matches(output) -> {
-                    K_PRETTY_OM.writeValue(output.toFile(), results)
-                }
-
-                InputFileType.TXT.matches(output) -> {
-                    results.print(PrintStream(output.toFile()), Ansi.OFF)
-                }
-
-                else -> throw IllegalArgumentException()
-            }
             val failedChecks = results.count { it.status == ALERT }
             val message = "Failed $failedChecks of ${results.size} qc checks"
             if (printWarn) {

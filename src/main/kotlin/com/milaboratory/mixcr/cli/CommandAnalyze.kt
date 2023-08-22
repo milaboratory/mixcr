@@ -355,7 +355,7 @@ object CommandAnalyze {
 
             // Adding an option to save output files by align
             val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list")
-                .takeIf { bundle.align!!.splitBySample }
+                .takeIf { bundle.align!!.splitBySample && !dryRun }
             val extraAlignArgs =
                 (sampleFileList?.let { listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, it.toString()) } ?: emptyList()) +
                         (if (strictMatching) listOf(STRICT_SAMPLE_NAME_MATCHING_OPTION) else emptyList())
@@ -489,7 +489,10 @@ object CommandAnalyze {
                         listOf("--print-to-stdout"),
                         emptyList(),
                         listOf(nextInput.fileNames.first()),
-                        listOf(nextInput.fileNames.first().removeExtension() + ".qc.txt")
+                        listOf(
+                            nextInput.fileNames.first().removeExtension() + ".qc.txt",
+                            nextInput.fileNames.first().removeExtension() + ".qc.json"
+                        )
                     )
                 }
             }

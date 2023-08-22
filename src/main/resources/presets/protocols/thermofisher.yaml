@@ -11,6 +11,11 @@
     - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 "thermofisher-human-rna-trb-oncomine-lr":
   inheritFrom: thermofisher-human-oncomine-base

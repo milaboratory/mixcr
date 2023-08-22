@@ -170,7 +170,7 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
 
     override fun run1() {
         val samples = inputFiles
-        val chains = this.chains?.let { ChainsFilter.parseChainsList(this.chains) }
+        val chains = this.chains?.let { ChainsFilter.parseChainsList(it) }
         val criteria = OverlapUtil.parseCriteria(overlapCriteria)
         val extractors = mutableListOf<OverlapFieldExtractor>()
         extractors += ExtractorUnique(

@@ -1,0 +1,57 @@
+generic-pacbio:
+  inheritFrom: bundle-base
+  flags:
+    - species
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+  align:
+    inheritFrom: align-long-read
+  assemble:
+    inheritFrom: assemble-base
+    overrides:
+      cloneAssemblerParameters:
+        cloneClusteringParameters:
+          clusteringFilter:
+            type: advanced
+            correctionPower: 0.001
+            backgroundSubstitutionRate: 0.001
+            backgroundIndelRate: 0.001
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.85
+
+generic-pacbio-with-umi:
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: MaterialTypeRNA
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+  align:
+    inheritFrom: align-long-read
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-amplicon-umi-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+  exportClones:
+    inheritFrom: exportClones-umi-base
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.7
+        upper: 0.85

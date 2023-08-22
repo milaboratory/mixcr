@@ -21,3 +21,8 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: DirectOnly

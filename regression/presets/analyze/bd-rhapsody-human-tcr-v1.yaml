@@ -673,7 +673,7 @@ align:
     tagType: Molecule
   - type: MustContainTagType
     tagType: Cell
-  splitBySample: false
+  splitBySample: true
   limit: null
   parameters:
     vParameters:
@@ -789,7 +789,7 @@ align:
     allowPartialAlignments: false
     allowNoCDR3PartAlignments: false
     allowChimeras: false
-    readsLayout: Opposite
+    readsLayout: ReverseOnly
     mergerParameters:
       qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
@@ -1159,14 +1159,6 @@ qc:
     upper: 0.05
     middle: 0.01
     label: Alignments dropped due to low sequence quality
-  - type: AlignmentsClusteredInAssembler
-    upper: 0.05
-    middle: 0.01
-    label: Alignments clustered in PCR error correction
-  - type: ClonesClusteredInAssembler
-    upper: 0.05
-    middle: 0.01
-    label: Clonotypes clustered in PCR error correction
   - type: ClonesDroppedInPostFiltering
     upper: 0.05
     middle: 0.01

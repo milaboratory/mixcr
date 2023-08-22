@@ -644,7 +644,7 @@ align:
     tagType: Cell
   - type: MustContainTagType
     tagType: Molecule
-  splitBySample: false
+  splitBySample: true
   limit: null
   parameters:
     vParameters:
@@ -761,7 +761,7 @@ align:
     allowPartialAlignments: true
     allowNoCDR3PartAlignments: true
     allowChimeras: false
-    readsLayout: Opposite
+    readsLayout: DirectOnly
     mergerParameters:
       qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null

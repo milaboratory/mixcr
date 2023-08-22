@@ -647,6 +647,8 @@
                     value: 384
               - type: tag
                 name: CELL3ID
+      parameters:
+        readsLayout: ReverseOnly
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:
@@ -1343,6 +1345,8 @@
                     value: 384
               - type: tag
                 name: CELL3ID
+      parameters:
+        readsLayout: ReverseOnly
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:
@@ -3775,6 +3779,8 @@
                     value: 384
               - type: tag
                 name: CELL3ID
+      parameters:
+        readsLayout: ReverseOnly
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:
@@ -6199,6 +6205,8 @@
                     value: 384
               - type: tag
                 name: CELL3ID
+      parameters:
+        readsLayout: ReverseOnly
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:

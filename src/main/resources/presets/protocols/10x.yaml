@@ -3,6 +3,11 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+  align:
+    inheritFrom: generic-ht-single-cell-fragmented-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
   refineTagsAndSort:
     whitelists:
       CELL: builtin:737K-august-2016
@@ -152,6 +157,11 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+  align:
+    inheritFrom: generic-single-cell-gex-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
   refineTagsAndSort:
     whitelists:
       CELL: builtin:737K-august-2016

@@ -32,7 +32,11 @@ milab-human-rna-ig-umi-multiplex:
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
-
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 milab-human-rna-tcr-umi-race:
   inheritFrom: generic-amplicon-with-umi
@@ -60,7 +64,11 @@ milab-human-rna-tcr-umi-race:
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
-
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 milab-human-rna-tcr-umi-multiplex:
   inheritFrom: generic-amplicon-with-umi
@@ -86,7 +94,11 @@ milab-human-rna-tcr-umi-multiplex:
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
-
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 milab-human-dna-tcr-multiplex:
   inheritFrom: generic-amplicon
@@ -104,6 +116,11 @@ milab-human-dna-tcr-multiplex:
         - type: OverlappedReadsMoreBetter
           middle: 0.8
           upper: 0.9
+  align:
+    inheritFrom: generic-amplicon
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 milab-human-dna-xcr-7genes-multiplex:
   inheritFrom: milab-human-dna-tcr-multiplex

@@ -47,6 +47,11 @@
         ^N{:4}cagacaagcgacatttgttccatttttcatgac(R1:*) |
         ^N{:4}cttctggagttttgtttcagcaatcgaaggaag(R1:*) |
         ^N{:4}ttccatttttcatgacaaaaacggatggtttggt(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
 
 "qiagen-mouse-rna-tcr-umi-qiaseq":
   inheritFrom: qiagen-human-rna-tcr-umi-qiaseq
