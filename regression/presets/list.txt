@@ -5,6 +5,7 @@ abhelix-human-rna-xcr
 bd-human-sc-xcr-rhapsody-cdr3
 bd-mouse-sc-xcr-rhapsody-cdr3
 bd-sc-xcr-rhapsody-full-length                     --species <name>
+bd-sc-xcr-rhapsody-full-length-enhanced-bead-v2    --species <name>
 biomed2-human-rna-igh
 biomed2-human-rna-igkl
 biomed2-human-rna-trbdg
@@ -52,6 +53,12 @@ generic-lt-single-cell-amplicon-with-umi           (--floating-left-alignment-bo
                                                    --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
 generic-lt-single-cell-fragmented                  --species <name>
 generic-lt-single-cell-fragmented-with-umi         --species <name>
+generic-ont                                        --species <name>
+generic-ont-with-umi                               --species <name>
+                                                   --tag-pattern <pattern>
+generic-pacbio                                     --species <name>
+generic-pacbio-with-umi                            --species <name>
+                                                   --tag-pattern <pattern>
 generic-single-cell-gex                            --species <name>
 generic-single-cell-gex-with-umi                   --species <name>
                                                    --tag-pattern <pattern>
@@ -82,7 +89,6 @@ milab-human-rna-tcr-umi-race
 milab-mouse-rna-tcr-umi-race
 neb-human-rna-xcr-umi-nebnext
 neb-mouse-rna-xcr-umi-nebnext
-ont-rna-seq                                        --species <name>
 parsebio-sc-3gex-evercode-wt                       --species <name>
 parsebio-sc-3gex-evercode-wt-mega                  --species <name>
 parsebio-sc-3gex-evercode-wt-mini                  --species <name>
