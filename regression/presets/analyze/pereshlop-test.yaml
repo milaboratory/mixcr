@@ -22,7 +22,7 @@ align:
   readIdAsCellTag: true
   sampleTable: null
   tagsValidations: []
-  splitBySample: false
+  splitBySample: true
   limit: null
   parameters:
     vParameters:

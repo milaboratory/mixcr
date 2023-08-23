@@ -1,20 +1,23 @@
-flags: []
+flags:
+- species
+- tagPattern
 pipeline:
 - align
 - refineTagsAndSort
 - assemble
+- assembleContigs
 - exportClones
 align:
-  species: hsa
+  species: ""
   libraryName: default
-  trimmingQualityThreshold: 10
+  trimmingQualityThreshold: 0
   trimmingWindowSize: 6
   chains: ALL
   replaceWildcards: true
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^(R1:*) \\ ^(UMI:N{17})N{10}(R2:*)"
+  tagPattern: null
   tagUnstranded: false
   tagMaxBudget: 10.0
   headerExtractors: []
@@ -32,31 +35,31 @@ align:
       relativeMinScore: 0.97
       parameters:
         type: kaligner2
-        mapperNValue: 8
+        mapperNValue: 14
         mapperKValue: 1
         floatingLeftBound: false
         floatingRightBound: true
         mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 98
+        mapperMatchScore: 148
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 8
-        mapperMaxClusters: 11
+        mapperSlotCount: 12
+        mapperMaxClusters: 8
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 103
-        mapperRelativeMinScore: 0.81
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 8
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 10
         alignmentStopPenalty: 0
-        absoluteMinScore: 150
-        relativeMinScore: 0.8
-        maxHits: 2
+        absoluteMinScore: 194
+        relativeMinScore: 0.73
+        maxHits: 7
         scoring:
           type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 10, mismatch = -19)"
+          subsMatrix: "simple(match = 10, mismatch = -20)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
     dParameters:
@@ -75,31 +78,31 @@ align:
       relativeMinScore: 0.97
       parameters:
         type: kaligner2
-        mapperNValue: 8
+        mapperNValue: 10
         mapperKValue: 1
         floatingLeftBound: true
         floatingRightBound: false
-        mapperAbsoluteMinClusterScore: 102
+        mapperAbsoluteMinClusterScore: 130
         mapperExtraClusterScore: -38
-        mapperMatchScore: 95
+        mapperMatchScore: 93
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 6
+        mapperSlotCount: 7
         mapperMaxClusters: 4
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 100
-        mapperRelativeMinScore: 0.8
+        mapperAbsoluteMinScore: 130
+        mapperRelativeMinScore: 0.77
         mapperMinSeedsDistance: 5
         mapperMaxSeedsDistance: 5
         alignmentStopPenalty: 0
-        absoluteMinScore: 150
-        relativeMinScore: 0.8
-        maxHits: 3
+        absoluteMinScore: 112
+        relativeMinScore: 0.78
+        maxHits: 5
         scoring:
           type: affine
           alphabet: nucleotide
-          subsMatrix: "simple(match = 10, mismatch = -19)"
+          subsMatrix: "simple(match = 10, mismatch = -20)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
     cParameters:
@@ -108,22 +111,22 @@ align:
       relativeMinScore: 0.97
       parameters:
         type: kaligner
-        mapperKValue: 5
+        mapperKValue: 11
         floatingLeftBound: false
-        floatingRightBound: true
+        floatingRightBound: false
         mapperAbsoluteMinScore: 1.5
         mapperRelativeMinScore: 0.75
-        mapperMatchScore: 1.0
+        mapperMatchScore: 90.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 4
-        mapperMaxSeedsDistance: 10
+        mapperMinSeedsDistance: 9
+        mapperMaxSeedsDistance: 18
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
-        relativeMinScore: 0.87
-        maxHits: 7
+        absoluteMinScore: 22.0
+        relativeMinScore: 0.75
+        maxHits: 6
         scoring:
           type: linear
           alphabet: nucleotide
@@ -139,7 +142,7 @@ align:
     allowPartialAlignments: false
     allowNoCDR3PartAlignments: false
     allowChimeras: false
-    readsLayout: ReverseOnly
+    readsLayout: Opposite
     mergerParameters:
       qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
@@ -230,7 +233,7 @@ extend:
   minimalJScore: 50
 assemble:
   sortBySequence: false
-  clnaOutput: false
+  clnaOutput: true
   cellLevel: false
   consensusAssemblerParameters:
     assembler:
@@ -268,8 +271,8 @@ assemble:
       clusteringFilter:
         type: advanced
         correctionPower: 0.001
-        backgroundSubstitutionRate: 5.0E-4
-        backgroundIndelRate: 2.0E-4
+        backgroundSubstitutionRate: 0.001
+        backgroundIndelRate: 0.01
     cloneFactoryParameters:
       vParameters:
         relativeMinScore: null
@@ -291,17 +294,17 @@ assemble:
         absoluteMinScore: null
         maxHits: null
         scoring: null
-    separateByV: true
-    separateByJ: true
-    separateByC: true
+    separateByV: false
+    separateByJ: false
+    separateByC: false
     maximalPreClusteringRatio: 1.0
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 15
+    badQualityThreshold: 0
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
-    minimalQuality: 20
+    minimalQuality: 15
     postFilters: null
   inferMinRecordsPerConsensus: true
 assembleContigs:
@@ -378,73 +381,7 @@ exportClones:
   groupClonesBy: []
 qc:
   checks:
-  - type: SuccessfullyAlignedReads
-    upper: 0.85
-    middle: 0.7
-    label: Successfully aligned reads
-  - type: OffTargetReads
-    upper: 0.2
-    middle: 0.1
-    label: Off target (non TCR/IG) reads
-  - type: ReadsWithNoVOrJHits
-    upper: 0.2
-    middle: 0.1
-    label: Reads with no V or J hits
-  - type: AlignmentsWithNoAssemblingFeature
-    upper: 0.15
-    middle: 0.05
-    label: Alignments without assembling feature
-  - type: ReadsWithNoBarcode
-    upper: 0.2
-    middle: 0.1
-    label: Reads with no barcode
-  - type: ReadsDroppedInTagRefinement
-    upper: 0.1
-    middle: 0.05
-    label: Reads dropped in tags error correction and filtering
-  - type: TagArtificialDiversityEliminated
-    tag: UMI
+  - type: AlignmentsDroppedLowQuality
     upper: 0.5
     middle: 0.3
-    label: UMIs artificial diversity eliminated
-  - type: ReadsDroppedInTagCorrection
-    tag: UMI
-    upper: 0.1
-    middle: 0.05
-    label: Reads dropped in UMI error correction and whitelist
-  - type: ReadsDroppedInTagFiltering
-    upper: 0.1
-    middle: 0.05
-    label: Reads dropped in tags filtering
-  - type: TagGroupsWithNoAssemblingFeature
-    upper: 0.2
-    middle: 0.1
-    label: Tag groups with no assembling feature
-  - type: TagGroupsWithMultipleConsensuses
-    upper: 0.1
-    middle: 0.01
-    label: Barcode collisions in clonotype assembly
-  - type: UnassignedAlignments
-    upper: 0.1
-    middle: 0.05
-    label: Unassigned alignments in clonotype assembly
-  - type: ReadsUsedInClonotypes
-    upper: 0.9
-    middle: 0.7
-    label: Reads used in clonotypes
-  - type: AlignmentsDroppedLowQuality
-    upper: 0.05
-    middle: 0.01
     label: Alignments dropped due to low sequence quality
-  - type: ClonesDroppedInPostFiltering
-    upper: 0.05
-    middle: 0.01
-    label: Clones dropped in post-filtering
-  - type: AlignmentsDroppedInPostFiltering
-    upper: 0.05
-    middle: 0.01
-    label: Alignments dropped in clones post-filtering
-  - type: OverlappedReadsMoreBetter
-    upper: 0.9
-    middle: 0.8
-    label: Overlapped paired-end reads

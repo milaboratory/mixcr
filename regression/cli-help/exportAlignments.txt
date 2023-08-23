@@ -34,22 +34,22 @@ Usage: mixcr exportAlignments [--chains <chains>] [--impute-germline-on-export]
                               [-mutationsDetailed <gene_feature>]... [-allMutationsDetailed
                               [<from_reference_point> <to_reference_point>]]...
                               [-mutationsDetailedRelative <gene_feature>
-                              <relative_to_gene_feature>]... [-positionInReferenceOf
-                              <reference_point>]... [-allPositionsInReference
-                              [<from_reference_point> <to_reference_point>]]... [-positionOf
-                              <reference_point>]... [-allPositions [<from_reference_point>
-                              <to_reference_point>]]... [-defaultAnchorPoints] [-readIds]
-                              [-targetSequences] [-targetQualities] [-descrsR1] [-descrsR2]
-                              [-readHistory] [-cloneId] [-cloneIdWithMappingType]
-                              [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
-                              [-cIdentityPercents] [-vBestIdentityPercent] [-dBestIdentityPercent]
-                              [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains]
-                              [-topChains] [-geneLabel <label>]... [-tagCounts] [-cellId [<
-                              (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
-                              [-uniqueTagCount <(Molecule|Cell|Sample)>]... [-hasStops
-                              <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
-                              <gene_feature>]... [--force-overwrite] [--no-warnings] [--verbose]
-                              [--help] data.(vdjca|clna) [table.tsv]
+                              <relative_to_gene_feature>]... [-biochemicalProperty <property>
+                              <gene_feature>]... [-positionInReferenceOf <reference_point>]...
+                              [-allPositionsInReference [<from_reference_point>
+                              <to_reference_point>]]... [-positionOf <reference_point>]...
+                              [-allPositions [<from_reference_point> <to_reference_point>]]...
+                              [-defaultAnchorPoints] [-readIds] [-targetSequences]
+                              [-targetQualities] [-descrsR1] [-descrsR2] [-readHistory] [-cloneId]
+                              [-cloneIdWithMappingType] [-vIdentityPercents] [-dIdentityPercents]
+                              [-jIdentityPercents] [-cIdentityPercents] [-vBestIdentityPercent]
+                              [-dBestIdentityPercent] [-jBestIdentityPercent]
+                              [-cBestIdentityPercent] [-chains] [-topChains] [-geneLabel
+                              <label>]... [-tagCounts] [-cellId [<(none|space|dash)>]]... [-tags <
+                              (Molecule|Cell|Sample)>]... [-uniqueTagCount <(Molecule|Cell|Sample)
+                              >]... [-hasStops <gene_feature>]... [-isOOF <gene_feature>]...
+                              [-isProductive <gene_feature>]... [--force-overwrite] [--no-warnings]
+                              [--verbose] [--help] data.(vdjca|clna) [table.tsv]
 Export V/D/J/C alignments into tab delimited file.
       data.(vdjca|clna)      Path to input file
       [table.tsv]            Path where to write export table. Will write to output if omitted.
@@ -263,6 +263,8 @@ Possible fields to export
                                amino acid mutation is the observed amino acid mutation combining
                                effect from all other. WARNING: format may change in following
                                versions.
+      -biochemicalProperty <property> <gene_feature>
+                             Biochemical property of specified gene feature
       -positionInReferenceOf <reference_point>
                              Export position of specified reference point inside reference
                                sequences (clonal sequence / read sequence).
