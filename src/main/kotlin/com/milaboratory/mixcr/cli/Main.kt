@@ -93,7 +93,7 @@ object Main {
         // GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
         // GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
         SequenceSetCollection.addSearchPath(Path(System.getProperty("user.home"), ".mixcr", "presets"))
-        val commandLine = mkCmd()
+        val commandLine = mkCmd(args)
         try {
             exitProcess(commandLine.execute(*args))
         } catch (e: OutOfMemoryError) {
@@ -111,7 +111,7 @@ object Main {
 
     private fun assertionsDisabled(): Boolean = System.getProperty("noAssertions") != null
 
-    fun mkCmd(): CommandLine {
+    fun mkCmd(cmdArgs: Array<out String>? = null): CommandLine {
         System.setProperty("picocli.usage.width", "100")
 
         val groups: MutableList<Pair<String, Set<String>>> = mutableListOf()
@@ -256,7 +256,7 @@ object Main {
             .registerLogger()
             .overrideSynopsysHelp()
             .registerConvertors()
-            .registerExceptionHandlers()
+            .registerExceptionHandlers(cmdArgs)
     }
 
     fun initializeSystem() {
@@ -294,7 +294,7 @@ object Main {
         }
     }
 
-    private fun CommandLine.registerExceptionHandlers(): CommandLine {
+    private fun CommandLine.registerExceptionHandlers(cmdArgs: Array<out String>?): CommandLine {
         val defaultParameterExceptionHandler = parameterExceptionHandler
         setParameterExceptionHandler { ex, args ->
             err.println(MiXCRVersionInfo.get().shortestVersionString)
@@ -304,7 +304,13 @@ object Main {
             }
         }
         setExecutionExceptionHandler { ex, commandLine, _ ->
-            err.println(MiXCRVersionInfo.get().shortestVersionString)
+            err.println("Please copy the following information along with the stacktrace:")
+            err.println("   Version: " + MiXCRVersionInfo.get().shortestVersionString)
+            err.println("        OS: " + System.getProperty("os.name"))
+            err.println("      Java: " + System.getProperty("java.version"))
+            if (cmdArgs != null) {
+                err.println("  Cmd args: " + cmdArgs.joinToString(" "))
+            }
             when (ex) {
                 is ValidationException -> commandLine.handleValidationException(ex)
                 is ApplicationException -> {
