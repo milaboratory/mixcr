@@ -1,8 +1,8 @@
 align:
   type: alignerReport
   commandLine: align --report baseSingleCell.raw.align.report.txt --json-report baseSingleCell.raw.align.report.json
-    --preset 10x-vdj-bcr --save-output-file-names baseSingleCell.raw.align.list --species
-    hs single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.raw.vdjca
+    --preset 10x-vdj-bcr --species hs single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz
+    baseSingleCell.raw.vdjca
   inputFiles:
   - single_cell_vdj_t_subset_R1.fastq.gz
   - single_cell_vdj_t_subset_R2.fastq.gz

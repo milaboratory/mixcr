@@ -838,7 +838,7 @@ align:
     tagType: Cell
   - type: MustContainTagType
     tagType: Molecule
-  splitBySample: true
+  splitBySample: false
   limit: null
   parameters:
     vParameters:

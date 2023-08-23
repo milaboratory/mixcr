@@ -3836,7 +3836,7 @@
                         share: 0.85
                         round: Down
 
-"bd-rhapsody-full-length-single-cell-B384":
+"bd-rhapsody-full-length-single-cell-B384-base":
   abstract: true
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
   mixins:
@@ -6321,6 +6321,11 @@
 
 "bd-sc-xcr-rhapsody-full-length":
   inheritFrom: bd-rhapsody-full-length-single-cell-A96-base
+  flags:
+    - species
+
+"bd-sc-xcr-rhapsody-full-length-enhanced-bead-v2":
+  inheritFrom: bd-rhapsody-full-length-single-cell-B384-base
   flags:
     - species
 

@@ -1,12 +1,12 @@
 Usage: mixcr buildLibrary --species <species_name> --chain <chain> [--taxon-id <taxon_id>]
                           [--do-not-infer-points] [--keep-intermediate] [--debug]
                           [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                          (--v-genes-from-species <species> | [--v-genes-from-fasta <v.fasta>
-                          --v-gene-feature <gene_feature>]) (--j-genes-from-species <species> |
-                          [--j-genes-from-fasta <j.fasta> [--j-gene-feature <gene_feature>]])
-                          [--d-genes-from-species <species> | [--d-genes-from-fasta <j.fasta>
-                          [--d-gene-feature <gene_feature>]]] [--c-genes-from-species <species> |
-                          [--c-genes-from-fasta <j.fasta> [--c-gene-feature <gene_feature>]]]
+                          (--v-genes-from-species <species> | [--v-gene-feature <gene_feature>
+                          --v-genes-from-fasta <v.fasta>]) (--j-genes-from-species <species> |
+                          [[--j-gene-feature <gene_feature>] --j-genes-from-fasta <j.fasta>])
+                          [--d-genes-from-species <species> | [[--d-gene-feature <gene_feature>]
+                          --d-genes-from-fasta <j.fasta>]] [--c-genes-from-species <species> |
+                          [[--c-gene-feature <gene_feature>] --c-genes-from-fasta <j.fasta>]]
                           library.json[.gz]
 Build custom reference library
       library.json[.gz]     Output library.

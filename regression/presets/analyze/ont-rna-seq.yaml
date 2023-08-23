@@ -8,7 +8,7 @@ pipeline:
 align:
   species: ""
   libraryName: default
-  trimmingQualityThreshold: 0
+  trimmingQualityThreshold: 10
   trimmingWindowSize: 6
   chains: ALL
   replaceWildcards: true
@@ -22,7 +22,7 @@ align:
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations: []
-  splitBySample: true
+  splitBySample: false
   limit: null
   parameters:
     vParameters:
@@ -74,27 +74,27 @@ align:
       relativeMinScore: 0.97
       parameters:
         type: kaligner2
-        mapperNValue: 10
+        mapperNValue: 12
         mapperKValue: 1
         floatingLeftBound: true
         floatingRightBound: false
-        mapperAbsoluteMinClusterScore: 130
+        mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 93
+        mapperMatchScore: 134
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 7
-        mapperMaxClusters: 4
+        mapperSlotCount: 11
+        mapperMaxClusters: 12
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 130
-        mapperRelativeMinScore: 0.77
-        mapperMinSeedsDistance: 5
-        mapperMaxSeedsDistance: 5
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.94
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 8
         alignmentStopPenalty: 0
         absoluteMinScore: 112
         relativeMinScore: 0.78
-        maxHits: 5
+        maxHits: 3
         scoring:
           type: affine
           alphabet: nucleotide
@@ -154,44 +154,9 @@ align:
     saveOriginalSequence: false
     saveOriginalReads: false
     smartForceEdgeAlignments: true
-refineTagsAndSort:
-  whitelists: {}
-  runCorrection: true
-  parameters:
-    correctionPower: 0.001
-    backgroundSubstitutionRate: 0.001
-    backgroundIndelRate: 1.0E-5
-    minQuality: 12
-    maxSubstitutions: 2
-    maxIndels: 2
-    maxTotalErrors: 3
-    postFilter: null
-assemblePartial:
-  overlappedOnly: false
-  dropPartial: false
-  cellLevel: false
-  parameters:
-    kValue: 12
-    kOffset: -7
-    minimalAssembleOverlap: 12
-    minimalNOverlap: 7
-    minimalNOverlapShare: 0.65
-    minimalAlignmentMergeIdentity: 0.85
-    mergerParameters:
-      qualityMergingAlgorithm: SumSubtraction
-      partsLayout: CollinearDirect
-      minimalOverlap: 20
-      minimalMatchQualitySum: 0
-      maxQuality: 45
-      minimalIdentity: 0.95
-      identityType: Unweighted
-    maxLeftParts: 256000
-    maxLeftMatches: 6144
-extend:
-  vAnchor: CDR3Begin
-  jAnchor: FR4Begin
-  minimalVScore: 50
-  minimalJScore: 50
+refineTagsAndSort: null
+assemblePartial: null
+extend: null
 assemble:
   sortBySequence: false
   clnaOutput: true

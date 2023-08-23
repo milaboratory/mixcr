@@ -38,7 +38,6 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [-mutationsDetailed <gene_feature>]... [-allMutationsDetailed
                           [<from_reference_point> <to_reference_point>]]...
                           [-mutationsDetailedRelative <gene_feature> <relative_to_gene_feature>]...
-                          [-biochemicalProperty <property> <gene_feature>]...
                           [-positionInReferenceOf <reference_point>]... [-allPositionsInReference
                           [<from_reference_point> <to_reference_point>]]... [-positionOf
                           <reference_point>]... [-allPositions [<from_reference_point>
@@ -296,8 +295,6 @@ Possible fields to export
                                amino acid mutation is the observed amino acid mutation combining
                                effect from all other. WARNING: format may change in following
                                versions.
-      -biochemicalProperty <property> <gene_feature>
-                             Biochemical property of specified gene feature
       -positionInReferenceOf <reference_point>
                              Export position of specified reference point inside reference
                                sequences (clonal sequence / read sequence).

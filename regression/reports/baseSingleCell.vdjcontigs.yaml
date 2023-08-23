@@ -1,9 +1,9 @@
 align:
   type: alignerReport
   commandLine: align --report baseSingleCell.vdjcontigs.align.report.txt --json-report
-    baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --save-output-file-names
-    baseSingleCell.vdjcontigs.align.list --species hs --assemble-contigs-by VDJRegion
-    single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.vdjcontigs.vdjca
+    baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --species hs
+    --assemble-contigs-by VDJRegion single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz
+    baseSingleCell.vdjcontigs.vdjca
   inputFiles:
   - single_cell_vdj_t_subset_R1.fastq.gz
   - single_cell_vdj_t_subset_R2.fastq.gz
