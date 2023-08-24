@@ -84,6 +84,9 @@ object CommandGroupClones {
         override fun run1() {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val input = reader.readCloneSet()
+                ValidationException.require(input.none { it.group != null }) {
+                    "Input file already grouped by cells"
+                }
 
                 val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
                 val (_, cmdParams) = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose)
