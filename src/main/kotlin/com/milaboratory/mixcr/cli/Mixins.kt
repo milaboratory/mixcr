@@ -563,7 +563,7 @@ object ExportMiXCRMixins {
             arity = "0",
             order = OptionsOrder.mixins.exports + 800
         )
-        fun resetExportClonesFileSplitting(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+        fun resetExportClonesFileSplitting(ignored: Boolean) =
             mixIn(ExportMixins.ExportClonesResetFileSplitting)
 
         @Option(
@@ -583,7 +583,7 @@ object ExportMiXCRMixins {
             arity = "0",
             order = OptionsOrder.mixins.exports + 1000
         )
-        fun resetExportClonesCloneGrouping(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+        fun resetExportClonesCloneGrouping(ignored: Boolean) =
             mixIn(ExportMixins.ExportClonesResetCloneGrouping)
 
         @Option(
@@ -592,7 +592,7 @@ object ExportMiXCRMixins {
             arity = "0",
             order = OptionsOrder.mixins.exports + 1100
         )
-        fun exportProductiveClonesOnly(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+        fun exportProductiveClonesOnly(ignored: Boolean) =
             mixIn(ExportMixins.ExportProductiveClonesOnly)
     }
 

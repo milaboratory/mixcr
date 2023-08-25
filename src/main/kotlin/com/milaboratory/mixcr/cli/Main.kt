@@ -180,6 +180,7 @@ object Main {
                     .addSubcommand(CommandExportAlignments.COMMAND_NAME, CommandExportAlignments.mkSpec())
                     .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty::class.java)
                     .addSubcommand(CommandExportClones.COMMAND_NAME, CommandExportClones.mkSpec())
+                    .addSubcommand(CommandExportCloneGroups.COMMAND_NAME, CommandExportCloneGroups.mkSpec())
                     .addSubcommand("exportClonesPretty", CommandExportClonesPretty::class.java)
                     .addSubcommand("exportShmTreesWithNodes", CommandExportShmTreesTableWithNodes.mkCommandSpec())
                     .addSubcommand("exportShmTrees", CommandExportShmTreesTable.mkCommandSpec())

@@ -19,6 +19,7 @@ import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.clonegrouping.CloneGroupingParams.Companion.mkGrouper
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
@@ -84,6 +85,9 @@ object CommandGroupClones {
         override fun run1() {
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 val input = reader.readCloneSet()
+                ValidationException.require(input.tagsInfo.hasTagsWithType(TagType.Cell)) {
+                    "Input doesn't have cell tags"
+                }
                 ValidationException.require(input.none { it.group != null }) {
                     "Input file already grouped by cells"
                 }
@@ -98,7 +102,7 @@ object CommandGroupClones {
                 reportBuilder.setOutputFiles(outputFiles)
                 reportBuilder.commandLine = commandLineArguments
 
-                val grouper = cmdParams.parameters.mkGrouper<Clone>(input.tagsInfo)
+                val grouper = cmdParams.algorithm.mkGrouper<Clone>(input.tagsInfo)
                 SmartProgressReporter.startProgressReport(grouper)
                 val grouppedClones = grouper.groupClones(input.clones)
                 reportBuilder.grouperReport = grouper.getReport()
@@ -106,7 +110,9 @@ object CommandGroupClones {
                 val result = CloneSet.Builder(
                     grouppedClones,
                     input.usedGenes,
-                    input.header.addStepParams(MiXCRCommandDescriptor.groupClones, cmdParams)
+                    input.header
+                        .addStepParams(MiXCRCommandDescriptor.groupClones, cmdParams)
+                        .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
                 )
                     .sort(input.ordering)
                     // some clones split, need to recalculate

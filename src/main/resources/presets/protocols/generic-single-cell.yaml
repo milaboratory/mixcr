@@ -9,6 +9,7 @@ generic-lt-single-cell-amplicon:
     - align
     - refineTagsAndSort
     - assemble
+    - groupClones
     - exportClones
   qc:
     checks:
@@ -81,6 +82,7 @@ generic-lt-single-cell-amplicon-with-umi:
     - align
     - refineTagsAndSort
     - assemble
+    - groupClones
     - exportClones
   qc:
     checks:
@@ -216,6 +218,7 @@ generic-lt-single-cell-fragmented:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
   qc:
     checks:
@@ -272,6 +275,7 @@ generic-lt-single-cell-fragmented-with-umi:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
   qc:
     checks:
@@ -375,6 +379,7 @@ generic-ht-single-cell-amplicon:
     - align
     - refineTagsAndSort
     - assemble
+    - groupClones
     - exportClones
   qc:
     checks:
@@ -475,6 +480,7 @@ generic-ht-single-cell-amplicon-with-umi:
     - align
     - refineTagsAndSort
     - assemble
+    - groupClones
     - exportClones
   qc:
     checks:
@@ -639,6 +645,7 @@ generic-ht-single-cell-fragmented:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
   qc:
     checks:
@@ -733,6 +740,7 @@ generic-ht-single-cell-fragmented-with-umi:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
   qc:
     checks:
@@ -857,6 +865,7 @@ generic-single-cell-gex-base:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
   qc:
     checks:
