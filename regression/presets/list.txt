@@ -5,6 +5,7 @@ abhelix-human-rna-xcr
 bd-human-sc-xcr-rhapsody-cdr3
 bd-mouse-sc-xcr-rhapsody-cdr3
 bd-sc-xcr-rhapsody-full-length                     --species <name>
+bd-sc-xcr-rhapsody-full-length-enhanced-bead-v2    --species <name>
 biomed2-human-rna-igh
 biomed2-human-rna-igkl
 biomed2-human-rna-trbdg
