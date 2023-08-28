@@ -13,17 +13,23 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneSetIO
+import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.clonegrouping.CellType
-import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.CloneGroup
+import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
-import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
-import io.repseq.core.GeneType
+import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model
@@ -36,8 +42,7 @@ object CommandExportCloneGroups {
 
     private fun CommandExportCloneGroupsParams.test(
         clone: Clone,
-        assemblingFeatures: Array<GeneFeature>,
-        chains: Chains
+        assemblingFeatures: Array<GeneFeature>
     ): Boolean {
         if (filterOutOfFrames)
             if (clone.isOutOfFrameOrAbsent(CDR3)) return false
@@ -46,13 +51,7 @@ object CommandExportCloneGroups {
             for (assemblingFeature in assemblingFeatures)
                 if (clone.containsStopsOrAbsent(assemblingFeature)) return false
 
-        if (chains == Chains.ALL)
-            return true
-
-        return GeneType.VJC_REFERENCE.any {
-            val hit = clone.getBestHit(it)
-            hit != null && chains.intersects(hit.gene.chains)
-        }
+        return true
     }
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandExportCloneGroupsParams> {
@@ -90,7 +89,7 @@ object CommandExportCloneGroups {
 
         @Option(
             description = [
-                "Exclude groups containing only one .",
+                "Exclude groups containing only one clone (fractions will be recalculated).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--filter-groups-with-one-chain"],
@@ -155,6 +154,48 @@ object CommandExportCloneGroups {
         }
 
         override fun run1() {
+            val fileInfo = IOUtil.extractFileInfo(inputFile)
+            val assemblingFeatures = fileInfo.header.assemblerParameters!!.assemblingFeatures
+            val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
+            val tagsInfo = initialSet.cloneSetInfo.tagsInfo
+            ValidationException.require(initialSet.clones.all { it.group != null }) {
+                "Not all clones have a group. Run `${CommandGroupClones.COMMAND_NAME}` for grouping clones."
+            }
+            val (_, params) = paramsResolver.resolve(
+                resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins),
+                printParameters = logger.verbose && outputFile != null
+            )
+
+            val headerForExport = MetaForExport(fileInfo)
+            val fieldExtractors = CloneGroupFieldsExtractorsFactory(params.types.ifEmpty { CellType.values().toList() })
+                .createExtractors(params.fields, headerForExport)
+
+            var groups = initialSet.clones
+                .filter { params.test(it, assemblingFeatures) }
+                .groupBy { it.group!! }
+                .map { (groupId, clones) ->
+                    val clonesGroupedByChains = clones.groupBy { it.chains }
+                    val totalTagsCount = TagCountAggregator().also { aggregator ->
+                        clones.forEach { clone -> aggregator.add(clone.tagCount) }
+                    }.createAndDestroy()
+                    CloneGroup(
+                        groupId = groupId,
+                        clonePairs = clonesGroupedByChains.mapValues { (_, clonesWithChain) ->
+                            val sorted = clonesWithChain.sortedByDescending { it.count }
+                            CloneGroup.ClonePair(
+                                sorted.first(),
+                                sorted.getOrNull(1)
+                            )
+                        },
+                        cellsCount = totalTagsCount.getTagDiversity(tagsInfo.getDepthFor(TagType.Cell)),
+                        cloneCount = clonesGroupedByChains.mapValues { it.value.size },
+                        totalReadsCount = clones.sumOf { it.count },
+                        totalTagsCount = totalTagsCount
+                    )
+                }
+            if (params.filterOutGroupsWithOneClone) {
+                groups = groups.filter { it.cloneCount.values.sum() > 1 }
+            }
         }
     }
 
@@ -163,7 +204,8 @@ object CommandExportCloneGroups {
         val cmd = Cmd()
         val spec = Model.CommandSpec.forAnnotatedObject(cmd)
         cmd.spec = spec // inject spec manually
-        CloneFieldsExtractorsFactory.addOptionsToSpec(cmd.exportDefaults.addedFields, spec)
+        CloneGroupFieldsExtractorsFactory(CellType.values().toList())
+            .addOptionsToSpec(cmd.exportDefaults.addedFields, spec)
         return spec
     }
 }
