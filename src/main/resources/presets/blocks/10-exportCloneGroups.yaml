@@ -1,0 +1,47 @@
+exportCloneGroups-single-cell-no-umi-base:
+  abstract: true
+  exportCloneGroups:
+    types: [ ]
+    fields:
+      - field: "-cellGroup"
+      - field: "-groupCellsCount"
+      - field: "-groupReadsCount"
+      - field: "-uniqClonesPerChainCount"
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+exportCloneGroups-single-cell-with-umi-base:
+  abstract: true
+  exportCloneGroups:
+    types: [ ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"

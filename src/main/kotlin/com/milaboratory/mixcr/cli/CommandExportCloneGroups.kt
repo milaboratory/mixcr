@@ -11,22 +11,31 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.clonegrouping.CellType
 import com.milaboratory.mixcr.export.CloneGroup
 import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
+import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.util.CanReportProgress
+import com.milaboratory.util.SmartProgressReporter
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.VDJCLibraryRegistry
@@ -155,7 +164,6 @@ object CommandExportCloneGroups {
 
         override fun run1() {
             val fileInfo = IOUtil.extractFileInfo(inputFile)
-            val assemblingFeatures = fileInfo.header.assemblerParameters!!.assemblingFeatures
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val tagsInfo = initialSet.cloneSetInfo.tagsInfo
             ValidationException.require(initialSet.clones.all { it.group != null }) {
@@ -166,12 +174,36 @@ object CommandExportCloneGroups {
                 printParameters = logger.verbose && outputFile != null
             )
 
+            val recalculatedClones = filterClones(initialSet, params, fileInfo)
+            val groups = cloneGroups(recalculatedClones, tagsInfo)
+
             val headerForExport = MetaForExport(fileInfo)
             val fieldExtractors = CloneGroupFieldsExtractorsFactory(params.types.ifEmpty { CellType.values().toList() })
                 .createExtractors(params.fields, headerForExport)
 
-            var groups = initialSet.clones
-                .filter { params.test(it, assemblingFeatures) }
+            val rowMetaForExport = RowMetaForExport(
+                tagsInfo,
+                headerForExport,
+                exportDefaults.notCoveredAsEmpty
+            )
+            InfoWriter.create(
+                outputFile,
+                fieldExtractors,
+                !params.noHeader
+            ) { rowMetaForExport }.use { writer ->
+                val reader = groups.asOutputPort()
+                if (reader is CanReportProgress) {
+                    SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err)
+                }
+                reader.forEach { writer.put(it) }
+            }
+        }
+
+        private fun cloneGroups(
+            recalculatedClones: CloneSet,
+            tagsInfo: TagsInfo
+        ): List<CloneGroup> {
+            val groups = recalculatedClones
                 .groupBy { it.group!! }
                 .map { (groupId, clones) ->
                     val clonesGroupedByChains = clones.groupBy { it.chains }
@@ -193,9 +225,28 @@ object CommandExportCloneGroups {
                         totalTagsCount = totalTagsCount
                     )
                 }
-            if (params.filterOutGroupsWithOneClone) {
-                groups = groups.filter { it.cloneCount.values.sum() > 1 }
-            }
+            return groups
+        }
+
+        private fun filterClones(
+            initialSet: CloneSet,
+            params: CommandExportCloneGroupsParams,
+            fileInfo: MiXCRFileInfo
+        ): CloneSet {
+            val assemblingFeatures = fileInfo.header.assemblerParameters!!.assemblingFeatures
+            val filteredClones = initialSet
+                .filter { params.test(it, assemblingFeatures) }
+                .groupBy { it.group!! }
+                .values
+                .filter { clones ->
+                    !params.filterOutGroupsWithOneClone || clones.size > 1
+                }
+                .flatten()
+            return CloneSet.Builder(filteredClones, initialSet.usedGenes, initialSet.header)
+                .alreadyOrdered(initialSet.ordering)
+                .calculateTotalCounts()
+                .recalculateRanks()
+                .build()
         }
     }
 

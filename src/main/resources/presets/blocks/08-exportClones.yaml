@@ -55,6 +55,7 @@ exportClones-single-cell-no-umi-base:
     splitFilesBy: []
     fields:
       - field: "-cloneId"
+      - field: "-cellGroup"
       - field: "-tags"
         args: [ "Cell" ]
       - field: "-readCount"
@@ -79,6 +80,7 @@ exportClones-single-cell-with-umi-base:
     splitFilesBy: []
     fields:
       - field: "-cloneId"
+      - field: "-cellGroup"
       - field: "-tags"
         args: [ "Cell" ]
       - field: "-readCount"
