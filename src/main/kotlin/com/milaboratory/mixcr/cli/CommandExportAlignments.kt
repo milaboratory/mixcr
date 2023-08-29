@@ -114,7 +114,7 @@ object CommandExportAlignments {
             }
 
         @Mixin
-        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportAlignments
+        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecific.ExportAlignments
 
         @Mixin
         lateinit var resetPreset: ResetPresetOptions

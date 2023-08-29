@@ -201,7 +201,7 @@ object CommandExportClones {
             }
 
         @Mixin
-        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportClones
+        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecific.ExportClones
 
         override val inputFiles
             get() = listOf(inputFile)

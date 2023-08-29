@@ -15,6 +15,7 @@ import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.FieldExtractorsFactory
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.AlignMixins
@@ -36,6 +37,7 @@ import com.milaboratory.mixcr.presets.AssembleMixins.SetClonotypeAssemblingFeatu
 import com.milaboratory.mixcr.presets.AssembleMixins.SetSplitClonesBy
 import com.milaboratory.mixcr.presets.ExportMixins
 import com.milaboratory.mixcr.presets.ExportMixins.AddExportAlignmentsField
+import com.milaboratory.mixcr.presets.ExportMixins.AddExportCloneGroupsField
 import com.milaboratory.mixcr.presets.ExportMixins.AddExportClonesField
 import com.milaboratory.mixcr.presets.ExportMixins.DontImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.ExportMixins.ImputeGermlineOnExport
@@ -441,11 +443,15 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
 
 object ExportMiXCRMixins {
 
-    class All : Modifiers, Generic, ExportClonesMixins, MiXCRMixinCollector()
+    class All : Modifiers, Generic, ExportClonesMixins, GeneralExportClonesMixins, MiXCRMixinCollector()
 
-    class CommandSpecificExportAlignments : Modifiers, MiXCRMixinCollector()
+    class CommandSpecific {
+        class ExportAlignments : Modifiers, MiXCRMixinCollector()
 
-    class CommandSpecificExportClones : Modifiers, ExportClonesMixins, MiXCRMixinCollector()
+        class ExportClones : Modifiers, ExportClonesMixins, GeneralExportClonesMixins, MiXCRMixinCollector()
+
+        class ExportCloneGroups : Modifiers, GeneralExportClonesMixins, MiXCRMixinCollector()
+    }
 
     private interface Modifiers : MiXCRMixinRegister {
         @Option(
@@ -471,6 +477,11 @@ object ExportMiXCRMixins {
         fun addExportClonesField(args: List<String>, prepend: Boolean) {
             require(args.isNotEmpty())
             mixIn(AddExportClonesField(if (prepend) 0 else -1, args.first(), args.drop(1)))
+        }
+
+        fun addExportCloneGroupsField(args: List<String>, prepend: Boolean) {
+            require(args.isNotEmpty())
+            mixIn(AddExportCloneGroupsField(if (prepend) 0 else -1, args.first(), args.drop(1)))
         }
 
         fun addExportAlignmentsField(args: List<String>, prepend: Boolean) {
@@ -501,13 +512,35 @@ object ExportMiXCRMixins {
         fun appendExportClonesField(data: List<String>) = addExportClonesField(data, false)
 
         @Option(
+            description = ["Add clone groups export column before other columns. First param is field name as it is in `${CommandExportCloneGroups.COMMAND_NAME}` command, left params are params of the field"],
+            names = [AddExportCloneGroupsField.CMD_OPTION_PREPEND_PREFIX],
+            parameterConsumer = CloneGroupExportParameterConsumer::class,
+            arity = "1..*",
+            paramLabel = "<field> [<param>...]",
+            hideParamSyntax = true,
+            order = OptionsOrder.mixins.exports + 500
+        )
+        fun prependExportCloneGroupsField(data: List<String>) = addExportCloneGroupsField(data, true)
+
+        @Option(
+            description = ["Add clone groups export column after other columns. First param is field name as it is in `${CommandExportCloneGroups.COMMAND_NAME}` command, left params are params of the field"],
+            names = [AddExportCloneGroupsField.CMD_OPTION_APPEND_PREFIX],
+            parameterConsumer = CloneGroupExportParameterConsumer::class,
+            arity = "1..*",
+            paramLabel = "<field> [<param>...]",
+            hideParamSyntax = true,
+            order = OptionsOrder.mixins.exports + 600
+        )
+        fun appendExportCloneGroupsField(data: List<String>) = addExportCloneGroupsField(data, false)
+
+        @Option(
             description = ["Add clones export column before other columns. First param is field name as it is in `${CommandExportAlignments.COMMAND_NAME}` command, left params are params of the field"],
             names = [AddExportAlignmentsField.CMD_OPTION_PREPEND_PREFIX],
             parameterConsumer = AlignsExportParameterConsumer::class,
             arity = "1..*",
             paramLabel = "<field> [<param>...]",
             hideParamSyntax = true,
-            order = OptionsOrder.mixins.exports + 500
+            order = OptionsOrder.mixins.exports + 700
         )
         fun prependExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, true)
 
@@ -518,7 +551,7 @@ object ExportMiXCRMixins {
             arity = "1..*",
             paramLabel = "<field> [<param>...]",
             hideParamSyntax = true,
-            order = OptionsOrder.mixins.exports + 600
+            order = OptionsOrder.mixins.exports + 800
         )
         fun appendExportAlignmentsField(data: List<String>) = addExportAlignmentsField(data, false)
 
@@ -542,8 +575,23 @@ object ExportMiXCRMixins {
 
             class CloneExportParameterConsumer : ExportParameterConsumer(CloneFieldsExtractorsFactory)
 
+            class CloneGroupExportParameterConsumer :
+                ExportParameterConsumer(CloneGroupFieldsExtractorsFactory.forAllChains)
+
             class AlignsExportParameterConsumer : ExportParameterConsumer(VDJCAlignmentsFieldsExtractorsFactory)
         }
+    }
+
+
+    private interface GeneralExportClonesMixins : MiXCRMixinRegister {
+        @Option(
+            description = ["Export only productive clonotypes."],
+            names = [ExportMixins.ExportProductiveClonesOnly.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 5_000
+        )
+        fun exportProductiveClonesOnly(ignored: Boolean) =
+            mixIn(ExportMixins.ExportProductiveClonesOnly)
     }
 
     private interface ExportClonesMixins : MiXCRMixinRegister {
@@ -585,15 +633,6 @@ object ExportMiXCRMixins {
         )
         fun resetExportClonesCloneGrouping(ignored: Boolean) =
             mixIn(ExportMixins.ExportClonesResetCloneGrouping)
-
-        @Option(
-            description = ["Export only productive clonotypes."],
-            names = [ExportMixins.ExportProductiveClonesOnly.CMD_OPTION],
-            arity = "0",
-            order = OptionsOrder.mixins.exports + 1100
-        )
-        fun exportProductiveClonesOnly(ignored: Boolean) =
-            mixIn(ExportMixins.ExportProductiveClonesOnly)
     }
 
     const val DESCRIPTION = "Params for export commands:%n"

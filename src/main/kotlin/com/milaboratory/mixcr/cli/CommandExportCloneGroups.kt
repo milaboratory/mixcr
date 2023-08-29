@@ -150,7 +150,7 @@ object CommandExportCloneGroups {
             }
 
         @Mixin
-        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecificExportClones
+        lateinit var exportMixins: ExportMiXCRMixins.CommandSpecific.ExportCloneGroups
 
         override val inputFiles
             get() = listOf(inputFile)
@@ -255,7 +255,7 @@ object CommandExportCloneGroups {
         val cmd = Cmd()
         val spec = Model.CommandSpec.forAnnotatedObject(cmd)
         cmd.spec = spec // inject spec manually
-        CloneGroupFieldsExtractorsFactory(CellType.values().toList())
+        CloneGroupFieldsExtractorsFactory.forAllChains
             .addOptionsToSpec(cmd.exportDefaults.addedFields, spec)
         return spec
     }
