@@ -5,11 +5,12 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import org.junit.Test
 import picocli.CommandLine
+import kotlin.reflect.KClass
 
 class MetaInfoTest {
     @Test
     fun `all command descriptor must be resolved by name`() {
-        MiXCRCommandDescriptor::class.sealedSubclasses.map { it.objectInstance!! }
+        mixcrCommandDescriptions()
             .map { it.command }
             .filter { commandName ->
                 MiXCRCommandDescriptor.fromStringOrNull(commandName) == null
@@ -25,7 +26,7 @@ class MetaInfoTest {
 
             MiXCRCommandDescriptor.align
         )
-        (MiXCRCommandDescriptor::class.sealedSubclasses.map { it.objectInstance!! } - exclusions)
+        (mixcrCommandDescriptions() - exclusions)
             .map { it.command }
             .filter { commandName ->
                 val command = cmd.allSubCommands().first { it.commandName == commandName }
@@ -41,16 +42,27 @@ class MetaInfoTest {
             MiXCRCommandDescriptor.findShmTrees,
 
             MiXCRCommandDescriptor.exportClones,
+            MiXCRCommandDescriptor.exportCloneGroups,
             MiXCRCommandDescriptor.exportAlignments,
             MiXCRCommandDescriptor.qc,
         )
-        (MiXCRCommandDescriptor::class.sealedSubclasses.map { it.objectInstance!! } - exclusions)
+        (mixcrCommandDescriptions() - exclusions)
             .map { it.command }
             .filter { commandName ->
                 val command = cmd.allSubCommands().first { it.commandName == commandName }
                 command.commandSpec.findOption("--dont-save-preset") == null
             } shouldBe emptyList()
     }
+
+    private fun mixcrCommandDescriptions() =
+        MiXCRCommandDescriptor::class.resolveSealedSubclasses().map { it.objectInstance!! }
+
+    private fun <T : Any> KClass<T>.resolveSealedSubclasses(): List<KClass<out T>> =
+        when {
+            isSealed -> sealedSubclasses.flatMap { it.resolveSealedSubclasses() }
+            else -> listOf(this)
+        }
+
 
     @Test
     fun `all options must have specified order`() {

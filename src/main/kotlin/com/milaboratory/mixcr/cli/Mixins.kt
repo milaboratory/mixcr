@@ -622,7 +622,7 @@ object ExportMiXCRMixins {
             names = [ExportMixins.ExportClonesAddFileSplitting.CMD_OPTION],
             paramLabel = "<(geneLabel|tag):key>",
             hideParamSyntax = true,
-            order = OptionsOrder.mixins.exports + 700
+            order = OptionsOrder.mixins.exports + 900
         )
         fun addExportClonesFileSplitting(by: String) =
             mixIn(ExportMixins.ExportClonesAddFileSplitting(by))
@@ -631,7 +631,7 @@ object ExportMiXCRMixins {
             description = ["Reset all file splitting for output clone tables."],
             names = [ExportMixins.ExportClonesResetFileSplitting.CMD_OPTION],
             arity = "0",
-            order = OptionsOrder.mixins.exports + 800
+            order = OptionsOrder.mixins.exports + 1_000
         )
         fun resetExportClonesFileSplitting(ignored: Boolean) =
             mixIn(ExportMixins.ExportClonesResetFileSplitting)
@@ -642,7 +642,7 @@ object ExportMiXCRMixins {
             arity = "1",
             paramLabel = "<(geneLabel|tag):key>",
             hideParamSyntax = true,
-            order = OptionsOrder.mixins.exports + 900
+            order = OptionsOrder.mixins.exports + 1_100
         )
         fun addExportClonesCloneGrouping(by: String) =
             mixIn(ExportMixins.ExportClonesAddCloneGrouping(by))
@@ -651,7 +651,7 @@ object ExportMiXCRMixins {
             description = ["Reset all clone grouping in the output clone tables."],
             names = [ExportMixins.ExportClonesResetCloneGrouping.CMD_OPTION],
             arity = "0",
-            order = OptionsOrder.mixins.exports + 1000
+            order = OptionsOrder.mixins.exports + 1_200
         )
         fun resetExportClonesCloneGrouping(ignored: Boolean) =
             mixIn(ExportMixins.ExportClonesResetCloneGrouping)
