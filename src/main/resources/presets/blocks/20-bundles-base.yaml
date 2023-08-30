@@ -17,5 +17,3 @@ bundle-base:
     inheritFrom: assembleContigs-base
   exportClones:
     inheritFrom: exportClones-base
-  groupClones:
-    inheritFrom: groupClones-base
