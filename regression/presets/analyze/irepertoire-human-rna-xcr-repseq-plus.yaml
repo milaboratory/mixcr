@@ -197,7 +197,7 @@ assemble:
   consensusAssemblerParameters: null
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR1_TO_FR4
+    - CDR2_TO_FR4
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
