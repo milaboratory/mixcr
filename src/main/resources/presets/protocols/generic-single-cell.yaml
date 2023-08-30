@@ -38,6 +38,12 @@ generic-lt-single-cell-amplicon:
       - type: AlignmentsDroppedInPostFiltering
         middle: 0.01
         upper: 0.05
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   mixins:
     - type: MaterialTypeRNA
     - type: AddTagsValidation
@@ -142,6 +148,12 @@ generic-lt-single-cell-amplicon-with-umi:
       - type: AlignmentsDroppedInPostFiltering
         middle: 0.01
         upper: 0.05
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   mixins:
     - type: MaterialTypeRNA
     - type: AddTagsValidation
@@ -242,6 +254,12 @@ generic-lt-single-cell-fragmented:
       - type: AlignmentsDroppedLowQuality
         middle: 0.1
         upper: 0.2
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   mixins:
     - type: MaterialTypeRNA
     - type: AddTagsValidation
@@ -314,6 +332,12 @@ generic-lt-single-cell-fragmented-with-umi:
       - type: ReadsDroppedInTagFiltering
         middle: 0.1
         upper: 0.2
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   mixins:
     - type: MaterialTypeRNA
     - type: AddTagsValidation
@@ -428,6 +452,12 @@ generic-ht-single-cell-amplicon:
       - type: AlignmentsDroppedInPostFiltering
         middle: 0.01
         upper: 0.05
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   mixins:
     - type: MaterialTypeRNA
     - type: AddTagsValidation
@@ -564,6 +594,12 @@ generic-ht-single-cell-amplicon-with-umi:
       - type: AlignmentsDroppedInPostFiltering
         middle: 0.01
         upper: 0.05
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   mixins:
     - type: MaterialTypeRNA
     - type: AddTagsValidation
@@ -699,6 +735,12 @@ generic-ht-single-cell-fragmented:
       - type: ReadsDroppedInTagFiltering
         middle: 0.1
         upper: 0.2
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   mixins:
     - type: MaterialTypeRNA
     - type: AddTagsValidation
@@ -799,6 +841,12 @@ generic-ht-single-cell-fragmented-with-umi:
       - type: ReadsDroppedInTagFiltering
         middle: 0.1
         upper: 0.2
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   mixins:
     - type: MaterialTypeRNA
     - type: AddTagsValidation
