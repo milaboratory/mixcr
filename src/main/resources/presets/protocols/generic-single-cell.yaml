@@ -961,6 +961,12 @@ generic-single-cell-gex-base:
       - type: AlignmentsDroppedLowQuality
         middle: 0.1
         upper: 0.2
+      - type: InvalidCellGroups
+        middle: 0.0
+        upper: 0.0
+      - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
+        middle: 0.0
+        upper: 0.01
   align:
     inheritFrom: align-single-cell
   assemblePartial:
